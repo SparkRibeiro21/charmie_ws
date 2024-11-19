@@ -1,0 +1,5 @@
+# Service to get the info from the robot power, battery voltage and emergency stop button
+
+---
+float64 battery_voltage # battery voltage level 
+bool emergency_stop     # boolean info of the emergency stop button

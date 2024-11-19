@@ -20,8 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		"yolo_pose = charmie_yolo_pose.yolo_pose:main",
-		"yolo_pose_characteristics = charmie_yolo_pose.yolo_pose_characteristics:main"
+		"yolo_pose = charmie_yolo_pose.yolo_pose:main"
         ],
     },
 )

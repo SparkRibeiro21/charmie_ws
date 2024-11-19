@@ -8,7 +8,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import Point
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints, ListOfDetectedObject, ListOfDetectedPerson, Obstacles
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles
 
 import cv2 
 import threading
@@ -768,24 +768,24 @@ class RestaurantMain():
                     person_already_in_list = DetectedPerson()
                     for people in person_detected:
 
-                        if temp_people.index_person == people.index_person:
+                        if temp_people.index == people.index:
                             is_already_in_list = True
                             person_already_in_list = people
 
                     if is_already_in_list:
                         person_detected.remove(person_already_in_list)
-                    elif temp_people.index_person > 0: # debug
-                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
+                    elif temp_people.index > 0: # debug
+                        # print("added_first_time", temp_people.index, temp_people.position_absolute.x, temp_people.position_absolute.y)
                         self.set_rgb(GREEN+SET_COLOUR)
                     
-                    if temp_people.index_person > 0:
+                    if temp_people.index > 0:
                         person_detected.append(temp_people)
                         people_ctr+=1
 
             # DEBUG
             # print("people in this neck pos:")
             # for people in person_detected:
-            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+            #     print(people.index, people.position_absolute.x, people.position_absolute.y)
         
             total_person_detected.append(person_detected.copy())
             # print("Total number of people detected:", len(person_detected), people_ctr)
@@ -798,7 +798,7 @@ class RestaurantMain():
         # print("TOTAL people in this neck pos:")
         # for frame in total_person_detected:
         #     for people in frame:    
-        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+        #         print(people.index, people.position_absolute.x, people.position_absolute.y)
         #     print("-")
 
         ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
@@ -825,7 +825,7 @@ class RestaurantMain():
                     for filtered in range(len(filtered_persons)):
 
                         dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
-                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
+                        # print("new:", total_person_detected[frame][person].index, "old:", filtered_persons[filtered].index, dist)
                         
                         if dist < MIN_DIST:
                             same_person_ctr+=1
@@ -852,14 +852,14 @@ class RestaurantMain():
 
             for p in to_remove:
                 if p in filtered_persons:
-                    # print("REMOVED: ", p.index_person)
+                    # print("REMOVED: ", p.index)
                     filtered_persons.remove(p)
                 # else:
                     # print("TRIED TO REMOVE TWICE THE SAME PERSON")
             to_remove.clear()  
 
             for p in to_append:
-                # print("ADDED: ", p.index_person)
+                # print("ADDED: ", p.index)
                 filtered_persons.append(p)
             to_append.clear()
             
@@ -870,7 +870,7 @@ class RestaurantMain():
         # print("FILTERED:")
         for p in filtered_persons:
             sfp_pub.persons.append(p)
-        #     print(p.index_person)
+        #     print(p.index)
         self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons
@@ -884,7 +884,7 @@ class RestaurantMain():
         # cv2.imshow("Search for Person", just_person_image)
         # cv2.waitKey(100)
         
-        face_path = current_datetime + str(person.index_person)
+        face_path = current_datetime + str(person.index)
         
         cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
         time.sleep(0.5)
@@ -922,8 +922,8 @@ class RestaurantMain():
 
             for people in self.node.detected_people.persons:
                 people_ctr+=1
-                print(" - ", people.index_person, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
-                print(" - ", people.index_person, people.position_relative.x,people.position_relative.y, people.position_relative.z)
+                print(" - ", people.index, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
+                print(" - ", people.index, people.position_relative.x,people.position_relative.y, people.position_relative.z)
                 aux = (people.position_absolute.x, people.position_absolute.y) 
                 person_detected.append(aux)
                 points.append(aux)
@@ -1225,7 +1225,7 @@ class RestaurantMain():
                     print("FOUND:", len(people_found)) 
                     for p in people_found:
                         # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                        print("ID:", p.index_person)
+                        print("ID:", p.index)
                         print('Barman position', p.position_relative)
                         self.barman_position.append(p)
                         barman_not_found = False
@@ -1336,7 +1336,7 @@ class RestaurantMain():
                 print("FOUND:", len(customers_found)) 
                 for p in customers_found:
                     # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                    print("ID:", p.index_person)
+                    print("ID:", p.index)
                     print('Customer position', p.position_relative)
                     customers_list.append(p)
                     
@@ -1421,7 +1421,7 @@ class RestaurantMain():
                     print("Sorted Distances with Indices:", sorted_distances)
                     
                     for p in sorted_persons:
-                        print("Positions:", p.position_relative, ' + ',p.index_person)
+                        print("Positions:", p.position_relative, ' + ',p.index)
 
 
                     self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], wait_for_end_of=True)
@@ -1830,7 +1830,7 @@ class RestaurantMain():
                     print("FOUND:", len(customers_found)) 
                     for p in customers_found:
                         self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                        print("ID:", p.index_person)
+                        print("ID:", p.index)
                         print('Customer position', p.position_relative)
                         customers_list.append(p)
                 
@@ -1869,7 +1869,7 @@ class RestaurantMain():
                 print("Sorted Distances with Indices:", sorted_distances)
                 
                 for p in sorted_persons:
-                    print("Positions:", p.position_relative, ' + ',p.index_person)
+                    print("Positions:", p.position_relative, ' + ',p.index)
 
 
                 self.set_neck_coords(position=[self.barman_position.position_relative.x, self.barman_position.position_relative.y], wait_for_end_of=True)

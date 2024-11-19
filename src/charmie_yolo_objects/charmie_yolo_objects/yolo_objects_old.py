@@ -7,7 +7,7 @@ from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import DetectedObject, Yolov8Objects, ListOfImages, ListOfStrings, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
-from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
+from charmie_interfaces.srv import GetPointCloudBB, ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
 import cvzone
@@ -62,13 +62,13 @@ class Yolo_obj(Node):
 
         # Opens files with objects names and categories
         try:
-            with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
             # print(self.objects_file)
-            with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
-            with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
             self.get_logger().info("Successfully Imported data from json configuration files. (objects_list, house_rooms and house_furniture)")
@@ -109,10 +109,7 @@ class Yolo_obj(Node):
 
         # Subscriber (Yolov8_Objects TR Parameters)
         # self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_obj_conf", self.get_minimum_object_confidence_callback, 10)
-        
-        # Diagnostics        
-        self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
- 
+         
         # Publish Results
         # self.objects_publisher = self.create_publisher(Yolov8Objects, 'objects_detected', 10) # test removed person_pose (non-filtered)
         self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
@@ -125,7 +122,7 @@ class Yolo_obj(Node):
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
@@ -156,10 +153,6 @@ class Yolo_obj(Node):
         self.br = CvBridge()
         self.head_rgb = Image()
         self.hand_rgb = Image()
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.yolo_object_diagnostic_publisher.publish(flag_diagn)
 
         self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
                                    'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
@@ -192,7 +185,7 @@ class Yolo_obj(Node):
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, req):
-        request = GetPointCloud.Request()
+        request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
     

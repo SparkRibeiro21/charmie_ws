@@ -7,16 +7,31 @@ import time
 import pygame
 from pathlib import Path
 
-# names_list = ["Adel", "Angel", "Axel", "Charlie", "Jane", "John", "Jules", "Morgan", "Paris", "Robin", "Simone"]
-#names_list = ["Kai", "Noah", "Unique", "Luca", "Evelyn", "Jayden", "James", "Riley", "Gabrielle", "Robin", "Avery", "Remi", "River", "Atlas"]
-names_list = ["Sophie", "Julia", "Emma", "Sara", "Laura", "Hayley", "Susan", "Fleur", "Gabrielle", "Robin", "John", "Liam", "William", "Kevin", "Jesse", "Noah", "Harrie", "Peter"]
-#drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
-drinks_list = ["Big Coke", "Cola", "Dubblefris", "Milk", "Iced Tea", "Fanta", "Water"] # the 7up is weird, must be redone manually
-host_name = "John"
+    # read names.json
+    # read objects.json
+    # read object_categories.json
+# read furniture.json
+# read rooms.json
+
+    # create all speaker files in respective folder for names
+# create all speaker files in respective folder for objects
+# create all speaker files in respective folder for object_categories
+# create all speaker files in respective folder for rooms
+# create all speaker files in respective folder for furniture
+
+    # create mode just for names
+# create mode just for objects and object categories
+# create mode just for rooms and furniture
+# create COMPETITION mode where updates all speaker files
+
+# drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
+# drinks_list = ["Big Coke", "Cola", "Dubblefris", "Milk", "Iced Tea", "Fanta", "Water"] # the 7up is weird, must be redone manually
 
 # MODE can be the following commands:
-# "STANDARD": convert one command into wav and txt 
-# "RECEPTIONIST": reads names and drinks arrays and generates all commands for first guest names, second guest names and favourite drinks
+# "STANDARD": convert save_speaker command into wav(speaker) and txt(show face) 
+# "NAMES": reads names from json file and exports all names to list_of_sentences/person_names
+# "OBJECTS": reads objects and objects_classe from json file and exports all objects to list_of_sentences/objects_names and objects_classes to list_of_sentences/objects_classes 
+
 MODE = "STANDARD"
 
 class RobotSpeak():
@@ -30,23 +45,47 @@ class RobotSpeak():
         pygame.mixer.music.set_volume(1.0) 
 
         # info regarding the paths for the recorded files intended to be played
-        self.home = str(Path.home())
-        self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
-        self.complete_path = self.home+'/'+self.midpath+'/'
-
-        # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
-        self.midpath_configuration = "charmie_ws/src/configuration_files"
-        self.complete_path_configuration = self.home+'/'+self.midpath_configuration+'/'
+        midpath_list_of_sentences = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
+        self.complete_path = self.home+'/'+midpath_list_of_sentences+'/'
 
-        # Open all configuration files
+        # info regarding the paths for the recorded files intended to be played
+        midpath_configuration_save_speaker = "charmie_ws/src/configuration_files/save_speaker"
+        self.complete_path_configuration_save_speaker = self.home+'/'+midpath_configuration_save_speaker+'/'
+
+        # info regarding the paths for the names, objects, objects_class, furniture, rooms to create speaker files
+        midpath_configuration_files = "charmie_ws/src/configuration_files"
+        self.complete_path_configuration_files = self.home+'/'+midpath_configuration_files+'/'
+
+        # Open the save_speaker configuration files
         try:
-            with open(self.complete_path_configuration + 'save_speaker_files.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_save_speaker + 'save_speaker_files.json', encoding='utf-8') as json_file:
                 self.json_commands = json.load(json_file)
                 print(self.json_commands)
         except:
             print("Could NOT import data from json configuration files. (save_speaker_files)")
+
+        # Opens files with objects, objects_classes, rooms, furniture, names
+        try:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
+                self.objects_file = json.load(json_file)
+            # print(self.objects_file)
+            with open(self.complete_path_configuration_files + 'objects_classes.json', encoding='utf-8') as json_file:
+                self.objects_classes_file = json.load(json_file)
+            # print(self.objects_classes_file)
+            with open(self.complete_path_configuration_files + 'rooms.json', encoding='utf-8') as json_file:
+                self.rooms_file = json.load(json_file)
+            # print(self.rooms_file)
+            with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
+                self.furniture_file = json.load(json_file)
+            # print(self.furniture_file)
+            with open(self.complete_path_configuration_files + 'names.json', encoding='utf-8') as json_file:
+                self.names_file = json.load(json_file)
+            # print(self.names_file)
+            print("Successfully Imported data from json configuration files. (objects, objects_classes, rooms, furniture, names)")
+        except:
+            print("Could NOT import data from json configuration files. (objects, objects_classes, rooms, furniture, names)")
         
         # TTS synthetiser models path 
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -94,16 +133,33 @@ def main(args=None):
     # STANDARD is used for all alone sentences. Just edit src/configuration_files/save_speaker_files.json
     # RECEPTIONIST is used for receptionist task. Just edit names_list and drinks_list
     if MODE == "STANDARD":
-        charmie_speech.convert_command(charmie_speech.json_commands, play_sound=True)
-    elif MODE == "RECEPTIONIST":
-        receptionist_commands = {}
-        receptionist_commands['receptionist/names/recep_host_name'] = 'The host name is '+host_name+'.'
-        # for name in names_list:
-        #     receptionist_commands['receptionist/names/recep_dear_'+name.lower()] = 'Dear '+name+'.'
-        #     # receptionist_commands['receptionist/recep_host_'+name.lower()] = 'The host name is '+name+'.'
-        #     receptionist_commands['receptionist/names/recep_first_guest_'+name.lower()] = 'The first guest name is '+name+'.'
-        #     receptionist_commands['receptionist/names/recep_second_guest_'+name.lower()] = 'The second guest name is '+name+'.'
-        # for drink in drinks_list:
-        #     receptionist_commands['receptionist/favourite_drink/recep_drink_'+drink.lower().replace(' ', '_')] = 'The favourite drink is '+drink+'.'
+        charmie_speech.convert_command(commands=charmie_speech.json_commands, play_sound=True)
+    
+    elif MODE == "NAMES":
+        names_commands = {}
+        for names in charmie_speech.names_file:
+            print(names['name'])
+            names_commands['person_names/'+names['name'].replace(" ","_").lower()] = names['name']
+        charmie_speech.convert_command(names_commands, play_sound=True)
 
-        charmie_speech.convert_command(receptionist_commands, play_sound=True)
+    elif MODE == "OBJECTS":
+        objects_commands = {}
+        for objects in charmie_speech.objects_file:
+            print(objects['name'])
+            objects_commands['objects_names2/'+objects['name'].replace(" ","_").lower()] = objects['name']
+        # charmie_speech.convert_command(objects_commands, play_sound=True)
+        
+        objects_class_commands = {}
+        for objects_c in charmie_speech.objects_classes_file:
+            print(objects_c['name'])
+            objects_class_commands['objects_classes2/'+objects_c['name'].replace(" ","_").lower()] = objects_c['name']
+        # charmie_speech.convert_command(objects_class_commands, play_sound=True)
+        
+        
+        
+        # receptionist_commands = {}
+        # for name in names_list:
+        #     receptionist_commands['receptionist/names/'+name.replace(" ","_").lower()] = name
+        # for drink in drinks_list:
+        #     receptionist_commands['objects_names/_'+drink.lower().replace(' ', '_')] = drink+'.'
+        # charmie_speech.convert_command(receptionist_commands, play_sound=True)

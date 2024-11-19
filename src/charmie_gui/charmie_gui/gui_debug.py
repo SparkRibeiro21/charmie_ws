@@ -5,9 +5,9 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
-from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
-from charmie_interfaces.msg import  Yolov8Pose, Yolov8Objects, NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace, ActivateObstacles, GetPointCloud, SetAcceleration
+from xarm_msgs.srv import MoveCartesian
+from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, GetLLMDemo
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -33,6 +33,11 @@ class DebugVisualNode(Node):
         self.get_logger().info("Initialised CHARMIE Debug Visual Node")
 
         ### Topics ###
+
+        # Audio: Help in Debug
+        self.audio_interpreted_subscriber = self.create_subscription(String, "audio_interpreted", self.audio_interpreted_callback, 10)
+        self.audio_final_subscriber = self.create_subscription(String, "audio_final", self.audio_final_callback, 10)
+
         # Intel Realsense
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
@@ -42,10 +47,6 @@ class DebugVisualNode(Node):
         # get neck position
         self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
         
-        # get yolo pose person detection filtered
-        self.person_pose_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.get_person_pose_callback, 10)
-        self.object_detected_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.get_object_detected_callback, 10)
-
         # lidar
         self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.lidar_callback , 10)
 
@@ -73,15 +74,11 @@ class DebugVisualNode(Node):
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_callback, 10)
 
         # Yolo Pose
-        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
-        self.object_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "objects_detected_filtered", self.object_detected_filtered_callback, 10)
-        self.object_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
-        self.doors_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "doors_detected_filtered", self.doors_detected_filtered_callback, 10)
-        self.doors_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'doors_detected_filtered_hand', self.doors_detected_filtered_hand_callback, 10)
-        self.shoes_detected_filtered_subscriber = self.create_subscription(Yolov8Objects, "shoes_detected_filtered", self.shoes_detected_filtered_callback, 10)
-        self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
-
+        self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
+        
         ### Services (Clients) ###
 		# Arm (Ufactory)
         self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
@@ -104,15 +101,22 @@ class DebugVisualNode(Node):
         # Yolo Objects
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
-        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
-        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
         # Low level
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
+        # LLM
+        self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
+        self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
+
+
+        self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
         self.create_timer(1.0, self.check_yolos_timer)
         self.is_yolo_pose_comm = False
@@ -126,6 +130,14 @@ class DebugVisualNode(Node):
         self.activate_obstacles_success = True
         self.activate_obstacles_message = ""
 
+        self.battery_voltage = 0.0
+        self.emergency_stop = False
+        self.waited_for_end_of_get_vccs = False
+        self.battery_timer_ctr = 0
+        self.previous_is_low_level_on = False
+        self.battery_timer()
+        self.create_timer(1.0, self.battery_timer)
+        
         self.head_rgb = Image()
         self.hand_rgb = Image()
         self.head_depth = Image()
@@ -135,20 +147,12 @@ class DebugVisualNode(Node):
         self.new_head_depth = False
         self.new_hand_depth = False
 
-        self.detected_people = Yolov8Pose()
-        self.detected_objects = Yolov8Objects()
-        self.detected_objects_hand = Yolov8Objects()
-        self.detected_doors = Yolov8Objects()
-        self.detected_doors_hand = Yolov8Objects()
-        self.detected_shoes = Yolov8Objects()
-        self.detected_shoes_hand = Yolov8Objects()
+        self.detected_people = ListOfDetectedPerson()
+        self.detected_objects = ListOfDetectedObject()
+        self.detected_objects_hand = ListOfDetectedObject()
         self.new_detected_people = False
         self.new_detected_objects = False
         self.new_detected_objects_hand = False
-        self.new_detected_doors = False
-        self.new_detected_doors_hand = False
-        self.new_detected_shoes = False
-        self.new_detected_shoes_hand = False
 
         self.robot_x = 0.0
         self.robot_y = 0.0
@@ -188,11 +192,12 @@ class DebugVisualNode(Node):
         self.all_pos_x_val = []
         self.all_pos_y_val = []
 
+        self.nodes_used = NodesUsed.Request()
         self.scan = LaserScan()
-        self.person_pose = Yolov8Pose()
-        self.object_detected = Yolov8Objects()
         self.search_for_person = ListOfDetectedPerson()
         self.search_for_object = ListOfDetectedObject()
+        self.new_search_for_person = False
+        self.new_search_for_object = False
         self.navigation = TarNavSDNL()
         self.is_navigating = False
 
@@ -219,22 +224,75 @@ class DebugVisualNode(Node):
         else:
             self.is_yolo_pose_comm = False
 
-        if self.new_detected_objects or self.new_detected_shoes or self.new_detected_doors:
+        if self.new_detected_objects: # or self.new_detected_shoes or self.new_detected_doors:
             self.new_detected_objects = False
-            self.new_detected_shoes = False
-            self.new_detected_doors = False
             self.is_yolo_obj_head_comm = True
         else:
             self.is_yolo_obj_head_comm = False
     
-        if self.new_detected_objects_hand or self.new_detected_shoes_hand or self.new_detected_doors_hand:
+        if self.new_detected_objects_hand: # or self.new_detected_shoes_hand or self.new_detected_doors_hand:
             self.new_detected_objects_hand = False
-            self.new_detected_shoes_hand = False
-            self.new_detected_doors_hand = False
             self.is_yolo_obj_hand_comm = True
         else:
             self.is_yolo_obj_hand_comm = False
 
+    def battery_timer(self):
+        
+        self.battery_timer_ctr += 1
+        check = False
+        current_is_low_level_on = self.set_acceleration_ramp_client.wait_for_service(0.0)
+        
+        if current_is_low_level_on and not self.previous_is_low_level_on:
+            check = True
+            self.battery_timer_ctr = 0
+        elif self.battery_timer_ctr >= 60.0 and current_is_low_level_on:
+            check = True
+            self.battery_timer_ctr = 0
+
+        if check:
+            print("CHECKING BATTERY VOLTAGE")
+            request=GetVCCs.Request()
+            self.call_vccs_command_server(request=request)
+
+        self.previous_is_low_level_on = current_is_low_level_on
+
+    def nodes_used_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
+        # Type of service received: 
+        # 
+        # bool charmie_arm
+        # bool charmie_audio
+        # bool charmie_face
+        # bool charmie_head_camera
+        # bool charmie_hand_camera
+        # bool charmie_lidar
+        # bool charmie_localisation
+        # bool charmie_low_level
+        # bool charmie_navigation
+        # bool charmie_neck
+        # bool charmie_obstacles
+        # bool charmie_odometry
+        # bool charmie_point_cloud
+        # bool charmie_ps4_controller
+        # bool charmie_speakers
+        # bool charmie_yolo_objects
+        # bool charmie_yolo_pose
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages
+
+        print("TASK NODES USED RECEIVED")
+        self.nodes_used = request
+        
+        
+        response.success = True
+        response.message = "Nodes Used Sucessfully Received"
+        return response
+
+    def audio_interpreted_callback(self, str: String):
+        print("Audio Interpreted:", str.data)
+
+    def audio_final_callback(self, str: String):
+        print("Audio Final:", str.data)
 
     def get_color_image_hand_callback(self, img: Image):
         self.hand_rgb = img
@@ -258,7 +316,7 @@ class DebugVisualNode(Node):
 
         self.last_hand_depth_camera_time = self.hand_depth_camera_time
         self.hand_depth_camera_time = time.time()
-        self.head_depth_fps = round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 1)
+        self.hand_depth_fps = round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 1)
 
 
     def get_aligned_depth_image_head_callback(self, img: Image):
@@ -267,7 +325,7 @@ class DebugVisualNode(Node):
         
         self.last_head_depth_camera_time = self.head_depth_camera_time
         self.head_depth_camera_time = time.time()
-        self.hand_depth_fps = round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 1)
+        self.head_depth_fps = round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 1)
 
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
@@ -308,7 +366,7 @@ class DebugVisualNode(Node):
         self.activate_obstacles_client.call_async(request)
 
     
-    def person_pose_filtered_callback(self, det_people: Yolov8Pose):
+    def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
         self.new_detected_people = True
     
@@ -316,7 +374,7 @@ class DebugVisualNode(Node):
         self.head_yp_time = time.time()
         self.head_yp_fps = round(1/(self.head_yp_time-self.last_head_yp_time), 1)
 
-    def object_detected_filtered_callback(self, det_object: Yolov8Objects):
+    def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
         self.new_detected_objects = True
 
@@ -324,29 +382,13 @@ class DebugVisualNode(Node):
         self.head_yo_time = time.time()
         self.head_yo_fps = round(1/(self.head_yo_time-self.last_head_yo_time), 1)
 
-    def object_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
+    def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
         self.new_detected_objects_hand = True
 
         self.last_hand_yo_time = self.hand_yo_time
         self.hand_yo_time = time.time()
         self.hand_yo_fps = round(1/(self.hand_yo_time-self.last_hand_yo_time), 1)
-
-    def doors_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_doors = det_object
-        self.new_detected_doors = True
-
-    def doors_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_doors_hand = det_object
-        self.new_detected_doors_hand = True
-
-    def shoes_detected_filtered_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes = det_object
-        self.new_detected_shoes = True
-
-    def shoes_detected_filtered_hand_callback(self, det_object: Yolov8Objects):
-        self.detected_shoes_hand = det_object
-        self.new_detected_shoes_hand = True
 
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
@@ -411,24 +453,13 @@ class DebugVisualNode(Node):
         self.is_navigating = True
         print(nav)
 
-
     def flag_navigation_reached_callback(self, flag: Bool):
         self.is_navigating = False
-
 
     def get_neck_position_callback(self, pose: NeckPosition):
         # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
         self.neck_pan = -math.radians(- pose.pan)
         self.neck_tilt = -math.radians(- pose.tilt)
-
-
-    def get_person_pose_callback(self, pose: Yolov8Pose):
-        # print("Received new yolo pose. Number of people = ", pose.num_person)
-        self.person_pose = pose
-
-    def get_object_detected_callback(self, obj: Yolov8Objects):
-        # print("Received new yolo objects. Number of objects = ", obj.num_person)
-        self.object_detected = obj
 
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
@@ -442,11 +473,32 @@ class DebugVisualNode(Node):
         
     def search_for_person_detections_callback(self, points: ListOfDetectedPerson):
         self.search_for_person = points
+        self.new_search_for_person = True
         
     def search_for_object_detections_callback(self, points: ListOfDetectedObject):
         self.search_for_object = points
+        self.new_search_for_object = True
 
+    def call_vccs_command_server(self, request=GetVCCs.Request()):
+    
+        future = self.get_vccs_client.call_async(request)
+        future.add_done_callback(self.callback_call_vccs_command)
+        
+    def callback_call_vccs_command(self, future): 
 
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info("Battery_Voltage: "+str(response.battery_voltage) + ", Emergency_Button: " + str(response.emergency_stop))
+            self.battery_voltage = response.battery_voltage
+            self.emergency_stop = response.emergency_stop
+            self.waited_for_end_of_get_vccs = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
+
+    
 class CheckNodesMain():
 
     def __init__(self, node: DebugVisualNode):
@@ -459,6 +511,8 @@ class CheckNodesMain():
         self.CHECK_HEAD_CAMERA_NODE = False
         self.CHECK_HAND_CAMERA_NODE = False
         self.CHECK_LIDAR_NODE = False
+        self.CHECK_LLM_NODE = False
+        self.CHECK_LOCALISATION_NODE = False
         self.CHECK_LOW_LEVEL_NODE = False
         self.CHECK_NAVIGATION_NODE = False
         self.CHECK_NECK_NODE = False
@@ -509,14 +563,14 @@ class CheckNodesMain():
 
             # HEAD CAMERA
             if current_time - self.node.head_camera_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
-                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                # self.node.get_logger().warn("Waiting for Topic Head Camera ...")
                 self.CHECK_HEAD_CAMERA_NODE = False
             else:
                 self.CHECK_HEAD_CAMERA_NODE = True
 
             # HAND CAMERA
             if current_time - self.node.hand_camera_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
-                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                # self.node.get_logger().warn("Waiting for Topic Hand Camera ...")
                 self.CHECK_HAND_CAMERA_NODE = False
             else:
                 self.CHECK_HAND_CAMERA_NODE = True
@@ -528,10 +582,26 @@ class CheckNodesMain():
             else:
                 self.CHECK_LIDAR_NODE = True
 
+            # LLM
+            if not self.node.llm_demonstration_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Face ...")
+                self.CHECK_LLM_NODE = False
+            else:
+                self.CHECK_LLM_NODE = True
+
+            # LOCALISATION
+            # if current_time - self.node.localisation_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+            #     # self.node.get_logger().warn("Waiting for Topic Localisation ...")
+            #     self.CHECK_LOCALISATION_NODE = False
+            # else:
+            #     self.CHECK_LOCALISATION_NODE = True
+            self.CHECK_LOCALISATION_NODE = False
+
             # LOW LEVEL
             if not self.node.set_acceleration_ramp_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
                 # self.node.get_logger().warn("Waiting for Server Navigation ...")
                 self.CHECK_LOW_LEVEL_NODE = False
+                self.node.battery_voltage = 0.0
             else:
                 self.CHECK_LOW_LEVEL_NODE = True
 
@@ -558,7 +628,7 @@ class CheckNodesMain():
 
             # ODOMETRY
             if current_time - self.node.odometry_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
-                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                # self.node.get_logger().warn("Waiting for Topic Odometry ...")
                 self.CHECK_ODOMETRY_NODE = False
             else:
                 self.CHECK_ODOMETRY_NODE = True
@@ -572,7 +642,7 @@ class CheckNodesMain():
 
             # PS4 CONTROLLER
             if current_time - self.node.ps4_controller_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
-                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                # self.node.get_logger().warn("Waiting for Topic PS4 Controller ...")
                 self.CHECK_PS4_CONTROLLER_NODE = False
             else:
                 self.CHECK_PS4_CONTROLLER_NODE = True
@@ -647,8 +717,6 @@ class DebugVisualMain():
         self.cams_initial_height = 10
         self.cams_initial_width = 165
 
-        self.camera_resize_ratio = 1.0
-
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
         self.map_init_height = 260
 
@@ -660,12 +728,12 @@ class DebugVisualMain():
         self.MAP_ZOOM_INC = 0.2
         self.MAP_SHIFT_INC = 1.0
 
-        # self.pause_button = False
+        self.first_pos_h = 19.1
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
-        logo_midpath = "/charmie_ws/src/configuration_files/logos/"
+        logo_midpath = "/charmie_ws/src/configuration_files/docs/logos/"
         configuration_files_midpath = "/charmie_ws/src/configuration_files/"
         self.save_recordings_midpath = "/charmie_ws/src/charmie_gui/charmie_gui/saved_gui_recordings/"
 
@@ -682,8 +750,8 @@ class DebugVisualMain():
         self.WIN = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.RESIZABLE)
 
         # self.text_font = pygame.font.SysFont("Arial", 30)
-        self.text_font_t = pygame.font.SysFont(None, 30)
-        self.text_font = pygame.font.SysFont(None,24)
+        self.text_font_t = pygame.font.SysFont(None, 28)
+        self.text_font   = pygame.font.SysFont(None, 24)
 
         self.button_size = 30
 
@@ -714,6 +782,9 @@ class DebugVisualMain():
         # self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
         #           borderColour=(255, 0, 0), textColour=(0, 200, 0),
         #           onSubmit=self.output, radius=10, borderThickness=5)        
+        # def output(self):
+        # Get text in the textbox
+        # print(self.textbox.getText())
 
         icon = pygame.image.load(self.home+logo_midpath+"logo_light_cropped_squared.png")
         pygame.display.set_icon(icon)
@@ -721,15 +792,15 @@ class DebugVisualMain():
 
         # Open all configuration files
         try:
-            with open(self.home + configuration_files_midpath + 'rooms_location.json', encoding='utf-8') as json_file:
+            with open(self.home + configuration_files_midpath + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
 
-            with open(self.home + configuration_files_midpath + 'furniture_location.json', encoding='utf-8') as json_file:
+            with open(self.home + configuration_files_midpath + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
 
-            with open(self.home + configuration_files_midpath + 'doors_location.json', encoding='utf-8') as json_file:
+            with open(self.home + configuration_files_midpath + 'doors.json', encoding='utf-8') as json_file:
                 self.house_doors = json.load(json_file)
             # print(self.house_doors)
         except:
@@ -739,8 +810,8 @@ class DebugVisualMain():
         self.current_datetime = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
         
         self.init_pos_w_rect_check_nodes = 15
-        self.init_pos_h_rect_check_nodes = 50
-        self.deviation_pos_h_rect_check_nodes = 25
+        self.init_pos_h_rect_check_nodes = 40
+        self.deviation_pos_h_rect_check_nodes = 24
         self.square_size_rect_check_nodes = 10
 
         self.ARM_UFACTORY_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*0, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -750,21 +821,23 @@ class DebugVisualMain():
         self.HEAD_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.HAND_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LIDAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_NAVIGATION_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_ODOMETRY_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_POINT_CLOUD_NODE_RECT      = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_PS4_CONTROLLER_NODE_RECT   = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LLM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LOCALISATION_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAVIGATION_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_ODOMETRY_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_POINT_CLOUD_NODE_RECT      = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_PS4_CONTROLLER_NODE_RECT   = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*17, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*18, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
 
-        self.toggle_record = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(18.75)), 40, 16)
-        self.toggle_pause_cams = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21.25), 40, 16)
-        self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23.75), 40, 16)
-        self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*26.25), 40, 16)
+        self.toggle_record =         Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(20.25)), 40, 16)
+        self.toggle_pause_cams =     Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(22.75-0.2)), 40, 16)
+        self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(25.25-0.4)), 40, 16)
+        self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(27.75-0.6)), 40, 16)
 
         self.toggle_activate_objects_head =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+50, 40, 16)
         self.toggle_activate_furniture_head = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90,  self.cams_initial_height+50, 40, 16)
@@ -811,24 +884,16 @@ class DebugVisualMain():
         self.curr_hand_depth = Image()
         self.last_hand_depth = Image()
 
-        self.curr_detected_people = Yolov8Pose()
-        self.last_detected_people = Yolov8Pose()
+        self.curr_detected_people = ListOfDetectedPerson()
+        self.last_detected_people = ListOfDetectedPerson()
     
-        self.curr_detected_objects = Yolov8Objects()
-        self.last_detected_objects = Yolov8Objects()
-        self.curr_detected_objects_hand = Yolov8Objects()
-        self.last_detected_objects_hand = Yolov8Objects()
-        self.curr_detected_shoes = Yolov8Objects()
-        self.last_detected_shoes = Yolov8Objects()
-        self.curr_detected_shoes_hand = Yolov8Objects()
-        self.last_detected_shoes_hand = Yolov8Objects()
-        self.curr_detected_furniture = Yolov8Objects()
-        self.last_detected_furniture = Yolov8Objects()
-        self.curr_detected_furniture_hand = Yolov8Objects()
-        self.last_detected_furniture_hand = Yolov8Objects()
+        self.curr_detected_objects = ListOfDetectedObject()
+        self.last_detected_objects = ListOfDetectedObject()
+        self.curr_detected_objects_hand = ListOfDetectedObject()
+        self.last_detected_objects_hand = ListOfDetectedObject()
 
         # robot info
-        self.robot_radius = 0.560/2 # meter 
+        self.robot_radius = self.node.robot_radius
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
@@ -875,10 +940,6 @@ class DebugVisualMain():
 
     def button_shift_right_function(self):
         self.MAP_ADJUST_X += self.MAP_SHIFT_INC
-
-    # def output(self):
-        # Get text in the textbox
-        # print(self.textbox.getText())
     
     def draw_text(self, text, font, text_col, x, y):
         img = font.render(text, True, text_col)
@@ -894,126 +955,121 @@ class DebugVisualMain():
         self.draw_text("Check Nodes:", self.text_font_t, self.WHITE, 10, 10)
 
         # ARM_UFACTORY
-        self.draw_text("Arm uFactory", self.text_font, self.WHITE, self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_ARM_UFACTORY_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.ARM_UFACTORY_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.ARM_UFACTORY_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_arm, self.check_nodes.CHECK_ARM_UFACTORY_NODE)
+        self.draw_text("Arm uFactory", self.text_font, tc, self.ARM_UFACTORY_NODE_RECT.x+2*self.ARM_UFACTORY_NODE_RECT.width, self.ARM_UFACTORY_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.ARM_UFACTORY_NODE_RECT)
             
         # ARM_CHARMIE
-        self.draw_text("Arm", self.text_font, self.WHITE, self.CHARMIE_ARM_NODE_RECT.x+2*self.CHARMIE_ARM_NODE_RECT.width, self.CHARMIE_ARM_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_ARM_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_ARM_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_ARM_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_arm, self.check_nodes.CHECK_ARM_NODE)
+        self.draw_text("Arm", self.text_font, tc, self.CHARMIE_ARM_NODE_RECT.x+2*self.CHARMIE_ARM_NODE_RECT.width, self.CHARMIE_ARM_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_ARM_NODE_RECT)
 
         # AUDIO
-        self.draw_text("Audio", self.text_font, self.WHITE, self.CHARMIE_AUDIO_NODE_RECT.x+2*self.CHARMIE_AUDIO_NODE_RECT.width, self.CHARMIE_AUDIO_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_AUDIO_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_AUDIO_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_AUDIO_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_audio, self.check_nodes.CHECK_AUDIO_NODE)
+        self.draw_text("Audio", self.text_font, tc, self.CHARMIE_AUDIO_NODE_RECT.x+2*self.CHARMIE_AUDIO_NODE_RECT.width, self.CHARMIE_AUDIO_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_AUDIO_NODE_RECT)
 
         # FACE
-        self.draw_text("Face", self.text_font, self.WHITE, self.CHARMIE_FACE_NODE_RECT.x+2*self.CHARMIE_FACE_NODE_RECT.width, self.CHARMIE_FACE_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_FACE_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_FACE_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_FACE_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_face, self.check_nodes.CHECK_FACE_NODE)
+        self.draw_text("Face", self.text_font, tc, self.CHARMIE_FACE_NODE_RECT.x+2*self.CHARMIE_FACE_NODE_RECT.width, self.CHARMIE_FACE_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_FACE_NODE_RECT)
 
         # HEAD CAMERA
-        self.draw_text("Head Camera", self.text_font, self.WHITE, self.HEAD_CAMERA_NODE_RECT.x+2*self.HEAD_CAMERA_NODE_RECT.width, self.HEAD_CAMERA_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_HEAD_CAMERA_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.HEAD_CAMERA_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.HEAD_CAMERA_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_head_camera, self.check_nodes.CHECK_HEAD_CAMERA_NODE)
+        self.draw_text("Head Camera", self.text_font, tc, self.HEAD_CAMERA_NODE_RECT.x+2*self.HEAD_CAMERA_NODE_RECT.width, self.HEAD_CAMERA_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.HEAD_CAMERA_NODE_RECT)
         
         # HAND CAMERA
-        self.draw_text("Hand Camera", self.text_font, self.WHITE, self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_HAND_CAMERA_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.HAND_CAMERA_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.HAND_CAMERA_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_hand_camera, self.check_nodes.CHECK_HAND_CAMERA_NODE)
+        self.draw_text("Hand Camera", self.text_font, tc, self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.HAND_CAMERA_NODE_RECT)
         
         # LIDAR
-        self.draw_text("Lidar", self.text_font, self.WHITE, self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_LIDAR_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_LIDAR_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_LIDAR_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar, self.check_nodes.CHECK_LIDAR_NODE)
+        self.draw_text("Lidar", self.text_font, tc, self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_NODE_RECT)
+        
+        # LLM
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_llm, self.check_nodes.CHECK_LLM_NODE)
+        self.draw_text("LLM", self.text_font, tc, self.CHARMIE_LLM_NODE_RECT.x+2*self.CHARMIE_LLM_NODE_RECT.width, self.CHARMIE_LLM_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LLM_NODE_RECT)
+
+        # LOCALISATION
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_localisation, self.check_nodes.CHECK_LOCALISATION_NODE)
+        self.draw_text("Localisation", self.text_font, tc, self.CHARMIE_LOCALISATION_NODE_RECT.x+2*self.CHARMIE_LOCALISATION_NODE_RECT.width, self.CHARMIE_LOCALISATION_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LOCALISATION_NODE_RECT)
 
         # LOW LEVEL
-        self.draw_text("Low Level", self.text_font, self.WHITE, self.CHARMIE_LOW_LEVEL_NODE_RECT.x+2*self.CHARMIE_LOW_LEVEL_NODE_RECT.width, self.CHARMIE_LOW_LEVEL_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_LOW_LEVEL_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_LOW_LEVEL_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_LOW_LEVEL_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_low_level, self.check_nodes.CHECK_LOW_LEVEL_NODE)
+        self.draw_text("Low Level", self.text_font, tc, self.CHARMIE_LOW_LEVEL_NODE_RECT.x+2*self.CHARMIE_LOW_LEVEL_NODE_RECT.width, self.CHARMIE_LOW_LEVEL_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LOW_LEVEL_NODE_RECT)
         
         # NAVIGATION
-        self.draw_text("Navigation", self.text_font, self.WHITE, self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_NAVIGATION_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_NAVIGATION_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_NAVIGATION_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_navigation, self.check_nodes.CHECK_NAVIGATION_NODE)
+        self.draw_text("Navigation", self.text_font, tc, self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAVIGATION_NODE_RECT)
 
         # NECK
-        self.draw_text("Neck", self.text_font, self.WHITE, self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_NECK_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_NECK_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_NECK_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_neck, self.check_nodes.CHECK_NECK_NODE)
+        self.draw_text("Neck", self.text_font, tc, self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_NECK_NODE_RECT)
 
         # OBSTACLES
-        self.draw_text("Obstacles", self.text_font, self.WHITE, self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_OBSTACLES_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_OBSTACLES_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_OBSTACLES_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_obstacles, self.check_nodes.CHECK_OBSTACLES_NODE)
+        self.draw_text("Obstacles", self.text_font, tc, self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_OBSTACLES_NODE_RECT)
 
         # ODOMETRY
-        self.draw_text("Odometry", self.text_font, self.WHITE, self.CHARMIE_ODOMETRY_NODE_RECT.x+2*self.CHARMIE_ODOMETRY_NODE_RECT.width, self.CHARMIE_ODOMETRY_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_ODOMETRY_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_ODOMETRY_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_ODOMETRY_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_odometry, self.check_nodes.CHECK_ODOMETRY_NODE)
+        self.draw_text("Odometry", self.text_font, tc, self.CHARMIE_ODOMETRY_NODE_RECT.x+2*self.CHARMIE_ODOMETRY_NODE_RECT.width, self.CHARMIE_ODOMETRY_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_ODOMETRY_NODE_RECT)
 
         # POINT CLOUD
-        self.draw_text("Point Cloud", self.text_font, self.WHITE, self.CHARMIE_POINT_CLOUD_NODE_RECT.x+2*self.CHARMIE_POINT_CLOUD_NODE_RECT.width, self.CHARMIE_POINT_CLOUD_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_POINT_CLOUD_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_POINT_CLOUD_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_POINT_CLOUD_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_point_cloud, self.check_nodes.CHECK_POINT_CLOUD_NODE)
+        self.draw_text("Point Cloud", self.text_font, tc, self.CHARMIE_POINT_CLOUD_NODE_RECT.x+2*self.CHARMIE_POINT_CLOUD_NODE_RECT.width, self.CHARMIE_POINT_CLOUD_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_POINT_CLOUD_NODE_RECT)
 
         # PS4 CONTROLLER
-        self.draw_text("PS4 Controller", self.text_font, self.WHITE, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.x+2*self.CHARMIE_PS4_CONTROLLER_NODE_RECT.width, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_PS4_CONTROLLER_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_ps4_controller, self.check_nodes.CHECK_PS4_CONTROLLER_NODE)
+        self.draw_text("PS4 Controller", self.text_font, tc, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.x+2*self.CHARMIE_PS4_CONTROLLER_NODE_RECT.width, self.CHARMIE_PS4_CONTROLLER_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_PS4_CONTROLLER_NODE_RECT)
 
         # SPEAKERS
-        self.draw_text("Speakers", self.text_font, self.WHITE, self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_SPEAKERS_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_SPEAKERS_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_SPEAKERS_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
+        self.draw_text("Speakers", self.text_font, tc, self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_SPEAKERS_NODE_RECT)
 
         # YOLO OBJECTS
-        self.draw_text("YOLO Objects", self.text_font, self.WHITE, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.x+2*self.CHARMIE_YOLO_OBJECTS_NODE_RECT.width, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_YOLO_OBJECTS_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
-        else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_objects, self.check_nodes.CHECK_YOLO_OBJECTS_NODE)
+        self.draw_text("YOLO Objects", self.text_font, tc, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.x+2*self.CHARMIE_YOLO_OBJECTS_NODE_RECT.width, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
 
         # YOLO POSE
-        self.draw_text("YOLO Pose", self.text_font, self.WHITE, self.CHARMIE_YOLO_POSE_NODE_RECT.x+2*self.CHARMIE_YOLO_POSE_NODE_RECT.width, self.CHARMIE_YOLO_POSE_NODE_RECT.y-2)
-        if self.check_nodes.CHECK_YOLO_POSE_NODE:
-            pygame.draw.rect(self.WIN, self.GREEN, self.CHARMIE_YOLO_POSE_NODE_RECT)
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_pose, self.check_nodes.CHECK_YOLO_POSE_NODE)
+        self.draw_text("YOLO Pose", self.text_font, tc, self.CHARMIE_YOLO_POSE_NODE_RECT.x+2*self.CHARMIE_YOLO_POSE_NODE_RECT.width, self.CHARMIE_YOLO_POSE_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_YOLO_POSE_NODE_RECT)
+
+    def get_check_nodes_rectangle_and_text_color(self, text_condition, rectangle_condition):
+        
+        rectangle_color_checked = self.GREEN
+        rectangle_color_not_checked = self.RED
+        text_color_used = self.BLUE_L
+        text_color_not_used = self.WHITE
+
+        if text_condition:
+            text_color = text_color_used
         else:
-            pygame.draw.rect(self.WIN, self.RED, self.CHARMIE_YOLO_POSE_NODE_RECT)
+            text_color = text_color_not_used
+        
+        if rectangle_condition:
+            rectangle_color = rectangle_color_checked
+        else:
+            rectangle_color = rectangle_color_not_checked
+        
+        return text_color, rectangle_color
+
 
     def draw_cameras(self):
-        
 
         self.curr_head_rgb = self.node.head_rgb
         self.curr_head_depth = self.node.head_depth
@@ -1212,12 +1268,10 @@ class DebugVisualMain():
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
                 self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cam_height_+2*self.cams_initial_height+(self.cam_height_//2))
 
-
-        first_pos_h = 17.5
-        self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*first_pos_h)
-        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+2.5))
-        self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+5))
-        self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(first_pos_h+7.5))
+        self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*self.first_pos_h)
+        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+2.5-0.2))
+        self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+5.0-0.4))
+        self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+7.5-0.6))
 
     def draw_activates(self):
 
@@ -1322,23 +1376,24 @@ class DebugVisualMain():
         if self.node.is_yolo_pose_comm:
            
             if len(used_detected_people.persons) > 0:
-                print("DETECTED PEOPLE:")
+                # print("DETECTED PEOPLE:")
+                pass
 
             for p in used_detected_people.persons:
 
-                room_and_furn_str = str(p.room_location + " (" + p.furniture_location + ")")
-                relative_coords_str = str("("+str(round(p.position_relative.x,2))+", "+str(round(p.position_relative.y,2))+", "+str(round(p.position_relative.z,2))+")")
-                print("id:", p.index_person, "|", str(int(round(p.conf_person,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", p.arm_raised, "|", "point:", p.pointing_at)
+                # room_and_furn_str = str(p.room_location + " (" + p.furniture_location + ")")
+                # relative_coords_str = str("("+str(round(p.position_relative.x,2))+", "+str(round(p.position_relative.y,2))+", "+str(round(p.position_relative.z,2))+")")
+                # print("id:", p.index, "|", str(int(round(p.confidence,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", p.arm_raised, "|", "point:", p.pointing_at)
 
                 PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio), int(p.box_width/2*self.camera_resize_ratio), int(p.box_height/2*self.camera_resize_ratio))
                 pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=self.BB_WIDTH)
 
                 if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
                     self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio), int(p.box_width/2*self.camera_resize_ratio), 30/2, self.RED, 85)
-                    self.draw_text("id:"+str(p.index_person)+" "+str(int(round(p.conf_person,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio))
+                    self.draw_text("id:"+str(p.index)+" "+str(int(round(p.confidence,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio))
                 else:
                     self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio-30/2), int(p.box_width/2*self.camera_resize_ratio), 30/2, self.RED, 85)
-                    self.draw_text("id:"+str(p.index_person)+" "+str(int(round(p.conf_person,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio-30/2))
+                    self.draw_text("id:"+str(p.index)+" "+str(int(round(p.confidence,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(self.cams_initial_height+(p.box_top_left_y/2)*self.camera_resize_ratio-30/2))
                 
                 self.draw_line_between_two_keypoints(p.kp_nose_conf, p.kp_nose_x, p.kp_nose_y, p.kp_eye_left_conf, p.kp_eye_left_x, p.kp_eye_left_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
                 self.draw_line_between_two_keypoints(p.kp_nose_conf, p.kp_nose_x, p.kp_nose_y, p.kp_eye_right_conf, p.kp_eye_right_x, p.kp_eye_right_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
@@ -1421,48 +1476,28 @@ class DebugVisualMain():
 
         self.curr_detected_objects = self.node.detected_objects
         self.curr_detected_objects_hand = self.node.detected_objects_hand
-        self.curr_detected_shoes = self.node.detected_shoes
-        self.curr_detected_shoes_hand = self.node.detected_shoes_hand
-        self.curr_detected_furniture = self.node.detected_doors
-        self.curr_detected_furniture_hand = self.node.detected_doors_hand
 
         if self.toggle_pause_cams.getValue():
             used_detected_objects = self.last_detected_objects
             used_detected_objects_hand = self.last_detected_objects_hand
-            used_detected_shoes = self.last_detected_shoes
-            used_detected_shoes_hand = self.last_detected_shoes_hand
-            used_detected_furniture = self.last_detected_furniture
-            used_detected_furniture_hand = self.last_detected_furniture_hand
         else:
             used_detected_objects = self.curr_detected_objects 
             used_detected_objects_hand = self.curr_detected_objects_hand
-            used_detected_shoes = self.curr_detected_shoes
-            used_detected_shoes_hand = self.curr_detected_shoes_hand
-            used_detected_furniture = self.curr_detected_furniture
-            used_detected_furniture_hand = self.curr_detected_furniture_hand
 
         self.last_detected_objects = used_detected_objects 
         self.last_detected_objects_hand = used_detected_objects_hand
-        self.last_detected_shoes = used_detected_shoes
-        self.last_detected_shoes_hand = used_detected_shoes_hand
-        self.last_detected_furniture = used_detected_furniture
-        self.last_detected_furniture_hand = used_detected_furniture_hand
 
         if self.node.is_yolo_obj_head_comm:
-            if len(used_detected_objects.objects) > 0 or len(used_detected_shoes.objects) > 0 or len(used_detected_furniture.objects) > 0:
-                print("DETECTED OBJECTS HEAD:")
+            if len(used_detected_objects.objects) > 0: # or len(used_detected_shoes.objects) > 0 or len(used_detected_furniture.objects) > 0:
+                # print("DETECTED OBJECTS HEAD:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects, "head")
-            self.draw_object_bounding_boxes(used_detected_shoes, "head")
-            self.draw_object_bounding_boxes(used_detected_furniture, "head")
 
         if self.node.is_yolo_obj_hand_comm:
-            if len(used_detected_objects_hand.objects) > 0 or len(used_detected_shoes_hand.objects) > 0 or len(used_detected_furniture_hand.objects) > 0:
-                print("DETECTED OBJECTS HAND:")
+            if len(used_detected_objects_hand.objects) > 0: # or len(used_detected_shoes_hand.objects) > 0 or len(used_detected_furniture_hand.objects) > 0:
+                # print("DETECTED OBJECTS HAND:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects_hand, "hand")
-            self.draw_object_bounding_boxes(used_detected_shoes_hand, "hand")
-            self.draw_object_bounding_boxes(used_detected_furniture_hand, "hand")
 
     def draw_object_bounding_boxes(self, objects, head_or_hand):
 
@@ -1471,20 +1506,40 @@ class DebugVisualMain():
         else: # "hand"
             window_cam_height = self.cam_height_+2*self.cams_initial_height
 
-        for o in objects.objects:
-
-            name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
-            room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
-            relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
-            print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
-            bb_color = self.object_class_to_bb_color(o.object_class)
-            OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))
-            pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
+        if len(objects.objects) > 0:
+            # print("DETECTED OBJECTS ("+head_or_hand.lower()+"):")
+            pass
         
+        for o in objects.objects:
+           
+            if not o.mask.point: # if object does not have a mask, we show bounding box
+                # name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
+                # room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
+                # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
+                # print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
+                bb_color = self.object_class_to_bb_color(o.object_class)
+                OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))
+                pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
+            
+            else: # if object has mask, we should segmentation mask
+
+                temp_mask = []
+                for p in o.mask.point: # converts received mask into local coordinates and numpy array
+                    p_list = []
+                    p_list.append(int(self.cams_initial_width+(p.x/2)*self.camera_resize_ratio))
+                    p_list.append(int(window_cam_height+(p.y/2)*self.camera_resize_ratio))
+                    temp_mask.append(p_list)
+
+                np_mask = np.array(temp_mask)
+                bb_color = self.object_class_to_bb_color(o.object_class)
+                pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
+                self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
+
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
 
-            text = str(o.object_name)
+            # text = str(o.object_name)
+            text = str(o.object_name)+" ("+str(o.index)+")"
             text_width, text_height = self.text_font_t.size(text)
             bb_color = self.object_class_to_bb_color(o.object_class)
 
@@ -1494,6 +1549,14 @@ class DebugVisualMain():
             else:
                 self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
                 self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2))
+
+    def draw_polygon_alpha(self, surface, color, points):
+        lx, ly = zip(*points)
+        min_x, min_y, max_x, max_y = min(lx), min(ly), max(lx), max(ly)
+        target_rect = pygame.Rect(min_x, min_y, max_x-min_x, max_y-min_y)
+        shape_surf = pygame.Surface(target_rect.size, pygame.SRCALPHA)
+        pygame.draw.polygon(shape_surf, color, [(x-min_x, y-min_y) for x,y in points])
+        surface.blit(shape_surf, target_rect)
 
     def object_class_to_bb_color(self, object_class):
 
@@ -1623,6 +1686,10 @@ class DebugVisualMain():
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
         self.map_init_height = 260
 
+        # visual configs:
+        neck_visual_lines_length = 1.0
+        detected_person_radius = 0.2
+        detected_object_radius = 0.08
 
         MAP_BB = pygame.Rect(self.map_init_width, self.map_init_height, self.MAP_SIDE, self.MAP_SIDE)
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
@@ -1663,18 +1730,17 @@ class DebugVisualMain():
     
         
         ### DRAW ROBOT
-        rad = (self.MAP_SIDE*(self.robot_radius/10.0*(1/self.MAP_SCALE)))
-        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(self.node.robot_x, self.node.robot_y), radius=rad, width=0)
+        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(self.node.robot_x, self.node.robot_y), radius=self.size_to_map(self.robot_radius), width=0)
         
-        front_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t + math.pi/2)), \
-                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t + math.pi/2)))
-        left_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t)), \
-                               self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t)))
-        right_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]+(rad*math.cos(-self.node.robot_t)), \
-                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]+(rad*math.sin(-self.node.robot_t)))
+        front_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_t + math.pi/2)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_t + math.pi/2)))
+        left_of_robot_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_t)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_t)))
+        right_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]+(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_t)), \
+                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]+(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_t)))
 
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), front_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
-        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_of_robot_point,  int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
             
 
@@ -1684,24 +1750,20 @@ class DebugVisualMain():
 
 
         ### NECK DIRECTION, CAMERA FOV
-        neck_visual_lines_length = 1.0
-        rad = (self.MAP_SIDE*(neck_visual_lines_length/10.0*(1/self.MAP_SCALE)))
-        left_vision_range_limit_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)), \
-                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)))
-        right_vision_range_limit_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(rad*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)), \
-                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(rad*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)))
+        left_vision_range_limit_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(neck_visual_lines_length)*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(neck_visual_lines_length)*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)))
+        right_vision_range_limit_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(neck_visual_lines_length)*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(neck_visual_lines_length)*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)))
 
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
         pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
 
 
         ### NAVIGATION TARGETS
-        if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
-            rad = (self.MAP_SIDE*(self.robot_radius/10.0*(1/self.MAP_SCALE)))
-            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=int(rad/2), width=0)
-
-            rad = (self.MAP_SIDE*(self.node.navigation.reached_radius/10.0*(1/self.MAP_SCALE)))
-            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=rad, width=1)
+        if self.node.is_navigating:
+            if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
+                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.robot_radius/2), width=0)
+                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.node.navigation.reached_radius), width=1)
 
 
         ### OBSTACLES POINTS (LIDAR, Depth Head Camera and Final Obstacles Fusion)
@@ -1710,7 +1772,7 @@ class DebugVisualMain():
             pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(points.x, points.y), radius=1, width=0)
 
         for points in self.node.camera_obstacle_points:
-            pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(points.x, points.y), radius=1, width=0)
+            pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
 
         for points in self.node.final_obstacle_points:
 
@@ -1725,32 +1787,53 @@ class DebugVisualMain():
             target.y = dist_obj * math.sin(theta_aux) + self.node.robot_y
             target.z = points.z
 
-            pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(target.x, target.y), radius=1, width=0)
+            pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(target.x, target.y), radius=2, width=0)
             
 
         ### PERSON DETECTED
-        rad_person = (self.MAP_SIDE*((self.robot_radius/2)/10.0*(1/self.MAP_SCALE)))
-        for person in self.node.person_pose.persons:
-            pygame.draw.circle(self.WIN, self.CYAN, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=rad_person, width=0)
+        for person in self.node.detected_people.persons:
+            pygame.draw.circle(self.WIN, self.CYAN, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
 
         ### SEARCH FOR PERSON
-        for person in self.node.search_for_person.persons:
-            pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=rad_person, width=0)
+        if self.node.new_search_for_person:
+            print("DETECTED SEARCH FOR PERSON:")
 
+        for person in self.node.search_for_person.persons:
+            pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(person.position_absolute.x, person.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
+
+            if self.node.new_search_for_person:            
+                room_and_furn_str = str(person.room_location + " (" + person.furniture_location + ")")
+                relative_coords_str = str("("+str(round(person.position_relative.x,2))+", "+str(round(person.position_relative.y,2))+", "+str(round(person.position_relative.z,2))+")")
+                print("id:", person.index, "|", str(int(round(person.confidence,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", person.arm_raised, "|", "point:", person.pointing_at)
+
+        if self.node.new_search_for_person:
+            self.node.new_search_for_person = False
+        
         ### OBJECT_DETECTED
-        rad_object = (self.MAP_SIDE*((self.robot_radius/4.5)/10.0*(1/self.MAP_SCALE)))
-        for object in self.node.object_detected.objects:
-            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-rad_object, \
-                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-rad_object, \
-                                    2*rad_object, 2*rad_object)
+        for object in self.node.detected_objects.objects:
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
+                                    2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))
             pygame.draw.rect(self.WIN, self.CYAN, temp_rect, width=0)
 
         ### SEARCH FOR OBJECT
+        if self.node.new_search_for_object:
+            print("DETECTED SEARCH FOR OBJECT:")
+
         for object in self.node.search_for_object.objects:
-            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-rad_object, \
-                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-rad_object, \
-                                    2*rad_object, 2*rad_object)
-            pygame.draw.rect(self.MAGENTA, self.MAGENTA, temp_rect, width=0)
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
+                                    2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))
+            pygame.draw.rect(self.WIN, self.MAGENTA, temp_rect, width=0)
+
+            if self.node.new_search_for_object:
+                name_and_cat_str = str(object.object_name + " (" + object.object_class + ")")
+                room_and_furn_str = str(object.room_location + " (" + object.furniture_location + ")")
+                relative_coords_str = str("("+str(round(object.position_relative.x,2))+", "+str(round(object.position_relative.y,2))+", "+str(round(object.position_relative.z,2))+")")
+                print("id:", object.index, "|", str(int(round(object.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
+         
+        if self.node.new_search_for_object:
+            self.node.new_search_for_object = False    
 
         ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
@@ -1767,10 +1850,24 @@ class DebugVisualMain():
         
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
+    def draw_battery(self):
+
+        battery_colour = self.WHITE
+
+        if self.node.battery_voltage > 37.0:
+            battery_colour = self.GREEN
+        elif self.node.battery_voltage > 35.0:
+            battery_colour = self.YELLOW
+        elif self.node.battery_voltage > 10.0:
+            battery_colour = self.RED
+
+        self.draw_text("Battery: "+str(self.node.battery_voltage)+"V", self.text_font_t, battery_colour, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+10.0-0.9))
+
     def coords_to_map(self, xx, yy):
-        # pygame.draw.circle(self.WIN, self.GREEN, (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE))), radius=10, width=0)
         return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE)))
 
+    def size_to_map(self, size): # convert physical real size into map size (meters)
+        return self.MAP_SIDE*((size)/10.0*(1/self.MAP_SCALE))
 
     def main(self):
 
@@ -1819,9 +1916,9 @@ class DebugVisualMain():
                     if event.key == pygame.K_d:
                         self.node.robot_x+=0.1
                     if event.key == pygame.K_q:
-                        self.node.robot_t-=math.radians(10)
+                        self.node.robot_t+=math.radians(15)
                     if event.key == pygame.K_e:
-                        self.node.robot_t+=math.radians(10)
+                        self.node.robot_t-=math.radians(15)
 
                     if event.key == pygame.K_c:
                         self.node.all_pos_x_val.clear()
@@ -1831,6 +1928,7 @@ class DebugVisualMain():
             self.draw_map()
             self.adjust_window_size()  
             self.draw_nodes_check()
+            self.draw_battery()
             self.draw_cameras()
             self.draw_activates()
             self.draw_pose_detections()
@@ -1840,16 +1938,3 @@ class DebugVisualMain():
             pygame.display.update()
 
             self.check_record_data()
-
-# TO DO LIST:
-
-# MAPA:
-    # teclas do teclado a fazer tambem zoom e shift do mapa
-    # limpar tudo o que está fora do mapa
-    # ajustar botoes para canto do mapa
-# navigation parar de dar quando checgou ao target
-# navigation no geral porque não dá pra testar com o rosbag atual...
-# testar camera obstacle points
-# testar final obstacle points
-# testar search for people 
-# testar search for objects

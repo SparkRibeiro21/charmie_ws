@@ -71,12 +71,6 @@ class Yolo_obj(Node):
             
         self.object_threshold = 0.5
 
-        self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.yolo_object_diagnostic_publisher.publish(flag_diagn)
-
         ### Services ###
         self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
 

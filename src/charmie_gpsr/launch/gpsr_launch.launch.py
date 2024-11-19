@@ -129,8 +129,8 @@ def generate_launch_description():
                         )
     
     yolo_pose = Node(package='charmie_yolo_pose',
-                        executable='yolo_pose_characteristics',
-                        name='yolo_pose_characteristics',
+                        executable='yolo_pose',
+                        name='yolo_pose',
                         emulate_tty=True
                         )
     

@@ -3,8 +3,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, Int16
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from geometry_msgs.msg import Pose, Point, Quaternion
-from charmie_interfaces.msg import RobotSpeech
-from charmie_interfaces.srv import ArmTrigger
+from charmie_interfaces.srv import Trigger
 from std_srvs.srv import SetBool
 from functools import partial
 import numpy as np 
@@ -66,7 +65,7 @@ class ArmUfactory(Node):
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
 
-		self.create_service(ArmTrigger, 'arm_trigger', self.arm_trigger_callback)
+		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
 
 		print("Bool TR Service is ready")
   
@@ -77,8 +76,7 @@ class ArmUfactory(Node):
 		# ARM TOPICS
 
 		self.barman_or_client_subscriber = self.create_subscription(Int16, "barman_or_client", self.go_barman_or_go_client_callback, 10)
-		self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
-
+		
 		self.object_grabbed_publisher = self.create_publisher(Bool, "object_grabbed", 10)
 	
 		self.flag_arm_finished_movement_ = Bool()

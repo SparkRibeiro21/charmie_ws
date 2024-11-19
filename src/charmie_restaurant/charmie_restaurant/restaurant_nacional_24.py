@@ -8,7 +8,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import Point
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfPoints
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace
 
 import cv2 
 import threading
@@ -803,8 +803,8 @@ class RestaurantMain():
 
             for people in self.node.detected_people.persons:
                 people_ctr+=1
-                print(" - ", people.index_person, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
-                print(" - ", people.index_person, people.position_relative.x,people.position_relative.y, people.position_relative.z)
+                print(" - ", people.index, people.position_absolute.x,people.position_absolute.y, people.position_absolute.z)
+                print(" - ", people.index, people.position_relative.x,people.position_relative.y, people.position_relative.z)
                 aux = (people.position_absolute.x, people.position_absolute.y) 
                 person_detected.append(aux)
                 points.append(aux)

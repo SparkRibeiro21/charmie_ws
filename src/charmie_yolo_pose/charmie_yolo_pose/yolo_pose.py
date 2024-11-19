@@ -4,21 +4,22 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, BoundingBox, BoundingBoxAndPoints, RGB
-from charmie_interfaces.srv import GetPointCloud, ActivateYoloPose
+from charmie_interfaces.msg import DetectedPerson, BoundingBox, BoundingBoxAndPoints, RGB, ListOfDetectedPerson
+from charmie_interfaces.srv import GetPointCloudBB, ActivateYoloPose
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
 import time
 import math
 import json
+from keras.models import load_model
 
 from pathlib import Path
 
 # configurable parameters through ros topics
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects people whose legs are visible 
 MIN_PERSON_CONF_VALUE = 0.3                          # defines the minimum confidence value to be considered a person
-MIN_KP_TO_DETECT_PERSON = 4                         # this parameter does not consider the four legs keypoints 
+MIN_KP_TO_DETECT_PERSON = 4                          # this parameter does not consider the four legs keypoints 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False            # only detects person right in front of the robot both on the x and y axis 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.6
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 1.8
@@ -38,10 +39,12 @@ DRAW_PERSON_KP = True
 DRAW_LOW_CONF_KP = False
 DRAW_PERSON_LOCATION_COORDS = True
 DRAW_PERSON_LOCATION_HOUSE_FURNITURE = False
-DRAW_PERSON_POINTING_INFO = True
+DRAW_PERSON_POINTING_INFO = False
 DRAW_PERSON_HAND_RAISED = False
 DRAW_PERSON_HEIGHT = True
 DRAW_PERSON_CLOTHES_COLOR = True
+DRAW_CHARACTERISTICS = True
+DRAW_FACE_RECOGNITION = True
 
 
 class YoloPoseNode(Node):
@@ -52,8 +55,8 @@ class YoloPoseNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("yolo_model", "s") 
-        self.declare_parameter("debug_draw", True) 
-        self.declare_parameter("activate", True)
+        self.declare_parameter("debug_draw", False) 
+        self.declare_parameter("activate", False)
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -64,21 +67,33 @@ class YoloPoseNode(Node):
         self.midpath_configuration_files = "charmie_ws/src/configuration_files"
         self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
 
+        self.complete_path_characteristics_models = self.home+'/'+self.midpath+'/characteristics_models/'
+
         self.house_rooms = {}
         self.house_furniture = {}
 
         # Open all configuration files
         try:
-            with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
-            with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
             self.get_logger().info("Successfully Imported data from json configuration files. (house_rooms and house_furniture)")
         except:
             self.get_logger().error("Could NOT import data from json configuration files. (house_rooms and house_furniture)")
         
+        try:
+            self.race_model = load_model(self.complete_path_characteristics_models+"modelo_raca.h5")
+            self.gender_model = load_model(self.complete_path_characteristics_models+"modelo_gender.h5")
+            ageModel = self.complete_path_characteristics_models+"age_net.caffemodel"
+            ageProto = self.complete_path_characteristics_models+"deploy_age.prototxt"
+            self.ageNet = cv2.dnn.readNet(ageModel, ageProto)
+            self.get_logger().info("Successfully Imported race, gender and age models.")
+        except:
+            self.get_logger().error("Could NOT import race, gender and age keras models. Please check if the files are in the /characteristics_models folder")
+
         # choose the yolo pose model intended to be used (n,s,m,l,...) 
         self.YOLO_MODEL = self.get_parameter("yolo_model").value
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
@@ -96,8 +111,7 @@ class YoloPoseNode(Node):
         self.model = YOLO(full_yolo_model)
 
         # Publisher (Pose of People Detected Filtered and Non Filtered)
-        # self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10) # test removed person_pose (non-filtered)
-        self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
+        self.person_pose_filtered_publisher = self.create_publisher(ListOfDetectedPerson, "person_pose_filtered", 10)
 
         # Subscriber (Yolov8_Pose TR Parameters)
         # self.only_detect_person_legs_visible_subscriber = self.create_subscription(Bool, "only_det_per_legs_vis", self.get_only_detect_person_legs_visible_callback, 10)
@@ -114,14 +128,14 @@ class YoloPoseNode(Node):
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
 
         ### Services ###
         self.activate_yolo_pose_service = self.create_service(ActivateYoloPose, "activate_yolo_pose", self.callback_activate_yolo_pose)
-
+        
         ### Variables ###
         # to calculate the FPS
         self.prev_frame_time = 0 # used to record the time when we processed last frame
@@ -164,7 +178,7 @@ class YoloPoseNode(Node):
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, req):
-        request = GetPointCloud.Request()
+        request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
         request.camera = "head"
@@ -196,6 +210,7 @@ class YoloPoseNode(Node):
         # float64 minimum_person_confidence           # adjust the minimum accuracy to assume as a person
         # int32 minimum_keypoints_to_detect_person    # minimum necessary keypoints to detect as a person
         # bool only_detect_person_right_in_front      # only detects people who are right in front of the robot (easier to interact)
+        # bool only_detect_person_arm_raised          # only detects people who are asking for assistance (arm raised)
         # bool characteristics                        # whether the person characteristics should be calculated or not (arm pointing, shirt and pants colour, ethnicity, age_estimate, gender) 
         # ---
         # bool success    # indicate successful run of triggered service
@@ -203,7 +218,8 @@ class YoloPoseNode(Node):
         global ONLY_DETECT_PERSON_LEGS_VISIBLE, MIN_PERSON_CONF_VALUE, MIN_KP_TO_DETECT_PERSON, ONLY_DETECT_PERSON_RIGHT_IN_FRONT, ONLY_DETECT_PERSON_ARM_RAISED, GET_CHARACTERISTICS
 
         if request.activate:
-            self.get_logger().info("Activated Yolo Pose %s" %("("+str(request.only_detect_person_legs_visible)+", "
+            self.get_logger().info("Activated Yolo Pose %s" %("("+str(request.activate)+", "
+                                                                 +str(request.only_detect_person_legs_visible)+", "
                                                                  +str(request.minimum_person_confidence)+", "
                                                                  +str(request.minimum_keypoints_to_detect_person)+", "
                                                                  +str(request.only_detect_person_right_in_front)+", "
@@ -273,6 +289,7 @@ class YoloPoseNode(Node):
     """
 
     def get_color_image_head_callback(self, img: Image):
+        # print("Received rgb cam")
 
         # only when activated via service, the model computes the person detection
         if self.ACTIVATE_YOLO_POSE:
@@ -458,8 +475,15 @@ class YoloPoseNode(Node):
                 self.waiting_for_pcloud = True
                 self.call_point_cloud_server(req2)
         
+        else:
+            yolov8_pose_filtered = ListOfDetectedPerson()
+            self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
+
+        
 
     def post_receiving_pcloud(self, new_pcloud):
+
+        global GET_CHARACTERISTICS
 
         # print("points")
         # print(new_pcloud)
@@ -474,9 +498,9 @@ class YoloPoseNode(Node):
         if not self.results[0].keypoints.has_visible:
             num_persons = 0
 
-        # yolov8_pose = Yolov8Pose()  # test removed person_pose (non-filtered)
-        yolov8_pose_filtered = Yolov8Pose()
-        num_persons_filtered = 0
+        # yolov8_pose = ListOfDetectedPerson()  # test removed person_pose (non-filtered)
+        yolov8_pose_filtered = ListOfDetectedPerson()
+        # num_persons_filtered = 0
 
         for person_idx in range(num_persons):
             keypoints_id = self.results[0].keypoints[person_idx]
@@ -521,6 +545,7 @@ class YoloPoseNode(Node):
                                                                self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], \
                                                                new_pcloud[person_idx].requested_point_coords[1], new_pcloud[person_idx].requested_point_coords[0], \
                                                                hand_raised)
+            
             # adds people to "person_pose" without any restriction
             # yolov8_pose.persons.append(new_person) # test removed person_pose (non-filtered)
             
@@ -546,6 +571,7 @@ class YoloPoseNode(Node):
             for kp in range(self.N_KEYPOINTS - self.NUMBER_OF_LEGS_KP): # all keypoints without the legs
                 if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
                     body_kp_high_conf_counter+=1
+
             # print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
 
 
@@ -587,11 +613,24 @@ class YoloPoseNode(Node):
                 # print(" - Misses not being with their arm raised")
 
             if ALL_CONDITIONS_MET:
-                num_persons_filtered+=1
+                # num_persons_filtered+=1
 
+                # characteristics will only be updated after we confirm that the person is inside the filteredpersons
+                # otherwise the large amount of time spent getting the characteristics from the models is applied to
+                # every detected person and not only the filtered 
+                is_cropped_face = False
+                if GET_CHARACTERISTICS:
+                    # in order to predict the ethnicity, age and gender, it is necessary to first cut out the face of the detected person
+                    is_cropped_face, cropped_face = self.crop_face(current_frame, current_frame_draw, new_person)
+
+                    if is_cropped_face:
+                        new_person.ethnicity, new_person.ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
+                        new_person.age_estimate, new_person.age_estimate_probability = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
+                        new_person.gender, new_person.gender_probability = self.get_gender_prediction(cropped_face) # says whether the person is male or female
+                        print(new_person.ethnicity, new_person.age_estimate, new_person.gender)        
                 # adds people to "person_pose_filtered" with selected filters
                 yolov8_pose_filtered.persons.append(new_person)
-
+              
                 if self.DEBUG_DRAW:
                     
                     red_yp = (56, 56, 255)
@@ -779,14 +818,14 @@ class YoloPoseNode(Node):
                                     (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                     
                     if DRAW_PERSON_POINTING_INFO:
-                        # if new_person.pointing_at != "None":
-                        cv2.putText(current_frame_draw, new_person.pointing_at+" "+new_person.pointing_with_arm,
-                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        if new_person.pointing_at != "None":
+                            cv2.putText(current_frame_draw, new_person.pointing_at+" "+new_person.pointing_with_arm,
+                                        (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
 
                     if DRAW_PERSON_HAND_RAISED:
-                        if hand_raised != "None":
-                            cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
-                                        (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        # if hand_raised != "None":
+                        cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
+                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
                     if DRAW_PERSON_HEIGHT:
                         cv2.putText(current_frame_draw, str(round(new_person.height,2)),
@@ -800,16 +839,15 @@ class YoloPoseNode(Node):
                         cv2.putText(current_frame_draw, new_person.pants_color + "(" + str(new_person.pants_rgb.red) + ", " + str(new_person.pants_rgb.green) + ", " + str(new_person.pants_rgb.blue) + ")",
                                     # (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
                                     (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                    
+                    if DRAW_CHARACTERISTICS and GET_CHARACTERISTICS and is_cropped_face:
+                        cv2.putText(current_frame_draw, str(round(new_person.height,2))+" / "+new_person.age_estimate+" / "+new_person.gender+" / "+new_person.ethnicity,
+                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         
 
             # print("===")
 
-        # yolov8_pose.image_rgb = self.rgb_img  # test removed person_pose (non-filtered)
-        # yolov8_pose.num_person = num_persons  # test removed person_pose (non-filtered)
         # self.person_pose_publisher.publish(yolov8_pose) # test removed person_pose (non-filtered)
-
-        yolov8_pose_filtered.image_rgb = self.rgb_img
-        yolov8_pose_filtered.num_person = num_persons_filtered
         self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
         # print("____END____")
@@ -823,7 +861,7 @@ class YoloPoseNode(Node):
         if self.DEBUG_DRAW:
             # putting the FPS count on the frame
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.putText(current_frame_draw, 'np:' + str(len(yolov8_pose_filtered.persons)) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
             # cv2.imshow("Yolo Pose Detection", annotated_frame)
             # cv2.imshow("Camera Image", current_frame)
@@ -854,8 +892,8 @@ class YoloPoseNode(Node):
 
         new_person.image_rgb_frame = self.rgb_img
 
-        new_person.index_person = int(person_id)
-        new_person.conf_person = float(boxes_id.conf)
+        new_person.index = int(person_id)
+        new_person.confidence = float(boxes_id.conf)
         new_person.box_top_left_x = int(boxes_id.xyxy[0][0])
         new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
         new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
@@ -1004,30 +1042,141 @@ class YoloPoseNode(Node):
 
         new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
         new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
-        
-        if GET_CHARACTERISTICS:
-                new_person.ethnicity = "None" # says whether the person white, asian, african descendent, middle eastern, ...
-                new_person.ethnicity_probability = 0.0
-                new_person.age_estimate = "None" # says an approximate age gap like 25-35 ...
-                new_person.age_estimate_probability = 0.0
-                new_person.gender = "None" # says whether the person is male or female
-                new_person.gender_probability = 0.0
 
-        else:
-            # new_person.pointing_at = "None"
-            # new_person.pointing_with_arm = "None"
-            # new_person.shirt_color = "None"
-            # new_person.pants_color = "None"
-            new_person.ethnicity = "None"
-            new_person.ethnicity_probability = 0.0
-            new_person.age_estimate = "None"
-            new_person.age_estimate_probability = 0.0
-            new_person.gender = "None"
-            new_person.gender_probability = 0.0
+        # characteristics will only be updated after we confirm that the person is inside the filteredpersons
+        # otherwise the large amount of time spent getting the characteristics from the models is applied to
+        # every detected person and not only the filtered 
+
+        # new_person.pointing_at = "None"
+        # new_person.pointing_with_arm = "None"
+        # new_person.shirt_color = "None"
+        # new_person.pants_color = "None"
+        new_person.ethnicity = "None"
+        new_person.ethnicity_probability = 0.0
+        new_person.age_estimate = "None"
+        new_person.age_estimate_probability = 0.0
+        new_person.gender = "None"
+        new_person.gender_probability = 0.0
+
 
         return new_person
 
+    def crop_face(self, current_frame, current_frame_draw, new_person):
 
+        global DRAW_FACE_RECOGNITION
+
+        # y1 = top of bounding box y
+        # y2 = y of lowest height shoulder
+        # x1 = keypoint more to the left
+        # x2 = keypoint more to the right
+        
+        # using all face and shoulders keypoints to make sure face is correctly detected
+        if new_person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_eye_right_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_eye_left_conf > MIN_KP_CONF_VALUE and \
+            new_person.kp_nose_conf > MIN_KP_CONF_VALUE:
+            # new_person.kp_ear_right_conf > MIN_KP_CONF_VALUE and \
+            # new_person.kp_ear_left_conf > MIN_KP_CONF_VALUE and \
+            
+            y1 = new_person.box_top_left_y
+            y2 = max(new_person.kp_shoulder_right_y, new_person.kp_shoulder_left_y)
+
+            x1 = min(new_person.kp_shoulder_right_x, new_person.kp_shoulder_left_x, new_person.kp_nose_x, new_person.kp_eye_right_x, new_person.kp_eye_left_x)
+            x2 = max(new_person.kp_shoulder_right_x, new_person.kp_shoulder_left_x, new_person.kp_nose_x, new_person.kp_eye_right_x, new_person.kp_eye_left_x)
+
+            if DRAW_FACE_RECOGNITION:
+                cv2.rectangle(current_frame_draw, (x1, y1), (x2, y2), (0, 255, 255) , 4) 
+                
+            # cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
+            
+            return True, current_frame[y1:y2, x1:x2]
+
+        else:
+            return False, current_frame
+        
+    def get_age_prediction(self, cropped_face):
+        
+        blob = cv2.dnn.blobFromImage(cropped_face, 1.0, (227, 227), (78.4263377603, 87.7689143744, 114.895847746), swapRB=False)
+        self.ageNet.setInput(blob)
+        agePreds = self.ageNet.forward()
+
+        age_index = agePreds[0].argmax()
+        # age_ranges = ["(0-2)", "(4-6)", "(8-12)", "(15-20)", "(25-32)", "(38-43)", "(48-53)", "(60-100)"]
+        age_ranges = ["Under 20", "Under 20", "Under 20", "Under 20", "Between 18 and 32", "Between 28 and 42", "Between 40 and 60", "Over 60"]
+        age = age_ranges[age_index]
+
+        # Filters for the people that are more likely to show up to the robot
+        # if age_index < 2:
+        #     age = "(15 and 22)"
+        # elif age_index >= 4:
+        #     age = "(23 and 32)"
+        
+        # Verificar se a previsão está disponível
+        if age is not None:
+            age = age
+            age_prob = float(round(max(agePreds[0]),2))
+        else:
+            age = "None"
+            age_prob = 0.0
+
+        # print("age predictions:", age, age_prob, agePreds[0])
+
+        return age, age_prob
+
+    def get_gender_prediction(self, cropped_face):
+
+        color_img = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(color_img, (224, 224))
+        normalized_img = img / 255.0
+        expanded_img = np.expand_dims(normalized_img, axis=0)
+
+        # Realizar a previsão usando o modelo carregado
+        predictions = self.gender_model.predict(expanded_img)
+
+        # Obter a previsão do gênero
+        gender_predominante_index = np.argmax(predictions, axis=1)
+        gender_predominante = ['Female', 'Male'][gender_predominante_index[0]]
+
+        # Verificar se a previsão está disponível
+        if gender_predominante is not None:
+            gender = gender_predominante
+            gender_prob = float(round(max(predictions[0]),2))
+        else:
+            gender = "None"
+            gender_prob = 0.0
+        
+        # print("gender predictions:", gender, gender_prob, predictions[0])
+
+        return gender, gender_prob
+
+    def get_ethnicity_prediction(self, cropped_face):
+
+        color_img = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(color_img, (224, 224))
+        normalized_img = img / 255.0
+        expanded_img = np.expand_dims(normalized_img, axis=0)
+
+        # Realizar a previsão usando o modelo carregado
+        predictions = self.race_model.predict(expanded_img)
+
+        # Obter a previsão da raça
+        race_labels = ['Asian', 'Indian', 'Black', 'Caucasian', 'Middle Eastern', 'Hispanic']
+        race_predominante_index = np.argmax(predictions, axis=1)
+        race_predominante = race_labels[race_predominante_index[0]]
+
+        # Verificar se a previsão está disponível
+        if race_predominante is not None:
+            race = race_predominante
+            race_prob = float(round(max(predictions[0]),2))
+        else:
+            race = "None"
+            race_prob = 0.0
+        
+        # print("ethnicity predictions:", race, race_prob, predictions[0])
+
+        return race, race_prob
+    
     def line_between_two_keypoints(self, current_frame_draw, KP_ONE, KP_TWO, xy, conf, colour):
 
         if conf[0][KP_ONE] > MIN_KP_CONF_VALUE and conf[0][KP_TWO] > MIN_KP_CONF_VALUE:    

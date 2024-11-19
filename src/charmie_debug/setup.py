@@ -28,6 +28,7 @@ setup(
             "debug_audio = charmie_debug.debug_audio:main",
             "debug_detect_distance_door = charmie_debug.debug_detect_distance_door:main",
             "debug_inspection_person_detection = charmie_debug.debug_inspection_person_detection:main",
+            "debug_llm = charmie_debug.debug_llm:main",
             "debug_main = charmie_debug.debug_main:main",
             "debug_navigation_localization = charmie_debug.debug_navigation_localization:main",
             "debug_obstacles = charmie_debug.debug_obstacles:main",

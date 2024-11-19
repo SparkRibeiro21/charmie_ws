@@ -5,8 +5,8 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, Float32, Int16
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3, Pose2D, PoseWithCovarianceStamped
-from charmie_interfaces.msg import TarNavSDNL, Obstacles, Yolov8Pose, Obstacles
-from charmie_interfaces.srv import NavTrigger, SetAcceleration
+from charmie_interfaces.msg import TarNavSDNL, Obstacles, ListOfDetectedPerson, Obstacles
+from charmie_interfaces.srv import Trigger, SetAcceleration, ActivateBool, SetRGB
 from sensor_msgs.msg import Image
 
 import cv2
@@ -823,32 +823,30 @@ class NavSDNLNode(Node):
         # Create Code Class Instance
         self.nav = NavigationSDNLClass() 
 
+        ### TOPICS ###
         # Low Level 
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)   
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10)
-        
         # Create PUBs/SUBs
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obs_lidar_callback, 10)
-        
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.get_initialpose_callback, 10)
-
         # Orientation
-        self.flag_orientation_publisher = self.create_publisher(Bool, "flag_orientation", 10)
         self.get_orientation_subscribrer = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
-       
-        # Navigation        
+        # Navigation
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
+        self.target_pos_check_answer_publisher = self.create_publisher(Bool, "target_pos_check_answer", 10)
         self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) 
-
         # Camera
         self.aligned_depth_image_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_callback, 10)
-
         # Yolo Pose
-        self.person_pose_filtered_subscriber = self.create_subscription(Yolov8Pose, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
 
+        ### SERVICES ###
+        # Low level
+        self.activate_orientation_client = self.create_client(ActivateBool, "activate_orientation")
         self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
 
         while not self.set_acceleration_ramp_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Low Level...")
@@ -862,27 +860,25 @@ class NavSDNLNode(Node):
         self.navigation_state = 0
         self.obstacles = Obstacles()
         # self.MIN_DIST_OBS = 10.0
-        self.detected_people = Yolov8Pose()
+        self.detected_people = ListOfDetectedPerson()
         self.PERSON_IN_FRONT = False
         self.latest_localisation_x = 0.0
         self.latest_localisation_y = 0.0
         self.latest_localisation_t = 0.0
 
-        self.navigation_diagnostic_publisher = self.create_publisher(Bool, "navigation_diagnostic", 10)
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.navigation_diagnostic_publisher.publish(flag_diagn)
-
-        self.create_service(NavTrigger, 'nav_trigger', self.navigation_trigger_callback)
-
-        ori = Bool()
-        ori.data = True
-        self.flag_orientation_publisher.publish(ori) 
-
-
         self.rgb_success = True
         self.rgb_message = ""
+
+        request = ActivateBool.Request()
+        request.activate = True
+        self.activate_orientation_client.call_async(request)
+
+        self.create_service(Trigger, 'nav_trigger', self.navigation_trigger_callback)
+
+        # ori = Bool()
+        # ori.data = True
+        # self.flag_orientation_publisher.publish(ori) 
+
 
     # def obstacles_callback(self, obs:Obstacles):
     #     self.obstacles = obs
@@ -903,12 +899,12 @@ class NavSDNLNode(Node):
         self.first_depth_image_received = True
         print("Received Depth Image")
 
-    def person_pose_filtered_callback(self, det_people: Yolov8Pose):
+    def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
 
         print(self.PERSON_IN_FRONT)
         
-        if self.detected_people.num_person > 0 or self.check_person_depth_head():
+        if len(self.detected_people.persons) > 0 or self.check_person_depth_head():
             self.PERSON_IN_FRONT = True
             
             if self.nav.nav_target.avoid_people:
@@ -927,17 +923,16 @@ class NavSDNLNode(Node):
         # cv2.imshow("Yolo Pose TR Detection 2", current_frame_draw)
         # cv2.waitKey(10)
 
-    def set_rgb(self, command="", wait_for_end_of=True):
-        
-        temp = Int16()
-        temp.data = command
-        self.rgb_mode_publisher.publish(temp)
+    def set_rgb(self, command=0, wait_for_end_of=True):
 
+        request = SetRGB.Request()
+        request.colour = int(command)
+
+        self.set_rgb_client.call_async(request)
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
         return self.rgb_success, self.rgb_message
-
 
     ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
     def call_set_acceleration_ramp_server(self, acceleration):
@@ -970,7 +965,6 @@ class NavSDNLNode(Node):
         #     print("alfa", o.alfa)
         #     print("dist", o.dist)
         #     print("l_ang", o.length_angular)
-        #     print("l_cm", o.length_cm)
         # print("---")
 
         # self.MIN_DIST_OBS = 10.0
@@ -985,6 +979,7 @@ class NavSDNLNode(Node):
         self.nav.update_debug_drawings()
 
     def get_orientation_callback(self, orientation: Float32):
+        # print("Received Orientatation:", str(orientation.data))
         self.nav.imu_orientation = orientation.data
         self.nav.imu_orientation_norm = self.nav.imu_orientation - self.nav.NORTE
         if self.nav.imu_orientation_norm > 180.0:
@@ -1042,6 +1037,14 @@ class NavSDNLNode(Node):
 
         if self.nav.nav_target.move_or_rotate.lower() == "move":
             self.call_set_acceleration_ramp_server(10)
+
+        # since we can not use services (actually we should be using actions)
+        # because it gets the code stuck if we need to adjust the navigation information during a navigation
+        # we use a topic to provide confirmation that the navigation was sucessfully received.
+        # On the "other side" should be a checking system that the confirmation was received and resent if not. 
+        temp = Bool()
+        temp.data = True
+        self.target_pos_check_answer_publisher.publish(temp)
         
         # time.sleep(1.0)
 
@@ -1125,11 +1128,11 @@ class NavSDNLNode(Node):
     def timer_callback(self):
 
         # safety
-        if self.nav.first_imu_orientation == False:
-            self.get_logger().warning("HAD TO RESEND IMU REQUEST...")
-            ori = Bool()
-            ori.data = True
-            self.flag_orientation_publisher.publish(ori) 
+        # if self.nav.first_imu_orientation == False:
+        #     self.get_logger().warning("HAD TO RESEND IMU REQUEST...")
+        #     ori = Bool()
+        #     ori.data = True
+        #     self.flag_orientation_publisher.publish(ori) 
 
         # print(self.nav.first_imu_orientation, round(self.nav.NORTE, 2), round(self.nav.imu_orientation, 2), round(self.nav.imu_orientation_norm, 2))
         

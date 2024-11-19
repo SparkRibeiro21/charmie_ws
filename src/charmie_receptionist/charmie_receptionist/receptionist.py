@@ -7,7 +7,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedPerson, ArmController
-from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, ArmTrigger, NavTrigger, SetFace
+from charmie_interfaces.srv import SpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace
 
 import os
 import cv2 
@@ -76,9 +76,9 @@ class ReceptionistNode(Node):
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
-        # self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        # self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
-        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
 
 
         # if is necessary to wait for a specific service to be ON, uncomment the two following lines
@@ -1222,7 +1222,7 @@ class ReceptionistMain():
 
             print("FOUND:", len(people_found)) 
             # for p in people_found:
-            #     print("ID:", p.index_person)
+            #     print("ID:", p.index)
 
             self.set_rgb(BLUE+HALF_ROTATE)
             self.set_neck(position=[0, 0], wait_for_end_of=True)
@@ -1234,7 +1234,7 @@ class ReceptionistMain():
             living_room_ctr = 0
             
             for p in people_found:
-                print("ID:", p.index_person, p.furniture_location, p.room_location)
+                print("ID:", p.index, p.furniture_location, p.room_location)
                 # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
                 # time.sleep(3)
 
@@ -1377,7 +1377,7 @@ class ReceptionistMain():
                 
                 if p.room_location == "Living Room" and p.furniture_location == "Sofa":
                     is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb, filename_with_index=True)
-                    # filename += "_"+str(p.index_person)
+                    # filename += "_"+str(p.index)
                     if is_cropped:
                         host = p
                         host_found = True
@@ -1386,7 +1386,7 @@ class ReceptionistMain():
                 # if the robot localisation is a bit off and i do not detect anyone in the sofa, i just check for people in the living room
                 elif p.room_location == "Living Room":
                     is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb, filename_with_index=True)
-                    # filename += "_"+str(p.index_person)
+                    # filename += "_"+str(p.index)
                     if is_cropped:
                         host = p
                         host_found = True
@@ -1394,7 +1394,7 @@ class ReceptionistMain():
                 else:
                     print("CLOSEST PERSON")
                     is_cropped, filename = self.crop_face(p, detected_person_temp.image_rgb, filename_with_index=True)
-                    # filename += "_"+str(p.index_person)
+                    # filename += "_"+str(p.index)
                     if is_cropped:
                         host = p
                         host_found = True
@@ -1434,7 +1434,7 @@ class ReceptionistMain():
 
             print("FOUND:", len(people_found)) 
             # for p in people_found:
-            #     print("ID:", p.index_person)
+            #     print("ID:", p.index)
 
             self.set_rgb(BLUE+HALF_ROTATE)
             self.set_neck(position=[0, 0], wait_for_end_of=True)
@@ -1442,7 +1442,7 @@ class ReceptionistMain():
             living_room_ctr = 0
             
             for p in people_found:
-                print("ID:", p.index_person, p.furniture_location, p.room_location)
+                print("ID:", p.index, p.furniture_location, p.room_location)
                 # self.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
                 # time.sleep(3)
 
@@ -1641,7 +1641,7 @@ class ReceptionistMain():
             # same time for all obejcts
             current_datetime = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S_"))   
             if filename_with_index: 
-                filename = self.complete_path_save_images+current_datetime+str(new_person.index_person)+"i_.jpg"
+                filename = self.complete_path_save_images+current_datetime+str(new_person.index)+"i_.jpg"
                 # filename = self.complete_path_save_images+current_datetime+".jpg"    
             else:
                 filename = self.complete_path_save_images+current_datetime+".jpg"    
@@ -1825,24 +1825,24 @@ class ReceptionistMain():
                     person_already_in_list = DetectedPerson()
                     for people in person_detected:
 
-                        if temp_people.index_person == people.index_person:
+                        if temp_people.index == people.index:
                             is_already_in_list = True
                             person_already_in_list = people
 
                     if is_already_in_list:
                         person_detected.remove(person_already_in_list)
-                    elif temp_people.index_person > 0: # debug
-                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
+                    elif temp_people.index > 0: # debug
+                        # print("added_first_time", temp_people.index, temp_people.position_absolute.x, temp_people.position_absolute.y)
                         self.set_rgb(GREEN+SET_COLOUR)
                     
-                    if temp_people.index_person > 0:
+                    if temp_people.index > 0:
                         person_detected.append(temp_people)
                         people_ctr+=1
 
             # DEBUG
             # print("people in this neck pos:")
             # for people in person_detected:
-            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+            #     print(people.index, people.position_absolute.x, people.position_absolute.y)
         
             total_person_detected.append(person_detected.copy())
             # print("Total number of people detected:", len(person_detected), people_ctr)
@@ -1855,7 +1855,7 @@ class ReceptionistMain():
         # print("TOTAL people in this neck pos:")
         # for frame in total_person_detected:
         #     for people in frame:    
-        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+        #         print(people.index, people.position_absolute.x, people.position_absolute.y)
         #     print("-")
 
         ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
@@ -1882,7 +1882,7 @@ class ReceptionistMain():
                     for filtered in range(len(filtered_persons)):
 
                         dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
-                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
+                        # print("new:", total_person_detected[frame][person].index, "old:", filtered_persons[filtered].index, dist)
                         
                         if dist < MIN_DIST:
                             same_person_ctr+=1
@@ -1909,14 +1909,14 @@ class ReceptionistMain():
 
             for p in to_remove:
                 if p in filtered_persons:
-                    # print("REMOVED: ", p.index_person)
+                    # print("REMOVED: ", p.index)
                     filtered_persons.remove(p)
                 # else:
                     # print("TRIED TO REMOVE TWICE THE SAME PERSON")
             to_remove.clear()  
 
             for p in to_append:
-                # print("ADDED: ", p.index_person)
+                # print("ADDED: ", p.index)
                 filtered_persons.append(p)
             to_append.clear()
             
@@ -1927,7 +1927,7 @@ class ReceptionistMain():
         # print("FILTERED:")
         for p in filtered_persons:
             sfp_pub.persons.append(p)
-        #     print(p.index_person)
+        #     print(p.index)
         self.node.search_for_person_detections_publisher.publish(sfp_pub)
 
         return filtered_persons
@@ -1941,7 +1941,7 @@ class ReceptionistMain():
         # cv2.imshow("Search for Person", just_person_image)
         # cv2.waitKey(100)
         
-        face_path = current_datetime + str(person.index_person)
+        face_path = current_datetime + str(person.index)
         
         cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
         time.sleep(0.5)

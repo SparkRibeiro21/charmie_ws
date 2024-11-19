@@ -1,3 +1,5 @@
+# All information interpreted regarding a detected object
+
 string object_name
 string object_class
 int32 index
@@ -10,6 +12,9 @@ int32 box_top_left_x
 int32 box_top_left_y
 int32 box_width
 int32 box_height
+
+MaskDetection mask
+MaskDetection mask_norm
 
 string room_location
 string furniture_location

@@ -4,9 +4,15 @@ import rclpy
 from rclpy.node import Node
 from functools import partial
 from example_interfaces.msg import Bool, Float32, Int16, String 
+<<<<<<< HEAD
 from geometry_msgs.msg import Point, Pose2D, PoseWithCovarianceStamped
 from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox, TarNavSDNL, ArmController, ListOfDetectedObject
 from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, GetPointCloud, SpeechCommand
+=======
+from geometry_msgs.msg import Point, Pose2D
+from charmie_interfaces.msg import Yolov8Pose, DetectedPerson, Yolov8Objects, DetectedObject, ListOfPoints, NeckPosition, ListOfFloats, BoundingBoxAndPoints, BoundingBox, TarNavSDNL, ArmController
+from charmie_interfaces.srv import TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, GetPointCloudBB
+>>>>>>> 36f8b053ba652f1bc138f2bd84cd5cb288f31cf1
 from xarm_msgs.srv import GetFloat32List, PlanPose, PlanExec, PlanJoint
 from sensor_msgs.msg import Image
 
@@ -70,7 +76,7 @@ class TestNode(Node):
         
         # Low level
         self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_test" , 10)
+        self.torso_test_publisher = self.create_publisher(Pose2D, "torso_move" , 10)
 
         # Navigation
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
@@ -89,7 +95,7 @@ class TestNode(Node):
         self.arm_set_height_publisher = self.create_publisher(Float32, 'arm_set_desired_height', 10)
 
         # Point cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
 
         while not self.point_cloud_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Point Cloud...")
@@ -166,7 +172,7 @@ class TestNode(Node):
         self.detected_doors = Yolov8Objects()
         self.detected_doors_hand= Yolov8Objects()
         self.waiting_for_pcloud = False
-        self.point_cloud_response = GetPointCloud.Response()
+        self.point_cloud_response = GetPointCloudBB.Response()
 
         self.wardrobe_width = 0.9
         self.door_width = self.wardrobe_width // 2
@@ -187,7 +193,7 @@ class TestNode(Node):
         print('arm current pose callback: ', self.arm_current_pose)
 
     def call_point_cloud_server(self, req, camera):
-        request = GetPointCloud.Request()
+        request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
         request.camera = camera    
@@ -6162,24 +6168,24 @@ class RestaurantMain():
                     person_already_in_list = DetectedPerson()
                     for people in person_detected:
 
-                        if temp_people.index_person == people.index_person:
+                        if temp_people.index == people.index:
                             is_already_in_list = True
                             person_already_in_list = people
 
                     if is_already_in_list:
                         person_detected.remove(person_already_in_list)
-                    elif temp_people.index_person > 0: # debug
-                        # print("added_first_time", temp_people.index_person, temp_people.position_absolute.x, temp_people.position_absolute.y)
+                    elif temp_people.index > 0: # debug
+                        # print("added_first_time", temp_people.index, temp_people.position_absolute.x, temp_people.position_absolute.y)
                         self.set_rgb(GREEN+SET_COLOUR)
                     
-                    if temp_people.index_person > 0:
+                    if temp_people.index > 0:
                         person_detected.append(temp_people)
                         people_ctr+=1
 
             # DEBUG
             # print("people in this neck pos:")
             # for people in person_detected:
-            #     print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+            #     print(people.index, people.position_absolute.x, people.position_absolute.y)
         
             total_person_detected.append(person_detected.copy())
             # print("Total number of people detected:", len(person_detected), people_ctr)
@@ -6192,7 +6198,7 @@ class RestaurantMain():
         # print("TOTAL people in this neck pos:")
         # for frame in total_person_detected:
         #     for people in frame:    
-        #         print(people.index_person, people.position_absolute.x, people.position_absolute.y)
+        #         print(people.index, people.position_absolute.x, people.position_absolute.y)
         #     print("-")
 
         ### DETECTS ALL THE PEOPLE SHOW IN EVERY FRAME ###
@@ -6219,7 +6225,7 @@ class RestaurantMain():
                     for filtered in range(len(filtered_persons)):
 
                         dist = math.dist((total_person_detected[frame][person].position_absolute.x, total_person_detected[frame][person].position_absolute.y), (filtered_persons[filtered].position_absolute.x, filtered_persons[filtered].position_absolute.y))
-                        # print("new:", total_person_detected[frame][person].index_person, "old:", filtered_persons[filtered].index_person, dist)
+                        # print("new:", total_person_detected[frame][person].index, "old:", filtered_persons[filtered].index, dist)
                         
                         if dist < MIN_DIST:
                             same_person_ctr+=1
@@ -6246,20 +6252,20 @@ class RestaurantMain():
 
             for p in to_remove:
                 if p in filtered_persons:
-                    # print("REMOVED: ", p.index_person)
+                    # print("REMOVED: ", p.index)
                     filtered_persons.remove(p)
                 # else:
                     # print("TRIED TO REMOVE TWICE THE SAME PERSON")
             to_remove.clear()  
 
             for p in to_append:
-                # print("ADDED: ", p.index_person)
+                # print("ADDED: ", p.index)
                 filtered_persons.append(p)
             to_append.clear()
 
         # print("FILTERED:")
         # for p in filtered_persons:
-        #     print(p.index_person)
+        #     print(p.index)
 
         return filtered_persons
 
@@ -6272,10 +6278,10 @@ class RestaurantMain():
         just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
         # cv2.imshow("Search for Person", just_person_image)
         # cv2.waitKey(100)
-        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + str(person.index_person) + ".jpg", just_person_image) 
+        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + str(person.index) + ".jpg", just_person_image) 
         time.sleep(0.5)
         
         if send_to_face:
-            self.set_face(custom=current_datetime + str(person.index_person))
+            self.set_face(custom=current_datetime + str(person.index))
         
-        return current_datetime + str(person.index_person)
+        return current_datetime + str(person.index)

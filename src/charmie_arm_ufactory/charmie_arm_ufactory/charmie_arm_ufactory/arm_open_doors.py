@@ -4,8 +4,13 @@ from example_interfaces.msg import Bool, Int16, String, Float32
 from xarm_msgs.msg import RobotMsg
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, GetFloat32List
 from geometry_msgs.msg import Pose, Point, Quaternion
+<<<<<<< HEAD
 from charmie_interfaces.msg import RobotSpeech, ListOfFloats, ArmController
 from charmie_interfaces.srv import ArmTrigger
+=======
+from charmie_interfaces.msg import ListOfFloats
+from charmie_interfaces.srv import Trigger
+>>>>>>> 36f8b053ba652f1bc138f2bd84cd5cb288f31cf1
 from std_srvs.srv import SetBool
 from functools import partial
 import numpy as np 
@@ -89,7 +94,7 @@ class ArmUfactory(Node):
 			self.get_logger().warn("Waiting for Server Collision sensitivity...")
 		
 
-		self.create_service(ArmTrigger, 'arm_trigger', self.arm_trigger_callback)
+		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
 		
 		print("Bool TR Service is ready")
 

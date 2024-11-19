@@ -1,1469 +1,686 @@
 #!/usr/bin/env python3
 import rclpy
-from rclpy.node import Node
-
-import math
-from example_interfaces.msg import Bool, String, Float32, Int16
-from charmie_interfaces.msg import SpeechType, RobotSpeech
-from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
-from functools import partial
-
-class Demonstration():
-	def __init__(self):
-		print("New Demonstration Class Initialised")
-
-	
-
-
-class DemonstrationNode(Node):
-	def __init__(self):
-		super().__init__("DemonstrationNode")
-		self.get_logger().info("Initialised CHARMIE Demonstration Node")	
-
-		self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
-		self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
-		self.next_arm_movement = 0
-		self.face = Demonstration()
-
-		# ARM SERVICES
-
-		self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
-		self.set_joint_client = self.create_client(MoveJoint, '/xarm/set_servo_angle')
-		self.motion_enable_client = self.create_client(SetInt16ById, '/xarm/motion_enable')
-		self.set_mode_client = self.create_client(SetInt16, '/xarm/set_mode')
-		self.set_state_client = self.create_client(SetInt16, '/xarm/set_state')
-		self.set_gripper_enable = self.create_client(SetInt16, '/xarm/set_gripper_enable')
-		self.set_gripper_mode = self.create_client(SetInt16, '/xarm/set_gripper_mode')
-		self.set_gripper = self.create_client(GripperMove, '/xarm/set_gripper_position')
-		self.set_pause_time_client = self.create_client(SetFloat32, '/xarm/set_pause_time')
-		self.get_gripper_position = self.create_client(GetFloat32,'/xarm/get_gripper_position')
-		#self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
-		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
-		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
-		
-
-		while not self.set_position_client.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/set_position not available, waiting again...')
-		while not self.set_joint_client.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/set_servo_angle not available, waiting again...')
-		while not self.motion_enable_client.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/motion_enable not available, waiting again...')
-		while not self.set_mode_client.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/set_mode not available, waiting again...')
-		while not self.set_state_client.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/set_state not available, waiting again...')
-		while not self.set_gripper_enable.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/set_gripper_enable not available, waiting again...')
-		while not self.set_gripper_mode.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/set_gripper_mode not available, waiting again...')
-		while not self.set_gripper.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/set_gripper_position not available, waiting again...')
-		while not self.set_pause_time_client.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/set_pause_time not available, waiting again...')
-		while not self.get_gripper_position.wait_for_service(timeout_sec=3.0):
-			self.get_logger().info('service /xarm/get_gripper_position not available, waiting again...')
-		#while not self.plan_pose_client.wait_for_service(timeout_sec=3.0):
-		#	self.get_logger().info('service /xarm_pose_plan not available, waiting again...')
-		#while not self.exec_plan_client.wait_for_service(timeout_sec=3.0):
-		#	self.get_logger().info('service /xarm_exec_plan not available, waiting again...')
-		#while not self.joint_plan_client.wait_for_service(timeout_sec=3.0):
-		#	self.get_logger().info('service /xarm_joint_plan not available, waiting again...')
-
-
-		self.flag_arm_finish_publisher = self.create_publisher(Bool, 'flag_arm_finished_movement', 10)
-
-		#self.barman_or_client_subscriber = self.create_subscription(Int16, "barman_or_client", self.go_barman_or_go_client_callback, 10)
-		#self.choose_action_subscriber = self.create_subscription(Int16, 'action', self.choose_action_callback, 10)
-		self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)
-	
-		self.flag_arm_finished_movement_ = Bool()
-		self.gripper_reached_target = Bool()
-		self.set_gripper_req = GripperMove.Request()
-		self.joint_values_req = MoveJoint.Request()
-		self.get_gripper_req = GetFloat32.Request()
-		self.set_pause_time = SetFloat32.Request()
-		self.position_values_req = MoveCartesian.Request()
-		#self.plan_pose_req = PlanPose.Request()
-		#self.plan_exec_req = PlanExec.Request()
-		#self.plan_pose_resp = PlanPose.Response()
-		#self.joint_plan_req = PlanJoint.Request()
-		self.arm_finished_movement = Bool()
-
-		self.next_arm_movement = 0
-		self.gripper_tr = 0.0
-		# self.gripper_tr_chegou = False
-
-		self.gripper_opening = []
-		self.a = 0
-		self.choose_action = Int16()
-
-		self.estado_tr = 0
-		self.ctr_button = 0
-		self.ctr_speaker = 0
-		#self.next_arm_movement = 0
-		self.processo = 0
-
-	def setup(self):
-		
-		#define key positions and keypoints
-
-		self.initial_position = [-215.0, 83.4, -65.0, -0.5, 74.9, -90.0] 
-		self.restaurant_initial_position = [-224.8, 83.4, -65.0, -0.5, 74.9, -90.0] 
-		self.pre_get_order_position = [-149.0, 2.0, -78.0, 245.0, 32.5, -331.0]
-		self.get_order_position = [-158.0, 33.0, -118.0, 255.0, 22.0, -343.0]
-		self.orient_to_table = [-195.4, 40.2, -52.7, 163.4, 77.8, -264.2]
-		#self.pre_pick_coke_tray = [-30.0, 69.0, -116.0, -37.0, 91.0, -110.0]
-		self.place_coke_tray = [-233.0, 45.0, -74.0, -35.0, 57.0, -116.0]
-		self.pre_place_coke_tray = [-229.0, 39.0, -63.0, -35.0, 53.0, -110.0]
-		#self.pick_coke_tray = [-40.0, 68.0, -98.0, -46.0, 74.0, -107.0]
-		self.place_juice_tray = [-243.0, 22.0, -81.0, 184.0, -56.0, -335.0]
-		#self.pick_juice_tray = [-48.0, 22.0, -76.0, -185.0, -49.0, 35.0]
-		self.pre_place_juice_tray = [-237.0, 2.0, -92.0, 182.0, -87.0, -324.0]
-		self.pre2_place_juice_tray = [-235.0, 9.0, -63.0, 184.0, -50.0, -325.0]
-		self.place_milk_table = [-207.0, 31.0, -121.0, 155.0, 50.0, -233.0]
-		self.pre_place_milk_table = [-203.0, 27.0, -114.0, 159.0, 50.0, -238.0]
-		self.place_juice_table = [-207.0, -8.0, -77.0, 151.0, 51.0, -231.0]
-		self.pre_place_juice_table = [-202.0, -11.0, -74.0, 151.0, 48.0, -236.0]
-		self.place_coke_table = [-200.0, 61.0, -129.0, 165.0, 68.0, -248.0]
-		self.pre_place_coke_table = [-195.0, 54.0, -118.0, 169.0, 71.0, -254.0]
-		#self.check_object = [51.0, 17.0, -114.0, 5.0, 112.0, -44.0]
-		
-		#define key positions and keypoints
-		#self.restaurant_initial_position = [6.0, 90.0, -90.0, 0.0, 90.0, 0.0] 
-		print('Nada')
-
-		########### EXPLANATION OF EACH MODE: ########### 
-		#   0: position mode
-		#   1: servo motion mode
-		#   2: joint teaching mode
-		#   4: joint velocity mode
-		#   5: cartesian velocity mode
-		#   6: joint online trajectory planning mode
-		#   7: cartesian online trajectory planning mode
-
-		set_mode_client_req = SetInt16.Request()
-		set_mode_client_req.data = 0
-		self.future = self.set_mode_client.call_async(set_mode_client_req)
-		rclpy.spin_until_future_complete(self, self.future)
-
-		print('mode_client')
-
-		########### EXPLANATION OF EACH STATE: ###########
-		#   0: motion state
-		#   3: pause state
-		#   4: stop state
-
-		set_state_client_req = SetInt16.Request()
-		set_state_client_req.data = 0
-		self.future = self.set_state_client.call_async(set_state_client_req)
-		rclpy.spin_until_future_complete(self, self.future)
-
-		print('state_client')
-
-		########### EXPLANATION OF MOTION ENABLE: ###########
-		#   enable: 1 means enable, 0 means disable
-
-		motion_enable_req = SetInt16ById.Request()
-		motion_enable_req.id = 8
-		motion_enable_req.data = 1
-		self.future = self.motion_enable_client.call_async(motion_enable_req)
-		rclpy.spin_until_future_complete(self, self.future)
-
-		print('motion_enable')
-
-		set_gripper_enable_req = SetInt16.Request()
-		set_gripper_enable_req.data = 1
-		self.future = self.set_gripper_enable.call_async(set_gripper_enable_req)
-		rclpy.spin_until_future_complete(self, self.future)
-
-		print('gripper_enable')
-
-		set_gripper_mode_req = SetInt16.Request()
-		set_gripper_mode_req.data = 0
-		self.future = self.set_gripper_mode.call_async(set_gripper_mode_req)
-		rclpy.spin_until_future_complete(self, self.future)
-
-		print('gripper_mode')
-	
-	def deg_to_rad(self, deg):
-			rad = [deg[0] * math.pi / 180,
-			deg[1] * math.pi / 180,
-			deg[2] * math.pi / 180,
-			deg[3] * math.pi / 180,
-			deg[4] * math.pi / 180,
-			deg[5] * math.pi / 180,
-			]
-			return rad
-
-	def callback_service_tr(self, future):
-		try:
-			print(future.result())
-			# print(future.result().ret)
-			
-			self.estado_tr += 1
-			print("ESTADO = ", self.estado_tr)
-			#self.say_hello()
-			#self.plan_and_execute()
-			self.demonstration_sell()
-			#self.go_grab_first_object()
-		
-		except Exception as e:
-			self.get_logger().error("Service call failed: %r" % (e,))
-
-	def callback_service_tr_gripper(self, future):
-		try:
-			print(future.result())
-			# print(future.result().ret)
-			self.gripper_tr = future.result().data
-			# self.gripper_tr_chegou = True
-
-			if self.check_gripper(self.gripper_tr, self.set_gripper_req.pos):
-				self.estado_tr += 1
-				self.gripper_reached_target.data = False
-			
-			print("ESTADO = ", self.estado_tr)
-
-			#self.go_grab_first_object()
-			self.demonstration_sell()
-
-		except Exception as e:
-			self.get_logger().error("Service call failed: %r" % (e,))
-
-	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
-		print('Abertura gripper em mm =', current_gripper_pos)
-		self.gripper_opening.append(current_gripper_pos)
-		if abs(current_gripper_pos - desired_gripper_pos) <= 5.0: #basicamente se a garra estiver no valor pretendido com uma diferença de 50mm aceito
-			print('Valor de gripper alcançado. Vou para o próximo estado. \n')
-			self.gripper_reached_target.data = True
-
-		elif len(self.gripper_opening) > 100:
-			i = 0
-			reached = 0
-			while i < len(self.gripper_opening) - 11: 
-				i += 1
-				#este ciclo tem o intuito verificar se o valor da garra nas últimas 3 iterações foi o mesmo. Apenas faço isto pois 
-				#caso contrário ao fechar a garra ela nunca chegava ao valor que eu lhe passava e nunca avançava de estado
-				if abs(self.gripper_opening[i] - self.gripper_opening[i+10]) <= 5.0:
-					reached += 1
-
-			if reached >= 5:
-				self.gripper_reached_target.data = True
-
-			if self.gripper_reached_target.data == True:
-				print('Estou com o gripper nesta posição há algumas iterações. Vou para o próximo estado. \n')
-
-		return self.gripper_reached_target.data
-
-	def get_speech_done_callback(self, state: Bool):
-		print("Received Speech Flag:", state.data)
-		self.get_logger().info("Received Speech Flag")
-
-	def demonstration_sell(self):
-		if self.next_arm_movement == 0:
-			self.go_grab_first_object()
-
-		elif self.next_arm_movement == 1:
-			self.go_place_first_object_tray()
-   
-		elif self.next_arm_movement == 2:
-			self.go_grab_second_object()
-   
-		elif self.next_arm_movement == 3:
-			self.go_place_second_object_tray()
-   
-		elif self.next_arm_movement == 4:
-			self.go_grab_third_object()
-   
-		elif self.next_arm_movement == 5:
-			self.go_place_third_object()
-   
-		elif self.next_arm_movement == 6:
-			self.place_first_object_table()
-   
-		elif self.next_arm_movement == 7:
-			self.place_second_object_table()
-   
-		elif self.next_arm_movement == 8:
-			self.place_third_object_table()
-   
-		elif self.next_arm_movement == 9:
-			self.go_rest_arm()
-	
-	def go_grab_first_object(self):
-		# self.flag_arm_finished_movement_.data = False
-		# while self.flag_arm_finished_movement_.data == False:
-		if self.estado_tr == 0:
-			print('a')
-			
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			#self.estado_tr = 1
-			
-		
-		elif self.estado_tr == 1:
-
-			print('b')
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			#self.estado_tr = 2
-
-		elif self.estado_tr == 2:
-			
-			print('c')
-			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
-			self.joint_values_req.speed = 1.0 #velocidade de 1.0 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			#self.estado_tr = 3
-
-		elif self.estado_tr == 3:
-
-			print('d')
-			#Waypoints
-			self.joint_values_req.angles = self.deg_to_rad(self.orient_to_table)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			position_reached = False
-			#self.estado_tr = 4
-
-		elif self.estado_tr == 4:
-			print('e')
-			self.joint_values_req.angles = self.deg_to_rad(self.orient_to_table)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			position_reached = False
-			#self.estado_tr = 5
-
-		elif self.estado_tr == 5:
-			print('f')
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_get_order_position)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			position_reached = False
-			#self.estado_tr = 6
-
-		elif self.estado_tr == 6:
-			print('g')
-			#Position to pick object from barman
-			self.joint_values_req.angles = self.deg_to_rad(self.get_order_position)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			position_reached = False
-			#self.estado_tr = 7
-
-		elif self.estado_tr == 7:
-			#Abrir garra
-			print('h')
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			#self.estado_tr = 8
-
-		elif self.estado_tr == 8:
-			
-			#print('i')
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			#self.estado_tr = 9
-
-		elif self.estado_tr == 9:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print("FEITO!!!")
-			self.next_arm_movement = 1
-			self.demonstration_sell()
-
-
-		# self.flag_arm_finished_movement_.data = True
-		# print("DONE")
-
-	def go_place_first_object_tray(self):
-
-		#self.flag_arm_finished_movement_.data = False
-
-		if self.estado_tr == 0:
-
-			#Fechar Garra
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('aa')
-		
-		elif self.estado_tr == 1: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('cc')
-	
-		elif self.estado_tr == 2: 
-			#waypoints
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_get_order_position)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('dd')
-
-		elif self.estado_tr == 3: 
-			self.joint_values_req.angles = self.deg_to_rad(self.orient_to_table)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('ee')
-
-		elif self.estado_tr == 4: 
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, 41.0, -109.0, -23.0, 97.0, -124.0])
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('ff')
-
-		elif self.estado_tr == 5: 
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_coke_tray)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('gg')
-
-		elif self.estado_tr == 6: 
-			#place coke on tray
-			self.joint_values_req.angles = self.deg_to_rad(self.place_coke_tray)
-			self.joint_values_req.speed = 0.2 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('hh')
-	
-
-		elif self.estado_tr == 7: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ii')
-
-		elif self.estado_tr == 8: 
-			#Fechar Garra
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 300.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('jj')
-
-		elif self.estado_tr == 9:
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 400.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			""" self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))"""
-			print('kk') 
-
-
-		elif self.estado_tr == 10: 
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 500.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			""" self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))"""
-			print('ll') 
-   
-		elif self.estado_tr == 11:
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 600.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-
-		elif self.estado_tr == 12:
-			self.set_gripper_req.pos = 700.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-			""" self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr)) """
-
-		elif self.estado_tr == 13: 
-			#Abrir garra
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('nn')
-
-		elif self.estado_tr == 14:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO 2.0') 
-			self.next_arm_movement = 2
-			self.demonstration_sell()
-		
-			#self.flag_arm_finished_movement_.data = True
-		# Depois disto o robot tem de dar um led verde no restaurante
-
-	def go_grab_second_object(self):
-		self.flag_arm_finished_movement_.data = False
-
-		if self.estado_tr == 0:
-			#waypoints
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, 31.0, -46.0, -31.0, 48.0, -100.0])
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('aaa')
-
-
-		elif self.estado_tr == 1:
-			#Fechar Garra
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('bbb')
-
-
-		elif self.estado_tr == 2:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ccc')
-
-		elif self.estado_tr == 3:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_get_order_position)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('ddd')
-
-		elif self.estado_tr == 4:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_get_order_position)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('eee')
-
-		elif self.estado_tr == 5:
-			#Position to pick object from barman
-			self.joint_values_req.angles = self.deg_to_rad(self.get_order_position)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('fff')
-
-		elif self.estado_tr == 6:
-			#Abrir garra
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('ggg')
-
-		elif self.estado_tr == 7:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('hhh')
-			
-
-		elif self.estado_tr == 8:
-			"""
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			"""
-			self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('iii') 
-
-		elif self.estado_tr == 9:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO 3.0') 
-			self.next_arm_movement = 3
-			self.demonstration_sell()
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
-
-	def go_place_second_object_tray(self):
-		#Fechar Garra
-		if self.estado_tr == 0:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('a')			
-
-		elif self.estado_tr == 1:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('b')
-		
-		elif self.estado_tr == 2:
-			#waypoints
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_get_order_position)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('c')	
-		
-		elif self.estado_tr == 3:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_juice_tray)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('d')
-
-		elif self.estado_tr == 4:
-
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_juice_tray)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('e')
-
-		elif self.estado_tr == 5:
-
-			self.joint_values_req.angles = self.deg_to_rad(self.pre2_place_juice_tray)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('f')
-
-
-		elif self.estado_tr == 6:
-
-			self.joint_values_req.angles = self.deg_to_rad(self.place_juice_tray)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('g')
-
-		elif self.estado_tr == 7:
-
-			#place coke on tray
-			self.joint_values_req.angles = self.deg_to_rad(self.place_juice_tray)
-			self.joint_values_req.speed = 0.2 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('h')
-
-		elif self.estado_tr == 8: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ii')
-
-		elif self.estado_tr == 9: 
-			#Fechar Garra
-  			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-    		
-			self.set_gripper_req.pos = 500.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('jj')
-
-		elif self.estado_tr == 10:
-			self.set_gripper_req.pos = 600.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-			""" self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))"""
-			print('kk') 
-
-
-		elif self.estado_tr == 11: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 12:
-			#self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.pos = 700.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-
-		elif self.estado_tr== 13:
-			self.set_gripper_req.pos = 700.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			""" self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))"""
-			print('n') 
-
-		elif self.estado_tr == 14:
-			#Abrir garra
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('o')
-
-		elif self.estado_tr == 15:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('p')
-
-		elif self.estado_tr == 16:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO 4.0') 
-			self.next_arm_movement = 4
-			self.demonstration_sell()
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
-
-	def go_grab_third_object(self):
-		if self.estado_tr == 0:
-			###POS JUICE TRAY
-			self.joint_values_req.angles = self.deg_to_rad([-244.0, 16.0, -97.0, 183.0, -78.1, -334.0])
-			self.joint_values_req.speed = 0.15 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad([-244.0, 16.0, -97.0, 183.0, -78.1, -334.0])
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			#Fechar Garra
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('p')
-
-		elif self.estado_tr == 4:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_get_order_position)
-			self.joint_values_req.speed = 0.5 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5:
-			self.joint_values_req.angles = self.deg_to_rad(self.get_order_position)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			#Abrir garra
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 7:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('p')
-
-
-		elif self.estado_tr == 8:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			""" self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr)) """
-		
-		elif self.estado_tr == 9:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO 4.0') 
-			self.next_arm_movement = 5
-			self.demonstration_sell()
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
-
-	def go_place_third_object(self):
-		if self.estado_tr == 0:
-			#Fechar Garra
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('p')
-		
-		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_get_order_position)
-			self.joint_values_req.speed = 0.5 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.joint_values_req.angles = self.deg_to_rad(self.orient_to_table)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO 5.0') 
-			self.next_arm_movement = 6
-			self.demonstration_sell()
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
-
-	def place_first_object_table(self):
-		if self.estado_tr == 0:
-			#Waypoints
-			self.joint_values_req.angles = self.deg_to_rad(self.orient_to_table)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, -242.0])
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_milk_table)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_milk_table)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ii')
-
-		elif self.estado_tr == 5: 
-			#Fechar Garra
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('jj')
-
-		elif self.estado_tr == 6:
-
-			#Fechar Garra
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('kk')
-
-
-		elif self.estado_tr == 7: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 8:
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-
-		elif self.estado_tr == 9:
-
-			#Fechar Garra
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-			print('n')
-
-		elif self.estado_tr == 10:
-			#Abrir garra
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 11:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-
-		elif self.estado_tr == 12:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO Entregue 1º objeto') 
-			self.next_arm_movement = 7
-			self.demonstration_sell()
-
-	def place_second_object_table(self):
-		if self.estado_tr == 0:
-			#Waypoints
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_milk_table)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, -2.0, -40.0, 154.0, 98.0, -242.0])
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad(self.orient_to_table)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			#self.joint_values_req.angles = self.deg_to_rad([-29.0, -15.0, -56.0, 15.0, 90.0, 0.0])
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_juice_tray)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-			#### TALVEZ ESTA TRANSIÇÃO POSSA SER CONSIDERADA ESTRANHA
-
-		elif self.estado_tr == 4:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_juice_tray)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5:
-			###POS JUICE TRAY
-			self.joint_values_req.angles = self.deg_to_rad(self.place_juice_tray)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_juice_tray)
-			self.joint_values_req.speed = 0.15 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 7:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ii')
-
-		elif self.estado_tr == 9:
-			#waypoints
-			self.joint_values_req.angles = self.deg_to_rad(self.pre2_place_juice_tray)
-			self.joint_values_req.speed = 0.2 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 10:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_juice_tray)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 11:
-			self.joint_values_req.angles = self.deg_to_rad([-243.0, -58.0, -5.0, 135.0, 88.0, -214.0])
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 12:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_juice_table)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			
-		elif self.estado_tr == 13:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_juice_table)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 14: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ii')
-
-		elif self.estado_tr == 15: 
-			#Fechar Garra
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('jj')
-
-		elif self.estado_tr == 16:
-
-			self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('kk')
-
-
-		elif self.estado_tr == 17: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 18:
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-
-		elif self.estado_tr == 19:
-
-			self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('n')
-
-		elif self.estado_tr == 20:
-			#Abrir garra
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 21:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 22:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO Entrega do segundo objeto') 
-			self.next_arm_movement = 8
-			self.demonstration_sell()
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
-	
-	def place_third_object_table(self):
-		if self.estado_tr == 0:
-			#Waypoints
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, -27.0, -45.0, 148.0, 68.0, -228.0])
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad([-218.0, 41.0, -109.0, -23.0, 97.0, -124.0])
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_coke_tray)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_coke_tray)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_coke_tray)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_coke_tray)
-			self.joint_values_req.speed = 0.2 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			# Fechar garra
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 7:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 8:
-			#waypoints
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_coke_tray)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 9:
-			self.joint_values_req.angles = self.deg_to_rad([-202.0, 47.0, -63.0, 163.0, 119.0, -259.0])
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 10:
-			self.joint_values_req.angles = self.deg_to_rad(self.place_coke_table)
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 11: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ii')
-
-		elif self.estado_tr == 12: 
-			#Fechar Garra
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('jj')
-
-		elif self.estado_tr == 13:
-
-			self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('kk')
-
-
-		elif self.estado_tr == 14: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 15:
-			self.set_gripper_req.pos = self.gripper_tr + 60.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('mm')
-
-		elif self.estado_tr == 16:
-
-			self.set_pause_time.data = 1.5
-			self.future = self.set_pause_time_client.call_async(self.set_pause_time)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			print('n')
-
-		elif self.estado_tr == 17:
-			#Abrir garra
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 18:
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 19:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO Terceiro objeto entregue') 
-			self.next_arm_movement = 9
-			self.demonstration_sell()
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
-
-	def go_rest_arm(self):
-		if self.estado_tr == 0:
-			#waypoints
-			self.joint_values_req.angles = self.deg_to_rad([-212.0, 53.0, -66.0, 155.0, 123.0, -257.0])
-			self.joint_values_req.speed = 0.3 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad(self.restaurant_initial_position)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.6 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 3:
-			#Abrir garra
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO REST') 
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
-
-	def open_close_gripper(self):
-		if self.estado_tr == 0:
-		#Fechar garra
-			print('a')
-			self.set_gripper_req.pos = 500.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-	
-		elif self.estado_tr == 1: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad([-224.8, 83.4, -65.0, -0.5, 74.9, -45.0])
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = 0.4 #velocidade de 1.5 é aceitável para maioria dos movimentos para waypoints
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 4: 
-			#Abrir garra
-			self.set_gripper_req.pos = 20.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 6:
-			self.arm_finished_movement.data = True
-			self.flag_arm_finish_publisher.publish(self.arm_finished_movement)
-			self.arm_finished_movement.data = False
-			self.estado_tr = 0
-			print('FEITO Abrir fechar garra') 
-			# Depois disto o robot tem de falar no restaurant e dar um led verde
-			
-
+import threading
+import time
+import random
+
+from geometry_msgs.msg import Vector3, Pose2D
+from charmie_interfaces.msg import DetectedObject, DetectedPerson, PS4Controller
+from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
+
+# Constant Variables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
+
+ros2_modules = {
+    "charmie_arm":              True,
+    "charmie_audio":            True,
+    "charmie_face":             False,
+    "charmie_head_camera":      True,
+    "charmie_hand_camera":      True,
+    "charmie_lidar":            True,
+    "charmie_llm":              True,
+    "charmie_localisation":     False,
+    "charmie_low_level":        True,
+    "charmie_navigation":       False,
+    "charmie_neck":             True,
+    "charmie_obstacles":        False,
+    "charmie_odometry":         False,
+    "charmie_point_cloud":      True,
+    "charmie_ps4_controller":   True,
+    "charmie_speakers":         True,
+    "charmie_yolo_objects":     True,
+    "charmie_yolo_pose":        True,
+}
+
+# main function that already creates the thread for the task state machine
 def main(args=None):
-	rclpy.init(args=args)
-	node = DemonstrationNode()
-	node.setup()
-	node.demonstration_sell()
-	rclpy.spin(node)
-	rclpy.shutdown()
+    rclpy.init(args=args)
+    node = ROS2TaskNode(ros2_modules)
+    robot = RobotStdFunctions(node)
+    th_main = threading.Thread(target=ThreadMainTask, args=(robot,), daemon=True)
+    th_main.start()
+    rclpy.spin(node)
+    rclpy.shutdown()
+
+def ThreadMainTask(robot: RobotStdFunctions):
+    main = TaskMain(robot)
+    main.main()
+
+class TaskMain():
+
+    def __init__(self, robot: RobotStdFunctions):
+        # create a robot instance so use all standard CHARMIE functions
+        self.robot = robot
+
+    # main state-machine function
+    def main(self):
+        
+        # Task States
+        self.Waiting_for_task_start = 0
+        self.Demo_actuators_with_tasks = 1
+        self.Demo_actuators_without_tasks = 2
+        self.Search_for_objects_demonstration = 3
+        self.Search_for_people_demonstration = 4
+        self.Introduction_demonstration = 5
+        self.Serve_breakfast_demonstration = 6
+        self.Audio_receptionist_and_restaurant_demonstration = 7
+        self.LLM_demonstration = 8
+        self.Open_door = 9
+        self.Final_State = 10
+        
+        self.SB_Waiting_for_task_start = 0
+        self.SB_Detect_and_receive_objects = 1
+        self.SB_Place_and_pour_objects = 2
+
+        self.A_Receptionist = 0
+        self.A_Restaurant = 1
+
+        # Neck Positions
+        self.look_forward = [0, 0]
+        self.look_forward_down = [0, -20]
+        # self.look_navigation = [0, -30]
+        # self.look_judge = [45, 0]
+        # self.look_table_objects = [-45, -45]
+        # self.look_tray = [0, -60]
+
+        self.OFF = 0     # LOW  -> LOW
+        self.FALLING = 1 # HIGH -> LOW
+        self.RISING = 2  # LOW  -> HIGH
+        self.ON = 3      # HIGH -> HIGH
+
+        self.ON_AND_RISING = 2   # used with <= 
+        self.OFF_AND_FALLING = 1 # used with >=
+
+        self.neck_pos_pan = self.look_forward[0]
+        self.neck_pos_tilt = self.look_forward[1]
+
+        # self.previous_message = False
+        self.PREVIOUS_WATCHDOG_SAFETY_FLAG = True # just for RGB debug
+        self.WATCHDOG_SAFETY_FLAG = True
+        self.WATCHDOG_CUT_TIME = 1.5
+        self.iteration_time = 0.01
+        self.watchdog_timer_ctr = self.WATCHDOG_CUT_TIME/self.iteration_time
+
+        self.motors_active = False
+        self.omni_move = Vector3()
+        self.torso_pos = Pose2D()
+
+        # Start localisation position
+        # self.initial_position = [-1.0, 1.5, -90.0]
+
+        # navigation positions
+        # self.front_of_sofa = [-2.5, 1.5]
+        # self.sofa = [-2.5, 3.0]
+        self.current_task = 0
+
+        # State the robot starts at, when testing it may help to change to the state it is intended to be tested
+        self.state = self.Waiting_for_task_start
+        self.state_SB = self.SB_Waiting_for_task_start
+        self.state_A = self.A_Receptionist
+
+        while True:
+
+            if self.state == self.Waiting_for_task_start:
+                # Initialization State
+
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(CLEAR)
+                    self.motors_active = False
+                    self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.node.torso_movement_publisher.publish(self.torso_pos)
+
+                if ros2_modules["charmie_face"]:
+                    self.robot.set_face("charmie_face")
+
+                if ros2_modules["charmie_neck"]:
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=True)
+
+                time.sleep(0.5)
+
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(RAINBOW_ROT)
+
+                if ros2_modules["charmie_speakers"]:
+                    self.robot.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                # to initially set WATCHDOG TIMER FLAGS and RGB 
+                ps4_controller, new_message = self.robot.get_controller_state()
+                self.controller_watchdog_timer(new_message)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                        self.motors_active = True
+                        self.robot.activate_motors(activate=self.motors_active)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+                        self.motors_active = False
+                        self.robot.activate_motors(activate=self.motors_active)
+
+                self.state = self.Demo_actuators_with_tasks
 
 
-if __name__ == "__main__":
-    main()
+            elif self.state == self.Demo_actuators_with_tasks:
+
+                ps4_controller, new_message = self.robot.get_controller_state()
+                self.controller_watchdog_timer(new_message)
+
+                if self.WATCHDOG_SAFETY_FLAG:
+                    ps4_controller = PS4Controller() # cleans ps4_controller -> sets everything to 0
+
+                # print(self.WATCHDOG_SAFETY_FLAG, self.PREVIOUS_WATCHDOG_SAFETY_FLAG)
+                
+                # WATCHDOG VERIFICATIONS
+                if not self.WATCHDOG_SAFETY_FLAG and self.PREVIOUS_WATCHDOG_SAFETY_FLAG:
+                    if ros2_modules["charmie_low_level"]:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                        # only allow reactivation via PS button (safety)
+                        # self.motors_active = True
+                        # self.robot.activate_motors(activate=self.motors_active)
+
+                elif self.WATCHDOG_SAFETY_FLAG and not self.PREVIOUS_WATCHDOG_SAFETY_FLAG:
+                    if ros2_modules["charmie_low_level"]:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+                    
+                    self.safety_stop_modules()
+    
+                    if ros2_modules["charmie_speakers"]:
+                        self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
+
+
+                if new_message:
+
+                    # Activate motors: only activates if ps4 controller messages are being received
+                    if ros2_modules["charmie_low_level"]:
+
+                        # Watchdog Verifications
+                        if ps4_controller.ps == self.RISING:
+                            if not self.WATCHDOG_SAFETY_FLAG:
+                                self.motors_active = not self.motors_active
+                                self.robot.activate_motors(activate=self.motors_active)
+
+                                self.torso_pos.x = 0.0
+                                self.torso_pos.y = 0.0
+                                self.robot.node.torso_movement_publisher.publish(self.torso_pos)
+
+                                if self.motors_active:
+                                    if ros2_modules["charmie_speakers"]:
+                                        self.robot.set_speech(filename="demonstration/motors_unlocked", wait_for_end_of=False)
+                                else:
+                                    if ros2_modules["charmie_speakers"]:
+                                        self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
+                        
+                    
+                    if ros2_modules["charmie_low_level"]:
+                        # Robot Omni Movement
+                        # left joy stick to control x and y movement (direction and linear speed) 
+                        if ps4_controller.l3_dist >= 0.1:
+                            self.omni_move.x = ps4_controller.l3_ang
+                            self.omni_move.y = ps4_controller.l3_dist*100/5
+                        else:
+                            self.omni_move.x = 0.0
+                            self.omni_move.y = 0.0
+
+                        # right joy stick to control angular speed
+                        if ps4_controller.r3_dist >= 0.1:
+                            self.omni_move.z = 100 + ps4_controller.r3_xx*10
+                        else:
+                            self.omni_move.z = 100.0
+                        
+                        if self.motors_active:
+                            self.robot.node.omni_move_publisher.publish(self.omni_move)
+
+                    if ros2_modules["charmie_low_level"]:
+
+                        if self.motors_active:
+
+                            # Torso Movement
+                            if ps4_controller.arrow_up >= 2:
+                                self.torso_pos.x = 1.0
+                            elif ps4_controller.arrow_down >= 2:
+                                self.torso_pos.x = -1.0
+                            else:
+                                self.torso_pos.x = 0.0
+
+                            if ps4_controller.arrow_right >= 2:
+                                self.torso_pos.y = 1.0
+                            elif ps4_controller.arrow_left >= 2:
+                                self.torso_pos.y = -1.0
+                            else:
+                                self.torso_pos.y = 0.0
+
+                            self.robot.node.torso_movement_publisher.publish(self.torso_pos)
+
+                    if ros2_modules["charmie_neck"]:
+                        
+                        # circle and square to move neck left and right
+                        # triangle and cross to move the neck up and down
+                        neck_inc_hor = 2
+                        neck_inc_ver = 1
+                        if ps4_controller.circle >= self.ON_AND_RISING:
+                            self.neck_pos_pan -= neck_inc_hor
+                            if self.neck_pos_pan < -180:
+                                self.neck_pos_pan = -180
+                            self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
+                            
+                        elif ps4_controller.square >= self.ON_AND_RISING:
+                            self.neck_pos_pan += neck_inc_hor
+                            if self.neck_pos_pan > 180:
+                                self.neck_pos_pan = 180
+                            self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
+                        
+                        if ps4_controller.cross >= self.ON_AND_RISING:
+                            self.neck_pos_tilt -= neck_inc_ver
+                            if self.neck_pos_tilt < -60:
+                                self.neck_pos_tilt = -60
+                            self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
+                        
+                        elif ps4_controller.triangle >= self.ON_AND_RISING:
+                            self.neck_pos_tilt += neck_inc_ver
+                            if self.neck_pos_tilt > 45:
+                                self.neck_pos_tilt = 45
+                            self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
+
+
+                    if not self.current_task:
+                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                            if ps4_controller.share == self.RISING:
+                                self.state = self.Search_for_objects_demonstration
+                        
+                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                            if ps4_controller.options == self.RISING:
+                                self.state = self.Search_for_people_demonstration
+
+                        if ros2_modules["charmie_audio"] and ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                            if ps4_controller.r1 == self.RISING:
+                                self.state = self.Audio_receptionist_and_restaurant_demonstration
+
+                        if ros2_modules["charmie_speakers"]:
+                            if ps4_controller.r3 == self.RISING:
+                                self.state = self.Introduction_demonstration
+
+                        if ros2_modules["charmie_speakers"]:
+                            if ps4_controller.l3 == self.RISING:
+                                self.state = self.Serve_breakfast_demonstration
+                                self.current_task = self.Serve_breakfast_demonstration
+                                self.state_SB = self.SB_Waiting_for_task_start
+
+                        if ros2_modules["charmie_llm"] and ros2_modules["charmie_speakers"]:
+                            if ps4_controller.r2 > 0.8:
+                                self.state = self.LLM_demonstration
+
+                        if ros2_modules["charmie_arm"] and ros2_modules["charmie_speakers"]:
+                            if ps4_controller.l2 > 0.8:
+                                # self.state = self.Open_door
+                                pass
+                    else:
+                        # Similar to wait_for_end_of_navigation, allows navigation between subparts of task
+                        if ps4_controller.l1 >= self.ON_AND_RISING and ps4_controller.r1 >= self.ON_AND_RISING:
+                            self.state = self.current_task
+
+                        # Allows to cancel a task midway (in navigation part)
+                        if ps4_controller.share >= self.ON_AND_RISING and ps4_controller.options >= self.ON_AND_RISING:
+                            self.robot.set_speech(filename="demonstration/stopped_task_demo", wait_for_end_of=False)
+                            self.current_task = 0
+    
+
+                time.sleep(self.iteration_time)
+
+
+            elif self.state == self.Search_for_objects_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+    
+                tetas = [[35, -35], [45, -15], [55, -35]]
+                # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                
+                self.robot.set_neck(self.look_forward, wait_for_end_of=True)
+
+                if len(objects_found):
+                    if ros2_modules["charmie_face"]:
+                        self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/i_have_found", wait_for_end_of=True)
+                    
+                    if ros2_modules["charmie_low_level"]:
+                        self.robot.set_rgb(RAINBOW_ROT)
+                    
+                    for o in objects_found:
+                        if ros2_modules["charmie_face"]:
+                            path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(255,255,0))
+                            time.sleep(0.5)
+                        
+                        self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                        if ros2_modules["charmie_face"]:
+                            time.sleep(2.5) # time to people check face
+                
+                    if ros2_modules["charmie_face"]:
+                        self.robot.set_face("charmie_face")
+    
+                else:
+                    self.robot.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+                
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+
+
+            elif self.state == self.Search_for_people_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                tetas = [[-60, -10], [0, -10], [60, -10]]
+                people_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0)
+
+                self.robot.set_neck(self.look_forward, wait_for_end_of=True)
+
+                if len(people_found):
+                    if ros2_modules["charmie_face"]:
+                        self.robot.set_speech(filename="generic/check_face_person_detected", wait_for_end_of=True) ###
+                    
+                    if ros2_modules["charmie_low_level"]:
+                        self.robot.set_rgb(RAINBOW_ROT)
+                    
+                    for p in people_found:
+                        if ros2_modules["charmie_face"]:
+                            path = self.robot.detected_person_to_face_path(person=p, send_to_face=True)
+                            # time.sleep(0.5)
+                        
+                        self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z], wait_for_end_of=True)
+                    
+                        if ros2_modules["charmie_face"]:
+                            time.sleep(2.5) # time to people check face
+                
+                    if ros2_modules["charmie_face"]:
+                        self.robot.set_face("charmie_face")
+    
+                else:
+                    self.robot.set_speech(filename="generic/could_not_find_any_people", wait_for_end_of=True) ###
+
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+
+
+            elif self.state == self.Introduction_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(RAINBOW_ROT)
+
+                if ros2_modules["charmie_arm"]:
+                    self.robot.set_arm(command="hello", wait_for_end_of=False)
+                    time.sleep(7.0)
+
+                # self.robot.set_speech(filename="generic/welcome_roboparty", wait_for_end_of=False)
+                self.robot.set_speech(filename="demonstration/introduction_demo", wait_for_end_of=True)
+
+                if ros2_modules["charmie_arm"]: # the delays only make sense when arm is operational 
+                    time.sleep(10.2)
+                
+                self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+
+            elif self.state == self.LLM_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(RAINBOW_ROT)
+
+                if ros2_modules["charmie_llm"]:
+                    self.robot.get_llm_demonstration(wait_for_end_of=True)
+                    
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+
+            elif self.state == self.Audio_receptionist_and_restaurant_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                if self.state_A == self.A_Receptionist:
+                
+                    ### audio receptionist code here
+                    self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
+                    
+                    time.sleep(1.0)
+                    # Reconhecer a pessoa
+                    # Olhar para a pessoa
+                    # person with characteristics received from search for person (closest person + ...)
+                    recep_detected_person = DetectedPerson()
+                    recep_detected_person.height = 1.00
+                    recep_detected_person.gender = "Female"
+                    recep_detected_person.shirt_color = "Pink"
+                    
+                    self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                    command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+                    print("Finished:", command)
+                    keyword_list= command.split(" ")
+                    guest_name = keyword_list[0] 
+                    guest_drink = keyword_list[1]
+                    
+                    print(guest_name, guest_drink)
+
+                    self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
+                    self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    
+                    random_drink = str(random.randint(1, 3))
+                    self.robot.set_speech(filename="demonstration/favourite_drink_demo_"+random_drink, wait_for_end_of=True)
+                    self.robot.set_speech(filename="objects_names/"+keyword_list[1].lower(), wait_for_end_of=True)
+
+                    confirmation = self.robot.get_audio(yes_or_no=True, question="demonstration/know_some_characteristics", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    ##### Verifica a resposta recebida
+                    if confirmation.lower() == "yes":
+                        self.robot.get_detected_person_characteristics(detected_person=recep_detected_person, first_sentence="demonstration/demo_characteristics_first_sentence", \
+                                                                       ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=True)
+                        time.sleep(1.0)
+                        
+                    else: #  confirmation.lower() == "no":
+                        self.robot.set_speech(filename="demonstration/ok_i_understand", wait_for_end_of=True)
+                    
+                    self.robot.set_speech(filename="demonstration/see_you_soon", wait_for_end_of=True)
+                    
+                    self.state_A = self.A_Restaurant
+
+                elif self.state_A == self.A_Restaurant:
+
+                    self.robot.set_speech(filename="demonstration/restaurant_demo_intro", wait_for_end_of=True)
+                    self.robot.set_speech(filename="demonstration/demo_please_wave", wait_for_end_of=True)
+
+                    list_customers = []                     
+                    # SFP
+
+                    list_filtered_customers = []
+
+                    # Olhar e mostrar cara da pessoa
+                    # Is this a guest?
+                    # Yes or No (continua para o próximo)
+                    # Yes: Olha para ele
+                    # Yes: please stand in front of me. What is your order?
+                    # Ouve
+                    # confirma 
+                    # Ok, I will try to get you (pedido)
+                    # (continua para o próximo pedido)
+                    # Now i should pick the foods and drinks and bring to my friends. See you soon my friends
+                
+                    ### audio restaurant code here
+                    self.robot.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
+
+                    self.state_A = self.A_Receptionist
+
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+
+            elif self.state == self.Serve_breakfast_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                # if ros2_modules["charmie_low_level"]:
+                #     self.robot.set_rgb(RAINBOW_ROT)
+
+                if self.state_SB == self.SB_Waiting_for_task_start:
+                    
+                    self.robot.set_speech(filename="serve_breakfast/sb_ready_start", wait_for_end_of=True)
+                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
+
+                    self.state_SB = self.SB_Detect_and_receive_objects
+
+                elif self.state_SB == self.SB_Detect_and_receive_objects:
+                    
+                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=False)
+                    
+                    ### SEARCH FOR OBJECTS
+                    ### RECEIVE OBJECTS
+
+                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=True)
+
+                    self.state_SB = self.SB_Place_and_pour_objects
+
+                elif self.state_SB == self.SB_Place_and_pour_objects:
+                    
+                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=False)
+                    
+                    ### PLACE OBJECTS
+                    ### POUR OBJECTS
+                    
+                    self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
+
+                    self.state_SB = self.SB_Waiting_for_task_start
+                    self.current_task = 0
+
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+
+
+                """
+            elif self.state == self.Example_demonstration:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                ### your code here
+
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+                """
+            
+            else:
+                pass
+
+
+    def controller_watchdog_timer(self, new_message):
+
+        if new_message:
+            self.watchdog_timer_ctr = 0
+        else:
+            self.watchdog_timer_ctr += 1
+
+        self.PREVIOUS_WATCHDOG_SAFETY_FLAG = self.WATCHDOG_SAFETY_FLAG
+
+        if self.watchdog_timer_ctr > (self.WATCHDOG_CUT_TIME/self.iteration_time):
+            self.WATCHDOG_SAFETY_FLAG = True
+        else:
+            self.WATCHDOG_SAFETY_FLAG = False
+
+    def safety_stop_modules(self):
+        
+        if ros2_modules["charmie_low_level"]:
+            
+            self.omni_move.x = 0.0
+            self.omni_move.y = 0.0
+            self.omni_move.z = 100.0
+            self.robot.node.omni_move_publisher.publish(self.omni_move)
+
+            self.motors_active = False
+            self.robot.activate_motors(activate=self.motors_active)
+
+            self.torso_pos.x = 0.0
+            self.torso_pos.y = 0.0
+            self.robot.node.torso_movement_publisher.publish(self.torso_pos)

@@ -3,7 +3,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from charmie_interfaces.msg import ArmController
-from charmie_interfaces.srv import ArmTrigger
+from charmie_interfaces.srv import Trigger
 from functools import partial
 import math
 import time
@@ -17,7 +17,8 @@ class ArmUfactory(Node):
 		# THIS VALUE HAS TO BE IN "cm" 1cm = 0.01m
 		# self.HEIGHT_TABLE_PLACE_OBJECTS = 91.0
 		# self.HEIGHT_TABLE_PLACE_OBJECTS = 58.0
-		self.HEIGHT_TABLE_PLACE_OBJECTS = 78.0
+		# self.HEIGHT_TABLE_PLACE_OBJECTS = 78.0
+		self.HEIGHT_TABLE_PLACE_OBJECTS = 74.0
 
 		# ARM TOPICS
 		self.arm_command_subscriber = self.create_subscription(ArmController, "arm_command", self.arm_command_callback, 10)
@@ -71,7 +72,7 @@ class ArmUfactory(Node):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
 		
 
-		self.create_service(ArmTrigger, 'arm_trigger', self.arm_trigger_callback)
+		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
 		
 		print("Bool TR Service is ready")
 
@@ -429,6 +430,153 @@ class ArmUfactory(Node):
 
 		except Exception as e:
 			self.get_logger().error("Service call failed: %r" % (e,))
+
+	def hello(self):
+		
+		# Removed safety waypoints
+		"""
+		if self.estado_tr == 0:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+	
+		elif self.estado_tr == 1: 
+			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+			print('ll')
+
+		elif self.estado_tr == 2: # safety
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+		"""
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 1:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 2:
+			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 4:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 5:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 7:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 8:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 9:
+			print('a')
+			self.set_gripper_req.pos = 900.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 10:
+			self.joint_values_req.angles = self.deg_to_rad(self.second_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 11:
+			print('a')
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 12:
+			self.joint_values_req.angles = self.deg_to_rad(self.first_waving_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = False
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 13:
+			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
+			self.joint_values_req.speed = 0.4 
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 14:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			print('FEITO Abrir fechar garra')
+			self.get_logger().info("FINISHED MOVEMENT")	
+
 
 	def open_close_gripper(self):
 		if self.estado_tr == 0:
@@ -1762,14 +1910,26 @@ class ArmUfactory(Node):
 		
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
+		
 		if self.next_arm_movement == "debug_initial":
 			self.open_close_gripper()
+<<<<<<< HEAD
+=======
+
+>>>>>>> 36f8b053ba652f1bc138f2bd84cd5cb288f31cf1
 		elif self.next_arm_movement == "hello":
 			self.hello()
+			
+			"""		
 		elif self.next_arm_movement == "place_objects":
 			self.place_objects_table()
 		elif self.next_arm_movement == "pick_objects":
+<<<<<<< HEAD
 			self.pick_objects_barman()
+=======
+			self.pick_objects_barman() 
+		"""
+>>>>>>> 36f8b053ba652f1bc138f2bd84cd5cb288f31cf1
    
 		elif self.next_arm_movement == "place_bowl_table":
 			self.place_bowl_table()
@@ -1829,10 +1989,8 @@ class ArmUfactory(Node):
 		elif self.next_arm_movement == "collect_bowl_to_initial_position":
 			self.collect_bowl_to_initial_position()
 		
-
 		elif self.next_arm_movement == "collect_cornflakes_to_tray_alternative_robocup_cornflakes":
 			self.collect_cornflakes_to_tray_alternative_robocup_cornflakes()
-
 
 		else:
 			self.wrong_movement_received = True

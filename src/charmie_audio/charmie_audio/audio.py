@@ -2,15 +2,14 @@
 import rclpy
 from rclpy.node import Node
 
-from example_interfaces.msg import Bool, String, Float32, Int16
-# from charmie_interfaces.msg import SpeechType, RobotSpeech
-from charmie_interfaces.srv import GetAudio, CalibrateAudio
+from example_interfaces.msg import String, Float32, Int16
+from charmie_interfaces.srv import GetAudio, CalibrateAudio, ContinuousGetAudio, SetRGB
 
 import io
 from pydub import AudioSegment
 import speech_recognition as sr
-import tempfile
-import os 
+# import tempfile
+# import os 
 from pathlib import Path
 from datetime import datetime
 
@@ -52,13 +51,10 @@ FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in
     # - dois sistemas de audição em paralelo, para que normalmente use o que ouve e pára no fim da frase
     # mas quando não ouve a paragem usa o que grava com o timeout
 # - modo de ouvir keywords constante (sempre a ouvir à espera de uma certa keyword)
+# - modo de ouvir sons de objetos
 # - mais idiomas (adicionar tambem o portugues)
-# - adicionar a lingua ao speechtype recebido 
-# - solução para palavras iguais
-# - definir keywords com antecedência (deixar tudo pronto para os objetos do dataset ycb)
+# - adicionar a lingua ao speechtype recebido
 # - define all the error, diferent from each other
-# - recalibrar audios quando der erro X vezes?
-# 
 # 
 # ---/---
 #
@@ -74,24 +70,9 @@ FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in
 # - simplificar diagnostic para se ver no terminal
 # - ligação direta aos rgb
 # - ligacao direta à fala
-
-
-"""
-to do sovalhão Tiago Ribeiro:
-
-- testar o timeout do processing do whisper
-
-
-- adicionar que se der erro no check_speech nem vale a pena entrar no keywords...
-    ja esta no calibration mas ainda não está no main
-
-
-- colocar record e listen em paralelo
-  -> 
-- testar o timeout do hearing
-
-"""
-
+# - solução para palavras iguais
+# - definir keywords com antecedência (deixar tudo pronto para os objetos do dataset ycb)
+# - recalibrar audios quando der erro X vezes?
 
 class TimeoutException(Exception):
     pass
@@ -113,7 +94,6 @@ class WhisperAudio():
         self.midpath = "charmie_ws/src/charmie_audio/charmie_audio"
         self.complete_path = self.home+'/'+self.midpath+'/'
         # self.save_temp_path = self.complete_path, "temp.wav"
-        
         
         # os.path.join(self.complete_path, "temp.wav")
         print(self.complete_path+"temp.wav")
@@ -153,7 +133,8 @@ class WhisperAudio():
         self.r.energy_threshold = self.energy
         self.r.pause_threshold = self.pause
         self.r.dynamic_energy_threshold = self.dynamic_energy
-        self.check_threshold = Float32()
+        # self.check_threshold = Float32()
+        self.check_threshold = 0.0
 
         self.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
         
@@ -500,6 +481,7 @@ class WhisperAudio():
         speech = speech.replace(".","")
         speech = speech.replace("?","")
         speech = speech.replace("!","")
+        speech = speech.replace("'","")
 
         self.node.get_logger().info(f"Command Filtered: {speech}")    
 
@@ -678,6 +660,52 @@ class WhisperAudio():
             return "ERROR"
 
 
+    def check_continuous_keywords(self, speech_nf, keywords):
+
+        speech = speech_nf.lower()
+        speech = speech.replace(",","")
+        speech = speech.replace(".","")
+        speech = speech.replace("?","")
+        speech = speech.replace("!","")
+        speech = speech.replace("'","")
+
+        self.node.get_logger().info(f"Command Filtered: {speech}")    
+
+        print("CONTINUOUS KEYWORDS!")
+        word_predicted = ''
+        word_ctr = 0
+
+        continuous_dict = {}
+
+        for words in keywords:
+            continuous_dict[words] = []
+            continuous_dict[words].append(words)
+
+        print(continuous_dict)
+
+        print("WORDS:")
+        for key in continuous_dict:
+            res, idx = self.compare_commands(continuous_dict, speech, [key])
+            print('    ', key, end='')
+            for spaces in range(max_number_of_chars_of_keys-len(key)):
+                print('.', end='') 
+            print('->', res)
+            if res:
+                word_predicted = key
+                word_ctr += 1
+        print("Name Detected =", "(", word_ctr, ")", word_predicted)
+        print()
+
+        if word_ctr > 0:
+            print("HEAR A KEYWORD:'%s'" %  word_predicted)
+            self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
+            return True
+        else:
+            print("DID NOT HEAR A KEYWORD")
+            self.node.set_rgb(RED+BACK_AND_FORTH_8)
+            return False
+            
+
     def compare_commands(self, w_dict, predicted_text, lst):
 
         ctr_tot = 1
@@ -730,36 +758,23 @@ class AudioNode(Node):
         super().__init__("Audio")
         self.get_logger().info("Initialised CHARMIE Audio v2 Node")
 
-
-        # I publish and subscribe in the same topic so I can request new hearings when errors are received 
-        # self.audio_command_subscriber = self.create_subscription(SpeechType, "audio_command", self.audio_command_callback, 10)
-        # self.audio_command_publisher = self.create_publisher(SpeechType, "audio_command", 10)
-
-        # self.flag_listening_publisher = self.create_publisher(Bool, "flag_listening", 10)
-        # self.get_speech_publisher = self.create_publisher(String, "get_speech", 10)
-
-        # self.speaker_publisher = self.create_publisher(RobotSpeech, "speech_command", 10)        
-        
-        # self.flag_speaker_subscriber = self.create_subscription(Bool, "flag_speech_done", self.get_speech_done_callback, 10)
-        
-        # self.calibrate_ambient_noise_subscriber = self.create_subscription(Bool, "calib_ambient_noise", self.calibrate_ambient_noise_callback, 10)
-        self.audio_diagnostic_publisher = self.create_publisher(Bool, "audio_diagnostic", 10)
-
         # Low Level: RGB
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
+        self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
+        # Audio: Help in Debug
+        self.audio_interpreted_publisher = self.create_publisher(String, "audio_interpreted", 10)
+        self.audio_final_publisher = self.create_publisher(String, "audio_final", 10)
         
         self.charmie_audio = WhisperAudio(self)
 
         self.server_audio = self.create_service(GetAudio, "audio_command", self.callback_audio)
+        self.server_continuous_audio = self.create_service(ContinuousGetAudio, "continuous_audio", self.callback_continuous_audio)
         self.server_calibrate_ambient_noise = self.create_service(CalibrateAudio, "calibrate_audio", self.callback_calibrate_audio)
         self.get_logger().info("Audio Servers have been started")
 
-        # self.speech_str = RobotSpeech()
-        # self.flag_speech_done = False
-        # self.audio_error = False
-        # self.latest_command = SpeechType()
+        self.rgb_success = True
+        self.rgb_message = ""
 
-        self.check_diagnostics()
+        self.check_microphone()
 
         if DICT_CALIBRATION:
             print("\tCALIBRATION MODE ACTIVATED!")
@@ -891,71 +906,28 @@ class AudioNode(Node):
             self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
 
 
-    def check_diagnostics(self):
+    def check_microphone(self):
 
-        self.flag_diagn = Bool()
-        self.flag_diagn.data = False
-        self.aux_flag_diagn = Bool()
-        self.aux_flag_diagn.data = False
-        
-        """ device_name, host_api = self.charmie_audio.find_speaker_device()
-
-        if device_name:
-            print('It is connected to the correct device, named ', device_name)
-        
-        else:
-            print('It is not onnected to the correct device. Please, change it') """
-        
-        """ audio_devices = self.charmie_audio.list_audio_devices()
-        print("Connected Audio Devices:")
-        for audio_device in audio_devices:
-            print(audio_device)
-        """
+        aux_flag_diagn = False
 
         input_devices = self.charmie_audio.get_pulsectl_device_names()
         # print("Input Sound Devices:")
         for device in input_devices:
             device_type = "External" if self.charmie_audio.is_external_micro(device) else "Internal"
             if device_type == "External":
-                self.aux_flag_diagn.data = True
+                aux_flag_diagn = True
             # print(f"{device.index}: {device.description} ({device_type})")
         
-        if self.aux_flag_diagn.data:
+        if aux_flag_diagn:
             self.get_logger().info(f"( "u"\u2713"+f" ) - External Microphone 'SHURE MV5' Connected!")
         else:
             self.get_logger().info(f"( X ) - External Microphone 'SHURE MV5' NOT CONNECTED!")
 
-
         # temp_threshold = "{:.2f}".format(self.charmie_audio.check_threshold)
         if self.charmie_audio.check_threshold < 50.0 or self.charmie_audio.check_threshold > 10000.0:
-            self.get_logger().info(f"( X ) - Threshold of {self.charmie_audio.check_threshold} value is wrong!")
-            self.flag_diagn.data = False
-        
+            self.get_logger().info(f"( X ) - Threshold of {self.charmie_audio.check_threshold} value is wrong!")        
         else:
             self.get_logger().info(f"( "u"\u2713"+f" ) - Correct Threshold Value! Value of {self.charmie_audio.check_threshold}")
-            if self.aux_flag_diagn.data == True:
-                self.flag_diagn.data = True
-            else:
-                self.flag_diagn.data = False
-            
-        # print(flag_diagn)
-        self.audio_diagnostic_publisher.publish(self.flag_diagn)
-
-
-
-    # def calibrate_ambient_noise_callback(self, flag: Bool):
-    #     self.charmie_audio.adjust_ambient_noise()
-
-
-    # def get_speech_done_callback(self, state: Bool):
-    #     print("Received Speech Flag:", state.data)
-    #     self.get_logger().info("Received Speech Flag")
-    #     self.flag_speech_done = True
-    #     if self.audio_error:
-    #         self.audio_error = False
-    #         print("Stopped Waiting until CHARMIE speaking is over")
-    #         ### MUST CHANGE TO SERVICES
-    #         # self.audio_command_publisher.publish(self.latest_command)
 
 
     def callback_calibrate_audio(self, request, response):
@@ -1010,6 +982,10 @@ class AudioNode(Node):
             speech_heard = self.charmie_audio.check_speech()
             print("\tYou said: " + speech_heard)
             self.get_logger().info("Finished Processing")
+
+            debug_interpreted_audio = String()
+            debug_interpreted_audio.data = speech_heard
+            self.audio_interpreted_publisher.publish(debug_interpreted_audio)
             
             # publish rgb estou a calcular as keywords
             keywords = self.charmie_audio.check_keywords(speech_heard, command_type)
@@ -1038,64 +1014,76 @@ class AudioNode(Node):
             # speech.data = keywords
             # self.get_speech_publisher.publish(speech)
 
+        # Debug Audio Final Interpretation (this is we have this data in rosbags for debug)
+        debug_final_audio = String()
+        debug_final_audio.data = keywords
+        self.audio_final_publisher.publish(debug_final_audio)
+
         response.command = keywords
         return response
+    
 
-    def set_rgb(self, command):
+    def callback_continuous_audio(self, request, response):
         
-        rgb = Int16()
-        rgb.data = command
-        self.rgb_mode_publisher.publish(rgb)
-        print("Published RGB:", command)
+        # Type of service received: 
+        # string[] keywords # words the robot must hear to answer the service
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+        print(request.keywords)
+        print(request.max_number_attempts)
 
+        heard_keyword = False
+        hear_attempt_ctr = 0
 
-    """
-    ### MUST CHANGE TO SERVICES
-    def audio_command_callback(self, comm: SpeechType):
-        print(comm)
+        while not heard_keyword:
 
-        # self.latest_command = comm
-        self.get_logger().info("Received Audio Command")
-        # publish rgb estou a ouvir
-        self.charmie_audio.hear_speech()
-        # flag = Bool()
-        # flag.data = True
-        # self.flag_listening_publisher.publish(flag)
-        self.get_logger().info("Finished Hearing, Start Processing")
-        
-        if not self.charmie_audio.ERRO_MAXIMO: # temp var unltil i fix the timeout when no speak start is detected
-            # publish rgb estou a criar o speech
-            speech_heard = self.charmie_audio.check_speech()
-            print("\tYou said: " + speech_heard)
-            self.get_logger().info("Finished Processing")
+            self.charmie_audio.hear_speech()
+            self.get_logger().info("Finished Hearing, Start Processing")
             
-            # publish rgb estou a calcular as keywords
-            keywords = self.charmie_audio.check_keywords(speech_heard, comm)
-            # print("Keywords:", keywords)
-        else:
-            self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
-            keywords = None
+            if not self.charmie_audio.ERRO_MAXIMO: # temp var unltil i fix the timeout when no speak start is detected
+                # publish rgb estou a criar o speech
+                speech_heard = self.charmie_audio.check_speech()
+                print("\tYou said: " + speech_heard)
+                self.get_logger().info("Finished Processing")
 
-        if keywords == "ERROR" or keywords == None:
-            self.get_logger().info("Got error, gonna retry the hearing")
-            self.speech_str.command = "I did not understand what you said. Could you please repeat?"
-            self.flag_speech_done = False # to prevent that flag may be true from other speak moments that have nothing to do with this node 
-            self.speaker_publisher.publish(self.speech_str)
+                debug_interpreted_audio = String()
+                debug_interpreted_audio.data = speech_heard
+                self.audio_interpreted_publisher.publish(debug_interpreted_audio)
+                
+                # publish rgb estou a calcular as keywords
+                heard_keyword = self.charmie_audio.check_continuous_keywords(speech_heard, request.keywords)
+
+                if heard_keyword:
+                    break
+                # print("Keywords:", keywords)
+            # else:
+            #     self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
+            #     keywords = None
             
-            # activates the flag that puts everything on hold waiting for the end of sentece said
-            self.audio_error = True
-
-        ### POR ISTO AUTOMATICO
-
-        else:
-            self.get_logger().info("Success Hearing")
-            speech = String()
-            speech.data = keywords
-            self.get_speech_publisher.publish(speech)
-
-    # def wait_for_end_of_speaking()
-    """
+            hear_attempt_ctr += 1
+            if hear_attempt_ctr >= request.max_number_attempts:
+                break
+            # if keywords=="" or keywords=="ERROR" or keywords==None:
+            #     self.get_logger().info("Got error, have to retry the hearing")
+            #     keywords = "ERROR"
         
+        response.success = heard_keyword
+        response.message = "Finished Continuous Audio Mode"
+        return response
+    
+    def set_rgb(self, command=0, wait_for_end_of=True):
+
+        request = SetRGB.Request()
+        request.colour = int(command)
+
+        self.set_rgb_client.call_async(request)
+        self.rgb_success = True
+        self.rgb_message = "Value Sucessfully Sent"
+
+        return self.rgb_success, self.rgb_message
+
+
 def main(args=None):
     rclpy.init(args=args)
     node = AudioNode()

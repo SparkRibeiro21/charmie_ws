@@ -4,7 +4,6 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D 
 from example_interfaces.msg import Bool
-from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import NeckPosition
 from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackPerson, TrackObject
 
@@ -12,10 +11,10 @@ import math
 import tty
 import termios
 import os
+import time
 
-DEBUG_DRAW = True
-
-print(os.name)
+# function to calculate zeros of non linear functions. In this case: to calculate the tilt (up/down) angle to look at coordinates
+from scipy.optimize import fsolve
 
 if os.name == 'nt':
     import msvcrt
@@ -103,15 +102,6 @@ read_tilt_closed_loop = 115*DEGREES_TO_SERVO_TICKS_CONST
 read_pan_open_loop = 180*DEGREES_TO_SERVO_TICKS_CONST
 read_tilt_open_loop = 115*DEGREES_TO_SERVO_TICKS_CONST
 
-# The servos start position (180, 180) does not make the robot look forward because of the camera and face angle.
-# These values are necessary to adjust to this position shift 
-# With recent changes to hardware, the neck part is now perpendicular to the floor, therefore this is no longer necessary
-# PAN_CONST_SHIFT = 0
-# TILT_CONST_SHIFT = 0  # (180 + 10 = 190)
-
-# index = 0
-# dxl_goal_position = [DXL_MINIMUM_POSITION_VALUE, DXL_MAXIMUM_POSITION_VALUE]  # Goal position
-
 # Initialize PacketHandler instance
 # Set the protocol version
 # Get methods and members of Protocol1PacketHandler or Protocol2PacketHandler
@@ -127,35 +117,9 @@ class NeckNode(Node):
         self.declare_parameter("device_name", "USB1") 
         self.declare_parameter("speed_up", 3) 
         self.declare_parameter("speed_down", 2) 
-        self.declare_parameter("speed_sides", 5) 
-
-        # receives two angles, pan and tilt - used when robot must look at something known in advance (ex: direction of navigation, forward, look right/left)
-        ########### self.neck_position_subscriber = self.create_subscription(NeckPosition, "neck_to_pos", self.neck_position_callback ,10)
-        # receives coordinates where the robot must look at, knowing its own position (ex: look at the couch, look at the table)
-        # self.neck_to_coords_subscriber = self.create_subscription(Pose2D, "neck_to_coords", self.neck_to_coords_callback, 10)
-
-        # receives a person and the keypoint it must follow (ex: constantly looking at the person face, look at body center  to check hands and feet)
-        # self.neck_follow_person_subscriber = self.create_subscription(TrackPerson, "neck_follow_person", self.neck_follow_person_callback ,10)
-        # receives an object and it follows it, keeping it centered in the image (ex: constantly looking at a cup, plate, cereal box)
-        # self.neck_follow_object_subscriber = self.create_subscription(TrackObject, "neck_follow_object", self.neck_follow_object_callback, 10)
-
-        # sends the current position of the servos after every change made on the publisher topics
-        self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
-        
-        # Robot Localisation
-        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-
-        # standard diagnostic publisher
-        self.neck_diagnostic_publisher = self.create_publisher(Bool, "neck_diagnostic", 10)
-
-        # SERVICES:
-        # Main receive commads 
-        self.server_set_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
-        self.server_get_neck_position = self.create_service(GetNeckPosition, "get_neck_pos", self.callback_get_neck_position) 
-        self.server_set_neck_to_coordinates = self.create_service(SetNeckCoordinates, "neck_to_coords", self.callback_set_neck_to_coordinates) 
-        self.server_neck_track_person = self.create_service(TrackPerson, "neck_track_person", self.callback_neck_track_person)
-        self.server_neck_track_object = self.create_service(TrackObject, "neck_track_object", self.callback_neck_track_object)
-        self.get_logger().info("Neck Servers have been started")
+        self.declare_parameter("speed_sides", 5)
+        self.declare_parameter("initial_position", [0, 0])  # Default value
+        # example of initial_position param: --ros-args -p initial_position:="[0, 10]"
 
         # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
         DEVICE_PARAM = self.get_parameter("device_name").value
@@ -163,6 +127,7 @@ class NeckNode(Node):
         self.u_tilt_up = self.get_parameter("speed_up").value
         self.u_tilt_down = self.get_parameter("speed_down").value
         self.u_pan = self.get_parameter("speed_sides").value
+        self.initial_position = self.get_parameter("initial_position").value
         
         DEVICENAME = "/dev/tty"+DEVICE_PARAM # "/dev/ttyUSB1"  # Check which port is being used on your controller
         # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
@@ -173,24 +138,42 @@ class NeckNode(Node):
 
         ########## CHANGE TO LOGGER ##########
         print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
-        
-        # if DEBUG_DRAW:
-        #     self.img = Image()
-        #     self.first_img_ready = False
-        #     self.color_image_subscriber = self.create_subscription(Image, "/color/image_raw", self.get_color_image_callback, 10)
-            
+                    
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.robot_t = 0.0
-         
-        self.flag_get_neck_position = False
+
+        # TOPICS:
+        # sends the current position of the servos after every change made on the publisher topics
+        self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
+        # Robot Localisation
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         self.initialise_servos()
 
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.neck_diagnostic_publisher.publish(flag_diagn)
-        
+        # SERVICES:
+        # Main receive commads 
+        self.server_set_neck_position = self.create_service(SetNeckPosition, "neck_to_pos", self.callback_set_neck_position) 
+        self.server_get_neck_position = self.create_service(GetNeckPosition, "get_neck_pos", self.callback_get_neck_position) 
+        self.server_set_neck_to_coordinates = self.create_service(SetNeckCoordinates, "neck_to_coords", self.callback_set_neck_to_coordinates) 
+        self.server_neck_track_person = self.create_service(TrackPerson, "neck_track_person", self.callback_neck_track_person)
+        self.server_neck_track_object = self.create_service(TrackObject, "neck_track_object", self.callback_neck_track_object)
+        self.get_logger().info("Neck Servers have been started")
+
+        # timer that checks the controller every 50 ms 
+        self.create_timer(1.0, self.timer_callback)
+
+
+    ########## TIMER ##########
+    def timer_callback(self):
+
+        # if any of the modules that need neck info (calculate positions of any detected object/person)
+        # is turned on after the initial neck movement and no other neck movement is made, these variables are never updated
+        # this way, these are updated periodically
+        global read_pan_open_loop, read_tilt_open_loop
+
+        self.publish_get_neck_pos(read_pan_open_loop, read_tilt_open_loop)
+
 
     ########## SERVICES ##########
     def callback_set_neck_position(self, request, response):
@@ -210,7 +193,7 @@ class NeckNode(Node):
 
         # returns whether the message was played and some informations regarding status
         response.success = True
-        response.message = "set neck position"
+        response.message = "Set Neck Position"
         return response
 
     def callback_get_neck_position(self, request, response):
@@ -242,18 +225,18 @@ class NeckNode(Node):
         # calculate the angle according to last received odometry
         neck_target_x = request.coords.x
         neck_target_y = request.coords.y
+        neck_target_z = request.coords.z
 
-        if request.is_tilt:
-            neck_target_other_axis = request.tilt
-            self.get_logger().info("Received Neck Coordinates %s" %("("+str(request.coords.x)+", "+str(request.coords.y)+") - ["+str(request.tilt)+"]"))
-        else:
-            pass
-            self.get_logger().warn("Not implemented yet... switch to x,y with tilt.")
-            ##### STILL HAVE TO MAKE THE MATH FOR THIS CASE
+        self.get_logger().info("Received Neck Coordinates %s" %("("+str(request.coords.x)+", "+str(request.coords.y)+", "+str(request.coords.z)+")"))
+        
+        ### PAN MOVEMENT (LEFT - RIGHT)
 
-        # print(math.degrees(self.robot_t))
-       
-        ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
+        # 6.5 cm adjustement from bottom servo to robot center, this helps in cases where angle to coordinates are near 90 and 270 degrees
+        # where there was an error of 4/5 degrees because the axis were not alligned 
+        bottom_servo_to_robot_center = 0.065
+
+        # print(math.degrees(self.robot_t))       
+        ang = math.atan2(self.robot_y + bottom_servo_to_robot_center - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
         # print("ang_rad:", ang)
         ang = math.degrees(ang)
         # print("ang_deg:", ang)
@@ -269,13 +252,54 @@ class NeckNode(Node):
         # print("neck_to_coords:", pan_neck_to_coords, ang)
         # self.get_logger().info("neck back angle %d" %pan_neck_to_coords)
 
-        self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis+180.0)
+        ### TILT MOVEMENT (UP - DOWN)
+        dist = math.sqrt((self.robot_y - neck_target_y)**2 + (self.robot_x - neck_target_x)**2)
+
+        # Constants
+        h = 1.30 # height of rotation axis of up/down servo from the ground (should be automatic). Does not consider changes in torso.
+        c = 0.06 # distance from center rotation axis of up/down servo to face (horizontal when looking forward)
+        d = 0.09 # distance from c to center of face. This way the center of the face is looking at the person and not the camera or servo.
+        e = math.sqrt(c**2 + d**2)
+        a = neck_target_z
+        b = dist
+            
+        # Define the function based on the equation
+        def equation(alpha):
+            return alpha - math.atan(c / d) - math.atan((h + e * math.cos(alpha) - a) / (b - e * math.sin(alpha)))
+            # return alpha - np.arctan(c / d) - np.arctan((h + e * np.sin(alpha) - a) / (b - e * np.cos(alpha)))
+
+        # Initial guess for alpha
+        initial_guess = 0
+
+        initial_time = time.time() 
+
+        # Solve the equation
+        alpha_solution = fsolve(equation, initial_guess)
+
+        elapsed_time = time.time() - initial_time
+
+        phi = math.atan(d / c)
+
+        final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90)
+
+        # Debug prints of calculations of up/down movement:
+        # print("Alpha:", math.degrees(alpha_solution[0]))
+        # print("Phi:", math.degrees(phi))
+        print("Alpha+Phi:", round(final_x, 2))
+        # print("Time:", elapsed_time)
+
+        if final_x > 0.0: # solves rounding errors when variable is positive
+            final_x += 0.5
+
+        ### por pan: pan+180 para ficar standard com o resto 
+
+        # self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis+180.0)
+        self.move_neck(180 - pan_neck_to_coords, final_x+180.0)
 
         # returns whether the message was played and some informations regarding status
         response.success = True
-        response.message = "set to coordinates"
+        response.message = "Set Neck to (x,y,z) Coordinates"
         return response
-    
 
     def callback_neck_track_person(self, request, response):
 
@@ -324,7 +348,7 @@ class NeckNode(Node):
         self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
     
         response.success = True
-        response.message = "neck track person"
+        response.message = "Neck Track Person"
         return response
 
     
@@ -369,105 +393,15 @@ class NeckNode(Node):
         self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
     
         response.success = True
-        response.message = "neck track object"
+        response.message = "Neck Track Object"
         return response
 
 
     ########## CALLBACKS ##########
-    # def neck_position_callback(self, neck_pos: NeckPosition):
-    #     self.get_logger().info("Received Neck Position, Adjusting the Neck Position")
-    #     # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
-    #     
-    #     # +180.0 on both values since for calculations (180, 180) is the middle position but is easier UI for center to be (0,0)
-    #     self.move_neck(neck_pos.pan+180.0, neck_pos.tilt+180.0)
-
-
-    # def neck_to_coords_callback(self, pose: Pose2D):
-    #     # calculate the angle according to last received odometry
-    #     neck_target_x = pose.x
-    #     neck_target_y = pose.y
-    #     neck_target_other_axis = pose.theta
-    # 
-    #     # print(math.degrees(self.robot_t))
-    #     
-    #     ang = math.atan2(self.robot_y - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
-    #     # print("ang_rad:", ang)
-    #     ang = math.degrees(ang)
-    #     # print("ang_deg:", ang)
-    # 
-    #     pan_neck_to_coords = math.degrees(self.robot_t) - ang
-    #     if pan_neck_to_coords < -math.degrees(math.pi):
-    #         pan_neck_to_coords += math.degrees(2*math.pi)
-    # 
-    #     print("neck_to_coords:", pan_neck_to_coords, ang)
-    #     self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis)
-
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_x = pose.x
         self.robot_y = pose.y
         self.robot_t = pose.theta
-
-    """
-    def callback_neck_track_person(self, pose: TrackPerson):
-        print("Folow person received")
-
-        # these are the only two points that will always exist independentely if the confidence of a keypoint is > MIN_CONFIDENCE_VALUE
-        if pose.body_part == "Head":
-            target_x = pose.head_center_x
-            target_y = pose.head_center_y
-        elif pose.body_part == "Torso":
-            target_x = pose.head_center_x
-            target_y = pose.head_center_y        
-            
-        global read_pan_open_loop, read_tilt_open_loop
-
-        img_width = 1280
-        img_height = 720
-
-        target_x = pose.person.kp_nose_x
-        target_y = pose.person.kp_nose_y
-
-        hor_fov = 91.2
-        ver_fov = 65.5
-
-        print(target_x, target_y)
-
-        error_x = -int(img_width/2 - pose.person.kp_nose_x)
-        error_y = -int(img_height/2 - pose.person.kp_nose_y)
-
-        perc_x = error_x/(img_width/2)
-        perc_y = error_y/(img_height/2)
-
-        new_a_x = (-perc_x*(hor_fov/2))
-        new_a_y = (-perc_y*(ver_fov/2))*0.75 # on the 'yes movement' axis, it tended to always overshoot a bit, the 0.75 factor fixes it
-
-        print("angs: ", new_a_x, new_a_y)
-
-        # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-        self.send_neck_move(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-        
-        # if DEBUG_DRAW and self.first_img_ready:
-        #     br = CvBridge()
-        #     current_frame = br.imgmsg_to_cv2(self.img, "bgr8")
-        # 
-        #     # cv2.line(current_frame, (img_width//2, img_height//2), (img_width//2+error_x, img_height//2+error_y), (255,0,0), 3)
-        #     cv2.line(current_frame, (img_width//2, img_height//2), (img_width//2, img_height//2+error_y), (255,0,0), 3)
-        #     cv2.line(current_frame, (img_width//2, img_height//2), (img_width//2+error_x, img_height//2), (255,0,0), 3)
-        # 
-        #     cv2.circle(current_frame, (img_width//2, img_height//2), 3, (0,0,255), -1)
-        #     cv2.circle(current_frame, (target_x, target_y), 3, (0,0,255), -1)
-        # 
-        #     cv2.imshow("Neck Debug", current_frame)
-        #     cv2.waitKey(1)
-    """
-
-    # def neck_follow_object_callback(self, pose: TrackObject):
-    #     pass
-
-    # def get_color_image_callback(self, img: Image):
-        # self.get_logger().info('Receiving color video frame')
-        # self.img = img
-        # self.first_img_ready = True
 
 
     ########## NECK CNOTROL FUNCTIONS ##########
@@ -497,24 +431,37 @@ class NeckNode(Node):
             getch()
             quit()
 
-        # Enable Dynamixel Torque
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
-        if dxl_comm_result != COMM_SUCCESS:
-            print("TILT %s" % packetHandler.getTxRxResult(dxl_comm_result))
-        elif dxl_error != 0:
-            print("TILT %s" % packetHandler.getRxPacketError(dxl_error))
-        else:
-            print("Dynamixel TILT has been successfully connected")
+        comms_with_neck_servo_established = False
+        while not comms_with_neck_servo_established:
 
-        dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
-        if dxl_comm_result != COMM_SUCCESS:
-            print("PAN %s" % packetHandler.getTxRxResult(dxl_comm_result))
-        elif dxl_error != 0:
-            print("PAN %s" % packetHandler.getRxPacketError(dxl_error))
-        else:
-            print("Dynamixel PAN has been successfully connected")
-        # self.get_logger().info("Set Torque Mode")
+            comms_pan = False
+            comms_tilt = False
 
+            # Enable Dynamixel Torque
+            dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_TILT, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+            if dxl_comm_result != COMM_SUCCESS:
+                print("TILT %s" % packetHandler.getTxRxResult(dxl_comm_result))
+            elif dxl_error != 0:
+                print("TILT %s" % packetHandler.getRxPacketError(dxl_error))
+            else:
+                print("Dynamixel TILT has been successfully connected")
+                comms_tilt = True
+
+            dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_TORQUE_ENABLE, TORQUE_ENABLE)
+            if dxl_comm_result != COMM_SUCCESS:
+                print("PAN %s" % packetHandler.getTxRxResult(dxl_comm_result))
+            elif dxl_error != 0:
+                print("PAN %s" % packetHandler.getRxPacketError(dxl_error))
+            else:
+                print("Dynamixel PAN has been successfully connected")
+                comms_pan = True
+
+            if comms_tilt and comms_pan:
+                comms_with_neck_servo_established = True
+            else:
+                self.get_logger().error("Neck Module not Powered!")
+                time.sleep(0.2)
+                
         # Set PID parameters for each servo (different params because of how smooth the movement must be on each axis)
         dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_D_GAIN, PAN_D_GAIN)
         dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(self.portHandler, DXL_ID_PAN, ADDR_MX_I_GAIN, PAN_I_GAIN)
@@ -528,28 +475,9 @@ class NeckNode(Node):
 
         self.get_logger().info("Set Neck to Initial Position, Looking Forward")
 
-        self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-
-        """
-        while True:
-            aaa = 4
-            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180-45, 180-45) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180+45, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180, 180-30) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(180-45, 180-45) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-            self.move_neck(0, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            time.sleep(aaa)
-        """
+        # changed to two different positions so that in any case it is visible the neck moving when is started 
+        self.move_neck(180, 135) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        self.move_neck(180+self.initial_position[0], 180+self.initial_position[1]) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
 
         
     def read_servo_position(self):
@@ -664,7 +592,7 @@ class NeckNode(Node):
         if t < MIN_TILT_ANGLE:
             t = MIN_TILT_ANGLE
         
-        print(p,t)
+        # print(p,t)
 
         p = int(p * DEGREES_TO_SERVO_TICKS_CONST + 0.5)
         t = int(t * DEGREES_TO_SERVO_TICKS_CONST + 0.5)

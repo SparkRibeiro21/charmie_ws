@@ -39,10 +39,7 @@ class LocalisationNode(Node):
         self.localisation_publisher = self.create_publisher(Odometry, "amcl_tr", 10)
         # publisher_auxiliar só para testes:
         self.amcl_alone_localisation_publisher = self.create_publisher(Odometry, "odom_a", 10)
-
-        self.rgb_mode_publisher = self.create_publisher(Int16, "rgb_mode", 10)
-
-
+        
         self.odom_robot = Odometry()
         self.conv_amcl = Odometry()
         self.amcl_loc = PoseWithCovarianceStamped()
@@ -86,14 +83,6 @@ class LocalisationNode(Node):
 
         self.xxx = 0.0
         self.yyy = 0.0
-
-
-        self.loacalisation_diagnostic_publisher = self.create_publisher(Bool, "localisation_diagnostic", 10)
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.loacalisation_diagnostic_publisher.publish(flag_diagn)
-
 
 
     def odom_robot_callback(self, odom:Odometry):

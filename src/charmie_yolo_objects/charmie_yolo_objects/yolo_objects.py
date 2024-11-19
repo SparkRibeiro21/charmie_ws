@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
 from ultralytics import YOLO
+from ultralytics.utils.plotting import Annotator, colors
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedObject, Yolov8Objects, BoundingBox, BoundingBoxAndPoints
-from charmie_interfaces.srv import GetPointCloud, ActivateYoloObjects
+from charmie_interfaces.msg import DetectedObject, BoundingBox, BoundingBoxAndPoints, ListOfDetectedObject, MaskDetection
+from charmie_interfaces.srv import GetPointCloudBB, GetPointCloudMask, ActivateYoloObjects
 from cv_bridge import CvBridge
 import cv2 
 import json
 import threading
+import numpy as np
 
 from pathlib import Path
 
 import math
 import time
 
-objects_filename = "segmentation_M_size_model_600_epochs.pt"
+# objects_filename = "segmentation_M_size_model_600_epochs.pt"
 # objects_filename = "epoch20.pt"
 # objects_filename = "new_best.pt"
 # objects_filename = "new_best_2.pt"
+objects_filename = "24_25_october_v1_LAR_seg.pt"
 # objects_filename = "detect_hands_2.pt"
 # objects_filename = "50_epochs.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
@@ -60,24 +63,24 @@ class Yolo_obj(Node):
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
-        self.midpath = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
-        self.complete_path = self.home+'/'+self.midpath+'/'
+        midpath_yolo_models = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects/yolo_models"
+        self.complete_path_yolo_models = self.home+'/'+midpath_yolo_models+'/'
 
-        self.midpath_configuration_files = "charmie_ws/src/configuration_files"
-        self.complete_path_configuration_files = self.home+'/'+self.midpath_configuration_files+'/'
+        midpath_configuration_files = "charmie_ws/src/configuration_files"
+        self.complete_path_configuration_files = self.home+'/'+midpath_configuration_files+'/'
 
         # Opens files with objects names and categories
         try:
-            with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
-            # print(self.objects_file) """
+            # print(self.objects_file)
             # with open(self.complete_path_configuration_files + 'objects_robocup.json', encoding='utf-8') as json_file:
             #     self.objects_file = json.load(json_file)
             # print(self.objects_file)
-            with open(self.complete_path_configuration_files + 'rooms_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
-            with open(self.complete_path_configuration_files + 'furniture_location.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
             self.get_logger().info("Successfully Imported data from json configuration files. (objects_list, house_rooms and house_furniture)")
@@ -103,44 +106,50 @@ class Yolo_obj(Node):
         # whether the activate doors flag starts as ON or OFF 
         self.ACTIVATE_YOLO_DOORS_HAND = self.get_parameter("activate_doors_hand").value
 
-        print(self.home+'/'+objects_filename)
+        # print(self.home+'/'+objects_filename)
+        yolo_models_sucessful_imported = False
 
-        # Import the models, one for each category
-        self.object_model = YOLO(self.home+'/'+objects_filename)
-        self.shoes_model = YOLO(self.complete_path + shoes_filename)
-        self.doors_model = YOLO(self.complete_path + doors_filename)
-        # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
-        self.object_model_hand = YOLO(self.home+'/'+objects_filename)
-        self.shoes_model_hand = YOLO(self.complete_path + shoes_filename)
-        self.doors_model_hand = YOLO(self.complete_path + doors_filename)
+        while not yolo_models_sucessful_imported:
+            
+            try: 
+                # Import the models, one for each category
+                self.object_model = YOLO(self.complete_path_yolo_models + objects_filename)
+                self.shoes_model = YOLO(self.complete_path_yolo_models + shoes_filename)
+                self.doors_model = YOLO(self.complete_path_yolo_models + doors_filename)
+                # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
+                self.object_model_hand = YOLO(self.complete_path_yolo_models + objects_filename)
+                self.shoes_model_hand = YOLO(self.complete_path_yolo_models + shoes_filename)
+                self.doors_model_hand = YOLO(self.complete_path_yolo_models + doors_filename)
 
-        print("Sucessfully imported YOLO models")
+                self.get_logger().info("Successfully imported YOLO models (objects, furniture, shoes)")
+
+                yolo_models_sucessful_imported = True
+
+            except:
+                self.get_logger().error("Could NOT import YOLO models (objects, furniture, shoes)")
+                time.sleep(1.0)
 
         ### Topics ###
         # Intel Realsense
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
-        
-        # Diagnostics        
-        self.yolo_object_diagnostic_publisher = self.create_publisher(Bool, "yolo_object_diagnostic", 10)
- 
+         
         # Publish Results
-        self.objects_filtered_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered', 10)
-        self.objects_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'objects_detected_filtered_hand', 10)
-        self.doors_filtered_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered', 10)
-        self.doors_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'doors_detected_filtered_hand', 10)
-        self.shoes_filtered_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered', 10)
-        self.shoes_filtered_hand_publisher = self.create_publisher(Yolov8Objects, 'shoes_detected_filtered_hand', 10)
+        self.objects_filtered_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered', 10)
+        self.objects_filtered_hand_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered_hand', 10)
         
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         ### Services (Clients) ###
         # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloud, "get_point_cloud")
+        self.point_cloud_bb_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
+        self.point_cloud_mask_client = self.create_client(GetPointCloudMask, "get_point_cloud_mask")
 
-        while not self.point_cloud_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Point Cloud...")
+        while not self.point_cloud_bb_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud BB...")
+        while not self.point_cloud_mask_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud Mask...")
 
         ### Services ###
         self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
@@ -158,11 +167,8 @@ class Yolo_obj(Node):
         self.new_head_rgb = False
         self.new_hand_rgb = False
         self.waiting_for_pcloud = False
-        self.point_cloud_response = GetPointCloud.Response()
-
-        flag_diagn = Bool()
-        flag_diagn.data = True
-        self.yolo_object_diagnostic_publisher.publish(flag_diagn)
+        self.point_cloud_bb_response = GetPointCloudBB.Response()
+        self.point_cloud_mask_response = GetPointCloudMask.Response()
 
         self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
                                    'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
@@ -193,22 +199,43 @@ class Yolo_obj(Node):
     
 
     # request point cloud information from point cloud node
-    def call_point_cloud_server(self, req, camera):
-        request = GetPointCloud.Request()
+    def call_point_cloud_bb_server(self, req, camera):
+        request = GetPointCloudBB.Request()
         request.data = req
         request.retrieve_bbox = False
         request.camera = camera
     
-        future = self.point_cloud_client.call_async(request)
-        future.add_done_callback(self.callback_call_point_cloud)
+        future = self.point_cloud_bb_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud_bb)
 
-    def callback_call_point_cloud(self, future):
+    def callback_call_point_cloud_bb(self, future):
 
         try:
             # in this function the order of the line of codes matter
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            self.point_cloud_response = future.result()
+            self.point_cloud_bb_response = future.result()
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    # request point cloud information from point cloud node
+    def call_point_cloud_mask_server(self, req, camera):
+        request = GetPointCloudMask.Request()
+        request.data = req
+        request.camera = camera
+    
+        future = self.point_cloud_mask_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud_mask)
+
+    def callback_call_point_cloud_mask(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            self.point_cloud_mask_response = future.result()
             self.waiting_for_pcloud = False
             # print("Received Back")
         except Exception as e:
@@ -264,7 +291,7 @@ class Yolo_obj(Node):
         self.head_rgb = img
         self.new_head_rgb = True
 
-    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera, mask=None):
 
         object_id = boxes_id.id
         if boxes_id.id == None:
@@ -285,7 +312,30 @@ class Yolo_obj(Node):
         object_rel_pos.y =  center_object_coordinates.x/1000
         object_rel_pos.z =  center_object_coordinates.z/1000
         new_object.position_relative = object_rel_pos
+
+        # if there is a segmentation mask, it adds to DetectedObject 
+        new_mask = MaskDetection()
+        new_mask_norm = MaskDetection()
         
+        if mask is not None:
+            for p, p_n in zip(mask.xy[0], mask.xyn[0]):
+
+                points_mask = Point()
+                points_mask.x = float(p[0])
+                points_mask.y = float(p[1])
+                points_mask.z = 0.0
+                new_mask.point.append(points_mask)
+
+                points_mask_norm = Point()
+                points_mask_norm.x = float(p_n[0])
+                points_mask_norm.y = float(p_n[1])
+                points_mask_norm.z = 0.0
+                new_mask_norm.point.append(points_mask_norm)
+
+        # print(new_mask)
+        new_object.mask = new_mask
+        new_object.mask_norm = new_mask_norm
+
         # calculate the absolute position according to the robot localisation
         angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
         dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
@@ -409,110 +459,187 @@ class YoloObjectsMain():
                 object_results = self.node.doors_model_hand.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
             # else: # just so there is no error in case of wrong model name
             #     object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
-        
 
         num_obj = len(object_results[0])
         # self.get_logger().info(f"Objects detected: {num_obj}")
 
-        requested_objects = []
-        for object_idx in range(num_obj):
-
-            boxes_id = object_results[0].boxes[object_idx]
-            
-            bb = BoundingBox()
-            bb.box_top_left_x = int(boxes_id.xyxy[0][0])
-            bb.box_top_left_y = int(boxes_id.xyxy[0][1])
-            bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
-            bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
-
-            get_pc = BoundingBoxAndPoints()
-            get_pc.bbox = bb
-
-            requested_objects.append(get_pc)
-
-
-        self.node.waiting_for_pcloud = True
-        self.node.call_point_cloud_server(requested_objects, camera)
-
-        while self.node.waiting_for_pcloud:
-            pass
-
-        new_pcloud = self.node.point_cloud_response.coords
-
-        yolov8_obj_filtered = Yolov8Objects()
-        num_objects_filtered = 0
-
-        # print(num_obj)
         # print(object_results[0])
-        # print(object_results[0].boxes)
-
-        for object_idx in range(num_obj):
-            boxes_id = object_results[0].boxes[object_idx]
-            # print(object_results[0].boxes)
-
-            if model == "objects":  
-                object_name = self.node.objects_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
-                object_class = self.node.objects_class_names_dict[object_name]
-            elif model == "shoes":  
-                object_name = self.node.shoes_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
-                object_class = "Footwear"
-            elif model == "doors":  
-                object_name = self.node.doors_class_names[int(boxes_id.cls[0])].replace("_", " ").title()
-                object_class = "Furniture"
-        
-            # adds object to "object_pose" without any restriction
-            new_object = DetectedObject()
-            self.node.get_logger().info(f"Objects detected: {new_pcloud[object_idx].center_coords}")
-            new_object = self.node.add_object_to_detectedobject_msg(boxes_id, object_name, object_class, new_pcloud[object_idx].center_coords, camera)
-
-            ALL_CONDITIONS_MET = 1
-
-            if model == "objects":   
-                # checks whether the object confidence is above a selected level
-                if not boxes_id.conf >= MIN_OBJECT_CONF_VALUE:
-                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                    # print("- Misses minimum object confidence level")
-
-            elif model == "shoes":     
-                # checks whether the shoes confidence is above a selected level
-                if not boxes_id.conf >= MIN_SHOES_CONF_VALUE:
-                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                    # print("- Misses minimum shoe confidence level")
-
-            elif model == "doors":  
-                # checks whether the doors confidence is above a selected level
-                if not boxes_id.conf >= MIN_DOORS_CONF_VALUE:
-                    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                    # print("- Misses minimum door confidence level")
-
-            # if the object detection passes all selected conditions, the detected object is added to the publishing list
-            if ALL_CONDITIONS_MET:
-                num_objects_filtered+=1
-                yolov8_obj_filtered.objects.append(new_object)
-
-        # yolov8_obj_filtered.image_rgb = self.node.head_rgb
-        yolov8_obj_filtered.num_objects = num_objects_filtered
-
-        if model == "objects" and camera == "head":
-            self.node.objects_filtered_publisher.publish(yolov8_obj_filtered)
-        if model == "objects" and camera == "hand":
-            self.node.objects_filtered_hand_publisher.publish(yolov8_obj_filtered)
-        if model == "doors" and camera == "head":
-            self.node.doors_filtered_publisher.publish(yolov8_obj_filtered)
-        if model == "doors" and camera == "hand":
-            self.node.doors_filtered_hand_publisher.publish(yolov8_obj_filtered)
-        if model == "shoes" and camera == "head":
-            self.node.shoes_filtered_publisher.publish(yolov8_obj_filtered)
-        if model == "shoes" and camera == "hand":
-            self.node.shoes_filtered_hand_publisher.publish(yolov8_obj_filtered)
-        
-        self.node.get_logger().info(f"Objects detected: {num_obj}/{num_objects_filtered}")
-        self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
+        # print(object_results[0].masks)
+        yolov8_obj_filtered = ListOfDetectedObject()
 
         if self.node.DEBUG_DRAW:
-            self.draw_detected_objects(yolov8_obj_filtered, current_frame_draw)
+            current_frame_draw_a = cv2.cvtColor(current_frame_draw, cv2.COLOR_BGR2BGRA)
+            annotator = Annotator(current_frame_draw_a, line_width=1)
+            b_mask = np.zeros(current_frame_draw.shape[:2], np.uint8)
 
-        return num_obj, num_objects_filtered
+        if object_results[0].boxes.id is not None:
+
+            boxes = object_results[0].boxes
+            masks = object_results[0].masks
+            track_ids = object_results[0].boxes.id.int().cpu().tolist()
+
+            if masks is not None: # if model has segmentation mask
+                
+                requested_objects = []
+                for mask in masks:
+                    m = MaskDetection()
+                    for p in mask.xy[0]:
+
+                        points_mask = Point()
+                        points_mask.x = float(p[0])
+                        points_mask.y = float(p[1])
+                        points_mask.z = 0.0
+                        m.point.append(points_mask)
+
+                    requested_objects.append(m)
+
+                # print(requested_objects)
+
+                self.node.waiting_for_pcloud = True
+                self.node.call_point_cloud_mask_server(requested_objects, camera)
+
+                while self.node.waiting_for_pcloud:
+                    pass
+
+                new_pcloud = self.node.point_cloud_mask_response.coords
+                
+                for box, mask, mask_d, track_id, pcloud in zip(boxes, masks, masks.xy, track_ids, new_pcloud):
+
+                    if model == "objects":
+                        object_name = self.node.objects_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_class = self.node.objects_class_names_dict[object_name]
+                    elif model == "shoes":  
+                        object_name = self.node.shoes_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_class = "Footwear"
+                    elif model == "doors":  
+                        object_name = self.node.doors_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_class = "Furniture"
+                
+                    # adds object to "object_pose" without any restriction
+                    new_object = DetectedObject()
+                    self.node.get_logger().info(f"'{object_name}' Mask Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
+                    new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera, mask)
+
+                    ALL_CONDITIONS_MET = 1
+
+                    if pcloud.center_coords.x == 0 and pcloud.center_coords.y == 0 and pcloud.center_coords.x == 0: # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+
+                    if model == "objects":   
+                        # checks whether the object confidence is above a selected level
+                        if not box.conf >= MIN_OBJECT_CONF_VALUE:
+                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                            # print("- Misses minimum object confidence level")
+
+                    elif model == "shoes":     
+                        # checks whether the shoes confidence is above a selected level
+                        if not box.conf >= MIN_SHOES_CONF_VALUE:
+                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                            # print("- Misses minimum shoe confidence level")
+
+                    elif model == "doors":  
+                        # checks whether the doors confidence is above a selected level
+                        if not box.conf >= MIN_DOORS_CONF_VALUE:
+                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                            # print("- Misses minimum door confidence level")
+
+                    # if the object detection passes all selected conditions, the detected object is added to the publishing list
+                    if ALL_CONDITIONS_MET:
+                        yolov8_obj_filtered.objects.append(new_object)
+
+                    if self.node.DEBUG_DRAW:
+                        #new for segmentation 
+                        color = colors(int(track_id), True)
+                        txt_color = annotator.get_txt_color(color)
+                        annotator.seg_bbox(mask=mask_d, mask_color=color, label=str(track_id), txt_color=txt_color)
+
+                        # print(mask_d)
+                        # print(type(mask_d))
+                        contour = mask_d
+                        contour = contour.astype(np.int32)
+                        contour = contour.reshape(-1, 1, 2)
+                        cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED)
+
+            else: # if for some reason, a used model does not have 'segmentation' masks
+
+                requested_objects = []
+                for box in boxes:
+                    
+                    bb = BoundingBox()
+                    bb.box_top_left_x = int(box.xyxy[0][0])
+                    bb.box_top_left_y = int(box.xyxy[0][1])
+                    bb.box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
+                    bb.box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
+
+                    get_pc = BoundingBoxAndPoints()
+                    get_pc.bbox = bb
+
+                    requested_objects.append(get_pc)
+
+                self.node.waiting_for_pcloud = True
+                self.node.call_point_cloud_bb_server(requested_objects, camera)
+
+                while self.node.waiting_for_pcloud:
+                    pass
+
+                new_pcloud = self.node.point_cloud_bb_response.coords
+                
+                for box, track_id, pcloud in zip(boxes, track_ids, new_pcloud):
+
+                    if model == "objects":
+                        object_name = self.node.objects_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_class = self.node.objects_class_names_dict[object_name]
+                    elif model == "shoes":  
+                        object_name = self.node.shoes_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_class = "Footwear"
+                    elif model == "doors":  
+                        object_name = self.node.doors_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_class = "Furniture"
+                
+                    # adds object to "object_pose" without any restriction
+                    new_object = DetectedObject()
+                    self.node.get_logger().info(f"'{object_name}' BB Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
+                    new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera)
+
+                    ALL_CONDITIONS_MET = 1
+
+                    if model == "objects":   
+                        # checks whether the object confidence is above a selected level
+                        if not box.conf >= MIN_OBJECT_CONF_VALUE:
+                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                            # print("- Misses minimum object confidence level")
+
+                    elif model == "shoes":     
+                        # checks whether the shoes confidence is above a selected level
+                        if not box.conf >= MIN_SHOES_CONF_VALUE:
+                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                            # print("- Misses minimum shoe confidence level")
+
+                    elif model == "doors":  
+                        # checks whether the doors confidence is above a selected level
+                        if not box.conf >= MIN_DOORS_CONF_VALUE:
+                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                            # print("- Misses minimum door confidence level")
+
+                    # if the object detection passes all selected conditions, the detected object is added to the publishing list
+                    if ALL_CONDITIONS_MET:
+                        yolov8_obj_filtered.objects.append(new_object)
+
+            self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
+            self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
+
+
+            if self.node.DEBUG_DRAW:
+                new_color = np.array([255, 255, 255, 128])
+                for c in range(0,3):
+                    current_frame_draw_a[:, :, c][b_mask != 0] = (current_frame_draw_a[:, :, c][b_mask != 0] * (1 - new_color[3]/255)) + (new_color[c]*(new_color[3]/255))
+                
+                # cv2.imshow("mask", b_mask)
+                cv2.imshow("instance-segmentation-object-tracking2", current_frame_draw_a)
+                cv2.waitKey(10)
+                self.draw_detected_objects(yolov8_obj_filtered, current_frame_draw)
+
+        return yolov8_obj_filtered, num_obj
 
     def draw_detected_objects(self, yolov8_objects, current_frame_draw):
         
@@ -718,32 +845,46 @@ class YoloObjectsMain():
             # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
             # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
 
+            # /*** ultralytics.engine.results.Masks ***/
+            # A class for storing and manipulating detection masks.
+            # Attributes:
+            # Name	Type	Description
+            # data	Tensor | ndarray	The raw tensor or array containing mask data.
+            # orig_shape	tuple	Original image shape in (height, width) format.
+            # xy	List[ndarray]	A list of segments in pixel coordinates.
+            # xyn	List[ndarray]	A list of normalized segments.
+            
+
             if self.node.new_head_rgb:
 
                 total_obj = 0
-                total_filtered_obj = 0
                 current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
                 # current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
+                list_all_objects_detected = ListOfDetectedObject()
                     
+
                 if self.node.ACTIVATE_YOLO_OBJECTS:
-                    to, tfo = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw)
+                    list_detected_objects, to = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw)
                     total_obj += to
-                    total_filtered_obj += tfo
-                    print("should return head yolo objects")
-                
+                    for o in list_detected_objects.objects:
+                        list_all_objects_detected.objects.append(o)
+                    
                 if self.node.ACTIVATE_YOLO_DOORS:
-                    td, tfd = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
+                    list_detected_doors, td = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
                     total_obj += td
-                    total_filtered_obj += tfd
-                    print("should return head yolo doors")
+                    for o in list_detected_doors.objects:
+                        list_all_objects_detected.objects.append(o)
                 
                 if self.node.ACTIVATE_YOLO_SHOES:
-                    ts, tfs = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
+                    list_detected_shoes, ts = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
                     total_obj += ts
-                    total_filtered_obj += tfs
-                    print("should return head yolo shoes")
+                    for o in list_detected_shoes.objects:
+                        list_all_objects_detected.objects.append(o)
+
+                if len(list_all_objects_detected.objects) > 0:
+                    self.node.objects_filtered_publisher.publish(list_all_objects_detected)
 
 
                 self.new_head_frame_time = time.time()
@@ -751,8 +892,11 @@ class YoloObjectsMain():
                 self.prev_head_frame_time = self.new_head_frame_time
 
                 if self.node.DEBUG_DRAW:
+
+                    annotator = Annotator(current_frame_draw, line_width=1)
+            
                     cv2.putText(current_frame_draw, 'fps:' + self.head_fps, (0, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'np:' + str(len(list_all_objects_detected.objects)) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HEAD", current_frame_draw)
                     cv2.waitKey(1)
 
@@ -761,29 +905,32 @@ class YoloObjectsMain():
             if self.node.new_hand_rgb:
 
                 total_obj = 0
-                total_filtered_obj = 0
                 current_frame = self.node.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
                 current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
+                list_all_objects_detected_hand = ListOfDetectedObject()
 
                 if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
-                    to, tfo = self.detect_with_yolo_model(model="objects", camera="hand", current_frame_draw=current_frame_draw)
+                    list_detected_objects_hand, to = self.detect_with_yolo_model(model="objects", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += to
-                    total_filtered_obj += tfo
-                    print("should return hand yolo objects")
-                
+                    for o in list_detected_objects_hand.objects:
+                        list_all_objects_detected_hand.objects.append(o)
+                    
                 if self.node.ACTIVATE_YOLO_DOORS_HAND:
-                    td, tfd = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw)
+                    list_detected_doors_hand, td = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += td
-                    total_filtered_obj += tfd
-                    print("should return hand yolo doors")
+                    for o in list_detected_doors_hand.objects:
+                        list_all_objects_detected_hand.objects.append(o)
                 
                 if self.node.ACTIVATE_YOLO_SHOES_HAND:
-                    ts, tfs = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw)
+                    list_detected_shoes_hand, ts = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw)
                     total_obj += ts
-                    total_filtered_obj += tfs
-                    print("should return hand yolo shoes")
+                    for o in list_detected_shoes_hand.objects:
+                        list_all_objects_detected_hand.objects.append(o)
+
+                if len(list_all_objects_detected_hand.objects) > 0:
+                    self.node.objects_filtered_hand_publisher.publish(list_all_objects_detected_hand)
 
 
                 self.new_hand_frame_time = time.time()
@@ -792,10 +939,9 @@ class YoloObjectsMain():
 
                 if self.node.DEBUG_DRAW:
                     cv2.putText(current_frame_draw, 'fps:' + self.hand_fps, (0, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(current_frame_draw, 'np:' + str(total_filtered_obj) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(current_frame_draw, 'np:' + str(len(list_all_objects_detected_hand.objects)) + '/' + str(total_obj), (180, _height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
                     cv2.waitKey(1)
 
                 self.node.new_hand_rgb = False
             
-            # time.sleep(0.05)

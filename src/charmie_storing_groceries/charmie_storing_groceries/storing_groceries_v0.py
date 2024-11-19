@@ -7,7 +7,7 @@ import threading
 
 from example_interfaces.msg import Bool, String, Int16, Float32
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger, SetFace, ActivateObstacles
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, Trigger, ActivateYoloObjects, SetFace, ActivateObstacles
 from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, ListOfDetectedObject, Obstacles, ArmController
 from sensor_msgs.msg import Image
 import cv2
@@ -132,11 +132,11 @@ class StoringGroceriesNode(Node):
         self.shoes_detected_filtered_hand_subscriber = self.create_subscription(Yolov8Objects, 'shoes_detected_filtered_hand', self.shoes_detected_filtered_hand_callback, 10)
         
         # Arm (CHARMIE)
-        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         self.arm_pose_subscriber = self.create_subscription(ArmController, 'arm_current_pose', self.get_arm_current_pose_callback, 10)
 
         # Navigation
-        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
 
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
@@ -167,7 +167,7 @@ class StoringGroceriesNode(Node):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
         
         try:
-            with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
                 # print(self.objects_file)
         except:
@@ -804,7 +804,7 @@ class StoringGroceriesMain():
         
         self.node.initialpose_publisher.publish(task_initialpose)
 
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False):
+    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -835,7 +835,7 @@ class StoringGroceriesMain():
             doors_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_doors,
+            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_furniture,
                                         activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
                                         minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
@@ -916,7 +916,7 @@ class StoringGroceriesMain():
                             objects_ctr+=1
 
                         
-                    if detect_doors: 
+                    if detect_furniture: 
                         local_detected_objects = self.node.detected_doors
                         for temp_objects in local_detected_objects.objects:
                             
@@ -1411,7 +1411,7 @@ class StoringGroceriesMain():
         # Este nível fica para a versão 1. Para a versão 0 faço ver o que está na prateleira, guardar essas classes e ficam essas como high
 
         try:
-            with open(self.node.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            with open(self.node.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 objects = json.load(json_file)
                 # print(self.objects_file)
         except:
@@ -2615,7 +2615,7 @@ class StoringGroceriesMain():
 
             print('inside')
             tetas = [[0, 0]]
-            objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+            objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_furniture=True)
             print('pos-search')
             cabinet_found = False
             for obj in objects_found:
@@ -3227,6 +3227,38 @@ class StoringGroceriesMain():
                 # self.set_navigation(movement="orientate", absolute_angle= 90.0, flag_not_obs=True, wait_for_end_of=True)
                 # self.set_rgb(command=GREEN+BLINK_LONG)
                 
+<<<<<<< HEAD
+=======
+
+                time.sleep(1)
+
+                self.activate_obstacles(obstacles_lidar_up=False, obstacles_camera_head=False)
+
+                """ self.set_rgb(command=BLUE+ROTATE)
+                self.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
+                self.set_rgb(command=GREEN+BLINK_LONG) """
+                
+                self.set_speech(filename="generic/arrived_table", wait_for_end_of=True)
+                
+                self.activate_yolo_objects(activate_objects=True)
+                
+                self.set_neck(position=self.look_table_objects_front)
+                
+                tetas = [[-120, -30], [-90, -30], [-60, -30]]
+                # tetas = [[-30, -30], [0, -30], [30, -30]]
+                objects_found_table = []
+                while objects_found_table == []:
+                    objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+
+                print('Objects found on table: ')
+                for obj in objects_found_table:
+                    print(obj.object_name)
+
+                
+
+                self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                
+>>>>>>> 36f8b053ba652f1bc138f2bd84cd5cb288f31cf1
                 self.set_rgb(command=BLUE+ROTATE)                
                 self.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs=True, wait_for_end_of=True)
                 self.set_rgb(command=GREEN+BLINK_LONG)
@@ -3246,8 +3278,13 @@ class StoringGroceriesMain():
 
                 while cabinet_found == False:
                     print('inside')
+<<<<<<< HEAD
                     tetas = [[0, -20], [0, 0]]
                     objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_doors=True)
+=======
+                    tetas = [[-20, -10]]
+                    objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_furniture=True)
+>>>>>>> 36f8b053ba652f1bc138f2bd84cd5cb288f31cf1
                     print('pos-search')
                     for obj in objects_found:
                         if obj.object_name == 'Cabinet':
@@ -3273,7 +3310,7 @@ class StoringGroceriesMain():
                 data = []
                 real_data = []
                 tetas = [[0, -40], [0, -20], [0, 0]]
-                objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                objects_found = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                 
                 self.set_rgb(command=GREEN+BLINK_LONG)
                 
@@ -3344,7 +3381,7 @@ class StoringGroceriesMain():
                 # tetas = [[160, -20], [140, -20], [120, -20]]
                 # objects_found_table = []
                 # while objects_found_table == []:
-                #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
 
                 # print('Objects found on table: ')
                 # for obj in objects_found_table:
@@ -3388,7 +3425,7 @@ class StoringGroceriesMain():
                 
                     # objects_found_table = []
                     # while objects_found_table == []:
-                    #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_doors=False)
+                    #     objects_found_table = self.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
 
                     # for obj in objects_found_table:
                     #     obj_name_lower = obj.object_name.lower().replace(" ", "_")

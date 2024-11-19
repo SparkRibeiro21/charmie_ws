@@ -1,5 +1,7 @@
-int32 index_person
-float32 conf_person
+# All information interpreted regarding a detected person
+
+int32 index
+float32 confidence
 
 geometry_msgs/Point position_relative
 geometry_msgs/Point position_absolute
@@ -10,6 +12,9 @@ int32 box_top_left_x
 int32 box_top_left_y
 int32 box_width
 int32 box_height
+
+MaskDetection mask      # not implemented yet for detected people (only for objects)
+MaskDetection mask_norm # not implemented yet for detected people (only for objects)
 
 string room_location
 string furniture_location

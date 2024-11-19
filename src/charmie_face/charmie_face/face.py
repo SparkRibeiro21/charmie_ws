@@ -138,18 +138,18 @@ class FaceNode(Node):
                 
     # Receive image or video files name to show in face
     def image_to_face(self, command):
-        self.get_logger().info("init image to face")
+        # self.get_logger().info("init image to face")
         # since the extension is not known, a system to check all filenames disregarding the extension had to be created
         file_exists = False
         files = os.listdir(self.face.destination_media)
-        self.get_logger().info("pre  GET FILES")
+        # self.get_logger().info("pre  GET FILES")
         for file in files:
             file_name, file_extension = os.path.splitext(file)
             if file_name == command:
                 file_exists = True
         
         
-        self.get_logger().info("PASS  GET FILES")
+        # self.get_logger().info("PASS  GET FILES")
         
 
         if file_exists:

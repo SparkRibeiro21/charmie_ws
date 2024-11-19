@@ -7,7 +7,7 @@ import threading
 
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped
-from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, ArmTrigger, ActivateYoloObjects, NavTrigger, SetFace
+from charmie_interfaces.srv import SpeechCommand, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, Trigger, ActivateYoloObjects, SetFace
 from charmie_interfaces.msg import Yolov8Objects, DetectedObject, TarNavSDNL, Obstacles, ArmController
 from sensor_msgs.msg import Image
 import cv2
@@ -110,10 +110,10 @@ class StoringGroceriesNode(Node):
         self.objects_filtered_subscriber = self.create_subscription(Yolov8Objects, 'objects_detected_filtered', self.get_objects_callback, 10)
 
         # Arm (CHARMIE)
-        self.arm_trigger_client = self.create_client(ArmTrigger, "arm_trigger")
+        self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
 
         # Navigation
-        self.nav_trigger_client = self.create_client(NavTrigger, "nav_trigger")
+        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
 
         ### CHECK IF ALL SERVICES ARE RESPONSIVE ###
         # Navigation
@@ -138,7 +138,7 @@ class StoringGroceriesNode(Node):
             self.get_logger().warn("Waiting for Server Arm Trigger Command...") """
         
         try:
-            with open(self.complete_path_configuration_files + 'objects_lar.json', encoding='utf-8') as json_file:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
                 # print(self.objects_file)
         except:

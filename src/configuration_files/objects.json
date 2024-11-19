@@ -1,0 +1,51 @@
+[
+{"name": "Sponge",   		"class": "Cleaning Supplies",	"height": "0.02"},
+{"name": "Cleanser", 		"class": "Cleaning Supplies",	"height": "0.00"},
+{"name": "Dishwasher Tab",	"class": "Cleaning Supplies",	"height": "0.00"},
+{"name": "Bag", 		"class": "Cleaning Supplies",	"height": "0.00"},
+
+{"name": "Red Wine", 		"class": "Drinks", 		"height": "0.01"},
+{"name": "Juice Pack", 		"class": "Drinks", 		"height": "0.00"},
+{"name": "Cola", 		"class": "Drinks",		"height": "0.00"},
+{"name": "Tropical Juice", 	"class": "Drinks",		"height": "0.00"},
+{"name": "Milk",           	"class": "Drinks",		"height": "0.00"},
+{"name": "Iced Tea",       	"class": "Drinks", 		"height": "0.01"},
+{"name": "Orange Juice",   	"class": "Drinks",		"height": "0.00"},
+{"name": "7Up",	   		"class": "Drinks",		"height": "0.00"},
+{"name": "Water",	   	"class": "Drinks",		"height": "0.00"},
+
+{"name": "Tuna", 		"class": "Foods", 		"height": "0.00"},
+{"name": "Tomato Soup", 	"class": "Foods", 		"height": "0.03"},
+{"name": "Spam",		"class": "Foods", 		"height": "0.03"},
+{"name": "Mustard", 		"class": "Foods", 		"height": "0.00"},
+{"name": "Strawberry Jello",	"class": "Foods", 		"height": "0.02"},
+{"name": "Chocolate Jello", 	"class": "Foods", 		"height": "0.02"},
+{"name": "Coffee Grounds", 	"class": "Foods", 		"height": "0.00"},
+{"name": "Sugar", 		"class": "Foods", 		"height": "0.02"},
+
+{"name": "Pear", 		"class": "Fruits",		"height": "0.00"},
+{"name": "Plum", 		"class": "Fruits",		"height": "0.00"},
+{"name": "Peach", 		"class": "Fruits",		"height": "0.00"},
+{"name": "Lemon", 		"class": "Fruits",		"height": "0.00"},
+{"name": "Orange", 		"class": "Fruits",		"height": "0.00"},
+{"name": "Strawberry", 		"class": "Fruits",		"height": "0.00"},
+{"name": "Banana", 		"class": "Fruits",		"height": "0.00"},
+{"name": "Apple", 		"class": "Fruits",		"height": "0.00"},
+
+{"name": "Tennis Ball", 	"class": "Toys",		"height": "0.00"},
+{"name": "Soccer Ball", 	"class": "Toys",		"height": "0.00"},
+{"name": "Rubiks Cube", 	"class": "Toys",		"height": "0.01"},
+{"name": "Dice", 		"class": "Toys",		"height": "0.00"},
+{"name": "Baseball", 		"class": "Toys",		"height": "0.00"},
+
+{"name": "Pringles", 		"class": "Snacks",		"height": "0.00"},
+{"name": "Cornflakes", 		"class": "Snacks",		"height": "0.02"},
+{"name": "Cheezit", 		"class": "Snacks",		"height": "0.00"},
+
+{"name": "Spoon", 		"class": "Dishes",		"height": "0.02"},
+{"name": "Plate", 		"class": "Dishes",		"height": "0.10"},
+{"name": "Cup", 		"class": "Dishes",		"height": "0.03"},
+{"name": "Fork", 		"class": "Dishes",		"height": "0.02"},
+{"name": "Bowl", 		"class": "Dishes",		"height": "0.06"},
+{"name": "Knife", 		"class": "Dishes",		"height": "0.02"}
+]

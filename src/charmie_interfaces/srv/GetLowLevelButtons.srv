@@ -1,0 +1,7 @@
+# Service to get the state info from the start button and the three debug buttons
+
+---
+bool start_button  # start button state 
+bool debug_button1 # debug1 button state boolean
+bool debug_button2 # debug2 button state boolean
+bool debug_button3 # debug3 button state boolean

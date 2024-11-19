@@ -1,0 +1,9 @@
+[
+{"name": "Cleaning Supplies",   "location": "Shelf"},
+{"name": "Drinks", 		"location": "Kitchen Cabinet"},
+{"name": "Foods",   		"location": "Kitchen Counter"},
+{"name": "Fruits", 		"location": "Coffee Table"},
+{"name": "Toys",   		"location": "TV Table"},
+{"name": "Snacks", 		"location": "Dinner Table"},
+{"name": "Dishes",   		"location": "Dishwasher"}
+]

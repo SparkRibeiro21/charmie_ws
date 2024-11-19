@@ -10,11 +10,16 @@
 * [Project Description :book:](#book-project-description)
 * [Requirements :rocket:](#rocket-requirements)
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
+  * [RoboCup@Home 2025 :brazil:](#robocuphome-2025-brazil)
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
 * [Videos from Pevious Events :gear:](#gear-videos-from-previous-events)
+  * [RoboCup 2024 :netherlands:](#robocup-2024-netherlands)
+  * [RoboCup Portugal Open 2024 :portugal:](#robocup-portugal-open-2024-portugal)
+  * [RoboCup@Home 2023 :fr:](#robocup-2023-fr)
 * [Results :trophy:](#trophy-results)
 * [Extended Scores :chart_with_upwards_trend:](#chart_with_upwards_trend-extended-scores)
+* [Contributors :technologist:](#technologist-contributors)
 * [Social Media :handshake:](#handshake-connect-with-us)
 
 ## :book: Project Description
@@ -37,6 +42,12 @@ To setup the realsense package in your workspace, please follow the installation
 
 ## :robot: RoboCup@Home Qualification Videos
 
+### RoboCup@Home 2025 :brazil:
+
+[![Video Title](https://img.youtube.com/vi/tgTzuuzeos8/0.jpg)](https://www.youtube.com/watch?v=tgTzuuzeos8)
+
+[Youtube Link for 2025 Qualification Video](https://m.youtube.com/watch?v=tgTzuuzeos8)
+
 ### RoboCup@Home 2024 :netherlands:
 
 [![Video Title](https://img.youtube.com/vi/RNr9uOhubqw/0.jpg)](https://www.youtube.com/watch?v=RNr9uOhubqw)
@@ -50,14 +61,100 @@ To setup the realsense package in your workspace, please follow the installation
 [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
 
 ## :gear: Videos from Previous Events 
+
+### RoboCup 2024 :netherlands:
 <details>
   <summary>Click to expand</summary>
 
-  ## Receptionist (RoboCup@Home 2023)
+  ### Enhanced General Purpose Service Robot (RoboCup 2024)
+
+  [![Video Title](https://img.youtube.com/vi/7iA6JAMG6Cc/0.jpg)](https://www.youtube.com/watch?v=7iA6JAMG6Cc)
+
+  [Youtube Link for Enhanced General Purpose Service Robot Task from RoboCup 2024](https://www.youtube.com/watch?v=7iA6JAMG6Cc)
+
+  ### Stickler for the Rules (RoboCup 2024)
+
+  [![Video Title](https://img.youtube.com/vi/3MXXbcImCNI/0.jpg)](https://www.youtube.com/watch?v=3MXXbcImCNI)
+
+  [Youtube Link for Stickler for the Rules Task from RoboCup 2024](https://www.youtube.com/watch?v=3MXXbcImCNI)
+
+  ### Clean the Table (RoboCup 2024)
+
+  [![Video Title](https://img.youtube.com/vi/5oIssDpQ8qg/0.jpg)](https://www.youtube.com/watch?v=5oIssDpQ8qg)
+
+  [Youtube Link for Clean the Table Task from RoboCup 2024](https://www.youtube.com/watch?v=5oIssDpQ8qg)
+
+  ### Serve Breakfast (RoboCup 2024)
+
+  [![Video Title](https://img.youtube.com/vi/xynH8cUdYko/0.jpg)](https://www.youtube.com/watch?v=xynH8cUdYko)
+
+  [Youtube Link for Serve Breakfast Task from RoboCup 2024](https://www.youtube.com/watch?v=xynH8cUdYko)
+
+  ### Receptionist (RoboCup 2024)
+
+  [![Video Title](https://img.youtube.com/vi/h5yJNZq_GOI/0.jpg)](https://www.youtube.com/watch?v=h5yJNZq_GOI)
+
+  [Youtube Link for Receptionist Task from RoboCup 2024](https://www.youtube.com/watch?v=h5yJNZq_GOI)
+
+  ### Furniture Interactions (RoboCup 2024)
+
+  [![Video Title](https://img.youtube.com/vi/MC85YfgHG8c/0.jpg)](https://www.youtube.com/watch?v=MC85YfgHG8c)
+
+  [Youtube Link for Furniture Interactions from RoboCup 2024](https://www.youtube.com/watch?v=MC85YfgHG8c)
+
+</details>
+
+### RoboCup Portugal Open 2024 :portugal:
+<details>
+  <summary>Click to expand</summary>
+ 
+  ### Stickler for the Rules (RoboCup Portugal Open 2024)
+
+  [![Video Title](https://img.youtube.com/vi/XCICAehz3OE/0.jpg)](https://www.youtube.com/watch?v=XCICAehz3OE)
+
+  [Youtube Link for Stickler for the Rules Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=XCICAehz3OE)
+
+  ### Restaurant (RoboCup Portugal Open 2024)
+
+  [![Video Title](https://img.youtube.com/vi/AKYIMY_POO4/0.jpg)](https://www.youtube.com/watch?v=AKYIMY_POO4)
+
+  [Youtube Link for Restaurant Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=AKYIMY_POO4)
+
+  ### Serve Breakfast (RoboCup Portugal Open 2024)
+
+  [![Video Title](https://img.youtube.com/vi/ZhBd1PQpAB0/0.jpg)](https://www.youtube.com/watch?v=ZhBd1PQpAB0)
+
+  [Youtube Link for Serve Breakfast Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=ZhBd1PQpAB0)
+
+  ### Storing Groceries (RoboCup Portugal Open 2024)
+
+  [![Video Title](https://img.youtube.com/vi/_QoUEJi4D6c/0.jpg)](https://www.youtube.com/watch?v=_QoUEJi4D6c)
+
+  [Youtube Link for Storing Groceries Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=_QoUEJi4D6c)
+
+  ### Receptionist (RoboCup Portugal Open 2024)
+
+  [![Video Title](https://img.youtube.com/vi/1B0Hf0hebCI/0.jpg)](https://www.youtube.com/watch?v=1B0Hf0hebCI)
+
+  [Youtube Link for Receptionist Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=1B0Hf0hebCI)
+
+  ### Carry my Luggage (RoboCup Portugal Open 2024)
+
+  [![Video Title](https://img.youtube.com/vi/jc68am8VqAk/0.jpg)](https://www.youtube.com/watch?v=jc68am8VqAk)
+
+  [Youtube Link for Carry my Luggage Task from RoboCup Portugal Open 2024](https://www.youtube.com/watch?v=jc68am8VqAk)
+
+</details>
+
+### RoboCup 2023 :fr:
+<details>
+  <summary>Click to expand</summary>
+
+  ## Receptionist (RoboCup 2023)
 
   [![Video Title](https://img.youtube.com/vi/rYzFhlLRpxc/0.jpg)](https://www.youtube.com/watch?v=rYzFhlLRpxc)
 
-  [Youtube Link for Receptionist Task from RoboCup@Home 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
+  [Youtube Link for Receptionist Task from RoboCup 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
   
 </details>
 
@@ -73,12 +170,27 @@ To setup the realsense package in your workspace, please follow the installation
 
 
 ## :chart_with_upwards_trend: Extended Scores
+
+### 2024
+
 |Event|Poster|Carry My Luggage|Receptionist|Storing Groceries|Serve Breakfast|GPSR|Total Stage 1|Clean the Table|Restaurant|Stickler for the rules|EGPSR|Total Stage 2|Total Event|
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 |RoboCup 2024|34|15|700|15|480|-|1244|525|100|800|150|1575|2819|
 |RoboCup Portugal Open 2024|-|115|645|135|610|-|1505|15|1120|500|-|1635|3140|
+
+### 2023
+
+|Event|Poster|Carry My Luggage|Receptionist|Storing Groceries|Serve Breakfast|GPSR|Total Stage 1|Clean the Table|Restaurant|Stickler for the rules|EGPSR|Total Stage 2|Total Event|
+| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 |RoboCup 2023|32|0|800|-|-|-|832|-|0|100|-|100|932|
 |RoboCup Portugal Open 2023|-|-|400|-|-|-|400|-|-|-|-|0|400|
+
+
+## :technologist: Contributors:
+
+<a href="https://github.com/SparkRibeiro21/charmie_ws"> 
+  <img src="https://contrib.rocks/image?repo=SparkRibeiro21/charmie_ws" alt="contrib.rocks image" />
+</a>
 
 
 ## :handshake: Connect with us

@@ -4,7 +4,7 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import NeckPosition, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
-from charmie_interfaces.srv import GetPointCloud, ActivateObstacles
+from charmie_interfaces.srv import GetPointCloudBB, GetPointCloudMask, ActivateObstacles
 from geometry_msgs.msg import Point
 from cv_bridge import CvBridge
 
@@ -72,9 +72,14 @@ class PointCloud():
             # self.Z_SHIFT = 1260
 
             # had to come back to originals
-            self.X_SHIFT = 50
+            # self.X_SHIFT = 50
+            # self.Y_SHIFT = 0
+            # self.Z_SHIFT = 1260
+            
+            # after hardware neck 2.0
+            self.X_SHIFT = 60
             self.Y_SHIFT = 0
-            self.Z_SHIFT = 1260
+            self.Z_SHIFT = 1300
         
 
         else: #  self.camera == "hand":
@@ -135,7 +140,7 @@ class PointCloud():
 
 
     def robo_head(self):
-        A4 = self.Trans(90, 11.5, 195)
+        A4 = self.Trans(100, 11.5, 195)
         A3 = self.Rot('y', self.teta[1])
         A2 = self.Trans(30, 0, 25)
         A1 = self.Rot('z', self.teta[0])
@@ -167,16 +172,32 @@ class PointCloud():
         # print(u, v)
 
         depth = self.depth_img_pc[u][v]
-        if depth == 0:      # Só faz os cálculos de o ponto for válido (OPTIMIZAÇÃO)
+        if depth == 0:      # Só faz os cálculos se o ponto for válido (OPTIMIZAÇÃO)
 
             # casos especiais, mas só em coordenadas especificas (não faz para a bounding box toda)
             # procuro a distancia mais próxima nos pixeis vizinhos
-            raio = 1
-            while np.all(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0):
-                raio += 1
-            nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
-            depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
+
+            # old version (pre bug inspection robocup 2024):
+            # raio = 1
+            # while np.all(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0)z:
+            #     raio += 1
+            # nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
+            # depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
             #print('u, v, min ', u, v, depth)
+
+            # new version (post bug inspection robocup 2024)
+            raio = 1
+            max_radius = 16
+            while np.all(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0) and raio <= max_radius:
+                raio += 1
+            
+            if raio < max_radius:
+                nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
+                depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
+                #print('u, v, min ', u, v, depth)
+            else: # error case
+                depth = self.MIN_DIST
+                # print("ERROR - BUG INSPECTION ROBOCUP 2024")
 
         Z = depth
         X = (v - self.cx) * depth / self.fx
@@ -194,6 +215,43 @@ class PointCloud():
         result = result.tolist()
         return result
 
+    def converter_2D_3D_mask(self, depth_with_mask):
+        
+        # s = time.time()
+        non_zero_indices = np.nonzero(depth_with_mask)
+        non_zero_values = depth_with_mask[non_zero_indices] 
+        # print(non_zero_values)
+        final_coords = []
+
+        if non_zero_values.size:
+
+            depth = np.mean(non_zero_values)
+            u = np.mean(non_zero_indices[0])
+            v = np.mean(non_zero_indices[1])
+            # print("avg np:", depth, u, v)
+
+            Z = depth
+            X = (v - self.cx) * depth / self.fx
+            Y = (u - self.cy) * depth / self.fy
+
+            xn = Z
+            yn = -X
+            zn = -Y
+            result = np.dot(self.T, [xn, yn, zn, 1])
+            result[0] += self.X_SHIFT
+            result[1] += self.Y_SHIFT
+            result[2] += self.Z_SHIFT  # Z=0 is the floor
+
+            result = result[0:3].astype(np.int16)
+            final_coords = result.tolist()
+
+        else:   
+            # there are no elements on the non_zero_indices from the mask
+            final_coords = [0, 0, 0]         
+
+        # elapsed = time.time() - s
+        # print(elapsed)
+        return final_coords
     
     def converter_2D_3D(self, u, v, height, width):
         
@@ -246,8 +304,8 @@ class PointCloudNode(Node):
         
         # SERVICES:
         # Main receive commads 
-        self.server_point_cloud_head = self.create_service(GetPointCloud, "get_point_cloud", self.callback_point_cloud_head) 
-        # self.server_point_cloud_hand = self.create_service(GetPointCloud, "get_point_cloud_hand", self.callback_point_cloud_hand) 
+        self.server_point_cloud_bb = self.create_service(GetPointCloudBB, "get_point_cloud_bb", self.callback_point_cloud_bb)  
+        self.server_point_cloud_mask = self.create_service(GetPointCloudMask, "get_point_cloud_mask", self.callback_point_cloud_mask)  
         # Activate Obstacles Head Camera Depth
         self.server_activate_obstacles = self.create_service(ActivateObstacles, "activate_obstacles_head_depth", self.callback_activate_head_depth_obstacles) 
         
@@ -320,8 +378,8 @@ class PointCloudNode(Node):
         # print("INSIDE DEPTH HEAD OBSTACLES FUNCTION")
 
         # using the same nomenclature as the service requests
-        request = GetPointCloud.Request()
-        response = GetPointCloud.Response()
+        request = GetPointCloudBB.Request()
+        response = GetPointCloudBB.Response()
         
         request.retrieve_bbox = True
 
@@ -446,7 +504,7 @@ class PointCloudNode(Node):
                 temp.append(uteis)
                 self.pcloud_head.ENVIO.append(temp)
 
-            # convert ENVIO into RetrievePointCloud ROS Variable
+            # convert ENVIO into GetPointCloudBB.Response()
             ret = []
             if len(self.pcloud_head.ENVIO) > 0:
                 for cc in self.pcloud_head.ENVIO:
@@ -499,7 +557,7 @@ class PointCloudNode(Node):
             print("n_pontos:", len(final_global_pc.bbox_point_coords))
             
             # imprime os tempos de processamento e da frame
-            self.get_logger().info(f"Point Cloud Time: {time.perf_counter() - self.tempo_calculo}")
+            self.get_logger().info(f"Point Cloud Time (Head Depth): {time.perf_counter() - self.tempo_calculo}")
             # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
             # print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
             # self.tempo_frame = time.perf_counter()
@@ -513,7 +571,7 @@ class PointCloudNode(Node):
         # return response
         
         
-    def callback_point_cloud_head(self, request, response):
+    def callback_point_cloud_bb(self, request, response):
 
         # print(request)
 
@@ -633,7 +691,8 @@ class PointCloudNode(Node):
                     temp.append(resp_outros)
                     temp.append(uteis)
                     self.pcloud_head.ENVIO.append(temp)
-                # convert ENVIO into RetrievePointCloud ROS Variable
+                    
+                # convert ENVIO into GetPointCloudBB.Response()
                 ret = []
                 if len(self.pcloud_head.ENVIO) > 0:
                     for cc in self.pcloud_head.ENVIO:
@@ -675,7 +734,7 @@ class PointCloudNode(Node):
 
                 response.coords = ret
                 # imprime os tempos de processamento e da frame
-                self.get_logger().info(f"Point Cloud Time: {time.perf_counter() - self.tempo_calculo}")
+                self.get_logger().info(f"Point Cloud Time (Head BB): {time.perf_counter() - self.tempo_calculo}")
                 # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
                 # print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
                 # self.tempo_frame = time.perf_counter()
@@ -797,7 +856,7 @@ class PointCloudNode(Node):
                     temp.append(uteis)
                     self.pcloud_hand.ENVIO.append(temp)
 
-                # convert ENVIO into RetrievePointCloud ROS Variable
+                # convert ENVIO into GetPointCloudBB.Response()
                 ret = []
                 if len(self.pcloud_hand.ENVIO) > 0:
                     for cc in self.pcloud_hand.ENVIO:
@@ -840,7 +899,7 @@ class PointCloudNode(Node):
                 response.coords = ret
                 
                 # imprime os tempos de processamento e da frame
-                self.get_logger().info(f"Point Cloud Time: {time.perf_counter() - self.tempo_calculo}")
+                self.get_logger().info(f"Point Cloud Time (Hand BB): {time.perf_counter() - self.tempo_calculo}")
                 # print('tempo calculo = ', time.perf_counter() - self.tempo_calculo)   # imprime o tempo de calculo em segundos
                 # print('tempo frame = ', time.perf_counter() - self.tempo_frame)   # imprime o tempo de calculo em segundos
                 # self.tempo_frame = time.perf_counter()
@@ -854,21 +913,177 @@ class PointCloudNode(Node):
             return response
 
 
-
-
-
-    # def callback_point_cloud_hand(self, request, response):
+    def callback_point_cloud_mask(self, request, response):
 
         # print(request)
 
         # Type of service received:
-        # BoundingBoxAndPoints[] data # bounding box and specific points inside the bounding box  
-        # bool retrieve_bbox # if it is intended to get the full bounding box of 3D points returned, saves data transitions 
+        # MaskDetection[] data # detection segmentation mask 
+        # string camera # which camera is being used (head or hand camera)
         # ---
-        # PointCloudCoordinates[] coords # returns the selected 3D points (the bounding box center, the custom ones and the full bounding box)
+        # PointCloudCoordinates[] coords # returns the selected 3D points
         
-        # return response
+        if request.camera == "head":
 
+            if self.head_depth_img.height > 0 and self.head_rgb_img.height > 0: # prevents doing this code before receiving images
+
+                # rgb_frame = self.br.imgmsg_to_cv2(self.head_rgb_img, "bgr8")
+                depth_frame = self.br.imgmsg_to_cv2(self.head_depth_img, desired_encoding="passthrough")
+                
+                width = self.head_rgb_img.width
+                height = self.head_rgb_img.height
+
+                depth_frame_res = cv2.resize(depth_frame, (width, height), interpolation = cv2.INTER_NEAREST)
+
+                depth_frame_res[depth_frame_res > self.pcloud_head.MAX_DIST] = 0
+                depth_frame_res[depth_frame_res < self.pcloud_head.MIN_DIST] = 0
+
+                # self.pcloud_head.rgb_img_pc = rgb_frame
+                self.pcloud_head.depth_img_pc = depth_frame_res
+                self.pcloud_head.RECEBO = []
+
+                # print(len(request.data))
+                for r in request.data:
+                    temp_mask = []
+                    for p in r.point: # converts received mask into local coordinates and numpy array
+                        p_list = []
+                        p_list.append(int(p.x))
+                        p_list.append(int(p.y))
+                        
+                        temp_mask.append(p_list)
+
+                    self.pcloud_head.RECEBO.append(np.array(temp_mask))
+                # print(self.pcloud_head.RECEBO)
+
+                self.pcloud_head.ENVIO = []
+                self.tempo_calculo = time.perf_counter()
+
+                self.pcloud_head.robo_head()
+                for mask in self.pcloud_head.RECEBO:
+                    b_mask = np.zeros(depth_frame_res.shape[:2], np.uint8) # creates new empty window
+                    contour = mask
+                    contour = contour.astype(np.int32)
+                    contour = contour.reshape(-1, 1, 2)
+                    cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED) # creates mask window with just the inside pixesl of the detected objects
+                    depth_frame_res_mask = depth_frame_res.copy()
+                    depth_frame_res_mask[b_mask == 0] = [0]
+                    self.pcloud_head.ENVIO.append(self.pcloud_head.converter_2D_3D_mask(depth_frame_res_mask))
+
+                print(self.pcloud_head.ENVIO)
+
+                # cv2.imshow("mask", b_mask)
+                # cv2.imshow("test depth", depth_frame_res_mask)
+                # cv2.waitKey(10)
+    
+                # convert ENVIO into GetPointCloudMask.Response()
+                ret = []
+                if len(self.pcloud_head.ENVIO) > 0:
+                    for cc in self.pcloud_head.ENVIO:
+                        
+                        # print(cc)
+                        pcc = PointCloudCoordinates()
+
+                        point_c = Point()
+                        point_c.x = float(cc[0])
+                        point_c.y = float(cc[1])
+                        point_c.z = float(cc[2])
+
+                        pcc.center_coords = point_c
+
+                        ret.append(pcc)
+
+                # print(ret)
+                response.coords = ret
+                # imprime os tempos de processamento e da frame
+                self.get_logger().info(f"Point Cloud Time (Head Mask): {time.perf_counter() - self.tempo_calculo}")
+
+            else:
+                # this prevents an error that sometimes on a low computational power PC that the rgb image arrives at yolo node 
+                # but the depth has not yet arrived. This is a rare bug, but it crashes the yolos nodes being used.
+                self.get_logger().error(f"Depth Image was not received. Please restart...")
+            
+            # print(response)
+            return response
+        
+        else:
+            
+            if self.hand_depth_img.height > 0 and self.hand_rgb_img.height > 0: # prevents doing this code before receiving images
+
+                depth_frame = self.br.imgmsg_to_cv2(self.hand_depth_img, desired_encoding="passthrough")
+                
+                width = self.hand_rgb_img.width
+                height = self.hand_rgb_img.height
+
+                depth_frame_res = cv2.resize(depth_frame, (1280, 720), interpolation = cv2.INTER_NEAREST)
+
+                depth_frame_res[depth_frame_res > self.pcloud_hand.MAX_DIST] = 0
+                depth_frame_res[depth_frame_res < self.pcloud_hand.MIN_DIST] = 0
+
+                self.pcloud_hand.depth_img_pc = depth_frame_res
+                self.pcloud_hand.RECEBO = []
+
+                # print(len(request.data))
+                for r in request.data:
+                    temp_mask = []
+                    for p in r.point: # converts received mask into local coordinates and numpy array
+                        p_list = []
+                        p_list.append(int(p.x))
+                        p_list.append(int(p.y))
+                        
+                        temp_mask.append(p_list)
+
+                    self.pcloud_hand.RECEBO.append(np.array(temp_mask))
+                # print(self.pcloud_hand.RECEBO)
+
+                self.pcloud_hand.ENVIO = []
+                self.tempo_calculo = time.perf_counter()
+
+                self.pcloud_hand.robo_hand()
+                for mask in self.pcloud_hand.RECEBO:
+                    b_mask = np.zeros(depth_frame_res.shape[:2], np.uint8) # creates new empty window
+                    contour = mask
+                    contour = contour.astype(np.int32)
+                    contour = contour.reshape(-1, 1, 2)
+                    cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED) # creates mask window with just the inside pixesl of the detected objects
+                    depth_frame_res_mask = depth_frame_res.copy()
+                    depth_frame_res_mask[b_mask == 0] = [0]
+                    self.pcloud_hand.ENVIO.append(self.pcloud_hand.converter_2D_3D_mask(depth_frame_res_mask))
+
+                print(self.pcloud_hand.ENVIO)
+
+                # cv2.imshow("mask", b_mask)
+                # cv2.imshow("test depth", depth_frame_res_mask)
+                # cv2.waitKey(10)
+    
+                # convert ENVIO into GetPointCloudMask.Response()
+                ret = []
+                if len(self.pcloud_hand.ENVIO) > 0:
+                    for cc in self.pcloud_hand.ENVIO:
+                        
+                        # print(cc)
+                        pcc = PointCloudCoordinates()
+
+                        point_c = Point()
+                        point_c.x = float(cc[0])
+                        point_c.y = float(cc[1])
+                        point_c.z = float(cc[2])
+
+                        pcc.center_coords = point_c
+
+                        ret.append(pcc)
+
+                # print(ret)
+                response.coords = ret
+                # imprime os tempos de processamento e da frame
+                self.get_logger().info(f"Point Cloud Time (Hand Mask): {time.perf_counter() - self.tempo_calculo}")
+
+            else:
+                # this prevents an error that sometimes on a low computational power PC that the rgb image arrives at yolo node 
+                # but the depth has not yet arrived. This is a rare bug, but it crashes the yolos nodes being used.
+                self.get_logger().error(f"Depth Image was not received. Please restart...")
+
+            # print(response)
+            return response
 
 
 def main(args=None):
