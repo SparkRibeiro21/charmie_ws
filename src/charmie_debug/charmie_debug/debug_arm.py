@@ -14,17 +14,6 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 ros2_modules = {
     "charmie_arm":              True,
     "charmie_audio":            False,
@@ -45,6 +34,7 @@ ros2_modules = {
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
+# teste
 
 
 
