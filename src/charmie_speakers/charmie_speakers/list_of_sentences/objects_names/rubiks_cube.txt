@@ -1,1 +1,1 @@
-a rubiks cube.
+Rubiks Cube
