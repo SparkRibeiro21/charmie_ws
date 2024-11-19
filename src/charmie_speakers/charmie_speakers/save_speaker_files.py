@@ -24,6 +24,13 @@ from pathlib import Path
 # create mode just for rooms and furniture
 # create COMPETITION mode where updates all speaker files
 
+# only create audios for new objects, don't recreate audios from already existing audios (some of them were edited to sound better)
+
+# add objects, object classes, names, etc... from previous competitions
+
+
+
+
 # drinks_list = ["Red Wine", "Juice Pack", "Cola", "Tropical Juice", "Milk", "Iced Tea", "Orange Juice", "7up", "Water"] # the 7up is weird, must be redone manually
 # drinks_list = ["Big Coke", "Cola", "Dubblefris", "Milk", "Iced Tea", "Fanta", "Water"] # the 7up is weird, must be redone manually
 
@@ -32,7 +39,7 @@ from pathlib import Path
 # "NAMES": reads names from json file and exports all names to list_of_sentences/person_names
 # "OBJECTS": reads objects and objects_classe from json file and exports all objects to list_of_sentences/objects_names and objects_classes to list_of_sentences/objects_classes 
 
-MODE = "STANDARD"
+MODE = "NAMES"
 
 class RobotSpeak():
     def __init__(self):
@@ -48,7 +55,7 @@ class RobotSpeak():
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         midpath_list_of_sentences = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
-        self.complete_path = self.home+'/'+midpath_list_of_sentences+'/'
+        self.complete_path_list_of_sentences = self.home+'/'+midpath_list_of_sentences+'/'
 
         # info regarding the paths for the recorded files intended to be played
         midpath_configuration_save_speaker = "charmie_ws/src/configuration_files/save_speaker"
@@ -107,7 +114,7 @@ class RobotSpeak():
             self.filename = filename+".wav"
 
             # create txt file with command for face package 
-            f = open(self.complete_path+filename+".txt", "w")
+            f = open(self.complete_path_list_of_sentences+filename+".txt", "w")
             f.write(command)
             f.close()
 
@@ -115,12 +122,12 @@ class RobotSpeak():
             print("Initialised synthetisation.")
             init_time = time.time()
             outputs = self.syn.tts(command)
-            self.syn.save_wav(outputs, self.complete_path+self.filename)
+            self.syn.save_wav(outputs, self.complete_path_list_of_sentences+self.filename)
             print(time.time()-init_time)
 
             # play wav file in speakers
             if play_sound:
-                pygame.mixer.music.load(self.complete_path+self.filename)
+                pygame.mixer.music.load(self.complete_path_list_of_sentences+self.filename)
                 pygame.mixer.music.play()
                 while pygame.mixer.music.get_busy():
                     pass
@@ -138,8 +145,17 @@ def main(args=None):
     elif MODE == "NAMES":
         names_commands = {}
         for names in charmie_speech.names_file:
-            print(names['name'])
-            names_commands['person_names/'+names['name'].replace(" ","_").lower()] = names['name']
+            message = names['name']
+            filename = 'person_names/'+message.replace(" ","_").lower()
+            
+            full_path = Path.home() / (charmie_speech.complete_path_list_of_sentences+filename+".wav")
+            if not full_path.is_file():
+                names_commands[filename] = message
+                print(message, "- NEW FILE!")
+            else:
+                print(message)
+
+        print(names_commands)
         charmie_speech.convert_command(names_commands, play_sound=True)
 
     elif MODE == "OBJECTS":
@@ -147,13 +163,17 @@ def main(args=None):
         for objects in charmie_speech.objects_file:
             print(objects['name'])
             objects_commands['objects_names2/'+objects['name'].replace(" ","_").lower()] = objects['name']
-        # charmie_speech.convert_command(objects_commands, play_sound=True)
+            
+            # self.complete_path_list_of_sentences
+
+
+        charmie_speech.convert_command(objects_commands, play_sound=True)
         
         objects_class_commands = {}
         for objects_c in charmie_speech.objects_classes_file:
             print(objects_c['name'])
             objects_class_commands['objects_classes2/'+objects_c['name'].replace(" ","_").lower()] = objects_c['name']
-        # charmie_speech.convert_command(objects_class_commands, play_sound=True)
+        charmie_speech.convert_command(objects_class_commands, play_sound=True)
         
         
         
