@@ -59,7 +59,7 @@ class TaskMain():
         Final_State = 3
 
         # VARS ...
-        self.state = LLM_demo
+        self.state = LLM_gpsr
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")

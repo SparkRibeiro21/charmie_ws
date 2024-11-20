@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller, ListOfStrings
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand
 
 import cv2 
 # import threading
@@ -111,6 +111,7 @@ class ROS2TaskNode(Node):
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
         # LLM
         self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
+        self.llm_confirm_command_client = self.create_client(GetLLMConfirmCommand, "llm_confirm_command")
         self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
 
     
@@ -154,9 +155,11 @@ class ROS2TaskNode(Node):
 
         if self.ros2_modules["charmie_llm"]:
             while not self.llm_demonstration_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server LLM ...")
+                self.get_logger().warn("Waiting for Demo Server LLM ...")
+            while not self.llm_confirm_command_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Confirm Command Server LLM ...")
             while not self.llm_gpsr_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server LLM ...")
+                self.get_logger().warn("Waiting for GPSR Server LLM ...")
 
         if self.ros2_modules["charmie_low_level"]:
             while not self.set_acceleration_ramp_client.wait_for_service(1.0):
@@ -222,6 +225,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_set_torso_position = False
         self.waiting_for_pcloud = False
         self.waited_for_end_of_llm_demonstration = False
+        self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
 
         self.br = CvBridge()
@@ -297,6 +301,7 @@ class ROS2TaskNode(Node):
         self.debug_button3 = False
         self.new_controller_msg = False
         self.llm_demonstration_response = ""
+        self.llm_confirm_command_response = ""
         self.llm_gpsr_response = ListOfStrings()
 
     def send_node_used_to_gui(self):
@@ -822,6 +827,24 @@ class ROS2TaskNode(Node):
             self.llm_demonstration_response = response.answer
             self.get_logger().info("Received LLM Demo Answer:"+str(self.llm_demonstration_response))
             self.waited_for_end_of_llm_demonstration = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    def call_llm_confirm_command_server(self, request=GetLLMConfirmCommand.Request(), wait_for_end_of=True):
+
+        future = self.llm_confirm_command_client.call_async(request)
+        future.add_done_callback(self.callback_call_llm_confirm_command)
+        
+    def callback_call_llm_confirm_command(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.llm_confirm_command_response = response.answer
+            self.get_logger().info("Received LLM Confirm Command Answer:"+str(self.llm_confirm_command_response))
+            self.waited_for_end_of_llm_confirm_command = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -1991,6 +2014,28 @@ class RobotStdFunctions():
         self.set_speech(filename="generic/uhm", wait_for_end_of=False)
         random_wait = str(random.randint(1, 3))
         self.set_speech(filename="gpsr/llm_wait_for_gpsr_"+random_wait, wait_for_end_of=False)
+
+        
+        ### EXAMPLE FOR LLM CONFIRM COMMAND - SLENDER
+
+
+        request = GetLLMConfirmCommand.Request()
+        request.command = command
+        self.node.call_llm_confirm_command_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_confirm_command:
+                pass
+            self.node.waited_for_end_of_llm_confirm_command = False
+
+        print(self.node.llm_confirm_command_response)
+
+        self.set_speech(command=self.node.llm_confirm_command_response, quick_voice=True, wait_for_end_of=True)
+
+
+        ### END OF EXAMPLE
+
+
 
         request = GetLLMGPSR.Request()
         request.command = command
