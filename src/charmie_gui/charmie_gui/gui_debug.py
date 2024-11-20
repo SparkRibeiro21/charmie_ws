@@ -1735,10 +1735,14 @@ class DebugVisualMain():
         if self.show_navigation_locations:
             for furniture in self.house_furniture:
 
-                map_coords = self.coords_to_map((furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2, (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2)
+                furniture_center_map_coords = self.coords_to_map((furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2, (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2)
+                pygame.draw.circle(self.WIN, self.ORANGE, furniture_center_map_coords, radius=self.size_to_map(self.robot_radius/2), width=0)
+                self.draw_text(str(furniture['name']), self.text_map_font, self.ORANGE, furniture_center_map_coords[0]-(3*len(str(furniture['name']))), furniture_center_map_coords[1]+13)
 
-                pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map((furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2, (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2), radius=self.size_to_map(self.robot_radius/2), width=0)
-                self.draw_text(str(furniture['name']), self.text_map_font, self.ORANGE, map_coords[0]-(3*len(str(furniture['name']))), map_coords[1]+13)
+                furniture_nav_map_coords = self.coords_to_map(furniture['nav_coords'][0], furniture['nav_coords'][1])
+                pygame.draw.circle(self.WIN, self.GREEN, furniture_nav_map_coords, radius=self.size_to_map(self.robot_radius/2), width=0)
+                self.draw_text(str(furniture['name']), self.text_map_font, self.GREEN, furniture_nav_map_coords[0]-(3*len(str(furniture['name']))), furniture_nav_map_coords[1]+13)
+
 
 
         ### DRAW ROBOT
