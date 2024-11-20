@@ -1743,6 +1743,11 @@ class DebugVisualMain():
                 pygame.draw.circle(self.WIN, self.GREEN, furniture_nav_map_coords, radius=self.size_to_map(self.robot_radius/2), width=0)
                 self.draw_text(str(furniture['name']), self.text_map_font, self.GREEN, furniture_nav_map_coords[0]-(3*len(str(furniture['name']))), furniture_nav_map_coords[1]+13)
 
+            for rooms in self.house_rooms:
+
+                rooms_nav_map_coords = self.coords_to_map(rooms['nav_coords'][0], rooms['nav_coords'][1])
+                pygame.draw.circle(self.WIN, self.BLUE_L, rooms_nav_map_coords, radius=self.size_to_map(self.robot_radius/2), width=0)
+                self.draw_text(str(rooms['name']), self.text_map_font, self.BLUE_L, rooms_nav_map_coords[0]-(3*len(str(rooms['name']))), rooms_nav_map_coords[1]+13)
 
 
         ### DRAW ROBOT
