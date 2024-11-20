@@ -1,0 +1,5 @@
+# Service to get the LLM response of a demonstration, just a quick response of general knowledge
+
+string command
+---
+string answer # LLM Response to the question asked to the robot 
