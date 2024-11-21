@@ -661,14 +661,6 @@ class TaskMain():
                     self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
                     self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
-                    ### POUR MILK
-                    self.robot.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
-                    self.robot.set_speech(filename="serve_breakfast/milk_poured", wait_for_end_of=False)
-
-                    ### PLACE MILK
-                    self.robot.set_arm(command="place_milk_table", wait_for_end_of=True)
-                    self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
-
                     ### POUR CORNFLAKES
                     self.robot.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
                     self.robot.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=False)
@@ -677,8 +669,18 @@ class TaskMain():
                     self.robot.set_arm(command="place_cereal_table", wait_for_end_of=True)
                     self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
+                    ### POUR MILK
+                    self.robot.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
+                    self.robot.set_speech(filename="serve_breakfast/milk_poured", wait_for_end_of=False)
+
+                    ### PLACE MILK
+                    self.robot.set_arm(command="place_milk_table", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+
                     #### PLACE SPOON: MISSING ...
-                    
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
+
                     self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
 
                     self.state_SB = self.SB_Waiting_for_task_start
