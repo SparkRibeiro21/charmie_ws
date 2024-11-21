@@ -614,8 +614,8 @@ class TaskMain():
                     while not object_in_gripper:
                         objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
                         object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
-                    self.robot.set_arm(command="collect_cornflakes_to_tray_alternative_robocup_cornflakes", wait_for_end_of=True)
-                    self.robot.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=True)
+                    self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_dishes
@@ -645,7 +645,7 @@ class TaskMain():
                         object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=correct_object_bowl, look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                                 
                     ### HAVE TO CHANGE THIS wait_for_end_of to False for after adding SPOON
-                    self.robot.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                     ### SPOON (to be done ...)
 
