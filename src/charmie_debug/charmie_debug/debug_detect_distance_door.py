@@ -4247,11 +4247,11 @@ class RestaurantMain():
                                 time.sleep(1)
                                 for obj in self.node.detected_doors.objects:
                                     print(obj.object_name)
-                                    if obj.object_name == "Levelhandler" or obj.object_name == "Door":
+                                    if obj.object_name == "Level Handler" or obj.object_name == "Door":
                                         if obj.object_name not in seen_names:
                                             objects.append(obj)
                                             seen_names.add(obj.object_name)
-                                            if obj.object_name == "Levelhandler":
+                                            if obj.object_name == "Level Handler":
                                                 handler = obj
                                                 print(handler.object_name)
                                             elif obj.object_name == "Door":
@@ -4402,7 +4402,7 @@ class RestaurantMain():
                                 while not finished_detections:
                                     for obj in self.node.detected_doors_hand.objects:
                                         print(obj.object_name)
-                                        if obj.object_name == "Levelhandler":
+                                        if obj.object_name == "Level Handler":
                                             handler = obj
                                             print(handler.object_name)
                                             print('posição absoluta', obj.position_absolute)
@@ -4629,11 +4629,11 @@ class RestaurantMain():
                                 time.sleep(1)
                                 for obj in self.node.detected_doors.objects:
                                     print(obj.object_name)
-                                    if obj.object_name == "Levelhandler" or obj.object_name == "Door":
+                                    if obj.object_name == "Level Handler" or obj.object_name == "Door":
                                         if obj.object_name not in seen_names:
                                             objects.append(obj)
                                             seen_names.add(obj.object_name)
-                                            if obj.object_name == "Levelhandler":
+                                            if obj.object_name == "Level Handler":
                                                 handler = obj
                                                 print(handler.object_name)
                                             elif obj.object_name == "Door":
@@ -4797,7 +4797,7 @@ class RestaurantMain():
                                 while not finished_detections:
                                     for obj in self.node.detected_doors_hand.objects:
                                         print(obj.object_name)
-                                        if obj.object_name == "Levelhandler":
+                                        if obj.object_name == "Level Handler":
                                             handler = obj
                                             print(handler.object_name)
                                             print('posição absoluta', obj.position_absolute)
@@ -5056,11 +5056,11 @@ class RestaurantMain():
                                 time.sleep(1)
                                 for obj in self.node.detected_doors.objects:
                                     print(obj.object_name)
-                                    if obj.object_name == "Levelhandler":
+                                    if obj.object_name == "Level Handler":
                                         if obj.object_name not in seen_names:
                                             objects.append(obj)
                                             seen_names.add(obj.object_name)
-                                            if obj.object_name == "Levelhandler":
+                                            if obj.object_name == "Level Handler":
                                                 handler = obj
                                                 print(handler.object_name)
                                             print('é isto')
@@ -5172,11 +5172,11 @@ class RestaurantMain():
                                 time.sleep(1)
                                 for obj in self.node.detected_doors.objects:
                                     print(obj.object_name)
-                                    if obj.object_name == "Levelhandler":
+                                    if obj.object_name == "Level Handler":
                                         if obj.object_name not in seen_names:
                                             objects.append(obj)
                                             seen_names.add(obj.object_name)
-                                            if obj.object_name == "Levelhandler":
+                                            if obj.object_name == "Level Handler":
                                                 handler = obj
                                                 print(handler.object_name)
                                             print('é isto')

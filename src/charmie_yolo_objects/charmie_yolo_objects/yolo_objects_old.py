@@ -169,7 +169,7 @@ class Yolo_obj(Node):
         
         self.shoes_class_names = ['shoe', 'sock']    
         
-        self.door_class_names = ['Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe door']
+        self.door_class_names = ['Dishwasher', 'Door', 'Drawer', 'Level Handler', 'Wardrobe Door']
 
         self.objects_class_names_dict = {}
         self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
