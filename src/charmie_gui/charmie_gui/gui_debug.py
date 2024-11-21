@@ -805,7 +805,7 @@ class DebugVisualMain():
                 self.house_doors = json.load(json_file)
             # print(self.house_doors)
         except:
-            print("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
+            print("Could NOT import data from json configuration files. (objects, rooms and furniture)")
 
         self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
         self.current_datetime = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))

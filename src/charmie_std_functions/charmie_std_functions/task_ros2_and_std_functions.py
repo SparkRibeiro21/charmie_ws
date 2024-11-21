@@ -17,6 +17,7 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 import random
+import json
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -33,9 +34,28 @@ class ROS2TaskNode(Node):
         self.ros2_modules = ros2_modules
 
         # path to save detected people in search for person
-        home = str(Path.home())
-        midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
-        self.complete_path_custom_face = home+'/'+midpath+'/'
+        self.home = str(Path.home())
+        custom_face_midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+        configuration_files_midpath = "/charmie_ws/src/configuration_files/"
+        self.complete_path_custom_face = self.home+'/'+custom_face_midpath+'/'
+
+        # Open all configuration files
+        try:
+            with open(self.home + configuration_files_midpath + 'objects.json', encoding='utf-8') as json_file:
+                self.objects_file = json.load(json_file)
+            # print(self.objects_file)
+            with open(self.home + configuration_files_midpath + 'objects_classes.json', encoding='utf-8') as json_file:
+                self.objects_classes_file = json.load(json_file)
+            # print(self.objects_classes_file)
+            with open(self.home + configuration_files_midpath + 'rooms.json', encoding='utf-8') as json_file:
+                self.house_rooms = json.load(json_file)
+            # print(self.house_rooms)
+            with open(self.home + configuration_files_midpath + 'furniture.json', encoding='utf-8') as json_file:
+                self.house_furniture = json.load(json_file)
+            # print(self.house_furniture)
+            self.get_logger().info("Successfully imported data from json configuration files.")
+        except:
+            self.get_logger().error("Could NOT import data from json configuration files.")
 
         # Intel Realsense Subscribers 
         # Head Camera
@@ -1326,8 +1346,8 @@ class RobotStdFunctions():
         if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
 
-            self.navigation_success = False
-            self.navigation_message = "Wrong Movement Name"
+            self.node.navigation_success = False
+            self.node.navigation_message = "Wrong Movement Name"
 
         else:
 
@@ -1370,8 +1390,8 @@ class RobotStdFunctions():
                     pass
                 self.node.flag_navigation_reached = False
 
-            self.navigation_success = True
-            self.navigation_message = "Arrived at selected location"
+            self.node.navigation_success = True
+            self.node.navigation_message = "Arrived at selected location"
 
         return self.node.navigation_success, self.node.navigation_message   
 
