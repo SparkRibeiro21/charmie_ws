@@ -61,7 +61,7 @@ class Yolo_obj(Node):
         # Variables
         self.br = CvBridge()
 
-        self.door_classname = ['Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
+        self.door_classname = ['Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe door']
         
         # depending on the filename selected, the class names change
         if objects_filename == 'door_bruno.pt':

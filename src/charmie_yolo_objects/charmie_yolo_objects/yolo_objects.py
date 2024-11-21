@@ -74,18 +74,34 @@ class Yolo_obj(Node):
             with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
             # print(self.objects_file)
-            # with open(self.complete_path_configuration_files + 'objects_robocup.json', encoding='utf-8') as json_file:
-            #     self.objects_file = json.load(json_file)
-            # print(self.objects_file)
             with open(self.complete_path_configuration_files + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
             with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
-            self.get_logger().info("Successfully Imported data from json configuration files. (objects_list, house_rooms and house_furniture)")
+            with open(self.complete_path_configuration_files + 'detected_furniture.json', encoding='utf-8') as json_file:
+                self.detected_furniture_file = json.load(json_file)
+            # print(self.objects_file)
+            self.get_logger().info("Successfully Imported data from json configuration files. (objects, rooms, furniture and detected_furniture)")
         except:
-            self.get_logger().error("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
+            self.get_logger().error("Could NOT import data from json configuration files. (objects, rooms, furniture and detected_furniture)")
+
+        # gets list of detected objects from objects.json and alphabetically orders it to match YOLO detections 
+        self.objects_class_names = [item["name"] for item in self.objects_file]
+        self.objects_class_names.sort()
+        
+        # gets objects_classes from objetcs.json
+        self.objects_class_names_dict = {}
+        self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
+
+        # gets list of detected furniture from detected_furniture.json and alphabetically orders it to match YOLO detections 
+        self.doors_class_names = [item["name"] for item in self.detected_furniture_file]
+        self.doors_class_names.sort()
+
+        # list of detections from Stickler for the Rules: check if person is wearing shoes...
+        self.shoes_class_names = ['Shoe', 'Sock']        
+        
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
@@ -170,33 +186,6 @@ class Yolo_obj(Node):
         self.point_cloud_bb_response = GetPointCloudBB.Response()
         self.point_cloud_mask_response = GetPointCloudMask.Response()
 
-        self.objects_class_names = ['7up', 'Apple', 'Bag', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser',
-                                   'Coffee_grounds', 'Cola', 'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_Tea', 
-                                   'Juice_pack', 'Knife', 'Lemon', 'Milk', 'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear',                                  
-                                   'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube', 'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 
-                                   'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup', 'Tropical_juice', 'Tuna', 'Water']
-        
-        # Objects robocup 24
-        # self.objects_class_names = ['Apple', 'Bag', 'Banana', 'Big_coke', 'Bowl', 'Candle', 'Candy', 'Cola', 'Cornflakes', 'Crisps', 'Cup', 
-        #                             'Curry', 'Dishwasher_tab', 'Dubbelfris', 'Fanta', 'Fork', 'Hagelslag', 'Ice_tea', 'Knife', 'Lemon', 'Liquorice', 
-        #                             'Mayonaise', 'Milk', 'Orange', 'Pancake_mix', 'Pea_soup', 'Peach', 'Pear', 'Plate', 'Plum', 'Pringles', 'Soap', 
-        #                             'Sponge', 'Spoon', 'Strawberry', 'Stroopwafel', 'Suasages', 'Tictac', 'Washcloth', 'Water']
-        
-        # Secondary declaration used for debug
-        # self.objects_class_names = ['Apple', 'Banana', 'Baseball', 'Bowl', 'Cheezit', 'Chocolate_jello', 'Cleanser', 'Coffee_grounds', 'Cola',
-        #                              'Cornflakes', 'Cup', 'Dice', 'Dishwasher_tab', 'Fork', 'Iced_tea', 'Juice_pack', 'Knife', 'Lemon', 'Milk',
-        #                                'Mustard', 'Orange', 'Orange_juice', 'Peach', 'Pear', 'Plate', 'Plum', 'Pringles', 'Red_wine', 'Rubiks_cube',
-        #                                  'Soccer_ball', 'Spam', 'Sponge', 'Spoon', 'Strawberry', 'Strawberry_jello', 'Sugar', 'Tennis_ball', 'Tomato_soup',
-        #                                    'Tropical_juice', 'Tuna']
-        
-        self.shoes_class_names = ['Shoe', 'Sock']
-        
-        self.doors_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'LevelHandler', 'Wardrobe_Door']
-        # self.doors_class_names = ['Cabinet', 'Dishwasher']
-
-        self.objects_class_names_dict = {}
-        self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
-    
 
     # request point cloud information from point cloud node
     def call_point_cloud_bb_server(self, req, camera):
@@ -506,13 +495,13 @@ class YoloObjectsMain():
                 for box, mask, mask_d, track_id, pcloud in zip(boxes, masks, masks.xy, track_ids, new_pcloud):
 
                     if model == "objects":
-                        object_name = self.node.objects_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_name = self.node.objects_class_names[int(box.cls[0])]
                         object_class = self.node.objects_class_names_dict[object_name]
                     elif model == "shoes":  
-                        object_name = self.node.shoes_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_name = self.node.shoes_class_names[int(box.cls[0])]
                         object_class = "Footwear"
                     elif model == "doors":  
-                        object_name = self.node.doors_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_name = self.node.doors_class_names[int(box.cls[0])]
                         object_class = "Furniture"
                 
                     # adds object to "object_pose" without any restriction
@@ -587,13 +576,13 @@ class YoloObjectsMain():
                 for box, track_id, pcloud in zip(boxes, track_ids, new_pcloud):
 
                     if model == "objects":
-                        object_name = self.node.objects_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_name = self.node.objects_class_names[int(box.cls[0])]
                         object_class = self.node.objects_class_names_dict[object_name]
                     elif model == "shoes":  
-                        object_name = self.node.shoes_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_name = self.node.shoes_class_names[int(box.cls[0])]
                         object_class = "Footwear"
                     elif model == "doors":  
-                        object_name = self.node.doors_class_names[int(box.cls[0])].replace("_", " ").title()
+                        object_name = self.node.doors_class_names[int(box.cls[0])]
                         object_class = "Furniture"
                 
                     # adds object to "object_pose" without any restriction
