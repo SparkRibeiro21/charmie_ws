@@ -26,7 +26,7 @@ ros2_modules = {
     "charmie_odometry":         False,
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
@@ -79,10 +79,17 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
-                self.robot.get_detected_person_characteristics(first_sentence="demonstration/demo_characteristics_first_sentence", shirt_color=True, age=True)
+                o = "Cornflakes"
+                c = self.robot.get_object_class_from_object(o)
+                f = self.robot.get_object_class_location_from_object_class(c)
+
+                print(c, "-", f)
 
                 while True:
                     pass
+                
+                self.robot.get_detected_person_characteristics(first_sentence="demonstration/demo_characteristics_first_sentence", shirt_color=True, age=True)
+
                 
                 ##### SAVE SPEAK
                 # current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))

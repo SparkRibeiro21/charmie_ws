@@ -2223,7 +2223,39 @@ class RobotStdFunctions():
 
         return object_in_gripper
 
+    def ask_help_pick_object_tray(self, object_d=DetectedObject(), look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, bb_color=(0, 255, 0)):
+        pass
+
+    def get_object_class_from_object(self, object_name):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
+                return obj["class"]  # Return the class
+        return None  # Return None if the object is not found
+
+    def get_object_class_location_from_object_class(self, object_class):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_classes_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_class).replace(" ","_").lower():  # Check if the name matches
+                return obj["location"]  # Return the class
+        return None  # Return None if the object is not found
+
+
+
 
     # Missing Functions:
+    # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
+    # 
     # ask_help_pick_object_tray -> aimilar to gripper but without hand movement and with audio confirmation (used in CT) audio confirmation may be optional (SG does not need audio confirmation, takes too long...)
+    # 
+    # json files:
+        # - get_object_class_from_object
+        # - get_object_class_location_from_object_class
+    # - get_navigation_coords_from_room
+    # - get_navigation_coords_from_furniture
+    # - get_location_coords_from_furniture
