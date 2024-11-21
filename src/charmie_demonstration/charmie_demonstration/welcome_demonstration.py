@@ -71,8 +71,10 @@ class TaskMain():
         self.Final_State = 10
         
         self.SB_Waiting_for_task_start = 0
-        self.SB_Detect_and_receive_objects = 1
-        self.SB_Place_and_pour_objects = 2
+        self.SB_Detect_and_receive_milk = 1
+        self.SB_Detect_and_receive_cornflakes = 2
+        self.SB_Detect_and_receive_dishes = 3
+        self.SB_Place_and_pour_objects = 4
 
         self.A_Receptionist = 0
         self.A_Restaurant = 1
@@ -80,8 +82,9 @@ class TaskMain():
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_forward_down = [0, -20]
+        self.look_judge = [45, 0]
+        self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
         # self.look_navigation = [0, -30]
-        # self.look_judge = [45, 0]
         # self.look_table_objects = [-45, -45]
         # self.look_tray = [0, -60]
 
@@ -581,22 +584,70 @@ class TaskMain():
                 temp_active_motors = self.motors_active
                 self.safety_stop_modules()
 
-                # if ros2_modules["charmie_low_level"]:
-                #     self.robot.set_rgb(RAINBOW_ROT)
-
                 if self.state_SB == self.SB_Waiting_for_task_start:
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_ready_start", wait_for_end_of=True)
                     self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
+                    self.state_SB = self.SB_Detect_and_receive_milk
 
-                    self.state_SB = self.SB_Detect_and_receive_objects
-
-                elif self.state_SB == self.SB_Detect_and_receive_objects:
+                elif self.state_SB == self.SB_Detect_and_receive_milk:
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=False)
+
+                    ### MILK 
+                    object_in_gripper = False
+                    while not object_in_gripper:
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                        object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
+                    self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
-                    ### SEARCH FOR OBJECTS
-                    ### RECEIVE OBJECTS
+                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
+                    self.state_SB = self.SB_Detect_and_receive_cornflakes
+
+                elif self.state_SB == self.SB_Detect_and_receive_cornflakes:
+
+                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=False)
+
+                    ### CORNFLAKES
+                    object_in_gripper = False                    
+                    while not object_in_gripper:
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                        object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
+                    self.robot.set_arm(command="collect_cornflakes_to_tray_alternative_robocup_cornflakes", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=True)
+                    
+                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
+                    self.state_SB = self.SB_Detect_and_receive_dishes
+                    
+                elif self.state_SB == self.SB_Detect_and_receive_dishes:
+
+                    ### BOWL
+                    object_in_gripper = False
+                    correct_object_bowl = DetectedObject()
+                    correct_object_spoon = DetectedObject()
+                    while not object_in_gripper:
+
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                        # objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                    
+                        for of in objects_found:
+                            print(of.object_name.lower(), of.index)
+                            if of.object_name.lower() == "bowl":
+                                correct_object_bowl = of
+                            elif of.object_name.lower() == "spoon":
+                                correct_object_spoon = of
+
+                        print("correct_bowl:", correct_object_bowl.object_name, correct_object_bowl.index)
+                        print("correct_spoon:", correct_object_spoon.object_name, correct_object_spoon.index)
+
+                        # BOWL
+                        object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=correct_object_bowl, look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
+                                
+                    ### HAVE TO CHANGE THIS wait_for_end_of to False for after adding SPOON
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position_alternative_robocup_cornflakes", wait_for_end_of=True)
+
+                    ### SPOON (to be done ...)
 
                     self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=True)
 
@@ -606,8 +657,27 @@ class TaskMain():
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=False)
                     
-                    ### PLACE OBJECTS
-                    ### POUR OBJECTS
+                    ### PLACE BOWL
+                    self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+
+                    ### POUR MILK
+                    self.robot.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
+                    self.robot.set_speech(filename="serve_breakfast/milk_poured", wait_for_end_of=False)
+
+                    ### PLACE MILK
+                    self.robot.set_arm(command="place_milk_table", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+
+                    ### POUR CORNFLAKES
+                    self.robot.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
+                    self.robot.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=False)
+                    
+                    ### PLACE CORNFLAKES
+                    self.robot.set_arm(command="place_cereal_table", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+
+                    #### PLACE SPOON: MISSING ...
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
 

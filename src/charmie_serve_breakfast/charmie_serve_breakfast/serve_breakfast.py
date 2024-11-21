@@ -74,7 +74,7 @@ class TaskMain():
         self.MAX_SPEED = 30
         self.TABLE_APPROACH_OBSTACLES = 0.35
         self.COUNTER_APPROACH_OBSTACLES = 0.25
-        self.GET_MILK = False
+        self.GET_MILK = True
         self.GET_CORNFLAKES = True
         self.GET_DISHES = True
         
@@ -345,11 +345,13 @@ class TaskMain():
 
                 if self.GET_CORNFLAKES:
                     ##### ARM POUR IN BOWL
-                    self.robot.set_arm(command="pour_cereals_bowl_alternative_robocup_cornflakes", wait_for_end_of=True)
+                    # self.robot.set_arm(command="pour_cereals_bowl_alternative_robocup_cornflakes", wait_for_end_of=True)
+                    self.robot.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
                     self.robot.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=False)
                     
                     ##### ARM PLACE OBJECT
-                    self.robot.set_arm(command="place_cereal_table_alternative_robocup_cornflakes", wait_for_end_of=True)
+                    # self.robot.set_arm(command="place_cereal_table_alternative_robocup_cornflakes", wait_for_end_of=True)
+                    self.robot.set_arm(command="place_cereal_table", wait_for_end_of=True)
                     self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
                 
                 self.state = self.Placing_milk
