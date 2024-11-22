@@ -48,10 +48,10 @@ class ROS2TaskNode(Node):
                 self.objects_classes_file = json.load(json_file)
             # print(self.objects_classes_file)
             with open(self.home + configuration_files_midpath + 'rooms.json', encoding='utf-8') as json_file:
-                self.house_rooms = json.load(json_file)
+                self.rooms = json.load(json_file)
             # print(self.house_rooms)
             with open(self.home + configuration_files_midpath + 'furniture.json', encoding='utf-8') as json_file:
-                self.house_furniture = json.load(json_file)
+                self.furniture = json.load(json_file)
             # print(self.house_furniture)
             self.get_logger().info("Successfully imported data from json configuration files.")
         except:
@@ -2244,6 +2244,15 @@ class RobotStdFunctions():
                 return obj["location"]  # Return the class
         return None  # Return None if the object is not found
 
+    def get_room_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj["room"]  # Return the class
+        return None  # Return None if the object is not found
+
 
 
 
@@ -2256,6 +2265,7 @@ class RobotStdFunctions():
     # json files:
         # - get_object_class_from_object
         # - get_object_class_location_from_object_class
+        # - get_room_from_furniture
     # - get_navigation_coords_from_room
     # - get_navigation_coords_from_furniture
     # - get_location_coords_from_furniture
