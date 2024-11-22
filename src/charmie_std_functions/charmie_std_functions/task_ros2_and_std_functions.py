@@ -2261,6 +2261,15 @@ class RobotStdFunctions():
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj["nav_coords"]  # Return the class
         return None  # Return None if the object is not found
+
+    def get_navigation_coords_from_room(self, room):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.rooms:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(room).replace(" ","_").lower():  # Check if the name matches
+                return obj["nav_coords"]  # Return the class
+        return None  # Return None if the object is not found
     
     def get_location_coords_from_furniture(self, furniture):
 
@@ -2290,6 +2299,6 @@ class RobotStdFunctions():
         # - get_object_class_from_object
         # - get_object_class_location_from_object_class
         # - get_room_from_furniture
-    # - get_location_coords_from_furniture
+        # - get_location_coords_from_furniture
         # - get_navigation_coords_from_furniture
     # - get_navigation_coords_from_room

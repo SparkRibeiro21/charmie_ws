@@ -80,16 +80,13 @@ class TaskMain():
             if self.state == Waiting_for_start_button:
 
                 o = "Cornflakes"
-                o = "Milk"
-                o = "Bowl"
-                o = "Dishwasher Tab"
                 c = self.robot.get_object_class_from_object(o)
                 f = self.robot.get_object_class_location_from_object_class(c)
                 r = self.robot.get_room_from_furniture(f)
-                nc = self.robot.get_navigation_coords_from_furniture(f)
-                lc = self.robot.get_location_coords_from_furniture(f)
-
-                print(o, "|", c, "|", f, "|", r, "|", nc, "|", lc)
+                fnc = self.robot.get_navigation_coords_from_furniture(f)
+                flc = self.robot.get_location_coords_from_furniture(f)
+                rnc = self.robot.get_navigation_coords_from_room(r)
+                print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
 
                 while True:
                     pass
