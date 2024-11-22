@@ -2232,7 +2232,7 @@ class RobotStdFunctions():
         for obj in self.node.objects_file:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
-                return obj["class"]  # Return the class
+                return str(obj["class"]).replace(" ","_").lower()  # Return the class
         return None  # Return None if the object is not found
 
     def get_object_class_location_from_object_class(self, object_class):
@@ -2241,7 +2241,7 @@ class RobotStdFunctions():
         for obj in self.node.objects_classes_file:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(object_class).replace(" ","_").lower():  # Check if the name matches
-                return obj["location"]  # Return the class
+                return str(obj["location"]).replace(" ","_").lower()  # Return the class
         return None  # Return None if the object is not found
 
     def get_room_from_furniture(self, furniture):
@@ -2250,7 +2250,7 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj["room"]  # Return the class
+                return str(obj["room"]).replace(" ","_").lower()  # Return the class
         return None  # Return None if the object is not found
 
     def get_navigation_coords_from_furniture(self, furniture):
