@@ -86,8 +86,10 @@ class TaskMain():
                 c = self.robot.get_object_class_from_object(o)
                 f = self.robot.get_object_class_location_from_object_class(c)
                 r = self.robot.get_room_from_furniture(f)
+                nc = self.robot.get_navigation_coords_from_furniture(f)
+                lc = self.robot.get_location_coords_from_furniture(f)
 
-                print(o, "-", c, "-", f, "-", r)
+                print(o, "|", c, "|", f, "|", r, "|", nc, "|", lc)
 
                 while True:
                     pass
