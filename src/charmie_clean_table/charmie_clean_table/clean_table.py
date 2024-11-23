@@ -155,7 +155,8 @@ class TaskMain():
                 
                 # self.robot.set_navigation(movement="move", target=self.front_of_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
 
 
                 self.robot.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
@@ -179,14 +180,13 @@ class TaskMain():
                 self.robot.set_rgb(BLUE+ROTATE)
                 
 
-                self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
 
                 # self.robot.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
                 # self.robot.set_navigation(movement="move", target=self.kitchen_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.robot.set_navigation(movement="orientate", absolute_angle= 225.0, flag_not_obs = True, wait_for_end_of=True)
 
-                # self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
-                
                 self.state = self.Detect_and_pick_all_objects_audio
 
 
@@ -260,17 +260,11 @@ class TaskMain():
 
             elif self.state == self.Approach_dishwasher:
                 
-                """
-                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                self.set_speech(filename="clean_the_table/moving_dishwasher", wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.dishwasher, max_speed=20.0, reached_radius=0.8, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs = True, wait_for_end_of=True)
-                """
                 # self.robot.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                # self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
 
                 self.robot.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
 
@@ -344,7 +338,8 @@ class TaskMain():
                     # alternative solution to make sure i am at the right distance from the dishwasher
                     # self.robot.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.5, wait_for_end_of=True)
                         
-                self.robot.set_speech(filename="clean_the_table/arrived_dishwasher", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
 
                 self.state = self.Open_dishwasher_door
 
@@ -522,7 +517,7 @@ class TaskMain():
 
                 # self.robot.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
 
-                self.robot.set_torso(legs=0, torso=0) 
+                self.robot.set_torso_position(legs=0, torso=0) 
                 print("TORSO SENT")
 
                 # time.sleep(25)
@@ -676,7 +671,7 @@ class TaskMain():
 
                 self.robot.set_arm(command="close_dishwasher_door", wait_for_end_of=False)
 
-                self.robot.set_torso(legs=0, torso=61) 
+                self.robot.set_torso_position(legs=0, torso=61) 
                 
                 time.sleep(19)
 
@@ -687,7 +682,7 @@ class TaskMain():
 
                 self.robot.set_navigation(movement="adjust", adjust_distance=distance_y_to_center, adjust_direction=0.0, wait_for_end_of=True)
                 
-                self.robot.set_torso(legs=140, torso=30) 
+                self.robot.set_torso_position(legs=140, torso=30) 
 
                 # self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
                 
@@ -709,9 +704,9 @@ class TaskMain():
                 
                 self.robot.set_speech(filename="clean_the_table/finished_ct", wait_for_end_of=False)
                 
-                self.robot.set_torso(legs=0, torso=8) 
+                self.robot.set_torso_position(legs=0, torso=8) 
 
-                # self.set_torso(legs=140, torso=8) 
+                # self.robot.set_torso_position(legs=140, torso=8) 
 
                 while True:
                     pass
