@@ -26,7 +26,7 @@ ros2_modules = {
     "charmie_odometry":         False,
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         False,
+    "charmie_speakers":         True,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
@@ -87,6 +87,12 @@ class TaskMain():
                 flc = self.robot.get_location_coords_from_furniture(f)
                 rnc = self.robot.get_navigation_coords_from_room(r)
                 print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
+
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                self.robot.set_speech(filename="rooms/"+r, wait_for_end_of=True)
+                time.sleep(2.0)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+f, wait_for_end_of=True)
 
                 while True:
                     pass
