@@ -81,19 +81,19 @@ class TaskMain():
 
                 o = "cornflakes"
                 c = self.robot.get_object_class_from_object(o)
-                f = self.robot.get_object_class_location_from_object_class(c)
+                f = self.robot.get_furniture_from_object_class(c)
                 r = self.robot.get_room_from_furniture(f)
                 fnc = self.robot.get_navigation_coords_from_furniture(f)
                 flc = self.robot.get_location_coords_from_furniture(f)
                 rnc = self.robot.get_navigation_coords_from_room(r)
                 print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
 
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
-                self.robot.set_speech(filename="rooms/"+r, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
                 time.sleep(2.0)
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                self.robot.set_speech(filename="furniture/"+f, wait_for_end_of=True)
-
+                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=True)
+                
                 while True:
                     pass
                 

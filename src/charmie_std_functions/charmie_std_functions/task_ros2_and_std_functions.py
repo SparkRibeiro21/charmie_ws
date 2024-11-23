@@ -2235,7 +2235,7 @@ class RobotStdFunctions():
                 return str(obj["class"]).replace(" ","_").lower()  # Return the class
         return None  # Return None if the object is not found
 
-    def get_object_class_location_from_object_class(self, object_class):
+    def get_furniture_from_object_class(self, object_class):
 
         # Iterate through the list of dictionaries
         for obj in self.node.objects_classes_file:
@@ -2282,23 +2282,10 @@ class RobotStdFunctions():
 
     
     
-    
-    
-    
-    
-    # (
-
 
     # Missing Functions:
     # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
     # 
     # ask_help_pick_object_tray -> aimilar to gripper but without hand movement and with audio confirmation (used in CT) audio confirmation may be optional (SG does not need audio confirmation, takes too long...)
-    # 
-    # json files:
-        # - get_object_class_from_object
-        # - get_object_class_location_from_object_class
-        # - get_room_from_furniture
-        # - get_location_coords_from_furniture
-        # - get_navigation_coords_from_furniture
-    # - get_navigation_coords_from_room
+    

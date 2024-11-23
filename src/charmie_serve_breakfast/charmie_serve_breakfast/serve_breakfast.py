@@ -148,13 +148,15 @@ class TaskMain():
                 self.robot.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     
                 if self.GET_MILK:
-                    self.robot.set_speech(filename="generic/moving_drinks_location", wait_for_end_of=False)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=False)
 
                     self.robot.set_navigation(movement="rotate", target=self.cofee_table, flag_not_obs=True, wait_for_end_of=True)
                     self.robot.set_navigation(movement="move", target=self.cofee_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     self.robot.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
                     
-                    self.robot.set_speech(filename="generic/arrived_drinks_location", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=False)
                 
                 self.state = self.Detect_and_pick_milk
 
@@ -183,7 +185,9 @@ class TaskMain():
                 if self.GET_CORNFLAKES:
                     
                     self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=False)
+
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
 
                     
                     self.robot.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
@@ -209,7 +213,9 @@ class TaskMain():
                     # debug
                     # self.set_initial_position([0.0, 0.0, 90.0])
 
-                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=False)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
+                
                     self.robot.set_navigation(movement="orientate", absolute_angle= 45.0, flag_not_obs = True, wait_for_end_of=True)
                     
                     
@@ -240,14 +246,17 @@ class TaskMain():
                 if self.GET_DISHES:
                     self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                    self.robot.set_speech(filename="generic/moving_dishes_location", wait_for_end_of=False)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=False)
                     
                     self.robot.set_navigation(movement="rotate", target=self.kitchen_counter, flag_not_obs=True, wait_for_end_of=True)
                     self.robot.set_navigation(movement="move", target=self.kitchen_counter, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                     
                     self.robot.set_navigation(movement="orientate", absolute_angle= -45.0, flag_not_obs = True, wait_for_end_of=True)
                     
-                    self.robot.set_speech(filename="generic/arrived_dishes_location", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=False)
+                
                 
                 self.state = self.Detect_and_pick_dishes
 
@@ -305,7 +314,8 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
 
                 self.robot.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
                 self.robot.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=self.COUNTER_APPROACH_OBSTACLES, wait_for_end_of=True)
@@ -325,7 +335,8 @@ class TaskMain():
                 
                 self.robot.set_navigation(movement="orientate", absolute_angle= 225.0, flag_not_obs=True, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
                 
                 self.robot.set_neck(position=self.look_table_objects, wait_for_end_of=False)
                 
