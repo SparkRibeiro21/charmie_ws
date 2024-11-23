@@ -587,12 +587,14 @@ class TaskMain():
                 if self.state_SB == self.SB_Waiting_for_task_start:
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_ready_start", wait_for_end_of=True)
-                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_milk
 
                 elif self.state_SB == self.SB_Detect_and_receive_milk:
                     
-                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=False)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=True)
 
                     ### MILK 
                     object_in_gripper = False
@@ -602,12 +604,14 @@ class TaskMain():
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
-                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_cornflakes
 
                 elif self.state_SB == self.SB_Detect_and_receive_cornflakes:
 
-                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_counter", wait_for_end_of=False)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=True)
 
                     ### CORNFLAKES
                     object_in_gripper = False                    
@@ -617,10 +621,14 @@ class TaskMain():
                     self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
-                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_dishes
                     
                 elif self.state_SB == self.SB_Detect_and_receive_dishes:
+
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=True)
 
                     ### BOWL
                     object_in_gripper = False
@@ -649,13 +657,15 @@ class TaskMain():
 
                     ### SPOON (to be done ...)
 
-                    self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=True)
 
                     self.state_SB = self.SB_Place_and_pour_objects
 
                 elif self.state_SB == self.SB_Place_and_pour_objects:
                     
-                    self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=False)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=True)
                     
                     ### PLACE BOWL
                     self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
