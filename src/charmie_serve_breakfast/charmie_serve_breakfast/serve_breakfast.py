@@ -372,7 +372,7 @@ class TaskMain():
 
             elif self.state == self.Final_State:
                 
-                self.robot.set_arm(command="arm_go_rest", wait_for_end_of=False)
+                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=False)
 
