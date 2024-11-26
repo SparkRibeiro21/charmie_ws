@@ -2167,25 +2167,28 @@ class RobotStdFunctions():
             self.set_speech(filename="receptionist/characteristics/color_"+detected_person.pants_color.lower(), wait_for_end_of=True)
 
 
-    def ask_help_pick_object_gripper(self, object_d=DetectedObject(), look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, bb_color=(0, 255, 0)):
+    def ask_help_pick_object_gripper(self, object_d=DetectedObject(), look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, show_detection=True, bb_color=(0, 255, 0)):
 
         object_name_for_files = object_d.object_name.replace(" ","_").lower()
         print("ask_help_pick_object_gripper:", object_name_for_files)
 
-        self.detected_object_to_face_path(object=object_d, send_to_face=True, bb_color=bb_color)
+        if show_detection:
+            self.detected_object_to_face_path(object=object_d, send_to_face=True, bb_color=bb_color)
 
         self.set_neck(position=look_judge, wait_for_end_of=False)
 
-        self.set_speech(filename="generic/found_the", wait_for_end_of=False)
-        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
-        
-        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
+        if show_detection:
+            self.set_speech(filename="generic/found_the", wait_for_end_of=False)
+            self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
+            
+            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
 
         self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-        # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
-        # this way is more natural, since it only opens the gripper before asking to receive object
-        time.sleep(3.0 + wait_time_show_detection) 
+        if show_detection:
+            # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
+            # this way is more natural, since it only opens the gripper before asking to receive object
+            time.sleep(3.0 + wait_time_show_detection) 
         
         self.set_arm(command="open_gripper", wait_for_end_of=False)
 

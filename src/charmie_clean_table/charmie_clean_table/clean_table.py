@@ -393,6 +393,11 @@ class TaskMain():
 
             elif self.state == self.Place_cup:
 
+                temp_object = DetectedObject()
+                temp_object.object_name = "cup"
+                self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False)
+
+                """
                 self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
                 
                 self.robot.set_face("help_pick_cup_ct")
@@ -419,7 +424,8 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
 
                 self.robot.set_face("charmie_face")
-                
+                """
+
                 self.robot.set_speech(filename="clean_the_table/placing_cup", wait_for_end_of=False)
 
                 self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
@@ -431,6 +437,11 @@ class TaskMain():
 
             elif self.state == self.Place_bowl:
 
+                temp_object = DetectedObject()
+                temp_object.object_name = "bowl"
+                self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False)
+
+                """
                 self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                 self.robot.set_face("help_pick_bowl")
@@ -457,7 +468,8 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
 
                 self.robot.set_face("charmie_face")
-                
+                """
+
                 self.robot.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
 
                 self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher_special_bowl", wait_for_end_of=True)
@@ -486,7 +498,13 @@ class TaskMain():
 
 
             elif self.state == self.Place_plate:
+                
+                temp_object = DetectedObject()
+                temp_object.object_name = "plate"
+                self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False)
 
+                """
+                
                 self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
 
                 self.robot.set_face("help_pick_plate")
@@ -513,7 +531,9 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
                 
                 self.robot.set_face("charmie_face")
+                """
 
+                """ # temp comppent for tests
                 self.robot.set_speech(filename="clean_the_table/close_dishwasher_rack", wait_for_end_of=False)
 
                 self.robot.set_speech(filename="clean_the_table/warning_close_dishwasher_rack_with_plate", wait_for_end_of=False)
@@ -528,13 +548,18 @@ class TaskMain():
                 print("TORSO SENT")
 
                 # time.sleep(25)
+                """
 
                 self.robot.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
                 
+                ### must de deleted
+                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
+
                 self.robot.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
 
                 # self.state = self.Place_cutlery_funilocopo
-                self.state = self.Close_dishwasher_door
+                # self.state = self.Close_dishwasher_door
+                self.state = self.Final_State
 
                 
             elif self.state == self.Place_cutlery1:
