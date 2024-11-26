@@ -2239,7 +2239,7 @@ class RobotStdFunctions():
 
         time.sleep(0.5 + wait_time_show_detection)
 
-        self.set_face("place_"+object_name_for_files.lower()+"_in_tray_ct")
+        self.set_face("place_"+object_name_for_files+"_in_tray")
 
         self.set_speech(filename="generic/please_place", wait_for_end_of=False)
         self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
@@ -2319,7 +2319,7 @@ class RobotStdFunctions():
         return None  # Return None if the object is not found
 
     
-    
+
 
     # Missing Functions:
     # 
