@@ -213,21 +213,24 @@ class TaskMain():
 
                         if o.object_name in list_of_objects_copy:
                             correct_object = o
-                            pretended_obj = o.object_name
                         
-                            print(pretended_obj, list_of_objects)    
-                            print(pretended_obj, list_of_objects_copy) 
+                            print(correct_object.object_name, list_of_objects)    
+                            print(correct_object.object_name, list_of_objects_copy) 
 
-                            confirmation = self.ask_judge_for_object(curr_obj=pretended_obj, correct_object=correct_object)
+                            if not self.DEBUG_WITHOUT_AUDIO:
+                                confirmation = self.robot.ask_help_pick_object_tray(curr_obj=correct_object.object_name, correct_object=correct_object)
+                            else: # does not use audio confirmation for receiving objects, used only for quicker debug
+                                confirmation = self.robot.ask_help_pick_object_tray(curr_obj=correct_object.object_name, correct_object=correct_object)
+                                
                             print("confirmation:", confirmation)
 
                             if confirmation.lower() == "yes":
                                 self.robot.set_rgb(command=GREEN+HALF_ROTATE)
                                 self.robot.set_speech(filename="generic/thank_you", wait_for_end_of=True)
 
-                                list_of_objects_copy.remove(pretended_obj)
-                                if pretended_obj == "Knife" or pretended_obj == "Spoon" or pretended_obj == "Fork":
-                                    self.SELECTED_CUTLERY.append(pretended_obj)
+                                list_of_objects_copy.remove(correct_object.object_name)
+                                if correct_object.object_name == "Knife" or correct_object.object_name == "Spoon" or correct_object.object_name == "Fork":
+                                    self.SELECTED_CUTLERY.append(correct_object.object_name)
 
                                     # the robot must only move two pieces of cutlery
                                     if "Knife" not in list_of_objects_copy and "Spoon" not in list_of_objects_copy:
@@ -713,46 +716,3 @@ class TaskMain():
 
             else:
                 pass
-
-
-
-    def ask_judge_for_object(self, curr_obj, correct_object):
-
-        self.robot.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
-
-        self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-        self.robot.set_speech(filename="clean_the_table/found_the_"+curr_obj.lower(), wait_for_end_of=True)  
-        
-        self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
-
-        if self.first_time_giving_audio_instructions:
-            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME) 
-        else:
-            time.sleep(0.5)     
-
-        self.robot.set_face("place_"+curr_obj.lower()+"_in_tray_ct")
-
-        self.robot.set_speech(filename="clean_the_table/place_"+curr_obj.lower()+"_in_tray", wait_for_end_of=True)  
-
-        if self.first_time_giving_audio_instructions:
-            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)   
-        else:
-            time.sleep(0.5)    
-
-        self.robot.set_face("charmie_face")
-
-        confirmation = "yes"
-        if not self.DEBUG_WITHOUT_AUDIO:
-
-            if self.first_time_giving_audio_instructions:
-                self.robot.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
-                self.first_time_giving_audio_instructions = False
-            
-            ##### AUDIO: Listen "YES" OR "NO"
-            ##### "Please say yes or no to confirm the order"
-            confirmation = self.robot.get_audio(yes_or_no=True, question="clean_the_table/question_detect_"+curr_obj.lower()+"_place_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-            print("Finished:", confirmation)
-
-        return confirmation 
