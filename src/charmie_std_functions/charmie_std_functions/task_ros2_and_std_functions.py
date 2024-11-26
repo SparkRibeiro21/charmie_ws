@@ -2252,11 +2252,11 @@ class RobotStdFunctions():
         confirmation = "yes"
         if audio_confirmation:
 
-            if self.first_time_giving_audio_instructions:
-                self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
-                self.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
-                self.first_time_giving_audio_instructions = False
-            
+            # if self.first_time_giving_audio_instructions:
+            self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
+            self.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
+            self.first_time_giving_audio_instructions = False
+        
             ##### AUDIO: Listen "YES" OR "NO"
             confirmation = self.get_audio(yes_or_no=True, question="generic/question_detect_object_and_put_in_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
             print("Finished:", confirmation)

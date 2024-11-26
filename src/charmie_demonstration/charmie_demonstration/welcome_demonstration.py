@@ -496,7 +496,13 @@ class TaskMain():
                 
                     ### audio receptionist code here
                     self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
+
+
                     
+                    ##### JA GEREI ALGUMAS FRASES, PLEASE CHECK: restaurant_demo_intro e demo_please_wave
+                    
+
+
                     time.sleep(1.0)
                     # Reconhecer a pessoa
                     # Olhar para a pessoa
