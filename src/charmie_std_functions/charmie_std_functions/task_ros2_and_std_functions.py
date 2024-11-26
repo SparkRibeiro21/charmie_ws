@@ -2241,8 +2241,6 @@ class RobotStdFunctions():
 
         self.set_face("place_"+object_name_for_files.lower()+"_in_tray_ct")
 
-        self.set_speech(filename="clean_the_table/place_"+object_name_for_files.lower()+"_in_tray", wait_for_end_of=True)  
-
         self.set_speech(filename="generic/please_place", wait_for_end_of=False)
         self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
         self.set_speech(filename="generic/in_tray_as_shown_on_face", wait_for_end_of=False)
@@ -2260,9 +2258,7 @@ class RobotStdFunctions():
                 self.first_time_giving_audio_instructions = False
             
             ##### AUDIO: Listen "YES" OR "NO"
-            ##### "Please say yes or no to confirm the order"
-            confirmation = self.get_audio(yes_or_no=True, question="clean_the_table/question_detect_"+object_name_for_files.lower()+"_place_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-            # Have I sucessfully detected the object and did you put it in my tray?
+            confirmation = self.get_audio(yes_or_no=True, question="generic/question_detect_object_and_put_in_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
             print("Finished:", confirmation)
 
         return confirmation 
