@@ -324,12 +324,9 @@ class TaskMain():
             elif self.state == self.Placing_bowl:
 
                 if self.GET_DISHES:
-                    self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/I_have_placed", wait_for_end_of=False)
-                    self.robot.set_speech(filename="objects_names/bowl", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/on_the_", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
+                    
+                    self.robot.place_object(arm_command="place_bowl_table", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="on", furniture_name="dinner table")
+                    # self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
 
                 self.state = self.Placing_cornflakes 
             
@@ -338,22 +335,14 @@ class TaskMain():
 
                 if self.GET_CORNFLAKES:
                     ##### ARM POUR IN BOWL
+                    self.robot.place_object(arm_command="pour_cereals_bowl", speak_before=False, speak_after=True, verb="pour", object_name="cornflakes", preposition="into", furniture_name="bowl")
                     # self.robot.set_arm(command="pour_cereals_bowl_alternative_robocup_cornflakes", wait_for_end_of=True)
-                    self.robot.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/I_have_poured", wait_for_end_of=False)
-                    self.robot.set_speech(filename="objects_names/cornflakes", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/into_the_", wait_for_end_of=False)
-                    self.robot.set_speech(filename="objects_names/bowl", wait_for_end_of=False)
+                    # self.robot.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
                     
                     ##### ARM PLACE OBJECT
+                    self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name="cornflakes", preposition="on", furniture_name="dinner table")
                     # self.robot.set_arm(command="place_cereal_table_alternative_robocup_cornflakes", wait_for_end_of=True)
-                    self.robot.set_arm(command="place_cereal_table", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/I_have_placed", wait_for_end_of=False)
-                    self.robot.set_speech(filename="objects_names/cornflakes", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/on_the_", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
+                    # self.robot.set_arm(command="place_cereal_table", wait_for_end_of=True)
                 
                 self.state = self.Placing_milk
 
@@ -362,33 +351,21 @@ class TaskMain():
 
                 if self.GET_MILK:
                     ##### ARM POUR IN BOWL
-                    self.robot.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="serve_breakfast/milk_poured", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/I_have_poured", wait_for_end_of=False)
-                    self.robot.set_speech(filename="objects_names/milk", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/into_the_", wait_for_end_of=False)
-                    self.robot.set_speech(filename="objects_names/bowl", wait_for_end_of=False)
+                    self.robot.place_object(arm_command="pour_milk_bowl", speak_before=False, speak_after=True, verb="pour", object_name="milk", preposition="into", furniture_name="bowl")
+                    # self.robot.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
 
                     ##### ARM PLACE OBJECT
-                    self.robot.set_arm(command="place_milk_table", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/I_have_placed", wait_for_end_of=False)
-                    self.robot.set_speech(filename="objects_names/milk", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/on_the_", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
-
+                    self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name="milk", preposition="on", furniture_name="dinner table")
+                    # self.robot.set_arm(command="place_milk_table", wait_for_end_of=True)
+                    
                 self.state = self.Placing_spoon
 
 
             elif self.state == self.Placing_spoon:
 
                 if self.GET_DISHES:
-                    self.robot.set_arm(command="place_spoon_table", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/I_have_placed", wait_for_end_of=False)
-                    self.robot.set_speech(filename="objects_names/spoon", wait_for_end_of=False)
-                    self.robot.set_speech(filename="place_objects/on_the_", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
+                    self.robot.place_object(arm_command="place_spoon_table", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name="dinner table")
+                    # self.robot.set_arm(command="place_spoon_table", wait_for_end_of=True)
 
                 self.state = self.Final_State 
 
