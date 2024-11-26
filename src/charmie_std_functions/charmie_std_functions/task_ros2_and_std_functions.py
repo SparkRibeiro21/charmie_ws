@@ -2223,7 +2223,7 @@ class RobotStdFunctions():
 
         return object_in_gripper
 
-    def ask_help_pick_object_tray(self, object_d=DetectedObject(), look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, bb_color=(0, 255, 0), audio_confirmation=False):
+    def ask_help_pick_object_tray(self, object_d=DetectedObject(), look_judge=[45, 0], first_help_request=False, wait_time_show_detection=0.0, wait_time_show_help_face=0.0, bb_color=(0, 255, 0), audio_confirmation=False):
     
         object_name_for_files = object_d.object_name.replace(" ","_").lower()
         print("ask_help_pick_object_tray:", object_name_for_files)
@@ -2237,25 +2237,30 @@ class RobotStdFunctions():
         
         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
 
-        time.sleep(0.5 + wait_time_show_detection)
-
+        if first_help_request:
+            time.sleep(0.5 + 2.5)
+        else:
+            time.sleep(0.5 + wait_time_show_detection)
+            
         self.set_face("place_"+object_name_for_files+"_in_tray")
 
         self.set_speech(filename="generic/please_place", wait_for_end_of=False)
         self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
         self.set_speech(filename="generic/in_tray_as_shown_on_face", wait_for_end_of=False)
 
-        time.sleep(0.5 + wait_time_show_help_face)
+        if first_help_request:
+            time.sleep(0.5 + 2.5)
+        else:
+            time.sleep(0.5 + wait_time_show_help_face)
 
         self.set_face("charmie_face")
 
         confirmation = "yes"
         if audio_confirmation:
 
-            # if self.first_time_giving_audio_instructions:
-            self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
-            self.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
-            self.first_time_giving_audio_instructions = False
+            if first_help_request:
+                self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
+                self.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
         
             ##### AUDIO: Listen "YES" OR "NO"
             confirmation = self.get_audio(yes_or_no=True, question="generic/question_detect_object_and_put_in_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)

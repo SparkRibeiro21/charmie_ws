@@ -284,7 +284,6 @@ class TaskMain():
                     # SPOON
                     self.robot.ask_help_pick_object_tray(object_d=correct_object_spoon, look_judge=self.look_judge, wait_time_show_detection=3.0, wait_time_show_help_face=3.0, bb_color=(0, 255, 0), audio_confirmation=False)
 
-
                 # self.state = self.Approach_kitchen_table
                 self.state = self.Placing_bowl # debug without NAV
 

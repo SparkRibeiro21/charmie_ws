@@ -198,6 +198,8 @@ class TaskMain():
                 list_of_objects_copy = []
 
                 self.robot.calibrate_audio()
+
+                first_help_request = True # this flag is just to help save time when multiple objects must be received, the first one explains and waits more, the following does it quicker
                 
                 while list_of_objects:
                 
@@ -217,11 +219,13 @@ class TaskMain():
                             print(correct_object.object_name, list_of_objects)    
                             print(correct_object.object_name, list_of_objects_copy) 
 
-                            if not self.DEBUG_WITHOUT_AUDIO:
-                                confirmation = self.robot.ask_help_pick_object_tray(curr_obj=correct_object.object_name, correct_object=correct_object)
+                            if not self.DEBUG_WITHOUT_AUDIO: # confirms with audio
+                                confirmation = self.robot.ask_help_pick_object_tray(object_d=correct_object, look_judge=self.look_judge, first_help_request=first_help_request, bb_color=(0,255,0), audio_confirmation=True)
                             else: # does not use audio confirmation for receiving objects, used only for quicker debug
-                                confirmation = self.robot.ask_help_pick_object_tray(curr_obj=correct_object.object_name, correct_object=correct_object)
-                                
+                                confirmation = self.robot.ask_help_pick_object_tray(object_d=correct_object, look_judge=self.look_judge, first_help_request=first_help_request, bb_color=(0,255,0), audio_confirmation=False)
+                            
+                            first_help_request = False
+
                             print("confirmation:", confirmation)
 
                             if confirmation.lower() == "yes":
