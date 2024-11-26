@@ -2269,7 +2269,38 @@ class RobotStdFunctions():
             confirmation = self.get_audio(yes_or_no=True, question="generic/question_detect_object_and_put_in_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
             print("Finished:", confirmation)
 
-        return confirmation 
+        return confirmation
+
+    def place_object(self, arm_command="", speak_before=False, speak_after=False, verb="", object_name="", preposition="", furniture_name=""):
+        
+        object_name_for_files = object_name.replace(" ","_").lower()
+        print("place_object_name:", object_name_for_files)
+        furniture_name_for_files = furniture_name.replace(" ","_").lower()
+        print("place_object_furniture:", furniture_name_for_files)
+        verb_name_for_files = verb.replace(" ","_").lower()
+        print("place_object_verb:", verb_name_for_files)
+        preposition_name_for_files = preposition.replace(" ","_").lower()
+        print("place_object_preposition:", preposition_name_for_files)
+
+        if speak_before:
+            self.set_speech(filename="place_objects/going_to_"+verb_name_for_files, wait_for_end_of=False)
+            self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
+            self.set_speech(filename="place_objects/"+preposition_name_for_files, wait_for_end_of=False)
+            if verb_name_for_files == "place": 
+                self.set_speech(filename="furniture/"+furniture_name_for_files, wait_for_end_of=False)
+            else: # pour
+                self.set_speech(filename="objects_names/"+furniture_name_for_files, wait_for_end_of=False)
+
+        self.set_arm(command=arm_command, wait_for_end_of=True)
+
+        if speak_after:
+            self.set_speech(filename="place_objects/completed_"+verb_name_for_files, wait_for_end_of=False)
+            self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
+            self.set_speech(filename="place_objects/"+preposition_name_for_files, wait_for_end_of=False)
+            if verb_name_for_files == "place": 
+                self.set_speech(filename="furniture/"+furniture_name_for_files, wait_for_end_of=False)
+            else: # pour
+                self.set_speech(filename="objects_names/"+furniture_name_for_files, wait_for_end_of=False)
 
 
     def get_object_class_from_object(self, object_name):
