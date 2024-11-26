@@ -2291,7 +2291,8 @@ class RobotStdFunctions():
             else: # pour
                 self.set_speech(filename="objects_names/"+furniture_name_for_files, wait_for_end_of=False)
 
-        self.set_arm(command=arm_command, wait_for_end_of=True)
+        if arm_command: # checks if string is not empty, otherwise just speaks
+            self.set_arm(command=arm_command, wait_for_end_of=True)
 
         if speak_after:
             self.set_speech(filename="place_objects/completed_"+verb_name_for_files, wait_for_end_of=False)

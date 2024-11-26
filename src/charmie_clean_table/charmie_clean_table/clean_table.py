@@ -425,12 +425,13 @@ class TaskMain():
 
                 self.robot.set_face("charmie_face")
                 """
-
-                self.robot.set_speech(filename="clean_the_table/placing_cup", wait_for_end_of=False)
-
-                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
+    
+                self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="place_cup_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
+                # self.robot.set_speech(filename="clean_the_table/placing_cup", wait_for_end_of=False)
+                # self.robot.set_arm(command="place_cup_in_dishwasher", wait_for_end_of=True)
                 
-                self.robot.set_arm(command="place_cup_in_dishwasher", wait_for_end_of=True)
 
                 self.state = self.Place_bowl
 
@@ -470,11 +471,11 @@ class TaskMain():
                 self.robot.set_face("charmie_face")
                 """
 
-                self.robot.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
-
-                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher_special_bowl", wait_for_end_of=True)
-                
-                self.robot.set_arm(command="place_bowl_in_dishwasher", wait_for_end_of=True)
+                self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher_special_bowl", speak_before=True, speak_after=False, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="place_bowl_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher_special_bowl", wait_for_end_of=True)
+                # self.robot.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
+                # self.robot.set_arm(command="place_bowl_in_dishwasher", wait_for_end_of=True)
 
                 self.state = self.Place_plate
 
@@ -550,12 +551,13 @@ class TaskMain():
                 # time.sleep(25)
                 """
 
-                self.robot.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
+                self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="place_plate_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
                 
+                # self.robot.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
                 ### must de deleted
-                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
-
-                self.robot.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
+                # self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
+                # self.robot.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
 
                 # self.state = self.Place_cutlery_funilocopo
                 # self.state = self.Close_dishwasher_door
