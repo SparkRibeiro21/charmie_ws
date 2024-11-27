@@ -2235,8 +2235,8 @@ class RobotStdFunctions():
 
         self.set_neck(position=look_judge, wait_for_end_of=False)
 
-        self.set_speech(filename="generic/found_the", wait_for_end_of=False)
-        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
+        self.set_speech(filename="generic/found_the", wait_for_end_of=True)
+        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=True)
         
         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
 
@@ -2247,9 +2247,9 @@ class RobotStdFunctions():
             
         self.set_face("place_"+object_name_for_files+"_in_tray")
 
-        self.set_speech(filename="generic/please_place", wait_for_end_of=False)
-        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
-        self.set_speech(filename="generic/in_tray_as_shown_on_face", wait_for_end_of=False)
+        self.set_speech(filename="generic/please_place", wait_for_end_of=True)
+        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=True)
+        self.set_speech(filename="generic/in_tray_as_shown_on_face", wait_for_end_of=True)
 
         if first_help_request:
             time.sleep(0.5 + 2.5)
