@@ -21,10 +21,10 @@ ros2_modules = {
     "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
-    "charmie_navigation":       True,
+    "charmie_navigation":       False,
     "charmie_neck":             True,
-    "charmie_obstacles":        True,
-    "charmie_odometry":         True,
+    "charmie_obstacles":        False,
+    "charmie_odometry":         False,
     "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
@@ -147,7 +147,8 @@ class TaskMain():
 
                 self.robot.wait_for_door_start()
 
-                self.state = self.Approach_kitchen_table
+                # self.state = self.Approach_kitchen_table
+                self.state = self.Detect_and_pick_all_objects_audio # debug without NAV
 
 
             elif self.state == self.Approach_kitchen_table:
@@ -263,7 +264,8 @@ class TaskMain():
                 
                 print(self.SELECTED_CUTLERY)
 
-                self.state = self.Approach_dishwasher
+                # self.state = self.Approach_dishwasher
+                self.state = self.Place_cup # debug without NAV
 
 
             elif self.state == self.Approach_dishwasher:
@@ -427,8 +429,11 @@ class TaskMain():
                 self.robot.set_face("charmie_face")
                 """
     
-                self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
-                self.robot.place_object(arm_command="place_cup_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="", speak_before=True, speak_after=False, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="", speak_before=False, speak_after=True, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="place_cup_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                
                 # self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
                 # self.robot.set_speech(filename="clean_the_table/placing_cup", wait_for_end_of=False)
                 # self.robot.set_arm(command="place_cup_in_dishwasher", wait_for_end_of=True)
@@ -472,8 +477,11 @@ class TaskMain():
                 self.robot.set_face("charmie_face")
                 """
 
-                self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher_special_bowl", speak_before=True, speak_after=False, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
-                self.robot.place_object(arm_command="place_bowl_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="", speak_before=True, speak_after=False, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")
+                # self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher_special_bowl", speak_before=True, speak_after=False, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="place_bowl_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
+                
                 # self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher_special_bowl", wait_for_end_of=True)
                 # self.robot.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
                 # self.robot.set_arm(command="place_bowl_in_dishwasher", wait_for_end_of=True)
@@ -554,8 +562,10 @@ class TaskMain():
                 # time.sleep(25)
                 """
 
-                self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
-                self.robot.place_object(arm_command="place_plate_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="", speak_before=True, speak_after=False, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="", speak_before=False, speak_after=True, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="place_plate_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
                 
                 # self.robot.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
                 ### must de deleted
@@ -571,6 +581,8 @@ class TaskMain():
                 
                 temp_object = DetectedObject()
                 for cutlery in self.SELECTED_CUTLERY:
+
+                    print(temp_object.object_name)
 
                     temp_object.object_name = cutlery
                     self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False)
@@ -606,13 +618,16 @@ class TaskMain():
                     self.robot.set_face("charmie_face")
                     """
 
-                    self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
-                    self.robot.place_object(arm_command="place_cutlery_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
+                    self.robot.place_object(arm_command="", speak_before=True, speak_after=False, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
+                    self.robot.place_object(arm_command="", speak_before=False, speak_after=True, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
+                    # self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
+                    # self.robot.place_object(arm_command="place_cutlery_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
                 
                     # self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
                     # self.robot.set_arm(command="place_cutlery_in_dishwasher", wait_for_end_of=True)
                 
-                self.state = self.Close_dishwasher_door
+                # self.state = self.Close_dishwasher_door
+                self.state = self.Final_State # debug without NAV
                 
                 """
                 self.state = self.Place_cutlery2
