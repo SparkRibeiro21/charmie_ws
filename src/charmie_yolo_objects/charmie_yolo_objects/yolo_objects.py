@@ -892,7 +892,7 @@ class YoloObjectsMain():
             if self.node.new_hand_rgb:
 
                 total_obj = 0
-                current_img = self.node.new_hand_rgb
+                current_img = self.node.hand_rgb
                 current_frame = self.node.br.imgmsg_to_cv2(current_img, "bgr8")
                 current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape

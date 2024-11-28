@@ -1632,7 +1632,7 @@ class RobotStdFunctions():
                 rgb_found_list_of_objects = False
                 self.set_rgb(RED+SET_COLOUR)
                 self.set_neck(position=t, wait_for_end_of=True)
-                time.sleep(0.5) # 0.5
+                time.sleep(0.5)
                 self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
                 self.set_rgb(WHITE+SET_COLOUR)
 
