@@ -574,7 +574,7 @@ class TaskMain():
 
                 # self.state = self.Place_cutlery_funilocopo
                 # self.state = self.Close_dishwasher_door
-                self.state = self.Final_State
+                self.state = self.Place_cutlery
 
                 
             elif self.state == self.Place_cutlery:

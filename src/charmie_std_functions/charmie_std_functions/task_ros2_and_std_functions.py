@@ -1444,7 +1444,7 @@ class RobotStdFunctions():
         for t in tetas:
             self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(1.0) # 0.5
+            time.sleep(1.5) # 0.5
             self.node.detected_people.persons = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
             self.set_rgb(WHITE+SET_COLOUR)
 
@@ -1632,7 +1632,7 @@ class RobotStdFunctions():
                 rgb_found_list_of_objects = False
                 self.set_rgb(RED+SET_COLOUR)
                 self.set_neck(position=t, wait_for_end_of=True)
-                time.sleep(1.0) # 0.5
+                time.sleep(1.5) # 0.5
                 self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
                 self.set_rgb(WHITE+SET_COLOUR)
 
@@ -2229,7 +2229,7 @@ class RobotStdFunctions():
     def ask_help_pick_object_tray(self, object_d=DetectedObject(), look_judge=[45, 0], first_help_request=False, wait_time_show_detection=0.0, wait_time_show_help_face=0.0, bb_color=(0, 255, 0), audio_confirmation=False):
     
         object_name_for_files = object_d.object_name.replace(" ","_").lower()
-        print("ask_help_pick_object_tray:", object_name_for_files)
+        # print("ask_help_pick_object_tray:", object_name_for_files)
 
         self.detected_object_to_face_path(object=object_d, send_to_face=True, bb_color=bb_color)
 
@@ -2274,13 +2274,13 @@ class RobotStdFunctions():
     def place_object(self, arm_command="", speak_before=False, speak_after=False, verb="", object_name="", preposition="", furniture_name=""):
         
         object_name_for_files = object_name.replace(" ","_").lower()
-        print("place_object_name:", object_name_for_files)
+        # print("place_object_name:", object_name_for_files)
         furniture_name_for_files = furniture_name.replace(" ","_").lower()
-        print("place_object_furniture:", furniture_name_for_files)
+        # print("place_object_furniture:", furniture_name_for_files)
         verb_name_for_files = verb.replace(" ","_").lower()
-        print("place_object_verb:", verb_name_for_files)
+        # print("place_object_verb:", verb_name_for_files)
         preposition_name_for_files = preposition.replace(" ","_").lower()
-        print("place_object_preposition:", preposition_name_for_files)
+        # print("place_object_preposition:", preposition_name_for_files)
 
         if speak_before:
             self.set_speech(filename="place_objects/going_to_"+verb_name_for_files, wait_for_end_of=False)
