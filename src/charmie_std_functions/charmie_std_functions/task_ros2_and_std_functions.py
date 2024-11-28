@@ -2220,8 +2220,6 @@ class RobotStdFunctions():
 
             self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
-            self.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
-                
         self.set_face("charmie_face")
 
         return object_in_gripper
