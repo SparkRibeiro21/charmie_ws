@@ -2192,8 +2192,10 @@ class RobotStdFunctions():
         
         self.set_arm(command="open_gripper", wait_for_end_of=False)
 
-        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
+        self.set_speech(filename="generic/check_face_put_object_hand_p1", wait_for_end_of=True)
+        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=True)
+        self.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
+        
         self.set_face("help_pick_"+object_name_for_files)
 
         time.sleep(wait_time_show_help_face)
@@ -2245,10 +2247,10 @@ class RobotStdFunctions():
             
         self.set_face("place_"+object_name_for_files+"_in_tray")
 
-        self.set_speech(filename="generic/please_place", wait_for_end_of=True)
+        self.set_speech(filename="generic/check_face_put_object_hand_p1", wait_for_end_of=True)
         self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=True)
-        self.set_speech(filename="generic/in_tray_as_shown_on_face", wait_for_end_of=True)
-
+        self.set_speech(filename="generic/check_face_put_object_tray_p2", wait_for_end_of=True)
+        
         if first_help_request:
             time.sleep(0.5 + 2.5)
         else:
