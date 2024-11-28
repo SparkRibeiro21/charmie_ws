@@ -280,7 +280,7 @@ class Yolo_obj(Node):
         self.head_rgb = img
         self.new_head_rgb = True
 
-    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera, mask=None):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera, current_img, mask=None):
 
         object_id = boxes_id.id
         if boxes_id.id == None:
@@ -357,10 +357,7 @@ class Yolo_obj(Node):
 
         new_object.orientation = 0.0 # still missing... (says the object angle so the gripper can adjust to correctly pick up the object)
         
-        if camera == "head":
-            new_object.image_rgb_frame = self.head_rgb
-        else:
-            new_object.image_rgb_frame = self.hand_rgb
+        new_object.image_rgb_frame = current_img
             
         return new_object
 
@@ -419,7 +416,7 @@ class YoloObjectsMain():
         self.new_hand_frame_time = time.time()
         self.prev_hand_frame_time = time.time()
         
-    def detect_with_yolo_model(self, model, camera, current_frame_draw):
+    def detect_with_yolo_model(self, model, camera, current_frame_draw, current_img):
 
         # self.get_logger().info('Receiving color video frame head')
         self.tempo_total = time.perf_counter()
@@ -507,8 +504,8 @@ class YoloObjectsMain():
                     # adds object to "object_pose" without any restriction
                     new_object = DetectedObject()
                     self.node.get_logger().info(f"'{object_name}' Mask Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
-                    new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera, mask)
-
+                    new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=pcloud.center_coords, camera=camera, current_img=current_img, mask=mask)
+                    
                     ALL_CONDITIONS_MET = 1
 
                     if pcloud.center_coords.x == 0 and pcloud.center_coords.y == 0 and pcloud.center_coords.x == 0: # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
@@ -588,8 +585,8 @@ class YoloObjectsMain():
                     # adds object to "object_pose" without any restriction
                     new_object = DetectedObject()
                     self.node.get_logger().info(f"'{object_name}' BB Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
-                    new_object = self.node.add_object_to_detectedobject_msg(box, object_name, object_class, pcloud.center_coords, camera)
-
+                    new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=pcloud.center_coords, camera=camera, current_img=current_img)
+                    
                     ALL_CONDITIONS_MET = 1
 
                     if model == "objects":   
@@ -847,7 +844,8 @@ class YoloObjectsMain():
             if self.node.new_head_rgb:
 
                 total_obj = 0
-                current_frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+                current_img = self.node.head_rgb # current_img goes through the functions to make sure, the image sent with object is the same image used for detection
+                current_frame = self.node.br.imgmsg_to_cv2(current_img, "bgr8")
                 # current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
@@ -855,19 +853,19 @@ class YoloObjectsMain():
                     
 
                 if self.node.ACTIVATE_YOLO_OBJECTS:
-                    list_detected_objects, to = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw)
+                    list_detected_objects, to = self.detect_with_yolo_model(model="objects", camera="head", current_frame_draw=current_frame_draw, current_img=current_img)
                     total_obj += to
                     for o in list_detected_objects.objects:
                         list_all_objects_detected.objects.append(o)
                     
                 if self.node.ACTIVATE_YOLO_DOORS:
-                    list_detected_doors, td = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw)
+                    list_detected_doors, td = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw, current_img=current_img)
                     total_obj += td
                     for o in list_detected_doors.objects:
                         list_all_objects_detected.objects.append(o)
                 
                 if self.node.ACTIVATE_YOLO_SHOES:
-                    list_detected_shoes, ts = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw)
+                    list_detected_shoes, ts = self.detect_with_yolo_model(model="shoes", camera="head", current_frame_draw=current_frame_draw, current_img=current_img)
                     total_obj += ts
                     for o in list_detected_shoes.objects:
                         list_all_objects_detected.objects.append(o)
@@ -894,26 +892,27 @@ class YoloObjectsMain():
             if self.node.new_hand_rgb:
 
                 total_obj = 0
-                current_frame = self.node.br.imgmsg_to_cv2(self.node.hand_rgb, "bgr8")
+                current_img = self.node.new_hand_rgb
+                current_frame = self.node.br.imgmsg_to_cv2(current_img, "bgr8")
                 current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
                 list_all_objects_detected_hand = ListOfDetectedObject()
 
                 if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
-                    list_detected_objects_hand, to = self.detect_with_yolo_model(model="objects", camera="hand", current_frame_draw=current_frame_draw)
+                    list_detected_objects_hand, to = self.detect_with_yolo_model(model="objects", camera="hand", current_frame_draw=current_frame_draw, current_img=current_img)
                     total_obj += to
                     for o in list_detected_objects_hand.objects:
                         list_all_objects_detected_hand.objects.append(o)
                     
                 if self.node.ACTIVATE_YOLO_DOORS_HAND:
-                    list_detected_doors_hand, td = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw)
+                    list_detected_doors_hand, td = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw, current_img=current_img)
                     total_obj += td
                     for o in list_detected_doors_hand.objects:
                         list_all_objects_detected_hand.objects.append(o)
                 
                 if self.node.ACTIVATE_YOLO_SHOES_HAND:
-                    list_detected_shoes_hand, ts = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw)
+                    list_detected_shoes_hand, ts = self.detect_with_yolo_model(model="shoes", camera="hand", current_frame_draw=current_frame_draw, current_img=current_img)
                     total_obj += ts
                     for o in list_detected_shoes_hand.objects:
                         list_all_objects_detected_hand.objects.append(o)
