@@ -69,15 +69,23 @@ class TaskMain():
         self.Final_State = 12
     
         # Configurables
-        self.ATTEMPTS_AT_RECEIVING = 2
-        self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
-        self.MAX_SPEED = 30
-        self.TABLE_APPROACH_OBSTACLES = 0.35
-        self.COUNTER_APPROACH_OBSTACLES = 0.25
         self.GET_MILK = True
         self.GET_CORNFLAKES = True
         self.GET_DISHES = True
+        self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
+        self.SB_TABLE_HEIGHT = 0.76
+        self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
         
+        self.TABLE_APPROACH_OBSTACLES = 0.35
+        self.COUNTER_APPROACH_OBSTACLES = 0.25
+        self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED.lower().replace(" ", "_")
+
+        # Checks if there is any error in the furniture variables:
+        if self.robot.get_room_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED) == None:
+            print("ERROR!!! - FURNITURE:", self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, "DOES NOT EXIST IN furniture.json")
+            while True:
+                pass
+
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
@@ -228,7 +236,12 @@ class TaskMain():
                     object_in_gripper = False
                     while not object_in_gripper:
                         objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
-                        object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
+                        
+                        if self.IS_CORNFLAKES_BIG:
+                            object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, alternative_help_pick_face="help_pick_cornflakes1", bb_color=(0, 255, 0))
+                        else:
+                            object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
+                        
                         if not object_in_gripper:
                             self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
 
@@ -299,7 +312,7 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
 
                 self.robot.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs = True, wait_for_end_of=True)
                 self.robot.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=self.COUNTER_APPROACH_OBSTACLES, wait_for_end_of=True)
@@ -320,7 +333,7 @@ class TaskMain():
                 self.robot.set_navigation(movement="orientate", absolute_angle= 225.0, flag_not_obs=True, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
                 
                 self.robot.set_neck(position=self.look_table_objects, wait_for_end_of=False)
                 
@@ -331,7 +344,7 @@ class TaskMain():
 
                 if self.GET_DISHES:
                     
-                    self.robot.place_object(arm_command="place_bowl_table", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="on", furniture_name="dinner table")
+                    self.robot.place_object(arm_command="place_bowl_table", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     # self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
 
                 self.state = self.Placing_cornflakes 
@@ -346,7 +359,7 @@ class TaskMain():
                     # self.robot.set_arm(command="pour_cereals_bowl", wait_for_end_of=True)
                     
                     ##### ARM PLACE OBJECT
-                    self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name="cornflakes", preposition="on", furniture_name="dinner table")
+                    self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name="cornflakes", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     # self.robot.set_arm(command="place_cereal_table_alternative_robocup_cornflakes", wait_for_end_of=True)
                     # self.robot.set_arm(command="place_cereal_table", wait_for_end_of=True)
                 
@@ -361,7 +374,7 @@ class TaskMain():
                     # self.robot.set_arm(command="pour_milk_bowl", wait_for_end_of=True)
 
                     ##### ARM PLACE OBJECT
-                    self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name="milk", preposition="on", furniture_name="dinner table")
+                    self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name="milk", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     # self.robot.set_arm(command="place_milk_table", wait_for_end_of=True)
                     
                 self.state = self.Placing_spoon
@@ -370,7 +383,7 @@ class TaskMain():
             elif self.state == self.Placing_spoon:
 
                 if self.GET_DISHES:
-                    self.robot.place_object(arm_command="place_spoon_table", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name="dinner table")
+                    self.robot.place_object(arm_command="place_spoon_table", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     # self.robot.set_arm(command="place_spoon_table", wait_for_end_of=True)
 
                 self.state = self.Final_State 
