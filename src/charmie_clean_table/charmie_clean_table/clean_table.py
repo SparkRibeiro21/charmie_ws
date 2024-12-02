@@ -67,9 +67,7 @@ class TaskMain():
         self.Place_bowl = 8
         self.Place_plate = 9
         self.Place_cutlery = 10
-        # self.Place_cutlery1 = 10
-        # self.Place_cutlery2 = 11
-        self.Place_cutlery_funilocopo = 15
+        self.Place_cutlery_funilocopo = 11
         self.Close_dishwasher_rack = 12
         self.Close_dishwasher_door = 13
         self.Final_State = 14
@@ -392,7 +390,7 @@ class TaskMain():
 
                 temp_object = DetectedObject()
                 temp_object.object_name = "cup"
-                self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False)
+                self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False, alternative_help_pick_face="help_pick_cup1")
 
                 self.robot.place_object(arm_command="", speak_before=True, speak_after=False, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
                 self.robot.place_object(arm_command="", speak_before=False, speak_after=True, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    

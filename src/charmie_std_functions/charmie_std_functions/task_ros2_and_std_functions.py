@@ -2167,7 +2167,7 @@ class RobotStdFunctions():
             self.set_speech(filename="receptionist/characteristics/color_"+detected_person.pants_color.lower(), wait_for_end_of=True)
 
 
-    def ask_help_pick_object_gripper(self, object_d=DetectedObject(), look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, show_detection=True, bb_color=(0, 255, 0)):
+    def ask_help_pick_object_gripper(self, object_d=DetectedObject(), look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, show_detection=True, alternative_help_pick_face = "", bb_color=(0, 255, 0)):
 
         object_name_for_files = object_d.object_name.replace(" ","_").lower()
         print("ask_help_pick_object_gripper:", object_name_for_files)
@@ -2196,7 +2196,10 @@ class RobotStdFunctions():
         self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=True)
         self.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
         
-        self.set_face("help_pick_"+object_name_for_files)
+        if not alternative_help_pick_face:
+            self.set_face("help_pick_"+object_name_for_files)
+        else:
+            self.set_face(alternative_help_pick_face)
 
         time.sleep(wait_time_show_help_face)
     
