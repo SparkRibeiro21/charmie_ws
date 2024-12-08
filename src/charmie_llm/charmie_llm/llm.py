@@ -3,7 +3,7 @@ from rclpy.node import Node
 import rclpy
 import time
 from charmie_interfaces.msg import ListOfStrings
-from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR
+from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR, GetLLMConfirmCommand
 
 ##### NOTAS: #####
 # temos de adicioanr infos sobre:
@@ -31,6 +31,7 @@ class LLMNode(Node):
         self.llm_demo_description = LLM_demo_description() # TODO: add gpsr and question_debug
 
         self.llm_demonstration_server = self.create_service(GetLLMDemo, "llm_demonstration", self.llm_demonstration_callback)
+        self.llm_confirm_command_server = self.create_service(GetLLMConfirmCommand, "llm_confirm_command", self.llm_confirm_command_callback)
         self.llm_gpsr_server = self.create_service(GetLLMGPSR, "llm_gpsr", self.llm_gpsr_callback)
 
 
@@ -48,6 +49,22 @@ class LLMNode(Node):
 
         return response
 
+    def llm_confirm_command_callback(self, request, response):
+        # Type of service received: 
+        # 
+        # string command        
+        # ---
+        # string answer # LLM Response to the question asked to the robot 
+
+        self.get_logger().info("LLM CONFIRM COMMAND REQUEST RECEIVED")
+        print("Received:", request.command)
+        
+        time.sleep(3.0)
+
+        example = "this is a test"
+        response.answer = example
+
+        return response    
 
     def llm_gpsr_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
         # Type of service received: 

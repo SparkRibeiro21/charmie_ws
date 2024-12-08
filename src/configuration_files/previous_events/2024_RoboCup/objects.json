@@ -1,0 +1,49 @@
+[
+{"name": "Soap",   		"class": "Cleaning Supplies", 	"height": "0.05"},
+{"name": "Washcloth", 		"class": "Cleaning Supplies", 	"height": "0.00"},
+{"name": "Dishwasher Tab",	"class": "Cleaning Supplies", 	"height": "0.00"},
+{"name": "Sponge", 		"class": "Cleaning Supplies", 	"height": "0.02"},
+
+{"name": "Fanta", 		"class": "Drinks", 		"height": "0.05"},
+{"name": "Big Coke", 		"class": "Drinks", 		"height": "0.09"},
+{"name": "Cola", 		"class": "Drinks", 		"height": "0.05"},
+{"name": "Dubbelfris", 		"class": "Drinks", 		"height": "0.03"},
+{"name": "Milk",           	"class": "Drinks", 		"height": "0.02"},
+{"name": "Ice Tea",       	"class": "Drinks", 		"height": "0.05"},
+{"name": "Water",	   	"class": "Drinks", 		"height": "0.05"},
+
+{"name": "Cornflakes", 		"class": "Foods", 		"height": "0.06"},
+{"name": "Pea Soup", 		"class": "Foods", 		"height": "0.03"},
+{"name": "Hagelslag",		"class": "Foods", 		"height": "0.07"},
+{"name": "Mayonaise", 		"class": "Foods", 		"height": "0.08"},
+{"name": "Curry",		"class": "Foods", 		"height": "0.05"},
+{"name": "Pancake Mix", 	"class": "Foods", 		"height": "0.05"},
+{"name": "Sausages",	 	"class": "Foods", 		"height": "0.05"},
+
+{"name": "Pear", 		"class": "Fruits", 		"height": "0.00"},
+{"name": "Plum", 		"class": "Fruits", 		"height": "0.00"},
+{"name": "Peach", 		"class": "Fruits", 		"height": "0.00"},
+{"name": "Lemon", 		"class": "Fruits", 		"height": "0.00"},
+{"name": "Orange", 		"class": "Fruits", 		"height": "0.00"},
+{"name": "Strawberry", 		"class": "Fruits", 		"height": "0.00"},
+{"name": "Banana", 		"class": "Fruits", 		"height": "0.00"},
+{"name": "Apple", 		"class": "Fruits", 		"height": "0.00"},
+
+{"name": "Candle", 		"class": "Decorations", 	"height": "0.05"},
+{"name": "Bag", 		"class": "Decorations", 	"height": "0.05"},
+
+{"name": "Pringles", 		"class": "Snacks", 		"height": "0.07"},
+{"name": "Stroopwafel", 	"class": "Snacks", 		"height": "0.12"},
+{"name": "Crisps", 		"class": "Snacks", 		"height": "0.07"},
+{"name": "Candy", 		"class": "Snacks", 		"height": "0.07"},
+{"name": "Tictac", 		"class": "Snacks", 		"height": "0.02"},
+{"name": "Liquorice", 		"class": "Snacks", 		"height": "0.07"},
+
+
+{"name": "Spoon", 		"class": "Dishes", 		"height": "0.02"},
+{"name": "Plate", 		"class": "Dishes", 		"height": "0.10"},
+{"name": "Cup", 		"class": "Dishes", 		"height": "0.03"},
+{"name": "Fork", 		"class": "Dishes", 		"height": "0.02"},
+{"name": "Bowl", 		"class": "Dishes", 		"height": "0.06"},
+{"name": "Knife", 		"class": "Dishes", 		"height": "0.02"}
+]

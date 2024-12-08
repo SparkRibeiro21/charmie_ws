@@ -7,28 +7,6 @@ import time
 import pygame
 from pathlib import Path
 
-    # read names.json
-    # read objects.json
-    # read object_categories.json
-    # read furniture.json
-    # read rooms.json
-
-    # create all speaker files in respective folder for names
-    # create all speaker files in respective folder for objects
-    # create all speaker files in respective folder for object_categories
-    # create all speaker files in respective folder for rooms
-    # create all speaker files in respective folder for furniture
-
-    # create mode just for names
-    # create mode just for objects and object categories
-    # create mode just for rooms and furniture
-    # create COMPETITION mode where updates all speaker files
-
-    # only create audios for new objects, don't recreate audios from already existing audios (some of them were edited to sound better)
-
-# add objects, object classes, names, etc... from previous competitions
-
-
 # MODE can be the following commands:
 # "STANDARD": convert save_speaker command into wav(speaker) and txt(show face) 
 # "NAMES": reads names from json file and exports all names to list_of_sentences/person_names
@@ -36,8 +14,7 @@ from pathlib import Path
 # "HOUSE": reads rooms and furniture from json file and exports all rooms to list_of_sentences/rooms and furniture to list_of_sentences/furniture 
 # "COMPETITION": to improve time-efficiency in competitions, this mode does NAMES, OBJECTS and HOUSE modes 
 
-
-MODE = "COMPETITION"
+MODE = "STANDARD"
 
 class RobotSpeak():
     def __init__(self):
@@ -172,5 +149,3 @@ def main(args=None):
         charmie_speech.generate_speaker_files_from_configuration_files(folder="objects_classes", config_file=charmie_speech.objects_classes_file)
         charmie_speech.generate_speaker_files_from_configuration_files(folder="rooms", config_file=charmie_speech.rooms_file)
         charmie_speech.generate_speaker_files_from_configuration_files(folder="furniture", config_file=charmie_speech.furniture_file)
-
-

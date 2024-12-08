@@ -752,6 +752,7 @@ class DebugVisualMain():
         # self.text_font = pygame.font.SysFont("Arial", 30)
         self.text_font_t = pygame.font.SysFont(None, 28)
         self.text_font   = pygame.font.SysFont(None, 24)
+        self.text_map_font   = pygame.font.SysFont(None, 20)
 
         self.button_size = 30
 
@@ -804,7 +805,7 @@ class DebugVisualMain():
                 self.house_doors = json.load(json_file)
             # print(self.house_doors)
         except:
-            print("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
+            print("Could NOT import data from json configuration files. (objects, rooms and furniture)")
 
         self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
         self.current_datetime = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
@@ -891,6 +892,8 @@ class DebugVisualMain():
         self.last_detected_objects = ListOfDetectedObject()
         self.curr_detected_objects_hand = ListOfDetectedObject()
         self.last_detected_objects_hand = ListOfDetectedObject()
+
+        self.show_navigation_locations = False
 
         # robot info
         self.robot_radius = self.node.robot_radius
@@ -1727,8 +1730,26 @@ class DebugVisualMain():
         for door in self.house_doors:
             pygame.draw.line(self.WIN, self.BLACK, (self.coords_to_map(door['top_left_coords'][0],  door['top_left_coords'][1])),\
                                                     self.coords_to_map(door['bot_right_coords'][0], door['bot_right_coords'][1]), 10)
-    
         
+        ### DRAWS NAVIGATION LOCATIONS ###
+        if self.show_navigation_locations:
+            for furniture in self.house_furniture:
+
+                furniture_center_map_coords = self.coords_to_map((furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2, (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2)
+                pygame.draw.circle(self.WIN, self.ORANGE, furniture_center_map_coords, radius=self.size_to_map(self.robot_radius/2), width=0)
+                self.draw_text(str(furniture['name']), self.text_map_font, self.ORANGE, furniture_center_map_coords[0]-(3*len(str(furniture['name']))), furniture_center_map_coords[1]+13)
+
+                furniture_nav_map_coords = self.coords_to_map(furniture['nav_coords'][0], furniture['nav_coords'][1])
+                pygame.draw.circle(self.WIN, self.GREEN, furniture_nav_map_coords, radius=self.size_to_map(self.robot_radius/2), width=0)
+                self.draw_text(str(furniture['name']), self.text_map_font, self.GREEN, furniture_nav_map_coords[0]-(3*len(str(furniture['name']))), furniture_nav_map_coords[1]+13)
+
+            for rooms in self.house_rooms:
+
+                rooms_nav_map_coords = self.coords_to_map(rooms['nav_coords'][0], rooms['nav_coords'][1])
+                pygame.draw.circle(self.WIN, self.BLUE_L, rooms_nav_map_coords, radius=self.size_to_map(self.robot_radius/2), width=0)
+                self.draw_text(str(rooms['name']), self.text_map_font, self.BLUE_L, rooms_nav_map_coords[0]-(3*len(str(rooms['name']))), rooms_nav_map_coords[1]+13)
+
+
         ### DRAW ROBOT
         pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(self.node.robot_x, self.node.robot_y), radius=self.size_to_map(self.robot_radius), width=0)
         
@@ -1906,6 +1927,9 @@ class DebugVisualMain():
                     if event.key == pygame.K_MINUS:
                         # print("MINUS key pressed!")
                         self.button_zoom_out_function()
+
+                    if event.key == pygame.K_m:
+                        self.show_navigation_locations = not self.show_navigation_locations
 
                     if event.key == pygame.K_w:
                         self.node.robot_y+=0.1

@@ -21,10 +21,10 @@ ros2_modules = {
     "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
-    "charmie_navigation":       True,
+    "charmie_navigation":       False,
     "charmie_neck":             True,
-    "charmie_obstacles":        True,
-    "charmie_odometry":         True,
+    "charmie_obstacles":        False,
+    "charmie_odometry":         False,
     "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
@@ -66,9 +66,8 @@ class TaskMain():
         self.Place_cup = 7
         self.Place_bowl = 8
         self.Place_plate = 9
-        self.Place_cutlery1 = 10
-        self.Place_cutlery2 = 11
-        self.Place_cutlery_funilocopo = 15
+        self.Place_cutlery = 10
+        self.Place_cutlery_funilocopo = 11
         self.Close_dishwasher_rack = 12
         self.Close_dishwasher_door = 13
         self.Final_State = 14
@@ -146,7 +145,8 @@ class TaskMain():
 
                 self.robot.wait_for_door_start()
 
-                self.state = self.Approach_kitchen_table
+                # self.state = self.Approach_kitchen_table
+                self.state = self.Detect_and_pick_all_objects_audio # debug without NAV
 
 
             elif self.state == self.Approach_kitchen_table:
@@ -155,8 +155,8 @@ class TaskMain():
                 
                 # self.robot.set_navigation(movement="move", target=self.front_of_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
-
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
 
                 self.robot.set_navigation(movement="move", target=self.front_of_start_door, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.robot.set_rgb(BLUE+ROTATE)
@@ -178,15 +178,13 @@ class TaskMain():
                 self.robot.set_navigation(movement="move", target=self.close_to_table_sb, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.robot.set_rgb(BLUE+ROTATE)
                 
-
-                self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=False)
 
                 # self.robot.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
                 # self.robot.set_navigation(movement="move", target=self.kitchen_table, max_speed=self.MAX_SPEED, reached_radius=0.6, flag_not_obs=True, wait_for_end_of=True)
                 self.robot.set_navigation(movement="orientate", absolute_angle= 225.0, flag_not_obs = True, wait_for_end_of=True)
 
-                # self.robot.set_speech(filename="serve_breakfast/sb_arrived_kitchen_table", wait_for_end_of=True)
-                
                 self.state = self.Detect_and_pick_all_objects_audio
 
 
@@ -198,6 +196,8 @@ class TaskMain():
                 list_of_objects_copy = []
 
                 self.robot.calibrate_audio()
+
+                first_help_request = True # this flag is just to help save time when multiple objects must be received, the first one explains and waits more, the following does it quicker
                 
                 while list_of_objects:
                 
@@ -213,21 +213,26 @@ class TaskMain():
 
                         if o.object_name in list_of_objects_copy:
                             correct_object = o
-                            pretended_obj = o.object_name
                         
-                            print(pretended_obj, list_of_objects)    
-                            print(pretended_obj, list_of_objects_copy) 
+                            print(correct_object.object_name, list_of_objects)    
+                            print(correct_object.object_name, list_of_objects_copy) 
 
-                            confirmation = self.ask_judge_for_object(curr_obj=pretended_obj, correct_object=correct_object)
+                            if not self.DEBUG_WITHOUT_AUDIO: # confirms with audio
+                                confirmation = self.robot.ask_help_pick_object_tray(object_d=correct_object, look_judge=self.look_judge, first_help_request=first_help_request, bb_color=(0,255,0), audio_confirmation=True)
+                            else: # does not use audio confirmation for receiving objects, used only for quicker debug
+                                confirmation = self.robot.ask_help_pick_object_tray(object_d=correct_object, look_judge=self.look_judge, first_help_request=first_help_request, bb_color=(0,255,0), audio_confirmation=False)
+                            
+                            first_help_request = False
+
                             print("confirmation:", confirmation)
 
                             if confirmation.lower() == "yes":
                                 self.robot.set_rgb(command=GREEN+HALF_ROTATE)
                                 self.robot.set_speech(filename="generic/thank_you", wait_for_end_of=True)
 
-                                list_of_objects_copy.remove(pretended_obj)
-                                if pretended_obj == "Knife" or pretended_obj == "Spoon" or pretended_obj == "Fork":
-                                    self.SELECTED_CUTLERY.append(pretended_obj)
+                                list_of_objects_copy.remove(correct_object.object_name)
+                                if correct_object.object_name == "Knife" or correct_object.object_name == "Spoon" or correct_object.object_name == "Fork":
+                                    self.SELECTED_CUTLERY.append(correct_object.object_name)
 
                                     # the robot must only move two pieces of cutlery
                                     if "Knife" not in list_of_objects_copy and "Spoon" not in list_of_objects_copy:
@@ -241,7 +246,6 @@ class TaskMain():
                                 self.robot.set_rgb(command=RED+HALF_ROTATE)
                                 self.robot.set_speech(filename="generic/misdetection_move_to_next", wait_for_end_of=True)
                         
-
                     list_of_objects = list_of_objects_copy   
 
                     if list_of_objects:
@@ -255,27 +259,21 @@ class TaskMain():
                 
                 print(self.SELECTED_CUTLERY)
 
-                self.state = self.Approach_dishwasher
+                # self.state = self.Approach_dishwasher
+                self.state = self.Place_cup # debug without NAV
 
 
             elif self.state == self.Approach_dishwasher:
                 
-                """
-                self.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                self.set_speech(filename="clean_the_table/moving_dishwasher", wait_for_end_of=True)
-                self.set_navigation(movement="rotate", target=self.dishwasher, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="move", target=self.dishwasher, max_speed=20.0, reached_radius=0.8, flag_not_obs=True, wait_for_end_of=True)
-                self.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs = True, wait_for_end_of=True)
-                """
                 # self.robot.set_navigation(movement="adjust_angle", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                # self.robot.set_speech(filename="serve_breakfast/sb_moving_kitchen_table", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
 
                 self.robot.activate_obstacles(obstacles_lidar_up=True, obstacles_camera_head=True)
 
                 self.robot.set_rgb(BLUE+HALF_ROTATE)
-
 
                 self.robot.set_navigation(movement="orientate", absolute_angle= 180.0, flag_not_obs = True, wait_for_end_of=True)
                 self.robot.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=self.TABLE_APPROACH_OBSTACLES, wait_for_end_of=True)
@@ -283,7 +281,6 @@ class TaskMain():
                 # self.robot.set_navigation(movement="rotate", target=self.kitchen_table, flag_not_obs=True, wait_for_end_of=True)
                 # self.robot.set_navigation(movement="move", target=self.kitchen_table, max_speed=20.0, reached_radius=1.0, flag_not_obs=False, wait_for_end_of=True)
 
-                                
                 self.robot.set_navigation(movement="orientate", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
 
                 # self.robot.set_navigation(movement="adjust_angle", absolute_angle= 0.0, flag_not_obs=True, wait_for_end_of=True)
@@ -344,7 +341,8 @@ class TaskMain():
                     # alternative solution to make sure i am at the right distance from the dishwasher
                     # self.robot.set_navigation(movement="adjust_obstacle", adjust_direction=0.0, adjust_min_dist=0.5, wait_for_end_of=True)
                         
-                self.robot.set_speech(filename="clean_the_table/arrived_dishwasher", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
 
                 self.state = self.Open_dishwasher_door
 
@@ -366,7 +364,6 @@ class TaskMain():
 
 
             elif self.state == self.Open_dishwasher_rack:
-
 
                 # The 175 rather than 180 is to force the adjustement
                 self.robot.set_navigation(movement="orientate", absolute_angle=80.0, flag_not_obs = True, wait_for_end_of=True)    
@@ -391,79 +388,89 @@ class TaskMain():
 
             elif self.state == self.Place_cup:
 
-                self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
+                temp_object = DetectedObject()
+                temp_object.object_name = "cup"
+                self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False, alternative_help_pick_face="help_pick_cup1")
+
+                self.robot.place_object(arm_command="", speak_before=True, speak_after=False, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="", speak_before=False, speak_after=True, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="place_cup_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="cup", preposition="inside", furniture_name="dishwasher")    
                 
-                self.robot.set_face("help_pick_cup_ct")
-                
-                self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
-
-                self.robot.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                object_in_gripper = False
-                while not object_in_gripper:
-                                        
-                    self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-
-                        self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                
-                self.robot.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
-
-                self.robot.set_face("charmie_face")
-                
-                self.robot.set_speech(filename="clean_the_table/placing_cup", wait_for_end_of=False)
-
-                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
-                
-                self.robot.set_arm(command="place_cup_in_dishwasher", wait_for_end_of=True)
-
                 self.state = self.Place_bowl
 
 
             elif self.state == self.Place_bowl:
 
-                self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
+                temp_object = DetectedObject()
+                temp_object.object_name = "bowl"
+                self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False)
 
-                self.robot.set_face("help_pick_bowl")
+                self.robot.place_object(arm_command="", speak_before=True, speak_after=False, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")
+                # self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher_special_bowl", speak_before=True, speak_after=False, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="place_bowl_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="inside", furniture_name="dishwasher")    
                 
-                self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
-
-                self.robot.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                object_in_gripper = False
-                while not object_in_gripper:
-                                        
-                    self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-
-                        self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                
-                self.robot.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
-
-                self.robot.set_face("charmie_face")
-                
-                self.robot.set_speech(filename="clean_the_table/placing_bowl", wait_for_end_of=False)
-
-                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher_special_bowl", wait_for_end_of=True)
-                
-                self.robot.set_arm(command="place_bowl_in_dishwasher", wait_for_end_of=True)
-
                 self.state = self.Place_plate
 
+
+            elif self.state == self.Place_plate:
+                
+                temp_object = DetectedObject()
+                temp_object.object_name = "plate"
+                self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False)
+
+                """ # temp comment for tests
+                self.robot.set_speech(filename="clean_the_table/close_dishwasher_rack", wait_for_end_of=False)
+
+                self.robot.set_speech(filename="clean_the_table/warning_close_dishwasher_rack_with_plate", wait_for_end_of=False)
+
+                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
+                
+                self.robot.set_arm(command="close_dishwasher_rack", wait_for_end_of=True)
+
+                # self.robot.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
+
+                self.robot.set_torso_position(legs=0, torso=0) 
+                print("TORSO SENT")
+
+                # time.sleep(25)
+                """
+
+                self.robot.place_object(arm_command="", speak_before=True, speak_after=False, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
+                self.robot.place_object(arm_command="", speak_before=False, speak_after=True, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
+                # self.robot.place_object(arm_command="place_plate_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name="plate", preposition="inside", furniture_name="dishwasher")    
+                
+                # self.robot.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
+                ### must de deleted
+                # self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
+                # self.robot.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
+
+                # self.state = self.Place_cutlery_funilocopo
+                # self.state = self.Close_dishwasher_door
+                self.state = self.Place_cutlery
+
+                
+            elif self.state == self.Place_cutlery:
+                
+                temp_object = DetectedObject()
+                for cutlery in self.SELECTED_CUTLERY:
+
+                    print(temp_object.object_name)
+
+                    temp_object.object_name = cutlery
+                    self.robot.ask_help_pick_object_gripper(object_d=temp_object, look_judge=self.look_forward, wait_time_show_help_face=3.0, attempts_at_receiving=5, show_detection=False)
+
+                    self.robot.place_object(arm_command="", speak_before=True, speak_after=False, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
+                    self.robot.place_object(arm_command="", speak_before=False, speak_after=True, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
+                    # self.robot.place_object(arm_command="ask_for_objects_to_pre_dishwasher", speak_before=True, speak_after=False, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
+                    # self.robot.place_object(arm_command="place_cutlery_in_dishwasher", speak_before=False, speak_after=True, verb="place", object_name=temp_object.object_name, preposition="inside", furniture_name="dishwasher")    
+                
+                # self.state = self.Close_dishwasher_door
+                self.state = self.Final_State # debug without NAV
+                
+                """
             elif self.state == self.Place_cutlery_funilocopo:
 
                 # self.robot.set_neck(position=self.look_forwas, wait_for_end_of=False)
@@ -481,136 +488,9 @@ class TaskMain():
                 self.robot.set_arm(command="place_cutlery_in_dishwasher", wait_for_end_of=True)
 
                 self.state = self.Place_plate
-
-
-            elif self.state == self.Place_plate:
-
-                self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-                self.robot.set_face("help_pick_plate")
                 
-                self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=False)
-
-                self.robot.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                object_in_gripper = False
-                while not object_in_gripper:
-                                        
-                    self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-
-                        self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                
-                self.robot.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
-                
-                self.robot.set_face("charmie_face")
-
-                self.robot.set_speech(filename="clean_the_table/close_dishwasher_rack", wait_for_end_of=False)
-
-                self.robot.set_speech(filename="clean_the_table/warning_close_dishwasher_rack_with_plate", wait_for_end_of=False)
-
-                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
-                
-                self.robot.set_arm(command="close_dishwasher_rack", wait_for_end_of=True)
-
-                # self.robot.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
-
-                self.robot.set_torso(legs=0, torso=0) 
-                print("TORSO SENT")
-
-                # time.sleep(25)
-
-                self.robot.set_speech(filename="clean_the_table/placing_plate", wait_for_end_of=False)
-                
-                self.robot.set_arm(command="place_plate_in_dishwasher", wait_for_end_of=True)
-
-                # self.state = self.Place_cutlery_funilocopo
-                self.state = self.Close_dishwasher_door
-
-                
-            elif self.state == self.Place_cutlery1:
-
-                self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
-                
-                self.robot.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
-                self.robot.set_face("help_pick_"+self.SELECTED_CUTLERY[0].lower()+"_ct")
-                
-                self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                object_in_gripper = False
-                while not object_in_gripper:
-                                        
-                    self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-
-                        self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                
-                self.robot.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
-                
-                self.robot.set_speech(filename="clean_the_table/placing_cutlery", wait_for_end_of=False)
-
-                self.robot.set_face("charmie_face")
-
-                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
-                
-                self.robot.set_arm(command="place_cutlery_in_dishwasher", wait_for_end_of=True)
-
-                self.state = self.Place_cutlery2
-
-
-            elif self.state == self.Place_cutlery2:
-
-                self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
-                
-                self.robot.set_arm(command="pre_dishwasher_to_ask_for_objects", wait_for_end_of=True)
-
-                self.robot.set_face("help_pick_"+self.SELECTED_CUTLERY[1].lower()+"_ct")
-                
-                self.robot.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-
-                object_in_gripper = False
-                while not object_in_gripper:
-                                        
-                    self.robot.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    
-                    if not object_in_gripper:
-
-                        self.robot.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                        
-                        self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                
-                self.robot.set_neck(position=self.look_dishwasher, wait_for_end_of=False)
-                
-                self.robot.set_speech(filename="clean_the_table/placing_cutlery", wait_for_end_of=False)
-
-                self.robot.set_face("charmie_face")
-
-                self.robot.set_arm(command="ask_for_objects_to_pre_dishwasher", wait_for_end_of=True)
-                
-                self.robot.set_arm(command="place_cutlery_in_dishwasher", wait_for_end_of=True)
-
-                self.state = self.Close_dishwasher_door
-            
-
+                """
+               
             ### FOR NOW - THE CLOSE RACK MOVEMENT IS INCLUDED IN THE PLACE_PLATE
                 """
             elif self.state == self.Close_dishwasher_rack:
@@ -676,7 +556,7 @@ class TaskMain():
 
                 self.robot.set_arm(command="close_dishwasher_door", wait_for_end_of=False)
 
-                self.robot.set_torso(legs=0, torso=61) 
+                self.robot.set_torso_position(legs=0, torso=61) 
                 
                 time.sleep(19)
 
@@ -687,7 +567,7 @@ class TaskMain():
 
                 self.robot.set_navigation(movement="adjust", adjust_distance=distance_y_to_center, adjust_direction=0.0, wait_for_end_of=True)
                 
-                self.robot.set_torso(legs=140, torso=30) 
+                self.robot.set_torso_position(legs=140, torso=30) 
 
                 # self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
                 
@@ -709,55 +589,12 @@ class TaskMain():
                 
                 self.robot.set_speech(filename="clean_the_table/finished_ct", wait_for_end_of=False)
                 
-                self.robot.set_torso(legs=0, torso=8) 
+                self.robot.set_torso_position(legs=0, torso=8) 
 
-                # self.set_torso(legs=140, torso=8) 
+                # self.robot.set_torso_position(legs=140, torso=8) 
 
                 while True:
                     pass
 
             else:
                 pass
-
-
-
-    def ask_judge_for_object(self, curr_obj, correct_object):
-
-        self.robot.detected_object_to_face_path(object=correct_object, send_to_face=True, bb_color=(0,255,0))
-
-        self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
-
-        self.robot.set_speech(filename="clean_the_table/found_the_"+curr_obj.lower(), wait_for_end_of=True)  
-        
-        self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
-
-        if self.first_time_giving_audio_instructions:
-            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME) 
-        else:
-            time.sleep(0.5)     
-
-        self.robot.set_face("place_"+curr_obj.lower()+"_in_tray_ct")
-
-        self.robot.set_speech(filename="clean_the_table/place_"+curr_obj.lower()+"_in_tray", wait_for_end_of=True)  
-
-        if self.first_time_giving_audio_instructions:
-            time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)   
-        else:
-            time.sleep(0.5)    
-
-        self.robot.set_face("charmie_face")
-
-        confirmation = "yes"
-        if not self.DEBUG_WITHOUT_AUDIO:
-
-            if self.first_time_giving_audio_instructions:
-                self.robot.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
-                self.first_time_giving_audio_instructions = False
-            
-            ##### AUDIO: Listen "YES" OR "NO"
-            ##### "Please say yes or no to confirm the order"
-            confirmation = self.robot.get_audio(yes_or_no=True, question="clean_the_table/question_detect_"+curr_obj.lower()+"_place_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-            print("Finished:", confirmation)
-
-        return confirmation 

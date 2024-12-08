@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller, ListOfStrings
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand
 
 import cv2 
 # import threading
@@ -17,6 +17,7 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 import random
+import json
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -33,9 +34,28 @@ class ROS2TaskNode(Node):
         self.ros2_modules = ros2_modules
 
         # path to save detected people in search for person
-        home = str(Path.home())
-        midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
-        self.complete_path_custom_face = home+'/'+midpath+'/'
+        self.home = str(Path.home())
+        custom_face_midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+        configuration_files_midpath = "/charmie_ws/src/configuration_files/"
+        self.complete_path_custom_face = self.home+'/'+custom_face_midpath+'/'
+
+        # Open all configuration files
+        try:
+            with open(self.home + configuration_files_midpath + 'objects.json', encoding='utf-8') as json_file:
+                self.objects_file = json.load(json_file)
+            # print(self.objects_file)
+            with open(self.home + configuration_files_midpath + 'objects_classes.json', encoding='utf-8') as json_file:
+                self.objects_classes_file = json.load(json_file)
+            # print(self.objects_classes_file)
+            with open(self.home + configuration_files_midpath + 'rooms.json', encoding='utf-8') as json_file:
+                self.rooms = json.load(json_file)
+            # print(self.house_rooms)
+            with open(self.home + configuration_files_midpath + 'furniture.json', encoding='utf-8') as json_file:
+                self.furniture = json.load(json_file)
+            # print(self.house_furniture)
+            self.get_logger().info("Successfully imported data from json configuration files.")
+        except:
+            self.get_logger().error("Could NOT import data from json configuration files.")
 
         # Intel Realsense Subscribers 
         # Head Camera
@@ -111,6 +131,7 @@ class ROS2TaskNode(Node):
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
         # LLM
         self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
+        self.llm_confirm_command_client = self.create_client(GetLLMConfirmCommand, "llm_confirm_command")
         self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
 
     
@@ -154,9 +175,11 @@ class ROS2TaskNode(Node):
 
         if self.ros2_modules["charmie_llm"]:
             while not self.llm_demonstration_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server LLM ...")
+                self.get_logger().warn("Waiting for Demo Server LLM ...")
+            while not self.llm_confirm_command_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Confirm Command Server LLM ...")
             while not self.llm_gpsr_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server LLM ...")
+                self.get_logger().warn("Waiting for GPSR Server LLM ...")
 
         if self.ros2_modules["charmie_low_level"]:
             while not self.set_acceleration_ramp_client.wait_for_service(1.0):
@@ -222,6 +245,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_set_torso_position = False
         self.waiting_for_pcloud = False
         self.waited_for_end_of_llm_demonstration = False
+        self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
 
         self.br = CvBridge()
@@ -297,6 +321,7 @@ class ROS2TaskNode(Node):
         self.debug_button3 = False
         self.new_controller_msg = False
         self.llm_demonstration_response = ""
+        self.llm_confirm_command_response = ""
         self.llm_gpsr_response = ListOfStrings()
 
     def send_node_used_to_gui(self):
@@ -825,6 +850,24 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    def call_llm_confirm_command_server(self, request=GetLLMConfirmCommand.Request(), wait_for_end_of=True):
+
+        future = self.llm_confirm_command_client.call_async(request)
+        future.add_done_callback(self.callback_call_llm_confirm_command)
+        
+    def callback_call_llm_confirm_command(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.llm_confirm_command_response = response.answer
+            self.get_logger().info("Received LLM Confirm Command Answer:"+str(self.llm_confirm_command_response))
+            self.waited_for_end_of_llm_confirm_command = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
     def call_llm_gpsr_server(self, request=GetLLMGPSR.Request(), wait_for_end_of=True):
 
         future = self.llm_gpsr_client.call_async(request)
@@ -1303,8 +1346,8 @@ class RobotStdFunctions():
         if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
             self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
 
-            self.navigation_success = False
-            self.navigation_message = "Wrong Movement Name"
+            self.node.navigation_success = False
+            self.node.navigation_message = "Wrong Movement Name"
 
         else:
 
@@ -1347,8 +1390,8 @@ class RobotStdFunctions():
                     pass
                 self.node.flag_navigation_reached = False
 
-            self.navigation_success = True
-            self.navigation_message = "Arrived at selected location"
+            self.node.navigation_success = True
+            self.node.navigation_message = "Arrived at selected location"
 
         return self.node.navigation_success, self.node.navigation_message   
 
@@ -1401,7 +1444,7 @@ class RobotStdFunctions():
         for t in tetas:
             self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(1.0) # 0.5
+            time.sleep(0.5)
             self.node.detected_people.persons = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
             self.set_rgb(WHITE+SET_COLOUR)
 
@@ -1589,7 +1632,7 @@ class RobotStdFunctions():
                 rgb_found_list_of_objects = False
                 self.set_rgb(RED+SET_COLOUR)
                 self.set_neck(position=t, wait_for_end_of=True)
-                time.sleep(1.0) # 0.5
+                time.sleep(0.5)
                 self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
                 self.set_rgb(WHITE+SET_COLOUR)
 
@@ -1992,6 +2035,28 @@ class RobotStdFunctions():
         random_wait = str(random.randint(1, 3))
         self.set_speech(filename="gpsr/llm_wait_for_gpsr_"+random_wait, wait_for_end_of=False)
 
+        
+        ### EXAMPLE FOR LLM CONFIRM COMMAND - SLENDER
+
+
+        request = GetLLMConfirmCommand.Request()
+        request.command = command
+        self.node.call_llm_confirm_command_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_confirm_command:
+                pass
+            self.node.waited_for_end_of_llm_confirm_command = False
+
+        print(self.node.llm_confirm_command_response)
+
+        self.set_speech(command=self.node.llm_confirm_command_response, quick_voice=True, wait_for_end_of=True)
+
+
+        ### END OF EXAMPLE
+
+
+
         request = GetLLMGPSR.Request()
         request.command = command
         self.node.call_llm_gpsr_server(request=request, wait_for_end_of=wait_for_end_of)
@@ -2102,31 +2167,39 @@ class RobotStdFunctions():
             self.set_speech(filename="receptionist/characteristics/color_"+detected_person.pants_color.lower(), wait_for_end_of=True)
 
 
-    def ask_help_pick_object_gripper(self, object_d=DetectedObject(), look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, bb_color=(0, 255, 0)):
+    def ask_help_pick_object_gripper(self, object_d=DetectedObject(), look_judge=[45, 0], wait_time_show_detection=0.0, wait_time_show_help_face=0.0, attempts_at_receiving=2, show_detection=True, alternative_help_pick_face = "", bb_color=(0, 255, 0)):
 
         object_name_for_files = object_d.object_name.replace(" ","_").lower()
-        print("ask_help_pick_object:", object_name_for_files)
+        print("ask_help_pick_object_gripper:", object_name_for_files)
 
-        self.detected_object_to_face_path(object=object_d, send_to_face=True, bb_color=bb_color)
+        if show_detection:
+            self.detected_object_to_face_path(object=object_d, send_to_face=True, bb_color=bb_color)
 
         self.set_neck(position=look_judge, wait_for_end_of=False)
 
-        self.set_speech(filename="generic/found_the", wait_for_end_of=False)
-        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
-        
-        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
+        if show_detection:
+            self.set_speech(filename="generic/found_the", wait_for_end_of=False)
+            self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
+            
+            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
 
         self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-        # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
-        # this way is more natural, since it only opens the gripper before asking to receive object
-        time.sleep(3.0 + wait_time_show_detection) 
+        if show_detection:
+            # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
+            # this way is more natural, since it only opens the gripper before asking to receive object
+            time.sleep(3.0 + wait_time_show_detection) 
         
         self.set_arm(command="open_gripper", wait_for_end_of=False)
 
-        self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-        self.set_face("help_pick_"+object_name_for_files)
+        self.set_speech(filename="generic/check_face_put_object_hand_p1", wait_for_end_of=True)
+        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=True)
+        self.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
+        
+        if not alternative_help_pick_face:
+            self.set_face("help_pick_"+object_name_for_files)
+        else:
+            self.set_face(alternative_help_pick_face)
 
         time.sleep(wait_time_show_help_face)
     
@@ -2152,13 +2225,148 @@ class RobotStdFunctions():
 
             self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
-            self.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
-                
         self.set_face("charmie_face")
 
         return object_in_gripper
 
+    def ask_help_pick_object_tray(self, object_d=DetectedObject(), look_judge=[45, 0], first_help_request=False, wait_time_show_detection=0.0, wait_time_show_help_face=0.0, bb_color=(0, 255, 0), audio_confirmation=False):
+    
+        object_name_for_files = object_d.object_name.replace(" ","_").lower()
+        # print("ask_help_pick_object_tray:", object_name_for_files)
+
+        self.detected_object_to_face_path(object=object_d, send_to_face=True, bb_color=bb_color)
+
+        self.set_neck(position=look_judge, wait_for_end_of=False)
+
+        self.set_speech(filename="generic/found_the", wait_for_end_of=True)
+        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=True)
+        
+        self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
+
+        if first_help_request:
+            time.sleep(0.5 + 2.5)
+        else:
+            time.sleep(0.5 + wait_time_show_detection)
+            
+        self.set_face("place_"+object_name_for_files+"_in_tray")
+
+        self.set_speech(filename="generic/check_face_put_object_hand_p1", wait_for_end_of=True)
+        self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=True)
+        self.set_speech(filename="generic/check_face_put_object_tray_p2", wait_for_end_of=True)
+        
+        if first_help_request:
+            time.sleep(0.5 + 2.5)
+        else:
+            time.sleep(0.5 + wait_time_show_help_face)
+
+        self.set_face("charmie_face")
+
+        confirmation = "yes"
+        if audio_confirmation:
+
+            if first_help_request:
+                self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
+                self.set_speech(filename="generic/say_robot_yes_no", wait_for_end_of=True)
+        
+            ##### AUDIO: Listen "YES" OR "NO"
+            confirmation = self.get_audio(yes_or_no=True, question="generic/question_detect_object_and_put_in_tray", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+            print("Finished:", confirmation)
+
+        return confirmation
+
+    def place_object(self, arm_command="", speak_before=False, speak_after=False, verb="", object_name="", preposition="", furniture_name=""):
+        
+        object_name_for_files = object_name.replace(" ","_").lower()
+        # print("place_object_name:", object_name_for_files)
+        furniture_name_for_files = furniture_name.replace(" ","_").lower()
+        # print("place_object_furniture:", furniture_name_for_files)
+        verb_name_for_files = verb.replace(" ","_").lower()
+        # print("place_object_verb:", verb_name_for_files)
+        preposition_name_for_files = preposition.replace(" ","_").lower()
+        # print("place_object_preposition:", preposition_name_for_files)
+
+        if speak_before:
+            self.set_speech(filename="place_objects/going_to_"+verb_name_for_files, wait_for_end_of=False)
+            self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
+            self.set_speech(filename="place_objects/"+preposition_name_for_files, wait_for_end_of=False)
+            if verb_name_for_files == "place": 
+                self.set_speech(filename="furniture/"+furniture_name_for_files, wait_for_end_of=False)
+            else: # pour
+                self.set_speech(filename="objects_names/"+furniture_name_for_files, wait_for_end_of=False)
+
+        if arm_command: # checks if string is not empty, otherwise just speaks
+            self.set_arm(command=arm_command, wait_for_end_of=True)
+
+        if speak_after:
+            self.set_speech(filename="place_objects/completed_"+verb_name_for_files, wait_for_end_of=False)
+            self.set_speech(filename="objects_names/"+object_name_for_files, wait_for_end_of=False)
+            self.set_speech(filename="place_objects/"+preposition_name_for_files, wait_for_end_of=False)
+            if verb_name_for_files == "place": 
+                self.set_speech(filename="furniture/"+furniture_name_for_files, wait_for_end_of=False)
+            else: # pour
+                self.set_speech(filename="objects_names/"+furniture_name_for_files, wait_for_end_of=False)
+
+
+    def get_object_class_from_object(self, object_name):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
+                return str(obj["class"]).replace(" ","_").lower()  # Return the class
+        return None  # Return None if the object is not found
+
+    def get_furniture_from_object_class(self, object_class):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_classes_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_class).replace(" ","_").lower():  # Check if the name matches
+                return str(obj["location"]).replace(" ","_").lower()  # Return the class
+        return None  # Return None if the object is not found
+
+    def get_room_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return str(obj["room"]).replace(" ","_").lower()  # Return the class
+        return None  # Return None if the object is not found
+
+    def get_navigation_coords_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj["nav_coords"]  # Return the class
+        return None  # Return None if the object is not found
+
+    def get_navigation_coords_from_room(self, room):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.rooms:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(room).replace(" ","_").lower():  # Check if the name matches
+                return obj["nav_coords"]  # Return the class
+        return None  # Return None if the object is not found
+    
+    def get_location_coords_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2)]  # Return the class
+        return None  # Return None if the object is not found
+
+    
+
 
     # Missing Functions:
+    # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
+    # 
     # ask_help_pick_object_tray -> aimilar to gripper but without hand movement and with audio confirmation (used in CT) audio confirmation may be optional (SG does not need audio confirmation, takes too long...)
+    
