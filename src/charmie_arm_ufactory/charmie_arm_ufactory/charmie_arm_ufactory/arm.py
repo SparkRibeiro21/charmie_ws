@@ -430,7 +430,51 @@ class ArmUfactory(Node):
 
 		except Exception as e:
 			self.get_logger().error("Service call failed: %r" % (e,))
+	
+	# TO DO:
+	# do not let errors with different types of variables: send int instead of float and that
 
+	def set_gripper_position(self, pos=0.0, wait=True, timeout=4.0):
+		set_gripper_pos = GripperMove.Request()
+		set_gripper_pos.pos = pos
+		set_gripper_pos.wait = wait
+		set_gripper_pos.timeout = timeout
+		self.future = self.set_gripper.call_async(set_gripper_pos)
+		self.future.add_done_callback(partial(self.callback_service_tr))
+
+	def set_gripper_movement_speed(self, speed=1000.0):
+		set_gripper_speed_req = SetFloat32.Request()
+		set_gripper_speed_req.data = speed
+		self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+		self.future.add_done_callback(partial(self.callback_service_tr))
+
+	def set_position_values(self, pose=None, speed=200.0, acc=1000.0, wait=True, timeout=4.0):
+		
+		if pose is None:
+			pose = self.get_lower_order_position_linear
+
+		position_values = MoveCartesian.Request()
+		position_values.pose = pose
+		position_values.speed = speed
+		position_values.acc = acc
+		position_values.wait = wait
+		position_values.timeout = timeout
+		self.future = self.set_position_client.call_async(position_values)
+		self.future.add_done_callback(partial(self.callback_service_tr))  
+
+	def set_joint_values(self, angles=None, speed=60, wait=True, radius=0.0):
+
+		if angles is None:
+			angles = self.initial_position_joints
+
+		joint_values = MoveJoint.Request()
+		joint_values.angles = self.deg_to_rad(angles)
+		joint_values.speed = math.radians(speed)
+		joint_values.wait = wait
+		joint_values.radius = radius
+		self.future = self.set_joint_client.call_async(joint_values)
+		self.future.add_done_callback(partial(self.callback_service_tr))
+		
 	def hello(self):
 		
 		# Removed safety waypoints
