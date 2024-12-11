@@ -46,7 +46,11 @@ class RobotSpeak():
                 self.json_commands = json.load(json_file)
                 print(self.json_commands)
         except:
-            print("Could NOT import data from json configuration files. (save_speaker_files)")
+            print("")
+            print("ERROR: Could NOT import data from json configuration files. (save_speaker_files)")
+            print("Please check if you have already created save_speaker_files.json in charmie_ws/src/configuration_files/save_speaker")
+            while True:
+                pass
 
         # Opens files with objects, objects_classes, rooms, furniture, names
         try:
