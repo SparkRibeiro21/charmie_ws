@@ -138,8 +138,8 @@ class LaunchStdFunctions():
                     )
 
         self.arm = Node(package='charmie_arm_ufactory',
-                            executable='arm_serve_breakfast',
-                            name='arm_serve_breakfast',
+                            executable='arm',
+                            name='arm',
                             emulate_tty=True
                             )
         
