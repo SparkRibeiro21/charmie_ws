@@ -2361,12 +2361,19 @@ class RobotStdFunctions():
                 return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2)]  # Return the class
         return None  # Return None if the object is not found
 
-    
+    def get_height_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['height'] # Return the height
+        return None  # Return None if the object is not found
+
+
 
 
     # Missing Functions:
     # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
-    # 
-    # ask_help_pick_object_tray -> aimilar to gripper but without hand movement and with audio confirmation (used in CT) audio confirmation may be optional (SG does not need audio confirmation, takes too long...)
-    
+    # track using neck

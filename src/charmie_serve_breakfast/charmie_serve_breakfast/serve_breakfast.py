@@ -73,7 +73,6 @@ class TaskMain():
         self.GET_CORNFLAKES = True
         self.GET_DISHES = True
         self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
-        self.SB_TABLE_HEIGHT = 0.76
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
         
         self.TABLE_APPROACH_OBSTACLES = 0.35
@@ -85,7 +84,10 @@ class TaskMain():
             print("ERROR!!! - FURNITURE:", self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, "DOES NOT EXIST IN furniture.json")
             while True:
                 pass
-
+        
+        self.SB_TABLE_HEIGHT = self.robot.get_height_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+        print("Table Height =", self.SB_TABLE_HEIGHT)
+        
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
