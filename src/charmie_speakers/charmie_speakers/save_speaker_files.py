@@ -6,6 +6,7 @@ import json
 import time
 import pygame
 from pathlib import Path
+import subprocess
 
 # MODE can be the following commands:
 # "STANDARD": convert save_speaker command into wav(speaker) and txt(show face) 
@@ -18,14 +19,36 @@ MODE = "STANDARD"
 
 class RobotSpeak():
     def __init__(self):
+        
         # starts pygame, library that reproduces audio files
-        pygame.init()      
+        pygame.init()
 
-        # automatically sets the computer speakers to 100% of the volume.
-        # it does not work with over amplification. 
-        # So in loud environments remove the following line and manually set the volume to max
-        pygame.mixer.music.set_volume(1.0) 
+        # Sets speaker values to maximum according to status of over-amplification toggle (either 100% or 150%)
+        # checks over-amplification settings toggle status 
+        try:
+            # Run gsettings to check the status of over-amplification
+            result = subprocess.run(
+                ["gsettings", "get", "org.gnome.desktop.sound", "allow-volume-above-100-percent"],
+                capture_output=True,
+                text=True
+            )
 
+            # Parse the output
+            status = result.stdout.strip()
+            if status == "true":
+                # automatically sets the computer speakers to 150% of the volume.
+                subprocess.run("pactl set-sink-mute @DEFAULT_SINK@ false; pactl set-sink-volume @DEFAULT_SINK@ 150%", shell = True, executable="/bin/bash")
+                print("Over-amplification toggle is enabled! Volume set to 150%!")
+            else:
+                # automatically sets the computer speakers to 100% of the volume.
+                subprocess.run("pactl set-sink-mute @DEFAULT_SINK@ false; pactl set-sink-volume @DEFAULT_SINK@ 100%", shell = True, executable="/bin/bash")
+                print("Over-amplification toggle is disabled! Volume set to 100%!")
+
+        except Exception as e:
+            print(f"An error occurred while checking over-amplification settings toggle status: {e}")
+            subprocess.run("pactl set-sink-mute @DEFAULT_SINK@ false; pactl set-sink-volume @DEFAULT_SINK@ 100%", shell = True, executable="/bin/bash")
+            print("Over-amplification toggle is unknown! Volume set to 100%!")
+        
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
