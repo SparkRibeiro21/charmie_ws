@@ -659,9 +659,10 @@ class TaskMain():
                         object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=correct_object_bowl, look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                                 
                     ### HAVE TO CHANGE THIS wait_for_end_of to False for after adding SPOON
-                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
-                    ### SPOON (to be done ...)
+                    ### SPOON
+                    self.robot.ask_help_pick_object_tray(object_d=correct_object_spoon, look_judge=self.look_judge, first_help_request=False, bb_color=(0, 255, 0), audio_confirmation=False)
 
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=True)
