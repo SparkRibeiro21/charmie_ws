@@ -432,20 +432,20 @@ class ArmUfactory(Node):
 		except Exception as e:
 			self.get_logger().error("Service call failed: %r" % (e,))
 	
-	# TO DO:
-	# do not let errors with different types of variables: send int instead of float and that
+
+	### ARM STD FUNCTIONS ###
 
 	def set_gripper_position_(self, pos=0.0, wait=True, timeout=4.0):
 		set_gripper_pos = GripperMove.Request()
-		set_gripper_pos.pos = pos
+		set_gripper_pos.pos = float(pos)
 		set_gripper_pos.wait = wait
-		set_gripper_pos.timeout = timeout
+		set_gripper_pos.timeout = float(timeout)
 		self.future = self.set_gripper.call_async(set_gripper_pos)
 		self.future.add_done_callback(partial(self.callback_service_tr))
 
 	def set_gripper_speed_(self, speed=1000.0):
 		set_gripper_speed_req = SetFloat32.Request()
-		set_gripper_speed_req.data = speed
+		set_gripper_speed_req.data = float(speed)
 		self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
 		self.future.add_done_callback(partial(self.callback_service_tr))
 
@@ -460,14 +460,14 @@ class ArmUfactory(Node):
 
 		position_values = MoveCartesian.Request()
 		position_values.pose = pose
-		position_values.speed = speed
-		position_values.acc = acc
+		position_values.speed = float(speed)
+		position_values.acc = float(acc)
 		position_values.wait = wait
-		position_values.timeout = timeout
+		position_values.timeout = float(timeout)
 		self.future = self.set_position_client.call_async(position_values)
 		self.future.add_done_callback(partial(self.callback_service_tr))  
 
-	def set_joint_values_(self, angles=None, speed=60, wait=True, radius=0.0):
+	def set_joint_values_(self, angles=None, speed=60.0, wait=True, radius=0.0):
 
 		if angles is None:
 			angles = self.initial_position_joints
@@ -476,7 +476,7 @@ class ArmUfactory(Node):
 		joint_values.angles = self.deg_to_rad(angles)
 		joint_values.speed = math.radians(speed)
 		joint_values.wait = wait
-		joint_values.radius = radius
+		joint_values.radius = float(radius)
 		self.future = self.set_joint_client.call_async(joint_values)
 		self.future.add_done_callback(partial(self.callback_service_tr))
 		
@@ -512,6 +512,7 @@ class ArmUfactory(Node):
 				print('Estou com o gripper nesta posição há algumas iterações. Vou para o próximo estado. \n')
 
 		return self.gripper_reached_target.data
+
 
 	### GENERIC ARM MOVEMENTS ###
 
@@ -555,9 +556,9 @@ class ArmUfactory(Node):
 			case 1:
 				self.set_gripper_position_(pos=900.0, wait=True)
 			case 2:
-				self.set_joint_values_(angles=self.secondary_initial_position_debug, speed=30, wait=True)
+				self.set_joint_values_(angles=self.secondary_initial_position_debug, speed=20, wait=True)
 			case 3:
-				self.set_joint_values_(angles=self.initial_position, speed=30, wait=True)
+				self.set_joint_values_(angles=self.initial_position, speed=20, wait=True)
 			case 4:
 				self.set_gripper_position_(pos=0.0, wait=False)
 			case 5:
