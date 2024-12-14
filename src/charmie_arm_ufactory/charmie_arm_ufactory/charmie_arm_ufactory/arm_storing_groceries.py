@@ -1333,7 +1333,7 @@ class ArmUfactory(Node):
 
 
 			""" # new serve breakfast functions
-			elif self.next_arm_movement == "search_for_objects":
+			elif self.next_arm_movement == initial_pose_to_search_for_objects:
 				self.search_for_objects()
 			elif self.next_arm_movement == "search_for_objects_to_ask_for_objects":
 				self.search_for_objects_to_ask_for_objects()

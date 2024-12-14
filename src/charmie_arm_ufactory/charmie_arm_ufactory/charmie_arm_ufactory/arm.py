@@ -479,13 +479,27 @@ class ArmUfactory(Node):
 		joint_values.radius = float(radius)
 		self.future = self.set_joint_client.call_async(joint_values)
 		self.future.add_done_callback(partial(self.callback_service_tr))
+
+	def return_if_object_is_grabbed_finish_arm_movement_(self, min_object_grabbed_position=5.0):
+
+			temp = Bool()
+
+			if self.gripper_tr >= min_object_grabbed_position:
+				print('OBJECT GRABBED')
+				temp.data = True
+			else:
+				print('OBJECT NOT GRABBED')
+				temp.data = False
+
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
 		
 	def finish_arm_movement_(self):
 		temp = Bool()
 		temp.data = True
 		self.flag_arm_finish_publisher.publish(temp)
 		self.estado_tr = 0
-		# print('FEITO Abrir fechar garra')
 		self.get_logger().info("FINISHED MOVEMENT")	
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
@@ -566,234 +580,85 @@ class ArmUfactory(Node):
 			case 6:
 				self.finish_arm_movement_()
 
-
-	### SERVE THE BREAKFAST ARM MOVEMENTS ###
-
-	def search_for_objects(self):
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = math.radians(50)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.detect_objects_first_position_linear
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
-
-	### ACTUAL SERVE THE BREAKFAST ARM MOVEMENTS ###
-
 	def initial_pose_to_ask_for_objects(self):
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = math.radians(50)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 1:
+				self.finish_arm_movement_()
 
 	def search_for_objects_to_ask_for_objects(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=200, wait=True)
+			case 1:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
-			self.position_values_req.pose = self.get_lower_order_position_linear
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+	def initial_pose_to_search_for_objects(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.detect_objects_first_position_linear, speed=150, wait=True)
+			case 2:
+				self.finish_arm_movement_()
 
 	def ask_for_objects_to_initial_position(self):
-
-		# if self.estado_tr == 0:
-		# 	self.set_gripper_req.pos = 0.0
-		# 	self.set_gripper_req.wait = True
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
-			self.joint_values_req.speed = math.radians(60)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.initial_position_joints, speed=60, wait=True)
+			case 1:
+				self.finish_arm_movement_()
 
 	def ask_for_objects_to_initial_position_alternative_robocup_cornflakes(self):
-
-		# if self.estado_tr == 0:
-		# 	self.set_gripper_req.pos = 0.0
-		# 	self.set_gripper_req.wait = True
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints_alternative_robocup_cornflakes)
-			self.joint_values_req.speed = math.radians(60)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.initial_position_joints_alternative_robocup_cornflakes, speed=60, wait=True)
+			case 1:
+				self.finish_arm_movement_()
 
 	def verify_if_object_is_grabbed(self):
 		# aqui quero fechar, verificar se tenho algo e se tiver colocar uma flag a 1, se não tiver manter a 0. 
 		# Essa flag é que me vai permitir avançar para o próximo estado ou ficar aqui e voltar ao princípio
-		if self.estado_tr == 0:
-			#Fechar Garra
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-			
-		elif self.estado_tr == 1: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('valor da garra =', self.future)
-			
-		elif self.estado_tr == 2:
-			temp = Bool()
-
-			if self.gripper_tr >= 5.0:
-				# self.flag_object_grabbed.data = True
-				# print('OBJECT GRABBED')
-				temp.data = True
-			else:
-				# self.flag_object_grabbed.data = False
-				# print('OBJECT NOT GRABBED')
-				temp.data = False
-
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_position_(pos=0.0, wait=True)
+			case 1:
+				self.get_gripper_position_()
+			case 2:
+				self.return_if_object_is_grabbed_finish_arm_movement_(min_object_grabbed_position=5.0)
 
 	def close_gripper(self):
-
-		if self.estado_tr == 0:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=1000)
+			case 1:
+				self.set_gripper_position_(pos=0.0, wait=True)
+			case 2:
+				self.finish_arm_movement_()
 
 	def close_gripper_with_check_object(self, min_value):
-
-		if self.estado_tr == 0:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.set_gripper_req.pos = float(min_value)
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('valor da garra =', self.future)
-			
-		elif self.estado_tr == 3:
-			temp = Bool()
-
-			if self.gripper_tr >= min_value+5:
-				# self.flag_object_grabbed.data = True
-				# print('OBJECT GRABBED')
-				temp.data = True
-			else:
-				# self.flag_object_grabbed.data = False
-				# print('OBJECT NOT GRABBED')
-				temp.data = False
-
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=1000)
+			case 1:
+				self.set_gripper_position_(pos=min_value, wait=True)
+			case 2:
+				self.get_gripper_position_()
+			case 3:
+				self.return_if_object_is_grabbed_finish_arm_movement_(min_object_grabbed_position=min_value+5.0)
 
 	def open_gripper(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=5000)
+			case 1:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 2:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 5000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
 
-		elif self.estado_tr == 1:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+	### SERVE THE BREAKFAST ARM MOVEMENTS ###
 
 	def collect_spoon_to_tray(self):
 
@@ -1819,14 +1684,16 @@ class ArmUfactory(Node):
 				self.start_debug()
 			case  "hello":
 				self.hello()
-			case "search_for_objects":
-				self.search_for_objects()
-			case "search_for_objects_to_ask_for_objects":
-				self.search_for_objects_to_ask_for_objects()
+
 			case "initial_pose_to_ask_for_objects":
 				self.initial_pose_to_ask_for_objects()
 			case "ask_for_objects_to_initial_position":
 				self.ask_for_objects_to_initial_position()
+			case "initial_pose_to_search_for_objects":
+				self.initial_pose_to_search_for_objects()
+			case "search_for_objects_to_ask_for_objects":
+				self.search_for_objects_to_ask_for_objects()
+
 			case "arm_go_rest":
 				self.arm_go_rest()
 			case "verify_if_object_is_grabbed":
