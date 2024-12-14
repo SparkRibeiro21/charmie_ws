@@ -2,10 +2,10 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D 
+from geometry_msgs.msg import Pose2D, Point
 from example_interfaces.msg import Bool
 from charmie_interfaces.msg import NeckPosition
-from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackPerson, TrackObject
+from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackPerson, TrackObject, TrackContinuous
 
 import math
 import tty
@@ -148,7 +148,9 @@ class NeckNode(Node):
         self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-
+        # Continuous Tracking
+        self.continuous_tracking_position_subscriber = self.create_subscription(Point, "continuous_tracking_position", self.continuous_tracking_position_callback, 10)
+        
         self.initialise_servos()
 
         # SERVICES:
@@ -158,14 +160,16 @@ class NeckNode(Node):
         self.server_set_neck_to_coordinates = self.create_service(SetNeckCoordinates, "neck_to_coords", self.callback_set_neck_to_coordinates) 
         self.server_neck_track_person = self.create_service(TrackPerson, "neck_track_person", self.callback_neck_track_person)
         self.server_neck_track_object = self.create_service(TrackObject, "neck_track_object", self.callback_neck_track_object)
+        self.server_neck_continuous_tracking = self.create_service(TrackContinuous, "set_continuous_tracking", self.callback_continuous_tracking)
         self.get_logger().info("Neck Servers have been started")
 
         # timer that checks the controller every 50 ms 
-        self.create_timer(1.0, self.timer_callback)
+        self.create_timer(1.0, self.timer_callback_neck_position)
+        self.create_timer(0.1, self.timer_callback_continuous_tracking)
 
 
     ########## TIMER ##########
-    def timer_callback(self):
+    def timer_callback_neck_position(self):
 
         # if any of the modules that need neck info (calculate positions of any detected object/person)
         # is turned on after the initial neck movement and no other neck movement is made, these variables are never updated
@@ -173,6 +177,13 @@ class NeckNode(Node):
         global read_pan_open_loop, read_tilt_open_loop
 
         self.publish_get_neck_pos(read_pan_open_loop, read_tilt_open_loop)
+
+
+    def timer_callback_continuous_tracking(self):
+        pass
+        # if tracking:
+        #     update tracked position
+        #  
 
 
     ########## SERVICES ##########
@@ -395,6 +406,28 @@ class NeckNode(Node):
         response.success = True
         response.message = "Neck Track Object"
         return response
+    
+    def callback_continuous_tracking(self, request, response):
+        
+        # Type of service received: 
+        # bool status # turns on anf off the continuous tracking mode
+        # string tracking_type # select the type of continuous tracking
+        # geometry_msgs/Point tracking_position # 3D coordinates of continuous tracking subject 
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        # self.get_logger().info("Received Neck Position %s" %("("+str(request.pan)+", "+str(request.tilt)+")"))
+        # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
+        
+        # +180.0 on both values since for calculations (180, 180) is the middle position but is easier UI for center to be (0,0)
+        # self.move_neck(request.pan+180.0, request.tilt+180.0)
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Set Neck Position"
+        return response
+
 
 
     ########## CALLBACKS ##########
@@ -403,6 +436,8 @@ class NeckNode(Node):
         self.robot_y = pose.y
         self.robot_t = pose.theta
 
+    def continuous_tracking_position_callback(self, position: Point):
+        pass
 
     ########## NECK CNOTROL FUNCTIONS ##########
     # Initially I created a class for NeckControl, however due to the errors in readings of neck positios from the servos, we changed to open loop readings.
@@ -511,7 +546,7 @@ class NeckNode(Node):
         self.neck_get_position_topic_publisher.publish(pose)
         
 
-    def move_neck(self, p, t):
+    def move_neck(self, p, t, just_one_iteration=False):
         global read_pan_open_loop, read_tilt_open_loop
 
         p = int(p)
@@ -559,7 +594,6 @@ class NeckNode(Node):
         new_pan = read_pan_open_loop_deg+rem_pan
         self.send_neck_move(new_pan, new_tilt) 
         while(t != new_tilt or p!=new_pan):
-            time.sleep(d_t)
             
             if new_pan == p:
                 new_pan = p
@@ -573,8 +607,14 @@ class NeckNode(Node):
             
             self.send_neck_move(new_pan, new_tilt) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
             ctr+=1
+
+            # breaks after the first iteration, used for continuous tracking, to avoid getting stuck in an old position
+            if just_one_iteration:
+                break
+            
+            time.sleep(d_t)
+
         print("ctr:", ctr)
-        
         print("END")
 
 
