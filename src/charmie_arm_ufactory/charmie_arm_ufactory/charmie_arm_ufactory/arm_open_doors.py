@@ -119,7 +119,7 @@ class ArmUfactory(Node):
 		self.robot_joints = []
 
 		# initial debug movement 
-  		# self.next_arm_movement = "debug_initial"
+  		# self.next_arm_movement = "start_debug"
 		self.next_arm_movement = "go_left"
 		
 		self.setup()
@@ -2442,7 +2442,7 @@ class ArmUfactory(Node):
 	def movement_selection(self):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
-		if self.next_arm_movement == "debug_initial":
+		if self.next_arm_movement == "start_debug":
 			self.open_close_gripper()
 		elif self.next_arm_movement == "go_initial_position":
 			self.go_initial_position()

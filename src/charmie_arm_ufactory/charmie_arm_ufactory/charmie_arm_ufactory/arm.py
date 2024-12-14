@@ -94,7 +94,7 @@ class ArmUfactory(Node):
 		self.estado_tr = 0
 
 		# initial debug movement 
-		self.next_arm_movement = "debug_initial"
+		self.next_arm_movement = "start_debug"
 		self.adjust_position = 0.0
 
 		self.setup()
@@ -435,7 +435,7 @@ class ArmUfactory(Node):
 	# TO DO:
 	# do not let errors with different types of variables: send int instead of float and that
 
-	def set_gripper_position(self, pos=0.0, wait=True, timeout=4.0):
+	def set_gripper_position_(self, pos=0.0, wait=True, timeout=4.0):
 		set_gripper_pos = GripperMove.Request()
 		set_gripper_pos.pos = pos
 		set_gripper_pos.wait = wait
@@ -443,13 +443,17 @@ class ArmUfactory(Node):
 		self.future = self.set_gripper.call_async(set_gripper_pos)
 		self.future.add_done_callback(partial(self.callback_service_tr))
 
-	def set_gripper_movement_speed(self, speed=1000.0):
+	def set_gripper_speed_(self, speed=1000.0):
 		set_gripper_speed_req = SetFloat32.Request()
 		set_gripper_speed_req.data = speed
 		self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
 		self.future.add_done_callback(partial(self.callback_service_tr))
 
-	def set_position_values(self, pose=None, speed=200.0, acc=1000.0, wait=True, timeout=4.0):
+	def get_gripper_position_(self):
+		self.future = self.get_gripper_position.call_async(self.get_gripper_req)
+		self.future.add_done_callback(partial(self.callback_service_tr_gripper))
+
+	def set_position_values_(self, pose=None, speed=200.0, acc=1000.0, wait=True, timeout=4.0):
 		
 		if pose is None:
 			pose = self.get_lower_order_position_linear
@@ -463,7 +467,7 @@ class ArmUfactory(Node):
 		self.future = self.set_position_client.call_async(position_values)
 		self.future.add_done_callback(partial(self.callback_service_tr))  
 
-	def set_joint_values(self, angles=None, speed=60, wait=True, radius=0.0):
+	def set_joint_values_(self, angles=None, speed=60, wait=True, radius=0.0):
 
 		if angles is None:
 			angles = self.initial_position_joints
@@ -476,111 +480,14 @@ class ArmUfactory(Node):
 		self.future = self.set_joint_client.call_async(joint_values)
 		self.future.add_done_callback(partial(self.callback_service_tr))
 		
-	def finish_arm_movement(self):
+	def finish_arm_movement_(self):
 		temp = Bool()
 		temp.data = True
 		self.flag_arm_finish_publisher.publish(temp)
 		self.estado_tr = 0
 		# print('FEITO Abrir fechar garra')
 		self.get_logger().info("FINISHED MOVEMENT")	
-		
-	def hello(self):
-	
-		match self.estado_tr:
-			case 0:
-				self.set_joint_values(angles=self.first_waving_position, speed=25, wait=False)
-			case 1:
-				self.set_gripper_position(pos=900.0, wait=False)
-			case 2:
-				self.set_joint_values(angles=self.second_waving_position, speed=25, wait=False)
-			case 3:
-				self.set_gripper_position(pos=0.0, wait=False)
-			case 4:
-				self.set_joint_values(angles=self.first_waving_position, speed=25, wait=False)
-			case 5:
-				self.set_gripper_position(pos=900.0, wait=False)
-			case 6:
-				self.set_joint_values(angles=self.second_waving_position, speed=25, wait=False)
-			case 7:
-				self.set_gripper_position(pos=0.0, wait=False)
-			case 8:
-				self.set_joint_values(angles=self.first_waving_position, speed=25, wait=False)
-			case 9:
-				self.set_gripper_position(pos=900.0, wait=False)
-			case 10:
-				self.set_joint_values(angles=self.second_waving_position, speed=25, wait=False)
-			case 11:
-				self.set_gripper_position(pos=0.0, wait=False)
-			case 12:
-				self.set_joint_values(angles=self.first_waving_position, speed=25, wait=False)
-			case 13:
-				self.set_joint_values(angles=self.initial_position, speed=25, wait=True)
-			case 14:
-				self.finish_arm_movement()
 
-	def open_close_gripper(self):
-		if self.estado_tr == 0:
-			print('a')
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-	
-		elif self.estado_tr == 1: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 2:
-			self.joint_values_req.angles = self.deg_to_rad(self.secondary_initial_position_debug)
-			self.joint_values_req.speed = math.radians(30) 
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = math.radians(30) 
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4: 
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 5: 
-			#Abrir garra
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6: 
-			self.future = self.get_gripper_position.call_async(self.get_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr_gripper))
-			print('ll')
-
-		elif self.estado_tr == 7: 
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1500.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 8:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			print('FEITO Abrir fechar garra')
-			self.get_logger().info("FINISHED MOVEMENT")	
-	
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
 		print('Abertura gripper em mm =', current_gripper_pos)
 		self.gripper_opening.append(current_gripper_pos)
@@ -606,7 +513,60 @@ class ArmUfactory(Node):
 
 		return self.gripper_reached_target.data
 
-	### ACTUAL SERVE THE BREAKFAST ARM MOVEMENTS ###
+	### GENERIC ARM MOVEMENTS ###
+
+	def hello(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.first_waving_position, speed=25, wait=False)
+			case 1:
+				self.set_gripper_position_(pos=900.0, wait=False)
+			case 2:
+				self.set_joint_values_(angles=self.second_waving_position, speed=25, wait=False)
+			case 3:
+				self.set_gripper_position_(pos=0.0, wait=False)
+			case 4:
+				self.set_joint_values_(angles=self.first_waving_position, speed=25, wait=False)
+			case 5:
+				self.set_gripper_position_(pos=900.0, wait=False)
+			case 6:
+				self.set_joint_values_(angles=self.second_waving_position, speed=25, wait=False)
+			case 7:
+				self.set_gripper_position_(pos=0.0, wait=False)
+			case 8:
+				self.set_joint_values_(angles=self.first_waving_position, speed=25, wait=False)
+			case 9:
+				self.set_gripper_position_(pos=900.0, wait=False)
+			case 10:
+				self.set_joint_values_(angles=self.second_waving_position, speed=25, wait=False)
+			case 11:
+				self.set_gripper_position_(pos=0.0, wait=False)
+			case 12:
+				self.set_joint_values_(angles=self.first_waving_position, speed=25, wait=False)
+			case 13:
+				self.set_joint_values_(angles=self.initial_position, speed=25, wait=True)
+			case 14:
+				self.finish_arm_movement_()
+
+	def start_debug(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=2000)
+			case 1:
+				self.set_gripper_position_(pos=900.0, wait=True)
+			case 2:
+				self.set_joint_values_(angles=self.secondary_initial_position_debug, speed=30, wait=True)
+			case 3:
+				self.set_joint_values_(angles=self.initial_position, speed=30, wait=True)
+			case 4:
+				self.set_gripper_position_(pos=0.0, wait=False)
+			case 5:
+				self.get_gripper_position_()
+			case 6:
+				self.finish_arm_movement_()
+
+
+	### SERVE THE BREAKFAST ARM MOVEMENTS ###
 
 	def search_for_objects(self):
 
@@ -1854,8 +1814,8 @@ class ArmUfactory(Node):
 		match self.next_arm_movement:
 			
 			# GENERIC
-			case "debug_initial":
-				self.open_close_gripper()
+			case "start_debug":
+				self.start_debug()
 			case  "hello":
 				self.hello()
 			case "search_for_objects":

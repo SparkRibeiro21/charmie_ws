@@ -92,7 +92,7 @@ class ArmUfactory(Node):
 		self.estado_tr = 0
 
 		# initial debug movement 
-		self.next_arm_movement = "debug_initial"
+		self.next_arm_movement = "start_debug"
 
 		self.setup()
 		print('---------')
@@ -856,7 +856,7 @@ class ArmUfactory(Node):
 	def movement_selection(self):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
-		if self.next_arm_movement == "debug_initial":
+		if self.next_arm_movement == "start_debug":
 			self.open_close_gripper()
 		elif self.next_arm_movement == "arm_go_rest":
 			self.arm_go_rest()
