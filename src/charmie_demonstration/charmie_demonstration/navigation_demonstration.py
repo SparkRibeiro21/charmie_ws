@@ -2,10 +2,9 @@
 import rclpy
 import threading
 import time
-import random
 
 from geometry_msgs.msg import Vector3, Pose2D
-from charmie_interfaces.msg import DetectedObject, DetectedPerson, PS4Controller
+from charmie_interfaces.msg import PS4Controller
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
@@ -34,14 +33,6 @@ ros2_modules = {
     "charmie_yolo_pose":        False,
 }
 
-
-
-# TO ADD:
-# ADD R1+L1 motors max speed
-
-
-
-
 # main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
@@ -68,7 +59,6 @@ class TaskMain():
         # Task States
         self.Waiting_for_task_start = 0
         self.Demo_actuators_with_tasks = 1
-        self.Demo_actuators_without_tasks = 2
         self.Introduction_demonstration = 5
         self.LLM_demonstration = 8
         self.Final_State = 10
@@ -91,8 +81,6 @@ class TaskMain():
         self.motors_active = False
         self.omni_move = Vector3()
         self.torso_pos = Pose2D()
-
-        self.current_task = 0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
@@ -187,28 +175,32 @@ class TaskMain():
                                         self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
                         
                     
-                    if ros2_modules["charmie_low_level"]:
+                    if ros2_modules["charmie_low_level"]: # Motors
                         # Robot Omni Movement
                         # left joy stick to control x and y movement (direction and linear speed) 
                         if ps4_controller.l3_dist >= 0.1:
                             self.omni_move.x = ps4_controller.l3_ang
-                            # self.omni_move.y = ps4_controller.l3_dist*100 # max is *100 is you use higher it will limit to *100
-                            self.omni_move.y = ps4_controller.l3_dist*50 # max is *100 is you use higher it will limit to *100
+                            if ps4_controller.l1 >= self.ON_AND_RISING and ps4_controller.r1 >= self.ON_AND_RISING: # if R1 and L1 are pressed, enters in TURBO MODE (MAX possible speed)
+                                self.omni_move.y = ps4_controller.l3_dist*100 # max is *100 is you use higher it will limit to *100
+                            else:
+                                self.omni_move.y = ps4_controller.l3_dist*50 # max is *100 is you use higher it will limit to *100
                         else:
                             self.omni_move.x = 0.0
                             self.omni_move.y = 0.0
 
                         # right joy stick to control angular speed
                         if ps4_controller.r3_dist >= 0.1:
-                            # self.omni_move.z = 100 + ps4_controller.r3_xx*100 # max is *100 is you use higher it will limit to *100
-                            self.omni_move.z = 100 + ps4_controller.r3_xx*25
+                            if ps4_controller.l1 >= self.ON_AND_RISING and ps4_controller.r1 >= self.ON_AND_RISING: # if R1 and L1 are pressed, enters in TURBO MODE (MAX possible speed)
+                                self.omni_move.z = 100 + ps4_controller.r3_xx*100 # max is *100 is you use higher it will limit to *100
+                            else:
+                                self.omni_move.z = 100 + ps4_controller.r3_xx*25
                         else:
                             self.omni_move.z = 100.0
                         
                         if self.motors_active:
                             self.robot.node.omni_move_publisher.publish(self.omni_move)
 
-                    if ros2_modules["charmie_low_level"]:
+                    if ros2_modules["charmie_low_level"]: # Torso
 
                         if self.motors_active:
 
@@ -229,25 +221,13 @@ class TaskMain():
 
                             self.robot.node.torso_movement_publisher.publish(self.torso_pos)
 
-                    if not self.current_task:
-                   
-                        if ros2_modules["charmie_speakers"]:
-                            if ps4_controller.r3 == self.RISING:
-                                self.state = self.Introduction_demonstration
+                    if ros2_modules["charmie_speakers"]: # Speak Introduction
+                        if ps4_controller.r3 == self.RISING:
+                            self.state = self.Introduction_demonstration
 
-                        if ros2_modules["charmie_llm"] and ros2_modules["charmie_speakers"]:
-                            if ps4_controller.r2 > 0.8:
-                                self.state = self.LLM_demonstration
-
-                    else:
-                        # Similar to wait_for_end_of_navigation, allows navigation between subparts of task
-                        if ps4_controller.l1 >= self.ON_AND_RISING and ps4_controller.r1 >= self.ON_AND_RISING:
-                            self.state = self.current_task
-
-                        # Allows to cancel a task midway (in navigation part)
-                        if ps4_controller.share >= self.ON_AND_RISING and ps4_controller.options >= self.ON_AND_RISING:
-                            self.robot.set_speech(filename="demonstration/stopped_task_demo", wait_for_end_of=False)
-                            self.current_task = 0
+                    if ros2_modules["charmie_llm"] and ros2_modules["charmie_speakers"]: # LLM demo
+                        if ps4_controller.l3 == self.RISING:
+                            self.state = self.LLM_demonstration
     
 
                 time.sleep(self.iteration_time)
