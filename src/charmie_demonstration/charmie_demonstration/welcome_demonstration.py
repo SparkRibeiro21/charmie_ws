@@ -224,14 +224,16 @@ class TaskMain():
                         # left joy stick to control x and y movement (direction and linear speed) 
                         if ps4_controller.l3_dist >= 0.1:
                             self.omni_move.x = ps4_controller.l3_ang
-                            self.omni_move.y = ps4_controller.l3_dist*100/5
+                            # self.omni_move.y = ps4_controller.l3_dist*100 # max is *100 is you use higher it will limit to *100
+                            self.omni_move.y = ps4_controller.l3_dist*50 # max is *100 is you use higher it will limit to *100
                         else:
                             self.omni_move.x = 0.0
                             self.omni_move.y = 0.0
 
                         # right joy stick to control angular speed
                         if ps4_controller.r3_dist >= 0.1:
-                            self.omni_move.z = 100 + ps4_controller.r3_xx*10
+                            # self.omni_move.z = 100 + ps4_controller.r3_xx*100 # max is *100 is you use higher it will limit to *100
+                            self.omni_move.z = 100 + ps4_controller.r3_xx*25
                         else:
                             self.omni_move.z = 100.0
                         

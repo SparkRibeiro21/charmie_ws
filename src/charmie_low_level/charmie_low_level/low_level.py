@@ -279,7 +279,7 @@ class LowLevelNode(Node):
         self.robot = RobotControl()
 
         self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
-        self.robot.set_omni_variables(self.robot.ACCELERATION, 10)
+        self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
         self.robot.set_omni_variables(self.robot.RGB, 100)
 
