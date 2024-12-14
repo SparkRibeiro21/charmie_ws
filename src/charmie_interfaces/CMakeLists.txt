@@ -69,6 +69,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetRGB.srv"
   "srv/SetTorso.srv"
   "srv/SpeechCommand.srv"
+  "srv/TrackContinuous.srv"
   "srv/TrackObject.srv"
   "srv/TrackPerson.srv"
   "srv/Trigger.srv"

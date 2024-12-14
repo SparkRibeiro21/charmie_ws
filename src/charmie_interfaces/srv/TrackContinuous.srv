@@ -1,0 +1,8 @@
+# Service to send a position to the servos to do continuous tracking
+
+bool status # turns on anf off the continuous tracking mode
+string tracking_type # select the type of continuous tracking
+geometry_msgs/Point tracking_position # 3D coordinates of continuous tracking subject 
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.
