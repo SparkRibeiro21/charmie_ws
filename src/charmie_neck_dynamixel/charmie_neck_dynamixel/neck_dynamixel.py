@@ -143,6 +143,9 @@ class NeckNode(Node):
         self.robot_y = 0.0
         self.robot_t = 0.0
 
+        self.continuous_tracking = False
+        self.continuous_tracking_point_position = Point()
+
         # TOPICS:
         # sends the current position of the servos after every change made on the publisher topics
         self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
@@ -180,11 +183,13 @@ class NeckNode(Node):
 
 
     def timer_callback_continuous_tracking(self):
-        pass
-        # if tracking:
-        #     update tracked position
-        #  
-
+        
+        if self.continuous_tracking:
+            print("ct:", self.continuous_tracking_point_position)
+            time.sleep(0.05)
+            
+            # update tracked position
+            # ...
 
     ########## SERVICES ##########
     def callback_set_neck_position(self, request, response):
@@ -417,17 +422,14 @@ class NeckNode(Node):
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
 
-        # self.get_logger().info("Received Neck Position %s" %("("+str(request.pan)+", "+str(request.tilt)+")"))
-        # print("Received Position: pan =", coords.x, " tilt = ", coords.y)
-        
-        # +180.0 on both values since for calculations (180, 180) is the middle position but is easier UI for center to be (0,0)
-        # self.move_neck(request.pan+180.0, request.tilt+180.0)
+        self.get_logger().info("Received Neck Continuous Tracking: %s" %str(request.status))
 
+        self.continuous_tracking = request.status
+        
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "Set Neck Position"
         return response
-
 
 
     ########## CALLBACKS ##########
@@ -437,7 +439,7 @@ class NeckNode(Node):
         self.robot_t = pose.theta
 
     def continuous_tracking_position_callback(self, position: Point):
-        pass
+        self.continuous_tracking_point_position = position
 
     ########## NECK CNOTROL FUNCTIONS ##########
     # Initially I created a class for NeckControl, however due to the errors in readings of neck positios from the servos, we changed to open loop readings.

@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller, ListOfStrings
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous
 
 import cv2 
 # import threading
@@ -90,7 +90,10 @@ class ROS2TaskNode(Node):
         # Low level
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for ps4 controller
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for ps4 controller
+        # Neck
+        self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
         
+
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -107,6 +110,8 @@ class ROS2TaskNode(Node):
         self.set_neck_coordinates_client = self.create_client(SetNeckCoordinates, "neck_to_coords")
         self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
+        self.neck_continuous_tracking_client = self.create_client(TrackContinuous, "set_continuous_tracking")
+        
         # Yolo Pose
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
@@ -237,6 +242,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
         self.waited_for_end_of_get_vccs = False
@@ -294,6 +300,8 @@ class ROS2TaskNode(Node):
         self.track_person_message = ""
         self.track_object_success = True
         self.track_object_message = ""
+        self.continuous_tracking_success = True
+        self.continuous_tracking_message = ""
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
@@ -725,6 +733,32 @@ class ROS2TaskNode(Node):
             self.waited_for_end_of_track_object = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
+
+
+    def call_neck_continuous_tracking_server(self, request=TrackContinuous.Request(), wait_for_end_of=True):
+
+        future = self.neck_continuous_tracking_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_neck_continuous_tracking)
+        else:
+            self.track_person_success = True
+            self.track_person_message = "Wait for answer not needed"
+    
+    def callback_call_neck_continuous_tracking(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.continuous_tracking_success = response.success
+            self.continuous_tracking_message = response.message
+            self.waited_for_end_of_continuous_tracking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
 
     #### LOW LEVEL SERVER FUNCTIONS #####
     def call_rgb_command_server(self, request=SetRGB.Request(), wait_for_end_of=True):
@@ -2370,7 +2404,44 @@ class RobotStdFunctions():
                 return obj['height'] # Return the height
         return None  # Return None if the object is not found
 
+    def set_continuous_tracking_with_coordinates(self):
+        pass
 
+        request = TrackContinuous.Request()
+
+        ### TURN ON CONTINUOUS TRACKING
+        request.status = True
+        request.tracking_type = "person_head"
+        request.tracking_position = Point()
+        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
+        
+        self.activate_yolo_pose(activate=True) 
+        
+        start_time = time.time()
+        tracking_condition = True
+        while tracking_condition:
+            pass
+
+            # ler continuamente o target 
+            # ...
+
+            # enviar valores 
+            p = Point()
+            p.x = 1.0
+            p.y = 2.0
+            p.z = 3.0
+            self.node.continuous_tracking_position_publisher.publish(p)
+            
+            # confirmar condição de fim de tracking
+            if time.time() - start_time > 10.0:
+                tracking_condition = False
+
+
+        self.activate_yolo_pose(activate=False) 
+        
+        ### TURN OFF CONTINUOUS TRACKING
+        request.status = False
+        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
 
 
     # Missing Functions:
