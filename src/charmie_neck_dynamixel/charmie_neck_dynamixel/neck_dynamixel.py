@@ -239,79 +239,14 @@ class NeckNode(Node):
         # string message # informational, e.g. for error messages.
 
         # calculate the angle according to last received odometry
-        neck_target_x = request.coords.x
-        neck_target_y = request.coords.y
-        neck_target_z = request.coords.z
+        target_x = request.coords.x
+        target_y = request.coords.y
+        target_z = request.coords.z
 
-        self.get_logger().info("Received Neck Coordinates %s" %("("+str(request.coords.x)+", "+str(request.coords.y)+", "+str(request.coords.z)+")"))
+        self.get_logger().info("Received Neck Coordinates %s" %("("+str(target_x)+", "+str(target_y)+", "+str(target_z)+")"))
         
-        ### PAN MOVEMENT (LEFT - RIGHT)
-
-        # 6.5 cm adjustement from bottom servo to robot center, this helps in cases where angle to coordinates are near 90 and 270 degrees
-        # where there was an error of 4/5 degrees because the axis were not alligned 
-        bottom_servo_to_robot_center = 0.065
-
-        # print(math.degrees(self.robot_t))       
-        ang = math.atan2(self.robot_y + bottom_servo_to_robot_center - neck_target_y, self.robot_x - neck_target_x) + math.pi/2
-        # print("ang_rad:", ang)
-        ang = math.degrees(ang)
-        # print("ang_deg:", ang)
-    
-        pan_neck_to_coords = math.degrees(self.robot_t) - ang
-        if pan_neck_to_coords < -math.degrees(math.pi):
-            pan_neck_to_coords += math.degrees(2*math.pi)
-    
-        # if the robot wants to look back, it uses the correct side to do so without damaging itself
-        if pan_neck_to_coords == -180:
-            pan_neck_to_coords = 180
-
-        # print("neck_to_coords:", pan_neck_to_coords, ang)
-        # self.get_logger().info("neck back angle %d" %pan_neck_to_coords)
-
-        ### TILT MOVEMENT (UP - DOWN)
-        dist = math.sqrt((self.robot_y - neck_target_y)**2 + (self.robot_x - neck_target_x)**2)
-
-        # Constants
-        h = 1.30 # height of rotation axis of up/down servo from the ground (should be automatic). Does not consider changes in torso.
-        c = 0.06 # distance from center rotation axis of up/down servo to face (horizontal when looking forward)
-        d = 0.09 # distance from c to center of face. This way the center of the face is looking at the person and not the camera or servo.
-        e = math.sqrt(c**2 + d**2)
-        a = neck_target_z
-        b = dist
-            
-        # Define the function based on the equation
-        def equation(alpha):
-            return alpha - math.atan(c / d) - math.atan((h + e * math.cos(alpha) - a) / (b - e * math.sin(alpha)))
-            # return alpha - np.arctan(c / d) - np.arctan((h + e * np.sin(alpha) - a) / (b - e * np.cos(alpha)))
-
-        # Initial guess for alpha
-        initial_guess = 0
-
-        initial_time = time.time() 
-
-        # Solve the equation
-        alpha_solution = fsolve(equation, initial_guess)
-
-        elapsed_time = time.time() - initial_time
-
-        phi = math.atan(d / c)
-
-        final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90)
-
-        # Debug prints of calculations of up/down movement:
-        # print("Alpha:", math.degrees(alpha_solution[0]))
-        # print("Phi:", math.degrees(phi))
-        print("Alpha+Phi:", round(final_x, 2))
-        # print("Time:", elapsed_time)
-
-        if final_x > 0.0: # solves rounding errors when variable is positive
-            final_x += 0.5
-
-        ### por pan: pan+180 para ficar standard com o resto 
-
-        # self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis+180.0)
-        self.move_neck(180 - pan_neck_to_coords, final_x+180.0)
-
+        self.move_neck_with_target_coordinates(target_x=target_x, target_y=target_y, target_z=target_z, just_one_iteration=False)
+        
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "Set Neck to (x,y,z) Coordinates"
@@ -332,37 +267,12 @@ class NeckNode(Node):
             target_y = request.person.head_center_y
         elif request.body_part == "Torso":
             target_x = request.person.body_center_x
-            target_y = request.person.body_center_y        
+            target_y = request.person.body_center_y
             
-        global read_pan_open_loop, read_tilt_open_loop
+        self.get_logger().info("Received Neck Track Person %s" %("("+str(target_x)+", "+str(target_y)+")"))
+        
+        self.move_neck_with_target_pixel(target_x=target_x, target_y=target_y, just_one_iteration=False)
 
-        print(target_x, target_y)
-
-        img_width = 1280
-        img_height = 720
-
-        # target_x = request.person.kp_nose_x
-        # target_y = request.person.kp_nose_y
-
-        hor_fov = 91.2
-        ver_fov = 65.5
-
-        print(target_x, target_y)
-
-        error_x = -int(img_width/2 - target_x)
-        error_y = -int(img_height/2 - target_y)
-
-        perc_x = error_x/(img_width/2)
-        perc_y = error_y/(img_height/2)
-
-        new_a_x = (-perc_x*(hor_fov/2))
-        new_a_y = (-perc_y*(ver_fov/2))*0.75 # on the 'yes movement' axis, it tended to always overshoot a bit, the 0.75 factor fixes it
-
-        print("angs: ", new_a_x, new_a_y)
-
-        # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-        self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-    
         response.success = True
         response.message = "Neck Track Person"
         return response
@@ -377,37 +287,12 @@ class NeckNode(Node):
         # string message # informational, e.g. for error messages.
 
         target_x = request.object.box_center_x
-        target_y = request.object.box_center_y 
+        target_y = request.object.box_center_y
 
-        global read_pan_open_loop, read_tilt_open_loop
+        self.get_logger().info("Received Neck Track Object %s" %("("+str(target_x)+", "+str(target_y)+")"))
+        
+        self.move_neck_with_target_pixel(target_x=target_x, target_y=target_y)
 
-        print(target_x, target_y)
-
-        img_width = 1280
-        img_height = 720
-
-        # target_x = request.person.kp_nose_x
-        # target_y = request.person.kp_nose_y
-
-        hor_fov = 91.2
-        ver_fov = 65.5
-
-        print(target_x, target_y)
-
-        error_x = -int(img_width/2 - target_x)
-        error_y = -int(img_height/2 - target_y)
-
-        perc_x = error_x/(img_width/2)
-        perc_y = error_y/(img_height/2)
-
-        new_a_x = (-perc_x*(hor_fov/2))
-        new_a_y = (-perc_y*(ver_fov/2))*0.75 # on the 'yes movement' axis, it tended to always overshoot a bit, the 0.75 factor fixes it
-
-        print("angs: ", new_a_x, new_a_y)
-
-        # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-        self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-    
         response.success = True
         response.message = "Neck Track Object"
         return response
@@ -441,7 +326,7 @@ class NeckNode(Node):
     def continuous_tracking_position_callback(self, position: Point):
         self.continuous_tracking_point_position = position
 
-    ########## NECK CNOTROL FUNCTIONS ##########
+    ########## NECK CONTROL FUNCTIONS ##########
     # Initially I created a class for NeckControl, however due to the errors in readings of neck positios from the servos, we changed to open loop readings.
     # This means that, due to the high quality of servos, if I give a value of 180 degrees, the maximum error I get is 0.5 degrees.
     # So the open loop readings are quite trustfull. However if I want to publish in the get_neck_pos topic, everytime i send a vlue to the servos, I cannot 
@@ -546,7 +431,109 @@ class NeckNode(Node):
         pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
         print(pose)
         self.neck_get_position_topic_publisher.publish(pose)
+
+
+    def move_neck_with_target_coordinates(self, target_x, target_y, target_z, just_one_iteration=False):
+
+        ### PAN MOVEMENT (LEFT - RIGHT)
+
+        # 6.5 cm adjustement from bottom servo to robot center, this helps in cases where angle to coordinates are near 90 and 270 degrees
+        # where there was an error of 4/5 degrees because the axis were not alligned 
+        bottom_servo_to_robot_center = 0.065
+
+        # print(math.degrees(self.robot_t))       
+        ang = math.atan2(self.robot_y + bottom_servo_to_robot_center - target_y, self.robot_x - target_x) + math.pi/2
+        # print("ang_rad:", ang)
+        ang = math.degrees(ang)
+        # print("ang_deg:", ang)
+    
+        pan_neck_to_coords = math.degrees(self.robot_t) - ang
+        if pan_neck_to_coords < -math.degrees(math.pi):
+            pan_neck_to_coords += math.degrees(2*math.pi)
+    
+        # if the robot wants to look back, it uses the correct side to do so without damaging itself
+        if pan_neck_to_coords == -180:
+            pan_neck_to_coords = 180
+
+        # print("neck_to_coords:", pan_neck_to_coords, ang)
+        # self.get_logger().info("neck back angle %d" %pan_neck_to_coords)
+
+        ### TILT MOVEMENT (UP - DOWN)
+        dist = math.sqrt((self.robot_y - target_y)**2 + (self.robot_x - target_x)**2)
+
+        # Constants
+        h = 1.30 # height of rotation axis of up/down servo from the ground (should be automatic). Does not consider changes in torso.
+        c = 0.06 # distance from center rotation axis of up/down servo to face (horizontal when looking forward)
+        d = 0.09 # distance from c to center of face. This way the center of the face is looking at the person and not the camera or servo.
+        e = math.sqrt(c**2 + d**2)
+        a = target_z
+        b = dist
+            
+        # Define the function based on the equation
+        def equation(alpha):
+            return alpha - math.atan(c / d) - math.atan((h + e * math.cos(alpha) - a) / (b - e * math.sin(alpha)))
+            # return alpha - np.arctan(c / d) - np.arctan((h + e * np.sin(alpha) - a) / (b - e * np.cos(alpha)))
+
+        # Initial guess for alpha
+        initial_guess = 0
+
+        initial_time = time.time() 
+
+        # Solve the equation
+        alpha_solution = fsolve(equation, initial_guess)
+
+        elapsed_time = time.time() - initial_time
+
+        phi = math.atan(d / c)
+
+        final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90)
+
+        # Debug prints of calculations of up/down movement:
+        # print("Alpha:", math.degrees(alpha_solution[0]))
+        # print("Phi:", math.degrees(phi))
+        print("Alpha+Phi:", round(final_x, 2))
+        # print("Time:", elapsed_time)
+
+        if final_x > 0.0: # solves rounding errors when variable is positive
+            final_x += 0.5
+
+        ### por pan: pan+180 para ficar standard com o resto 
+
+        # self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis+180.0)
+        self.move_neck(180 - pan_neck_to_coords, final_x+180.0, just_one_iteration=just_one_iteration)
+
         
+    def move_neck_with_target_pixel(self, target_x, target_y, just_one_iteration=False):
+    
+        global read_pan_open_loop, read_tilt_open_loop
+
+        print(target_x, target_y)
+
+        img_width = 1280
+        img_height = 720
+
+        # target_x = request.person.kp_nose_x
+        # target_y = request.person.kp_nose_y
+
+        hor_fov = 91.2
+        ver_fov = 65.5
+
+        print(target_x, target_y)
+
+        error_x = -int(img_width/2 -  target_x)
+        error_y = -int(img_height/2 - target_y)
+
+        perc_x = error_x/(img_width/2)
+        perc_y = error_y/(img_height/2)
+
+        new_a_x = (-perc_x*(hor_fov/2))
+        new_a_y = (-perc_y*(ver_fov/2))*0.75 # on the 'yes movement' axis, it tended to always overshoot a bit, the 0.75 factor fixes it
+
+        print("angs: ", new_a_x, new_a_y)
+
+        # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
+        self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y, just_one_iteration=just_one_iteration)
+
 
     def move_neck(self, p, t, just_one_iteration=False):
         global read_pan_open_loop, read_tilt_open_loop
