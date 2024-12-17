@@ -272,6 +272,7 @@ class ROS2TaskNode(Node):
         self.obstacles = Obstacles()
         self.ps4_controller_state = PS4Controller()
         self.new_object_frame_for_tracking = False
+        self.new_person_frame_for_tracking = False
 
         # robot localization
         self.robot_x = 0.0
@@ -360,6 +361,7 @@ class ROS2TaskNode(Node):
 
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
+        self.new_person_frame_for_tracking = True
 
         # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
         # current_frame_draw = current_frame.copy()
@@ -2417,86 +2419,64 @@ class RobotStdFunctions():
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
         
         self.node.detected_people.persons = [] # clears detected_people after receiving them to make sure the objects from previous frames are not considered again
-        # self.activate_yolo_pose(activate=True) 
+        self.activate_yolo_pose(activate=True) 
         self.activate_yolo_objects(activate_objects=True) 
         
         start_time = time.time()
         tracking_condition = True
-        correct_track = DetectedPerson()
-        correct_track.position_absolute_head.x = 0.0
-        correct_track.position_absolute_head.y = 2.0
-        correct_track.position_absolute_head.z = 1.8
-
-
         selected_object_to_track = "bowl"
         
         self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
         while tracking_condition:
 
-            correct_track_ = DetectedObject()  
-            
-            # ler continuamente o target 
+            ### PERSON
+            correct_track_per = DetectedPerson()
             local_detected_people = self.node.detected_people.persons
-            local_detected_objects = self.node.detected_objects.objects
-
-
-            if len(local_detected_people) > 0:
-                correct_track = local_detected_people[0]
-
-
-            if self.node.new_object_frame_for_tracking:
-
-
-                for o in local_detected_objects:
-                    if o.object_name.lower() == selected_object_to_track:
-                        correct_track_ = o
-
-
-
-                if correct_track_.object_name.lower() == selected_object_to_track:  
+            if self.node.new_person_frame_for_tracking:
+            
+                if len(local_detected_people) > 0:
+                    correct_track_per = local_detected_people[0]
+                
                     # enviar valores 
                     coords = Point()
-                    coords.x = float(correct_track_.box_center_x)
-                    coords.y = float(correct_track_.box_center_y)
+                    coords.x = float(correct_track_per.head_center_x)
+                    coords.y = float(correct_track_per.head_center_y)
                     # coords.z = correct_person_to_track.position_absolute_head.z
                     self.node.continuous_tracking_position_publisher.publish(coords)
                     print(coords)
+                self.node.new_person_frame_for_tracking = False
 
-
-                self.node.new_object_frame_for_tracking = False
-
-            
-            # print(len(local_detected_people))
-            # print(correct_person_to_track)
-            
-            # for person in local_detected_people:
-            #     pass
-            # ...
-
-            # enviar valores 
-            # coords = Point()
-            # coords.x = float(correct_track.head_center_x)
-            # coords.y = float(correct_track.head_center_y)
-            # coords.z = correct_person_to_track.position_absolute_head.z
-            # self.node.continuous_tracking_position_publisher.publish(coords)
-            
-            # print(coords)
+            ### OBJECTS
+            # correct_track_obj = DetectedObject()  
+            # local_detected_objects = self.node.detected_objects.objects
+            # if self.node.new_object_frame_for_tracking:
+            # 
+            #     for o in local_detected_objects:
+            #         if o.object_name.lower() == selected_object_to_track:
+            #             correct_track_obj = o
+            # 
+            #     if correct_track_obj.object_name.lower() == selected_object_to_track:  
+            #         # enviar valores 
+            #         coords = Point()
+            #         coords.x = float(correct_track_obj.box_center_x)
+            #         coords.y = float(correct_track_obj.box_center_y)
+            #         # coords.z = correct_person_to_track.position_absolute_head.z
+            #         self.node.continuous_tracking_position_publisher.publish(coords)
+            #         print(coords)
+            #     self.node.new_object_frame_for_tracking = False
 
             # confirmar condição de fim de tracking
-            if time.time() - start_time > 30.0:
-                tracking_condition = False
-
+            # if time.time() - start_time > 60.0:
+            #     tracking_condition = False
 
         self.set_rgb(CYAN+BREATH)
-        # self.activate_yolo_pose(activate=False) 
+        self.activate_yolo_pose(activate=False) 
         self.activate_yolo_objects(activate_objects=False) 
         
         ### TURN OFF CONTINUOUS TRACKING
         request.status = False
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
 
-
     # Missing Functions:
     # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
-    # track using neck

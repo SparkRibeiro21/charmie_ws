@@ -146,6 +146,20 @@ class NeckNode(Node):
         self.continuous_tracking = False
         self.continuous_tracking_point_position = Point()
 
+        self.tracking_target_p = 0
+        self.tracking_target_t = 0
+        self.tracking_ctr = 1
+        self.tracking_new_pan = 0
+        self.tracking_new_tilt = 0
+        self.tracking_read_pan_open_loop_deg = 0
+        self.tracking_read_tilt_open_loop_deg = 0
+        self.tracking_signal_pan = 0
+        self.tracking_signal_tilt = 0
+        self.tracking_u_pan = 0
+        self.tracking_u_tilt = 0
+        self.tracking_rem_pan = 0
+        self.tracking_rem_tilt = 0
+
         # TOPICS:
         # sends the current position of the servos after every change made on the publisher topics
         self.neck_get_position_topic_publisher = self.create_publisher(NeckPosition, "get_neck_pos_topic", 10)
@@ -168,7 +182,7 @@ class NeckNode(Node):
 
         # timer that checks the controller every 50 ms 
         self.create_timer(1.0, self.timer_callback_neck_position)
-        self.create_timer(0.2, self.timer_callback_continuous_tracking)
+        self.create_timer(0.025, self.timer_callback_continuous_tracking)
 
 
     ########## TIMER ##########
@@ -185,14 +199,52 @@ class NeckNode(Node):
     def timer_callback_continuous_tracking(self):
         
         if self.continuous_tracking:
-            print("ct:", self.continuous_tracking_point_position)
-            # time.sleep(0.05)
-            # self.move_neck_with_target_coordinates(target_x=self.continuous_tracking_point_position.x, target_y=self.continuous_tracking_point_position.y, target_z=self.continuous_tracking_point_position.z, just_one_iteration=True)
-            self.move_neck_with_target_pixel(target_x=self.continuous_tracking_point_position.x, target_y=self.continuous_tracking_point_position.y, just_one_iteration=True)
-        
+
+            error_tilt = abs(self.tracking_target_t - self.tracking_new_tilt)
+            error_pan  = abs(self.tracking_target_p - self.tracking_new_pan) 
+
+            max_error_p = 7
+            max_error_t = 7
+
+            print("Tr_PAN:", self.tracking_target_p, " -> ", self.tracking_target_p, "error_p:", error_pan)
+            print("Tr_TILT:", self.tracking_target_t, " -> ", self.tracking_target_t, "error_t:", error_tilt)
+
+
+            if error_pan < 20:# 
+                self.tracking_u_pan = 1
+            elif error_pan < 30:
+                self.tracking_u_pan = 2
+            elif error_pan < 40:
+                self.tracking_u_pan = 3
+
+            print("pan_speed:", self.tracking_u_pan)
             
-            # update tracked position
-            # ...
+            if(error_tilt>max_error_t or error_pan>max_error_p):
+                
+                if error_pan<=max_error_p:
+                    pass # keeps the same value
+                    # self.tracking_new_pan = self.tracking_target_p
+                    print("P_S_E")
+                else:
+                    self.tracking_new_pan = self.tracking_read_pan_open_loop_deg+self.tracking_rem_pan+((self.tracking_ctr)*self.tracking_signal_pan*self.tracking_u_pan)
+                    print("P_C_E")
+
+                if error_tilt<=max_error_t:
+                    pass # keeps the same value
+                    # self.tracking_new_tilt = self.tracking_target_t
+                    print("T_S_E")
+                else:
+                    self.tracking_new_tilt = self.tracking_read_tilt_open_loop_deg+self.tracking_rem_tilt+((self.tracking_ctr)*self.tracking_signal_tilt*self.tracking_u_tilt)
+                    print("T_C_E")
+                
+                self.send_neck_move(self.tracking_new_pan, self.tracking_new_tilt)
+                self.tracking_ctr+=1
+            
+
+    def continuous_tracking_position_callback(self, position: Point):
+        self.continuous_tracking_point_position = position
+        self.move_neck_with_target_pixel(target_x=self.continuous_tracking_point_position.x, target_y=self.continuous_tracking_point_position.y, tracking_mode=True)
+        print("NEW")
 
     ########## SERVICES ##########
     def callback_set_neck_position(self, request, response):
@@ -248,7 +300,7 @@ class NeckNode(Node):
 
         self.get_logger().info("Received Neck Coordinates %s" %("("+str(target_x)+", "+str(target_y)+", "+str(target_z)+")"))
         
-        self.move_neck_with_target_coordinates(target_x=target_x, target_y=target_y, target_z=target_z, just_one_iteration=False)
+        self.move_neck_with_target_coordinates(target_x=target_x, target_y=target_y, target_z=target_z, tracking_mode=False)
         
         # returns whether the message was played and some informations regarding status
         response.success = True
@@ -274,7 +326,7 @@ class NeckNode(Node):
             
         self.get_logger().info("Received Neck Track Person %s" %("("+str(target_x)+", "+str(target_y)+")"))
         
-        self.move_neck_with_target_pixel(target_x=target_x, target_y=target_y, just_one_iteration=False)
+        self.move_neck_with_target_pixel(target_x=target_x, target_y=target_y, tracking_mode=False)
 
         response.success = True
         response.message = "Neck Track Person"
@@ -325,9 +377,6 @@ class NeckNode(Node):
         self.robot_x = pose.x
         self.robot_y = pose.y
         self.robot_t = pose.theta
-
-    def continuous_tracking_position_callback(self, position: Point):
-        self.continuous_tracking_point_position = position
 
     ########## NECK CONTROL FUNCTIONS ##########
     # Initially I created a class for NeckControl, however due to the errors in readings of neck positios from the servos, we changed to open loop readings.
@@ -437,7 +486,7 @@ class NeckNode(Node):
         self.neck_get_position_topic_publisher.publish(pose)
 
 
-    def move_neck_with_target_coordinates(self, target_x, target_y, target_z, just_one_iteration=False):
+    def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
 
         ### PAN MOVEMENT (LEFT - RIGHT)
 
@@ -504,14 +553,14 @@ class NeckNode(Node):
         ### por pan: pan+180 para ficar standard com o resto 
 
         # self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis+180.0)
-        self.move_neck(180 - pan_neck_to_coords, final_x+180.0, just_one_iteration=just_one_iteration)
+        self.move_neck(180 - pan_neck_to_coords, final_x+180.0, tracking_mode=tracking_mode)
 
         
-    def move_neck_with_target_pixel(self, target_x, target_y, just_one_iteration=False):
+    def move_neck_with_target_pixel(self, target_x, target_y, tracking_mode=False):
     
         global read_pan_open_loop, read_tilt_open_loop
 
-        print(target_x, target_y)
+        # print(target_x, target_y)
 
         img_width = 1280
         img_height = 720
@@ -536,16 +585,16 @@ class NeckNode(Node):
         print("angs: ", new_a_x, new_a_y)
 
         # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
-        self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y, just_one_iteration=just_one_iteration)
+        self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y, tracking_mode=tracking_mode)
 
 
-    def move_neck(self, p, t, just_one_iteration=False):
+    def move_neck(self, p, t, tracking_mode=False):
         global read_pan_open_loop, read_tilt_open_loop
 
         p = int(p)
         t = int(t)
 
-        print("START")
+        # print("START")
         
         d_t = 0.02
 
@@ -562,49 +611,80 @@ class NeckNode(Node):
         else:
             signal_pan = 1
 
-        div_pan = int(abs(pan_dif)//self.u_pan)*signal_pan
-        rem_pan = int(abs(pan_dif)%self.u_pan)*signal_pan
+        if not tracking_mode:
+            speed_sides = self.u_pan
+        else:
+            speed_sides = 2
 
+
+        div_pan = int(abs(pan_dif)//speed_sides)*signal_pan
+        rem_pan = int(abs(pan_dif)%speed_sides)*signal_pan
 
         tilt_dif = int(t) - read_tilt_open_loop_deg
 
         if tilt_dif < 0.0:
             signal_tilt = -1
-            u_tilt =  self.u_tilt_down
+            if not tracking_mode:
+                u_tilt =  self.u_tilt_down
+            else:
+                u_tilt = 1
         else:
             signal_tilt = 1
-            u_tilt = self.u_tilt_up
+            if not tracking_mode:
+                u_tilt = self.u_tilt_up
+            else:
+                u_tilt = 1
 
         div_tilt = int(abs(tilt_dif)//u_tilt)*signal_tilt
         rem_tilt = int(abs(tilt_dif)%u_tilt)*signal_tilt
 
         
-        print("PAN:", read_pan_open_loop_deg, " -> ", p, "dif:", pan_dif, "u_pan:", self.u_pan, "div:", div_pan, "rem:", rem_pan)
+        print("PAN:", read_pan_open_loop_deg, " -> ", p, "dif:", pan_dif, "u_pan:", speed_sides, "div:", div_pan, "rem:", rem_pan)
         print("TILT:", read_tilt_open_loop_deg, " -> ", t, "dif:", tilt_dif, "u_tilt:", u_tilt, "div:", div_tilt, "rem:", rem_tilt)
 
         ctr = 1
         new_tilt = read_tilt_open_loop_deg+rem_tilt
         new_pan = read_pan_open_loop_deg+rem_pan
-        self.send_neck_move(new_pan, new_tilt) 
-        while(t != new_tilt or p!=new_pan):
-            
-            if new_pan == p:
-                new_pan = p
-            else:
-                new_pan = read_pan_open_loop_deg+rem_pan+((ctr)*signal_pan*self.u_pan)
-            
-            if new_tilt == t:
-                new_tilt = t
-            else:
-                new_tilt = read_tilt_open_loop_deg+rem_tilt+((ctr)*signal_tilt*u_tilt)
-            
-            self.send_neck_move(new_pan, new_tilt) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-            ctr+=1
 
-            time.sleep(d_t)
+        if not tracking_mode:
 
-        print("ctr:", ctr)
-        print("END")
+            self.send_neck_move(new_pan, new_tilt)
+
+            while(t != new_tilt or p!=new_pan):
+                
+                time.sleep(d_t)
+
+                if new_pan == p:
+                    new_pan = p
+                else:
+                    new_pan = read_pan_open_loop_deg+rem_pan+((ctr)*signal_pan*speed_sides)
+                
+                if new_tilt == t:
+                    new_tilt = t
+                else:
+                    new_tilt = read_tilt_open_loop_deg+rem_tilt+((ctr)*signal_tilt*u_tilt)
+                
+                self.send_neck_move(new_pan, new_tilt)
+                ctr+=1
+
+        else:
+            print("Set new variables for tracking!")
+            self.tracking_target_p = p
+            self.tracking_target_t = t
+            self.tracking_ctr = 1
+            self.tracking_new_pan = new_pan
+            self.tracking_new_tilt = new_tilt
+            self.tracking_read_pan_open_loop_deg = read_pan_open_loop_deg
+            self.tracking_read_tilt_open_loop_deg = read_tilt_open_loop_deg
+            self.tracking_signal_pan = signal_pan
+            self.tracking_signal_tilt = signal_tilt
+            self.tracking_u_pan = speed_sides
+            self.tracking_u_tilt = u_tilt
+            self.tracking_rem_pan = rem_pan
+            self.tracking_rem_tilt = rem_tilt
+
+        # print("ctr:", ctr)
+        # print("END")
 
 
     def send_neck_move(self, p, t):
