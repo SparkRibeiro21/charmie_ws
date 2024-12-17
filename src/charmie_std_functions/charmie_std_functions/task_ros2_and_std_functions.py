@@ -271,6 +271,7 @@ class ROS2TaskNode(Node):
         self.point_cloud_response = GetPointCloudBB.Response()
         self.obstacles = Obstacles()
         self.ps4_controller_state = PS4Controller()
+        self.new_object_frame_for_tracking = False
 
         # robot localization
         self.robot_x = 0.0
@@ -367,6 +368,7 @@ class ROS2TaskNode(Node):
 
     def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
+        self.new_object_frame_for_tracking = True
 
     def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
@@ -2405,7 +2407,6 @@ class RobotStdFunctions():
         return None  # Return None if the object is not found
 
     def set_continuous_tracking_with_coordinates(self):
-        pass
 
         request = TrackContinuous.Request()
 
@@ -2415,29 +2416,80 @@ class RobotStdFunctions():
         request.tracking_position = Point()
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
         
-        self.activate_yolo_pose(activate=True) 
+        self.node.detected_people.persons = [] # clears detected_people after receiving them to make sure the objects from previous frames are not considered again
+        # self.activate_yolo_pose(activate=True) 
+        self.activate_yolo_objects(activate_objects=True) 
         
         start_time = time.time()
         tracking_condition = True
-        while tracking_condition:
-            pass
+        correct_track = DetectedPerson()
+        correct_track.position_absolute_head.x = 0.0
+        correct_track.position_absolute_head.y = 2.0
+        correct_track.position_absolute_head.z = 1.8
 
+
+        selected_object_to_track = "bowl"
+        
+        self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
+        while tracking_condition:
+
+            correct_track_ = DetectedObject()  
+            
             # ler continuamente o target 
+            local_detected_people = self.node.detected_people.persons
+            local_detected_objects = self.node.detected_objects.objects
+
+
+            if len(local_detected_people) > 0:
+                correct_track = local_detected_people[0]
+
+
+            if self.node.new_object_frame_for_tracking:
+
+
+                for o in local_detected_objects:
+                    if o.object_name.lower() == selected_object_to_track:
+                        correct_track_ = o
+
+
+
+                if correct_track_.object_name.lower() == selected_object_to_track:  
+                    # enviar valores 
+                    coords = Point()
+                    coords.x = float(correct_track_.box_center_x)
+                    coords.y = float(correct_track_.box_center_y)
+                    # coords.z = correct_person_to_track.position_absolute_head.z
+                    self.node.continuous_tracking_position_publisher.publish(coords)
+                    print(coords)
+
+
+                self.node.new_object_frame_for_tracking = False
+
+            
+            # print(len(local_detected_people))
+            # print(correct_person_to_track)
+            
+            # for person in local_detected_people:
+            #     pass
             # ...
 
             # enviar valores 
-            p = Point()
-            p.x = 1.0
-            p.y = 2.0
-            p.z = 3.0
-            self.node.continuous_tracking_position_publisher.publish(p)
+            # coords = Point()
+            # coords.x = float(correct_track.head_center_x)
+            # coords.y = float(correct_track.head_center_y)
+            # coords.z = correct_person_to_track.position_absolute_head.z
+            # self.node.continuous_tracking_position_publisher.publish(coords)
             
+            # print(coords)
+
             # confirmar condição de fim de tracking
-            if time.time() - start_time > 10.0:
+            if time.time() - start_time > 30.0:
                 tracking_condition = False
 
 
-        self.activate_yolo_pose(activate=False) 
+        self.set_rgb(CYAN+BREATH)
+        # self.activate_yolo_pose(activate=False) 
+        self.activate_yolo_objects(activate_objects=False) 
         
         ### TURN OFF CONTINUOUS TRACKING
         request.status = False

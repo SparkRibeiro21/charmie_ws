@@ -168,7 +168,7 @@ class NeckNode(Node):
 
         # timer that checks the controller every 50 ms 
         self.create_timer(1.0, self.timer_callback_neck_position)
-        self.create_timer(0.1, self.timer_callback_continuous_tracking)
+        self.create_timer(0.2, self.timer_callback_continuous_tracking)
 
 
     ########## TIMER ##########
@@ -186,7 +186,10 @@ class NeckNode(Node):
         
         if self.continuous_tracking:
             print("ct:", self.continuous_tracking_point_position)
-            time.sleep(0.05)
+            # time.sleep(0.05)
+            # self.move_neck_with_target_coordinates(target_x=self.continuous_tracking_point_position.x, target_y=self.continuous_tracking_point_position.y, target_z=self.continuous_tracking_point_position.z, just_one_iteration=True)
+            self.move_neck_with_target_pixel(target_x=self.continuous_tracking_point_position.x, target_y=self.continuous_tracking_point_position.y, just_one_iteration=True)
+        
             
             # update tracked position
             # ...
@@ -400,7 +403,8 @@ class NeckNode(Node):
         # changed to two different positions so that in any case it is visible the neck moving when is started 
         self.move_neck(180, 135) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         self.move_neck(180+self.initial_position[0], 180+self.initial_position[1]) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-
+        self.move_neck(180, 160) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        
         
     def read_servo_position(self):
 
@@ -491,7 +495,7 @@ class NeckNode(Node):
         # Debug prints of calculations of up/down movement:
         # print("Alpha:", math.degrees(alpha_solution[0]))
         # print("Phi:", math.degrees(phi))
-        print("Alpha+Phi:", round(final_x, 2))
+        # print("Alpha+Phi:", round(final_x, 2))
         # print("Time:", elapsed_time)
 
         if final_x > 0.0: # solves rounding errors when variable is positive
@@ -597,10 +601,6 @@ class NeckNode(Node):
             self.send_neck_move(new_pan, new_tilt) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
             ctr+=1
 
-            # breaks after the first iteration, used for continuous tracking, to avoid getting stuck in an old position
-            if just_one_iteration:
-                break
-            
             time.sleep(d_t)
 
         print("ctr:", ctr)
