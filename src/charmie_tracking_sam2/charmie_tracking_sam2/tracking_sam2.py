@@ -68,7 +68,11 @@ class TrackingMain():
 
         self.if_init = False
         self.initial_obj_id = 1  # Object ID for tracking
+
+
+
         self.tracking_flag = True  # Flag to enable tracking
+        self.calibration_mode = True # Calibrations starts as true so it is executed right at the beggining
 
         """
         # Define points for initialization (example: 3 points)
@@ -160,7 +164,7 @@ class TrackingMain():
 
     def process_user_input(self, frame):
         """Dsiplays the first frame and allows point selection."""
-        cv2.namedWindow("Select Points")
+        # cv2.namedWindow("Select Points")
         cv2.setMouseCallback("Select Points", self.mouse_callback)
 
         print("Select points on the frame, Left click to add points.")
@@ -195,6 +199,43 @@ class TrackingMain():
                 cv2.destroyWindow("Select Points")
 
 
+    """
+    def process_user_input2(self, frame):
+        # cv2.namedWindow("Select Points")
+        cv2.setMouseCallback("Select Points", self.mouse_callback)
+
+        print("Select points on the frame, Left click to add points.")
+        print("Press 's' to finalize selection and start tracking.")
+
+        # while not self.done_selecting:
+
+            # temp_frame = frame.copy()
+
+            if self.points_events:
+                for i, point in enumerate(self.selected_points):
+                    color = (0, 255, 0)  if self.point_labels[i] == 1 else (0, 0, 255)
+                    cv2.circle(temp_frame, point, 5, color, -1)
+
+
+            if self.bounding_box_events:
+                if self.drawing:
+                    pass
+                    # cv2.rectangle(frame, (self.ix, self.iy), (self.x, self.y), (0, 255, 0), 2)
+                
+                elif not self.drawing and self.finished_drawing:
+                    cv2.rectangle(frame, (self.ix, self.iy), (self.x, self.y), (0, 255, 0), 2)  # Draw final rectangle
+                    self.finished_drawing = False
+
+
+            cv2.imshow("Select Points", temp_frame)
+            key = cv2.waitKey(1) & 0xFF
+
+            if key == ord('s'): # Finalize the selection
+                print("Finalizing print selection")
+                self.done_selecting = True
+                cv2.destroyWindow("Select Points")
+    """
+
     def draw_bb(self):
         pass
 
@@ -203,17 +244,110 @@ class TrackingMain():
 
         with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
 
+            cv2.namedWindow("Segmented Objects TR")
+            cv2.setMouseCallback("Segmented Objects TR", self.mouse_callback)
+
             while True:
 
                 ret, frame = self.cap.read()
                 height, width = frame.shape[:2]  # Get frame dimensions
+                main_with_mask = frame.copy()
                 
                 if not ret:
                     break
 
                 if self.tracking_flag:
 
+                    if self.calibration_mode:
+                        
+                        if self.points_events:
+                            for i, point in enumerate(self.selected_points):
+                                color = (0, 255, 0)  if self.point_labels[i] == 1 else (0, 0, 255)
+                                cv2.circle(main_with_mask, point, 5, color, -1)
 
+                        if self.done_selecting:
+                            
+                            self.predictor.load_first_frame(frame)
+
+                            if self.points_events:
+
+                                multiple_points = [(x , y) for x, y in self.selected_points]
+                                # Use points and object ID as prompts to multiple points:
+                                _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
+                                    frame_idx=0,  # First frame
+                                    obj_id=self.initial_obj_id,
+                                    points=multiple_points,
+                                    labels=self.point_labels)
+                                
+                                self.selected_points.clear()
+                                self.point_labels.clear()
+
+                            self.calibration_mode = False
+                            self.points_events = False
+                            self.bounding_box_events = False
+                            self.done_selecting = False
+                            print("Calibration done")
+
+                
+                    else: # Standard work mode (tracking)  
+
+                        # Track object in subsequent frames
+                        out_obj_ids, out_mask_logits = self.predictor.track(frame)
+
+                        # Convert logits to binary mask
+                        mask = (out_mask_logits[0] > 0).cpu().numpy().astype("uint8") * 255  # Binary mask, 2D
+                    
+                        # Ensure the mask is 2D before applying colormap
+                        if mask.ndim == 3:
+                            mask = mask.squeeze()  # Remove extra dimensions if present
+
+                        # Create a white mask where the object is segmented
+                        white_mask = (mask > 0).astype("uint8") * 255  # Binary mask, 2D with white pixels
+                    
+                        # Apply the white mask to the frame
+                        frame_with_mask = cv2.bitwise_and(frame, frame, mask=white_mask)
+                        # Display the result
+                        cv2.imshow("Frame with Mask", frame_with_mask)
+
+                        ### ORIGINAL MASK BY SAM2 ###
+                        # # Apply colormap for visualization
+                        # mask_colored = cv2.applyColorMap(mask, cv2.COLORMAP_JET)
+                        # # Blend the mask with the frame
+                        # overlay = cv2.addWeighted(frame, 0.7, mask_colored, 0.3, 0)
+                        # # Display the result
+                        # cv2.imshow("Segmented Object", overlay)
+
+                        green_overlay = np.zeros_like(frame)
+                        green_overlay[:, :] = [0, 255, 0]  # BGR for green
+                        green_part = cv2.bitwise_and(green_overlay, green_overlay, mask=mask)
+                        overlay_green = cv2.addWeighted(frame, 1.0, green_part, 0.3, 0)
+                        
+                        # cv2.imshow("Frame with Green Mask", overlay_green)
+                        main_with_mask = overlay_green
+                        
+                        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+                        polygons = []
+
+                        for obj in contours:
+                            coords = []
+                                
+                            for point in obj:
+                                coords.append(int(point[0][0]))
+                                coords.append(int(point[0][1]))
+
+                            polygons.append(coords)
+
+                        teste = frame.copy()
+                        for p in polygons:
+                            cv2.polylines(teste, [np.array(p).reshape((-1, 1, 2))], True, (0, 255, 0), 2)
+                            cv2.fillPoly(teste, [np.array(p).reshape((-1, 1, 2))], (0, 100, 0))
+                        cv2.imshow("Test Polygon", teste)
+                        
+
+                    
+
+
+                    """
                     # print(height, width)
 
                     if not self.if_init:
@@ -333,6 +467,7 @@ class TrackingMain():
                     
 
                     
+                    """    
                     
                     """
                     # Apply colormap for visualization
@@ -358,33 +493,42 @@ class TrackingMain():
 
                     # self.draw_bb()
 
+                    # cv2.circle(main_with_mask, (width//2, height//2), 5, (0, 255, 0), -1)
 
                 else:
+                    pass
+                    
 
+                # Display the result
+                # cv2.imshow("Segmented Object", overlay)
+                self.new_frame_time = time.time()
+                self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
+                self.prev_frame_time = self.new_frame_time
+                self.fps = str(self.fps)
 
-                    # Display the result
-                    # cv2.imshow("Segmented Object", overlay)
-                    self.new_frame_time = time.time()
-                    self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
-                    self.prev_frame_time = self.new_frame_time
-                    self.fps = str(self.fps)
+                print(self.fps)
+                cv2.putText(main_with_mask, 'fps:' + self.fps, (0, height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                cv2.imshow("Segmented Objects TR", main_with_mask)
+                # cv2.imshow("Frame with Mask", cv2.bitwise_and(frame, frame, ))
 
-                    print(self.fps)
-                    cv2.putText(frame, 'fps:' + self.fps, (0, height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                    cv2.imshow("Frame with Green Mask", frame)
-                    # cv2.imshow("Frame with Mask", cv2.bitwise_and(frame, frame, ))
-
-
-
-                k = cv2.waitKey(1)
-                if k == ord('q'):
+                
+                key = cv2.waitKey(1)
+                if key == ord('q'):
                     break
+                if key == ord(' '):
+                    self.tracking_flag = not self.tracking_flag
+                if key == ord('s'): # Finalize the selection
+                    print("Finalizing print selection")
+                    self.done_selecting = True
+                if key == ord('c'):
+                    self.calibration_mode = True
+                    self.points_events = True
+                    self.bounding_box_events = False
+                """
                 if k == ord('r'):
                     self.predictor.reset_state()
                     self.if_init = False
-                if k == ord(' '):
-                    self.tracking_flag = not self.tracking_flag
-
+                
                     # if k == ord('q'):
                     #     self.floor_dist -= 10
                     # if k == ord('s'):
@@ -395,6 +539,8 @@ class TrackingMain():
                     # if cv2.waitKey(1) & 0xFF == ord('q'):
                     #     break
 
+                    """
+                
         self.cap.release()
         cv2.destroyAllWindows()
 
