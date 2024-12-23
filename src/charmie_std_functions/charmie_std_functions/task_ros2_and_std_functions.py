@@ -164,7 +164,7 @@ class ROS2TaskNode(Node):
             "charmie_point_cloud":      True,
         "charmie_ps4_controller":   False,
             "charmie_speakers":         True,
-            "chaarmie_tracking":        False,
+            "charmie_tracking":        False,
             "charmie_yolo_objects":     True,
             "charmie_yolo_pose":        False,
         """
