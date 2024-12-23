@@ -1,0 +1,8 @@
+# Service to activate the SAM2 tracking system
+
+bool activate            # activate or deactivate tracking system
+ListOfPoints points      # list of points to track
+BoundingBox bounding_box # bounding box to track
+---
+bool success    # indicate successful run of triggered service
+string message  # informational, e.g. for error messages.

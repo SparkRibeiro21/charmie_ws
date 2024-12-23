@@ -3,6 +3,8 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Point
+from charmie_interfaces.msg import TrackingMask, ListOfPoints, BoundingBox
+from charmie_interfaces.srv import ActivateTracking
 
 import threading
 import cv2
@@ -13,7 +15,6 @@ import numpy as np
 import time
 
 
-
 class TrackingNode(Node):
 
     def __init__(self):
@@ -21,14 +22,36 @@ class TrackingNode(Node):
         self.get_logger().info("Initialised CHARMIE Tracking Node")
 
         # Tracking Variables Initialisation
-
+        self.tracking_flag = False
+        self.tracking_received_points = ListOfPoints()
+        self.tracking_received_bbox = BoundingBox()
 
         # TOPICS:
         # Publica a máscara do objecto a ser seguido
-
+        self.tracking_mask_publisher = self.create_publisher(TrackingMask, 'tracking_mask', 10)
 
         # SERVICES:
         # Ativa e desativa o tracking
+        self.activate_yolo_objects_service = self.create_service(ActivateTracking, "activate_tracking", self.callback_activate_tracking)
+
+
+    def callback_activate_tracking(self, request, response):
+        
+        # Type of service received: 
+        # bool activate            # activate or deactivate tracking system
+        # ListOfPoints points      # list of points to track
+        # BoundingBox bounding_box # bounding box to track
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+        
+        self.get_logger().info("Activate Tracking Service: %s" %("("+str(request.activate)+", "
+                                                                    +str(request.points)+", "
+                                                                    +str(request.bounding_box)+")"))
+        
+        self.tracking_flag = request.activate
+        self.tracking_received_points = request.points
+        self.tracking_received_bbox = request.bounding_box
 
 
 def main(args=None):
@@ -61,7 +84,7 @@ class TrackingMain():
 
         self.initial_obj_id = 1  # Object ID for tracking
 
-        self.tracking_flag = True  # Flag to enable tracking
+        # self.tracking_flag = True  # Flag to enable tracking
         self.calibration_mode = False # Calibrations starts as true so it is executed right at the beggining
         self.first_calibration_done = False
 
@@ -200,7 +223,7 @@ class TrackingMain():
                 if not ret:
                     break
 
-                if self.tracking_flag:
+                if self.node.tracking_flag:
 
                     if self.calibration_mode:
                         
@@ -325,9 +348,13 @@ class TrackingMain():
                                 # centroid = self.polygon_centroid(polygons[0])
                                 centroid = self.combined_polygon_centroid(polygons)
 
+                                print(centroid)
+
                                 if centroid is not None:
                                     cv2.circle(teste, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
+                                    cv2.circle(white_mask, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
                             
+                            cv2.imshow("Frame with Mask BW", white_mask)
                             cv2.imshow("Test Polygon", teste)
                             
                 # Display the result
@@ -341,13 +368,12 @@ class TrackingMain():
                 cv2.putText(main_with_mask, 'fps:' + self.fps, (0, height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                 cv2.imshow("Segmented Objects TR", main_with_mask)
                 # cv2.imshow("Frame with Mask", cv2.bitwise_and(frame, frame, ))
-
         
                 key = cv2.waitKey(1)
                 if key == ord('q'):
                     break
                 elif key == ord(' '):
-                    self.tracking_flag = not self.tracking_flag
+                    self.node.tracking_flag = not self.node.tracking_flag
 
                 elif key == ord('s'): # Finalize the selection
                     self.done_selecting = True
