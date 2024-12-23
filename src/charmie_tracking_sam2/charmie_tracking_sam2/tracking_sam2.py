@@ -61,12 +61,12 @@ class TrackingMain():
         # model_cfg = "configs/sam2.1/sam2.1_hiera_s.yaml"
         # predictor = build_sam2_camera_predictor(model_cfg, sam2_checkpoint)
 
-        print("HEY")
+        # print("HEY")
 
         # Load video or camera
         self.cap = cv2.VideoCapture(0)  # Replace 0 with video file path if needed
 
-        self.if_init = False
+        # self.if_init = False
         self.initial_obj_id = 1  # Object ID for tracking
 
 
@@ -98,7 +98,7 @@ class TrackingMain():
         self.drawing = False
         self.ix, self.iy = -1, -1  # Initial coordinates
         self.x, self.y = -1, -1  # Mouse coordinates
-        self.selected_bbox = ((self.ix, self.iy), (self.x, self.y))
+        self.selected_bbox = []                               
         # self.finished_drawing = False
         
         self.prev_frame_time = time.time() # used to record the time when we processed last frame
@@ -109,7 +109,7 @@ class TrackingMain():
         """Handle mouse events for selecting points and labels."""
         
         if self.points_events:
-            if event == cv2.EVENT_LBUTTONDOWN:
+            if event == cv2.EVENT_MBUTTONDOWN:
                 # Append selected point and label
                 self.selected_points.append((x, y))
                 print(f"Selected point: {(x, y)}")
@@ -124,7 +124,7 @@ class TrackingMain():
                 print(f"Selected points ({len(self.selected_points)}): {self.selected_points}")
                 print(f"Point Labels ({len(self.point_labels)}): {self.point_labels}")
 
-            if event == cv2.EVENT_RBUTTONDOWN or event == cv2.EVENT_MBUTTONDOWN:
+            if event == cv2.EVENT_RBUTTONDOWN: #  or event == cv2.EVENT_MBUTTONDOWN:
                 # Append selected point and label
                 self.selected_points.append((x, y))
                 print(f"Selected point: {(x, y)}")
@@ -162,14 +162,13 @@ class TrackingMain():
                 # self.finished_drawing = True
                 # self.x = x
                 # self.y = y
-                self.selected_bbox = ((self.ix, self.iy), (self.x, self.y))  # Store rectangle coordinates
+                self.selected_bbox = [(self.ix, self.iy), (self.x, self.y)]  # Store rectangle coordinates
                 # cv2.rectangle(frame, (self.ix, self.iy), (self.x, self.y), (0, 255, 0), 2)  # Draw final rectangle
                 # cv2.imshow('Select Points', frame)
 
-
+    """
 
     def process_user_input(self, frame):
-        """Dsiplays the first frame and allows point selection."""
         # cv2.namedWindow("Select Points")
         cv2.setMouseCallback("Select Points", self.mouse_callback)
 
@@ -203,7 +202,7 @@ class TrackingMain():
                 print("Finalizing print selection")
                 self.done_selecting = True
                 cv2.destroyWindow("Select Points")
-
+    """
 
     """
     def process_user_input2(self, frame):
@@ -272,8 +271,8 @@ class TrackingMain():
                                 cv2.circle(main_with_mask, point, 5, color, -1)
 
                         if self.bounding_box_events:
-                                
-                            cv2.rectangle(main_with_mask, self.selected_bbox[0], self.selected_bbox[1], (0, 255, 0), 2)
+                            if self.selected_bbox:
+                                cv2.rectangle(main_with_mask, self.selected_bbox[0], self.selected_bbox[1], (0, 255, 0), 2)
                             if self.drawing:
                                 cv2.rectangle(main_with_mask, (self.ix, self.iy), (self.x, self.y), (255, 0, 0), 2)
 
@@ -281,21 +280,26 @@ class TrackingMain():
                             
                             self.predictor.load_first_frame(frame)
 
-                            if self.points_events:
+                            multiple_points = []
+                            bbox = []
 
+                            # if self.points_events and not self.bounding_box_events:
+                            if self.selected_points:
+                                
+                                print("just points")
                                 multiple_points = [(x , y) for x, y in self.selected_points]
                                 # Use points and object ID as prompts to multiple points:
                                 _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
                                     frame_idx=0,  # First frame
                                     obj_id=self.initial_obj_id,
                                     points=multiple_points,
-                                    labels=self.point_labels)
+                                    labels=self.point_labels
+                                )
                                 
-                                self.selected_points.clear()
-                                self.point_labels.clear()
+                            # if self.bounding_box_events and not self.points_events:
+                            elif self.selected_bbox:
 
-                            if self.bounding_box_events:
-                                
+                                print("just bbox")
                                 # multiple_bboxes = [[r1[0], r1[1], r2[0], r2[1]] for r1, r2 in self.selected_bboxes]
                                 bbox = [self.selected_bbox[0][0], self.selected_bbox[0][1], self.selected_bbox[1][0], self.selected_bbox[1][1]]
                                 # Use bounding box and object ID as prompts
@@ -305,7 +309,25 @@ class TrackingMain():
                                     bbox=bbox
                                 )
 
-                                self.selected_bbox = ((0, 0), (0, 0))
+                            # if self.bounding_box_events and self.points_events and self.selected_points and self.selected_bbox:
+
+                                # print("Inside double")
+                                
+                            # multiple_points = [(x , y) for x, y in self.selected_points]
+                            # bbox = [self.selected_bbox[0][0], self.selected_bbox[0][1], self.selected_bbox[1][0], self.selected_bbox[1][1]]
+                            # Use bounding box and object ID as prompts
+                            # _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
+                            #     frame_idx=0,  # First frame
+                            #     obj_id=self.initial_obj_id,
+                            #     points=multiple_points,
+                            #     labels=self.point_labels,
+                            #     bbox=bbox
+                            # )
+
+
+                            self.selected_bbox.clear()                              
+                            self.selected_points.clear()
+                            self.point_labels.clear()
 
                             self.calibration_mode = False
                             self.points_events = False
@@ -589,13 +611,21 @@ class TrackingMain():
                     if self.first_calibration_done:
                         self.predictor.reset_state()
                     self.calibration_mode = True
+                    self.bounding_box_events = True
                     self.points_events = True
 
-                elif key == ord('b'):
-                    if self.first_calibration_done:
-                        self.predictor.reset_state()
-                    self.calibration_mode = True
-                    self.bounding_box_events = True
+                # elif key == ord('b'):
+                #     if self.first_calibration_done:
+                #         self.predictor.reset_state()
+                #     self.calibration_mode = True
+                #     self.bounding_box_events = True
+
+                # elif key == ord('d'):
+                #     if self.first_calibration_done:
+                #         self.predictor.reset_state()
+                #     self.calibration_mode = True
+                #     self.bounding_box_events = True
+                #     self.points_events = True
 
                 """
                 if k == ord('r'):
