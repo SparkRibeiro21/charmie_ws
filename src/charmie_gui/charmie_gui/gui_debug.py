@@ -7,7 +7,9 @@ from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, GetLLMDemo
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
+    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, \
+    GetLLMDemo, ActivateTracking
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -114,6 +116,8 @@ class DebugVisualNode(Node):
         # LLM
         self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
         self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
+        # Tracking (SAM2)
+        self.activate_tracking_client = self.create_client(ActivateTracking, "activate_tracking")
 
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
@@ -274,6 +278,7 @@ class DebugVisualNode(Node):
         # bool charmie_point_cloud
         # bool charmie_ps4_controller
         # bool charmie_speakers
+        # bool charmie_tracking
         # bool charmie_yolo_objects
         # bool charmie_yolo_pose
         # ---
@@ -521,6 +526,7 @@ class CheckNodesMain():
         self.CHECK_POINT_CLOUD_NODE = False
         self.CHECK_PS4_CONTROLLER_NODE = False
         self.CHECK_SPEAKERS_NODE = False
+        self.CHECK_TRACKING_NODE = False
         self.CHECK_YOLO_OBJECTS_NODE = False
         self.CHECK_YOLO_POSE_NODE = False
 
@@ -653,7 +659,14 @@ class CheckNodesMain():
                 self.CHECK_SPEAKERS_NODE = False
             else:
                 self.CHECK_SPEAKERS_NODE = True
-                
+
+            # TRACKING (SAM2)
+            if not self.node.activate_tracking_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Tracking ...")
+                self.CHECK_TRACKING_NODE = False
+            else:
+                self.CHECK_TRACKING_NODE = True
+
             # YOLO OBJECTS
             if not self.node.activate_yolo_objects_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
                 # self.node.get_logger().warn("Waiting for Server Yolo Objects ...")
@@ -728,7 +741,7 @@ class DebugVisualMain():
         self.MAP_ZOOM_INC = 0.2
         self.MAP_SHIFT_INC = 1.0
 
-        self.first_pos_h = 19.1
+        self.first_pos_h = 19.8 # 19.1
         
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -832,13 +845,16 @@ class DebugVisualMain():
         self.CHARMIE_POINT_CLOUD_NODE_RECT      = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_PS4_CONTROLLER_NODE_RECT   = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*17, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*18, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_TRACKING_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*17, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*18, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
 
-        self.toggle_record =         Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(20.25)), 40, 16)
-        self.toggle_pause_cams =     Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(22.75-0.2)), 40, 16)
-        self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(25.25-0.4)), 40, 16)
-        self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(27.75-0.6)), 40, 16)
+        toggle_h_init = 21.0
+        toggle_h_diff = 2.25
+        self.toggle_record =         Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+0*toggle_h_diff)), 40, 16)
+        self.toggle_pause_cams =     Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+1*toggle_h_diff)), 40, 16)
+        self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+2*toggle_h_diff)), 40, 16)
+        self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+3*toggle_h_diff)), 40, 16)
 
         self.toggle_activate_objects_head =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+50, 40, 16)
         self.toggle_activate_furniture_head = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90,  self.cams_initial_height+50, 40, 16)
@@ -1041,6 +1057,11 @@ class DebugVisualMain():
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
         self.draw_text("Speakers", self.text_font, tc, self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_SPEAKERS_NODE_RECT)
+
+        # TRACKING
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_tracking, self.check_nodes.CHECK_TRACKING_NODE)
+        self.draw_text("Tracking SAM2", self.text_font, tc, self.CHARMIE_TRACKING_NODE_RECT.x+2*self.CHARMIE_TRACKING_NODE_RECT.width, self.CHARMIE_TRACKING_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_TRACKING_NODE_RECT)
 
         # YOLO OBJECTS
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_objects, self.check_nodes.CHECK_YOLO_OBJECTS_NODE)
