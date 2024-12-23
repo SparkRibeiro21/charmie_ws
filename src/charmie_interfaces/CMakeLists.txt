@@ -33,6 +33,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ListOfDetectedObject.msg"
   "msg/ListOfDetectedPerson.msg"
   "msg/ListOfImages.msg"
+  "msg/ListOfMaskDetections.msg"
   "msg/ListOfFloats.msg"
   "msg/ListOfPoints.msg"
   "msg/ListOfStrings.msg"

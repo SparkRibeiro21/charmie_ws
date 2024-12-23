@@ -2522,12 +2522,15 @@ class RobotStdFunctions():
     def set_follow_person(self):
 
         points = ListOfPoints()
-        points.coords.append(Point(x=480.0, y=640.0, z=1.0))
+        # points.coords.append(Point(x=640.0//2, y=480.0//2, z=1.0))
+        points.coords.append(Point(x=320.0, y=150.0, z=1.0))
+        points.coords.append(Point(x=420.0, y=150.0, z=0.0))
+        points.coords.append(Point(x=220.0, y=150.0, z=0.0))
 
 
         self.activate_tracking(activate=True, points=points)
-        time.sleep(5.0)
-        self.activate_tracking(activate=False)
+        # time.sleep(60.0)
+        # self.activate_tracking(activate=False)
 
 
 
