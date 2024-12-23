@@ -6,7 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
-    Obstacles, ArmController, PS4Controller, ListOfStrings, TrackingMask
+    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, \
     SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking
@@ -95,6 +95,8 @@ class ROS2TaskNode(Node):
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for ps4 controller
         # Neck
         self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
+        # Tracking
+        self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         
 
         ### Services (Clients) ###
@@ -228,6 +230,10 @@ class ROS2TaskNode(Node):
             while not self.save_speech_command_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Save Speech Command...")
 
+        if self.ros2_modules["charmie_tracking"]:
+            while not self.activate_tracking_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Activate Tracking Command...")
+
         if self.ros2_modules["charmie_yolo_objects"]:
             while not self.activate_yolo_objects_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
@@ -279,6 +285,8 @@ class ROS2TaskNode(Node):
         self.ps4_controller_state = PS4Controller()
         self.new_object_frame_for_tracking = False
         self.new_person_frame_for_tracking = False
+        self.tracking_mask = TrackingMask()
+        self.new_tracking_mask_msg = False
 
         # robot localization
         self.robot_x = 0.0
@@ -322,6 +330,8 @@ class ROS2TaskNode(Node):
         self.activate_obstacles_message = ""
         self.activate_motors_success = True
         self.activate_motors_message = ""
+        self.activate_tracking_success = True
+        self.activate_tracking_message = ""
 
         self.audio_command = ""
         self.received_continuous_audio = False
@@ -360,6 +370,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_point_cloud      = self.ros2_modules["charmie_point_cloud"]
         nodes_used.charmie_ps4_controller   = self.ros2_modules["charmie_ps4_controller"]
         nodes_used.charmie_speakers         = self.ros2_modules["charmie_speakers"]
+        nodes_used.charmie_tracking         = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects     = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose        = self.ros2_modules["charmie_yolo_pose"]
 
@@ -434,6 +445,10 @@ class ROS2TaskNode(Node):
         self.ps4_controller_state = controller
         self.new_controller_msg = True
 
+    def tracking_mask_callback(self, mask: TrackingMask):
+        self.tracking_mask = mask
+        self.new_tracking_mask_msg = True
+
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, request=GetPointCloudBB.Request()):
     
@@ -467,6 +482,12 @@ class ROS2TaskNode(Node):
     def call_activate_obstacles_server(self, request=ActivateObstacles.Request()):
 
         self.activate_obstacles_client.call_async(request)
+
+
+    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
+    def call_activate_tracking_server(self, request=ActivateTracking.Request()):
+
+        self.activate_tracking_client.call_async(request)
 
 
     #### FACE SERVER FUNCTIONS #####
@@ -1333,6 +1354,20 @@ class RobotStdFunctions():
         self.node.activate_motors_message = "Activated with selected parameters"
 
         return self.node.activate_motors_success, self.node.activate_motors_message
+
+    def activate_tracking(self, activate=False, points=ListOfPoints(), bbox=BoundingBox(), wait_for_end_of=True):
+        
+        request = ActivateTracking.Request()
+        request.activate = activate
+        request.points = points
+        request.bounding_box = bbox
+
+        self.node.call_activate_tracking_server(request=request)
+
+        self.node.activate_tracking_success = True
+        self.node.activate_tracking_message = "Activated with selected parameters"
+
+        return self.node.activate_tracking_success, self.node.activate_tracking_message
 
     def track_person(self, person=DetectedPerson(), body_part="Head", wait_for_end_of=True):
 
@@ -2425,8 +2460,8 @@ class RobotStdFunctions():
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
         
         self.node.detected_people.persons = [] # clears detected_people after receiving them to make sure the objects from previous frames are not considered again
-        self.activate_yolo_pose(activate=True) 
-        self.activate_yolo_objects(activate_objects=True) 
+        # self.activate_yolo_pose(activate=True) 
+        # self.activate_yolo_objects(activate_objects=True) 
         
         start_time = time.time()
         tracking_condition = True
@@ -2482,6 +2517,19 @@ class RobotStdFunctions():
         ### TURN OFF CONTINUOUS TRACKING
         request.status = False
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
+
+
+    def set_follow_person(self):
+
+        points = ListOfPoints()
+        points.coords.append(Point(x=480.0, y=640.0, z=1.0))
+
+
+        self.activate_tracking(activate=True, points=points)
+        time.sleep(5.0)
+        self.activate_tracking(activate=False)
+
+
 
     # Missing Functions:
     # 

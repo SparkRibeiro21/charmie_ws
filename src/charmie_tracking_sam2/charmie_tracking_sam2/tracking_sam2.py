@@ -25,7 +25,9 @@ class TrackingNode(Node):
 
         # Tracking Variables Initialisation
         self.tracking_flag = False
-        self.tracking_received_points = ListOfPoints()
+        self.calibration_mode = False # Calibrations starts as true so it is executed right at the beggining
+        self.tracking_received_points = []
+        self.tracking_received_labels = []
         self.tracking_received_bbox = BoundingBox()
 
         self.br = CvBridge()
@@ -70,10 +72,22 @@ class TrackingNode(Node):
                                                                     +str(request.points)+", "
                                                                     +str(request.bounding_box)+")"))
         
-        self.tracking_flag = request.activate
-        self.tracking_received_points = request.points
+        
+        for point in request.points.coords:
+            self.tracking_received_points.append((int(point.x), int(point.y)))
+            self.tracking_received_labels.append(int(point.z))
+        # self.tracking_received_points = request.points
+        
         self.tracking_received_bbox = request.bounding_box
 
+        self.calibration_mode = True
+        self.tracking_flag = request.activate
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Activated with selected parameters"
+        return response
+    
     # request point cloud information from point cloud node
     def call_point_cloud_mask_server(self, req, camera):
         request = GetPointCloudMask.Request()
@@ -136,7 +150,7 @@ class TrackingMain():
         self.initial_obj_id = 1  # Object ID for tracking
 
         # self.tracking_flag = True  # Flag to enable tracking
-        self.calibration_mode = False # Calibrations starts as true so it is executed right at the beggining
+        # self.calibration_mode = False # Calibrations starts as true so it is executed right at the beggining
         self.first_calibration_done = False
 
         self.selected_points = []
@@ -155,8 +169,8 @@ class TrackingMain():
         self.new_frame_time = time.time() # used to record the time at which we processed current frame
         
 
+    """
     def mouse_callback(self, event, x, y, flags, param):
-        """Handle mouse events for selecting points and labels."""
         
         if self.points_events:
             if event == cv2.EVENT_MBUTTONDOWN:
@@ -197,6 +211,7 @@ class TrackingMain():
             elif event == cv2.EVENT_LBUTTONUP:  # Mouse button released
                 self.drawing = False
                 self.selected_bbox = [(self.ix, self.iy), (self.x, self.y)]  # Store rectangle coordinates
+    """
 
     def polygon_centroid(self, polygon_points):
         # Ensure the points are in NumPy array format
@@ -263,12 +278,13 @@ class TrackingMain():
         with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
 
             cv2.namedWindow("Segmented Objects TR")
-            cv2.setMouseCallback("Segmented Objects TR", self.mouse_callback)
+            # cv2.setMouseCallback("Segmented Objects TR", self.mouse_callback)
 
             while True:
 
                 ret, frame = self.cap.read()
                 height, width = frame.shape[:2]  # Get frame dimensions
+                # print(height, width)
                 main_with_mask = frame.copy()
                 
                 if not ret:
@@ -276,8 +292,11 @@ class TrackingMain():
 
                 if self.node.tracking_flag:
 
-                    if self.calibration_mode:
+                    if self.node.calibration_mode:
+
+                        # self.node.tracking_received_points
                         
+                        """
                         if self.points_events:
                             for i, point in enumerate(self.selected_points):
                                 color = (0, 255, 0)  if self.point_labels[i] == 1 else (0, 0, 255)
@@ -290,48 +309,51 @@ class TrackingMain():
                                 cv2.rectangle(main_with_mask, (self.ix, self.iy), (self.x, self.y), (255, 0, 0), 2)
 
                         if self.done_selecting:
+                        """    
+                        self.predictor.load_first_frame(frame)
+
+                        # multiple_points = []
+                        # bbox = []
+
+                        # if self.points_events and not self.bounding_box_events:
+                        # if self.selected_points:
                             
-                            self.predictor.load_first_frame(frame)
+                        print("just points")
+                        # multiple_points = [(x , y) for x, y in self.selected_points]
+                        multiple_points = [(x , y) for x, y in self.node.tracking_received_points]
+                        # Use points and object ID as prompts to multiple points:
+                        _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
+                            frame_idx=0,  # First frame
+                            obj_id=self.initial_obj_id,
+                            points=multiple_points,
+                            labels=self.node.tracking_received_labels
+                        )
+                        
+                        """
+                        # if self.bounding_box_events and not self.points_events:
+                        elif self.selected_bbox:
 
-                            multiple_points = []
-                            bbox = []
+                            print("just bbox")
+                            # multiple_bboxes = [[r1[0], r1[1], r2[0], r2[1]] for r1, r2 in self.selected_bboxes]
+                            bbox = [self.selected_bbox[0][0], self.selected_bbox[0][1], self.selected_bbox[1][0], self.selected_bbox[1][1]]
+                            # Use bounding box and object ID as prompts
+                            _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
+                                frame_idx=0,  # First frame
+                                obj_id=self.initial_obj_id,
+                                bbox=bbox
+                            )
+                        """
 
-                            # if self.points_events and not self.bounding_box_events:
-                            if self.selected_points:
-                                
-                                print("just points")
-                                multiple_points = [(x , y) for x, y in self.selected_points]
-                                # Use points and object ID as prompts to multiple points:
-                                _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
-                                    frame_idx=0,  # First frame
-                                    obj_id=self.initial_obj_id,
-                                    points=multiple_points,
-                                    labels=self.point_labels
-                                )
-                                
-                            # if self.bounding_box_events and not self.points_events:
-                            elif self.selected_bbox:
+                        self.selected_bbox.clear()                              
+                        self.selected_points.clear()
+                        self.point_labels.clear()
 
-                                print("just bbox")
-                                # multiple_bboxes = [[r1[0], r1[1], r2[0], r2[1]] for r1, r2 in self.selected_bboxes]
-                                bbox = [self.selected_bbox[0][0], self.selected_bbox[0][1], self.selected_bbox[1][0], self.selected_bbox[1][1]]
-                                # Use bounding box and object ID as prompts
-                                _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
-                                    frame_idx=0,  # First frame
-                                    obj_id=self.initial_obj_id,
-                                    bbox=bbox
-                                )
-
-                            self.selected_bbox.clear()                              
-                            self.selected_points.clear()
-                            self.point_labels.clear()
-
-                            self.calibration_mode = False
-                            self.points_events = False
-                            self.bounding_box_events = False
-                            self.done_selecting = False
-                            self.first_calibration_done = True
-                            print("Calibration done")
+                        self.node.calibration_mode = False
+                        # self.points_events = False
+                        # self.bounding_box_events = False
+                        # self.done_selecting = False
+                        self.first_calibration_done = True
+                        print("Calibration done")
 
 
                     else: # Standard work mode (tracking)  
@@ -420,7 +442,9 @@ class TrackingMain():
                 cv2.imshow("Segmented Objects TR", main_with_mask)
                 # cv2.imshow("Frame with Mask", cv2.bitwise_and(frame, frame, ))
         
+
                 key = cv2.waitKey(1)
+                """
                 if key == ord('q'):
                     break
                 elif key == ord(' '):
@@ -432,9 +456,10 @@ class TrackingMain():
                 elif key == ord('c'):
                     if self.first_calibration_done:
                         self.predictor.reset_state()
-                    self.calibration_mode = True
+                    self.node.calibration_mode = True
                     self.bounding_box_events = True
                     self.points_events = True
+                """
 
         self.cap.release()
         cv2.destroyAllWindows()

@@ -20,15 +20,15 @@ ros2_modules = {
     "charmie_localisation":     False,
     "charmie_low_level":        False,
     "charmie_navigation":       False,
-    "charmie_neck":             True,
+    "charmie_neck":             False,
     "charmie_obstacles":        False,
     "charmie_odometry":         False,
     "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
-    "charmie_tracking":        False,
-    "charmie_yolo_objects":     True,
-    "charmie_yolo_pose":        True,
+    "charmie_speakers":         False,
+    "charmie_tracking":         True,
+    "charmie_yolo_objects":     False,
+    "charmie_yolo_pose":        False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -133,7 +133,8 @@ class TaskMain():
                 
                 ### CONTINUOUS TRACKING EXAMPLE ###
                 
-                self.robot.set_continuous_tracking_with_coordinates()
+                # self.robot.set_continuous_tracking_with_coordinates()
+                self.robot.set_follow_person()
 
                 # next state
                 self.state = Final_State
