@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+		"debug_tracking_sam2_webcam = charmie_tracking_sam2.debug_tracking_sam2_webcam:main",
 		"tracking_sam2 = charmie_tracking_sam2.tracking_sam2:main"
         ],
     },
