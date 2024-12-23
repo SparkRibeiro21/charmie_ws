@@ -3,14 +3,16 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Point
+from sensor_msgs.msg import Image
 from charmie_interfaces.msg import TrackingMask, ListOfPoints, BoundingBox
-from charmie_interfaces.srv import ActivateTracking
+from charmie_interfaces.srv import ActivateTracking, GetPointCloudMask
 
 import threading
 import cv2
 import torch
 from sam2.build_sam import build_sam2_camera_predictor
 from pathlib import Path
+from cv_bridge import CvBridge
 import numpy as np
 import time
 
@@ -26,14 +28,33 @@ class TrackingNode(Node):
         self.tracking_received_points = ListOfPoints()
         self.tracking_received_bbox = BoundingBox()
 
-        # TOPICS:
+        self.br = CvBridge()
+        self.head_rgb = Image()
+        self.new_head_rgb = False
+
+        # robot localization
+        self.robot_x = 0.0
+        self.robot_y = 0.0
+        self.robot_t = 0.0
+
+        ### Topics ###
+        # Intel Realsense
+        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         # Publica a máscara do objecto a ser seguido
         self.tracking_mask_publisher = self.create_publisher(TrackingMask, 'tracking_mask', 10)
+        # Robot Localisation
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         # SERVICES:
-        # Ativa e desativa o tracking
-        self.activate_yolo_objects_service = self.create_service(ActivateTracking, "activate_tracking", self.callback_activate_tracking)
+         # Point Cloud Mask Service
+        self.point_cloud_mask_client = self.create_client(GetPointCloudMask, "get_point_cloud_mask")
 
+        while not self.point_cloud_mask_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Point Cloud Mask...")
+
+        # Acitvate and Deactivate Tracking Service
+        self.activate_yolo_objects_service = self.create_service(ActivateTracking, "activate_tracking", self.callback_activate_tracking)
+       
 
     def callback_activate_tracking(self, request, response):
         
@@ -52,6 +73,36 @@ class TrackingNode(Node):
         self.tracking_flag = request.activate
         self.tracking_received_points = request.points
         self.tracking_received_bbox = request.bounding_box
+
+    # request point cloud information from point cloud node
+    def call_point_cloud_mask_server(self, req, camera):
+        request = GetPointCloudMask.Request()
+        request.data = req
+        request.camera = camera
+    
+        future = self.point_cloud_mask_client.call_async(request)
+        future.add_done_callback(self.callback_call_point_cloud_mask)
+
+    def callback_call_point_cloud_mask(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            self.point_cloud_mask_response = future.result()
+            self.waiting_for_pcloud = False
+            # print("Received Back")
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    def get_color_image_head_callback(self, img: Image):
+        self.head_rgb = img
+        self.new_head_rgb = True
+ 
+    def robot_localisation_callback(self, pose: Pose2D):
+        self.robot_x = pose.x
+        self.robot_y = pose.y
+        self.robot_t = pose.theta
 
 
 def main(args=None):
