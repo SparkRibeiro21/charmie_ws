@@ -3,3 +3,4 @@
 geometry_msgs/Point centroid   # pixel centroid coordinates
 ListOfMaskDetections mask      # mask of the tracking selection
 ListOfMaskDetections mask_norm # normalized mask of the tracking selection
+sensor_msgs/Image binary_mask  # binary mask of the tracking selection

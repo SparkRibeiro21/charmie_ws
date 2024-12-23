@@ -174,6 +174,7 @@ class TrackingMain():
         self.prev_frame_time = time.time() # used to record the time when we processed last frame
         self.new_frame_time = time.time() # used to record the time at which we processed current frame
         
+        
 
     """
     def mouse_callback(self, event, x, y, flags, param):
@@ -438,7 +439,7 @@ class TrackingMain():
 
                                     if centroid is not None:
                                         cv2.circle(teste, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
-                                        cv2.circle(white_mask, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
+                                        # cv2.circle(white_mask, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
                                 
                                     ###
                                     list_masks = ListOfMaskDetections()
@@ -459,7 +460,8 @@ class TrackingMain():
                                     msg = TrackingMask()
                                     msg.centroid.x = float(centroid[0])
                                     msg.centroid.y = float(centroid[1])
-                                    msg.mask = list_masks
+                                    msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
+                                    # msg.mask = list_masks
                                     self.node.tracking_mask_publisher.publish(msg)
 
                                     

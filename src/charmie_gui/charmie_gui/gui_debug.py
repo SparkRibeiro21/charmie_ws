@@ -6,7 +6,8 @@ from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
-from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject
+from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject, \
+    TrackingMask
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, \
     GetLLMDemo, ActivateTracking
@@ -83,6 +84,7 @@ class DebugVisualNode(Node):
         self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
 
         # Tracking (SAM2)
+        self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         
         ### Services (Clients) ###
 		# Arm (Ufactory)
@@ -187,14 +189,17 @@ class DebugVisualNode(Node):
         self.head_yp_time = 0.0
         self.head_yo_time = 0.0
         self.hand_yo_time = 0.0
+        self.track_time = 0.0
 
         self.last_head_yp_time = 0.0
         self.last_head_yo_time = 0.0
         self.last_hand_yo_time = 0.0
+        self.last_track_time = 0.0
 
         self.head_yp_fps = 0.0
         self.head_yo_fps = 0.0
         self.hand_yo_fps = 0.0
+        self.track_fps = 0.0
 
         self.all_pos_x_val = []
         self.all_pos_y_val = []
@@ -207,6 +212,9 @@ class DebugVisualNode(Node):
         self.new_search_for_object = False
         self.navigation = TarNavSDNL()
         self.is_navigating = False
+        self.tracking_mask = TrackingMask()
+        self.new_tracking_mask_msg = False
+        self.is_tracking_comm = False
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
@@ -242,6 +250,21 @@ class DebugVisualNode(Node):
             self.is_yolo_obj_hand_comm = True
         else:
             self.is_yolo_obj_hand_comm = False
+
+        if self.new_tracking_mask_msg:
+            self.new_tracking_mask_msg = False
+            self.is_tracking_comm = True
+        else:
+            self.is_tracking_comm = False
+
+
+
+
+
+
+
+
+
 
     def battery_timer(self):
         
@@ -398,6 +421,14 @@ class DebugVisualNode(Node):
         self.hand_yo_time = time.time()
         self.hand_yo_fps = round(1/(self.hand_yo_time-self.last_hand_yo_time), 1)
 
+    def tracking_mask_callback(self, mask: TrackingMask):
+        self.tracking_mask = mask
+        self.new_tracking_mask_msg = True
+    
+        self.last_track_time = self.track_time
+        self.track_time = time.time()
+        self.track_fps = round(1/(self.track_time-self.last_track_time), 1)
+
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
 
@@ -505,7 +536,6 @@ class DebugVisualNode(Node):
             self.waited_for_end_of_get_vccs = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
-
     
 class CheckNodesMain():
 
@@ -912,6 +942,9 @@ class DebugVisualMain():
         self.curr_detected_objects_hand = ListOfDetectedObject()
         self.last_detected_objects_hand = ListOfDetectedObject()
 
+        self.curr_tracking = TrackingMask()
+        self.last_tracking = TrackingMask()
+
         self.show_navigation_locations = False
 
         # robot info
@@ -1139,11 +1172,12 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 8*self.cams_initial_height, self.BLACK, 85)
+                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 10*self.cams_initial_height, self.BLACK, 85)
                 self.draw_text("RGB: "+str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
                 self.draw_text("Dep: "+str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
                 self.draw_text("Y_O: "+str(self.node.head_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, 5*self.cams_initial_height)
                 self.draw_text("Y_P: "+str(self.node.head_yp_fps), self.text_font, self.WHITE, self.cams_initial_width, 7*self.cams_initial_height)
+                self.draw_text("Track: "+str(self.node.track_fps), self.text_font, self.WHITE, self.cams_initial_width, 9*self.cams_initial_height)
 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
@@ -1196,17 +1230,17 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 8*self.cams_initial_height, self.BLACK, 85)
+                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 10*self.cams_initial_height, self.BLACK, 85)
                 self.draw_text("RGB: "+str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
                 self.draw_text("Dep: "+str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
                 self.draw_text("Y_O: "+str(self.node.head_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, 5*self.cams_initial_height)
                 self.draw_text("Y_P: "+str(self.node.head_yp_fps), self.text_font, self.WHITE, self.cams_initial_width, 7*self.cams_initial_height)
+                self.draw_text("Track: "+str(self.node.track_fps), self.text_font, self.WHITE, self.cams_initial_width, 9*self.cams_initial_height)
 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
                 self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cams_initial_height+(self.cam_height_//2))
-
 
 
         if not self.toggle_hand_rgb_depth.getValue():
@@ -1610,6 +1644,89 @@ class DebugVisualMain():
 
         return bb_color
 
+    def draw_tracking(self):
+
+        self.curr_tracking = self.node.tracking_mask
+        if self.toggle_pause_cams.getValue():
+            used_tracking = self.last_tracking
+        else:
+            used_tracking = self.curr_tracking 
+        self.last_tracking = used_tracking
+
+        window_cam_height = self.cams_initial_height
+        
+        if self.node.is_tracking_comm:
+           
+            """
+            i = 0
+            for used_point in used_tracking.mask.masks:
+                
+                i=i+1
+                print(i)
+            
+                # print(used_point)
+            
+                temp_mask = []
+                for p in used_point.point: # converts received mask into local coordinates and numpy array
+                    p_list = []
+                    p_list.append(int(self.cams_initial_width+(p.x/2)*self.camera_resize_ratio))
+                    p_list.append(int(window_cam_height+(p.y/2)*self.camera_resize_ratio))
+                    temp_mask.append(p_list)
+                
+                p_list = []
+                p_list.append(int(self.cams_initial_width+(used_point.point[0].x/2)*self.camera_resize_ratio))
+                p_list.append(int(window_cam_height+(used_point.point[0].y/2)*self.camera_resize_ratio))
+                temp_mask.append(p_list)
+
+                np_mask = np.array(temp_mask)
+
+                temp_mask.clear()
+
+                if i == 1:
+                    bb_color = self.RED
+                elif i == 2:
+                    bb_color = self.GREEN
+                elif i == 3:
+                    bb_color = self.BLUE
+                elif i == 4:
+                    bb_color = self.YELLOW
+                else:
+                    bb_color = self.BLACK
+
+                # bb_color = self.object_class_to_bb_color(o.object_class)
+                pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
+                # self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
+                break
+
+
+            print(len(used_tracking.mask.masks))
+
+            """            
+            binary_mask = self.br.imgmsg_to_cv2(used_tracking.binary_mask, desired_encoding='mono8')
+            binary_mask = cv2.resize(binary_mask, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
+            # Convert the image to RGB (OpenCV loads as BGR by default)
+
+            binary_mask = np.transpose(binary_mask)
+
+            mask_surface = pygame.surfarray.make_surface(np.stack([binary_mask] * 3, axis=-1))  # Convert grayscale to RGB
+            mask_surface.set_colorkey((0, 0, 0))  # Make black pixels transparent
+
+            # Apply a color to white pixels
+            mask_color = (0, 255, 0, 128)  # Green
+            mask_surface.fill(mask_color, special_flags=pygame.BLEND_RGB_MULT)
+            
+            self.WIN.blit(mask_surface, (self.cams_initial_width, self.cams_initial_height))
+            
+            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.WHITE, 0.0, 9)
+            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.BLACK, 0.0, 5)
+            
+            # cv2.imshow("tracking", binary_mask)
+            # cv2.waitKey(1)
+            # opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+            # Convert the image to a banded surface (Pygame compatible format)
+            # height, width, channels = opencv_image.shape
+            # print(height, width)
+        
     def check_record_data(self):
         
         if self.toggle_record.getValue() and not self.last_toggle_record:
@@ -1981,6 +2098,7 @@ class DebugVisualMain():
             self.draw_activates()
             self.draw_pose_detections()
             self.draw_object_detections()
+            self.draw_tracking()
             
             pygame_widgets.update(events)
             pygame.display.update()
