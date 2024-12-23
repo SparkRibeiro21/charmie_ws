@@ -128,6 +128,7 @@ class DebugVisualNode(Node):
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
         self.create_timer(1.0, self.check_yolos_timer)
+        self.create_timer(0.4, self.check_tracking_timer)
         self.is_yolo_pose_comm = False
         self.is_yolo_obj_head_comm = False
         self.is_yolo_obj_hand_comm = False
@@ -251,20 +252,13 @@ class DebugVisualNode(Node):
         else:
             self.is_yolo_obj_hand_comm = False
 
+    def check_tracking_timer(self):
+
         if self.new_tracking_mask_msg:
             self.new_tracking_mask_msg = False
             self.is_tracking_comm = True
         else:
             self.is_tracking_comm = False
-
-
-
-
-
-
-
-
-
 
     def battery_timer(self):
         

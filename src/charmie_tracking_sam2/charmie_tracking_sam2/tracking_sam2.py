@@ -150,76 +150,13 @@ class TrackingMain():
         model_cfg = "configs/sam2.1/sam2.1_hiera_s.yaml"
         self.predictor = build_sam2_camera_predictor(model_cfg, sam2_checkpoint)
 
-        # Load video or camera
-        self.cap = cv2.VideoCapture(0)  # Replace 0 with video file path if needed
-
         self.initial_obj_id = 1  # Object ID for tracking
-
-        # self.tracking_flag = True  # Flag to enable tracking
-        # self.calibration_mode = False # Calibrations starts as true so it is executed right at the beggining
-        self.first_calibration_done = False
-
-        # self.selected_points = []
-        # self.point_labels = []
-        # self.done_selecting = False
-
-        # self.bounding_box_events = False
-        # self.points_events = False
-
-        # self.drawing = False
-        # self.ix, self.iy = -1, -1  # Initial coordinates
-        # self.x, self.y = -1, -1  # Mouse coordinates
-        # self.selected_bbox = []                  
         
+        self.DEBUG_DRAW = False
+
         self.prev_frame_time = time.time() # used to record the time when we processed last frame
         self.new_frame_time = time.time() # used to record the time at which we processed current frame
         
-        
-
-    """
-    def mouse_callback(self, event, x, y, flags, param):
-        
-        if self.points_events:
-            if event == cv2.EVENT_MBUTTONDOWN:
-                # Append selected point and label
-                self.selected_points.append((x, y))
-                print(f"Selected point: {(x, y)}")
-                label = "1"                
-
-                self.point_labels.append(int(label))
-                # Print the current state of points and labels
-                print(f"Selected points ({len(self.selected_points)}): {self.selected_points}")
-                print(f"Point Labels ({len(self.point_labels)}): {self.point_labels}")
-
-            if event == cv2.EVENT_RBUTTONDOWN: #  or event == cv2.EVENT_MBUTTONDOWN:
-                # Append selected point and label
-                self.selected_points.append((x, y))
-                print(f"Selected point: {(x, y)}")
-                label = "0"
-                
-                self.point_labels.append(int(label))
-                # Print the current state of points and labels
-                print(f"Selected points ({len(self.selected_points)}): {self.selected_points}")
-                print(f"Point Labels ({len(self.point_labels)}): {self.point_labels}")
-
-        if self.bounding_box_events:
-            
-            if event == cv2.EVENT_LBUTTONDOWN:  # Mouse button pressed
-                self.drawing = True
-                self.ix, self.iy = x, y
-                self.x = x
-                self.y = y
-
-            elif event == cv2.EVENT_MOUSEMOVE:  # Mouse movement
-                if self.drawing:
-                    self.x = x
-                    self.y = y
-
-            elif event == cv2.EVENT_LBUTTONUP:  # Mouse button released
-                self.drawing = False
-                self.selected_bbox = [(self.ix, self.iy), (self.x, self.y)]  # Store rectangle coordinates
-    """
-
     def polygon_centroid(self, polygon_points):
         # Ensure the points are in NumPy array format
         points = np.array(polygon_points, dtype=np.float32)
@@ -284,9 +221,9 @@ class TrackingMain():
 
         with torch.inference_mode(), torch.autocast("cuda", dtype=torch.bfloat16):
 
-            cv2.namedWindow("Segmented Objects TR")
-            # cv2.setMouseCallback("Segmented Objects TR", self.mouse_callback)
-
+            if self.DEBUG_DRAW:
+                cv2.namedWindow("Segmented Objects TR")
+    
             while True:
 
                 if self.node.new_head_rgb:
@@ -294,47 +231,13 @@ class TrackingMain():
                     frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
                     height, width = frame.shape[:2]
                     main_with_mask = frame.copy()
-                    
-                    """
-                    ret, frame = self.cap.read()
-                    height, width = frame.shape[:2]  # Get frame dimensions
-                    # print(height, width)
-                    main_with_mask = frame.copy()
-                    """
-                    # if not ret:
-                    #     break
-
+    
                     if self.node.tracking_flag:
 
                         if self.node.calibration_mode:
 
-                            # self.node.tracking_received_points
-                            
-                            """
-                            if self.points_events:
-                                for i, point in enumerate(self.selected_points):
-                                    color = (0, 255, 0)  if self.point_labels[i] == 1 else (0, 0, 255)
-                                    cv2.circle(main_with_mask, point, 5, color, -1)
-
-                            if self.bounding_box_events:
-                                if self.selected_bbox:
-                                    cv2.rectangle(main_with_mask, self.selected_bbox[0], self.selected_bbox[1], (0, 255, 0), 2)
-                                if self.drawing:
-                                    cv2.rectangle(main_with_mask, (self.ix, self.iy), (self.x, self.y), (255, 0, 0), 2)
-
-                            if self.done_selecting:
-                            """    
                             self.predictor.load_first_frame(frame)
 
-                            # multiple_points = []
-                            # bbox = []
-
-                            # if self.points_events and not self.bounding_box_events:
-                            # if self.selected_points:
-                                
-                            print("just points")
-                            # multiple_points = [(x , y) for x, y in self.selected_points]
-                            # multiple_points = [(x , y) for x, y in self.node.tracking_received_points]
                             # Use points and object ID as prompts to multiple points:
                             _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
                                 frame_idx=0,  # First frame
@@ -343,50 +246,24 @@ class TrackingMain():
                                 labels=self.node.tracking_received_labels
                             )
                             
-                            """
-                            # if self.bounding_box_events and not self.points_events:
-                            elif self.selected_bbox:
-
-                                print("just bbox")
-                                # multiple_bboxes = [[r1[0], r1[1], r2[0], r2[1]] for r1, r2 in self.selected_bboxes]
-                                bbox = [self.selected_bbox[0][0], self.selected_bbox[0][1], self.selected_bbox[1][0], self.selected_bbox[1][1]]
-                                # Use bounding box and object ID as prompts
-                                _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
-                                    frame_idx=0,  # First frame
-                                    obj_id=self.initial_obj_id,
-                                    bbox=bbox
-                                )
-                            """
-
-                            # self.selected_bbox.clear()                              
-                            # self.selected_points.clear()
-                            # self.point_labels.clear()
-
                             self.node.calibration_mode = False
-                            # self.points_events = False
-                            # self.bounding_box_events = False
-                            # self.done_selecting = False
-                            self.first_calibration_done = True
-                            print("Calibration done")
-
-
+                  
                         else: # Standard work mode (tracking)  
                             
-                            if self.first_calibration_done:
-                                
-                                # Track object in subsequent frames
-                                out_obj_ids, out_mask_logits = self.predictor.track(frame)
+                            # Track object in subsequent frames
+                            out_obj_ids, out_mask_logits = self.predictor.track(frame)
 
-                                # Convert logits to binary mask
-                                mask = (out_mask_logits[0] > 0).cpu().numpy().astype("uint8") * 255  # Binary mask, 2D
-                            
-                                # Ensure the mask is 2D before applying colormap
-                                if mask.ndim == 3:
-                                    mask = mask.squeeze()  # Remove extra dimensions if present
+                            # Convert logits to binary mask
+                            mask = (out_mask_logits[0] > 0).cpu().numpy().astype("uint8") * 255  # Binary mask, 2D
+                        
+                            # Ensure the mask is 2D before applying colormap
+                            if mask.ndim == 3:
+                                mask = mask.squeeze()  # Remove extra dimensions if present
 
-                                # Create a white mask where the object is segmented
-                                white_mask = (mask > 0).astype("uint8") * 255  # Binary mask, 2D with white pixels
-                            
+                            # Create a white mask where the object is segmented
+                            white_mask = (mask > 0).astype("uint8") * 255  # Binary mask, 2D with white pixels
+
+                            if self.DEBUG_DRAW:
                                 # Apply the white mask to the frame
                                 frame_with_mask = cv2.bitwise_and(frame, frame, mask=white_mask)
                                 # Display the result
@@ -408,66 +285,62 @@ class TrackingMain():
                                 # cv2.imshow("Frame with Green Mask", overlay_green)
                                 main_with_mask = overlay_green
                                 
-                                contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-                                polygons = []
+                            contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+                            polygons = []
+                            for obj in contours:
+                                coords = []
+                                    
+                                # for point in obj:
+                                #     coords.append(int(point[0][0]))
+                                #     coords.append(int(point[0][1]))
+                                for point in obj:
+                                    coords.append([int(point[0][0]), int(point[0][1])])  # Store as [x, y]
+                                polygons.append(coords)
+                                # polygons.append(coords)
+                            if polygons:
+                                centroid = self.combined_polygon_centroid(polygons)
+                                msg = TrackingMask()
+                                msg.centroid.x = float(centroid[0])
+                                msg.centroid.y = float(centroid[1])
+                                """
+                                list_masks = ListOfMaskDetections()
+                                new_mask = MaskDetection()
+                                
+                                for p in polygons:
 
-                                for obj in contours:
-                                    coords = []
-                                        
-                                    # for point in obj:
-                                    #     coords.append(int(point[0][0]))
-                                    #     coords.append(int(point[0][1]))
-                                    for point in obj:
-                                        coords.append([int(point[0][0]), int(point[0][1])])  # Store as [x, y]
-                                    polygons.append(coords)
-                                    # polygons.append(coords)
+                                    for c in p:
+                                            
+                                        points_mask = Point()
+                                        points_mask.x = float(c[0])
+                                        points_mask.y = float(c[1])
+                                        points_mask.z = 0.0
+                                        new_mask.point.append(points_mask)
 
+                                    list_masks.masks.append(new_mask)
+                                """
+                                msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
+                                # msg.mask = list_masks
+                                self.node.tracking_mask_publisher.publish(msg)
+
+                            if self.DEBUG_DRAW:
+                            
                                 teste = frame.copy()
 
                                 if polygons:
                                     for p in polygons:
-                                        # cv2.polylines(teste, [np.array(p).reshape((-1, 1, 2))], True, (0, 255, 0), 2)
-                                        # cv2.fillPoly(teste, [np.array(p).reshape((-1, 1, 2))], (0, 100, 0))
                                         cv2.polylines(teste, [np.array(p, dtype=np.int32)], True, (0, 255, 0), 2)
                                         cv2.fillPoly(teste, [np.array(p, dtype=np.int32)], (0, 100, 0))
                                                                 
                                     # print(polygons[0])
                                     # centroid = self.polygon_centroid(polygons[0])
-                                    centroid = self.combined_polygon_centroid(polygons)
-
-                                    print(centroid)
+                                    # centroid = self.combined_polygon_centroid(polygons)
+                                    # print(centroid)
 
                                     if centroid is not None:
                                         cv2.circle(teste, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
                                         # cv2.circle(white_mask, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
-                                
-                                    ###
-                                    list_masks = ListOfMaskDetections()
-                                    new_mask = MaskDetection()
-                                    for p in polygons:
-
-                                        for c in p:
-                                                
-                                            points_mask = Point()
-                                            points_mask.x = float(c[0])
-                                            points_mask.y = float(c[1])
-                                            points_mask.z = 0.0
-                                            new_mask.point.append(points_mask)
-
-                                        list_masks.masks.append(new_mask)
-                                    ###
-
-                                    msg = TrackingMask()
-                                    msg.centroid.x = float(centroid[0])
-                                    msg.centroid.y = float(centroid[1])
-                                    msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
-                                    # msg.mask = list_masks
-                                    self.node.tracking_mask_publisher.publish(msg)
-
-                                    
                                 cv2.imshow("Frame with Mask BW", white_mask)
                                 cv2.imshow("Test Polygon", teste)
-
 
                     # Display the result
                     # cv2.imshow("Segmented Object", overlay)
@@ -475,64 +348,20 @@ class TrackingMain():
                     self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
                     self.prev_frame_time = self.new_frame_time
                     self.fps = str(self.fps)
-
-            
-                    for i, point in enumerate(self.node.tracking_received_points):
-                        color = (0, 255, 0)  if self.node.tracking_received_labels[i] == 1 else (0, 0, 255)
-                        print(point, color)
-                        cv2.circle(main_with_mask, point, 5, color, -1)
-            
-                    # cv2.circle(main_with_mask, (480, 640), 5, color, -1)
-            
-                    #print(self.fps)
-                    cv2.putText(main_with_mask, 'fps:' + self.fps, (0, height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                    cv2.imshow("Segmented Objects TR", main_with_mask)
-                    # cv2.imshow("Frame with Mask", cv2.bitwise_and(frame, frame, ))
-            
-
-                    cv2.waitKey(1)
-
-                """
-                # if there is a segmentation mask, it adds to DetectedObject 
-                new_mask = MaskDetection()
-                new_mask_norm = MaskDetection()
+                    print(self.fps)
+                                
+                    if self.DEBUG_DRAW:
+                               
+                        for i, point in enumerate(self.node.tracking_received_points):
+                            color = (0, 255, 0)  if self.node.tracking_received_labels[i] == 1 else (0, 0, 255)
+                            print(point, color)
+                            cv2.circle(main_with_mask, point, 5, color, -1)
                 
-                if mask is not None:
-                    for p, p_n in zip(mask.xy[0], mask.xyn[0]):
+                        print(self.fps)
+                        cv2.putText(main_with_mask, 'fps:' + self.fps, (0, height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        cv2.imshow("Segmented Objects TR", main_with_mask)
+                        # cv2.imshow("Frame with Mask", cv2.bitwise_and(frame, frame, ))
+                        cv2.waitKey(1)
 
-                        points_mask = Point()
-                        points_mask.x = float(p[0])
-                        points_mask.y = float(p[1])
-                        points_mask.z = 0.0
-                        new_mask.point.append(points_mask)
-
-                        points_mask_norm = Point()
-                        points_mask_norm.x = float(p_n[0])
-                        points_mask_norm.y = float(p_n[1])
-                        points_mask_norm.z = 0.0
-                        new_mask_norm.point.append(points_mask_norm)
-
-                # print(new_mask)
-                new_object.mask = new_mask
-                new_object.mask_norm = new_mask_norm
-                """
-
-                """
-                if key == ord('q'):
-                    break
-                elif key == ord(' '):
-                    self.node.tracking_flag = not self.node.tracking_flag
-
-                elif key == ord('s'): # Finalize the selection
-                    self.done_selecting = True
-
-                elif key == ord('c'):
-                    if self.first_calibration_done:
-                        self.predictor.reset_state()
-                    self.node.calibration_mode = True
-                    self.bounding_box_events = True
-                    self.points_events = True
-                """
-
-        self.cap.release()
-        cv2.destroyAllWindows()
+        if self.DEBUG_DRAW:
+            cv2.destroyAllWindows()
