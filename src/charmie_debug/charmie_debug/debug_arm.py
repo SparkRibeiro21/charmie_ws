@@ -29,6 +29,7 @@ ros2_modules = {
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
+    "chaarmie_tracking":        False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }

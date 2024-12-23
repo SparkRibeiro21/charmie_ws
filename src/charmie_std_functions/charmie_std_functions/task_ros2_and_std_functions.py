@@ -5,8 +5,11 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller, ListOfStrings
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
+    Obstacles, ArmController, PS4Controller, ListOfStrings, TrackingMask
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
+    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, \
+    SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking
 
 import cv2 
 # import threading
@@ -138,6 +141,8 @@ class ROS2TaskNode(Node):
         self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
         self.llm_confirm_command_client = self.create_client(GetLLMConfirmCommand, "llm_confirm_command")
         self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
+        # Tracking (SAM2)
+        self.activate_tracking_client = self.create_client(ActivateTracking, "activate_tracking")
 
     
         self.send_node_used_to_gui()
@@ -159,6 +164,7 @@ class ROS2TaskNode(Node):
             "charmie_point_cloud":      True,
         "charmie_ps4_controller":   False,
             "charmie_speakers":         True,
+            "chaarmie_tracking":        False,
             "charmie_yolo_objects":     True,
             "charmie_yolo_pose":        False,
         """
