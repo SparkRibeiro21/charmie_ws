@@ -29,7 +29,7 @@ class TrackingNode(Node):
 
         self.tracking_received_points = []
         self.tracking_received_labels = []
-        self.tracking_received_bbox = BoundingBox()
+        self.tracking_received_bbox = []
 
         self.br = CvBridge()
         self.head_rgb = Image()
@@ -75,16 +75,19 @@ class TrackingNode(Node):
         
         self.tracking_received_points.clear()
         self.tracking_received_labels.clear()
+        self.tracking_received_bbox.clear()
 
         for point in request.points.coords:
             self.tracking_received_points.append((int(point.x), int(point.y)))
             self.tracking_received_labels.append(int(point.z))
 
 
+        if request.bounding_box.box_width > 0.0 and request.bounding_box.box_height > 0.0:
+            self.tracking_received_bbox = [request.bounding_box.box_top_left_x, request.bounding_box.box_top_left_y, \
+                                           request.bounding_box.box_top_left_x + request.bounding_box.box_width, \
+                                           request.bounding_box.box_top_left_y + request.bounding_box.box_height]
+                                
         print("===", self.tracking_received_points, self.tracking_received_labels)
-           
-
-        self.tracking_received_bbox = request.bounding_box
 
         self.calibration_mode = True
         self.tracking_flag = request.activate
@@ -238,15 +241,28 @@ class TrackingMain():
 
                             self.predictor.load_first_frame(frame)
 
-                            # Use points and object ID as prompts to multiple points:
-                            _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
-                                frame_idx=0,  # First frame
-                                obj_id=self.initial_obj_id,
-                                points=self.node.tracking_received_points,
-                                labels=self.node.tracking_received_labels
-                            )
+                            if self.node.tracking_received_points:
+                                # Use points and object ID as prompts to multiple points:
+                                _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
+                                    frame_idx=0,  # First frame
+                                    obj_id=self.initial_obj_id,
+                                    points=self.node.tracking_received_points,
+                                    labels=self.node.tracking_received_labels
+                                )
+                                self.node.calibration_mode = False
+
+                            elif self.node.tracking_received_bbox:
+                                # Use bounding box and object ID as prompts
+                                _, out_obj_ids, out_mask_logits = self.predictor.add_new_prompt(
+                                    frame_idx=0,  # First frame
+                                    obj_id=self.initial_obj_id,
+                                    bbox=self.node.tracking_received_bbox
+                                )
+                                self.node.calibration_mode = False
+
+                            else:
+                                self.node.tracking_flag = False
                             
-                            self.node.calibration_mode = False
                   
                         else: # Standard work mode (tracking)  
                             
@@ -299,28 +315,30 @@ class TrackingMain():
                                 # polygons.append(coords)
                             if polygons:
                                 centroid = self.combined_polygon_centroid(polygons)
-                                msg = TrackingMask()
-                                msg.centroid.x = float(centroid[0])
-                                msg.centroid.y = float(centroid[1])
-                                """
-                                list_masks = ListOfMaskDetections()
-                                new_mask = MaskDetection()
-                                
-                                for p in polygons:
+                                if centroid is not None:
+                                    
+                                    msg = TrackingMask()
+                                    msg.centroid.x = float(centroid[0])
+                                    msg.centroid.y = float(centroid[1])
+                                    """
+                                    list_masks = ListOfMaskDetections()
+                                    new_mask = MaskDetection()
+                                    
+                                    for p in polygons:
 
-                                    for c in p:
-                                            
-                                        points_mask = Point()
-                                        points_mask.x = float(c[0])
-                                        points_mask.y = float(c[1])
-                                        points_mask.z = 0.0
-                                        new_mask.point.append(points_mask)
+                                        for c in p:
+                                                
+                                            points_mask = Point()
+                                            points_mask.x = float(c[0])
+                                            points_mask.y = float(c[1])
+                                            points_mask.z = 0.0
+                                            new_mask.point.append(points_mask)
 
-                                    list_masks.masks.append(new_mask)
-                                """
-                                msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
-                                # msg.mask = list_masks
-                                self.node.tracking_mask_publisher.publish(msg)
+                                        list_masks.masks.append(new_mask)
+                                    """
+                                    msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
+                                    # msg.mask = list_masks
+                                    self.node.tracking_mask_publisher.publish(msg)
 
                             if self.DEBUG_DRAW:
                             
@@ -351,11 +369,15 @@ class TrackingMain():
                     print(self.fps)
                                 
                     if self.DEBUG_DRAW:
-                               
-                        for i, point in enumerate(self.node.tracking_received_points):
-                            color = (0, 255, 0)  if self.node.tracking_received_labels[i] == 1 else (0, 0, 255)
-                            print(point, color)
-                            cv2.circle(main_with_mask, point, 5, color, -1)
+
+                        if self.node.tracking_received_points:
+                            for i, point in enumerate(self.node.tracking_received_points):
+                                color = (0, 255, 0)  if self.node.tracking_received_labels[i] == 1 else (0, 0, 255)
+                                print(point, color)
+                                cv2.circle(main_with_mask, point, 5, color, -1)
+                        if self.node.tracking_received_bbox:
+                            cv2.rectangle(main_with_mask, (self.node.tracking_received_bbox[0], self.node.tracking_received_bbox[1]), (self.node.tracking_received_bbox[2], self.node.tracking_received_bbox[3]), (255, 0, 0), 2)
+
                 
                         print(self.fps)
                         cv2.putText(main_with_mask, 'fps:' + self.fps, (0, height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)

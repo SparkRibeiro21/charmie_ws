@@ -2523,12 +2523,18 @@ class RobotStdFunctions():
 
         points = ListOfPoints()
         # points.coords.append(Point(x=640.0//2, y=480.0//2, z=1.0))
-        points.coords.append(Point(x=320.0, y=150.0, z=1.0))
-        points.coords.append(Point(x=420.0, y=150.0, z=0.0))
-        points.coords.append(Point(x=220.0, y=150.0, z=0.0))
+        # points.coords.append(Point(x=320.0, y=150.0, z=1.0))
+        # points.coords.append(Point(x=420.0, y=150.0, z=0.0))
+        # points.coords.append(Point(x=220.0, y=150.0, z=0.0))
+
+        bb = BoundingBox()
+        bb.box_top_left_x = 200
+        bb.box_top_left_y = 100
+        bb.box_width = 640
+        bb.box_height = 480
 
 
-        self.activate_tracking(activate=True, points=points)
+        self.activate_tracking(activate=True, points=points, bbox=bb)
         # time.sleep(60.0)
         # self.activate_tracking(activate=False)
 
