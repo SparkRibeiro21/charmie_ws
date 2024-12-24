@@ -339,10 +339,17 @@ class TrackingMain():
                                     
                                     # msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
                                     msg.mask = list_masks
-                                    
+                                                                
+                                    object_abs_pos = Point()
+                                    object_abs_pos.x = 3.0
+                                    object_abs_pos.y = 2.0
+                                    object_abs_pos.z = 1.0
+                                    msg.position_absolute = object_abs_pos
                                     
                                     # when i add the method to get the 3D coordinates, i have to calculate the final 3D coordiantes
                                     # as a weighted average using the area of each mask as the weight
+
+                                    # resolver a cena de o tracking ficar sempre a mostrar no mapa
                                     """
                                     requested_objects = []
                                     for mask in masks:

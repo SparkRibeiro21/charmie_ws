@@ -1958,6 +1958,9 @@ class DebugVisualMain():
         if self.node.new_search_for_object:
             self.node.new_search_for_object = False    
 
+        ### TRACKING
+        pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(self.node.tracking_mask.position_absolute.x, self.node.tracking_mask.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
+
         ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
         
