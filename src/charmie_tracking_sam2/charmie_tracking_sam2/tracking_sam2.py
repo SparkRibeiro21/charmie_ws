@@ -320,12 +320,13 @@ class TrackingMain():
                                     msg = TrackingMask()
                                     msg.centroid.x = float(centroid[0])
                                     msg.centroid.y = float(centroid[1])
-                                    """
+                                    
                                     list_masks = ListOfMaskDetections()
-                                    new_mask = MaskDetection()
                                     
                                     for p in polygons:
 
+                                        new_mask = MaskDetection()
+                                        
                                         for c in p:
                                                 
                                             points_mask = Point()
@@ -335,9 +336,38 @@ class TrackingMain():
                                             new_mask.point.append(points_mask)
 
                                         list_masks.masks.append(new_mask)
+                                    
+                                    # msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
+                                    msg.mask = list_masks
+                                    
+                                    
+                                    # when i add the method to get the 3D coordinates, i have to calculate the final 3D coordiantes
+                                    # as a weighted average using the area of each mask as the weight
                                     """
-                                    msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
-                                    # msg.mask = list_masks
+                                    requested_objects = []
+                                    for mask in masks:
+                                        m = MaskDetection()
+                                        for p in mask.xy[0]:
+
+                                            points_mask = Point()
+                                            points_mask.x = float(p[0])
+                                            points_mask.y = float(p[1])
+                                            points_mask.z = 0.0
+                                            m.point.append(points_mask)
+
+                                        requested_objects.append(m)
+
+                                    # print(requested_objects)
+
+                                    self.node.waiting_for_pcloud = True
+                                    self.node.call_point_cloud_mask_server(requested_objects, "head")
+
+                                    while self.node.waiting_for_pcloud:
+                                        pass
+
+                                    new_pcloud = self.node.point_cloud_mask_response.coords
+                                    """
+                                
                                     self.node.tracking_mask_publisher.publish(msg)
 
                             if self.DEBUG_DRAW:

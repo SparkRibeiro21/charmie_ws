@@ -1651,15 +1651,8 @@ class DebugVisualMain():
         
         if self.node.is_tracking_comm:
            
-            """
-            i = 0
             for used_point in used_tracking.mask.masks:
                 
-                i=i+1
-                print(i)
-            
-                # print(used_point)
-            
                 temp_mask = []
                 for p in used_point.point: # converts received mask into local coordinates and numpy array
                     p_list = []
@@ -1667,35 +1660,15 @@ class DebugVisualMain():
                     p_list.append(int(window_cam_height+(p.y/2)*self.camera_resize_ratio))
                     temp_mask.append(p_list)
                 
-                p_list = []
-                p_list.append(int(self.cams_initial_width+(used_point.point[0].x/2)*self.camera_resize_ratio))
-                p_list.append(int(window_cam_height+(used_point.point[0].y/2)*self.camera_resize_ratio))
-                temp_mask.append(p_list)
-
                 np_mask = np.array(temp_mask)
+                # print(len(np_mask))
 
-                temp_mask.clear()
+                if len(np_mask) > 2:
+                    bb_color = self.WHITE
+                    pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
+                    self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
 
-                if i == 1:
-                    bb_color = self.RED
-                elif i == 2:
-                    bb_color = self.GREEN
-                elif i == 3:
-                    bb_color = self.BLUE
-                elif i == 4:
-                    bb_color = self.YELLOW
-                else:
-                    bb_color = self.BLACK
-
-                # bb_color = self.object_class_to_bb_color(o.object_class)
-                pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
-                # self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
-                break
-
-
-            print(len(used_tracking.mask.masks))
-
-            """            
+            """ # old method that used a binary mask rather than a detection mask           
             binary_mask = self.br.imgmsg_to_cv2(used_tracking.binary_mask, desired_encoding='mono8')
             binary_mask = cv2.resize(binary_mask, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
             # Convert the image to RGB (OpenCV loads as BGR by default)
@@ -1710,16 +1683,10 @@ class DebugVisualMain():
             mask_surface.fill(mask_color, special_flags=pygame.BLEND_RGB_MULT)
             
             self.WIN.blit(mask_surface, (self.cams_initial_width, self.cams_initial_height))
-            
-            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.WHITE, 0.0, 9)
-            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.BLACK, 0.0, 5)
-            
-            # cv2.imshow("tracking", binary_mask)
-            # cv2.waitKey(1)
-            # opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-            # Convert the image to a banded surface (Pygame compatible format)
-            # height, width, channels = opencv_image.shape
-            # print(height, width)
+            """
+
+            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.BLACK, 0.0, 9)
+            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.WHITE, 0.0, 5)
         
     def check_record_data(self):
         

@@ -2521,17 +2521,63 @@ class RobotStdFunctions():
 
     def set_follow_person(self):
 
+        self.activate_yolo_pose(activate=True) 
+        
+        while len(self.node.detected_people.persons) == 0:
+            pass
+
+        p = self.node.detected_people.persons[0]
+
+        self.activate_yolo_pose(activate=False) 
+
         points = ListOfPoints()
+        
+        if p.kp_nose_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_nose_x), y=float(p.kp_nose_y), z=1.0))
+        if p.kp_eye_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_eye_left_x), y=float(p.kp_eye_left_y), z=1.0))
+        if p.kp_eye_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_eye_right_x), y=float(p.kp_eye_right_y), z=1.0))
+        if p.kp_ear_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_ear_left_x), y=float(p.kp_ear_left_y), z=1.0))
+        if p.kp_ear_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_ear_right_x), y=float(p.kp_ear_right_y), z=1.0))
+        if p.kp_shoulder_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_shoulder_left_x), y=float(p.kp_shoulder_left_y), z=1.0))
+        if p.kp_shoulder_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_shoulder_right_x), y=float(p.kp_shoulder_right_y), z=1.0))
+        if p.kp_elbow_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_elbow_left_x), y=float(p.kp_elbow_left_y), z=1.0))
+        if p.kp_elbow_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_elbow_right_x), y=float(p.kp_elbow_right_y), z=1.0))
+        if p.kp_wrist_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_wrist_left_x), y=float(p.kp_wrist_left_y), z=1.0))
+        if p.kp_wrist_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_wrist_right_x), y=float(p.kp_wrist_right_y), z=1.0))
+        if p.kp_hip_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_hip_left_x), y=float(p.kp_hip_left_y), z=1.0))
+        if p.kp_hip_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_hip_right_x), y=float(p.kp_hip_right_y), z=1.0))
+        if p.kp_knee_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_knee_left_x), y=float(p.kp_knee_left_y), z=1.0))
+        if p.kp_knee_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_knee_right_x), y=float(p.kp_knee_right_y), z=1.0))
+        if p.kp_ankle_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_ankle_left_x), y=float(p.kp_ankle_left_y), z=1.0))
+        if p.kp_ankle_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_ankle_right_x), y=float(p.kp_ankle_right_y), z=1.0))
+        
+
         # points.coords.append(Point(x=640.0//2, y=480.0//2, z=1.0))
         # points.coords.append(Point(x=320.0, y=150.0, z=1.0))
         # points.coords.append(Point(x=420.0, y=150.0, z=0.0))
         # points.coords.append(Point(x=220.0, y=150.0, z=0.0))
 
         bb = BoundingBox()
-        bb.box_top_left_x = 200
-        bb.box_top_left_y = 100
-        bb.box_width = 640
-        bb.box_height = 480
+        # bb.box_top_left_x = 200
+        # bb.box_top_left_y = 100
+        # bb.box_width = 640
+        # bb.box_height = 480
 
 
         self.activate_tracking(activate=True, points=points, bbox=bb)
