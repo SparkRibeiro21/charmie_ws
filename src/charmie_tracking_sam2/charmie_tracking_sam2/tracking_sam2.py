@@ -89,7 +89,7 @@ class TrackingNode(Node):
                                            request.bounding_box.box_top_left_x + request.bounding_box.box_width, \
                                            request.bounding_box.box_top_left_y + request.bounding_box.box_height]
                                 
-        print("===", self.tracking_received_points, self.tracking_received_labels)
+        # print("===", self.tracking_received_points, self.tracking_received_labels)
 
         self.calibration_mode = True
         self.tracking_flag = request.activate
@@ -157,7 +157,7 @@ class TrackingMain():
 
         self.initial_obj_id = 1  # Object ID for tracking
         
-        self.DEBUG_DRAW = False
+        self.DEBUG_DRAW = True
 
         self.prev_frame_time = time.time() # used to record the time when we processed last frame
         self.new_frame_time = time.time() # used to record the time at which we processed current frame
@@ -190,6 +190,9 @@ class TrackingMain():
         total_area = 0
         centroid_x = 0
         centroid_y = 0
+        area_of_each_polygon = []
+        centroid_of_each_polygon = []
+        updated_polygons = []
 
         for polygon_points in polygons:
             points = np.array(polygon_points, dtype=np.float32)
@@ -202,31 +205,36 @@ class TrackingMain():
             
             x = points[:, 0]
             y = points[:, 1]
-            A = 0.5 * np.sum(x[:-1] * y[1:] - x[1:] * y[:-1])
+            A = 0.5 * np.sum(x[:-1] * y[1:] - x[1:] * y[:-1]) # using the abolute value, because depending on the orientation (CW or CCW) the area may be returned as negative
             
             # Skip polygons with zero area
             if A == 0:
                 continue
-            
+
             Cx = np.sum((x[:-1] + x[1:]) * (x[:-1] * y[1:] - x[1:] * y[:-1])) / (6 * A)
             Cy = np.sum((y[:-1] + y[1:]) * (x[:-1] * y[1:] - x[1:] * y[:-1])) / (6 * A)
+
+            area_of_each_polygon.append(abs(A))
+            updated_polygons.append(polygon_points)
+            centroid_of_each_polygon.append((Cx, Cy))
             
             total_area += A
             centroid_x += Cx * A
             centroid_y += Cy * A
 
         if total_area == 0:
-            return None  # No valid polygons
+            return None, None, None, None  # No valid polygons
         
         # Final combined centroid
         combined_Cx = centroid_x / total_area
         combined_Cy = centroid_y / total_area
-        return combined_Cx, combined_Cy
+        combined_C = (combined_Cx, combined_Cy)
+        return combined_C, updated_polygons, area_of_each_polygon, centroid_of_each_polygon
     
     def publish_tracking_data(self, polygons):
 
         if polygons:
-            centroid = self.combined_polygon_centroid(polygons)
+            centroid, updated_polygons, area_each_polygon, centroid_each_polygon = self.combined_polygon_centroid(polygons)
             if centroid is not None:
                 
                 msg = TrackingMask()
@@ -236,7 +244,7 @@ class TrackingMain():
                 list_masks = ListOfMaskDetections()
                 requested_objects = []
                 
-                for p in polygons:
+                for p in updated_polygons: # only goes through filtres polygons, rather than all polygons
 
                     new_mask = MaskDetection()
                     for c in p:
@@ -261,13 +269,27 @@ class TrackingMain():
 
                 new_pcloud = self.node.point_cloud_mask_response.coords
 
-
+                # print(centroid)
                 print("NEW PC:", len(self.node.point_cloud_mask_response.coords))
-                for p in self.node.point_cloud_mask_response.coords:
-                    print(p.center_coords)
+                for p, a in zip(self.node.point_cloud_mask_response.coords, area_each_polygon):
+                    print(p.center_coords, a)
+
+
+
+
+                ### HERE I WILL FILTER THE DATA FROM THE POINT CLOUD TO GET THE OBJECT POSITION
+                
+                # 1) Remove all polygons that are not part of the object being tracked (check if centroid is part of image mask)
+
+                # 2) Remove the points whose mask does not have a valid depth point inside (returned by PC as: (x=0.0, y=0.0, z=0.0))
+
+                # 3) Use the area of each mask to weight the position of the object
                 
                 # center_object_coordinates=pcloud.center_coords
                 center_object_coordinates=new_pcloud[0].center_coords
+
+
+
 
 
                 # changes the axis of point cloud coordinates to fit with robot axis
@@ -286,7 +308,7 @@ class TrackingMain():
                 target_x = dist_obj * math.cos(theta_aux) + self.node.robot_x
                 target_y = dist_obj * math.sin(theta_aux) + self.node.robot_y
 
-                a_ref = (target_x, target_y)
+                # a_ref = (target_x, target_y)
                 # print("Rel:", (object_rel_pos.x, object_rel_pos.y), "Abs:", a_ref)
 
                 object_abs_pos = Point()
@@ -299,7 +321,7 @@ class TrackingMain():
                 # object_abs_pos.x = 3.0
                 # object_abs_pos.y = 2.0
                 # object_abs_pos.z = 1.0
-                # msg.position_absolute = object_abs_pos
+                # msg.position_absolute = object_abs_pos-+
                 
                 # when i add the method to get the 3D coordinates, i have to calculate the final 3D coordiantes
                 # as a weighted average using the area of each mask as the weight
@@ -331,6 +353,10 @@ class TrackingMain():
                 """
             
                 self.node.tracking_mask_publisher.publish(msg)
+
+            return centroid, updated_polygons, area_each_polygon, centroid_each_polygon
+        
+        return None, None, None, None
 
     def main(self):
 
@@ -426,25 +452,33 @@ class TrackingMain():
                                 polygons.append(coords)
                                 # polygons.append(coords)
 
-                            self.publish_tracking_data(polygons)
+                            centroid, updated_polygons, area_each_polygon, centroid_each_polygon = self.publish_tracking_data(polygons)
 
                             if self.DEBUG_DRAW:
                             
                                 teste = frame.copy()
 
-                                if polygons:
-                                    for p in polygons:
+                                if updated_polygons:
+                                    for p in updated_polygons: # only goes through filtres polygons, rather than all polygons
                                         cv2.polylines(teste, [np.array(p, dtype=np.int32)], True, (0, 255, 0), 2)
                                         cv2.fillPoly(teste, [np.array(p, dtype=np.int32)], (0, 100, 0))
                                                                 
-                                    # print(polygons[0])
-                                    # centroid = self.polygon_centroid(polygons[0])
-                                    # centroid = self.combined_polygon_centroid(polygons)
-                                    # print(centroid)
+                                    print("out")
+                                    print(centroid)
 
                                     if centroid is not None:
+                                        print("in centroid")
                                         cv2.circle(teste, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
+                                        cv2.circle(main_with_mask, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
                                         # cv2.circle(white_mask, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
+
+                                        for p, a in zip(centroid_each_polygon, area_each_polygon):
+                                            cv2.circle(teste, (int(p[0]), int(p[1])), 5, (255, 0, 0), -1)
+                                            cv2.circle(main_with_mask, (int(p[0]), int(p[1])), 5, (255, 0, 0), -1)
+                                            cv2.putText(teste, 'A:' + str(int(a)), (int(p[0]), int(p[1])), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                                            cv2.putText(main_with_mask, 'A:' + str(int(a)), (int(p[0]), int(p[1])), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                        
+                                        
                                 cv2.imshow("Frame with Mask BW", white_mask)
                                 cv2.imshow("Test Polygon", teste)
 
@@ -454,20 +488,20 @@ class TrackingMain():
                     self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
                     self.prev_frame_time = self.new_frame_time
                     self.fps = str(self.fps)
-                    print(self.fps)
+                    print("fps:", self.fps)
                                 
                     if self.DEBUG_DRAW:
 
                         if self.node.tracking_received_points:
                             for i, point in enumerate(self.node.tracking_received_points):
                                 color = (0, 255, 0)  if self.node.tracking_received_labels[i] == 1 else (0, 0, 255)
-                                print(point, color)
+                                # print(point, color)
                                 cv2.circle(main_with_mask, point, 5, color, -1)
                         if self.node.tracking_received_bbox:
                             cv2.rectangle(main_with_mask, (self.node.tracking_received_bbox[0], self.node.tracking_received_bbox[1]), (self.node.tracking_received_bbox[2], self.node.tracking_received_bbox[3]), (255, 0, 0), 2)
 
                 
-                        print(self.fps)
+                        # print(self.fps)
                         cv2.putText(main_with_mask, 'fps:' + self.fps, (0, height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
                         cv2.imshow("Segmented Objects TR", main_with_mask)
                         # cv2.imshow("Frame with Mask", cv2.bitwise_and(frame, frame, ))
