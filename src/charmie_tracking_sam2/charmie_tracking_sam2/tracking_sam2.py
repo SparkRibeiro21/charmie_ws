@@ -239,7 +239,7 @@ class TrackingMain():
             centroid_y += Cy * A
 
         if total_area == 0:
-            return None, None, None, None, None  # No valid polygons
+            return None, None, None, None  # No valid polygons
         
         # Final combined centroid
         combined_Cx = centroid_x / total_area
@@ -248,6 +248,8 @@ class TrackingMain():
         return combined_C, updated_filtered_polygons, area_of_each_polygon, centroid_of_each_polygon
     
     def filter_and_publish_tracking_data(self, polygons, binary_mask):
+
+        MIN_AREA_FOR_PC_CALCULATION = 4000
 
         if polygons:
             centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon = self.combined_polygon_centroid(polygons, binary_mask)
@@ -283,93 +285,58 @@ class TrackingMain():
                 while self.node.waiting_for_pcloud:
                     pass
 
-                new_pcloud = self.node.point_cloud_mask_response.coords
-
-                # print(centroid)
+                weighted_sum_x = 0
+                weighted_sum_y = 0
+                weighted_sum_z = 0
+                total_weight = 0
                 print("NEW PC:", len(self.node.point_cloud_mask_response.coords))
                 for p, a in zip(self.node.point_cloud_mask_response.coords, area_each_polygon):
-                    print(p.center_coords, a)
+                    print(f"(x,y,z)): ({p.center_coords.x}, {p.center_coords.y}, {p.center_coords.z}), Area: {a}")
 
+                    # Remove the points whose mask does not have a valid depth point inside (returned by PC as: (x=0.0, y=0.0, z=0.0))
+                    if p.center_coords.x != 0 and p.center_coords.y != 0 and p.center_coords.z != 0 and a > MIN_AREA_FOR_PC_CALCULATION:
+                        # Use the area of each mask to weight the position of the object
+                        weighted_sum_x += p.center_coords.x * a
+                        weighted_sum_y += p.center_coords.y * a
+                        weighted_sum_z += p.center_coords.z * a
+                        total_weight += a
+    
+                if total_weight > 0:
+                    # Compute weighted averages
+                    x_avg = weighted_sum_x / total_weight
+                    y_avg = weighted_sum_y / total_weight
+                    z_avg = weighted_sum_z / total_weight
 
+                    # Output result
+                    print(f"Weighted Average (x, y, z): ({x_avg}, {y_avg}, {z_avg})")
 
+                    # changes the axis of point cloud coordinates to fit with robot axis
+                    object_rel_pos = Point()
+                    object_rel_pos.x =  -y_avg/1000
+                    object_rel_pos.y =  x_avg/1000
+                    object_rel_pos.z =  z_avg/1000
+                    msg.position_relative = object_rel_pos
+                    
+                    # calculate the absolute position according to the robot localisation
+                    angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
+                    dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
 
-                ### HERE I WILL FILTER THE DATA FROM THE POINT CLOUD TO GET THE OBJECT POSITION
-                # 1) Remove the points whose mask does not have a valid depth point inside (returned by PC as: (x=0.0, y=0.0, z=0.0))
+                    theta_aux = math.pi/2 - (angle_obj - self.node.robot_t)
 
-                # 2) Use the area of each mask to weight the position of the object
-                
-                # center_object_coordinates=pcloud.center_coords
-                center_object_coordinates=new_pcloud[0].center_coords
+                    target_x = dist_obj * math.cos(theta_aux) + self.node.robot_x
+                    target_y = dist_obj * math.sin(theta_aux) + self.node.robot_y
 
-
-
-
-
-                # changes the axis of point cloud coordinates to fit with robot axis
-                object_rel_pos = Point()
-                object_rel_pos.x =  -center_object_coordinates.y/1000
-                object_rel_pos.y =  center_object_coordinates.x/1000
-                object_rel_pos.z =  center_object_coordinates.z/1000
-                msg.position_relative = object_rel_pos
-                
-                # calculate the absolute position according to the robot localisation
-                angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
-                dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
-
-                theta_aux = math.pi/2 - (angle_obj - self.node.robot_t)
-
-                target_x = dist_obj * math.cos(theta_aux) + self.node.robot_x
-                target_y = dist_obj * math.sin(theta_aux) + self.node.robot_y
-
-                # a_ref = (target_x, target_y)
-                # print("Rel:", (object_rel_pos.x, object_rel_pos.y), "Abs:", a_ref)
-
-                object_abs_pos = Point()
-                object_abs_pos.x = target_x
-                object_abs_pos.y = target_y
-                object_abs_pos.z = center_object_coordinates.z/1000
-                msg.position_absolute = object_abs_pos
-                
-                # object_abs_pos = Point()
-                # object_abs_pos.x = 3.0
-                # object_abs_pos.y = 2.0
-                # object_abs_pos.z = 1.0
-                # msg.position_absolute = object_abs_pos-+
-                
-                # when i add the method to get the 3D coordinates, i have to calculate the final 3D coordiantes
-                # as a weighted average using the area of each mask as the weight
-
-                # resolver a cena de o tracking ficar sempre a mostrar no mapa
-                """
-                requested_objects = []
-                for mask in masks:
-                    m = MaskDetection()
-                    for p in mask.xy[0]:
-
-                        points_mask = Point()
-                        points_mask.x = float(p[0])
-                        points_mask.y = float(p[1])
-                        points_mask.z = 0.0
-                        m.point.append(points_mask)
-
-                    requested_objects.append(m)
-
-                # print(requested_objects)
-
-                self.node.waiting_for_pcloud = True
-                self.node.call_point_cloud_mask_server(requested_objects, "head")
-
-                while self.node.waiting_for_pcloud:
-                    pass
-
-                new_pcloud = self.node.point_cloud_mask_response.coords
-                """
-            
-                self.node.tracking_mask_publisher.publish(msg)
+                    object_abs_pos = Point()
+                    object_abs_pos.x = target_x
+                    object_abs_pos.y = target_y
+                    object_abs_pos.z = z_avg/1000
+                    msg.position_absolute = object_abs_pos
+                    
+                    self.node.tracking_mask_publisher.publish(msg)
 
             return centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon
         
-        return None, None, None, None, None
+        return None, None, None, None
 
     def main(self):
 
@@ -476,12 +443,12 @@ class TrackingMain():
                                         cv2.polylines(teste, [np.array(p, dtype=np.int32)], True, (0, 255, 255), 5)
                                         cv2.fillPoly(teste, [np.array(p, dtype=np.int32)], (0, 100, 100))
 
-                                    print(len(updated_filtered_polygons))
-                                    print("out")
-                                    print(centroid)
+                                    # print(len(updated_filtered_polygons))
+                                    # print("out")
+                                    # print(centroid)
 
                                     if centroid is not None:
-                                        print("in centroid")
+                                        # print("in centroid")
                                         cv2.circle(teste, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
                                         cv2.circle(main_with_mask, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
                                         # cv2.circle(white_mask, (int(centroid[0]), int(centroid[1])), 5, (0, 0, 255), -1)
