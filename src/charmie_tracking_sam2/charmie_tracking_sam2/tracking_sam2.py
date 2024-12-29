@@ -157,34 +157,11 @@ class TrackingMain():
 
         self.initial_obj_id = 1  # Object ID for tracking
         
-        self.DEBUG_DRAW = True
+        self.DEBUG_DRAW = False
 
         self.prev_frame_time = time.time() # used to record the time when we processed last frame
         self.new_frame_time = time.time() # used to record the time at which we processed current frame
         
-    def polygon_centroid(self, polygon_points):
-        # Ensure the points are in NumPy array format
-        points = np.array(polygon_points, dtype=np.float32)
-
-        # Close the polygon if it's not already closed
-        if not np.array_equal(points[0], points[-1]):
-            points = np.vstack([points, points[0]])
-
-        # Calculate the signed area (A)
-        x = points[:, 0]
-        y = points[:, 1]
-        A = 0.5 * np.sum(x[:-1] * y[1:] - x[1:] * y[:-1])
-
-        # Skip if the area is 0
-        if A == 0:
-            return None
-
-        # Calculate the centroid (Cx, Cy)
-        Cx = np.sum((x[:-1] + x[1:]) * (x[:-1] * y[1:] - x[1:] * y[:-1])) / (6 * A)
-        Cy = np.sum((y[:-1] + y[1:]) * (x[:-1] * y[1:] - x[1:] * y[:-1])) / (6 * A)
-
-        return Cx, Cy
-
     def combined_polygon_centroid(self, polygons, binary_mask):
         
         MIN_ACCEPTABLE_AREA = 100
@@ -285,10 +262,12 @@ class TrackingMain():
                 while self.node.waiting_for_pcloud:
                     pass
 
+                ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
+                """
                 weighted_sum_x = 0
                 weighted_sum_y = 0
                 weighted_sum_z = 0
-                total_weight = 0
+                max_area = 0
                 print("NEW PC:", len(self.node.point_cloud_mask_response.coords))
                 for p, a in zip(self.node.point_cloud_mask_response.coords, area_each_polygon):
                     print(f"(x,y,z)): ({p.center_coords.x}, {p.center_coords.y}, {p.center_coords.z}), Area: {a}")
@@ -299,22 +278,40 @@ class TrackingMain():
                         weighted_sum_x += p.center_coords.x * a
                         weighted_sum_y += p.center_coords.y * a
                         weighted_sum_z += p.center_coords.z * a
-                        total_weight += a
-    
-                if total_weight > 0:
+                        max_area += a
+
+                if max_area > 0:
                     # Compute weighted averages
-                    x_avg = weighted_sum_x / total_weight
-                    y_avg = weighted_sum_y / total_weight
-                    z_avg = weighted_sum_z / total_weight
+                    x_f = weighted_sum_x / max_area
+                    y_f = weighted_sum_y / max_area
+                    z_f = weighted_sum_z / max_area
+                """
+                
+                ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
+                max_area = 0
+                x_f, y_f, z_f = 0.0, 0.0, 0.0
+                print("NEW PC:", len(self.node.point_cloud_mask_response.coords))
+                for p, a in zip(self.node.point_cloud_mask_response.coords, area_each_polygon):
+                    print(f"(x,y,z)): ({p.center_coords.x}, {p.center_coords.y}, {p.center_coords.z}), Area: {a}")
+
+                    # Remove the points whose mask does not have a valid depth point inside (returned by PC as: (x=0.0, y=0.0, z=0.0))
+                    if p.center_coords.x != 0 and p.center_coords.y != 0 and p.center_coords.z != 0 and a > max_area:
+                        # Update the maximum area and the corresponding coordinates
+                        max_area = a
+                        x_f = p.center_coords.x
+                        y_f = p.center_coords.y
+                        z_f = p.center_coords.z
+
+                if max_area > 0:
 
                     # Output result
-                    print(f"Weighted Average (x, y, z): ({x_avg}, {y_avg}, {z_avg})")
+                    print(f"Weighted Average (x, y, z): ({x_f}, {y_f}, {z_f})")
 
                     # changes the axis of point cloud coordinates to fit with robot axis
                     object_rel_pos = Point()
-                    object_rel_pos.x =  -y_avg/1000
-                    object_rel_pos.y =  x_avg/1000
-                    object_rel_pos.z =  z_avg/1000
+                    object_rel_pos.x =  -y_f/1000
+                    object_rel_pos.y =  x_f/1000
+                    object_rel_pos.z =  z_f/1000
                     msg.position_relative = object_rel_pos
                     
                     # calculate the absolute position according to the robot localisation
@@ -329,7 +326,7 @@ class TrackingMain():
                     object_abs_pos = Point()
                     object_abs_pos.x = target_x
                     object_abs_pos.y = target_y
-                    object_abs_pos.z = z_avg/1000
+                    object_abs_pos.z = z_f/1000
                     msg.position_absolute = object_abs_pos
                     
                     self.node.tracking_mask_publisher.publish(msg)
