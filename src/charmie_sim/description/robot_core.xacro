@@ -31,7 +31,7 @@
     </link>
     
     
-    <!-- BASE LINK -->
+    <!-- BASE FOOTPRINT -->
 
     <joint name="base_footprint_joint" type="fixed">
         <parent link="base_link"/>
