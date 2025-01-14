@@ -1,5 +1,7 @@
 <launch>
-    <let name="urdf_path" value="$(find-pkg-share charmie_description)/urdf/charmie_.urdf" />
+    <let name="urdf_path" value="$(find-pkg-share charmie_description)/urdf/charmie_.urdf.xacro" />
+
+    <let name="rviz_config_path" value="$(find-pkg-share charmie_description)/rviz/urdf_config.rviz" />
 
     <node pkg="robot_state_publisher" exec="robot_state_publisher">
         <param name="robot_description" value="$(command 'xacro $(var urdf_path)')" />
@@ -7,6 +9,6 @@
 
     <node pkg="joint_state_publisher_gui" exec="joint_state_publisher_gui" />
 
-    <node pkg="rviz2" exec="rviz2" output="screen" />
+    <node pkg="rviz2" exec="rviz2" output="screen" args="-d $(var rviz_config_path)"/>
 
 </launch>

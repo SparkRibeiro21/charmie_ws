@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="charmie">
+<robot name="charmie" xmlns:xacro="http://www.ros.org/wiki/xacro">
     
     <material name ="orange">
         <color rgba="1 0.3 0.1 1" />
