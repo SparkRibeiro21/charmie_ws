@@ -142,7 +142,7 @@
                 <sphere radius="0.025" />
             </geometry>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <material name="orange"/>
+            <material name="black"/>
         </visual>
     </link>
 
@@ -161,7 +161,7 @@
                 <sphere radius="0.025" />
             </geometry>
             <origin xyz="0 0 0" rpy="0 0 0"/>
-            <material name="orange"/>
+            <material name="black"/>
         </visual>
     </link>
 
