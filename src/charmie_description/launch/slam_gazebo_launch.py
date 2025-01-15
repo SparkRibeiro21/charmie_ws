@@ -23,6 +23,9 @@ def generate_launch_description():
     world_path = os.path.join(get_package_share_path('charmie_description'), 
                              'worlds', 'obstacles_test.world')
     
+    slam_mapper_params_path = os.path.join(get_package_share_path('charmie_description'), 'config', 'mapper_params_online_async.yaml')
+    slam_toolbox_launch_file = os.path.join(get_package_share_path('slam_toolbox'), 'launch', 'online_async_launch.py')
+    
     robot_description = ParameterValue(Command(['xacro ', urdf_path]), value_type=str)
 
     robot_state_publisher_node = Node(
@@ -38,8 +41,9 @@ def generate_launch_description():
 
     gazebo = IncludeLaunchDescription(PythonLaunchDescriptionSource(
                 os.path.join(gazebo_ros_path, 'launch', 'gazebo.launch.py')),
-                launch_arguments={'world': world_path}.items()  # Specify the world file
-        
+                launch_arguments={
+                    'world': world_path
+                }.items()  # Specify the world file
     )
 
 
@@ -54,11 +58,20 @@ def generate_launch_description():
         executable="rviz2",
         arguments=['-d', rviz_config_path]
     )
+
+    slam_toolbox_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(slam_toolbox_launch_file),
+        launch_arguments={
+            'slam_params_file': slam_mapper_params_path,
+            'use_sim_time': 'true'
+        }.items()
+    )
     
     return LaunchDescription([
         robot_state_publisher_node,
         # joint_state_publisher_node,
         rviz2_node,
         spawn_entity,
-        gazebo
+        gazebo,
+        slam_toolbox_launch
     ])
