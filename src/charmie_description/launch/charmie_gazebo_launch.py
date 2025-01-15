@@ -1,0 +1,65 @@
+
+from launch import LaunchDescription
+from launch_ros.parameter_descriptions import ParameterValue
+from launch.substitutions import Command
+from launch_ros.actions import Node
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+import os
+from ament_index_python.packages import get_package_share_path, get_package_share_directory
+
+def generate_launch_description():
+
+    urdf_path = os.path.join(get_package_share_path('charmie_description'), 
+                             'urdf', 'charmie_.urdf.xacro')
+    
+    rviz_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                             'rviz', 'urdf_config.rviz')
+    
+    rviz_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                             'rviz', 'urdf_config.rviz')
+    
+    gazebo_ros_path = get_package_share_path('gazebo_ros')
+
+    world_path = os.path.join(get_package_share_path('charmie_description'), 
+                             'worlds', 'obstacles_test.world')
+    
+    robot_description = ParameterValue(Command(['xacro ', urdf_path]), value_type=str)
+
+    robot_state_publisher_node = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        parameters=[{'robot_description': robot_description}]
+    )
+
+    # joint_state_publisher_node = Node(
+    #     package="joint_state_publisher_gui",
+    #     executable="joint_state_publisher_gui"
+    # )
+
+    gazebo = IncludeLaunchDescription(PythonLaunchDescriptionSource(
+                os.path.join(gazebo_ros_path, 'launch', 'gazebo.launch.py')),
+                launch_arguments={'world': world_path}.items()  # Specify the world file
+        
+    )
+
+
+    # Run the spawner node from the gazebo_ros package. The entity name doesn't really matter if you only have a single robot.
+    spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
+                        arguments=['-topic', 'robot_description',
+                                   '-entity', 'charmie'],
+                        output='screen')
+
+    rviz2_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        arguments=['-d', rviz_config_path]
+    )
+    
+    return LaunchDescription([
+        robot_state_publisher_node,
+        # joint_state_publisher_node,
+        rviz2_node,
+        spawn_entity,
+        gazebo
+    ])

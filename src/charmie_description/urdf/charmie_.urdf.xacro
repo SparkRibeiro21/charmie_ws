@@ -5,6 +5,7 @@
     <xacro:include filename="common_properties.xacro"/>
     <xacro:include filename="inertial_macros.xacro"/>
     <xacro:include filename="mobile_base.xacro"/>
+    <xacro:include filename="mobile_base_gazebo.xacro"/>
 
 
     <!-- LIDAR -->
