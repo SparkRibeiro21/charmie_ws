@@ -40,12 +40,12 @@
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/2}" />
             <material name="light_grey"/>
         </visual>
-        <!-- <collision>
+        <collision>
             <geometry>
                 <box size="${base_length} ${base_octagon_side} ${base_height}" />
             </geometry>
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/2}" />
-        </collision> -->
+        </collision>
         <xacro:inertial_box mass="5.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/2}" />
         </xacro:inertial_box>
@@ -57,6 +57,12 @@
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/4}" />
             <material name="light_grey"/>
         </visual>
+        <collision>
+            <geometry>
+                <box size="${base_length} ${base_octagon_side} ${base_height}" />
+            </geometry>
+            <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/4}" />
+        </collision>
         <xacro:inertial_box mass="5.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/4}" />
         </xacro:inertial_box>
@@ -68,6 +74,12 @@
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 -${pi/4}" />
             <material name="light_grey"/>
         </visual>
+        <collision>
+            <geometry>
+                <box size="${base_length} ${base_octagon_side} ${base_height}" />
+            </geometry>
+            <origin xyz="0 0 ${base_height/2}" rpy="0 0 -${pi/4}" />
+        </collision>
         <xacro:inertial_box mass="5.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 -${pi/4}" />
         </xacro:inertial_box>
