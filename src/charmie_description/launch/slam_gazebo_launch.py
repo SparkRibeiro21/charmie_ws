@@ -5,9 +5,13 @@ from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 import os
-from ament_index_python.packages import get_package_share_path, get_package_share_directory
+from ament_index_python.packages import get_package_share_path
+
+from charmie_std_functions.launch_std_functions import LaunchStdFunctions
 
 def generate_launch_description():
+
+    std_lf = LaunchStdFunctions() # From charmie_std_functions - Standardizes launch files
 
     urdf_path = os.path.join(get_package_share_path('charmie_description'), 
                              'urdf', 'charmie_gazebo.urdf.xacro')
@@ -70,5 +74,7 @@ def generate_launch_description():
         rviz2_node,
         spawn_entity,
         gazebo,
-        slam_toolbox_launch
+        slam_toolbox_launch,
+
+        std_lf.odometry_lidar
     ])
