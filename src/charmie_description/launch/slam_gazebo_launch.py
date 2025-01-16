@@ -15,9 +15,6 @@ def generate_launch_description():
     rviz_config_path = os.path.join(get_package_share_path('charmie_description'), 
                              'rviz', 'urdf_config.rviz')
     
-    rviz_config_path = os.path.join(get_package_share_path('charmie_description'), 
-                             'rviz', 'urdf_config.rviz')
-    
     gazebo_ros_path = get_package_share_path('gazebo_ros')
 
     world_path = os.path.join(get_package_share_path('charmie_description'), 
