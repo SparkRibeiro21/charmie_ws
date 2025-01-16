@@ -7,13 +7,18 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 import os
 from ament_index_python.packages import get_package_share_path, get_package_share_directory
 
+from charmie_std_functions.launch_std_functions import LaunchStdFunctions
+
+
 def generate_launch_description():
+
+    std_lf = LaunchStdFunctions() # From charmie_std_functions - Standardizes launch files
 
     urdf_path = os.path.join(get_package_share_path('charmie_description'), 
                              'urdf', 'charmie_gazebo.urdf.xacro')
     
     rviz_config_path = os.path.join(get_package_share_path('charmie_description'), 
-                             'rviz', 'urdf_config.rviz')
+                             'rviz', 'urdf_config_slam.rviz')
     
     slam_mapper_params_path = os.path.join(get_package_share_path('charmie_description'), 'config', 'mapper_params_online_async.yaml')
     slam_toolbox_launch_file = os.path.join(get_package_share_path('slam_toolbox'), 'launch', 'online_async_launch.py')
@@ -77,5 +82,11 @@ def generate_launch_description():
         static_transform_left_wheel,
         static_transform_right_wheel,
         rviz2_node,
-        slam_toolbox_launch
+        slam_toolbox_launch,
+
+        std_lf.gui,
+        std_lf.speakers,
+        std_lf.lidar,
+        std_lf.low_level,
+        std_lf.ps4_controller,
     ])
