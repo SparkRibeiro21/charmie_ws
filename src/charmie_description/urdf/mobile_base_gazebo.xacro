@@ -25,37 +25,31 @@
         <mu2 value="0.001" />
     </gazebo>
 
-    <gazebo>
+    <!-- <gazebo>
         <plugin name="diff_drive" filename="libgazebo_ros_diff_drive.so">
 
-            <!-- Update rate in Hz -->
             <update_rate>50</update_rate>
 
-            <!-- Wheel Information -->
             <left_joint>left_wheel_joint</left_joint>
             <right_joint>right_wheel_joint</right_joint>
 
-            <!-- Kinematics -->
             <wheel_separation>0.51</wheel_separation>
             <wheel_diameter>0.2</wheel_diameter>
 
-            <!-- Limits -->
             <max_wheel_torque>200</max_wheel_torque>
             <max_wheel_acceleration>10.0</max_wheel_acceleration>
 
-            <!-- Input -->
             <command_topic>cmd_vel</command_topic>
 
-            <!-- Output -->
-            <odometry_topic>odom</odometry_topic>
-            <odometry_frame>odom</odometry_frame>
-            <robot_base_frame>base_footprint</robot_base_frame>
+            <odometry_topic>odom1</odometry_topic>
+            <odometry_frame>odom1</odometry_frame>
+            <robot_base_frame>base_footprint1</robot_base_frame>
 
             <publish_odom>true</publish_odom>
             <publish_odom_tf>true</publish_odom_tf>
             <publish_wheel_tf>true</publish_wheel_tf>
 
         </plugin>
-    </gazebo>
+    </gazebo> -->
 
 </robot>

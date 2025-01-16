@@ -8,7 +8,7 @@ from ament_index_python.packages import get_package_share_path
 def generate_launch_description():
 
     urdf_path = os.path.join(get_package_share_path('charmie_description'), 
-                             'urdf', 'charmie_.urdf.xacro')
+                             'urdf', 'charmie_real.urdf.xacro')
     
     rviz_config_path = os.path.join(get_package_share_path('charmie_description'), 
                              'rviz', 'urdf_config.rviz')
