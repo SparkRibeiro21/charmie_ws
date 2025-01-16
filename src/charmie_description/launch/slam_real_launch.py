@@ -5,7 +5,7 @@ from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 import os
-from ament_index_python.packages import get_package_share_path, get_package_share_directory
+from ament_index_python.packages import get_package_share_path
 
 from charmie_std_functions.launch_std_functions import LaunchStdFunctions
 
@@ -76,6 +76,12 @@ def generate_launch_description():
             'right_wheel_link'  # child frame
         ]
     )
+
+    navigation_with_ps4 = Node(package='charmie_demonstration',
+                executable='navigation_demonstration',
+                name='navigation_demonstration',
+                emulate_tty=True
+                )
     
     return LaunchDescription([
         robot_state_publisher_node,
@@ -84,9 +90,12 @@ def generate_launch_description():
         rviz2_node,
         slam_toolbox_launch,
 
+        std_lf.odometry_lidar,
         std_lf.gui,
         std_lf.speakers,
         std_lf.lidar,
         std_lf.low_level,
         std_lf.ps4_controller,
+
+        navigation_with_ps4
     ])
