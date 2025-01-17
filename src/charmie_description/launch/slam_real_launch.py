@@ -18,7 +18,7 @@ def generate_launch_description():
                              'urdf', 'charmie_gazebo.urdf.xacro')
     
     rviz_config_path = os.path.join(get_package_share_path('charmie_description'), 
-                             'rviz', 'urdf_config_slam.rviz')
+                             'rviz', 'slam_config.rviz')
     
     slam_mapper_params_path = os.path.join(get_package_share_path('charmie_description'), 'config', 'mapper_params_online_async.yaml')
     slam_toolbox_launch_file = os.path.join(get_package_share_path('slam_toolbox'), 'launch', 'online_async_launch.py')
