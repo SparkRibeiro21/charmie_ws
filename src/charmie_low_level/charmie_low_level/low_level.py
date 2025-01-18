@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D, Vector3
+from geometry_msgs.msg import Pose2D, Vector3, Twist
 from example_interfaces.msg import Bool, Int16, Float32
 from charmie_interfaces.msg import Encoders
 from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs, GetTorso, SetTorso, ActivateBool
@@ -248,6 +248,7 @@ class LowLevelNode(Node):
         self.torso_move_subscriber = self.create_subscription(Pose2D, "torso_move", self.torso_move_callback , 10)
         # Motors
         self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
+        self.cmd_vel_subscriber = self.create_subscription(Twist, "cmd_vel", self.cmd_vel_callback , 10)
         # Encoders
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         # IMU
@@ -476,6 +477,14 @@ class LowLevelNode(Node):
         ### MUST UNCOMMENT LATER, TESTING DEBUG 
         # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
         self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
+
+    def cmd_vel_callback(self, cmd_vel:Twist):
+        ### MUST UNCOMMENT LATER, TESTING DEBUG 
+        # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
+        # twist = cmd_vel
+        # twist.linear
+        # self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
+        print("Diff Lin Vel:", round(cmd_vel.linear.x, 3), "Ang Vel:", round(cmd_vel.angular.z, 3))
 
 
     def timer_callback(self):
