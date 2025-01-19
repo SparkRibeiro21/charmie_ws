@@ -9,6 +9,7 @@ from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, 
 import serial
 import time
 import struct
+import math
 
 # TO DO:
 #   change the way NumBytes work, these only make sense for variables that are requested
@@ -273,6 +274,7 @@ class LowLevelNode(Node):
         # Motors
         self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
 
+        self.prev_cmd_vel = Twist()
 
         self.create_timer(0.1, self.timer_callback)
         # self.create_timer(1.0, self.timer_callback2)
@@ -479,12 +481,43 @@ class LowLevelNode(Node):
         self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
 
     def cmd_vel_callback(self, cmd_vel:Twist):
-        ### MUST UNCOMMENT LATER, TESTING DEBUG 
-        # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
-        # twist = cmd_vel
-        # twist.linear
-        # self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
-        print("Diff Lin Vel:", round(cmd_vel.linear.x, 3), "Ang Vel:", round(cmd_vel.angular.z, 3))
+
+        # these are just for debug, can delete later:
+        # cmd_vel.linear.y = 0.2
+        # cmd_vel.linear.x = -cmd_vel.linear.x
+        
+        different_movement= False
+        if cmd_vel.linear.x != self.prev_cmd_vel.linear.x or \
+           cmd_vel.linear.y != self.prev_cmd_vel.linear.y or \
+           cmd_vel.angular.z != self.prev_cmd_vel.angular.z:
+            different_movement= True
+
+        self.prev_cmd_vel = cmd_vel
+
+        # ANGULAR SPEED LINEAR REGRESSION CONVERSION:
+        # y = mx+b # however b in this case is 0, so we will only consider y=mx
+        angular_speed_m = 59.1965386210101 # calculated via real charmie tests to know the rad/s speeds of the robot
+        omni_move_angular_speed = 100 - angular_speed_m*cmd_vel.angular.z
+        omni_move_angular_speed = max(0.0, min(200.0, omni_move_angular_speed)) # defines limits for the omni_values
+        
+        # LINEAR SPEED LINEAR REGRESSION CONVERSION:
+        # y = mx+b # however b in this case is 0, so we will only consider y=mx
+        linear_speed_m = 237.6182739989   # calculated via real charmie tests to know the rad/s speeds of the robot
+        
+        # combining x and y linear speeds from /cmd_vel
+        combined_linear_speed_xy = math.sqrt(cmd_vel.linear.x*cmd_vel.linear.x + cmd_vel.linear.y*cmd_vel.linear.y) 
+        omni_move_linear_speed = linear_speed_m*combined_linear_speed_xy
+        omni_move_linear_speed = max(0.0, min(100.0, omni_move_linear_speed)) # defines limits for the omni_values
+        
+        # total angle combining x and y linear speeds from /cmd_vel
+        omni_move_direction = math.atan2(cmd_vel.linear.y, cmd_vel.linear.x) 
+        omni_move_direction = math.degrees(omni_move_direction)
+        omni_move_direction = max(0.0, min(359.0, omni_move_direction)) # defines limits for the omni_values
+        print("Diff Lin Vel (x, y):", round(cmd_vel.linear.x, 3), round(cmd_vel.linear.y, 3), "Ang Vel (z):", round(cmd_vel.angular.z, 3))
+        
+        if different_movement:
+            # self.robot.omni_move(dir_= int(omni_move_direction), lin_= int(omni_move_linear_speed), ang_= int(omni_move_angular_speed))
+            print("Omni move:", "Ang:", int(omni_move_angular_speed), "Lin:", int(omni_move_linear_speed), "Dir:", int(omni_move_direction))
 
 
     def timer_callback(self):
