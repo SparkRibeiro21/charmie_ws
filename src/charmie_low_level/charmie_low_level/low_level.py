@@ -75,6 +75,8 @@ class RobotControl:
         self.OMNI_MOVE = {'CommVar': 'O', 'Lin': 0, 'Ang': 100, 'Dir': 0}
         self.OMNI_MOVE_ANT = {'Lin': 0, 'Ang': 100, 'Dir': 0}
 
+        self.COMMS_DELAY = 0.003
+
 
     def set_omni_flags(self, comm_dict, num):
         comm_dict['Value'] = num
@@ -93,7 +95,7 @@ class RobotControl:
                 # print(comm_dict['SetVar'], comm_dict['Value'])
 
                 self.ser.write(comm_dict['SetVar'].encode('utf-8'))
-                time.sleep(0.003)
+                time.sleep(self.COMMS_DELAY)
                 self.ser.write(comm_dict['Value'][0].to_bytes(comm_dict['NoBytes'], 'big'))
                 return 0  # No error
             else:
@@ -107,7 +109,7 @@ class RobotControl:
         if 'GetVar' in comm_dict:  # check if it is a variable that can be 'get'
             # print(comm_dict['GetVar'], comm_dict['NoBytes'])
             self.ser.write(comm_dict['GetVar'].encode('utf-8'))  # sends get command
-            time.sleep(0.003)
+            time.sleep(self.COMMS_DELAY)
 
             while self.ser.in_waiting < comm_dict['NoBytes'] * 2:  # 2x NoBytes since there are two motor drivers
                 pass  # waits until all the variables have been returned
@@ -229,11 +231,11 @@ class RobotControl:
         # print(dir_aux)
 
         self.ser.write(self.OMNI_MOVE['CommVar'].encode('utf-8'))
-        time.sleep(0.003)
+        time.sleep(self.COMMS_DELAY)
         self.ser.write(dir_aux.to_bytes(1, 'big'))
-        time.sleep(0.003)
+        time.sleep(self.COMMS_DELAY)
         self.ser.write(self.OMNI_MOVE['Lin'].to_bytes(1, 'big'))
-        time.sleep(0.003)
+        time.sleep(self.COMMS_DELAY)
         self.ser.write(self.OMNI_MOVE['Ang'].to_bytes(1, 'big'))
 
         self.OMNI_MOVE_ANT['Lin'] = self.OMNI_MOVE['Lin']
@@ -285,6 +287,8 @@ class LowLevelNode(Node):
         self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
         self.robot.set_omni_variables(self.robot.RGB, 100)
+
+        self.time_cmd_vel = time.time()
 
         # test and reorganize
         aaa = self.robot.get_omni_variables(self.robot.ACCELERATION)
@@ -486,11 +490,16 @@ class LowLevelNode(Node):
         # cmd_vel.linear.y = 0.2
         # cmd_vel.linear.x = -cmd_vel.linear.x
         
-        different_movement= False
-        if cmd_vel.linear.x != self.prev_cmd_vel.linear.x or \
-           cmd_vel.linear.y != self.prev_cmd_vel.linear.y or \
-           cmd_vel.angular.z != self.prev_cmd_vel.angular.z:
-            different_movement= True
+        t = time.time() - self.time_cmd_vel
+        print(round(t,2))
+        if t < 0.1:
+            return
+        
+        different_movement = True
+        # if cmd_vel.linear.x != self.prev_cmd_vel.linear.x or \
+        #    cmd_vel.linear.y != self.prev_cmd_vel.linear.y or \
+        #    cmd_vel.angular.z != self.prev_cmd_vel.angular.z:
+        #    different_movement= True
 
         self.prev_cmd_vel = cmd_vel
 
@@ -512,13 +521,19 @@ class LowLevelNode(Node):
         # total angle combining x and y linear speeds from /cmd_vel
         omni_move_direction = math.atan2(cmd_vel.linear.y, cmd_vel.linear.x) 
         omni_move_direction = math.degrees(omni_move_direction)
-        omni_move_direction = max(0.0, min(359.0, omni_move_direction)) # defines limits for the omni_values
+        
+        while omni_move_direction < 0:
+            omni_move_direction += 360
+        while omni_move_direction >= 360:
+            omni_move_direction -= 360
+        # omni_move_direction = max(0.0, min(359.0, omni_move_direction)) # defines limits for the omni_values
+        
         print("Diff Lin Vel (x, y):", round(cmd_vel.linear.x, 3), round(cmd_vel.linear.y, 3), "Ang Vel (z):", round(cmd_vel.angular.z, 3))
         
         if different_movement:
-            # self.robot.omni_move(dir_= int(omni_move_direction), lin_= int(omni_move_linear_speed), ang_= int(omni_move_angular_speed))
+            self.robot.omni_move(dir_= int(omni_move_direction), lin_= int(omni_move_linear_speed), ang_= int(omni_move_angular_speed))
             print("Omni move:", "Ang:", int(omni_move_angular_speed), "Lin:", int(omni_move_linear_speed), "Dir:", int(omni_move_direction))
-
+            self.time_cmd_vel = time.time()
 
     def timer_callback(self):
 
