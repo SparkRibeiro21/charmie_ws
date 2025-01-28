@@ -187,7 +187,7 @@ class ArmUfactory(Node):
 
 
 		### SERVE THE BREAKFAST VARIABLES: ###
-		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-76.0)*10)
+		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
 		print("height_adjust:", height_adjust)
 		
 		# SET JOINTS VARIABLES
@@ -311,20 +311,25 @@ class ArmUfactory(Node):
 		self.lift_funilocopo_a_bit_from_tray = 			[-131.2, 380.0, -157.8, math.radians(-130.0), math.radians(0.0), math.radians( -90.0)]
 		self.lift_funilocopo_more =						[-394.4, 120.0, 74.4, math.radians(173.3), math.radians(0.0), math.radians( -90.0)]
 
-		# 4
+
 		self.reach_position_to_place_spoon_table = 		[-648.7, 220.0+height_adjust, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
-		
-		
-		
-		
-		# 5
-		self.place_spoon_table_joints =         [-455.4, 239.3+height_adjust, 459.7, math.radians(114.0), math.radians(-44.7), math.radians(147.6)]
-		# 6
-		# self.small_up_after_drop_spoon_table = 			[-501.6, 209.3+height_adjust, 513.9, math.radians(122.1), math.radians(-40.0), math.radians(135.7)]
-		# 7
+		self.place_spoon_table_joints =         		[-455.4, 239.3+height_adjust, 459.7, math.radians(114.0), math.radians(-44.7), math.radians(147.6)]
 		self.pos_place_spoon_table = 					[-648.7, 120.0+height_adjust, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
   
-  
+
+  		# place spoon serve breakfast with v2 of funilocopo
+		self.pre_pick_funilocopo_v2_tray = 				[-208.7, 430.0, -105.0, math.radians(-130.0), math.radians(0.0), math.radians( -90.0)]
+		self.pick_funilocopo_v2_tray = 					[-162.5, 430.0, -143.8, math.radians(-130.0), math.radians(0.0), math.radians( -90.0)]
+		self.lift_funilocopo_v2_from_tray = 			[-162.5, 347.3, -143.8, math.radians(-130.0), math.radians(0.0), math.radians( -90.0)]
+		self.joints_pre_place_table_funilocopo_v2 =		[ -181.9,    5.1,  -77.5,  177.2,   66.0,   94.2] 
+		self.place_spoon_in_table_funilocopo_v2 =     	[ -610.6, 308.7+height_adjust, 641.6, math.radians(74.4), math.radians(-47.7), math.radians(-159.4)]
+		self.step_away_from_table_funilocopo_v2 =     	[ -648.7, 20.0, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
+		
+		# spoon facing the other way, as if the person is already sitting on the other side of the table
+		self.joints_pre_place_table_funilocopo_v2_facing_other_side =		[ -181.9,    5.1,  -77.5,  177.2,   66.0,   269.2] 
+		self.place_spoon_in_table_funilocopo_v2_facing_other_side =     	[ -591.5, 308.7+height_adjust, 648.8, math.radians(-82.2), math.radians(49.1), math.radians(3.8)]
+		self.step_away_from_table_funilocopo_v2_facing_other_side =     	[ -648.7, 20.0, 677.4, math.radians(-40.5), math.radians(0.0), math.radians(90.0)]
+		
 		print('Nada')
 
 		########### EXPLANATION OF EACH MODE: ########### 
@@ -1648,6 +1653,241 @@ class ArmUfactory(Node):
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
 
+
+	def place_spoon_table_funilocopo_v2(self):
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_spoon_tray_joints)
+			self.joint_values_req.speed = math.radians(70)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		# elif self.estado_tr == 1:
+		# 	set_gripper_speed_req= SetFloat32.Request()
+		# 	set_gripper_speed_req.data = 5000.0
+		# 	self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+
+		# elif self.estado_tr == 2:
+		# 	self.set_gripper_req.pos = 850.0
+		# 	self.set_gripper_req.wait = True
+		# 	self.set_gripper_req.timeout = 4.0
+		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+
+		# elif self.estado_tr == 1:
+		# 	self.position_values_req.pose = self.pre_pick_funilocopo_v2_tray
+		# 	self.position_values_req.speed = 120.0
+		# 	self.position_values_req.acc = 1000.0
+		# 	self.position_values_req.wait = True
+		#	self.position_values_req.timeout = 4.0
+		#	self.future = self.set_position_client.call_async(self.position_values_req)
+		#	self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 1:
+			self.position_values_req.pose = self.pick_funilocopo_v2_tray
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 2:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 4:
+			self.position_values_req.pose = self.lift_funilocopo_v2_from_tray
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 5:
+			self.joint_values_req.angles = self.deg_to_rad(self.joints_pre_place_table_funilocopo_v2)
+			self.joint_values_req.speed = math.radians(70)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			self.position_values_req.pose = self.place_spoon_in_table_funilocopo_v2
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 7:
+			self.set_gripper_req.pos = 300.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 8:
+			self.position_values_req.pose = self.step_away_from_table_funilocopo_v2
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 9:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 5000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 10:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 11:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
+	def place_spoon_table_funilocopo_v2_facing_other_side(self):
+
+		if self.estado_tr == 0:
+			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_spoon_tray_joints)
+			self.joint_values_req.speed = math.radians(70)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		# elif self.estado_tr == 1:
+		# 	set_gripper_speed_req= SetFloat32.Request()
+		# 	set_gripper_speed_req.data = 5000.0
+		# 	self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+
+		# elif self.estado_tr == 2:
+		# 	self.set_gripper_req.pos = 850.0
+		# 	self.set_gripper_req.wait = True
+		# 	self.set_gripper_req.timeout = 4.0
+		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+
+		# elif self.estado_tr == 1:
+		# 	self.position_values_req.pose = self.pre_pick_funilocopo_v2_tray
+		# 	self.position_values_req.speed = 120.0
+		# 	self.position_values_req.acc = 1000.0
+		# 	self.position_values_req.wait = True
+		# 	self.position_values_req.timeout = 4.0
+		# 	self.future = self.set_position_client.call_async(self.position_values_req)
+		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 1:
+			self.position_values_req.pose = self.pick_funilocopo_v2_tray
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 2:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 1000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 3:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+   
+		elif self.estado_tr == 4:
+			self.position_values_req.pose = self.lift_funilocopo_v2_from_tray
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 5:
+			self.joint_values_req.angles = self.deg_to_rad(self.joints_pre_place_table_funilocopo_v2_facing_other_side)
+			self.joint_values_req.speed = math.radians(70)
+			self.joint_values_req.wait = True
+			self.joint_values_req.radius = 0.0
+			self.future = self.set_joint_client.call_async(self.joint_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 6:
+			self.position_values_req.pose = self.place_spoon_in_table_funilocopo_v2_facing_other_side
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 7:
+			self.set_gripper_req.pos = 300.0
+			self.set_gripper_req.wait = True
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 8:
+			self.position_values_req.pose = self.step_away_from_table_funilocopo_v2_facing_other_side
+			self.position_values_req.speed = 120.0
+			self.position_values_req.acc = 1000.0
+			self.position_values_req.wait = True
+			self.position_values_req.timeout = 4.0
+			self.future = self.set_position_client.call_async(self.position_values_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 9:
+			set_gripper_speed_req= SetFloat32.Request()
+			set_gripper_speed_req.data = 5000.0
+			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 10:
+			self.set_gripper_req.pos = 0.0
+			self.set_gripper_req.wait = False
+			self.set_gripper_req.timeout = 4.0
+			self.future = self.set_gripper.call_async(self.set_gripper_req)
+			self.future.add_done_callback(partial(self.callback_service_tr))
+
+		elif self.estado_tr == 11:
+			temp = Bool()
+			temp.data = True
+			self.flag_arm_finish_publisher.publish(temp)
+			self.estado_tr = 0
+			self.get_logger().info("FINISHED MOVEMENT")	
+
+
 	def arm_go_rest(self):
 		# if self.estado_tr == 0:
 		# 	self.set_gripper_req.pos = 0.0
@@ -1723,6 +1963,10 @@ class ArmUfactory(Node):
 				self.place_milk_table()
 			case "place_spoon_table":
 				self.place_spoon_table()
+			case "place_spoon_table_funilocopo_v2":
+				self.place_spoon_table_funilocopo_v2()
+			case "place_spoon_table_funilocopo_v2_facing_other_side":
+				self.place_spoon_table_funilocopo_v2_facing_other_side()
 			case "collect_spoon_to_tray":
 				self.collect_spoon_to_tray()
 			case "collect_milk_to_tray":

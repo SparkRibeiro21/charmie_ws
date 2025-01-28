@@ -27,7 +27,7 @@ ros2_modules = {
     "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
-    "charmie_tracking":        False,
+    "charmie_tracking":         False,
     "charmie_yolo_objects":     True,
     "charmie_yolo_pose":        False,
 }
@@ -386,7 +386,8 @@ class TaskMain():
             elif self.state == self.Placing_spoon:
 
                 if self.GET_DISHES:
-                    self.robot.place_object(arm_command="place_spoon_table", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                    self.robot.place_object(arm_command="place_spoon_table_funilocopo_v2", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                    # self.robot.place_object(arm_command="place_spoon_table_funilocopo_v2_facing_other_side", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     # self.robot.set_arm(command="place_spoon_table", wait_for_end_of=True)
 
                 self.state = self.Final_State 

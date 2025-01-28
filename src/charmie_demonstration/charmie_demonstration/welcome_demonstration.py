@@ -16,7 +16,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              True,
     "charmie_audio":            True,
-    "charmie_face":             False,
+    "charmie_face":             True,
     "charmie_head_camera":      True,
     "charmie_hand_camera":      True,
     "charmie_lidar":            True,
@@ -30,7 +30,7 @@ ros2_modules = {
     "charmie_point_cloud":      True,
     "charmie_ps4_controller":   True,
     "charmie_speakers":         True,
-    "charmie_tracking":        False,
+    "charmie_tracking":         False,
     "charmie_yolo_objects":     True,
     "charmie_yolo_pose":        True,
 }
@@ -86,7 +86,7 @@ class TaskMain():
         self.look_judge = [45, 0]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
         # self.look_navigation = [0, -30]
-        # self.look_table_objects = [-45, -45]
+        self.look_table_objects = [-45, -35]
         # self.look_tray = [0, -60]
 
         self.OFF = 0     # LOW  -> LOW
@@ -596,6 +596,7 @@ class TaskMain():
                 if self.state_SB == self.SB_Waiting_for_task_start:
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_ready_start", wait_for_end_of=True)
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_milk
@@ -613,6 +614,7 @@ class TaskMain():
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_cornflakes
@@ -630,6 +632,7 @@ class TaskMain():
                     self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_dishes
@@ -666,7 +669,8 @@ class TaskMain():
 
                     ### SPOON
                     self.robot.ask_help_pick_object_tray(object_d=correct_object_spoon, look_judge=self.look_judge, first_help_request=False, bb_color=(0, 255, 0), audio_confirmation=False)
-
+                    
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=True)
 
@@ -674,6 +678,7 @@ class TaskMain():
 
                 elif self.state_SB == self.SB_Place_and_pour_objects:
                     
+                    self.robot.set_neck(self.look_table_objects, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=True)
                     
@@ -698,9 +703,13 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
                     #### PLACE SPOON: MISSING ...
+                    # self.robot.set_arm(command="place_spoon_table_funilocopo_v2", wait_for_end_of=True)
+                    self.robot.set_arm(command="place_spoon_table_funilocopo_v2_facing_other_side", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+
+                    ### FINISHED SERVING BREAKFAST
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-
-
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
 
                     self.state_SB = self.SB_Waiting_for_task_start
