@@ -183,7 +183,7 @@ def generate_launch_description():
         # gazebo,
         
         std_lf.odometry_lidar,
-        std_lf.gui,
+        # std_lf.gui,
         # std_lf.speakers,
         std_lf.lidar,
         std_lf.low_level,
