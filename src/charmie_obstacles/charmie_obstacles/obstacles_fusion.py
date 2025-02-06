@@ -76,9 +76,6 @@ class Robot():
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
 
-            with open(self.complete_path + 'doors.json', encoding='utf-8') as json_file:
-                self.house_doors = json.load(json_file)
-            # print(self.house_doors)
         except:
             print("Could NOT import data from json configuration files. (objects_list, house_rooms and house_furniture)")
 
@@ -155,14 +152,6 @@ class Robot():
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*room['top_left_coords'][0]) , int(self.yc_adj - self.scale*room['top_left_coords'][1])), 6, (255,0,0), -1)
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*room['bot_right_coords'][0]), int(self.yc_adj - self.scale*room['bot_right_coords'][1])), 6, (0,0,255), -1)
             
-            ### DRAWS THE HOUSE DOORS ###
-            for door in self.house_doors:
-                cv2.line(self.test_image, 
-                            (int(self.xc_adj + self.scale*door['top_left_coords'][0]) , int(self.yc_adj - self.scale*door['top_left_coords'][1])),
-                            (int(self.xc_adj + self.scale*door['bot_right_coords'][0]), int(self.yc_adj - self.scale*door['bot_right_coords'][1])),
-                            (50,0,50), 3)
-
-
             ### ROBOT
             cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
             # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)

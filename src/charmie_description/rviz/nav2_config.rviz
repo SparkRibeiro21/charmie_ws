@@ -10,6 +10,7 @@ Panels:
         - /Map1
         - /Map1/Topic1
         - /Map2/Topic1
+        - /MarkerArray3/Namespaces1
       Splitter Ratio: 0.5
     Tree Height: 1239
   - Class: rviz_common/Selection
@@ -29,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: LaserScan
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -120,6 +121,8 @@ Visualization Manager:
           Value: false
         base_footprint:
           Value: false
+        base_footprint1:
+          Value: true
         base_link:
           Value: true
         front_caster_wheel_link:
@@ -128,9 +131,9 @@ Visualization Manager:
           Value: false
         lidar_frame:
           Value: true
-        map:
-          Value: true
         odom:
+          Value: true
+        odom1:
           Value: true
         right_wheel_link:
           Value: false
@@ -140,21 +143,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          odom:
-            base_link:
-              back_caster_wheel_link:
-                {}
-              base_footprint:
-                {}
-              front_caster_wheel_link:
-                {}
-              left_wheel_link:
-                {}
-              lidar_frame:
-                {}
-              right_wheel_link:
-                {}
+        {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -277,6 +266,90 @@ Visualization Manager:
         Value: /global_costmap/costmap_updates
       Use Timestamp: false
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        Hallway: true
+        Kitchen: true
+        Living Room: true
+        Office: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualization_marker_array_rooms
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        Hallway Name: true
+        Kitchen Name: true
+        Living Room Name: true
+        Office Name: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualization_marker_array_rooms_names
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        Coathanger: true
+        "Coffee Table ": true
+        Couch: true
+        Desk: true
+        Dinner Table: true
+        Dishwasher: true
+        Entrance: true
+        Exit: true
+        Hallway Cabinet: true
+        Kitchen Cabinet: true
+        Kitchen Counter: true
+        Lamp: true
+        Lounge Chair: true
+        Shelf: true
+        TV Table: true
+        Trashcan: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualization_marker_array_furniture
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        Coathanger Name: true
+        Coffee Table  Name: true
+        Couch Name: true
+        Desk Name: true
+        Dinner Table Name: true
+        Dishwasher Name: true
+        Entrance Name: true
+        Exit Name: true
+        Hallway Cabinet Name: true
+        Kitchen Cabinet Name: true
+        Kitchen Counter Name: true
+        Lamp Name: true
+        Lounge Chair Name: true
+        Shelf Name: true
+        TV Table Name: true
+        Trashcan Name: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualization_marker_array_furniture_names
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -322,7 +395,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0.004999768920242786
+      Angle: -1.5707999467849731
       Class: rviz_default_plugins/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -332,11 +405,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 109.2751235961914
+      Scale: 112.18724822998047
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
-      X: 2.0663740634918213
-      Y: -4.084232807159424
+      X: 2.341968059539795
+      Y: -0.30421802401542664
     Saved: ~
 Window Geometry:
   Displays:
@@ -344,7 +417,7 @@ Window Geometry:
   Height: 1536
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000015600000562fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000562000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000562fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000562000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000071f0000003efc0100000002fb0000000800540069006d006501000000000000071f000002fb00fffffffb0000000800540069006d00650100000000000004500000000000000000000004ae0000056200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000023500000562fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000562000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000562fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000562000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000009ba0000003efc0100000002fb0000000800540069006d00650100000000000009ba000002fb00fffffffb0000000800540069006d006501000000000000045000000000000000000000066a0000056200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -353,6 +426,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1823
+  Width: 2490
   X: 70
   Y: 27

@@ -841,9 +841,6 @@ class DebugVisualMain():
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
 
-            with open(self.home + configuration_files_midpath + 'doors.json', encoding='utf-8') as json_file:
-                self.house_doors = json.load(json_file)
-            # print(self.house_doors)
         except:
             print("Could NOT import data from json configuration files. (objects, rooms and furniture)")
 
@@ -1827,11 +1824,6 @@ class DebugVisualMain():
                                     abs(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[0] - self.coords_to_map(room['bot_right_coords'][0], room['bot_right_coords'][1])[0]), \
                                     abs(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[1] - self.coords_to_map(room['bot_right_coords'][0], room['bot_right_coords'][1])[1]))
             pygame.draw.rect(self.WIN, self.WHITE, temp_rect, width=3)
-        
-        ### DRAWS THE HOUSE DOORS ###
-        for door in self.house_doors:
-            pygame.draw.line(self.WIN, self.BLACK, (self.coords_to_map(door['top_left_coords'][0],  door['top_left_coords'][1])),\
-                                                    self.coords_to_map(door['bot_right_coords'][0], door['bot_right_coords'][1]), 10)
         
         ### DRAWS NAVIGATION LOCATIONS ###
         if self.show_navigation_locations:
