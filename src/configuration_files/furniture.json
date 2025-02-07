@@ -1,5 +1,5 @@
 [
-{"name": "Couch",		"height": 0.40, "room": "Living Room", 	"nav_coords": [ 0.91,  6.00], "top_left_coords": [-0.08, 9.55], "bot_right_coords": [1.90, 8.3]},
+{"name": "Couch",		"height": 0.40, "room": "Living Room", 	"nav_coords": [ 0.91,  6.00], "top_left_coords": [ 3.62, 3.84], "bot_right_coords": [2.82, 1.91]},
 {"name": "Lounge Chair", 	"height": 0.40, "room": "Living Room", 	"nav_coords": [ 2.00,  6.00], "top_left_coords": [ 1.92, 7.75], "bot_right_coords": [2.97, 6.75]},
 {"name": "Coffee Table ", 	"height": 0.50, "room": "Living Room", 	"nav_coords": [ 0.57,  6.00], "top_left_coords": [-0.03, 8.10], "bot_right_coords": [1.17, 6.9]},
 {"name": "TV Table",     	"height": 0.70, "room": "Living Room", 	"nav_coords": [ 1.56,  5.23], "top_left_coords": [ 0.91, 4.46], "bot_right_coords": [2.2, 4.00]},
@@ -15,7 +15,7 @@
 {"name": "Dinner Table", 	"height": 0.74, "room": "Kitchen", 	"nav_coords": [-2.00,  6.45], "top_left_coords": [-5.01, 7.11], "bot_right_coords": [-2.81, 5.8]},
 {"name": "Kitchen Counter",     "height": 0.80, "room": "Kitchen", 	"nav_coords": [-5.00,  8.00], "top_left_coords": [-6.01, 9.55], "bot_right_coords": [-4.19, 8.87]},
 {"name": "Trashcan", 	        "height": 0.30, "room": "Kitchen", 	"nav_coords": [-1.90,  4.75], "top_left_coords": [-1.71, 4.50], "bot_right_coords": [-1.10, 4.00]},
-{"name": "Kitchen Cabinet", 	"height": 1.05,	"room": "Kitchen", 	"nav_coords": [-5.04,  5.00], "top_left_coords": [-5.49, 4.30], "bot_right_coords": [-4.59, 4.00]},
+{"name": "Kitchen Cabinet", 	"height": 1.50,	"room": "Kitchen", 	"nav_coords": [-5.04,  5.00], "top_left_coords": [ 7.23, 0.96], "bot_right_coords": [ 6.85, 0.22]},
 
 {"name": "Entrance",    	"height": 2.10, "room": "Hallway", 	"nav_coords": [ 0.00,  2.00], "top_left_coords": [-0.38, 0.54], "bot_right_coords": [ 0.40, 0.56]},
 {"name": "Exit",      		"height": 2.10, "room": "Office", 	"nav_coords": [-4.50,  3.00], "top_left_coords": [-6.00, 3.88], "bot_right_coords": [-6.02, 3.19]}
