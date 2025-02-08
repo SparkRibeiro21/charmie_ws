@@ -2,7 +2,7 @@
 {"name": "Kitchen",     "nav_coords": [-2.00,  8.00], "top_left_coords": [ 7.32, 5.60], "bot_right_coords": [ 3.60,-0.12]},
 {"name": "Living Room", "nav_coords": [ 3.25,  5.00], "top_left_coords": [ 3.60, 5.60], "bot_right_coords": [ 0.61, 0.87]},
 {"name": "Hallway",     "nav_coords": [ 2.00,  3.00], "top_left_coords": [ 3.60, 0.87], "bot_right_coords": [ 0.61,-2.09]},
-{"name": "Office",      "nav_coords": [-3.00,  3.00], "top_left_coords": [ 4.06,-2.09], "bot_right_coords": [ 0.79,-7.00]},
-{"name": "Bedroom",     "nav_coords": [-3.00,  3.00], "top_left_coords": [ 6.50,-2.20], "bot_right_coords": [ 4.06,-7.00]},
-{"name": "Workshop",    "nav_coords": [-3.00,  3.00], "top_left_coords": [ 0.61, 5.60], "bot_right_coords": [-2.44,-3.24]}
+{"name": "Office",      "nav_coords": [-3.00,  3.00], "top_left_coords": [ 4.06,-2.09], "bot_right_coords": [ 0.79,-6.77]},
+{"name": "Bedroom",     "nav_coords": [-3.00,  3.00], "top_left_coords": [ 6.50,-2.20], "bot_right_coords": [ 4.06,-6.77]},
+{"name": "Workshop",    "nav_coords": [-3.00,  3.00], "top_left_coords": [ 0.61, 5.60], "bot_right_coords": [-3.05,-3.24]}
 ]
