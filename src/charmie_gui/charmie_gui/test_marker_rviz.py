@@ -17,6 +17,7 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_navigations =       self.create_publisher(MarkerArray, "visualization_marker_array_navigations", 10)
         self.publisher_marker_array_navigations_names = self.create_publisher(MarkerArray, "visualization_marker_array_navigations_names", 10)
 
+        self.publisher_marker_array_detected_person =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_person", 10)
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -60,6 +61,8 @@ class MarkerPublisher(Node):
         self.publish_marker_array_rooms()
         self.publish_marker_array_furniture()
         self.publish_marker_array_navigation()
+
+        self.publish_marker_array_detected_person()
 
 
     def publish_marker_array_rooms(self):
@@ -366,187 +369,99 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_navigations.publish(marker_array)
         self.publisher_marker_array_navigations_names.publish(marker_array_names)
 
-    """
-    def publish_marker_array(self):
+
+    def publish_marker_array_detected_person(self):
+
         marker_array = MarkerArray()
-        
-        sofa = Marker()
+        marker_array_names = MarkerArray()
 
-        # Header - Defines frame and timestamp
-        sofa.header.frame_id = "map"  # Change to "odom" or "base_link" if needed
-        sofa.header.stamp = self.get_clock().now().to_msg()
-        # Namespace and ID (useful when publishing multiple markers)
-        sofa.ns = "sofa"
-        sofa.id = 1  # Each marker must have a unique ID
-        # Marker Type (Choose shape)
-        sofa.type = Marker.CUBE  # Other options: SPHERE, CYLINDER, ARROW, etc.
-        # Marker Action
-        sofa.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+        x = -1.0
+        y = 0.0
+        height = 1.80
 
-        corner_top_left  = [3.610-0, 3.836-0]
-        # corner_top_right = [3.702-0, 1.846-0]
-        # corner_bot_left  = [2.731-0, 3.828-0]
-        corner_bot_right = [2.807-0, 1.899-0]
-        margin_x = 0.0
-        margin_y = 0.0
-        height = 0.4
+        person_size = 0.4
+        head_size = 0.3
 
-        sofa.pose.position.x = (corner_top_left[0] + corner_bot_right[0]) / 2  # Set the X coordinate
-        sofa.pose.position.y = (corner_top_left[1] + corner_bot_right[1]) / 2  # Set the X coordinate
-        sofa.pose.position.z = height/2  # Set the Z coordinate
-        
-        sofa.pose.orientation.x = 0.0
-        sofa.pose.orientation.y = 0.0
-        sofa.pose.orientation.z = 0.0
-        sofa.pose.orientation.w = 1.0  # No rotation
+        ### FALTA:
+        # ORIENTATION
 
-        sofa.scale.x = abs(corner_top_left[0] - corner_bot_right[0]) + 2*margin_x  # Width
-        sofa.scale.y = abs(corner_top_left[1] - corner_bot_right[1]) + 2*margin_y # Width
-        sofa.scale.z = height  # Height
-
-        # Color (RGBA format, values from 0 to 1)
-        sofa.color.r = 0.0  # Red
-        sofa.color.g = 1.0  # Green
-        sofa.color.b = 1.0  # Blue
-        sofa.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
-        
-        # Lifetime (0 = forever, otherwise, disappears after X seconds)
-        sofa.lifetime.sec = 0
-        sofa.lifetime.nanosec = 0
-
-        # Frame behavior (Keeps marker always facing the camera if enabled)
-        sofa.frame_locked = False
-
-
-
-
-        cabinet = Marker()
-
-        # Header - Defines frame and timestamp
-        cabinet.header.frame_id = "map"  # Change to "odom" or "base_link" if needed
-        cabinet.header.stamp = self.get_clock().now().to_msg()
-        # Namespace and ID (useful when publishing multiple markers)
-        cabinet.ns = "cabinet"
-        cabinet.id = 2  # Each marker must have a unique ID
-        # Marker Type (Choose shape)
-        cabinet.type = Marker.CUBE  # Other options: SPHERE, CYLINDER, ARROW, etc.
-        # Marker Action
-        cabinet.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
-
-        corner_top_left  = [3.610-1, 3.836-2]
-        # corner_top_right = [3.702-1, 1.846-2]
-        # corner_bot_left  = [2.731-1, 3.828-3]
-        corner_bot_right = [2.807-1, 1.899-3]
-        margin_x = 0.0
-        margin_y = 0.0
-        height = 0.4
-
-        cabinet.pose.position.x = (corner_top_left[0] + corner_bot_right[0]) / 4  # Set the X coordinate
-        cabinet.pose.position.y = (corner_top_left[1] + corner_bot_right[1]) / 4  # Set the X coordinate
-        cabinet.pose.position.z = height/2  # Set the Z coordinate
-        
-        # ROTATION:
-        theta = math.radians(45)
-        cabinet.pose.orientation.x = 0.0
-        cabinet.pose.orientation.y = 0.0
-        cabinet.pose.orientation.z = math.sin(theta/2)  # Rotate 45 degrees around the Z axis
-        cabinet.pose.orientation.w = math.cos(theta/2)  # Rotate 45 degrees around the Z axis
-
-
-        cabinet.scale.x = abs(corner_top_left[0] - corner_bot_right[0]) + 2*margin_x  # Width
-        cabinet.scale.y = abs(corner_top_left[1] - corner_bot_right[1]) + 2*margin_y # Width
-        cabinet.scale.z = height  # Height
-
-        # Color (RGBA format, values from 0 to 1)
-        cabinet.color.r = 1.0  # Red
-        cabinet.color.g = 1.0  # Green
-        cabinet.color.b = 1.0  # Blue
-        cabinet.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
-        
-        # Lifetime (0 = forever, otherwise, disappears after X seconds)
-        cabinet.lifetime.sec = 0
-        cabinet.lifetime.nanosec = 0
-
-        # Frame behavior (Keeps marker always facing the camera if enabled)
-        cabinet.frame_locked = False
-
-
-        marker_array.markers.append(sofa)
-        marker_array.markers.append(cabinet)
-
-        # Publish the marker
-        self.publisher_array.publish(marker_array)
-        self.get_logger().info("Marker Array published!")
-
-    """
-    
-
-    """
-    def publish_marker(self):
+        # for index, furniture in enumerate(self.house_furniture):
         marker = Marker()
-        
+
         # Header - Defines frame and timestamp
-        marker.header.frame_id = "map"  # Change to "odom" or "base_link" if needed
+        marker.header.frame_id = "map"
         marker.header.stamp = self.get_clock().now().to_msg()
-
         # Namespace and ID (useful when publishing multiple markers)
-        marker.ns = "basic_shapes"
+        marker.ns = "PersonB_"+"1"
         marker.id = 1  # Each marker must have a unique ID
-
         # Marker Type (Choose shape)
-        marker.type = Marker.CUBE  # Other options: SPHERE, CYLINDER, ARROW, etc.
-        
+        marker.type = Marker.CYLINDER  # Other options: SPHERE, CYLINDER, ARROW, etc.
         # Marker Action
         marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
 
 
-        corner_top_left  = [3.610-0, 3.836-0]
-        corner_top_right = [3.702-0, 1.846-0]
-        corner_bot_left  = [2.731-0, 3.828-0]
-        corner_bot_right = [2.807-0, 1.899-0]
-        margin_x = 0.0
-        margin_y = 0.0
-        height = 0.4
+        marker.pose.position.x = x  # Set the X coordinate
+        marker.pose.position.y = y  # Set the X coordinate
+        marker.pose.position.z = (height-head_size)/2  # Set the Z coordinate
 
-        # Position (x, y, z) and Orientation (quaternion w, x, y, z)
-        # marker.pose.position.x = 1.0  # Set the X coordinate
-        # marker.pose.position.y = 2.0  # Set the Y coordinate
-        # marker.pose.position.z = 0.0  # Set the Z coordinate
-
-        marker.pose.position.x = (corner_top_left[0] + corner_top_right[0] + corner_bot_left[0] + corner_bot_right[0]) / 4  # Set the X coordinate
-        marker.pose.position.y = (corner_top_left[1] + corner_top_right[1] + corner_bot_left[1] + corner_bot_right[1]) / 4  # Set the X coordinate
-        marker.pose.position.z = height/2  # Set the Z coordinate
-
-
-        # ROTATION:
-        theta = math.radians(45)
         marker.pose.orientation.x = 0.0
         marker.pose.orientation.y = 0.0
-        marker.pose.orientation.z = math.sin(theta/2)  # Rotate 45 degrees around the Z axis
-        marker.pose.orientation.w = math.cos(theta/2)  # Rotate 45 degrees around the Z axis
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0  # No rotation
 
-
-        # NO ROTATION: 
-        # marker.pose.orientation.x = 0.0
-        # marker.pose.orientation.y = 0.0
-        # marker.pose.orientation.z = 0.0
-        # marker.pose.orientation.w = 1.0  # No rotation
-
-        # Scale (size of marker)
-        # marker.scale.x = 0.5  # Width
-        # marker.scale.y = 0.5  # Depth
-        # marker.scale.z = 0.5  # Height
+        marker.scale.x = person_size # Width
+        marker.scale.y = person_size # Width
+        marker.scale.z = height-head_size  # Height
         
-        marker.scale.x = abs(corner_top_left[0] - corner_bot_left[0]) + 2*margin_x  # Width
-        marker.scale.y = abs(corner_top_left[1] - corner_top_right[1]) + 2*margin_y # Width
-        marker.scale.z = height  # Height
-
         # Color (RGBA format, values from 0 to 1)
-        marker.color.r = 0.0  # Red
-        marker.color.g = 1.0  # Green
-        marker.color.b = 1.0  # Blue
-        marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+        marker.color.r = 1.0 # 0.0  # Red
+        marker.color.g = 1.0 # 1.0  # Green
+        marker.color.b = 0.0 # 1.0  # Blue
+        marker.color.a = 1.0  # Alpha (1.0 = fully visible, 0.0 = invisible)
+        
+        # Lifetime (0 = forever, otherwise, disappears after X seconds)
+        marker.lifetime.sec = 0
+        marker.lifetime.nanosec = 0
 
+        # Frame behavior (Keeps marker always facing the camera if enabled)
+        marker.frame_locked = False
+        
+        marker_array.markers.append(marker)
+
+        # for index, furniture in enumerate(self.house_furniture):
+        marker = Marker()
+
+        # Header - Defines frame and timestamp
+        marker.header.frame_id = "map"
+        marker.header.stamp = self.get_clock().now().to_msg()
+        # Namespace and ID (useful when publishing multiple markers)
+        marker.ns = "PersonH_"+"1"
+        marker.id = 100+1  # Each marker must have a unique ID
+        # Marker Type (Choose shape)
+        marker.type = Marker.SPHERE  # Other options: SPHERE, CYLINDER, ARROW, etc.
+        # Marker Action
+        marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+
+
+        marker.pose.position.x = x  # Set the X coordinate
+        marker.pose.position.y = y  # Set the X coordinate
+        marker.pose.position.z = height-(head_size/2)  # Set the Z coordinate
+
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0  # No rotation
+
+        marker.scale.x = head_size # Width
+        marker.scale.y = head_size # Width
+        marker.scale.z = head_size  # Height
+        
+        # Color (RGBA format, values from 0 to 1)
+        marker.color.r = 1.0 # 0.0  # Red
+        marker.color.g = 1.0 # 1.0  # Green
+        marker.color.b = 0.0 # 1.0  # Blue
+        marker.color.a = 1.0  # Alpha (1.0 = fully visible, 0.0 = invisible)
+        
         # Lifetime (0 = forever, otherwise, disappears after X seconds)
         marker.lifetime.sec = 0
         marker.lifetime.nanosec = 0
@@ -554,11 +469,10 @@ class MarkerPublisher(Node):
         # Frame behavior (Keeps marker always facing the camera if enabled)
         marker.frame_locked = False
 
-        # Publish the marker
-        self.publisher.publish(marker)
-        self.get_logger().info("Marker published!")
-    """
+        marker_array.markers.append(marker)
 
+        self.publisher_marker_array_detected_person.publish(marker_array)
+    
 
 def main(args=None):
     rclpy.init(args=args)
