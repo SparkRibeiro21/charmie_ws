@@ -56,10 +56,10 @@ class MarkerPublisher(Node):
         self.timer = self.create_timer(1.0, self.publish_all_marker_arrays)  # Publish every 1 second
 
 
-
     def publish_all_marker_arrays(self):
         self.publish_marker_array_rooms()
         self.publish_marker_array_furniture()
+        self.publish_marker_array_navigation()
 
 
     def publish_marker_array_rooms(self):
@@ -85,7 +85,6 @@ class MarkerPublisher(Node):
             marker.type = Marker.CUBE  # Other options: SPHERE, CYLINDER, ARROW, etc.
             # Marker Action
             marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
-
 
             marker.pose.position.x = (room['top_left_coords'][0] + room['bot_right_coords'][0]) / 2  # Set the X coordinate
             marker.pose.position.y = (room['top_left_coords'][1] + room['bot_right_coords'][1]) / 2  # Set the X coordinate
@@ -177,12 +176,18 @@ class MarkerPublisher(Node):
             marker.scale.y = abs(furniture['top_left_coords'][1] - furniture['bot_right_coords'][1]) # + 2*margin_y # Width
             marker.scale.z = furniture['height']  # Height
 
-            rgb_v = self.COLOR_LIST[index % len(self.COLOR_LIST)]
+            # rgb_v = self.COLOR_LIST[index % len(self.COLOR_LIST)]
             # print(ctr % len(self.COLOR_LIST), rgb_v)
             # Color (RGBA format, values from 0 to 1)
-            marker.color.r = rgb_v[0] # 0.0  # Red
-            marker.color.g = rgb_v[1] # 1.0  # Green
-            marker.color.b = rgb_v[2] # 1.0  # Blue
+            # marker.color.r = rgb_v[0] # 0.0  # Red
+            # marker.color.g = rgb_v[1] # 1.0  # Green
+            # marker.color.b = rgb_v[2] # 1.0  # Blue
+            # marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+            
+            # Color (RGBA format, values from 0 to 1)
+            marker.color.r = 0.5 # 0.0  # Red
+            marker.color.g = 0.5 # 1.0  # Green
+            marker.color.b = 0.5 # 1.0  # Blue
             marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
             
             # Lifetime (0 = forever, otherwise, disappears after X seconds)
@@ -219,6 +224,149 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_furniture_names.publish(marker_array_names)
 
 
+    def publish_marker_array_navigation(self):
+
+        marker_array = MarkerArray()
+        marker_array_names = MarkerArray()
+
+        height = 0.185 # floor_to_base(0.05) + half_of_move_base_haight(0.27/2) 
+        for index, room in enumerate(self.house_rooms):
+            # print(index, room)
+            marker = Marker()
+
+            # Header - Defines frame and timestamp
+            marker.header.frame_id = "map"
+            marker.header.stamp = self.get_clock().now().to_msg()
+            # Namespace and ID (useful when publishing multiple markers)
+            marker.ns = room['name']+"_nav"
+            marker.id = 100+index  # Each marker must have a unique ID
+            # Marker Type (Choose shape)
+            marker.type = Marker.ARROW  # Other options: SPHERE, CYLINDER, ARROW, etc.
+            # Marker Action
+            marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+
+            # Position (Start of Arrow)
+            marker.pose.position.x = room['nav_coords'][0]  # Set the X coordinate
+            marker.pose.position.y = room['nav_coords'][1]  # Set the X coordinate
+            marker.pose.position.z = height  # Set the Z coordinate
+            
+            # print(marker.ns, room['nav_coords'][2])
+            marker.pose.orientation.x = 0.0
+            marker.pose.orientation.y = 0.0
+            marker.pose.orientation.z = math.sin(math.radians(room['nav_coords'][2])/2)  # Rotate 45 degrees around the Z axis
+            marker.pose.orientation.w = math.cos(math.radians(room['nav_coords'][2])/2)  # Rotate 45 degrees around the Z axis
+
+            # Scale (Defines Arrow Size)
+            marker.scale.x = 1.0  # Shaft length
+            marker.scale.y = 0.1  # Shaft thickness
+            marker.scale.z = 0.1  # Arrowhead size
+
+            # Color (RGBA format, values from 0 to 1)
+            marker.color.r = 0.0  # Red
+            marker.color.g = 0.0  # Green
+            marker.color.b = 1.0  # Blue
+            marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+            
+            # Lifetime (0 = forever, otherwise, disappears after X seconds)
+            marker.lifetime.sec = 0
+            marker.lifetime.nanosec = 0
+
+            # Frame behavior (Keeps marker always facing the camera if enabled)
+            marker.frame_locked = False
+            
+            marker_array.markers.append(marker)
+
+            
+            marker_name = Marker()
+            marker_name.header.frame_id = "map"
+            marker_name.header.stamp = self.get_clock().now().to_msg()
+            marker_name.ns = room['name']+"_nav"+" Name"
+            marker_name.id = index+len(self.house_rooms)
+            marker_name.type = Marker.TEXT_VIEW_FACING
+            marker_name.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+            marker_name.pose.position.x = room['nav_coords'][0]  # Set the X coordinate
+            marker_name.pose.position.y = room['nav_coords'][1]  # Set the X coordinate
+            marker_name.pose.position.z = height  # Set the Z coordinate
+            marker_name.pose.orientation.w = 1.0  # No rotation
+            marker_name.scale.z = self.names_text_size  # Height
+            marker_name.text = room['name'].replace(" ", "_")+"_Nav"
+            marker_name.color.r = 1.0  # Red
+            marker_name.color.g = 1.0  # Green
+            marker_name.color.b = 1.0  # Blue
+            marker_name.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+
+            marker_array_names.markers.append(marker_name)
+
+        for index, furniture in enumerate(self.house_furniture):
+            marker = Marker()
+
+            # Header - Defines frame and timestamp
+            marker.header.frame_id = "map"
+            marker.header.stamp = self.get_clock().now().to_msg()
+            # Namespace and ID (useful when publishing multiple markers)
+            marker.ns = furniture['name']+"_nav"
+            marker.id = 100+index  # Each marker must have a unique ID
+            # Marker Type (Choose shape)
+            marker.type = Marker.ARROW  # Other options: SPHERE, CYLINDER, ARROW, etc.
+            # Marker Action
+            marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+
+            # Position (Start of Arrow)
+            marker.pose.position.x = furniture['nav_coords'][0]  # Set the X coordinate
+            marker.pose.position.y = furniture['nav_coords'][1]  # Set the X coordinate
+            marker.pose.position.z = height  # Set the Z coordinate
+            
+            # print(marker.ns, furniture['nav_coords'][2])
+            marker.pose.orientation.x = 0.0
+            marker.pose.orientation.y = 0.0
+            marker.pose.orientation.z = math.sin(math.radians(furniture['nav_coords'][2])/2)  # Rotate 45 degrees around the Z axis
+            marker.pose.orientation.w = math.cos(math.radians(furniture['nav_coords'][2])/2)  # Rotate 45 degrees around the Z axis
+
+            # Scale (Defines Arrow Size)
+            marker.scale.x = 1.0  # Shaft length
+            marker.scale.y = 0.1  # Shaft thickness
+            marker.scale.z = 0.1  # Arrowhead size
+
+            # Color (RGBA format, values from 0 to 1)
+            marker.color.r = 0.0  # Red
+            marker.color.g = 1.0  # Green
+            marker.color.b = 1.0  # Blue
+            marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+            
+            # Lifetime (0 = forever, otherwise, disappears after X seconds)
+            marker.lifetime.sec = 0
+            marker.lifetime.nanosec = 0
+
+            # Frame behavior (Keeps marker always facing the camera if enabled)
+            marker.frame_locked = False
+            
+            marker_array.markers.append(marker)
+
+            
+            marker_name = Marker()
+            marker_name.header.frame_id = "map"
+            marker_name.header.stamp = self.get_clock().now().to_msg()
+            marker_name.ns = furniture['name']+"_nav"+" Name"
+            marker_name.id = index+len(self.house_furniture)
+            marker_name.type = Marker.TEXT_VIEW_FACING
+            marker_name.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+            marker_name.pose.position.x = furniture['nav_coords'][0]  # Set the X coordinate
+            marker_name.pose.position.y = furniture['nav_coords'][1]  # Set the X coordinate
+            marker_name.pose.position.z = height  # Set the Z coordinate
+            marker_name.pose.orientation.w = 1.0  # No rotation
+            marker_name.scale.z = self.names_text_size  # Height
+            marker_name.text = furniture['name'].replace(" ", "_")+"_Nav"
+            marker_name.color.r = 1.0  # Red
+            marker_name.color.g = 1.0  # Green
+            marker_name.color.b = 1.0  # Blue
+            marker_name.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+
+            marker_array_names.markers.append(marker_name)
+
+        self.publisher_marker_array_navigations.publish(marker_array)
+        self.publisher_marker_array_navigations_names.publish(marker_array_names)
+
+    """
     def publish_marker_array(self):
         marker_array = MarkerArray()
         
@@ -301,8 +449,8 @@ class MarkerPublisher(Node):
         theta = math.radians(45)
         cabinet.pose.orientation.x = 0.0
         cabinet.pose.orientation.y = 0.0
-        cabinet.pose.orientation.z = math.cos(theta/2)  # Rotate 45 degrees around the Z axis
-        cabinet.pose.orientation.w = math.sin(theta/2)  # Rotate 45 degrees around the Z axis
+        cabinet.pose.orientation.z = math.sin(theta/2)  # Rotate 45 degrees around the Z axis
+        cabinet.pose.orientation.w = math.cos(theta/2)  # Rotate 45 degrees around the Z axis
 
 
         cabinet.scale.x = abs(corner_top_left[0] - corner_bot_right[0]) + 2*margin_x  # Width
@@ -330,7 +478,8 @@ class MarkerPublisher(Node):
         self.publisher_array.publish(marker_array)
         self.get_logger().info("Marker Array published!")
 
-
+    """
+    
 
     """
     def publish_marker(self):
@@ -373,8 +522,8 @@ class MarkerPublisher(Node):
         theta = math.radians(45)
         marker.pose.orientation.x = 0.0
         marker.pose.orientation.y = 0.0
-        marker.pose.orientation.z = math.cos(theta/2)  # Rotate 45 degrees around the Z axis
-        marker.pose.orientation.w = math.sin(theta/2)  # Rotate 45 degrees around the Z axis
+        marker.pose.orientation.z = math.sin(theta/2)  # Rotate 45 degrees around the Z axis
+        marker.pose.orientation.w = math.cos(theta/2)  # Rotate 45 degrees around the Z axis
 
 
         # NO ROTATION: 
