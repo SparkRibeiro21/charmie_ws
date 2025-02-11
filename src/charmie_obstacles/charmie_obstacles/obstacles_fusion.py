@@ -39,9 +39,7 @@ class Robot():
         self.lidar_to_robot_center = 0.255
         self.neck_visual_lines_length = 1.0
 
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0
+        self.robot_pose = Pose2D()
 
         self.MAX_OBS_DISTANCE = 2.5
         self.OBSTACLE_RADIUS_THRESHOLD = 0.05
@@ -108,11 +106,11 @@ class Robot():
         self.current_frame = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
 
 
-    def pose2d_msg_to_position(self, pose: Pose2D):
+    # def pose2d_msg_to_position(self, pose: Pose2D):
         
-        self.robot_x = pose.x
-        self.robot_y = pose.y
-        # self.robot_t = pose.theta
+        # self.robot_pose.x = pose.x
+        # self.robot_pose.y = pose.y
+        # self.robot_pose.theta = pose.theta
 
     
     def update_debug_drawings(self):
@@ -153,30 +151,30 @@ class Robot():
                 # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*room['bot_right_coords'][0]), int(self.yc_adj - self.scale*room['bot_right_coords'][1])), 6, (0,0,255), -1)
             
             ### ROBOT
-            cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
-            # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
-            cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                         int(self.yc_adj - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
+            cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_pose.x), int(self.yc_adj - self.scale * self.robot_pose.y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
+            # cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_pose.x), int(self.yc_adj - self.scale * self.robot_pose.y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.xc_adj + self.scale*self.robot_pose.x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_pose.theta + math.pi/2)),
+                                         int(self.yc_adj - self.scale*self.robot_pose.y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_pose.theta + math.pi/2))), (int)(self.scale*self.lidar_radius)+2, (0, 255, 255), -1)
             
             # NECK DIRECTION, CAMERA FOV
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
-                     (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4)),
-                      int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 - math.pi/4))), (0,255,255), 1)
-            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_x), int(self.yc_adj - self.scale * self.robot_y)), 
-                     (int(self.xc_adj + self.scale*self.robot_x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4)),
-                      int(self.yc_adj - self.scale*self.robot_y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_t + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
+            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_pose.x), int(self.yc_adj - self.scale * self.robot_pose.y)), 
+                     (int(self.xc_adj + self.scale*self.robot_pose.x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_pose.theta + self.neck_pan + math.pi/2 - math.pi/4)),
+                      int(self.yc_adj - self.scale*self.robot_pose.y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_pose.theta + self.neck_pan + math.pi/2 - math.pi/4))), (0,255,255), 1)
+            cv2.line(self.test_image, (int(self.xc_adj + self.scale*self.robot_pose.x), int(self.yc_adj - self.scale * self.robot_pose.y)), 
+                     (int(self.xc_adj + self.scale*self.robot_pose.x + (self.neck_visual_lines_length)*self.scale*math.cos(self.robot_pose.theta + self.neck_pan + math.pi/2 + math.pi/4)),
+                      int(self.yc_adj - self.scale*self.robot_pose.y - (self.neck_visual_lines_length)*self.scale*math.sin(self.robot_pose.theta + self.neck_pan + math.pi/2 + math.pi/4))), (0,255,255), 1)
                        
             for points in self.lidar_obstacle_points:
 
-                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                        int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_pose.theta + math.pi/2)),
+                                        int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_pose.theta + math.pi/2))),
                                         3, (0, 0, 255), -1)
 
 
             for points in self.camera_obstacle_points:
 
-                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                        int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                cv2.circle(self.test_image, (int(self.xc_adj + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_pose.theta + math.pi/2)),
+                                        int(self.yc_adj - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_pose.theta + math.pi/2))),
                                         3, (255, 0, 0), -1)
 
             cv2.imshow("Person Localization", self.test_image)
@@ -202,26 +200,26 @@ class Robot():
 
         if self.DEBUG_DRAW_JUST_CALCULATION_POINTS:
             for points in self.lidar_obstacle_points_rel:
-                cv2.circle(self.test_image_, (int(self.xc + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                            int(self.yc - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                cv2.circle(self.test_image_, (int(self.xc + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_pose.theta + math.pi/2)),
+                                            int(self.yc - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_pose.theta + math.pi/2))),
                                             int(self.OBSTACLE_RADIUS_THRESHOLD*self.scale), (0, 0, 255), 1)
 
 
             for points in self.camera_obstacle_points_rel:
-                cv2.circle(self.test_image_, (int(self.xc + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                            int(self.yc - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                cv2.circle(self.test_image_, (int(self.xc + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_pose.theta + math.pi/2)),
+                                            int(self.yc - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_pose.theta + math.pi/2))),
                                             int(self.OBSTACLE_RADIUS_THRESHOLD*self.scale), (255, 0, 0), 1)
 
         else:
             for points in self.lidar_obstacle_points_rel_draw:
-                cv2.circle(self.test_image_, (int(self.xc + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                            int(self.yc - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                cv2.circle(self.test_image_, (int(self.xc + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_pose.theta + math.pi/2)),
+                                            int(self.yc - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_pose.theta + math.pi/2))),
                                             int(self.OBSTACLE_RADIUS_THRESHOLD*self.scale), (0, 0, 255), 1)
 
 
             for points in self.camera_obstacle_points_rel_draw:
-                cv2.circle(self.test_image_, (int(self.xc + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                            int(self.yc - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_t + math.pi/2))),
+                cv2.circle(self.test_image_, (int(self.xc + self.scale * points.x),# + (self.robot_radius)*self.scale*math.cos(self.robot_pose.theta + math.pi/2)),
+                                            int(self.yc - self.scale * points.y)),# - (self.robot_radius)*self.scale*math.sin(self.robot_pose.theta + math.pi/2))),
                                             int(self.OBSTACLE_RADIUS_THRESHOLD*self.scale), (255, 0, 0), 1)
 
     def calculate_obstacle_points(self, sensor="none"):
@@ -456,7 +454,7 @@ class DebugVisualNode(Node):
             imu_orientation_norm += 360.0
 
         self.robot.imu_orientation_norm_rad = math.radians(imu_orientation_norm)
-        self.robot.robot_t = -self.robot.imu_orientation_norm_rad
+        self.robot.robot_pose.theta = -self.robot.imu_orientation_norm_rad
 
 
     def get_obstacles_head_depth_callback(self, pc: PointCloudCoordinates):
@@ -489,11 +487,11 @@ class DebugVisualNode(Node):
 
                     # if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
                     angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
-                    theta_aux = math.pi/2 - (angle_obj - self.robot.robot_t)
+                    theta_aux = math.pi/2 - (angle_obj - self.robot.robot_pose.theta)
 
                     target = Point()
-                    target.x = dist_obj * math.cos(theta_aux) + self.robot.robot_x
-                    target.y = dist_obj * math.sin(theta_aux) + self.robot.robot_y
+                    target.x = dist_obj * math.cos(theta_aux) + self.robot.robot_pose.x
+                    target.y = dist_obj * math.sin(theta_aux) + self.robot.robot_pose.y
                     target.z = object_rel_pos.z
 
                     self.robot.camera_obstacle_points.append(target)
@@ -578,15 +576,15 @@ class DebugVisualNode(Node):
                     self.robot.lidar_obstacle_points_rel_draw.append(object_rel_pos)
 
                 if self.robot.DEBUG_DRAW_IMAGE_OVERALL:
-                    obs_x = value * math.cos(key + self.robot.robot_t + math.pi/2)
-                    obs_y = value * math.sin(key + self.robot.robot_t + math.pi/2)
+                    obs_x = value * math.cos(key + self.robot.robot_pose.theta + math.pi/2)
+                    obs_y = value * math.sin(key + self.robot.robot_pose.theta + math.pi/2)
 
-                    adj_x = (self.robot.robot_radius - self.robot.lidar_radius)*math.cos(self.robot.robot_t + math.pi/2)
-                    adj_y = (self.robot.robot_radius - self.robot.lidar_radius)*math.sin(self.robot.robot_t + math.pi/2)
+                    adj_x = (self.robot.robot_radius - self.robot.lidar_radius)*math.cos(self.robot.robot_pose.theta + math.pi/2)
+                    adj_y = (self.robot.robot_radius - self.robot.lidar_radius)*math.sin(self.robot.robot_pose.theta + math.pi/2)
 
                     target = Point()
-                    target.x = self.robot.robot_x + obs_x + adj_x
-                    target.y = self.robot.robot_y + obs_y + adj_y
+                    target.x = self.robot.robot_pose.x + obs_x + adj_x
+                    target.y = self.robot.robot_pose.y + obs_y + adj_y
                     target.z = 0.35 # lidar height on the robot
 
                     self.robot.lidar_obstacle_points.append(target)
@@ -606,10 +604,8 @@ class DebugVisualNode(Node):
         self.robot.neck_tilt = -math.radians(- pose.tilt)
 
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot.robot_x = pose.x
-        self.robot.robot_y = pose.y
-        # self.robot.robot_t = pose.theta
-    
+        self.robot.robot_pose = pose
+        
     def publish_obstacles(self, sensor="none"):       
 
         if self.robot.DEBUG_DRAW_IMAGE:

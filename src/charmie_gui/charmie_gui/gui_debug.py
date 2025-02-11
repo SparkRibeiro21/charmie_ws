@@ -164,9 +164,7 @@ class DebugVisualNode(Node):
         self.new_detected_objects = False
         self.new_detected_objects_hand = False
 
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0
+        self.robot_pose = Pose2D()
 
         self.lidar_time = 0.0
         self.odometry_time = 0.0
@@ -434,7 +432,7 @@ class DebugVisualNode(Node):
             imu_orientation_norm += 360.0
 
         self.imu_orientation_norm_rad = math.radians(imu_orientation_norm)
-        self.robot_t = -self.imu_orientation_norm_rad
+        self.robot_pose.theta = -self.imu_orientation_norm_rad
         
     def get_camera_obstacles_callback(self, points: ListOfPoints):
         self.camera_obstacle_points = points.coords
@@ -467,15 +465,15 @@ class DebugVisualNode(Node):
             
             if value > self.min_dist_error: # and value < self.max_dist_error:
 
-                obs_x = value * math.cos(key + self.robot_t + math.pi/2)
-                obs_y = value * math.sin(key + self.robot_t + math.pi/2)
+                obs_x = value * math.cos(key + self.robot_pose.theta + math.pi/2)
+                obs_y = value * math.sin(key + self.robot_pose.theta + math.pi/2)
 
-                adj_x = (self.robot_radius - self.lidar_radius)*math.cos(self.robot_t + math.pi/2)
-                adj_y = (self.robot_radius - self.lidar_radius)*math.sin(self.robot_t + math.pi/2)
+                adj_x = (self.robot_radius - self.lidar_radius)*math.cos(self.robot_pose.theta + math.pi/2)
+                adj_y = (self.robot_radius - self.lidar_radius)*math.sin(self.robot_pose.theta + math.pi/2)
 
                 target = Point()
-                target.x = self.robot_x + obs_x + adj_x
-                target.y = self.robot_y + obs_y + adj_y
+                target.x = self.robot_pose.x + obs_x + adj_x
+                target.y = self.robot_pose.y + obs_y + adj_y
                 target.z = 0.35 # lidar height on the robot
 
                 self.lidar_obstacle_points.append(target)
@@ -495,14 +493,13 @@ class DebugVisualNode(Node):
         self.neck_tilt = -math.radians(- pose.tilt)
 
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_x = pose.x
-        self.robot_y = pose.y
+        self.robot_pose = pose
         
-        self.all_pos_x_val.append(self.robot_x)
-        self.all_pos_y_val.append(self.robot_y)
+        self.all_pos_x_val.append(self.robot_pose.x)
+        self.all_pos_y_val.append(self.robot_pose.y)
         
         self.odometry_time = time.time()
-        # self.robot_t = pose.theta
+        # self.robot_pose.theta = pose.theta
         
     def search_for_person_detections_callback(self, points: ListOfDetectedPerson):
         self.search_for_person = points
@@ -1845,18 +1842,18 @@ class DebugVisualMain():
 
 
         ### DRAW ROBOT
-        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(self.node.robot_x, self.node.robot_y), radius=self.size_to_map(self.robot_radius), width=0)
+        pygame.draw.circle(self.WIN, self.BLUE_L, self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y), radius=self.size_to_map(self.robot_radius), width=0)
         
-        front_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_t + math.pi/2)), \
-                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_t + math.pi/2)))
-        left_of_robot_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_t)), \
-                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_t)))
-        right_of_robot_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]+(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_t)), \
-                                self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]+(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_t)))
+        front_of_robot_point = (self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[0]-(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_pose.theta + math.pi/2)), \
+                                self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[1]-(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_pose.theta + math.pi/2)))
+        left_of_robot_point =  (self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[0]-(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_pose.theta)), \
+                                self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[1]-(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_pose.theta)))
+        right_of_robot_point = (self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[0]+(self.size_to_map(self.robot_radius)*math.cos(-self.node.robot_pose.theta)), \
+                                self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[1]+(self.size_to_map(self.robot_radius)*math.sin(-self.node.robot_pose.theta)))
 
-        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), front_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
-        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_of_robot_point,  int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
-        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y), front_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y), left_of_robot_point,  int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y), right_of_robot_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
             
 
         ### DRAW ROBOT PAST LOCATIONS (MOVEMENT)
@@ -1865,13 +1862,13 @@ class DebugVisualMain():
 
 
         ### NECK DIRECTION, CAMERA FOV
-        left_vision_range_limit_point =  (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(neck_visual_lines_length)*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)), \
-                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(neck_visual_lines_length)*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 - math.pi/4)))
-        right_vision_range_limit_point = (self.coords_to_map(self.node.robot_x, self.node.robot_y)[0]-(self.size_to_map(neck_visual_lines_length)*math.cos(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)), \
-                                          self.coords_to_map(self.node.robot_x, self.node.robot_y)[1]-(self.size_to_map(neck_visual_lines_length)*math.sin(-self.node.robot_t - self.node.neck_pan + math.pi/2 + math.pi/4)))
+        left_vision_range_limit_point =  (self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[0]-(self.size_to_map(neck_visual_lines_length)*math.cos(-self.node.robot_pose.theta - self.node.neck_pan + math.pi/2 - math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[1]-(self.size_to_map(neck_visual_lines_length)*math.sin(-self.node.robot_pose.theta - self.node.neck_pan + math.pi/2 - math.pi/4)))
+        right_vision_range_limit_point = (self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[0]-(self.size_to_map(neck_visual_lines_length)*math.cos(-self.node.robot_pose.theta - self.node.neck_pan + math.pi/2 + math.pi/4)), \
+                                          self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y)[1]-(self.size_to_map(neck_visual_lines_length)*math.sin(-self.node.robot_pose.theta - self.node.neck_pan + math.pi/2 + math.pi/4)))
 
-        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), left_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
-        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_x, self.node.robot_y), right_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y), left_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
+        pygame.draw.line(self.WIN, self.BLUE, self.coords_to_map(self.node.robot_pose.x, self.node.robot_pose.y), right_vision_range_limit_point, int((self.MAP_SIDE*(0.05/10.0*(1/self.MAP_SCALE)))))
 
 
         ### NAVIGATION TARGETS
@@ -1883,7 +1880,7 @@ class DebugVisualMain():
 
         ### OBSTACLES POINTS (LIDAR, Depth Head Camera and Final Obstacles Fusion)
         for points in self.node.lidar_obstacle_points:
-            # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_x+points.x, self.node.robot_y+points.y), radius=1, width=0)
+            # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_pose.x+points.x, self.node.robot_pose.y+points.y), radius=1, width=0)
             pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(points.x, points.y), radius=1, width=0)
 
         for points in self.node.camera_obstacle_points:
@@ -1895,11 +1892,11 @@ class DebugVisualMain():
             dist_obj = math.sqrt(points.x**2 + points.y**2)
 
             angle_obj = math.atan2(points.x, points.y)
-            theta_aux = math.pi/2 - (angle_obj - self.node.robot_t)
+            theta_aux = math.pi/2 - (angle_obj - self.node.robot_pose.theta)
 
             target = Point()
-            target.x = dist_obj * math.cos(theta_aux) + self.node.robot_x
-            target.y = dist_obj * math.sin(theta_aux) + self.node.robot_y
+            target.x = dist_obj * math.cos(theta_aux) + self.node.robot_pose.x
+            target.y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
             target.z = points.z
 
             pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(target.x, target.y), radius=2, width=0)
@@ -2029,17 +2026,17 @@ class DebugVisualMain():
                         self.show_navigation_locations = not self.show_navigation_locations
 
                     if event.key == pygame.K_w:
-                        self.node.robot_y+=0.1
+                        self.node.robot_pose.x+=0.1
                     if event.key == pygame.K_s:
-                        self.node.robot_y-=0.1
+                        self.node.robot_pose.x-=0.1
                     if event.key == pygame.K_a:
-                        self.node.robot_x-=0.1
+                        self.node.robot_pose.y+=0.1
                     if event.key == pygame.K_d:
-                        self.node.robot_x+=0.1
+                        self.node.robot_pose.y-=0.1
                     if event.key == pygame.K_q:
-                        self.node.robot_t+=math.radians(15)
+                        self.node.robot_pose.theta+=math.radians(15)
                     if event.key == pygame.K_e:
-                        self.node.robot_t-=math.radians(15)
+                        self.node.robot_pose.theta-=math.radians(15)
 
                     if event.key == pygame.K_c:
                         self.node.all_pos_x_val.clear()

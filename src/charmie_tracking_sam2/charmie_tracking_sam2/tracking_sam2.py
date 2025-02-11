@@ -38,9 +38,7 @@ class TrackingNode(Node):
         self.waiting_for_pcloud = False
 
         # robot localization
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0
+        self.robot_pose = Pose2D()
 
         ### Topics ###
         # Intel Realsense
@@ -125,9 +123,7 @@ class TrackingNode(Node):
         self.new_head_rgb = True
  
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_x = pose.x
-        self.robot_y = pose.y
-        self.robot_t = pose.theta
+        self.robot_pose = pose
 
 
 def main(args=None):
@@ -318,10 +314,10 @@ class TrackingMain():
                     angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
                     dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
 
-                    theta_aux = math.pi/2 - (angle_obj - self.node.robot_t)
+                    theta_aux = math.pi/2 - (angle_obj - self.node.robot_pose.theta)
 
-                    target_x = dist_obj * math.cos(theta_aux) + self.node.robot_x
-                    target_y = dist_obj * math.sin(theta_aux) + self.node.robot_y
+                    target_x = dist_obj * math.cos(theta_aux) + self.node.robot_pose.x
+                    target_y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
 
                     object_abs_pos = Point()
                     object_abs_pos.x = target_x

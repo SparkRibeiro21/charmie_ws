@@ -289,9 +289,7 @@ class ROS2TaskNode(Node):
         self.new_tracking_mask_msg = False
 
         # robot localization
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0
+        self.robot_pose = Pose2D()
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -417,9 +415,7 @@ class ROS2TaskNode(Node):
         self.obstacles = obs
 
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_x = pose.x
-        self.robot_y = pose.y
-        self.robot_t = pose.theta
+        self.robot_pose = pose
 
     def arm_finished_movement_callback(self, flag: Bool):
         # self.get_logger().info("Received response from arm finishing movement")
@@ -2032,7 +2028,7 @@ class RobotStdFunctions():
 
     def get_robot_localization(self):
 
-        return self.node.robot_x, self.node.robot_y, self.node.robot_t
+        return self.node.robot_pose.x, self.node.robot_pose.y, self.node.robot_pose.theta
 
     def get_head_rgb_image(self):
 

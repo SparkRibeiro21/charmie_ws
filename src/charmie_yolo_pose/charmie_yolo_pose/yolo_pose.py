@@ -151,9 +151,7 @@ class YoloPoseNode(Node):
         self.center_torso_person_list = []
         self.center_head_person_list = []
 
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0 # math.pi/2
+        self.robot_pose = Pose2D()
 
         self.N_KEYPOINTS = 17
         self.NUMBER_OF_LEGS_KP = 4
@@ -873,9 +871,7 @@ class YoloPoseNode(Node):
 
 
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_x = pose.x
-        self.robot_y = pose.y
-        self.robot_t = pose.theta
+        self.robot_pose = pose
 
 
     def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
@@ -988,10 +984,10 @@ class YoloPoseNode(Node):
         angle_person = math.atan2(person_rel_pos.x, person_rel_pos.y)
         dist_person = math.sqrt(person_rel_pos.x**2 + person_rel_pos.y**2)
 
-        theta_aux = math.pi/2 - (angle_person - self.robot_t)
+        theta_aux = math.pi/2 - (angle_person - self.robot_pose.theta)
 
-        target_x = dist_person * math.cos(theta_aux) + self.robot_x
-        target_y = dist_person * math.sin(theta_aux) + self.robot_y
+        target_x = dist_person * math.cos(theta_aux) + self.robot_pose.x
+        target_y = dist_person * math.sin(theta_aux) + self.robot_pose.y
 
         a_ref = (target_x, target_y)
         # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
@@ -1015,10 +1011,10 @@ class YoloPoseNode(Node):
         angle_head = math.atan2(head_rel_pos.x, head_rel_pos.y)
         dist_head = math.sqrt(head_rel_pos.x**2 + head_rel_pos.y**2)
 
-        theta_aux = math.pi/2 - (angle_head - self.robot_t)
+        theta_aux = math.pi/2 - (angle_head - self.robot_pose.theta)
 
-        target_x = dist_head * math.cos(theta_aux) + self.robot_x
-        target_y = dist_head * math.sin(theta_aux) + self.robot_y
+        target_x = dist_head * math.cos(theta_aux) + self.robot_pose.x
+        target_y = dist_head * math.sin(theta_aux) + self.robot_pose.y
 
         a_ref = (target_x, target_y)
         # print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)

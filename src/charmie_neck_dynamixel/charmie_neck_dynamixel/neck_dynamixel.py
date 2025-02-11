@@ -138,10 +138,8 @@ class NeckNode(Node):
 
         ########## CHANGE TO LOGGER ##########
         print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
-                    
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0
+        
+        self.robot_pose = Pose2D()
 
         self.continuous_tracking = False
         self.continuous_tracking_point_position = Point()
@@ -374,9 +372,7 @@ class NeckNode(Node):
 
     ########## CALLBACKS ##########
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_x = pose.x
-        self.robot_y = pose.y
-        self.robot_t = pose.theta
+        self.robot_pose = pose
 
     ########## NECK CONTROL FUNCTIONS ##########
     # Initially I created a class for NeckControl, however due to the errors in readings of neck positios from the servos, we changed to open loop readings.
@@ -494,13 +490,13 @@ class NeckNode(Node):
         # where there was an error of 4/5 degrees because the axis were not alligned 
         bottom_servo_to_robot_center = 0.065
 
-        # print(math.degrees(self.robot_t))       
-        ang = math.atan2(self.robot_y + bottom_servo_to_robot_center - target_y, self.robot_x - target_x) + math.pi/2
+        # print(math.degrees(self.robot_pose.theta))       
+        ang = math.atan2(self.robot_pose.y + bottom_servo_to_robot_center - target_y, self.robot_pose.x - target_x) + math.pi/2
         # print("ang_rad:", ang)
         ang = math.degrees(ang)
         # print("ang_deg:", ang)
     
-        pan_neck_to_coords = math.degrees(self.robot_t) - ang
+        pan_neck_to_coords = math.degrees(self.robot_pose.theta) - ang
         if pan_neck_to_coords < -math.degrees(math.pi):
             pan_neck_to_coords += math.degrees(2*math.pi)
     
@@ -512,7 +508,7 @@ class NeckNode(Node):
         # self.get_logger().info("neck back angle %d" %pan_neck_to_coords)
 
         ### TILT MOVEMENT (UP - DOWN)
-        dist = math.sqrt((self.robot_y - target_y)**2 + (self.robot_x - target_x)**2)
+        dist = math.sqrt((self.robot_pose.y - target_y)**2 + (self.robot_pose.x - target_x)**2)
 
         # Constants
         h = 1.30 # height of rotation axis of up/down servo from the ground (should be automatic). Does not consider changes in torso.
