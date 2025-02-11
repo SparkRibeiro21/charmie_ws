@@ -761,9 +761,9 @@ class DebugVisualMain():
         self.map_init_height = 260
 
         self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
-        self.MAP_SCALE = 1.15
-        self.MAP_ADJUST_X = -2.5
-        self.MAP_ADJUST_Y = -8.5
+        self.MAP_SCALE = 1.40
+        self.MAP_ADJUST_X = 0.8
+        self.MAP_ADJUST_Y = -3.0
 
         self.MAP_ZOOM_INC = 0.2
         self.MAP_SHIFT_INC = 1.0
@@ -1982,7 +1982,7 @@ class DebugVisualMain():
         self.draw_text("Battery: "+str(self.node.battery_voltage)+"V", self.text_font_t, battery_colour, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+10.0-0.9))
 
     def coords_to_map(self, xx, yy):
-        return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(xx/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(yy/(10*self.MAP_SCALE)))
+        return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(-yy/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(xx/(10*self.MAP_SCALE)))
 
     def size_to_map(self, size): # convert physical real size into map size (meters)
         return self.MAP_SIDE*((size)/10.0*(1/self.MAP_SCALE))

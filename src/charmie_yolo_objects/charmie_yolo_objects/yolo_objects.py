@@ -365,8 +365,8 @@ class Yolo_obj(Node):
         
         room_location = "Outside"
         for room in self.house_rooms:
-            min_x = room['top_left_coords'][0]
-            max_x = room['bot_right_coords'][0]
+            min_x = room['bot_right_coords'][0]
+            max_x = room['top_left_coords'][0]
             min_y = room['bot_right_coords'][1]
             max_y = room['top_left_coords'][1]
             # print(min_x, max_x, min_y, max_y)
@@ -375,8 +375,8 @@ class Yolo_obj(Node):
 
         furniture_location = "None"
         for furniture in self.house_furniture:
-            min_x = furniture['top_left_coords'][0]
-            max_x = furniture['bot_right_coords'][0]
+            min_x = furniture['bot_right_coords'][0]
+            max_x = furniture['top_left_coords'][0]
             min_y = furniture['bot_right_coords'][1]
             max_y = furniture['top_left_coords'][1]
             # print(min_x, max_x, min_y, max_y)

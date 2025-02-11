@@ -441,7 +441,7 @@ class MarkerPublisher(Node):
         for person in self.detected_people.persons:
             if person.index > 0:
 
-                print(person.index, person.position_absolute.x, person.position_absolute.y, person.position_absolute.z, person.height)
+                print(person.index, round(person.position_absolute.x, 2), round(person.position_absolute.y, 2), round(person.position_absolute.z, 2), person.height, person.room_location, person.furniture_location)
                 
                 marker = Marker()
 
