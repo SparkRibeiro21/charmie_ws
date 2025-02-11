@@ -980,8 +980,8 @@ class YoloPoseNode(Node):
         person_rel_pos = Point()
         # person_rel_pos.x = -torso_localisation.y/1000
         # person_rel_pos.y =  torso_localisation.x/1000
-        person_rel_pos.x =  -center_person_filtered.y/1000
-        person_rel_pos.y =  center_person_filtered.x/1000
+        person_rel_pos.x =  center_person_filtered.x/1000
+        person_rel_pos.y =  center_person_filtered.y/1000
         person_rel_pos.z =  center_person_filtered.z/1000
         
         new_person.position_relative = person_rel_pos
