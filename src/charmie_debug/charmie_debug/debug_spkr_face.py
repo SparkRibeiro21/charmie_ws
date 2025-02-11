@@ -80,7 +80,7 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
-                o = "frk"
+                o = "milk"
                 c = self.robot.get_object_class_from_object(o)
                 f = self.robot.get_furniture_from_object_class(c)
                 r = self.robot.get_room_from_furniture(f)
