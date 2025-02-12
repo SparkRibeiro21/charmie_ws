@@ -2028,7 +2028,7 @@ class RobotStdFunctions():
 
     def get_robot_localization(self):
 
-        return self.node.robot_pose.x, self.node.robot_pose.y, self.node.robot_pose.theta
+        return self.node.robot_pose
 
     def get_head_rgb_image(self):
 
@@ -2433,7 +2433,7 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2)]  # Return the class
+                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height']]  # Return the class
         return None  # Return None if the object is not found
 
     def get_height_from_furniture(self, furniture):

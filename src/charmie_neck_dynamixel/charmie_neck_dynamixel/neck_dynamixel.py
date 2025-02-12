@@ -478,7 +478,7 @@ class NeckNode(Node):
         pose = NeckPosition()
         pose.pan  = float(int(p*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
         pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
-        print(pose)
+        ### print(pose) # THIS IS THE COMMENT THAT SHOWS EVERY MOVEMENT ITERATION
         self.neck_get_position_topic_publisher.publish(pose)
 
 
@@ -488,24 +488,26 @@ class NeckNode(Node):
 
         # 6.5 cm adjustement from bottom servo to robot center, this helps in cases where angle to coordinates are near 90 and 270 degrees
         # where there was an error of 4/5 degrees because the axis were not alligned 
-        bottom_servo_to_robot_center = 0.065
-
-        # print(math.degrees(self.robot_pose.theta))       
-        ang = math.atan2(self.robot_pose.y + bottom_servo_to_robot_center - target_y, self.robot_pose.x - target_x) + math.pi/2
+        bottom_servo_to_robot_center = 0.065  
+        ang = math.atan2(self.robot_pose.y - target_y, -(self.robot_pose.x + bottom_servo_to_robot_center - target_x))
         # print("ang_rad:", ang)
         ang = math.degrees(ang)
         # print("ang_deg:", ang)
     
-        pan_neck_to_coords = math.degrees(self.robot_pose.theta) - ang
+        # print(math.degrees(self.robot_pose.theta))     
+        pan_neck_to_coords = - math.degrees(self.robot_pose.theta) - ang
         if pan_neck_to_coords < -math.degrees(math.pi):
             pan_neck_to_coords += math.degrees(2*math.pi)
+        if pan_neck_to_coords > math.degrees(math.pi):
+            pan_neck_to_coords -= math.degrees(2*math.pi)
     
+        print(pan_neck_to_coords)
         # if the robot wants to look back, it uses the correct side to do so without damaging itself
-        if pan_neck_to_coords == -180:
-            pan_neck_to_coords = 180
+        # this was left here but on practice is not used (decided to comment but left in case it makes sense in the future)
+        # if pan_neck_to_coords == -180:
+        #     pan_neck_to_coords = 180
 
         # print("neck_to_coords:", pan_neck_to_coords, ang)
-        # self.get_logger().info("neck back angle %d" %pan_neck_to_coords)
 
         ### TILT MOVEMENT (UP - DOWN)
         dist = math.sqrt((self.robot_pose.y - target_y)**2 + (self.robot_pose.x - target_x)**2)
@@ -526,12 +528,10 @@ class NeckNode(Node):
         # Initial guess for alpha
         initial_guess = 0
 
-        initial_time = time.time() 
-
+        # initial_time = time.time() 
         # Solve the equation
         alpha_solution = fsolve(equation, initial_guess)
-
-        elapsed_time = time.time() - initial_time
+        # elapsed_time = time.time() - initial_time
 
         phi = math.atan(d / c)
 
@@ -546,10 +546,7 @@ class NeckNode(Node):
         if final_x > 0.0: # solves rounding errors when variable is positive
             final_x += 0.5
 
-        ### por pan: pan+180 para ficar standard com o resto 
-
-        # self.move_neck(180 - pan_neck_to_coords, neck_target_other_axis+180.0)
-        self.move_neck(180 - pan_neck_to_coords, final_x+180.0, tracking_mode=tracking_mode)
+        self.move_neck(180 + pan_neck_to_coords, final_x+180.0, tracking_mode=tracking_mode)
 
         
     def move_neck_with_target_pixel(self, target_x, target_y, tracking_mode=False):
