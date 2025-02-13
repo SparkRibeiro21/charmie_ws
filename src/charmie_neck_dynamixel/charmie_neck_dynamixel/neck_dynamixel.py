@@ -114,22 +114,20 @@ class NeckNode(Node):
         super().__init__("Neck")
         self.get_logger().info("Initialised CHARMIE Neck Node")
 
-        self.declare_parameter("device_name", "USB1") 
         self.declare_parameter("speed_up", 3) 
         self.declare_parameter("speed_down", 2) 
         self.declare_parameter("speed_sides", 5)
         self.declare_parameter("initial_position", [0, 0])  # Default value
         # example of initial_position param: --ros-args -p initial_position:="[0, 10]"
 
-        # CONTROL VARIABLES, this is what defines which modules will the ps4 controller control
-        DEVICE_PARAM = self.get_parameter("device_name").value
-        
+        # CONTROL VARIABLES
         self.u_tilt_up = self.get_parameter("speed_up").value
         self.u_tilt_down = self.get_parameter("speed_down").value
         self.u_pan = self.get_parameter("speed_sides").value
         self.initial_position = self.get_parameter("initial_position").value
         
-        DEVICENAME = "/dev/tty"+DEVICE_PARAM # "/dev/ttyUSB1"  # Check which port is being used on your controller
+        # open serial port by id, this removes problems with volative port names: "/dev/ttyUSBX"
+        DEVICENAME = "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AI0282RX-if00-port0"
         # ex) Windows: "COM1"   Linux: "/dev/ttyUSB0" Mac: "/dev/tty.usbserial-*"
         # Initialize PortHandler instance
         # Set the port path

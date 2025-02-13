@@ -20,7 +20,9 @@ import math
 class RobotControl:
 
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB0', baudrate=9600)  # open serial port
+        
+        # open serial port by id, this removes problems with volative port names: "/dev/ttyUSBX"
+        self.ser = serial.Serial('/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0', baudrate=9600)
         print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
 
         # FLAGS
