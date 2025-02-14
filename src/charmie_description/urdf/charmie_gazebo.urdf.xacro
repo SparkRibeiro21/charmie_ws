@@ -6,6 +6,8 @@
     <xacro:include filename="mobile_base.xacro"/>
     <xacro:include filename="mobile_base_gazebo.xacro"/>
     <xacro:include filename="lidar.xacro"/>
+    <xacro:include filename="lidar_bottom.xacro"/>
     <xacro:include filename="lidar_gazebo.xacro"/>
+    <xacro:include filename="lidar_bottom_gazebo.xacro"/>
 
 </robot>

@@ -1,21 +1,20 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-    <xacro:property name="lidar_height_from_base" value="0.3" />
+    <xacro:property name="lidar_bottom_height_from_base" value="0.1" /> <!-- 20 cm below the first lidar -->
     <xacro:property name="lidar_dist_from_base_limit" value="0.025" />
 
-    <joint name="laser_joint" type="fixed">
+    <joint name="laser_bottom_joint" type="fixed">
         <parent link="base_link"/>
-        <child link="lidar_frame"/>
-        <origin xyz="${(base_length/2-lidar_dist_from_base_limit)} 0 ${lidar_height_from_base}" rpy="0 0 0"/>
+        <child link="lidar_bottom_frame"/>
+        <origin xyz="${(base_length/2-lidar_dist_from_base_limit)} 0 ${lidar_bottom_height_from_base}" rpy="0 0 0"/>
     </joint>
 
-    <link name="lidar_frame">
+    <link name="lidar_bottom_frame">
         <visual>
             <origin xyz="0 0 -0.062" rpy="${pi/2} 0 ${pi}"/>
             <geometry>
                 <mesh filename="file://$(find charmie_description)/meshes/lidar.stl" scale="0.001 0.001 0.001"/>
-                <!-- <cylinder radius="0.05" length="0.04"/> -->
             </geometry>
             <material name="dark_grey"/>
         </visual>
@@ -25,7 +24,7 @@
                 <cylinder radius="0.021" length="0.038"/>
             </geometry>
         </collision>
-        <xacro:inertial_cylinder mass="0.1" length="0.038" radius="0.021"> <!-- ajustar -->
+        <xacro:inertial_cylinder mass="0.1" length="0.038" radius="0.021">
             <origin xyz="0 0 -0.011" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
     </link>
