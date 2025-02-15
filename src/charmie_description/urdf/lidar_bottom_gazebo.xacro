@@ -11,9 +11,9 @@
             <ray>
                 <scan>
                     <horizontal>
-                        <samples>681</samples>
-                        <min_angle>-2.092387973753402</min_angle>
-                        <max_angle>2.092387973753402</max_angle>
+                        <samples>341</samples>
+                        <min_angle>-1.04773860326472</min_angle>
+                        <max_angle>1.04773860326472</max_angle>
                     </horizontal>
                 </scan>
                 <range>
