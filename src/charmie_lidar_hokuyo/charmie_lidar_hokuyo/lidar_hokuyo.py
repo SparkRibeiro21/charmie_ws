@@ -25,6 +25,7 @@ import math
 uart_port = '/dev/ttyACM0'
 uart_speed = 19200
 
+ROTATION_ERROR = 4.5
 LASER_ANG_MAX = 119.885
 LASER_STEP_DEG = 0.35208516886930985
 
@@ -482,8 +483,8 @@ class LidarNode(Node):
 
         laser_scan.header.stamp = self.get_clock().now().to_msg()
         laser_scan.header.frame_id = 'lidar_frame'
-        laser_scan.angle_min = -LASER_ANG_MAX*math.pi/180.0
-        laser_scan.angle_max = LASER_ANG_MAX*math.pi/180.0
+        laser_scan.angle_min = (-LASER_ANG_MAX-ROTATION_ERROR)*math.pi/180.0
+        laser_scan.angle_max = (LASER_ANG_MAX-ROTATION_ERROR)*math.pi/180.0
         laser_scan.angle_increment = LASER_STEP_DEG*math.pi/180.0
         laser_scan.time_increment = 0.0
         laser_scan.scan_time = 0.1
