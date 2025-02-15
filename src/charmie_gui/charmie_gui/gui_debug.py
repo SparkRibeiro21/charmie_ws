@@ -52,6 +52,7 @@ class DebugVisualNode(Node):
         
         # lidar
         self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.lidar_callback , 10)
+        self.lidar_bottom_subscriber = self.create_subscription(LaserScan, "scan_bottom", self.lidar_bottom_callback , 10)
 
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
@@ -167,6 +168,7 @@ class DebugVisualNode(Node):
         self.robot_pose = Pose2D()
 
         self.lidar_time = 0.0
+        self.lidar_bottom_time = 0.0
         self.odometry_time = 0.0
         self.ps4_controller_time = 0.0
 
@@ -219,6 +221,7 @@ class DebugVisualNode(Node):
         self.neck_tilt = 0.0
 
         self.lidar_obstacle_points = []
+        self.lidar_bottom_obstacle_points = []
         self.camera_obstacle_points = []
         self.final_obstacle_points = []
 
@@ -465,11 +468,11 @@ class DebugVisualNode(Node):
             
             if value > self.min_dist_error: # and value < self.max_dist_error:
 
-                obs_x = value * math.cos(key + self.robot_pose.theta + math.pi/2)
-                obs_y = value * math.sin(key + self.robot_pose.theta + math.pi/2)
+                obs_y = -value * math.cos(key + self.robot_pose.theta + math.pi/2)
+                obs_x = value * math.sin(key + self.robot_pose.theta + math.pi/2)
 
-                adj_x = (self.robot_radius - self.lidar_radius)*math.cos(self.robot_pose.theta + math.pi/2)
-                adj_y = (self.robot_radius - self.lidar_radius)*math.sin(self.robot_pose.theta + math.pi/2)
+                adj_x = (self.robot_radius - self.lidar_radius + 0.035)*math.cos(self.robot_pose.theta + math.pi/2)
+                adj_y = (self.robot_radius - self.lidar_radius + 0.035)*math.sin(self.robot_pose.theta + math.pi/2)
 
                 target = Point()
                 target.x = self.robot_pose.x + obs_x + adj_x
@@ -478,6 +481,39 @@ class DebugVisualNode(Node):
 
                 self.lidar_obstacle_points.append(target)
 
+    def lidar_bottom_callback(self, scan: LaserScan):
+        self.scan = scan
+        # print(scan)
+
+        self.lidar_bottom_time = time.time()
+
+        START_RAD = scan.angle_min
+        STEP_RAD = scan.angle_increment
+        self.min_dist_error = 0.1
+        self.max_dist_error = 5.0
+
+        self.lidar_bottom_obstacle_points.clear()
+
+        # calculates list of lidar obstacle points
+        for i in range(len(scan.ranges)):
+            
+            value = scan.ranges[i]
+            key = START_RAD+i*STEP_RAD
+            
+            if value > self.min_dist_error: # and value < self.max_dist_error:
+
+                obs_y = -value * math.cos(key + self.robot_pose.theta + math.pi/2)
+                obs_x = value * math.sin(key + self.robot_pose.theta + math.pi/2)
+
+                adj_x = (self.robot_radius - self.lidar_radius - 0.015)*math.cos(self.robot_pose.theta + math.pi/2)
+                adj_y = (self.robot_radius - self.lidar_radius - 0.015)*math.sin(self.robot_pose.theta + math.pi/2)
+
+                target = Point()
+                target.x = self.robot_pose.x + obs_x + adj_x
+                target.y = self.robot_pose.y + obs_y + adj_y
+                target.z = 0.35 # lidar height on the robot
+
+                self.lidar_bottom_obstacle_points.append(target)
 
     def target_pos_callback(self, nav: TarNavSDNL):
         self.navigation = nav
@@ -605,6 +641,7 @@ class CheckNodesMain():
             else:
                 self.CHECK_HAND_CAMERA_NODE = True
 
+            ########## MISSING CHECK FOR BOTTOM LIDAR, IF NEEDED ##########
             # LIDAR
             if current_time - self.node.lidar_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
                 # self.node.get_logger().warn("Waiting for Topic Lidar ...")
@@ -966,7 +1003,8 @@ class DebugVisualMain():
         return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def button_zoom_in_function(self):
-        if self.MAP_SCALE - self.MAP_ZOOM_INC > 0.0:
+        print(self.MAP_SCALE - self.MAP_ZOOM_INC)
+        if self.MAP_SCALE - self.MAP_ZOOM_INC > 0.1:
             self.MAP_SCALE -= self.MAP_ZOOM_INC
 
     def button_zoom_out_function(self):
@@ -1882,6 +1920,10 @@ class DebugVisualMain():
         for points in self.node.lidar_obstacle_points:
             # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_pose.x+points.x, self.node.robot_pose.y+points.y), radius=1, width=0)
             pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(points.x, points.y), radius=1, width=0)
+
+        for points in self.node.lidar_bottom_obstacle_points:
+            # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_pose.x+points.x, self.node.robot_pose.y+points.y), radius=1, width=0)
+            pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(points.x, points.y), radius=1, width=0)
 
         for points in self.node.camera_obstacle_points:
             pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
