@@ -167,6 +167,12 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
+        self.lidar_bottom = Node(package='charmie_lidar_hokuyo',
+                            executable='lidar_hokuyo_bottom',
+                            name='lidar_hokuyo_bottom',
+                            emulate_tty=True
+                            )
+        
         self.obstacles = Node(package='charmie_obstacles',
                             executable='obstacles_fusion',
                             name='obstacles_fusion',

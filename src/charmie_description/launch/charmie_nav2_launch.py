@@ -186,6 +186,7 @@ def generate_launch_description():
         # std_lf.gui,
         # std_lf.speakers,
         std_lf.lidar,
+        std_lf.lidar_bottom,
         std_lf.low_level,
         # std_lf.ps4_controller,
         

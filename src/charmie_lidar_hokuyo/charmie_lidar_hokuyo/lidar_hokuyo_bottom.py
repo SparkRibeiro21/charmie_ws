@@ -25,8 +25,8 @@ import math
 uart_port = '/dev/ttyACM1'
 uart_speed = 19200
 
-LASER_ANG_MAX = 119.885
-LASER_ANG_MIN = -119.885
+# LASER_ANG_MAX = 119.885
+LASER_ANG_MAX = 60.031
 LASER_STEP_DEG = 0.35208516886930985
 
 
@@ -467,7 +467,7 @@ class LidarNode(Node):
 
         self.laser = Hokuyo(port)
         self.laser.laser_on()
-        print("Started Hokuyo Scans")
+        self.get_logger().info("Started Hokuyo Bottom Scans")
 
         self.create_timer(0.1, self.timer_callback)
         
@@ -477,13 +477,15 @@ class LidarNode(Node):
 
         scan = self.laser.get_single_scan()
         ranges = []
-        for key, value in scan.items():
-            ranges.append(float(value/1000))
-            # print(key, value)
+
+        for key, value in reversed(scan.items()):
+            if abs(key) < LASER_ANG_MAX:
+                ranges.append(float(value/1000))
+                # print(key, value)
 
         laser_scan.header.stamp = self.get_clock().now().to_msg()
         laser_scan.header.frame_id = 'lidar_frame'
-        laser_scan.angle_min = LASER_ANG_MIN*math.pi/180.0
+        laser_scan.angle_min = -LASER_ANG_MAX*math.pi/180.0
         laser_scan.angle_max = LASER_ANG_MAX*math.pi/180.0
         laser_scan.angle_increment = LASER_STEP_DEG*math.pi/180.0
         laser_scan.time_increment = 0.0

@@ -28,7 +28,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: LaserScan
 Visualization Manager:
   Class: ""
   Displays:
@@ -92,6 +92,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        lidar_bottom_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         lidar_frame:
           Alpha: 1
           Show Axes: false
@@ -115,23 +120,9 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        D405_hand_link:
-          Value: true
-        D455_head_color_frame:
-          Value: true
-        D455_head_color_optical_frame:
-          Value: true
-        D455_head_depth_frame:
-          Value: true
-        D455_head_depth_optical_frame:
-          Value: true
-        D455_head_link:
-          Value: true
         back_caster_wheel_link:
           Value: true
         base_footprint:
-          Value: true
-        base_footprint1:
           Value: true
         base_link:
           Value: true
@@ -139,11 +130,13 @@ Visualization Manager:
           Value: true
         left_wheel_link:
           Value: true
+        lidar_bottom_frame:
+          Value: true
         lidar_frame:
           Value: true
-        odom:
+        map:
           Value: true
-        odom1:
+        odom:
           Value: true
         right_wheel_link:
           Value: true
@@ -153,7 +146,23 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        map:
+          odom:
+            base_link:
+              back_caster_wheel_link:
+                {}
+              base_footprint:
+                {}
+              front_caster_wheel_link:
+                {}
+              left_wheel_link:
+                {}
+              lidar_bottom_frame:
+                {}
+              lidar_frame:
+                {}
+              right_wheel_link:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -165,7 +174,7 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/LaserScan
-      Color: 224; 27; 36
+      Color: 255; 0; 0
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -189,6 +198,40 @@ Visualization Manager:
         Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/LaserScan
+      Color: 255; 0; 255
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: LaserScan
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.03999999910593033
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scan_bottom
+      Use Fixed Frame: true
+      Use rainbow: false
       Value: true
     - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
@@ -304,33 +347,7 @@ Visualization Manager:
       Enabled: true
       Name: MarkerArray
       Namespaces:
-        Bed: true
-        Bedroom Trashcan: true
-        Bench: true
-        Coffee Table: true
-        Couch: true
-        Desk: true
-        Dinner Table: true
-        Dishwasher: true
-        Drill Press: true
-        Entrance: true
-        Exit: true
-        Fridge: true
-        Kitchen Cabinet: true
-        Kitchen Counter: true
-        Kitchen Trashcan: true
-        Left Lounge Chair: true
-        Living Room Trashcan: true
-        Night Stand: true
-        Office Counter: true
-        Pantry: true
-        Reading Chair: true
-        Right Lounge Chair: true
-        Shelf: true
-        TV Table: true
-        Tool Cabinet: true
-        Workbench: true
-        Workshop Desk: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -342,33 +359,7 @@ Visualization Manager:
       Enabled: true
       Name: MarkerArray
       Namespaces:
-        Bed Name: true
-        Bedroom Trashcan Name: true
-        Bench Name: true
-        Coffee Table Name: true
-        Couch Name: true
-        Desk Name: true
-        Dinner Table Name: true
-        Dishwasher Name: true
-        Drill Press Name: true
-        Entrance Name: true
-        Exit Name: true
-        Fridge Name: true
-        Kitchen Cabinet Name: true
-        Kitchen Counter Name: true
-        Kitchen Trashcan Name: true
-        Left Lounge Chair Name: true
-        Living Room Trashcan Name: true
-        Night Stand Name: true
-        Office Counter Name: true
-        Pantry Name: true
-        Reading Chair Name: true
-        Right Lounge Chair Name: true
-        Shelf Name: true
-        TV Table Name: true
-        Tool Cabinet Name: true
-        Workbench Name: true
-        Workshop Desk Name: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -490,4 +481,4 @@ Window Geometry:
     collapsed: false
   Width: 1920
   X: 2560
-  Y: 181
+  Y: 0

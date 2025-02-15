@@ -4,8 +4,7 @@
     <xacro:include filename="common_properties.xacro"/>
     <xacro:include filename="inertial_macros.xacro"/>
     <xacro:include filename="mobile_base.xacro"/>
-    <!-- <xacro:include filename="mobile_base_gazebo.xacro"/> -->
     <xacro:include filename="lidar.xacro"/>
-    <!-- <xacro:include filename="lidar_gazebo.xacro"/> -->
+    <xacro:include filename="lidar_bottom.xacro"/>
 
 </robot>
