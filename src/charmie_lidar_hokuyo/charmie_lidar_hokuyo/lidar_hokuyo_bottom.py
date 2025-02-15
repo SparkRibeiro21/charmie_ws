@@ -478,13 +478,13 @@ class LidarNode(Node):
         scan = self.laser.get_single_scan()
         ranges = []
 
-        for key, value in reversed(scan.items()):
+        for key, value in scan.items():
             if abs(key) < LASER_ANG_MAX:
                 ranges.append(float(value/1000))
                 # print(key, value)
 
         laser_scan.header.stamp = self.get_clock().now().to_msg()
-        laser_scan.header.frame_id = 'lidar_frame'
+        laser_scan.header.frame_id = 'lidar_bottom_frame'
         laser_scan.angle_min = -LASER_ANG_MAX*math.pi/180.0
         laser_scan.angle_max = LASER_ANG_MAX*math.pi/180.0
         laser_scan.angle_increment = LASER_STEP_DEG*math.pi/180.0
