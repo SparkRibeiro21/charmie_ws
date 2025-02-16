@@ -11,6 +11,7 @@ from pathlib import Path
 import pygame
 import threading
 from screeninfo import get_monitors
+from PIL import Image
 
 
 # ROS2 Face Node
@@ -194,22 +195,52 @@ def thread_face_display(node: FaceNode):
     # just for initialization
     image = pygame.image.load(node.home+logo_midpath+"charmie_face.png") 
 
+    gif_flag = False
+    gif_frames = []
+    frame_index = 0
+    clock = pygame.time.Clock()
+
+
     running = True
     while running:
-        SCREEN.fill((50, 50, 50))
+        # SCREEN.fill((50, 50, 50))
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
         
         if node.new_face_received:
+            
             node.new_face_received = False
+            gif_flag = False
             print(node.new_face_received_name)
             print("New Face Received in Pygame")
-        
-            image = pygame.image.load(node.new_face_received_name)
 
-        SCREEN.blit(image, (0, 0))
-        pygame.display.update()
+            file_name, file_extension = os.path.splitext(node.new_face_received_name)
+
+            print(file_extension)
+            if file_extension == ".jpg":
+                image = pygame.image.load(node.new_face_received_name)
+            elif file_extension == ".gif":
+                gif_flag = True
+                gif = Image.open(node.new_face_received_name)
+                for frame in range(gif.n_frames):
+                    gif.seek(frame)
+                    frame = pygame.image.fromstring(gif.tobytes(), gif.size, gif.mode)
+                    gif_frames.append(frame)
+            else:
+                pass
+
+        if gif_flag:
+            SCREEN.blit(gif_frames[frame_index], (0, 0))
+            pygame.display.update()
+            frame_index = (frame_index + 1) % len(gif_frames)
+            if frame_index == 0: # needs this line to avoid a blank frame everytime the gif resets
+                frame_index = 1
+            # print(frame_index)
+            clock.tick(30)
+        else:
+            SCREEN.blit(image, (0, 0))
+            pygame.display.update()
 
     pygame.quit()
