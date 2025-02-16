@@ -50,6 +50,12 @@ class FaceNode(Node):
         
         self.get_logger().info("Initial Face Received is: %s" %self.INITIAL_FACE)
 
+
+        self.new_face_received = False
+        self.new_face_received_name = ""
+
+
+
         # sends initial face
         self.image_to_face(self.INITIAL_FACE)
 
@@ -100,10 +106,12 @@ class FaceNode(Node):
         # since the extension is not known, a system to check all filenames disregarding the extension had to be created
         file_exists = False
         files = os.listdir(self.media_faces_path)
+        correct_extension = ""
         # self.get_logger().info("pre  GET FILES")
         for file in files:
             file_name, file_extension = os.path.splitext(file)
             if file_name == command:
+                correct_extension = file_extension
                 file_exists = True
         
         
@@ -113,8 +121,11 @@ class FaceNode(Node):
         if file_exists:
             self.get_logger().info("FACE received (standard) - %s" %command)
             # self.face.save_text_file("media/" + command)
+            self.new_face_received = True
+            self.new_face_received_name = self.media_faces_path + command + correct_extension
             return True, "Face received (standard) sucessfully displayed"
-
+        
+            
         else:
             self.get_logger().error("FACE received (standard) does not exist! - %s" %command)
             return False, "FACE received (standard) does not exist."
@@ -180,13 +191,25 @@ def thread_face_display(node: FaceNode):
     icon = pygame.image.load(node.home+logo_midpath+"charmie_face.png")
     pygame.display.set_icon(icon)
 
+    # just for initialization
+    image = pygame.image.load(node.home+logo_midpath+"charmie_face.png") 
+
     running = True
     while running:
         SCREEN.fill((50, 50, 50))
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+        
+        if node.new_face_received:
+            node.new_face_received = False
+            print(node.new_face_received_name)
+            print("New Face Received in Pygame")
+        
+            image = pygame.image.load(node.new_face_received_name)
 
+        SCREEN.blit(image, (0, 0))
         pygame.display.update()
 
     pygame.quit()
