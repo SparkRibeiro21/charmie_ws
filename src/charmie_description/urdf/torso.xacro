@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+    <xacro:property name="legs_max_height_from_base" value="0.205" />
+    <xacro:property name="legs_range" value="0.14" />
+    <xacro:property name="legs_length" value="0.05" />
+    <xacro:property name="legs_width" value="0.19" />
+    <xacro:property name="legs_height" value="0.51" />
+
+    <xacro:property name="torso_height_from_legs" value="0.25" />
+    <xacro:property name="torso_initial_angle_rads" value="0.15708" />
+    <xacro:property name="torso_max_angle_rads" value="1.22173" />
+    <xacro:property name="torso_length" value="0.04" />
+    <xacro:property name="torso_width" value="0.04" />
+    <xacro:property name="torso_height" value="0.51" />
+        
+        
+
+    <joint name="legs_joint" type="prismatic">
+        <parent link="base_link"/>
+        <child link="legs_link"/>
+        <origin xyz="0 0 ${base_height+legs_max_height_from_base-legs_range}" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="0.0" upper="0.14" effort="1000.0" velocity="0.5"/>
+    </joint>
+
+    <link name="legs_link">
+        <visual>
+            <origin xyz="0 0 ${legs_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${legs_length} ${legs_width} ${legs_height}" />
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 ${legs_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${legs_length} ${legs_width} ${legs_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="2.0" x="${legs_length}" y="${legs_width}" z="${legs_height}" >
+            <origin xyz="0 0 ${legs_height/2}" rpy="0 0 0" />
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="torso_joint" type="revolute">
+        <parent link="legs_link"/>
+        <child link="torso_link"/>
+        <origin xyz="0 0 ${torso_height_from_legs}" rpy="0 ${torso_initial_angle_rads} 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="0.0" upper="${torso_max_angle_rads}" effort="10000.0" velocity="0.5"/>
+    </joint>
+
+    <link name="torso_link">
+        <visual>
+            <origin xyz="0 0 ${torso_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${torso_length} ${torso_width} ${torso_height}" />
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 ${torso_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${torso_length} ${torso_width} ${torso_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.5" x="${torso_length}" y="${torso_width}" z="${torso_height}" >
+            <origin xyz="0 0 ${torso_height/2}" rpy="0 0 0" />
+        </xacro:inertial_box>
+    </link>
+
+
+    <joint name="top_torso_joint" type="fixed">
+        <parent link="torso_link"/>
+        <child link="top_torso_link"/>
+        <origin xyz="0 0 ${torso_height}" rpy="0 ${-torso_initial_angle_rads} 0"/>
+    </joint>
+
+    <link name="top_torso_link">
+    </link>
+
+</robot>

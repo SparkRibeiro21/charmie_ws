@@ -89,6 +89,10 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        legs_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         lidar_bottom_frame:
           Alpha: 1
           Show Axes: false
@@ -133,8 +137,6 @@ Visualization Manager:
           Value: true
         lidar_frame:
           Value: true
-        odom:
-          Value: true
         odom1:
           Value: true
         right_wheel_link:
@@ -145,22 +147,21 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        odom:
-          base_link:
-            back_caster_wheel_link:
-              {}
-            base_footprint:
-              {}
-            front_caster_wheel_link:
-              {}
-            left_wheel_link:
-              {}
-            lidar_bottom_frame:
-              {}
-            lidar_frame:
-              {}
-            right_wheel_link:
-              {}
+        base_link:
+          back_caster_wheel_link:
+            {}
+          base_footprint:
+            {}
+          front_caster_wheel_link:
+            {}
+          left_wheel_link:
+            {}
+          lidar_bottom_frame:
+            {}
+          lidar_frame:
+            {}
+          right_wheel_link:
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -255,7 +256,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: map
+    Fixed Frame: base_footprint
     Frame Rate: 30
   Name: root
   Tools:
@@ -297,21 +298,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
-      Class: rviz_default_plugins/TopDownOrtho
+      Class: rviz_default_plugins/Orbit
+      Distance: 3.254274845123291
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: 0.5991108417510986
+        Y: 0.09698610752820969
+        Z: 0.36841022968292236
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 89.60641479492188
+      Pitch: 0.7847967147827148
       Target Frame: <Fixed Frame>
-      Value: TopDownOrtho (rviz_default_plugins)
-      X: 0.2417839914560318
-      Y: -0.3987211287021637
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 5.012394428253174
     Saved: ~
 Window Geometry:
   Displays:
@@ -329,5 +335,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: 2560
-  Y: 0
+  X: 640
+  Y: 27
