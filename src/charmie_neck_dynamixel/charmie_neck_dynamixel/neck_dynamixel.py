@@ -84,7 +84,7 @@ SERVO_TICKS_TO_DEGREES_CONST = 0.087891
 # max angles for each servo to prevent incorrect values
 MAX_PAN_ANGLE = 359
 MIN_PAN_ANGLE = 0
-MAX_TILT_ANGLE = 235
+MAX_TILT_ANGLE = 240
 MIN_TILT_ANGLE = 120
 
 pan = 2048

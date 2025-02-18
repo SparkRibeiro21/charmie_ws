@@ -14,25 +14,25 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              True,
-    "charmie_audio":            True,
-    "charmie_face":             True,
-    "charmie_head_camera":      True,
-    "charmie_hand_camera":      True,
-    "charmie_lidar":            True,
-    "charmie_llm":              True,
+    "charmie_arm":              False,
+    "charmie_audio":            False,
+    "charmie_face":             False,
+    "charmie_head_camera":      False,
+    "charmie_hand_camera":      False,
+    "charmie_lidar":            False,
+    "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
     "charmie_navigation":       False,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_odometry":         False,
-    "charmie_point_cloud":      True,
+    "charmie_point_cloud":      False,
     "charmie_ps4_controller":   True,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
-    "charmie_yolo_objects":     True,
-    "charmie_yolo_pose":        True,
+    "charmie_yolo_objects":     False,
+    "charmie_yolo_pose":        False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -288,8 +288,8 @@ class TaskMain():
                         
                         elif ps4_controller.triangle >= self.ON_AND_RISING:
                             self.neck_pos_tilt += neck_inc_ver
-                            if self.neck_pos_tilt > 45:
-                                self.neck_pos_tilt = 45
+                            if self.neck_pos_tilt > 60:
+                                self.neck_pos_tilt = 60
                             self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
 
 
