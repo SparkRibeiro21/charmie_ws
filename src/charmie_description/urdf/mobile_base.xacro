@@ -29,7 +29,7 @@
             </geometry>
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 0" />
         </collision>
-        <xacro:inertial_box mass="5.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
+        <xacro:inertial_box mass="50.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 0" />
         </xacro:inertial_box>
 
@@ -46,7 +46,7 @@
             </geometry>
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/2}" />
         </collision>
-        <xacro:inertial_box mass="5.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
+        <xacro:inertial_box mass="50.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/2}" />
         </xacro:inertial_box>
 
@@ -63,7 +63,7 @@
             </geometry>
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/4}" />
         </collision>
-        <xacro:inertial_box mass="5.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
+        <xacro:inertial_box mass="50.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/4}" />
         </xacro:inertial_box>
 
@@ -80,7 +80,7 @@
             </geometry>
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 -${pi/4}" />
         </collision>
-        <xacro:inertial_box mass="5.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
+        <xacro:inertial_box mass="50.0" x="${base_length}" y="${base_octagon_side}" z="${base_height}" >
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 -${pi/4}" />
         </xacro:inertial_box>
 
