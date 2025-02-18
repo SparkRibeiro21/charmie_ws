@@ -140,7 +140,7 @@ class PointCloud():
 
 
     def robo_head(self):
-        A4 = self.Trans(100, 11.5, 195)
+        A4 = self.Trans(95, 11.5, 195)
         A3 = self.Rot('y', self.teta[1])
         A2 = self.Trans(30, 0, 25)
         A1 = self.Rot('z', self.teta[0])

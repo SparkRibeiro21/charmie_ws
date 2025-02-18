@@ -11,5 +11,7 @@
     <xacro:include filename="lidar_bottom_gazebo.xacro"/>
     <xacro:include filename="torso.xacro"/>
     <xacro:include filename="torso_gazebo.xacro"/>
+    <xacro:include filename="neck.xacro"/>
+    <xacro:include filename="neck_gazebo.xacro"/>
 
 </robot>

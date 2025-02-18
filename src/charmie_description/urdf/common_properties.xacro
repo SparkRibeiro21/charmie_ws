@@ -18,7 +18,6 @@
         <color rgba="0.5 0.5 0.5 1" />
     </material>
 
-    
     <material name ="dark_grey">
         <color rgba="0.25 0.25 0.25 1" />
     </material>
