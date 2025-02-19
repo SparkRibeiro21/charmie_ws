@@ -2,7 +2,8 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D, Point
+import tf2_ros
+from geometry_msgs.msg import Pose2D, Point, TransformStamped
 from example_interfaces.msg import Bool
 from charmie_interfaces.msg import NeckPosition
 from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackPerson, TrackObject, TrackContinuous
@@ -155,6 +156,9 @@ class NeckNode(Node):
         self.tracking_u_tilt = 0
         self.tracking_rem_pan = 0
         self.tracking_rem_tilt = 0
+
+        # TF Broadcaster
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
 
         # TOPICS:
         # sends the current position of the servos after every change made on the publisher topics
@@ -478,6 +482,64 @@ class NeckNode(Node):
         pose.tilt = float(int(t*SERVO_TICKS_TO_DEGREES_CONST + 0.5)) - 180.0
         ### print(pose) # THIS IS THE COMMENT THAT SHOWS EVERY MOVEMENT ITERATION
         self.neck_get_position_topic_publisher.publish(pose)
+        self.publish_neck_tf2s(pose)
+
+
+    def publish_neck_tf2s(self, pose: NeckPosition):
+
+        # Publish the pan TF of the neck
+        neck_pan_transform = TransformStamped()
+        # Set the timestamp to the current time
+        neck_pan_transform.header.stamp = self.get_clock().now().to_msg()
+
+        # Set the parent and child frames (the link names)
+        neck_pan_transform.header.frame_id = 'neck_base_link'  # Parent frame
+        neck_pan_transform.child_frame_id = 'neck_pan_link'  # Child frame
+
+        # Set the translation (position) of the neck relative to the base
+        neck_pan_transform.transform.translation.x = 0.0  # Example value
+        neck_pan_transform.transform.translation.y = 0.0  # Example value
+        neck_pan_transform.transform.translation.z = 0.0  # Example value (height)
+
+        deg_pan = math.radians(pose.pan)
+        # Set the rotation (orientation) of the neck (in quaternion format)
+        neck_pan_transform.transform.rotation.x = 0.0
+        neck_pan_transform.transform.rotation.y = 0.0
+        neck_pan_transform.transform.rotation.z = math.sin(deg_pan/2.0)
+        neck_pan_transform.transform.rotation.w = math.cos(deg_pan/2.0)
+
+        # Publish the transform
+        self.tf_broadcaster.sendTransform(neck_pan_transform)
+        # print(pose.pan)
+        # self.get_logger().info('Published TF from base_link to neck_pan_link')
+
+        # Publish the tilt TF of the neck
+        neck_tilt_transform = TransformStamped()
+        # Set the timestamp to the current time
+        neck_tilt_transform.header.stamp = self.get_clock().now().to_msg()
+
+        # Set the parent and child frames (the link names)
+        neck_tilt_transform.header.frame_id = 'neck_pan_link'  # Parent frame
+        neck_tilt_transform.child_frame_id = 'neck_tilt_link'  # Child frame
+
+        # Set the translation (position) of the neck relative to the base
+        neck_tilt_transform.transform.translation.x = 0.03   # Example value
+        neck_tilt_transform.transform.translation.y = 0.0    # Example value
+        neck_tilt_transform.transform.translation.z = 0.0250 # Example value (height)
+
+        deg_tilt = -math.radians(pose.tilt)
+        # Set the rotation (orientation) of the neck (in quaternion format)
+        neck_tilt_transform.transform.rotation.x = 0.0
+        neck_tilt_transform.transform.rotation.y = math.sin(deg_tilt/2.0)
+        neck_tilt_transform.transform.rotation.z = 0.0
+        neck_tilt_transform.transform.rotation.w = math.cos(deg_tilt/2.0)
+
+        # Publish the transform
+        self.tf_broadcaster.sendTransform(neck_tilt_transform)
+        # print(pose.tilt)
+        # self.get_logger().info('Published TF from neck_pan_link to neck_tilt_link')
+
+
 
 
     def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
