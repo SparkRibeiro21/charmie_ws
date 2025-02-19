@@ -2,7 +2,7 @@ from ament_index_python.packages import get_package_share_directory
 from ament_index_python.packages import get_package_share_path
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.parameter_descriptions import ParameterValue
 
@@ -319,26 +319,30 @@ class LaunchStdFunctions():
         )
 
         
-        """
-        # Some ROS 2 packages (especially when running inside containers or strict environments) might not resolve symlinks properly.?
-        map_path = os.path.join(get_package_share_path('configuration_files'),
-                                'maps', '2025_LAR_house_final_save.yaml')
+        ### LOCALIZATION
 
-        # nav2_bringup_path = get_package_share_path('nav2_bringup')
-        nav2_bringup_path = get_package_share_path('charmie_description')
-        
-        
-        if not os.path.exists(map_path):
-            print(f"ERROR: The map file does not exist: {map_path}")
-        else:
-            print(f"Map file found at: {map_path}")
-            
+        # Exmaples of how the map should be added to launch file
+        map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', '2025_LAR_house_final_save.yaml')
+        # map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', 'Robocup2023', 'robocup23_house_save.yaml')
+
         # Adds localization mode (AMCL) from nav2
-        nav2_localization = IncludeLaunchDescription(PythonLaunchDescriptionSource(
-                os.path.join(nav2_bringup_path, 'launch', 'localization_launch.py')),
+        self.nav2_localization = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(get_package_share_path('charmie_description'), 'launch', 'localization_launch.py')]),
                 launch_arguments=[
-                    # ('map', '/home/tiago/charmie_ws/src/configuration_files/maps/sim_tests/charmie_diff_sim_map_full_save.yaml'),
-                    ('use_sim_time', 'true')
+                    ('map', map_path),
+                    ('use_sim_time', 'false')
                     ]
         )
-        """
+
+        self.delayed_nav2_localization = TimerAction(
+            period=3.0,  # Delay for 3 seconds
+            actions=[self.nav2_localization]  # This is the action that will be triggered after the delay
+        )
+
+        self.nav2_navigation = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(get_package_share_path('charmie_description'), 'launch', 'navigation_launch.py')]),
+                launch_arguments=[
+                    ('use_sim_time', 'false')
+                    ]
+        )
+        
