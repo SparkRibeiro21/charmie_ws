@@ -7,7 +7,7 @@
     <xacro:property name="neck_tilt_to_head_camera_height" value="0.195" />
 
     <joint name="head_camera_joint" type="fixed">
-        <parent link="legs_link"/>
+        <parent link="neck_tilt_link"/>
         <child link="head_camera_link"/>
         <origin xyz="${neck_tilt_to_head_camera_length} ${neck_tilt_to_head_camera_width} ${neck_tilt_to_head_camera_height}" rpy="0 0 0"/>
     </joint>

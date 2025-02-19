@@ -21,7 +21,7 @@
                 <box size="${base_length} ${base_octagon_side} ${base_height}" />
             </geometry>
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 0" />
-            <material name="light_grey"/>
+            <material name="grey"/>
         </visual>
         <collision>
             <geometry>
@@ -38,7 +38,7 @@
                 <box size="${base_length} ${base_octagon_side} ${base_height}" />
             </geometry>
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/2}" />
-            <material name="light_grey"/>
+            <material name="grey"/>
         </visual>
         <collision>
             <geometry>
@@ -55,7 +55,7 @@
                 <box size="${base_length} ${base_octagon_side} ${base_height}" />
             </geometry>
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 ${pi/4}" />
-            <material name="light_grey"/>
+            <material name="grey"/>
         </visual>
         <collision>
             <geometry>
@@ -72,7 +72,7 @@
                 <box size="${base_length} ${base_octagon_side} ${base_height}" />
             </geometry>
             <origin xyz="0 0 ${base_height/2}" rpy="0 0 -${pi/4}" />
-            <material name="light_grey"/>
+            <material name="grey"/>
         </visual>
         <collision>
             <geometry>

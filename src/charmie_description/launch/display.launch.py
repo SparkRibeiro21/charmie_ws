@@ -106,6 +106,23 @@ def generate_launch_description():
         ]
     )
 
+    # not implemented yet, we assume everytime we need TFs the robot legs and torso are on top position
+    static_transform_head_camera = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_right_wheel',
+        arguments=[
+            '0',  # x
+            '0',  # y
+            '0',  # z
+            '0',  # roll
+            '0',  # pitch
+            '0',  # yaw
+            'head_camera_link',  # parent frame
+            'D455_head_link'  # child frame
+        ]
+    )
+
 
     return LaunchDescription([
         robot_state_publisher_node,
@@ -114,5 +131,6 @@ def generate_launch_description():
         static_transform_right_wheel,
         static_transform_torso_legs,
         static_transform_torso_torso,
+        static_transform_head_camera,
         rviz2_node
     ])

@@ -13,7 +13,7 @@
     
     <xacro:include filename="neck.xacro"/>
     
-    <!-- <xacro:include filename="head_camera.xacro"/> -->
+    <xacro:include filename="head_camera.xacro"/>
     
 
 </robot>
