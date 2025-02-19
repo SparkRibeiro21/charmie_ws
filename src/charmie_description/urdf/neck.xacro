@@ -144,17 +144,6 @@
             <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
         </xacro:inertial_box>
 
-
-
-    </link>
-
-    <joint name="head_camera_joint" type="fixed">
-        <parent link="neck_tilt_link"/>
-        <child link="head_camera_link"/>
-        <origin xyz="0.095 0.0115 0.195" rpy="0 0 0"/>
-    </joint>
-
-    <link name="head_camera_link">
     </link>
 
 </robot>
