@@ -52,6 +52,15 @@ class LaunchStdFunctions():
             arguments=['-d', rviz_basic_config_path]
         )
 
+        rviz_slam_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'rviz', 'slam_config.rviz')
+    
+        self.rviz2_slam_node = Node(
+            package="rviz2",
+            executable="rviz2",
+            arguments=['-d', rviz_slam_config_path]
+        )
+
         rviz_nav2_config_path = os.path.join(get_package_share_path('charmie_description'), 
                                 'rviz', 'nav2_config.rviz')
         
@@ -285,7 +294,51 @@ class LaunchStdFunctions():
                     name='ps4_controller',
                     )
         
+        self.navigation_with_ps4 = Node(package='charmie_demonstration',
+                executable='navigation_demonstration',
+                name='navigation_demonstration',
+                emulate_tty=True
+                )
+    
+        
         self.llm = Node(package='charmie_llm',
                     executable='llm',
                     name='llm',
                     )
+        
+        ### SLAM
+        slam_mapper_params_path = os.path.join(get_package_share_path('charmie_description'), 'config', 'mapper_params_online_async.yaml')
+        slam_toolbox_launch_file = os.path.join(get_package_share_path('slam_toolbox'), 'launch', 'online_async_launch.py')
+
+        self.slam_toolbox_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(slam_toolbox_launch_file),
+            launch_arguments={
+                'slam_params_file': slam_mapper_params_path,
+                'use_sim_time': 'false'
+            }.items()
+        )
+
+        
+        """
+        # Some ROS 2 packages (especially when running inside containers or strict environments) might not resolve symlinks properly.?
+        map_path = os.path.join(get_package_share_path('configuration_files'),
+                                'maps', '2025_LAR_house_final_save.yaml')
+
+        # nav2_bringup_path = get_package_share_path('nav2_bringup')
+        nav2_bringup_path = get_package_share_path('charmie_description')
+        
+        
+        if not os.path.exists(map_path):
+            print(f"ERROR: The map file does not exist: {map_path}")
+        else:
+            print(f"Map file found at: {map_path}")
+            
+        # Adds localization mode (AMCL) from nav2
+        nav2_localization = IncludeLaunchDescription(PythonLaunchDescriptionSource(
+                os.path.join(nav2_bringup_path, 'launch', 'localization_launch.py')),
+                launch_arguments=[
+                    # ('map', '/home/tiago/charmie_ws/src/configuration_files/maps/sim_tests/charmie_diff_sim_map_full_save.yaml'),
+                    ('use_sim_time', 'true')
+                    ]
+        )
+        """
