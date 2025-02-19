@@ -1,11 +1,14 @@
 from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_path
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.parameter_descriptions import ParameterValue
 
 from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
 
+from launch.substitutions import Command
 from launch_ros.actions import Node
 from pathlib import Path
 
@@ -16,13 +19,58 @@ import os
 class LaunchStdFunctions():
 
     def __init__(self):
+
+        ### ROBOT URDF 
+        urdf_path_real = os.path.join(get_package_share_path('charmie_description'), 
+                             'urdf', 'charmie_real.urdf.xacro')
+        robot_description_real = ParameterValue(Command(['xacro ', urdf_path_real]), value_type=str)
+
+        self.robot_state_publisher_real_node = Node(
+            package="robot_state_publisher",
+            executable="robot_state_publisher",
+            parameters=[{'robot_description': robot_description_real}]
+        )
+
+        urdf_path_gazebo = os.path.join(get_package_share_path('charmie_description'), 
+                             'urdf', 'charmie_gazebo.urdf.xacro')
+        robot_description_gazebo = ParameterValue(Command(['xacro ', urdf_path_gazebo]), value_type=str)
+
+        self.robot_state_publisher_gazebo_node = Node(
+            package="robot_state_publisher",
+            executable="robot_state_publisher",
+            parameters=[{'robot_description': robot_description_gazebo}]
+        )
+
+
+        ### RVIZ CONFIGS
+        rviz_basic_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'rviz', 'urdf_config.rviz')
         
-        # Process the URDF file
-        pkg_path_bot = os.path.join(get_package_share_directory('charmie_bot'))
+        self.rviz2_basic_node = Node(
+            package="rviz2",
+            executable="rviz2",
+            arguments=['-d', rviz_basic_config_path]
+        )
+
+
+        ### GAZEBO
+        gazebo_ros_path = get_package_share_path('gazebo_ros')
+
+        world_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'worlds', 'obstacles_test.world')
         
-        xacro_file = os.path.join(pkg_path_bot,'description','robot.urdf.xacro')
-        robot_description_config = xacro.process_file(xacro_file)
-        
+        self.gazebo = IncludeLaunchDescription(PythonLaunchDescriptionSource(
+                    os.path.join(gazebo_ros_path, 'launch', 'gazebo.launch.py')),
+                    launch_arguments={'world': world_path}.items()  # Specify the world file
+        )
+
+        # Run the spawner node from the gazebo_ros package. The entity name doesn't really matter if you only have a single robot.
+        self.spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
+                            arguments=['-topic', 'robot_description',
+                                    '-entity', 'charmie'],
+                            output='screen')
+
+        ### ARM XARM
         # Declare arguments
         self.declared_arm_arguments = []
         self.declared_arm_arguments.append(
@@ -73,30 +121,24 @@ class LaunchStdFunctions():
                 'robot_type': 'xarm',
             }.items(),
         )
- 
-        # Create a robot_state_publisher node
-        params = {'robot_description': robot_description_config.toxml(), 'use_sim_time': True}
-        
-        self.node_robot_state_publisher = Node(
-            package='robot_state_publisher',
-            executable='robot_state_publisher',
-            output='screen',
-            parameters=[params]
-        )
 
         #Publishes the joint_states of the robot
-        self.joint_state = Node(package='joint_state_publisher',
+        self.joint_state_publisher = Node(package='joint_state_publisher',
                        executable='joint_state_publisher',
-                       name='joint_state_publisher',
-                       output='screen',
-                       parameters=[{'use_sim_time': True}])
+                       name='joint_state_publisher')
 
-        charmie_multi_camera_launch_file = PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('realsense2_camera'), 'launch', 'charmie_multi_camera_launch.py'
-        )])
-
+        self.joint_state_publisher_gui = Node(package='joint_state_publisher_gui',
+                       executable='joint_state_publisher_gui')
+        
         # Use IncludeLaunchDescription to include the launch file
-        self.charmie_multi_camera_launch_description = IncludeLaunchDescription(charmie_multi_camera_launch_file)
+        self.charmie_multi_camera_launch_description = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('realsense2_camera'), 'launch', 'charmie_multi_camera_launch.py')])
+            )
+
+            # Include static transforms
+        self.static_transforms_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('charmie_description'), 'launch', 'static_transforms_launch.py')])
+            )
 
         self.gui = Node(package='charmie_gui',
                 executable='gui_debug',
