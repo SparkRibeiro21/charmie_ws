@@ -52,6 +52,14 @@ class LaunchStdFunctions():
             arguments=['-d', rviz_basic_config_path]
         )
 
+        rviz_nav2_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'rviz', 'nav2_config.rviz')
+        
+        self.rviz2_nav2_node = Node(
+            package="rviz2",
+            executable="rviz2",
+            arguments=['-d', rviz_nav2_config_path]
+        )
 
         ### GAZEBO
         gazebo_ros_path = get_package_share_path('gazebo_ros')
@@ -69,6 +77,31 @@ class LaunchStdFunctions():
                             arguments=['-topic', 'robot_description',
                                     '-entity', 'charmie'],
                             output='screen')
+        
+        twist_mux_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'config', 'twist_mux.yaml')
+        
+        self.diff_drive_spawner = Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["diff_cont"],
+        )
+
+        self.joint_broad_spawner = Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["joint_broad"],
+        )
+
+        # The differencial pluggin from gazebo does not receive messages from /cmd_vel but from /diff_cont/cmd_vel_unstamped
+        self.twist_mux_node = Node(
+            package="twist_mux",
+            executable="twist_mux",
+            parameters=[twist_mux_config_path],
+            remappings=[("/cmd_vel_out", "/diff_cont/cmd_vel_unstamped")],
+            output="screen"
+        )
+        
 
         ### ARM XARM
         # Declare arguments
