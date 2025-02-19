@@ -4,7 +4,16 @@
     <xacro:include filename="common_properties.xacro"/>
     <xacro:include filename="inertial_macros.xacro"/>
     <xacro:include filename="mobile_base.xacro"/>
+
     <xacro:include filename="lidar.xacro"/>
     <xacro:include filename="lidar_bottom.xacro"/>
+
+
+    <xacro:include filename="torso.xacro"/>
+    
+    <xacro:include filename="neck.xacro"/>
+    
+    <!-- <xacro:include filename="head_camera.xacro"/> -->
+    
 
 </robot>
