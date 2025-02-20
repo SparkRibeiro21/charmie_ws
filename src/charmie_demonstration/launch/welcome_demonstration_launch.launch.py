@@ -24,7 +24,7 @@ def generate_launch_description():
         # std_lf.obstacles,
         # std_lf.odometry,
         # std_lf.navigation
-        
+        # std_lf.rosbag_record,
         # std_lf.node_robot_state_publisher,
         # std_lf.joint_state,
     ])

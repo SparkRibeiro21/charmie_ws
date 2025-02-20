@@ -2,7 +2,7 @@ from ament_index_python.packages import get_package_share_directory
 from ament_index_python.packages import get_package_share_path
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction, ExecuteProcess
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.parameter_descriptions import ParameterValue
 
@@ -346,3 +346,10 @@ class LaunchStdFunctions():
                     ]
         )
         
+        ### ROSBAG
+        # Node to start rosbag recording
+        self.rosbag_record = ExecuteProcess(
+        cmd=['ros2', 'bag', 'record', '-a'],  # Command to start recording all topics
+        name='rosbag_record_node',
+        output='screen'
+        )
