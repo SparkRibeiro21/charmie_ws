@@ -104,7 +104,7 @@ bt_navigator:
 bt_navigator_navigate_through_poses_rclcpp_node:
   ros__parameters:
     use_sim_time: False
-use_sim_time: True
+    
 bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
     use_sim_time: False

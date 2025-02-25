@@ -3,8 +3,9 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
+from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
+from nav2_simple_commander.robot_navigator import BasicNavigator
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
     Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
@@ -1472,6 +1473,13 @@ class RobotStdFunctions():
 
     def set_initial_position(self, initial_position):
 
+        # New version using nav2_simple_commander 
+
+        nav = BasicNavigator()
+
+        initial_pose = PoseStamped()
+
+        """
         task_initialpose = PoseWithCovarianceStamped()
 
         task_initialpose.header.frame_id = "map"
@@ -1502,6 +1510,7 @@ class RobotStdFunctions():
         task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         
         self.node.initialpose_publisher.publish(task_initialpose)
+        """
 
     def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
