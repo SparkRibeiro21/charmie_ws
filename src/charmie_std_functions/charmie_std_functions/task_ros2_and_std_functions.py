@@ -6,6 +6,7 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
 from nav2_simple_commander.robot_navigator import BasicNavigator
+import tf_transformations
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
     Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
@@ -288,6 +289,7 @@ class ROS2TaskNode(Node):
         self.new_person_frame_for_tracking = False
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
+        self.nav2 = BasicNavigator()
 
         # robot localization
         self.robot_pose = Pose2D()
@@ -1475,9 +1477,22 @@ class RobotStdFunctions():
 
         # New version using nav2_simple_commander 
 
-        nav = BasicNavigator()
-
+        q_x, q_y, q_z, q_w = tf_transformations.quaternion_from_euler(0.0, 0.0, 0.0)
         initial_pose = PoseStamped()
+        initial_pose.header.frame_id = "map"
+        initial_pose.header.stamp = self.node.get_clock().now().to_msg()
+        initial_pose.pose.position.x = 0.0
+        initial_pose.pose.position.y = 0.0
+        initial_pose.pose.position.z = 0.0
+        initial_pose.pose.orientation.x = q_x
+        initial_pose.pose.orientation.y = q_y
+        initial_pose.pose.orientation.z = q_z
+        initial_pose.pose.orientation.w = q_w
+        self.node.nav2.setInitialPose(initial_pose)
+
+        # Wait for Nav2 Comms
+
+        self.node.nav2.waitUntilNav2Active
 
         """
         task_initialpose = PoseWithCovarianceStamped()
