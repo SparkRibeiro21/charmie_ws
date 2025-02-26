@@ -40,6 +40,9 @@ To setup the arm in your workspace, please follow the preparation steps on the x
 Cameras (IntelRealsense 455 and 405): [Realsense Repo](https://github.com/IntelRealSense/realsense-ros)
 To setup the realsense package in your workspace, please follow the installation steps on the Intel Realsense repository. 
 
+Cameras (Orbecc Astra Pro Plus): [Orbecc Repo](https://github.com/orbbec/OrbbecSDK_ROS2)
+To setup the orbebc package in your workspace, please follow the installation instructions steps on the OrbbecSDK_ROS2 repository. 
+
 ## :robot: RoboCup@Home Qualification Videos
 
 ### RoboCup@Home 2025 :brazil:
