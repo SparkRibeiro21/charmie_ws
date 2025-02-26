@@ -1,6 +1,7 @@
 build/
 install/
 log/
+Log/
 **/__pycache__/
 **/.vscode/
 src/charmie_yolo_pose/charmie_yolo_pose/characteristics_models/modelo_gender.h5
