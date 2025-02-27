@@ -181,6 +181,11 @@ class LaunchStdFunctions():
         self.static_transforms_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('charmie_description'), 'launch', 'static_transforms_launch.py')])
             )
+        
+        # Use IncludeLaunchDescription to include the launch file
+        self.charmie_orbbec_base_camera_launch_description = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('orbbec_camera'), 'launch', 'astra.launch.py')])
+            )
 
         self.gui = Node(package='charmie_gui',
                 executable='gui_debug',
