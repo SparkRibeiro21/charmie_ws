@@ -6,7 +6,6 @@ from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
 from nav2_simple_commander.robot_navigator import BasicNavigator
-import tf_transformations
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
     Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
@@ -1475,57 +1474,30 @@ class RobotStdFunctions():
 
     def set_initial_position(self, initial_position):
 
-        # New version using nav2_simple_commander 
+        if initial_position is not None:
 
-        q_x, q_y, q_z, q_w = tf_transformations.quaternion_from_euler(0.0, 0.0, 0.0)
-        initial_pose = PoseStamped()
-        initial_pose.header.frame_id = "map"
-        initial_pose.header.stamp = self.node.get_clock().now().to_msg()
-        initial_pose.pose.position.x = 0.0
-        initial_pose.pose.position.y = 0.0
-        initial_pose.pose.position.z = 0.0
-        initial_pose.pose.orientation.x = q_x
-        initial_pose.pose.orientation.y = q_y
-        initial_pose.pose.orientation.z = q_z
-        initial_pose.pose.orientation.w = q_w
-        self.node.nav2.setInitialPose(initial_pose)
+            # New version using nav2_simple_commander
+            q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(initial_position[2]))
+            initial_pose = PoseStamped()
+            initial_pose.header.frame_id = "map"
+            initial_pose.header.stamp = self.node.get_clock().now().to_msg()
+            initial_pose.pose.position.x = initial_position[0]
+            initial_pose.pose.position.y = initial_position[1]
+            initial_pose.pose.position.z = 0.0
+            print(q_x, q_y, q_z, q_w)
+            initial_pose.pose.orientation.x = q_x
+            initial_pose.pose.orientation.y = q_y
+            initial_pose.pose.orientation.z = q_z
+            initial_pose.pose.orientation.w = q_w
+            self.node.nav2.setInitialPose(initial_pose)
 
-        # Wait for Nav2 Comms
+            # Wait for Nav2 Comms
+            # this gives an error: ValueError: generator already executing
+            # self.node.nav2.waitUntilNav2Active()
 
-        self.node.nav2.waitUntilNav2Active
+        else:
 
-        """
-        task_initialpose = PoseWithCovarianceStamped()
-
-        task_initialpose.header.frame_id = "map"
-        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
-
-        task_initialpose.pose.pose.position.x = float(initial_position[1])
-        task_initialpose.pose.pose.position.y = float(-initial_position[0])
-        task_initialpose.pose.pose.position.z = float(0.0)
-
-        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
-
-        # Convert an Euler angle to a quaternion.
-        # Input
-        #     :param roll: The roll (rotation around x-axis) angle in radians.
-        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
-        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
-        # 
-        # Output
-        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
-
-        roll = 0.0
-        pitch = 0.0
-        yaw = math.radians(initial_position[2])
-
-        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        
-        self.node.initialpose_publisher.publish(task_initialpose)
-        """
+            print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
     def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
@@ -2605,6 +2577,27 @@ class RobotStdFunctions():
         # self.activate_tracking(activate=False)
 
 
+
+    def get_quaternion_from_euler(self, roll, pitch, yaw):
+        """
+		Convert an Euler angle to a quaternion.
+		
+		Input
+			:param roll: The roll (rotation around x-axis) angle in radians.
+			:param pitch: The pitch (rotation around y-axis) angle in radians.
+			:param yaw: The yaw (rotation around z-axis) angle in radians.
+		
+		Output
+			:return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+		"""
+        qx = math.sin(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) - math.cos(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+        qy = math.cos(roll/2) * math.sin(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.cos(pitch/2) * math.sin(yaw/2)
+        qz = math.cos(roll/2) * math.cos(pitch/2) * math.sin(yaw/2) - math.sin(roll/2) * math.sin(pitch/2) * math.cos(yaw/2)
+        qw = math.cos(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+		
+        #print(qx,qy,qz,qw)
+  
+        return [qx, qy, qz, qw]
 
     # Missing Functions:
     # 

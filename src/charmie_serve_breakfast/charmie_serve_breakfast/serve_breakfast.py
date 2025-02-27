@@ -11,24 +11,24 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              True,
+    "charmie_arm":              False,
     "charmie_audio":            False,
-    "charmie_face":             True,
-    "charmie_head_camera":      True,
-    "charmie_hand_camera":      True,
-    "charmie_lidar":            True,
+    "charmie_face":             False,
+    "charmie_head_camera":      False,
+    "charmie_hand_camera":      False,
+    "charmie_lidar":            False,
     "charmie_llm":              False,
     "charmie_localisation":     False,
-    "charmie_low_level":        True,
+    "charmie_low_level":        False,
     "charmie_navigation":       False, # 
-    "charmie_neck":             True,
+    "charmie_neck":             False,
     "charmie_obstacles":        False, # 
     "charmie_odometry":         False, #
-    "charmie_point_cloud":      True,
+    "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_tracking":         False,
-    "charmie_yolo_objects":     True,
+    "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
 
@@ -98,8 +98,8 @@ class TaskMain():
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
         # Initial Position
-        self.initial_position = [0.0, 0.1, 0.0]
-
+        self.initial_position = self.robot.get_navigation_coords_from_furniture("Entrance")
+        print(self.initial_position)
         # Navigation Positions
         self.front_of_door = [0.0, 1.5] 
         self.cofee_table = [-0.4, 3.5]
@@ -129,6 +129,12 @@ class TaskMain():
             if self.state == self.Waiting_for_task_start:
 
                 self.robot.set_initial_position(self.initial_position)
+
+                print("Set Initial Position: DONE")
+
+                while True:
+                    pass
+
                 print("SET INITIAL POSITION")
                 print("GET_MILK:", self.GET_MILK, "GET_CORNFLAKES:", self.GET_CORNFLAKES, "GET_DISHES:", self.GET_DISHES)
 
