@@ -15,5 +15,7 @@
     <xacro:include filename="neck_gazebo.xacro"/>
     <xacro:include filename="head_camera.xacro"/>
     <xacro:include filename="head_camera_gazebo.xacro"/>
+    <xacro:include filename="base_camera.xacro"/>
+    <!-- <xacro:include filename="base_camera_gazebo.xacro"/> -->
 
 </robot>

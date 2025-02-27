@@ -86,5 +86,22 @@ def generate_launch_description():
                 'head_camera_link',  # parent frame
                 'D455_head_link'  # child frame
             ]
+        ),
+
+        # Static transform for the head camera
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='static_transform_head_camera',
+            arguments=[
+                '0',  # x
+                '0',  # y
+                '0',  # z
+                '0',  # roll
+                '0',  # pitch
+                '0',  # yaw
+                'base_camera_link',  # parent frame
+                'camera_link'  # child frame
+            ]
         )
     ])

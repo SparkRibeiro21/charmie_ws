@@ -2,9 +2,9 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
 
-    <gazebo reference="head_camera_link">
+    <gazebo reference="base_camera_link">
         <material>Gazebo/Black</material>
-        <sensor type="depth" name="camera_sensor">
+        <sensor type="depth" name="camera_sensor_orbbec">
             <pose> 0 0 0 0 0 0 </pose>
             <visualize>true</visualize>
             <update_rate>10</update_rate>
@@ -19,7 +19,7 @@
             </depth_camera>
 
             <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
-                <frame_name>head_camera_link</frame_name>
+                <frame_name>base_camera_link</frame_name>
             </plugin>
         </sensor>
     </gazebo>
