@@ -40,7 +40,7 @@ class LocalisationNode(Node):
             qy = transform.transform.rotation.y
             qz = transform.transform.rotation.z
             qw = transform.transform.rotation.w
-            yaw = self.quaternion_to_yaw(qx, qy, qz, qw)
+            yaw = self.get_yaw_from_quaternion(qx, qy, qz, qw)
 
             # Publish Pose2D message
             pose_msg = Pose2D()
@@ -54,7 +54,7 @@ class LocalisationNode(Node):
         except Exception as e:
             self.get_logger().warn(f"Could not get transform: {str(e)}")
 
-    def quaternion_to_yaw(self, x, y, z, w):
+    def get_yaw_from_quaternion(self, x, y, z, w):
         """ Convert quaternion (x, y, z, w) to Yaw (rotation around Z-axis). """
         t3 = 2.0 * (w * z + x * y)
         t4 = 1.0 - 2.0 * (y * y + z * z)

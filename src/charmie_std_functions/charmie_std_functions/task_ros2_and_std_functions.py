@@ -3,9 +3,8 @@ from rclpy.node import Node
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Pose2D, Vector3, Point
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
-from nav2_simple_commander.robot_navigator import BasicNavigator
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
     Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
@@ -83,6 +82,7 @@ class ROS2TaskNode(Node):
         self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) # used only for ps4 controller
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         # Search for person and object 
         self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
@@ -288,7 +288,8 @@ class ROS2TaskNode(Node):
         self.new_person_frame_for_tracking = False
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
-        self.nav2 = BasicNavigator()
+        self.amcl_pose = PoseWithCovarianceStamped()
+        self.new_amcl_pose_msg = False
 
         # robot localization
         self.robot_pose = Pose2D()
@@ -951,6 +952,9 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    def amcl_pose_callback(self, msg: PoseWithCovarianceStamped):
+        self.amcl_pose = msg
+        self.new_amcl_pose_msg = True
 
 
 
@@ -1476,24 +1480,62 @@ class RobotStdFunctions():
 
         if initial_position is not None:
 
-            # New version using nav2_simple_commander
-            q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(initial_position[2]))
-            initial_pose = PoseStamped()
-            initial_pose.header.frame_id = "map"
-            initial_pose.header.stamp = self.node.get_clock().now().to_msg()
-            initial_pose.pose.position.x = initial_position[0]
-            initial_pose.pose.position.y = initial_position[1]
-            initial_pose.pose.position.z = 0.0
-            print(q_x, q_y, q_z, q_w)
-            initial_pose.pose.orientation.x = q_x
-            initial_pose.pose.orientation.y = q_y
-            initial_pose.pose.orientation.z = q_z
-            initial_pose.pose.orientation.w = q_w
-            self.node.nav2.setInitialPose(initial_pose)
+            initial_pose_correctly_received_by_nav2 = False 
+            xy_min_error_for_initial_pose = 0.05 # 5 cm
+            yaw_min_error_for_initial_pose = math.radians(5.0) # 5 degrees
 
-            # Wait for Nav2 Comms
-            # this gives an error: ValueError: generator already executing
-            # self.node.nav2.waitUntilNav2Active()
+            self.node.new_amcl_pose_msg = False
+            while not initial_pose_correctly_received_by_nav2:
+                print("Attempting Sending Initial Pose to Nav2...")
+                initial_pose = PoseWithCovarianceStamped()
+
+                initial_pose.header.frame_id = "map"
+                initial_pose.header.stamp = self.node.get_clock().now().to_msg()
+                initial_pose.pose.pose.position.x = float(initial_position[0])
+                initial_pose.pose.pose.position.y = float(initial_position[1])
+                initial_pose.pose.pose.position.z = float(0.0)
+                q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(initial_position[2]))
+                initial_pose.pose.pose.orientation.x = q_x
+                initial_pose.pose.pose.orientation.y = q_y
+                initial_pose.pose.pose.orientation.z = q_z
+                initial_pose.pose.pose.orientation.w = q_w
+                self.node.initialpose_publisher.publish(initial_pose)
+
+                # Sometimes the initial_pose is not received by nav2, so it is necessary to check if it was received correctly
+                # We do this by using /amcl_pose topic, which is the topic that receives the robot's pose from the amcl node
+                # if /amcl_pose is not updated with the initial_pose coordinates means that nav2 did not receive the initial_pose
+                # so we need to resend it.
+
+                time.sleep(0.1)
+                amcl_yaw = self.get_yaw_from_quaternion(self.node.amcl_pose.pose.pose.orientation.x, self.node.amcl_pose.pose.pose.orientation.y, self.node.amcl_pose.pose.pose.orientation.z, self.node.amcl_pose.pose.pose.orientation.w)
+                initial_position_yaw_rad = math.radians(initial_position[2])
+                
+                # print(amcl_yaw, initial_position_yaw_rad)
+
+                # Angle conversions because they may be the same angle but 2*math.pi apart
+                while amcl_yaw < 0:
+                    amcl_yaw += 2*math.pi
+                while amcl_yaw >= 2*math.pi:
+                    amcl_yaw -= 2*math.pi
+
+                while initial_position_yaw_rad < 0:
+                    initial_position_yaw_rad += 2*math.pi
+                while initial_position_yaw_rad >= 2*math.pi:
+                    initial_position_yaw_rad -= 2*math.pi
+
+                # print(amcl_yaw, initial_position_yaw_rad)
+
+                if self.node.new_amcl_pose_msg and \
+                    initial_position[0]+xy_min_error_for_initial_pose > self.node.amcl_pose.pose.pose.position.x > initial_position[0]-xy_min_error_for_initial_pose and \
+                    initial_position[1]+xy_min_error_for_initial_pose > self.node.amcl_pose.pose.pose.position.y > initial_position[1]-xy_min_error_for_initial_pose and \
+                    initial_position_yaw_rad+yaw_min_error_for_initial_pose > amcl_yaw > initial_position_yaw_rad-yaw_min_error_for_initial_pose:
+
+                    initial_pose_correctly_received_by_nav2 = True
+                    print("Success Sending Initial Pose to Nav2!")
+
+                else:
+                    self.node.new_amcl_pose_msg = False
+                    initial_pose_correctly_received_by_nav2 = False
 
         else:
 
@@ -2576,8 +2618,6 @@ class RobotStdFunctions():
         # time.sleep(60.0)
         # self.activate_tracking(activate=False)
 
-
-
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
 		Convert an Euler angle to a quaternion.
@@ -2599,6 +2639,12 @@ class RobotStdFunctions():
   
         return [qx, qy, qz, qw]
 
+    def get_yaw_from_quaternion(self, x, y, z, w):
+        """ Convert quaternion (x, y, z, w) to Yaw (rotation around Z-axis). """
+        t3 = 2.0 * (w * z + x * y)
+        t4 = 1.0 - 2.0 * (y * y + z * z)
+        return math.atan2(t3, t4)  # Yaw angle in radians
+    
     # Missing Functions:
     # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
