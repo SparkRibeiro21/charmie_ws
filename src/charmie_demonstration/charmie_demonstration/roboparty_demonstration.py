@@ -14,7 +14,7 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
+    "charmie_arm":              True,
     "charmie_audio":            False,
     "charmie_face":             False,
     "charmie_head_camera":      False,
@@ -66,19 +66,17 @@ class TaskMain():
         self.Search_for_people_demonstration = 4
         self.Introduction_demonstration = 5
         self.Serve_breakfast_demonstration = 6
-        self.Audio_receptionist_and_restaurant_demonstration = 7
+        self.RoboParty_delivery_demonstration = 7
         self.LLM_demonstration = 8
         self.Open_door = 9
         self.Final_State = 10
+        self.Open_gripper_for_delivery = 11
         
         self.SB_Waiting_for_task_start = 0
         self.SB_Detect_and_receive_milk = 1
         self.SB_Detect_and_receive_cornflakes = 2
         self.SB_Detect_and_receive_dishes = 3
         self.SB_Place_and_pour_objects = 4
-
-        self.A_Receptionist = 0
-        self.A_Restaurant = 1
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -122,7 +120,6 @@ class TaskMain():
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
         self.state_SB = self.SB_Waiting_for_task_start
-        self.state_A = self.A_Receptionist
 
         while True:
 
@@ -302,9 +299,9 @@ class TaskMain():
                             if ps4_controller.options == self.RISING:
                                 self.state = self.Search_for_people_demonstration
 
-                        if ros2_modules["charmie_audio"] and ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                        if ros2_modules["charmie_arm"]:
                             if ps4_controller.r1 == self.RISING:
-                                self.state = self.Audio_receptionist_and_restaurant_demonstration
+                                self.state = self.RoboParty_delivery_demonstration
 
                         if ros2_modules["charmie_speakers"]:
                             if ps4_controller.r3 == self.RISING:
@@ -316,9 +313,13 @@ class TaskMain():
                                 self.current_task = self.Serve_breakfast_demonstration
                                 self.state_SB = self.SB_Waiting_for_task_start
 
-                        if ros2_modules["charmie_llm"] and ros2_modules["charmie_speakers"]:
+                        # if ros2_modules["charmie_llm"] and ros2_modules["charmie_speakers"]:
+                        #     if ps4_controller.r2 > 0.8:
+                        #         self.state = self.LLM_demonstration
+
+                        if ros2_modules["charmie_arm"]:
                             if ps4_controller.r2 > 0.8:
-                                self.state = self.LLM_demonstration
+                                self.state = self.Open_gripper_for_delivery
 
                         if ros2_modules["charmie_arm"] and ros2_modules["charmie_speakers"]:
                             if ps4_controller.l2 > 0.8:
@@ -490,88 +491,26 @@ class TaskMain():
 
                 self.state = self.Demo_actuators_with_tasks
 
-            elif self.state == self.Audio_receptionist_and_restaurant_demonstration:
+            elif self.state == self.RoboParty_delivery_demonstration:
                 
                 temp_active_motors = self.motors_active
                 self.safety_stop_modules()
 
-                if self.state_A == self.A_Receptionist:
-                
-                    ### audio receptionist code here
-                    self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
+                ########## START TASK ##########
+                self.robot.set_speech(filename="generic/introduction_quick", wait_for_end_of=True)
 
+                self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-                    
-                    ##### JA GEREI ALGUMAS FRASES, PLEASE CHECK: restaurant_demo_intro e demo_please_wave
-                    
+                self.robot.set_speech(filename="generic/introduction_quick", wait_for_end_of=True)
 
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
 
-                    time.sleep(1.0)
-                    # Reconhecer a pessoa
-                    # Olhar para a pessoa
-                    # person with characteristics received from search for person (closest person + ...)
-                    recep_detected_person = DetectedPerson()
-                    recep_detected_person.height = 1.00
-                    recep_detected_person.gender = "Female"
-                    recep_detected_person.shirt_color = "Pink"
-                    
-                    self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                    command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
-                    print("Finished:", command)
-                    keyword_list= command.split(" ")
-                    guest_name = keyword_list[0] 
-                    guest_drink = keyword_list[1]
-                    
-                    print(guest_name, guest_drink)
+                self.robot.set_speech(filename="generic/introduction_quick", wait_for_end_of=True)
 
-                    self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
-                    self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
-                    
-                    random_drink = str(random.randint(1, 3))
-                    self.robot.set_speech(filename="demonstration/favourite_drink_demo_"+random_drink, wait_for_end_of=True)
-                    self.robot.set_speech(filename="objects_names/"+keyword_list[1].lower(), wait_for_end_of=True)
+                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
-                    confirmation = self.robot.get_audio(yes_or_no=True, question="demonstration/know_some_characteristics", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                    print("Finished:", confirmation)
-
-                    ##### Verifica a resposta recebida
-                    if confirmation.lower() == "yes":
-                        self.robot.get_detected_person_characteristics(detected_person=recep_detected_person, first_sentence="demonstration/demo_characteristics_first_sentence", \
-                                                                       ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=True)
-                        time.sleep(1.0)
-                        
-                    else: #  confirmation.lower() == "no":
-                        self.robot.set_speech(filename="demonstration/ok_i_understand", wait_for_end_of=True)
-                    
-                    self.robot.set_speech(filename="demonstration/see_you_soon", wait_for_end_of=True)
-                    
-                    self.state_A = self.A_Restaurant
-
-                elif self.state_A == self.A_Restaurant:
-
-                    self.robot.set_speech(filename="demonstration/restaurant_demo_intro", wait_for_end_of=True)
-                    self.robot.set_speech(filename="demonstration/demo_please_wave", wait_for_end_of=True)
-
-                    list_customers = []                     
-                    # SFP
-
-                    list_filtered_customers = []
-
-                    # Olhar e mostrar cara da pessoa
-                    # Is this a guest?
-                    # Yes or No (continua para o próximo)
-                    # Yes: Olha para ele
-                    # Yes: please stand in front of me. What is your order?
-                    # Ouve
-                    # confirma 
-                    # Ok, I will try to get you (pedido)
-                    # (continua para o próximo pedido)
-                    # Now i should pick the foods and drinks and bring to my friends. See you soon my friends
-                
-                    ### audio restaurant code here
-                    self.robot.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
-
-                    self.state_A = self.A_Receptionist
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                ########## END TASK ##########
 
                 self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
@@ -587,6 +526,33 @@ class TaskMain():
                         self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators_with_tasks
+
+            elif self.state == self.Open_gripper_for_delivery:
+                
+                temp_active_motors = self.motors_active
+                self.safety_stop_modules()
+
+                ########## START TASK ##########
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                time.sleep(3.0)
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                ########## END TASK ##########
+
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
+                ### self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
+
+                self.state = self.Demo_actuators_with_tasks
+
 
             elif self.state == self.Serve_breakfast_demonstration:
                 
