@@ -498,18 +498,24 @@ class TaskMain():
 
                 ########## START TASK ##########
                 self.robot.set_speech(filename="generic/introduction_quick", wait_for_end_of=True)
+                self.robot.set_speech(filename="demonstration/welcome_roboparty", wait_for_end_of=True)
+                self.robot.set_speech(filename="demonstration/need_tools_roboparty", wait_for_end_of=True)
 
                 self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
 
-                self.robot.set_speech(filename="generic/introduction_quick", wait_for_end_of=True)
+                self.robot.set_speech(filename="demonstration/give_tools_roboparty", wait_for_end_of=True)
 
                 self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
 
-                self.robot.set_speech(filename="generic/introduction_quick", wait_for_end_of=True)
+                self.robot.set_speech(filename="demonstration/goodbye_roboparty", wait_for_end_of=False)
+
+                time.sleep(0.5)
 
                 self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                
+                time.sleep(3.0)
                 ########## END TASK ##########
 
                 self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
