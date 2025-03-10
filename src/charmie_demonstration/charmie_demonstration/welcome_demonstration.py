@@ -14,24 +14,25 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              True,
-    "charmie_audio":            True,
+    "charmie_arm":              False,
+    "charmie_audio":            False,
     "charmie_face":             False,
-    "charmie_head_camera":      True,
-    "charmie_hand_camera":      True,
-    "charmie_lidar":            True,
-    "charmie_llm":              True,
+    "charmie_head_camera":      False,
+    "charmie_hand_camera":      False,
+    "charmie_lidar":            False,
+    "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
     "charmie_navigation":       False,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_odometry":         False,
-    "charmie_point_cloud":      True,
+    "charmie_point_cloud":      False,
     "charmie_ps4_controller":   True,
     "charmie_speakers":         True,
-    "charmie_yolo_objects":     True,
-    "charmie_yolo_pose":        True,
+    "charmie_tracking":         False,
+    "charmie_yolo_objects":     False,
+    "charmie_yolo_pose":        False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -85,7 +86,7 @@ class TaskMain():
         self.look_judge = [45, 0]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
         # self.look_navigation = [0, -30]
-        # self.look_table_objects = [-45, -45]
+        self.look_table_objects = [-45, -35]
         # self.look_tray = [0, -60]
 
         self.OFF = 0     # LOW  -> LOW
@@ -224,14 +225,16 @@ class TaskMain():
                         # left joy stick to control x and y movement (direction and linear speed) 
                         if ps4_controller.l3_dist >= 0.1:
                             self.omni_move.x = ps4_controller.l3_ang
-                            self.omni_move.y = ps4_controller.l3_dist*100/5
+                            # self.omni_move.y = ps4_controller.l3_dist*100 # max is *100 is you use higher it will limit to *100
+                            self.omni_move.y = ps4_controller.l3_dist*50 # max is *100 is you use higher it will limit to *100
                         else:
                             self.omni_move.x = 0.0
                             self.omni_move.y = 0.0
 
                         # right joy stick to control angular speed
                         if ps4_controller.r3_dist >= 0.1:
-                            self.omni_move.z = 100 + ps4_controller.r3_xx*10
+                            # self.omni_move.z = 100 + ps4_controller.r3_xx*100 # max is *100 is you use higher it will limit to *100
+                            self.omni_move.z = 100 + ps4_controller.r3_xx*25
                         else:
                             self.omni_move.z = 100.0
                         
@@ -285,8 +288,8 @@ class TaskMain():
                         
                         elif ps4_controller.triangle >= self.ON_AND_RISING:
                             self.neck_pos_tilt += neck_inc_ver
-                            if self.neck_pos_tilt > 45:
-                                self.neck_pos_tilt = 45
+                            if self.neck_pos_tilt > 60:
+                                self.neck_pos_tilt = 60
                             self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
 
 
@@ -593,6 +596,7 @@ class TaskMain():
                 if self.state_SB == self.SB_Waiting_for_task_start:
                     
                     self.robot.set_speech(filename="serve_breakfast/sb_ready_start", wait_for_end_of=True)
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_milk
@@ -610,6 +614,7 @@ class TaskMain():
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_cornflakes
@@ -627,6 +632,7 @@ class TaskMain():
                     self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=True)
                     self.state_SB = self.SB_Detect_and_receive_dishes
@@ -659,10 +665,12 @@ class TaskMain():
                         object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=correct_object_bowl, look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                                 
                     ### HAVE TO CHANGE THIS wait_for_end_of to False for after adding SPOON
-                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
-                    ### SPOON (to be done ...)
-
+                    ### SPOON
+                    self.robot.ask_help_pick_object_tray(object_d=correct_object_spoon, look_judge=self.look_judge, first_help_request=False, bb_color=(0, 255, 0), audio_confirmation=False)
+                    
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=True)
 
@@ -670,6 +678,7 @@ class TaskMain():
 
                 elif self.state_SB == self.SB_Place_and_pour_objects:
                     
+                    self.robot.set_neck(self.look_table_objects, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
                     self.robot.set_speech(filename="furniture/dinner_table", wait_for_end_of=True)
                     
@@ -694,9 +703,13 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
 
                     #### PLACE SPOON: MISSING ...
+                    # self.robot.set_arm(command="place_spoon_table_funilocopo_v2", wait_for_end_of=True)
+                    self.robot.set_arm(command="place_spoon_table_funilocopo_v2_facing_other_side", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/place_object_placed", wait_for_end_of=False)
+
+                    ### FINISHED SERVING BREAKFAST
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-
-
+                    self.robot.set_neck(self.look_forward, wait_for_end_of=False)
                     self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
 
                     self.state_SB = self.SB_Waiting_for_task_start

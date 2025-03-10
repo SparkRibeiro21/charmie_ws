@@ -13,12 +13,20 @@ import time
 import serial
 import math
 
+# with the addition of the 2nd LIDAR, there may be a problem of port name.
+# In low_level and neck i ahnged the port names to /dev/serial/by-id/
+# However, both lidars seem to have the same id. So we have to change to port name or /dev/serial/by-path/ 
+# These are the paths of connections to the robot:
+# lrwxrwxrwx 1 root root 13 Feb 14 15:03 pci-0000:00:14.0-usb-0:4.2:1.0 -> ../../ttyACM0
+# lrwxrwxrwx 1 root root 13 Feb 14 15:03 pci-0000:00:14.0-usb-0:4.3:1.0 -> ../../ttyACM1
+# I will leave this here so when we actually implement the 2nd lidar we can change the port name
+# Hoppefully it will be soon.
 
 uart_port = '/dev/ttyACM0'
 uart_speed = 19200
 
+ROTATION_ERROR = 4.5
 LASER_ANG_MAX = 119.885
-LASER_ANG_MIN = -119.885
 LASER_STEP_DEG = 0.35208516886930985
 
 
@@ -459,7 +467,7 @@ class LidarNode(Node):
 
         self.laser = Hokuyo(port)
         self.laser.laser_on()
-        print("Started Hokuyo Scans")
+        self.get_logger().info("Started Hokuyo Scans")
 
         self.create_timer(0.1, self.timer_callback)
         
@@ -475,8 +483,8 @@ class LidarNode(Node):
 
         laser_scan.header.stamp = self.get_clock().now().to_msg()
         laser_scan.header.frame_id = 'lidar_frame'
-        laser_scan.angle_min = LASER_ANG_MIN*math.pi/180.0
-        laser_scan.angle_max = LASER_ANG_MAX*math.pi/180.0
+        laser_scan.angle_min = (-LASER_ANG_MAX-ROTATION_ERROR)*math.pi/180.0
+        laser_scan.angle_max = (LASER_ANG_MAX-ROTATION_ERROR)*math.pi/180.0
         laser_scan.angle_increment = LASER_STEP_DEG*math.pi/180.0
         laser_scan.time_increment = 0.0
         laser_scan.scan_time = 0.1

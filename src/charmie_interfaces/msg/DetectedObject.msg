@@ -5,8 +5,8 @@ string object_class
 int32 index
 float32 confidence
 
-geometry_msgs/Point position_relative
-geometry_msgs/Point position_absolute
+geometry_msgs/Point position_relative # position relative to the robot frame
+geometry_msgs/Point position_absolute # position relative to the map frame
 
 int32 box_top_left_x
 int32 box_top_left_y

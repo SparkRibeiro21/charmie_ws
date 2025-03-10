@@ -66,9 +66,7 @@ class NavigationSDNLClass:
 
         self.obstacles = Obstacles()
         self.aux_obstacles_l = Obstacles()
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0
+        self.robot_pose = Pose2D()
         self.nav_target = TarNavSDNL()
 
         # IMU ORIENTATION
@@ -315,8 +313,8 @@ class NavigationSDNLClass:
 
         target = (self.nav_target.target_coordinates.x, self.nav_target.target_coordinates.y) 
         lambda_target = self.lambda_target
-        current_pos = (self.robot_x, self.robot_y)
-        phi = self.robot_t
+        current_pos = (self.robot_pose.x, self.robot_pose.y)
+        phi = self.robot_pose.theta
 
         print("lambda_target:", lambda_target)
 
@@ -349,7 +347,7 @@ class NavigationSDNLClass:
     def calculate_obstacles_lidar(self):
 
         # variables necessary to calculate the obstacles from the LIDAR
-        phi = self.robot_t
+        phi = self.robot_pose.theta
 
         obstacles = []
         aux_obs = {}
@@ -374,7 +372,7 @@ class NavigationSDNLClass:
     def repulsor(self):
 
         obstacles = self.obstacles_l
-        phi = self.robot_t
+        phi = self.robot_pose.theta
 
         # variables to help in the TRplotter
         y1 = [0] * 360 * 2
@@ -498,8 +496,8 @@ class NavigationSDNLClass:
 
     def upload_move_dist_to_target(self):
         
-        x1 = self.robot_x
-        y1 = self.robot_y
+        x1 = self.robot_pose.x
+        y1 = self.robot_pose.y
 
         # x2 = self.nav_target.move_target_coordinates.x
         # y2 = self.nav_target.move_target_coordinates.y
@@ -516,11 +514,11 @@ class NavigationSDNLClass:
         # target = (self.nav_target.rotate_target_coordinates.x, self.nav_target.rotate_target_coordinates.y)
         
         target = (self.nav_target.target_coordinates.x, self.nav_target.target_coordinates.y)
-        current_pos = (self.robot_x, self.robot_y)
+        current_pos = (self.robot_pose.x, self.robot_pose.y)
 
-        # theta1 = math.degrees(self.robot_t + math.pi/2)
+        # theta1 = math.degrees(self.robot_pose.theta + math.pi/2)
         # theta2 = math.degrees(math.atan2(target[1]-current_pos[1], target[0]-current_pos[0]))
-        theta1 = (self.robot_t + math.pi/2)
+        theta1 = (self.robot_pose.theta + math.pi/2)
         theta2 = (math.atan2(target[1]-current_pos[1], target[0]-current_pos[0]))
 
         # normalize_angles()
@@ -558,9 +556,9 @@ class NavigationSDNLClass:
                 cv2.line(self.test_image, (0, int(self.yc + self.scale*i)), (self.yc*2, int(self.yc + self.scale*i)), (255, 255, 255), 1)
             
             # present and past localization positions
-            self.all_pos_x_val.append(self.robot_x)
-            self.all_pos_y_val.append(self.robot_y)
-            self.all_pos_t_val.append(self.robot_t)
+            self.all_pos_x_val.append(self.robot_pose.x)
+            self.all_pos_y_val.append(self.robot_pose.y)
+            self.all_pos_t_val.append(self.robot_pose.theta)
             for i in range(len(self.all_pos_x_val)):
                 cv2.circle(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[i]), int(self.yc - self.scale * self.all_pos_y_val[i])), 1, (255, 255, 0), -1)
 
@@ -597,23 +595,23 @@ class NavigationSDNLClass:
                 aux_new_obs_len = self.aux_obstacles_l.obstacles[i].dist * math.tan(self.aux_obstacles_l.obstacles[i].length_angular)
 
                 #line robot center to obstacle center
-                # cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)),
-                #                         (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2))),
-                #                         int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)))),
+                # cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_pose.x), int(self.yc - self.scale * self.robot_pose.y)),
+                #                         (int(self.xc + self.scale*self.robot_pose.x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_pose.theta + math.pi/2))),
+                #                         int(self.yc - self.scale*self.robot_pose.y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_pose.theta + math.pi/2)))),
                 #                         (255, 255, 255))
 
                 # line robot platform to obstacle center
-                cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x - self.scale * (self.robot_radius) * (math.cos(aux_ang - self.robot_t + math.pi/2))),
-                                           int(self.yc - self.scale*self.robot_y - self.scale * (self.robot_radius) * (math.sin(aux_ang - self.robot_t + math.pi/2)))),
-                                          (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2))),
-                                           int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)))),
+                cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_pose.x - self.scale * (self.robot_radius) * (math.cos(aux_ang - self.robot_pose.theta + math.pi/2))),
+                                           int(self.yc - self.scale*self.robot_pose.y - self.scale * (self.robot_radius) * (math.sin(aux_ang - self.robot_pose.theta + math.pi/2)))),
+                                          (int(self.xc + self.scale*self.robot_pose.x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_pose.theta + math.pi/2))),
+                                           int(self.yc - self.scale*self.robot_pose.y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_pose.theta + math.pi/2)))),
                                           (255, 255, 255))
                 
                 # line length of obstacle at dist and alfa detected
-                cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
-                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
-                                        (int(self.xc + self.scale*self.robot_x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_t + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2))),
-                                        int(self.yc - self.scale*self.robot_y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_t + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_t + math.pi/2)))),
+                cv2.line(self.test_image, (int(self.xc + self.scale*self.robot_pose.x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_pose.theta + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_pose.theta + math.pi/2))),
+                                        int(self.yc - self.scale*self.robot_pose.y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_pose.theta + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_pose.theta + math.pi/2)))),
+                                        (int(self.xc + self.scale*self.robot_pose.x - self.scale * (aux_dist) * (math.cos(aux_ang - self.robot_pose.theta + math.pi/2)) - self.scale * (aux_new_obs_len/2) * math.cos(-(math.pi/2 + aux_ang - self.robot_pose.theta + math.pi/2))),
+                                        int(self.yc - self.scale*self.robot_pose.y - self.scale * (aux_dist) * (math.sin(aux_ang - self.robot_pose.theta + math.pi/2)) + self.scale * (aux_new_obs_len/2) * math.sin(-(math.pi/2 + aux_ang - self.robot_pose.theta + math.pi/2)))),
                                         (0, 0, 255), int(1.0 + thickness*self.scale/1000))
                   
             
@@ -650,10 +648,10 @@ class NavigationSDNLClass:
 
 
             # robot
-            cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
-            cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_x), int(self.yc - self.scale * self.robot_y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
-            cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_t + math.pi/2)),
-                                            int(self.yc - self.scale*self.robot_y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_t + math.pi/2))), (int)(self.scale*self.lidar_radius), (0, 255, 255), -1)
+            cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_pose.x), int(self.yc - self.scale * self.robot_pose.y)), (int)(self.scale*self.robot_radius), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_pose.x), int(self.yc - self.scale * self.robot_pose.y)), (int)(self.scale*self.robot_radius/10), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.xc + self.scale*self.robot_pose.x + (self.robot_radius - self.lidar_radius)*self.scale*math.cos(self.robot_pose.theta + math.pi/2)),
+                                            int(self.yc - self.scale*self.robot_pose.y - (self.robot_radius - self.lidar_radius)*self.scale*math.sin(self.robot_pose.theta + math.pi/2))), (int)(self.scale*self.lidar_radius), (0, 255, 255), -1)
             
 
 
@@ -662,15 +660,15 @@ class NavigationSDNLClass:
                 # SDNL equations
                 # if self.first_nav_target:
                 # print(self.y_atrator)
-                self.plot1.plot(self.image_plt, self.scale_plotter, self.y_atrator, self.robot_t)
+                self.plot1.plot(self.image_plt, self.scale_plotter, self.y_atrator, self.robot_pose.theta)
                 for y_plt_ff in self.yff:
-                    self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_t, (255, 100, 100))
+                    self.plot3.plot(self.image_plt, self.scale_plotter, y_plt_ff, self.robot_pose.theta, (255, 100, 100))
 
                 # print(self.yfff)
                 # print(self.y_final)
                     
-                self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_t, (0, 140, 255))
-                self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_t, (255, 255, 0))
+                self.plot2.plot(self.image_plt, self.scale_plotter, self.yfff, self.robot_pose.theta, (0, 140, 255))
+                self.plot2.plot(self.image_plt, self.scale_plotter, self.y_final, self.robot_pose.theta, (255, 255, 0))
                 
                 cv2.imshow("SDNL", self.image_plt)
 
@@ -973,9 +971,7 @@ class NavSDNLNode(Node):
         #         self.MIN_DIST_OBS = o.dist
 
     def robot_localisation_callback(self, pose: Pose2D):
-        self.nav.robot_x = pose.x
-        self.nav.robot_y = pose.y
-        self.nav.robot_t = pose.theta
+        self.nav.robot_pose = pose
         self.nav.update_debug_drawings()
 
     def get_orientation_callback(self, orientation: Float32):
@@ -1026,9 +1022,9 @@ class NavSDNLNode(Node):
         self.nav.nav_threshold_dist = nav.reached_radius # in meters
         self.nav.max_lin_speed = nav.max_speed
         self.nav.aux_initial_speed_ramp = 0.0
-        self.latest_localisation_x = self.nav.robot_x
-        self.latest_localisation_y = self.nav.robot_y
-        self.latest_localisation_t = self.nav.robot_t
+        self.latest_localisation_x = self.nav.robot_pose.x
+        self.latest_localisation_y = self.nav.robot_pose.y
+        self.latest_localisation_t = self.nav.robot_pose.theta
         self.navigation_state = 0
 
         # if self.nav.nav_target.move_or_rotate.lower() == "adjust_angle":
@@ -1207,7 +1203,7 @@ class NavSDNLNode(Node):
                     omni_move.y = float(5.0)
                     omni_move.z = float(100.0) 
                     
-                    dist = math.dist((self.latest_localisation_x, self.latest_localisation_y),(self.nav.robot_x, self.nav.robot_y))
+                    dist = math.dist((self.latest_localisation_x, self.latest_localisation_y),(self.nav.robot_pose.x, self.nav.robot_pose.y))
                     if dist >= self.nav.nav_target.adjust_distance - 0.08: # this values is used to compensate the error made by the decceleration ramp by the motor controller
                         omni_move.x = float(0.0)
                         omni_move.y = float(0.0)

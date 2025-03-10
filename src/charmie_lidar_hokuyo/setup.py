@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		"lidar_hokuyo = charmie_lidar_hokuyo.lidar_hokuyo:main"
+		"lidar_hokuyo = charmie_lidar_hokuyo.lidar_hokuyo:main",
+		"lidar_hokuyo_bottom = charmie_lidar_hokuyo.lidar_hokuyo_bottom:main"
         ],
     },
 )

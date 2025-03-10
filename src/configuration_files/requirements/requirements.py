@@ -2,6 +2,7 @@ import os
 import subprocess
 import pkg_resources
 
+from pathlib import Path
 
 
 subprocess.run(['sudo', 'apt-get', 'install', 'python3-tk'],text=True)
@@ -12,7 +13,9 @@ from tkinter import messagebox, ttk
 from PIL import Image, ImageTk  # Make sure you have Pillow installed
 
 # Define target versions
-path_to_ws="/home/martins/Desktop/Charmie/charmie_ws"
+
+# by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+path_to_ws=str(Path.home())+"/charmie_ws"
 ubuntu_target = '22.04'
 python_version = "3.10.14"
 ultralytics_target = '8.2.20'
@@ -189,6 +192,8 @@ def check_all_versions():
 
 # GUI
 def create_gui():
+    global path_to_ws
+
     root = tk.Tk()
     root.title("CHARMIE Installation")
     root.geometry("700x500")
@@ -202,7 +207,7 @@ def create_gui():
     frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
     # Load and display the robot image
-    image = Image.open("Installation.png")
+    image = Image.open(path_to_ws+"/src/configuration_files/docs/Installation.png")
     photo = ImageTk.PhotoImage(image)
     label_image = tk.Label(frame, image=photo)
     label_image.pack()

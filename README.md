@@ -26,6 +26,8 @@
 
 CHARMIE is a domestic and healthcare service and assistive robot capable of performing tasks in non-standardized environments. The social goal for CHARMIE is to develop a robot capable of aiding in family homes, nursing homes, and healthcare facilities. The scientific objective of CHARMIE is the development of a multifaceted anthropomorphic robot capable of performing a broad set of tasks based solely on machine learning solutions that allow the robot to learn how to perform and improve tasks via observation and trial-and-error interactions with the environment. RoboCup@Home is an international robotics competition that aims to develop service and assistive robotic technology with high relevance for future personal domestic applications. The efficiency and effectiveness in the day-to-day tasks of CHARMIE are benchmarked in RoboCup@Home.
 
+Official Project Webpage: [https://lar.dei.uminho.pt/home](https://lar.dei.uminho.pt/home)
+
 ## :rocket: Requirements
 
 OS: Ubuntu 22.04 LTS
@@ -39,6 +41,9 @@ To setup the arm in your workspace, please follow the preparation steps on the x
 
 Cameras (IntelRealsense 455 and 405): [Realsense Repo](https://github.com/IntelRealSense/realsense-ros)
 To setup the realsense package in your workspace, please follow the installation steps on the Intel Realsense repository. 
+
+Cameras (Orbecc Astra Pro Plus): [Orbecc Repo](https://github.com/orbbec/OrbbecSDK_ROS2)
+To setup the orbebc package in your workspace, please follow the installation instructions steps on the OrbbecSDK_ROS2 repository. 
 
 ## :robot: RoboCup@Home Qualification Videos
 

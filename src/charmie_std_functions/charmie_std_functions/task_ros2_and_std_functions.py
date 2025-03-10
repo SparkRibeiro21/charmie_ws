@@ -5,8 +5,11 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, Obstacles, ArmController, PS4Controller, ListOfStrings
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
+    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
+    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, \
+    SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking
 
 import cv2 
 # import threading
@@ -79,6 +82,7 @@ class ROS2TaskNode(Node):
         self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) # used only for ps4 controller
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         # Search for person and object 
         self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
@@ -90,7 +94,12 @@ class ROS2TaskNode(Node):
         # Low level
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for ps4 controller
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for ps4 controller
+        # Neck
+        self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
+        # Tracking
+        self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         
+
         ### Services (Clients) ###
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
@@ -107,6 +116,8 @@ class ROS2TaskNode(Node):
         self.set_neck_coordinates_client = self.create_client(SetNeckCoordinates, "neck_to_coords")
         self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
+        self.neck_continuous_tracking_client = self.create_client(TrackContinuous, "set_continuous_tracking")
+        
         # Yolo Pose
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
@@ -133,6 +144,8 @@ class ROS2TaskNode(Node):
         self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
         self.llm_confirm_command_client = self.create_client(GetLLMConfirmCommand, "llm_confirm_command")
         self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
+        # Tracking (SAM2)
+        self.activate_tracking_client = self.create_client(ActivateTracking, "activate_tracking")
 
     
         self.send_node_used_to_gui()
@@ -154,6 +167,7 @@ class ROS2TaskNode(Node):
             "charmie_point_cloud":      True,
         "charmie_ps4_controller":   False,
             "charmie_speakers":         True,
+            "charmie_tracking":        False,
             "charmie_yolo_objects":     True,
             "charmie_yolo_pose":        False,
         """
@@ -217,6 +231,10 @@ class ROS2TaskNode(Node):
             while not self.save_speech_command_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Save Speech Command...")
 
+        if self.ros2_modules["charmie_tracking"]:
+            while not self.activate_tracking_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Activate Tracking Command...")
+
         if self.ros2_modules["charmie_yolo_objects"]:
             while not self.activate_yolo_objects_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
@@ -237,6 +255,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
         self.waited_for_end_of_get_vccs = False
@@ -265,11 +284,15 @@ class ROS2TaskNode(Node):
         self.point_cloud_response = GetPointCloudBB.Response()
         self.obstacles = Obstacles()
         self.ps4_controller_state = PS4Controller()
+        self.new_object_frame_for_tracking = False
+        self.new_person_frame_for_tracking = False
+        self.tracking_mask = TrackingMask()
+        self.new_tracking_mask_msg = False
+        self.amcl_pose = PoseWithCovarianceStamped()
+        self.new_amcl_pose_msg = False
 
         # robot localization
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0
+        self.robot_pose = Pose2D()
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -294,6 +317,8 @@ class ROS2TaskNode(Node):
         self.track_person_message = ""
         self.track_object_success = True
         self.track_object_message = ""
+        self.continuous_tracking_success = True
+        self.continuous_tracking_message = ""
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
@@ -306,6 +331,8 @@ class ROS2TaskNode(Node):
         self.activate_obstacles_message = ""
         self.activate_motors_success = True
         self.activate_motors_message = ""
+        self.activate_tracking_success = True
+        self.activate_tracking_message = ""
 
         self.audio_command = ""
         self.received_continuous_audio = False
@@ -344,6 +371,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_point_cloud      = self.ros2_modules["charmie_point_cloud"]
         nodes_used.charmie_ps4_controller   = self.ros2_modules["charmie_ps4_controller"]
         nodes_used.charmie_speakers         = self.ros2_modules["charmie_speakers"]
+        nodes_used.charmie_tracking         = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects     = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose        = self.ros2_modules["charmie_yolo_pose"]
 
@@ -351,6 +379,7 @@ class ROS2TaskNode(Node):
 
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
+        self.new_person_frame_for_tracking = True
 
         # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
         # current_frame_draw = current_frame.copy()
@@ -359,6 +388,7 @@ class ROS2TaskNode(Node):
 
     def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
+        self.new_object_frame_for_tracking = True
 
     def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
@@ -388,9 +418,7 @@ class ROS2TaskNode(Node):
         self.obstacles = obs
 
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_x = pose.x
-        self.robot_y = pose.y
-        self.robot_t = pose.theta
+        self.robot_pose = pose
 
     def arm_finished_movement_callback(self, flag: Bool):
         # self.get_logger().info("Received response from arm finishing movement")
@@ -415,6 +443,10 @@ class ROS2TaskNode(Node):
     def ps4_controller_state_callback(self, controller: PS4Controller):
         self.ps4_controller_state = controller
         self.new_controller_msg = True
+
+    def tracking_mask_callback(self, mask: TrackingMask):
+        self.tracking_mask = mask
+        self.new_tracking_mask_msg = True
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, request=GetPointCloudBB.Request()):
@@ -449,6 +481,12 @@ class ROS2TaskNode(Node):
     def call_activate_obstacles_server(self, request=ActivateObstacles.Request()):
 
         self.activate_obstacles_client.call_async(request)
+
+
+    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
+    def call_activate_tracking_server(self, request=ActivateTracking.Request()):
+
+        self.activate_tracking_client.call_async(request)
 
 
     #### FACE SERVER FUNCTIONS #####
@@ -726,6 +764,32 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+
+    def call_neck_continuous_tracking_server(self, request=TrackContinuous.Request(), wait_for_end_of=True):
+
+        future = self.neck_continuous_tracking_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_neck_continuous_tracking)
+        else:
+            self.track_person_success = True
+            self.track_person_message = "Wait for answer not needed"
+    
+    def callback_call_neck_continuous_tracking(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.continuous_tracking_success = response.success
+            self.continuous_tracking_message = response.message
+            self.waited_for_end_of_continuous_tracking = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
     #### LOW LEVEL SERVER FUNCTIONS #####
     def call_rgb_command_server(self, request=SetRGB.Request(), wait_for_end_of=True):
         
@@ -888,6 +952,9 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    def amcl_pose_callback(self, msg: PoseWithCovarianceStamped):
+        self.amcl_pose = msg
+        self.new_amcl_pose_msg = True
 
 
 
@@ -1290,6 +1357,20 @@ class RobotStdFunctions():
 
         return self.node.activate_motors_success, self.node.activate_motors_message
 
+    def activate_tracking(self, activate=False, points=ListOfPoints(), bbox=BoundingBox(), wait_for_end_of=True):
+        
+        request = ActivateTracking.Request()
+        request.activate = activate
+        request.points = points
+        request.bounding_box = bbox
+
+        self.node.call_activate_tracking_server(request=request)
+
+        self.node.activate_tracking_success = True
+        self.node.activate_tracking_message = "Activated with selected parameters"
+
+        return self.node.activate_tracking_success, self.node.activate_tracking_message
+
     def track_person(self, person=DetectedPerson(), body_part="Head", wait_for_end_of=True):
 
         request = TrackPerson.Request()
@@ -1397,36 +1478,68 @@ class RobotStdFunctions():
 
     def set_initial_position(self, initial_position):
 
-        task_initialpose = PoseWithCovarianceStamped()
+        if initial_position is not None:
 
-        task_initialpose.header.frame_id = "map"
-        task_initialpose.header.stamp = self.node.get_clock().now().to_msg()
+            initial_pose_correctly_received_by_nav2 = False 
+            xy_min_error_for_initial_pose = 0.05 # 5 cm
+            yaw_min_error_for_initial_pose = math.radians(5.0) # 5 degrees
 
-        task_initialpose.pose.pose.position.x = float(initial_position[1])
-        task_initialpose.pose.pose.position.y = float(-initial_position[0])
-        task_initialpose.pose.pose.position.z = float(0.0)
+            self.node.new_amcl_pose_msg = False
+            while not initial_pose_correctly_received_by_nav2:
+                print("Attempting Sending Initial Pose to Nav2...")
+                initial_pose = PoseWithCovarianceStamped()
 
-        # quaternion = self.get_quaternion_from_euler(0,0,math.radians(initial_position[2]))
+                initial_pose.header.frame_id = "map"
+                initial_pose.header.stamp = self.node.get_clock().now().to_msg()
+                initial_pose.pose.pose.position.x = float(initial_position[0])
+                initial_pose.pose.pose.position.y = float(initial_position[1])
+                initial_pose.pose.pose.position.z = float(0.0)
+                q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(initial_position[2]))
+                initial_pose.pose.pose.orientation.x = q_x
+                initial_pose.pose.pose.orientation.y = q_y
+                initial_pose.pose.pose.orientation.z = q_z
+                initial_pose.pose.pose.orientation.w = q_w
+                self.node.initialpose_publisher.publish(initial_pose)
 
-        # Convert an Euler angle to a quaternion.
-        # Input
-        #     :param roll: The roll (rotation around x-axis) angle in radians.
-        #     :param pitch: The pitch (rotation around y-axis) angle in radians.
-        #     :param yaw: The yaw (rotation around z-axis) angle in radians.
-        # 
-        # Output
-        #     :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+                # Sometimes the initial_pose is not received by nav2, so it is necessary to check if it was received correctly
+                # We do this by using /amcl_pose topic, which is the topic that receives the robot's pose from the amcl node
+                # if /amcl_pose is not updated with the initial_pose coordinates means that nav2 did not receive the initial_pose
+                # so we need to resend it.
 
-        roll = 0.0
-        pitch = 0.0
-        yaw = math.radians(initial_position[2])
+                time.sleep(0.1)
+                amcl_yaw = self.get_yaw_from_quaternion(self.node.amcl_pose.pose.pose.orientation.x, self.node.amcl_pose.pose.pose.orientation.y, self.node.amcl_pose.pose.pose.orientation.z, self.node.amcl_pose.pose.pose.orientation.w)
+                initial_position_yaw_rad = math.radians(initial_position[2])
+                
+                # print(amcl_yaw, initial_position_yaw_rad)
 
-        task_initialpose.pose.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        task_initialpose.pose.pose.orientation.y = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-        task_initialpose.pose.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-        task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        
-        self.node.initialpose_publisher.publish(task_initialpose)
+                # Angle conversions because they may be the same angle but 2*math.pi apart
+                while amcl_yaw < 0:
+                    amcl_yaw += 2*math.pi
+                while amcl_yaw >= 2*math.pi:
+                    amcl_yaw -= 2*math.pi
+
+                while initial_position_yaw_rad < 0:
+                    initial_position_yaw_rad += 2*math.pi
+                while initial_position_yaw_rad >= 2*math.pi:
+                    initial_position_yaw_rad -= 2*math.pi
+
+                # print(amcl_yaw, initial_position_yaw_rad)
+
+                if self.node.new_amcl_pose_msg and \
+                    initial_position[0]+xy_min_error_for_initial_pose > self.node.amcl_pose.pose.pose.position.x > initial_position[0]-xy_min_error_for_initial_pose and \
+                    initial_position[1]+xy_min_error_for_initial_pose > self.node.amcl_pose.pose.pose.position.y > initial_position[1]-xy_min_error_for_initial_pose and \
+                    initial_position_yaw_rad+yaw_min_error_for_initial_pose > amcl_yaw > initial_position_yaw_rad-yaw_min_error_for_initial_pose:
+
+                    initial_pose_correctly_received_by_nav2 = True
+                    print("Success Sending Initial Pose to Nav2!")
+
+                else:
+                    self.node.new_amcl_pose_msg = False
+                    initial_pose_correctly_received_by_nav2 = False
+
+        else:
+
+            print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
     def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
@@ -1953,7 +2066,7 @@ class RobotStdFunctions():
 
     def get_robot_localization(self):
 
-        return self.node.robot_x, self.node.robot_y, self.node.robot_t
+        return self.node.robot_pose
 
     def get_head_rgb_image(self):
 
@@ -2358,15 +2471,180 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2)]  # Return the class
+                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height']]  # Return the class
         return None  # Return None if the object is not found
 
+    def get_height_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['height'] # Return the height
+        return None  # Return None if the object is not found
+
+    def set_continuous_tracking_with_coordinates(self):
+
+        request = TrackContinuous.Request()
+
+        ### TURN ON CONTINUOUS TRACKING
+        request.status = True
+        request.tracking_type = "person_head"
+        request.tracking_position = Point()
+        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
+        
+        self.node.detected_people.persons = [] # clears detected_people after receiving them to make sure the objects from previous frames are not considered again
+        # self.activate_yolo_pose(activate=True) 
+        # self.activate_yolo_objects(activate_objects=True) 
+        
+        start_time = time.time()
+        tracking_condition = True
+        selected_object_to_track = "bowl"
+        
+        self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
+        while tracking_condition:
+
+            ### PERSON
+            correct_track_per = DetectedPerson()
+            local_detected_people = self.node.detected_people.persons
+            if self.node.new_person_frame_for_tracking:
+            
+                if len(local_detected_people) > 0:
+                    correct_track_per = local_detected_people[0]
+                
+                    # enviar valores 
+                    coords = Point()
+                    coords.x = float(correct_track_per.head_center_x)
+                    coords.y = float(correct_track_per.head_center_y)
+                    # coords.z = correct_person_to_track.position_absolute_head.z
+                    self.node.continuous_tracking_position_publisher.publish(coords)
+                    print(coords)
+                self.node.new_person_frame_for_tracking = False
+
+            ### OBJECTS
+            # correct_track_obj = DetectedObject()  
+            # local_detected_objects = self.node.detected_objects.objects
+            # if self.node.new_object_frame_for_tracking:
+            # 
+            #     for o in local_detected_objects:
+            #         if o.object_name.lower() == selected_object_to_track:
+            #             correct_track_obj = o
+            # 
+            #     if correct_track_obj.object_name.lower() == selected_object_to_track:  
+            #         # enviar valores 
+            #         coords = Point()
+            #         coords.x = float(correct_track_obj.box_center_x)
+            #         coords.y = float(correct_track_obj.box_center_y)
+            #         # coords.z = correct_person_to_track.position_absolute_head.z
+            #         self.node.continuous_tracking_position_publisher.publish(coords)
+            #         print(coords)
+            #     self.node.new_object_frame_for_tracking = False
+
+            # confirmar condição de fim de tracking
+            # if time.time() - start_time > 60.0:
+            #     tracking_condition = False
+
+        self.set_rgb(CYAN+BREATH)
+        self.activate_yolo_pose(activate=False) 
+        self.activate_yolo_objects(activate_objects=False) 
+        
+        ### TURN OFF CONTINUOUS TRACKING
+        request.status = False
+        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
+
+
+    def set_follow_person(self):
+
+        self.activate_yolo_pose(activate=True) 
+        
+        while len(self.node.detected_people.persons) == 0:
+            pass
+
+        p = self.node.detected_people.persons[0]
+
+        self.activate_yolo_pose(activate=False) 
+
+        points = ListOfPoints()
+        
+        if p.kp_nose_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_nose_x), y=float(p.kp_nose_y), z=1.0))
+        if p.kp_eye_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_eye_left_x), y=float(p.kp_eye_left_y), z=1.0))
+        if p.kp_eye_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_eye_right_x), y=float(p.kp_eye_right_y), z=1.0))
+        if p.kp_ear_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_ear_left_x), y=float(p.kp_ear_left_y), z=1.0))
+        if p.kp_ear_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_ear_right_x), y=float(p.kp_ear_right_y), z=1.0))
+        if p.kp_shoulder_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_shoulder_left_x), y=float(p.kp_shoulder_left_y), z=1.0))
+        if p.kp_shoulder_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_shoulder_right_x), y=float(p.kp_shoulder_right_y), z=1.0))
+        if p.kp_elbow_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_elbow_left_x), y=float(p.kp_elbow_left_y), z=1.0))
+        if p.kp_elbow_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_elbow_right_x), y=float(p.kp_elbow_right_y), z=1.0))
+        if p.kp_wrist_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_wrist_left_x), y=float(p.kp_wrist_left_y), z=1.0))
+        if p.kp_wrist_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_wrist_right_x), y=float(p.kp_wrist_right_y), z=1.0))
+        if p.kp_hip_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_hip_left_x), y=float(p.kp_hip_left_y), z=1.0))
+        if p.kp_hip_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_hip_right_x), y=float(p.kp_hip_right_y), z=1.0))
+        if p.kp_knee_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_knee_left_x), y=float(p.kp_knee_left_y), z=1.0))
+        if p.kp_knee_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_knee_right_x), y=float(p.kp_knee_right_y), z=1.0))
+        if p.kp_ankle_left_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_ankle_left_x), y=float(p.kp_ankle_left_y), z=1.0))
+        if p.kp_ankle_right_conf > 0.5:
+            points.coords.append(Point(x=float(p.kp_ankle_right_x), y=float(p.kp_ankle_right_y), z=1.0))
+        
+
+        # points.coords.append(Point(x=640.0//2, y=480.0//2, z=1.0))
+        # points.coords.append(Point(x=320.0, y=150.0, z=1.0))
+        # points.coords.append(Point(x=420.0, y=150.0, z=0.0))
+        # points.coords.append(Point(x=220.0, y=150.0, z=0.0))
+
+        bb = BoundingBox()
+        # bb.box_top_left_x = 200
+        # bb.box_top_left_y = 100
+        # bb.box_width = 640
+        # bb.box_height = 480
+
+
+        self.activate_tracking(activate=True, points=points, bbox=bb)
+        # time.sleep(60.0)
+        # self.activate_tracking(activate=False)
+
+    def get_quaternion_from_euler(self, roll, pitch, yaw):
+        """
+		Convert an Euler angle to a quaternion.
+		
+		Input
+			:param roll: The roll (rotation around x-axis) angle in radians.
+			:param pitch: The pitch (rotation around y-axis) angle in radians.
+			:param yaw: The yaw (rotation around z-axis) angle in radians.
+		
+		Output
+			:return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+		"""
+        qx = math.sin(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) - math.cos(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+        qy = math.cos(roll/2) * math.sin(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.cos(pitch/2) * math.sin(yaw/2)
+        qz = math.cos(roll/2) * math.cos(pitch/2) * math.sin(yaw/2) - math.sin(roll/2) * math.sin(pitch/2) * math.cos(yaw/2)
+        qw = math.cos(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+		
+        #print(qx,qy,qz,qw)
+  
+        return [qx, qy, qz, qw]
+
+    def get_yaw_from_quaternion(self, x, y, z, w):
+        """ Convert quaternion (x, y, z, w) to Yaw (rotation around Z-axis). """
+        t3 = 2.0 * (w * z + x * y)
+        t4 = 1.0 - 2.0 * (y * y + z * z)
+        return math.atan2(t3, t4)  # Yaw angle in radians
     
-
-
     # Missing Functions:
     # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
-    # 
-    # ask_help_pick_object_tray -> aimilar to gripper but without hand movement and with audio confirmation (used in CT) audio confirmation may be optional (SG does not need audio confirmation, takes too long...)
-    

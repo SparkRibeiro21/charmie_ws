@@ -94,7 +94,7 @@ class ArmUfactory(Node):
 		self.estado_tr = 0
 
 		# initial debug movement 
-		self.next_arm_movement = "debug_initial"
+		self.next_arm_movement = "start_debug"
 		self.adjust_position = 0.0
 
 		self.setup()
@@ -1911,7 +1911,7 @@ class ArmUfactory(Node):
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
 		print('valor vindo do pick and place: ', self.next_arm_movement)
 		
-		if self.next_arm_movement == "debug_initial":
+		if self.next_arm_movement == "start_debug":
 			self.open_close_gripper()
 
 		elif self.next_arm_movement == "hello":
@@ -1947,7 +1947,7 @@ class ArmUfactory(Node):
 			self.arm_go_rest()
 
 		# new serve breakfast functions
-		elif self.next_arm_movement == "search_for_objects":
+		elif self.next_arm_movement == "initial_pose_to_search_for_objects":
 			self.search_for_objects()
 		elif self.next_arm_movement == "search_for_objects_to_ask_for_objects":
 			self.search_for_objects_to_ask_for_objects()

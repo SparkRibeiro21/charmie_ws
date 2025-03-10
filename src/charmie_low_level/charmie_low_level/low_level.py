@@ -2,13 +2,14 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D, Vector3
+from geometry_msgs.msg import Pose2D, Vector3, Twist
 from example_interfaces.msg import Bool, Int16, Float32
 from charmie_interfaces.msg import Encoders
 from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs, GetTorso, SetTorso, ActivateBool
 import serial
 import time
 import struct
+import math
 
 # TO DO:
 #   change the way NumBytes work, these only make sense for variables that are requested
@@ -19,7 +20,9 @@ import struct
 class RobotControl:
 
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB0', baudrate=9600)  # open serial port
+        
+        # open serial port by id, this removes problems with volative port names: "/dev/ttyUSBX"
+        self.ser = serial.Serial('/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0', baudrate=9600)
         print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
 
         # FLAGS
@@ -74,6 +77,8 @@ class RobotControl:
         self.OMNI_MOVE = {'CommVar': 'O', 'Lin': 0, 'Ang': 100, 'Dir': 0}
         self.OMNI_MOVE_ANT = {'Lin': 0, 'Ang': 100, 'Dir': 0}
 
+        self.COMMS_DELAY = 0.003
+
 
     def set_omni_flags(self, comm_dict, num):
         comm_dict['Value'] = num
@@ -92,7 +97,7 @@ class RobotControl:
                 # print(comm_dict['SetVar'], comm_dict['Value'])
 
                 self.ser.write(comm_dict['SetVar'].encode('utf-8'))
-                time.sleep(0.003)
+                time.sleep(self.COMMS_DELAY)
                 self.ser.write(comm_dict['Value'][0].to_bytes(comm_dict['NoBytes'], 'big'))
                 return 0  # No error
             else:
@@ -106,7 +111,7 @@ class RobotControl:
         if 'GetVar' in comm_dict:  # check if it is a variable that can be 'get'
             # print(comm_dict['GetVar'], comm_dict['NoBytes'])
             self.ser.write(comm_dict['GetVar'].encode('utf-8'))  # sends get command
-            time.sleep(0.003)
+            time.sleep(self.COMMS_DELAY)
 
             while self.ser.in_waiting < comm_dict['NoBytes'] * 2:  # 2x NoBytes since there are two motor drivers
                 pass  # waits until all the variables have been returned
@@ -228,11 +233,11 @@ class RobotControl:
         # print(dir_aux)
 
         self.ser.write(self.OMNI_MOVE['CommVar'].encode('utf-8'))
-        time.sleep(0.003)
+        time.sleep(self.COMMS_DELAY)
         self.ser.write(dir_aux.to_bytes(1, 'big'))
-        time.sleep(0.003)
+        time.sleep(self.COMMS_DELAY)
         self.ser.write(self.OMNI_MOVE['Lin'].to_bytes(1, 'big'))
-        time.sleep(0.003)
+        time.sleep(self.COMMS_DELAY)
         self.ser.write(self.OMNI_MOVE['Ang'].to_bytes(1, 'big'))
 
         self.OMNI_MOVE_ANT['Lin'] = self.OMNI_MOVE['Lin']
@@ -248,6 +253,7 @@ class LowLevelNode(Node):
         self.torso_move_subscriber = self.create_subscription(Pose2D, "torso_move", self.torso_move_callback , 10)
         # Motors
         self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
+        self.cmd_vel_subscriber = self.create_subscription(Twist, "cmd_vel", self.cmd_vel_callback , 10)
         # Encoders
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         # IMU
@@ -272,6 +278,7 @@ class LowLevelNode(Node):
         # Motors
         self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
 
+        self.prev_cmd_vel = Twist()
 
         self.create_timer(0.1, self.timer_callback)
         # self.create_timer(1.0, self.timer_callback2)
@@ -279,9 +286,11 @@ class LowLevelNode(Node):
         self.robot = RobotControl()
 
         self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
-        self.robot.set_omni_variables(self.robot.ACCELERATION, 10)
+        self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
         self.robot.set_omni_variables(self.robot.RGB, 100)
+
+        self.time_cmd_vel = time.time()
 
         # test and reorganize
         aaa = self.robot.get_omni_variables(self.robot.ACCELERATION)
@@ -477,6 +486,56 @@ class LowLevelNode(Node):
         # print("Received OMNI move. dir =", omni.x, "vlin =", omni.y, "vang =", omni.z)
         self.robot.omni_move(dir_= int(omni.x), lin_= int(omni.y), ang_= int(omni.z))
 
+    def cmd_vel_callback(self, cmd_vel:Twist):
+
+        # these are just for debug, can delete later:
+        # cmd_vel.linear.y = 0.2
+        # cmd_vel.linear.x = -cmd_vel.linear.x
+        
+        t = time.time() - self.time_cmd_vel
+        print(round(t,2))
+        if t < 0.1:
+            return
+        
+        different_movement = True
+        # if cmd_vel.linear.x != self.prev_cmd_vel.linear.x or \
+        #    cmd_vel.linear.y != self.prev_cmd_vel.linear.y or \
+        #    cmd_vel.angular.z != self.prev_cmd_vel.angular.z:
+        #    different_movement= True
+
+        self.prev_cmd_vel = cmd_vel
+
+        # ANGULAR SPEED LINEAR REGRESSION CONVERSION:
+        # y = mx+b # however b in this case is 0, so we will only consider y=mx
+        angular_speed_m = 59.1965386210101 # calculated via real charmie tests to know the rad/s speeds of the robot
+        omni_move_angular_speed = 100 - angular_speed_m*cmd_vel.angular.z
+        omni_move_angular_speed = max(0.0, min(200.0, omni_move_angular_speed)) # defines limits for the omni_values
+        
+        # LINEAR SPEED LINEAR REGRESSION CONVERSION:
+        # y = mx+b # however b in this case is 0, so we will only consider y=mx
+        linear_speed_m = 237.6182739989   # calculated via real charmie tests to know the rad/s speeds of the robot
+        
+        # combining x and y linear speeds from /cmd_vel
+        combined_linear_speed_xy = math.sqrt(cmd_vel.linear.x*cmd_vel.linear.x + cmd_vel.linear.y*cmd_vel.linear.y) 
+        omni_move_linear_speed = linear_speed_m*combined_linear_speed_xy
+        omni_move_linear_speed = max(0.0, min(100.0, omni_move_linear_speed)) # defines limits for the omni_values
+        
+        # total angle combining x and y linear speeds from /cmd_vel
+        omni_move_direction = math.atan2(cmd_vel.linear.y, cmd_vel.linear.x) 
+        omni_move_direction = math.degrees(omni_move_direction)
+        
+        while omni_move_direction < 0:
+            omni_move_direction += 360
+        while omni_move_direction >= 360:
+            omni_move_direction -= 360
+        # omni_move_direction = max(0.0, min(359.0, omni_move_direction)) # defines limits for the omni_values
+        
+        print("Diff Lin Vel (x, y):", round(cmd_vel.linear.x, 3), round(cmd_vel.linear.y, 3), "Ang Vel (z):", round(cmd_vel.angular.z, 3))
+        
+        if different_movement:
+            self.robot.omni_move(dir_= int(omni_move_direction), lin_= int(omni_move_linear_speed), ang_= int(omni_move_angular_speed))
+            print("Omni move:", "Ang:", int(omni_move_angular_speed), "Lin:", int(omni_move_linear_speed), "Dir:", int(omni_move_direction))
+            self.time_cmd_vel = time.time()
 
     def timer_callback(self):
 

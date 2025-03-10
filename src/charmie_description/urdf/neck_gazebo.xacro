@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <gazebo reference="neck_pan_link">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo reference="neck_tilt_link">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <gazebo reference="neck_base_link">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
+</robot>

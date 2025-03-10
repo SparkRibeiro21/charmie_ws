@@ -20,13 +20,14 @@ ros2_modules = {
     "charmie_localisation":     False,
     "charmie_low_level":        False,
     "charmie_navigation":       False,
-    "charmie_neck":             True,
+    "charmie_neck":             False,
     "charmie_obstacles":        False,
     "charmie_odometry":         False,
     "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         False,
-    "charmie_yolo_objects":     True,
+    "charmie_tracking":         True,
+    "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
 
@@ -54,19 +55,17 @@ class TaskMain():
         
         Search_for_person = 1
         Search_for_objects = 2
-        Final_State = 3
+        Continuous_tracking = 3
+        Final_State = 4
 
         # VARS ...
-        self.state = Search_for_objects
+        self.state = Continuous_tracking
 
         print("IN NEW MAIN")
 
         while True:
 
             if self.state == Search_for_person:
-
-                # self.robot.set_neck_coords(position=[1.0, 1.1, 1.2], wait_for_end_of=True)
-                # time.sleep(10)
 
                 ### SEARCH FOR PERSON EXAMPLE ###
                 
@@ -126,6 +125,17 @@ class TaskMain():
                     path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
                     time.sleep(4)
                                 
+                # next state
+                self.state = Final_State
+
+            
+            elif self.state == Continuous_tracking:
+                
+                ### CONTINUOUS TRACKING EXAMPLE ###
+                
+                # self.robot.set_continuous_tracking_with_coordinates()
+                self.robot.set_follow_person()
+
                 # next state
                 self.state = Final_State
             

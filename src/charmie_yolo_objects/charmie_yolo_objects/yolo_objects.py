@@ -173,9 +173,7 @@ class Yolo_obj(Node):
         ### Variables ###
 
         # robot localization
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0
+        self.robot_pose = Pose2D()
         
         self.br = CvBridge()
         self.head_rgb = Image()
@@ -329,10 +327,10 @@ class Yolo_obj(Node):
         angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
         dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
 
-        theta_aux = math.pi/2 - (angle_obj - self.robot_t)
+        theta_aux = math.pi/2 - (angle_obj - self.robot_pose.theta)
 
-        target_x = dist_obj * math.cos(theta_aux) + self.robot_x
-        target_y = dist_obj * math.sin(theta_aux) + self.robot_y
+        target_x = dist_obj * math.cos(theta_aux) + self.robot_pose.x
+        target_y = dist_obj * math.sin(theta_aux) + self.robot_pose.y
 
         a_ref = (target_x, target_y)
         # print("Rel:", (object_rel_pos.x, object_rel_pos.y), "Abs:", a_ref)
@@ -365,8 +363,8 @@ class Yolo_obj(Node):
         
         room_location = "Outside"
         for room in self.house_rooms:
-            min_x = room['top_left_coords'][0]
-            max_x = room['bot_right_coords'][0]
+            min_x = room['bot_right_coords'][0]
+            max_x = room['top_left_coords'][0]
             min_y = room['bot_right_coords'][1]
             max_y = room['top_left_coords'][1]
             # print(min_x, max_x, min_y, max_y)
@@ -375,8 +373,8 @@ class Yolo_obj(Node):
 
         furniture_location = "None"
         for furniture in self.house_furniture:
-            min_x = furniture['top_left_coords'][0]
-            max_x = furniture['bot_right_coords'][0]
+            min_x = furniture['bot_right_coords'][0]
+            max_x = furniture['top_left_coords'][0]
             min_y = furniture['bot_right_coords'][1]
             max_y = furniture['top_left_coords'][1]
             # print(min_x, max_x, min_y, max_y)
@@ -386,9 +384,7 @@ class Yolo_obj(Node):
         return room_location, furniture_location
  
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_x = pose.x
-        self.robot_y = pose.y
-        self.robot_t = pose.theta
+        self.robot_pose = pose
 
         
 # main function that already creates the thread for the task state machine

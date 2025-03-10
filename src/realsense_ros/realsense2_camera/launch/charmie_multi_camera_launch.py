@@ -74,8 +74,9 @@ def launch_static_transform_publisher_node(context : LaunchContext):
             package = "tf2_ros",
             executable = "static_transform_publisher",
             arguments = ["0", "0", "0", "0", "0", "0",
-                          context.launch_configurations['camera_name1'] + "_link",
-                          context.launch_configurations['camera_name2'] + "_link"]
+                          context.launch_configurations['camera_name1'] + "_link" #,
+                          # context.launch_configurations['camera_name2'] + "_link"]
+            ]
     )
     return [node]
 

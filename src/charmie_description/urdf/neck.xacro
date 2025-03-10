@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+    <!-- PAN (ID = 1)  bottom servo (left and right) -->
+    <!-- TILT (ID = 2)     up servo (up and down) -->
+
+    <xacro:property name="servo_center_to_rotation_axis" value="0.0175" />
+    <xacro:property name="top_torso_to_neck_pan" value="0.10" />
+
+    <xacro:property name="neck_pan_length" value="0.06" />
+    <xacro:property name="neck_pan_width" value="0.04" />
+    <xacro:property name="neck_pan_height" value="0.10" />
+    
+    <xacro:property name="neck_tilt_length" value="0.06" />
+    <xacro:property name="neck_tilt_width" value="0.04" />
+    <xacro:property name="neck_tilt_height" value="0.045" />
+
+    <xacro:property name="neck_tilt_shaft_length" value="0.0465" />
+    <xacro:property name="neck_tilt_shaft_width" value="0.051" />
+    <xacro:property name="neck_tilt_shaft_height" value="0.028" />
+
+    <xacro:property name="face_length" value="0.013" />
+    <xacro:property name="face_width" value="0.16" />
+    <xacro:property name="face_height" value="0.26" />
+
+    <xacro:property name="face_height_shift" value="0.0975" />
+
+    <xacro:property name="head_camera_length" value="0.034" />
+    <xacro:property name="head_camera_width" value="0.145" />
+    <xacro:property name="head_camera_height" value="0.052" />
+
+    <xacro:property name="head_camera_height_shift" value="0.0975" />
+
+    <joint name="neck_base" type="fixed">
+        <parent link="top_torso_link"/>
+        <child link="neck_base_link"/>
+        <origin xyz="0.01 0 ${top_torso_to_neck_pan}" rpy="0 0 0"/>
+    </joint>
+
+    <link name="neck_base_link">
+        <visual>
+            <origin xyz="${-servo_center_to_rotation_axis} 0 ${-neck_pan_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${neck_pan_length} ${neck_pan_width} ${neck_pan_height}" />
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="${-servo_center_to_rotation_axis} 0 ${-neck_pan_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${neck_pan_length} ${neck_pan_width} ${neck_pan_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="2.0" x="${neck_pan_length}" y="${neck_pan_width}" z="${legs_height}" >
+            <origin xyz="${-servo_center_to_rotation_axis} 0 ${-neck_pan_height/2}" rpy="0 0 0" />
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="neck_pan_joint" type="revolute">
+        <parent link="neck_base_link"/>
+        <child link="neck_pan_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="${-pi}" upper="${pi}" effort="1000.0" velocity="0.5"/>
+    </joint>
+
+    <link name="neck_pan_link">
+        <visual>
+            <origin xyz="${servo_center_to_rotation_axis} 0 ${neck_tilt_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${neck_tilt_length} ${neck_tilt_width} ${neck_tilt_height}" />
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="${servo_center_to_rotation_axis} 0 ${neck_tilt_height/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${neck_tilt_length} ${neck_tilt_width} ${neck_tilt_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.5" x="${neck_tilt_length}" y="${neck_tilt_width}" z="${neck_tilt_height}" >
+            <origin xyz="${servo_center_to_rotation_axis} 0 ${neck_tilt_height/2}" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+    <joint name="neck_tilt_joint" type="revolute">
+        <parent link="neck_pan_link"/>
+        <child link="neck_tilt_link"/>
+        <origin xyz="0.03 0 0.025" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="${-pi/3}" upper="${pi/3}" effort="10000.0" velocity="0.5"/>
+    </joint>
+
+    <link name="neck_tilt_link">
+        <visual>
+            <origin xyz="${neck_tilt_shaft_length/2} 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="${neck_tilt_shaft_length} ${neck_tilt_shaft_width} ${neck_tilt_shaft_height}" />
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="${neck_tilt_shaft_length/2} 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="${neck_tilt_shaft_length} ${neck_tilt_shaft_width} ${neck_tilt_shaft_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.5" x="${neck_tilt_shaft_length}" y="${neck_tilt_shaft_width}" z="${neck_tilt_shaft_height}" >
+            <origin xyz="${neck_tilt_shaft_length/2} 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+
+        <visual>
+            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${face_length} ${face_width} ${face_height}" />
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${face_length} ${face_width} ${face_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.5" x="${face_length}" y="${face_width}" z="${face_height}" >
+            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+        </xacro:inertial_box>
+
+
+        <visual>
+            <origin xyz="${neck_tilt_shaft_length + face_length + head_camera_length/2} 0 ${face_height_shift+face_height/2-head_camera_height/2-0.008}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.5" x="${head_camera_length}" y="${head_camera_width}" z="${head_camera_height}" >
+            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+        </xacro:inertial_box>
+
+    </link>
+
+</robot>

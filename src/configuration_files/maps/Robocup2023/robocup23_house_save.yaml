@@ -1,0 +1,7 @@
+image: robocup23_house_save.pgm
+mode: trinary
+resolution: 0.05
+origin: [-1.72, -7.93, 0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.25

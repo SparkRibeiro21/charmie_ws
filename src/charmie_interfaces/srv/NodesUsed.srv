@@ -16,6 +16,7 @@ bool charmie_odometry
 bool charmie_point_cloud
 bool charmie_ps4_controller
 bool charmie_speakers
+bool charmie_tracking
 bool charmie_yolo_objects
 bool charmie_yolo_pose
 ---

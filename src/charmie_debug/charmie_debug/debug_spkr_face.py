@@ -27,6 +27,7 @@ ros2_modules = {
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
+    "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
@@ -79,7 +80,7 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
-                o = "cornflakes"
+                o = "juice pack"
                 c = self.robot.get_object_class_from_object(o)
                 f = self.robot.get_furniture_from_object_class(c)
                 r = self.robot.get_room_from_furniture(f)
@@ -88,12 +89,20 @@ class TaskMain():
                 rnc = self.robot.get_navigation_coords_from_room(r)
                 print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
 
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)), wait_for_end_of=False)
-                time.sleep(2.0)
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)), wait_for_end_of=True)
+                if self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)) is not None:
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)), wait_for_end_of=True)
+                    time.sleep(1.0)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)), wait_for_end_of=True)
+                else:
+                    print("Wrong object name! Skipping speaking and navigation...")
                 
+                # self.robot.set_neck_coords(self.robot.get_location_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o))), 
+                #                            wait_for_end_of=True)
+                # self.robot.set_neck_coords(self.robot.get_location_coords_from_furniture("dishwasher"), 
+                #                            wait_for_end_of=True)
+
                 while True:
                     pass
                 

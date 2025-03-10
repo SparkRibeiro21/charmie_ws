@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-		"face = charmie_face.face:main"
+		"face = charmie_face.face:main",
+		"face_display = charmie_face.face_display:main"
         ],
     },
 )
