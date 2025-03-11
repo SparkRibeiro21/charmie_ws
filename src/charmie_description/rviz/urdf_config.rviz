@@ -1,15 +1,17 @@
 Panels:
   - Class: rviz_common/Displays
-    Help Height: 78
+    Help Height: 0
     Name: Displays
     Property Tree Widget:
       Expanded:
         - /Global Options1
         - /LaserScan1
         - /LaserScan2
+        - /PointCloud21
+        - /PointCloud21/Topic1
         - /Image1
       Splitter Ratio: 0.5
-    Tree Height: 276
+    Tree Height: 354
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -219,11 +221,37 @@ Visualization Manager:
           Value: true
         neck_tilt_link:
           Value: true
+        panda_hand:
+          Value: true
+        panda_leftfinger:
+          Value: true
+        panda_link0:
+          Value: true
+        panda_link1:
+          Value: true
+        panda_link2:
+          Value: true
+        panda_link3:
+          Value: true
+        panda_link4:
+          Value: true
+        panda_link5:
+          Value: true
+        panda_link6:
+          Value: true
+        panda_link7:
+          Value: true
+        panda_link8:
+          Value: true
+        panda_rightfinger:
+          Value: true
         right_wheel_link:
           Value: true
         top_torso_link:
           Value: true
         torso_link:
+          Value: true
+        world:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -503,25 +531,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.6657040119171143
+      Distance: 7.550386428833008
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.9876514673233032
-        Y: -0.16373857855796814
-        Z: 0.016424451023340225
+        X: 1.5626194477081299
+        Y: 0.1808399111032486
+        Z: 0.7362143993377686
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2147969007492065
+      Pitch: 0.2997954487800598
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz_default_plugins)
-      Yaw: 2.942390203475952
+      Yaw: 3.81744647026062
     Saved: ~
 Window Geometry:
   Displays:
