@@ -450,7 +450,7 @@ class NeckNode(Node):
         # changed to two different positions so that in any case it is visible the neck moving when is started 
         self.move_neck(180, 135) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         self.move_neck(180+self.initial_position[0], 180+self.initial_position[1]) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        self.move_neck(180, 160) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
+        self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         
         
     def read_servo_position(self):

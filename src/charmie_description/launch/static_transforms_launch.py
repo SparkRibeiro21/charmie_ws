@@ -43,9 +43,9 @@ def generate_launch_description():
             executable='static_transform_publisher',
             name='static_transform_torso_legs',
             arguments=[
-                '0',  # x
+                '-0.105', #'0.0',  # x
                 '0',  # y
-                '0.475',  # z
+                '0.355',  #'0.475',  # z
                 '0',  # roll
                 '0',  # pitch
                 '0',  # yaw
