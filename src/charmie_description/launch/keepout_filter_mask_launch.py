@@ -1,12 +1,11 @@
+"""
 import os
 
 from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
-from launch.substitutions import NotEqualsSubstitution
 from launch_ros.actions import Node, LoadComposableNodes
 from launch_ros.actions import PushRosNamespace
 from launch_ros.descriptions import ComposableNode
@@ -15,8 +14,7 @@ from nav2_common.launch import RewrittenYaml
 
 def generate_launch_description():
     # Get the launch directory
-    # costmap_filters_demo_dir = get_package_share_directory('nav2_costmap_filters_demo')
-
+    bringup_dir = get_package_share_directory('charmie_description')
     lifecycle_nodes = ['filter_mask_server', 'costmap_filter_info_server']
 
     # Parameters
@@ -46,10 +44,12 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
+        default_value=os.path.join(bringup_dir, 'config', 'keepout_params.yaml'),
         description='Full path to the ROS2 parameters file to use')
 
     declare_mask_yaml_file_cmd = DeclareLaunchArgument(
         'mask',
+        default_value='/home/tiago/charmie_ws/src/configuration_files/maps/keepout_mask.yaml',
         description='Full path to filter mask yaml file to load')
 
     declare_use_composition_cmd = DeclareLaunchArgument(
@@ -107,7 +107,7 @@ def generate_launch_description():
         condition=IfCondition(use_composition),
         actions=[
             PushRosNamespace(
-                condition=IfCondition(NotEqualsSubstitution(LaunchConfiguration('namespace'), '')),
+                condition=IfCondition(PythonExpression(['"', namespace, '" != ""'])),
                 namespace=namespace),
             LoadComposableNodes(
                 target_container=container_name_full,
@@ -148,4 +148,80 @@ def generate_launch_description():
     ld.add_action(load_nodes)
     ld.add_action(load_composable_nodes)
 
-    return ld
+    return ld"
+"""
+
+"""
+from launch_ros.actions import Node
+from launch.actions import RegisterEventHandler
+from launch.event_handlers import OnProcessExit
+#from launch.events.process import ProcessExit
+
+keepout_map_server = Node(
+    package="nav2_map_server",
+    executable="map_server",
+    name="keepout_map_server",
+    output="screen",
+    parameters=[{"yaml_filename": "/home/tiago/charmie_ws/src/configuration_files/maps/keepout_mask.yaml"}],
+    remappings=[("/map", "/keepout_map")],
+)
+
+activate_keepout_map_server = RegisterEventHandler(
+    event_handler=OnProcessExit(
+        target_action=keepout_map_server,
+        on_exit=[
+            Node(
+                package="nav2_lifecycle_manager",
+                executable="lifecycle_manager",
+                name="lifecycle_manager_keepout",
+                output="screen",
+                parameters=[{
+                    "use_sim_time": False,
+                    "autostart": True,
+                    "node_names": ["keepout_map_server"]
+                }]
+            )
+        ]
+    )
+)
+"""
+
+import launch
+from launch import LaunchDescription
+from launch_ros.actions import Node
+from launch.actions import RegisterEventHandler
+from launch.event_handlers import OnProcessExit
+from launch_ros.event_handlers import OnStateTransition
+from launch_ros.substitutions import FindPackageShare
+
+def generate_launch_description():
+    # Define the path to your keepout map
+    keepout_map_yaml = "/home/tiago/charmie_ws/src/configuration_files/maps/keepout_mask.yaml"
+
+    # Node: Map Server for Keepout Mask
+    keepout_map_server = Node(
+        package="nav2_map_server",
+        executable="map_server",
+        name="keepout_map_server",
+        output="screen",
+        parameters=[{"yaml_filename": keepout_map_yaml}],
+        remappings=[("/map", "/keepout_map")],
+    )
+
+    # Lifecycle Manager to Auto-Activate Keepout Map Server
+    lifecycle_manager_keepout = Node(
+        package="nav2_lifecycle_manager",
+        executable="lifecycle_manager",
+        name="lifecycle_manager_keepout",
+        output="screen",
+        parameters=[{
+            "use_sim_time": False,
+            "autostart": True,
+            "node_names": ["keepout_map_server"]
+        }]
+    )
+
+    return LaunchDescription([
+        keepout_map_server,
+        lifecycle_manager_keepout
+    ])
