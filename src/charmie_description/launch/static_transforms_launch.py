@@ -92,7 +92,7 @@ def generate_launch_description():
         Node(
             package='tf2_ros',
             executable='static_transform_publisher',
-            name='static_transform_head_camera',
+            name='static_transform_base_camera',
             arguments=[
                 '0',  # x
                 '0',  # y
