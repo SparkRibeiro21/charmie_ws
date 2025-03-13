@@ -1,10 +1,10 @@
 [
-{"name": "Couch",		"height": 0.40, "room": "Living Room", 	"nav_coords": [ 1.86,  2.98,   0.0], "top_left_coords": [ 3.72,  3.84], "bot_right_coords": [ 2.68,  1.91]},
-{"name": "Left Lounge Chair", 	"height": 0.97, "room": "Living Room", 	"nav_coords": [ 1.86,  3.48,  45.0], "top_left_coords": [ 3.62,  4.82], "bot_right_coords": [ 2.51,  3.84]},
-{"name": "Right Lounge Chair", 	"height": 0.97, "room": "Living Room", 	"nav_coords": [ 1.86,  2.48, -45.0], "top_left_coords": [ 3.72,  1.91], "bot_right_coords": [ 2.51,  0.93]},
-{"name": "Shelf", 		"height": 1.20, "room": "Living Room", 	"nav_coords": [ 1.70,  1.06, 180.0], "top_left_coords": [ 1.03,  1.50], "bot_right_coords": [ 0.58,  0.62]},
-{"name": "Coffee Table", 	"height": 0.74, "room": "Living Room", 	"nav_coords": [ 1.96,  2.63, 180.0], "top_left_coords": [ 1.25,  3.61], "bot_right_coords": [ 0.58,  1.80]},
-{"name": "Living Room Trashcan","height": 0.28, "room": "Living Room", 	"nav_coords": [ 1.60,  4.00, 160.0], "top_left_coords": [ 0.96,  4.44], "bot_right_coords": [ 0.68,  4.16]},
+	{"name": "Couch",		"height": 0.40, "room": "Living Room", 	"nav_coords": [ 1.86,  2.60,   0.0], "top_left_coords": [ 3.82,  3.62], "bot_right_coords": [ 2.96,  1.58]},
+	{"name": "Left Lounge Chair", 	"height": 0.97, "room": "Living Room", 	"nav_coords": [ 1.96,  3.25,  30.0], "top_left_coords": [ 3.82,  4.53], "bot_right_coords": [ 2.73,  3.62]},
+	{"name": "Right Lounge Chair", 	"height": 0.97, "room": "Living Room", 	"nav_coords": [ 1.96,  1.95, -30.0], "top_left_coords": [ 3.82,  1.58], "bot_right_coords": [ 2.73,  0.67]},
+	{"name": "Shelf", 		"height": 1.20, "room": "Living Room", 	"nav_coords": [ 1.90,  0.94, 180.0], "top_left_coords": [ 1.15,  1.38], "bot_right_coords": [ 0.68,  0.50]},
+	{"name": "Coffee Table", 	"height": 0.74, "room": "Living Room", 	"nav_coords": [ 2.00,  2.70, 180.0], "top_left_coords": [ 1.35,  3.61], "bot_right_coords": [ 0.68,  1.80]},
+	{"name": "Living Room Trashcan","height": 0.28, "room": "Living Room", 	"nav_coords": [ 1.95,  3.95, 160.0], "top_left_coords": [ 1.16,  4.44], "bot_right_coords": [ 0.88,  4.16]},
 
 {"name": "Dishwasher", 	        "height": 0.85, "room": "Kitchen", 	"nav_coords": [ 4.45,  3.60,  90.0], "top_left_coords": [ 4.81,  5.12], "bot_right_coords": [ 4.08,  4.21]},
 {"name": "Fridge", 		"height": 0.85,	"room": "Kitchen", 	"nav_coords": [ 4.10,  3.60, 110.0], "top_left_coords": [ 4.08,  5.12], "bot_right_coords": [ 3.62,  4.27]},
@@ -14,14 +14,14 @@
 {"name": "Kitchen Trashcan",	"height": 0.28, "room": "Kitchen", 	"nav_coords": [ 6.49,  2.32,  70.0], "top_left_coords": [ 6.95,  3.33], "bot_right_coords": [ 6.67,  3.05]},
 {"name": "Pantry", 		"height": 1.20,	"room": "Kitchen", 	"nav_coords": [ 6.08,  0.60,   0.0], "top_left_coords": [ 7.30,  1.05], "bot_right_coords": [ 6.78,  0.20]},
 
-{"name": "Reading Chair", 	"height": 1.38, "room": "Bedroom", 	"nav_coords": [ 4.53, -2.90,  10.0], "top_left_coords": [ 6.36, -2.34], "bot_right_coords": [ 5.46, -3.07]},
-{"name": "Bed",     		"height": 0.45, "room": "Bedroom", 	"nav_coords": [ 5.16, -3.53, -60.0], "top_left_coords": [ 6.45, -3.95], "bot_right_coords": [ 5.60, -6.20]},
-{"name": "Night Stand", 	"height": 0.42, "room": "Bedroom", 	"nav_coords": [ 5.15, -4.56, 280.0], "top_left_coords": [ 5.60, -5.52], "bot_right_coords": [ 5.02, -6.20]},
-{"name": "Bedroom Trashcan", 	"height": 0.28, "room": "Bedroom", 	"nav_coords": [ 5.16, -3.53,   0.0], "top_left_coords": [ 6.26, -3.34], "bot_right_coords": [ 5.98, -3.62]},
+	{"name": "Reading Chair", 	"height": 1.38, "room": "Bedroom", 	"nav_coords": [ 4.53, -3.00,   5.0], "top_left_coords": [ 6.28, -2.50], "bot_right_coords": [ 5.40, -3.28]},
+	{"name": "Bed",     		"height": 0.45, "room": "Bedroom", 	"nav_coords": [ 4.96, -3.57, -65.0], "top_left_coords": [ 6.28, -4.15], "bot_right_coords": [ 5.38, -6.50]},
+	{"name": "Night Stand", 	"height": 0.42, "room": "Bedroom", 	"nav_coords": [ 4.96, -4.56, 280.0], "top_left_coords": [ 5.38, -5.70], "bot_right_coords": [ 4.80, -6.50]},
+	{"name": "Bedroom Trashcan", 	"height": 0.28, "room": "Bedroom", 	"nav_coords": [ 4.96, -3.57,   0.0], "top_left_coords": [ 6.06, -3.44], "bot_right_coords": [ 5.78, -3.72]},
 
-{"name": "TV Table", 		"height": 0.74, "room": "Office", 	"nav_coords": [ 2.28, -2.95, 180.0], "top_left_coords": [ 1.60, -2.09], "bot_right_coords": [ 0.79, -3.89]},
-{"name": "Desk", 	        "height": 0.74, "room": "Office", 	"nav_coords": [ 2.28, -4.83, 180.0], "top_left_coords": [ 1.60, -3.89], "bot_right_coords": [ 0.79, -5.69]},
-{"name": "Office Counter",      "height": 0.85, "room": "Office", 	"nav_coords": [ 2.87, -5.34, 270.0], "top_left_coords": [ 3.44, -6.08], "bot_right_coords": [ 2.28, -6.68]},
+	{"name": "TV Table", 		"height": 0.74, "room": "Office", 	"nav_coords": [ 2.28, -2.99, 180.0], "top_left_coords": [ 1.50, -2.09], "bot_right_coords": [ 0.70, -3.89]},
+	{"name": "Desk", 	        "height": 0.74, "room": "Office", 	"nav_coords": [ 2.28, -4.79, 180.0], "top_left_coords": [ 1.50, -3.89], "bot_right_coords": [ 0.70, -5.69]},
+	{"name": "Office Counter",      "height": 0.85, "room": "Office", 	"nav_coords": [ 2.66, -5.34, 270.0], "top_left_coords": [ 3.24, -6.15], "bot_right_coords": [ 2.08, -6.75]},
 
 {"name": "Workbench",	 	"height": 0.85, "room": "Workshop",	"nav_coords": [-1.02,  3.39, 145.0], "top_left_coords": [-2.25,  5.25], "bot_right_coords": [-3.05,  3.37]},
 {"name": "Workshop Desk",       "height": 0.72, "room": "Workshop", 	"nav_coords": [-0.92,  2.40,   0.0], "top_left_coords": [ 0.58,  3.09], "bot_right_coords": [-0.20,  1.74]},
@@ -29,6 +29,6 @@
 {"name": "Bench",       	"height": 0.45, "room": "Workshop", 	"nav_coords": [-0.94,  0.55, 180.0], "top_left_coords": [-1.75,  1.35], "bot_right_coords": [-2.32, -0.10]},
 {"name": "Drill Press",       	"height": 1.63, "room": "Workshop", 	"nav_coords": [-1.44,  2.28, 110.0], "top_left_coords": [-1.53,  3.60], "bot_right_coords": [-2.12,  3.17]},
 
-{"name": "Entrance",    	"height": 2.10, "room": "Hallway", 	"nav_coords": [ 1.74,  0.27, 190.0], "top_left_coords": [ 0.62,  0.44], "bot_right_coords": [ 0.60, -0.38]},
-{"name": "Exit",      		"height": 2.10, "room": "Hallway", 	"nav_coords": [ 1.75, -1.28, 180.0], "top_left_coords": [ 0.62, -0.87], "bot_right_coords": [ 0.60, -1.69]}
+	{"name": "Entrance",    	"height": 2.10, "room": "Hallway", 	"nav_coords": [ 1.74,  0.15, 190.0], "top_left_coords": [ 0.62,  0.38], "bot_right_coords": [ 0.60, -0.44]},
+	{"name": "Exit",      		"height": 2.10, "room": "Hallway", 	"nav_coords": [ 1.75, -1.35, 180.0], "top_left_coords": [ 0.62, -0.90], "bot_right_coords": [ 0.60, -1.72]}
 ]
