@@ -1541,6 +1541,34 @@ class RobotStdFunctions():
 
             print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
+    def move_to_position(self):
+        # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
+
+        """ #goal definition
+        geometry_msgs/PoseStamped pose
+        string behavior_tree
+        ---
+        #result definition
+
+        # Error codes
+        # Note: The expected priority order of the errors should match the message order
+        uint16 NONE=0
+        uint16 UNKNOWN=9000
+        uint16 FAILED_TO_LOAD_BEHAVIOR_TREE=9001
+        uint16 TF_ERROR=9002
+
+        uint16 error_code
+        string error_msg
+        ---
+        #feedback definition
+        geometry_msgs/PoseStamped current_pose
+        builtin_interfaces/Duration navigation_time
+        builtin_interfaces/Duration estimated_time_remaining
+        int16 number_of_recoveries
+        float32 distance_remaining """
+        
+        pass
+
     def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
@@ -2419,7 +2447,6 @@ class RobotStdFunctions():
             else: # pour
                 self.set_speech(filename="objects_names/"+furniture_name_for_files, wait_for_end_of=False)
 
-
     def get_object_class_from_object(self, object_name):
 
         # Iterate through the list of dictionaries
@@ -2552,7 +2579,6 @@ class RobotStdFunctions():
         request.status = False
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
 
-
     def set_follow_person(self):
 
         self.activate_yolo_pose(activate=True) 
@@ -2600,7 +2626,6 @@ class RobotStdFunctions():
             points.coords.append(Point(x=float(p.kp_ankle_left_x), y=float(p.kp_ankle_left_y), z=1.0))
         if p.kp_ankle_right_conf > 0.5:
             points.coords.append(Point(x=float(p.kp_ankle_right_x), y=float(p.kp_ankle_right_y), z=1.0))
-        
 
         # points.coords.append(Point(x=640.0//2, y=480.0//2, z=1.0))
         # points.coords.append(Point(x=320.0, y=150.0, z=1.0))
