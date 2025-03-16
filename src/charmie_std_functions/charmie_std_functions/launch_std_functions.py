@@ -62,7 +62,7 @@ class LaunchStdFunctions():
         )
 
         rviz_nav2_config_path = os.path.join(get_package_share_path('charmie_description'), 
-                                'rviz', 'nav2_config.rviz')
+                                'rviz', 'nav2_default_view_charmie.rviz')
         
         self.rviz2_nav2_node = Node(
             package="rviz2",
