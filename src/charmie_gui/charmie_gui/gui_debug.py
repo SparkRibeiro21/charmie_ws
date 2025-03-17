@@ -4,7 +4,7 @@ from rclpy.node import Node
 from rclpy.action import ActionClient
 
 from example_interfaces.msg import Bool, String, Float32
-from geometry_msgs.msg import Pose2D, Point
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
@@ -58,6 +58,7 @@ class DebugVisualNode(Node):
 
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
+        self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
 
         # Navigation
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
@@ -175,6 +176,8 @@ class DebugVisualNode(Node):
         self.lidar_bottom_time = 0.0
         self.odometry_time = 0.0
         self.ps4_controller_time = 0.0
+        self.localisation_time = 0.0
+        self.amcl_time = 0.0
 
         self.head_camera_time = 0.0
         self.head_depth_camera_time = 0.0
@@ -535,13 +538,18 @@ class DebugVisualNode(Node):
 
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_pose = pose
+        self.localisation_time = time.time()
         
         self.all_pos_x_val.append(self.robot_pose.x)
         self.all_pos_y_val.append(self.robot_pose.y)
         
-        self.odometry_time = time.time()
+        # self.odometry_time = time.time()
         # self.robot_pose.theta = pose.theta
-        
+    
+    def amcl_pose_callback(self, msg: PoseWithCovarianceStamped):
+        # self.amcl_pose = msg
+        self.amcl_time = time.time()
+
     def search_for_person_detections_callback(self, points: ListOfDetectedPerson):
         self.search_for_person = points
         self.new_search_for_person = True
@@ -663,12 +671,11 @@ class CheckNodesMain():
                 self.CHECK_LLM_NODE = True
 
             # LOCALISATION
-            # if current_time - self.node.localisation_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+            if current_time - self.node.localisation_time > self.MIN_TIMEOUT_FOR_CHECK_NODE: # or current_time - self.node.amcl_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
             #     # self.node.get_logger().warn("Waiting for Topic Localisation ...")
-            #     self.CHECK_LOCALISATION_NODE = False
-            # else:
-            #     self.CHECK_LOCALISATION_NODE = True
-            self.CHECK_LOCALISATION_NODE = False
+                self.CHECK_LOCALISATION_NODE = False
+            else:
+                self.CHECK_LOCALISATION_NODE = True
 
             # LOW LEVEL
             if not self.node.set_acceleration_ramp_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
