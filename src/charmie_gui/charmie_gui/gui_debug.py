@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
 
 from example_interfaces.msg import Bool, String, Float32
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
+from nav2_msgs.action import NavigateToPose
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject, \
     TrackingMask
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
@@ -125,6 +127,8 @@ class DebugVisualNode(Node):
         # Tracking (SAM2)
         self.activate_tracking_client = self.create_client(ActivateTracking, "activate_tracking")
 
+        ### Actions (Clients) ###
+        self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
@@ -293,6 +297,7 @@ class DebugVisualNode(Node):
         # bool charmie_localisation
         # bool charmie_low_level
         # bool charmie_navigation
+        # bool charmie_nav2
         # bool charmie_neck
         # bool charmie_obstacles
         # bool charmie_odometry
@@ -580,6 +585,7 @@ class CheckNodesMain():
         self.CHECK_LOCALISATION_NODE = False
         self.CHECK_LOW_LEVEL_NODE = False
         self.CHECK_NAVIGATION_NODE = False
+        self.CHECK_NAV2_NODE = False
         self.CHECK_NECK_NODE = False
         self.CHECK_OBSTACLES_NODE = False
         self.CHECK_ODOMETRY_NODE = False
@@ -678,6 +684,13 @@ class CheckNodesMain():
                 self.CHECK_NAVIGATION_NODE = False
             else:
                 self.CHECK_NAVIGATION_NODE = True
+
+            # NAV2
+            if not self.node.nav2_client_.server_is_ready():
+                # self.node.get_logger().warn("Waiting for Server Navigation ...")
+                self.CHECK_NAV2_NODE = False
+            else:
+                self.CHECK_NAV2_NODE = True
 
             # NECK
             if not self.node.set_neck_position_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -896,7 +909,9 @@ class DebugVisualMain():
         self.CHARMIE_LLM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOCALISATION_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        # the two navs have the same node rect for now, only nav2 will be used for now
         self.CHARMIE_NAVIGATION_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAV2_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_ODOMETRY_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1086,9 +1101,14 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_LOW_LEVEL_NODE_RECT)
         
         # NAVIGATION
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_navigation, self.check_nodes.CHECK_NAVIGATION_NODE)
-        self.draw_text("Navigation", self.text_font, tc, self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
-        pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAVIGATION_NODE_RECT)
+        # tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_navigation, self.check_nodes.CHECK_NAVIGATION_NODE)
+        # self.draw_text("Navigation", self.text_font, tc, self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
+        # pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAVIGATION_NODE_RECT)
+        
+        # NAV2
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_nav2, self.check_nodes.CHECK_NAV2_NODE)
+        self.draw_text("Nav2", self.text_font, tc, self.CHARMIE_NAV2_NODE_RECT.x+2*self.CHARMIE_NAV2_NODE_RECT.width, self.CHARMIE_NAV2_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAV2_NODE_RECT)
 
         # NECK
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_neck, self.check_nodes.CHECK_NECK_NODE)

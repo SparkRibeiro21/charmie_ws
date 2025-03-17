@@ -1,10 +1,13 @@
 # import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
+from rclpy.action.client import ClientGoalHandle, GoalStatus
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
 from sensor_msgs.msg import Image
+from nav2_msgs.action import NavigateToPose
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
     Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
@@ -147,7 +150,10 @@ class ROS2TaskNode(Node):
         # Tracking (SAM2)
         self.activate_tracking_client = self.create_client(ActivateTracking, "activate_tracking")
 
+        ### Actions (Clients) ###
+        self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
     
+
         self.send_node_used_to_gui()
 
         """
@@ -161,6 +167,7 @@ class ROS2TaskNode(Node):
         "charmie_localisation":     False,
             "charmie_low_level":        True,
             "charmie_navigation":       True,
+            "charmie_nav2":             False,
             "charmie_neck":             True,
             "charmie_obstacles":        True,
         "charmie_odometry":         True,
@@ -204,6 +211,11 @@ class ROS2TaskNode(Node):
         if self.ros2_modules["charmie_navigation"]:
             while not self.nav_trigger_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+
+        if self.ros2_modules["charmie_nav2"]:
+            while not self.nav2_client_.server_is_ready():
+                self.get_logger().warn("Waiting for Server Nav2 Trigger Command...")
+                time.sleep(1.0)
 
         if self.ros2_modules["charmie_neck"]:
             while not self.set_neck_position_client.wait_for_service(1.0):

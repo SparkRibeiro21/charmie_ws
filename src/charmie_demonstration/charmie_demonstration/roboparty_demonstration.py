@@ -24,6 +24,7 @@ ros2_modules = {
     "charmie_localisation":     False,
     "charmie_low_level":        True,
     "charmie_navigation":       False,
+    "charmie_nav2":             False,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_odometry":         False,
