@@ -49,7 +49,7 @@ def generate_launch_description():
 
     declare_mask_yaml_file_cmd = DeclareLaunchArgument(
         'mask',
-        default_value='/home/tiago/charmie_ws/src/configuration_files/maps/keepout_mask.yaml',
+        default_value=os.path.join(get_package_share_directory('configuration_files'), 'maps', 'keepout_mask.yaml'),
         description='Full path to filter mask yaml file to load')
 
     declare_use_composition_cmd = DeclareLaunchArgument(
@@ -157,12 +157,16 @@ from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessExit
 #from launch.events.process import ProcessExit
 
+
+# keepout_map_yaml = "/home/tiago/charmie_ws/src/configuration_files/maps/keepout_mask.yaml"
+keepout_map_yaml = os.path.join(get_package_share_directory('configuration_files'), 'maps', 'keepout_mask.yaml')
+
 keepout_map_server = Node(
     package="nav2_map_server",
     executable="map_server",
     name="keepout_map_server",
     output="screen",
-    parameters=[{"yaml_filename": "/home/tiago/charmie_ws/src/configuration_files/maps/keepout_mask.yaml"}],
+    parameters=[{"yaml_filename": keepout_map_yaml}],
     remappings=[("/map", "/keepout_map")],
 )
 
@@ -186,6 +190,9 @@ activate_keepout_map_server = RegisterEventHandler(
 )
 """
 
+import os
+from ament_index_python.packages import get_package_share_directory
+
 import launch
 from launch import LaunchDescription
 from launch_ros.actions import Node
@@ -196,7 +203,8 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     # Define the path to your keepout map
-    keepout_map_yaml = "/home/tiago/charmie_ws/src/configuration_files/maps/keepout_mask.yaml"
+    # keepout_map_yaml = "/home/tiago/charmie_ws/src/configuration_files/maps/keepout_mask.yaml"
+    keepout_map_yaml = os.path.join(get_package_share_directory('configuration_files'), 'maps', 'keepout_mask.yaml')
 
     # Node: Map Server for Keepout Mask
     keepout_map_server = Node(
