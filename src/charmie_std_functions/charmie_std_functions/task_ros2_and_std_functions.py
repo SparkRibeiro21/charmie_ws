@@ -363,6 +363,11 @@ class ROS2TaskNode(Node):
         self.llm_confirm_command_response = ""
         self.llm_gpsr_response = ListOfStrings()
 
+        self.nav2_goal_accepted = False
+        self.nav2_feedback = NavigateToPose.Feedback()
+        self.nav2_status = GoalStatus.STATUS_UNKNOWN
+
+
     def send_node_used_to_gui(self):
 
         nodes_used = NodesUsed.Request()
@@ -968,6 +973,52 @@ class ROS2TaskNode(Node):
         self.amcl_pose = msg
         self.new_amcl_pose_msg = True
 
+    ### Nav2 Action Client ###
+    # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
+
+    def nav2_client_goal_response_callback(self, future):
+        self.goal_handle_:ClientGoalHandle = future.result()
+        if self.goal_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.goal_handle_.get_result_async().add_done_callback(self.nav2_client_goal_result_callback)
+            self.nav2_goal_accepted = True
+        else:
+            self.get_logger().warn("Goal rejected.")
+
+    def nav2_client_cancel_goal(self):
+        self.get_logger().info("Canceling goal...")
+        # Not implemented yet
+        # self.goal_handle_.cancel_goal_async() # Not ideal, but just to test, goal_handle_ is only defined in goal_response_callback
+        # self.timer_.cancel()
+
+    def nav2_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.nav2_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.nav2_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.nav2_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+            
+        # self.get_logger().info(f"Result: {result.reached_number}")
+
+    def nav2_client_goal_feedback_callback(self, feedback_msg):
+        self.nav2_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+        # current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+        # current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+        # no_recoveries = str(feedback.number_of_recoveries)
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
 
 
 
@@ -1553,33 +1604,80 @@ class RobotStdFunctions():
 
             print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
-    def move_to_position(self):
-        # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
+    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
-        """ #goal definition
-        geometry_msgs/PoseStamped pose
-        string behavior_tree
-        ---
-        #result definition
+        # Whether the nav2 goal has been successfully completed until the end
+        nav2_goal_completed = False
 
-        # Error codes
-        # Note: The expected priority order of the errors should match the message order
-        uint16 NONE=0
-        uint16 UNKNOWN=9000
-        uint16 FAILED_TO_LOAD_BEHAVIOR_TREE=9001
-        uint16 TF_ERROR=9002
+        # Create a goal
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose.header.frame_id = "map"
+        goal_msg.pose.header.stamp = self.node.get_clock().now().to_msg()
+        goal_msg.pose.pose.position.x = float(move_coords[0])
+        goal_msg.pose.pose.position.y = float(move_coords[1])
+        goal_msg.pose.pose.position.z = float(0.0)
+        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(move_coords[2]))        
+        goal_msg.pose.pose.orientation.x = q_x
+        goal_msg.pose.pose.orientation.y = q_y
+        goal_msg.pose.pose.orientation.z = q_z
+        goal_msg.pose.pose.orientation.w = q_w
 
-        uint16 error_code
-        string error_msg
-        ---
-        #feedback definition
-        geometry_msgs/PoseStamped current_pose
-        builtin_interfaces/Duration navigation_time
-        builtin_interfaces/Duration estimated_time_remaining
-        int16 number_of_recoveries
-        float32 distance_remaining """
-        
-        pass
+        while not nav2_goal_completed:
+                
+            self.node.nav2_goal_accepted = False
+            self.node.nav2_status = GoalStatus.STATUS_UNKNOWN
+
+            # Makes sure goal is accepted, and if not attempts to resend it
+            while not self.node.nav2_goal_accepted:
+                
+                self.node.get_logger().info("Waiting for nav2 server...")
+                self.node.nav2_client_.wait_for_server()
+                self.node.get_logger().info("Nav2 server is ON...")
+
+                # Send the goal
+                self.node.get_logger().info("Sending goal...")
+                self.node.nav2_client_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_client_goal_feedback_callback).add_done_callback(self.node.nav2_client_goal_response_callback)
+                self.node.get_logger().info("Goal Sent")
+
+                time.sleep(0.5)
+
+
+            if wait_for_end_of:
+
+                timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                start_time = time.time()
+
+                while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
+                    
+                    if print_feedback:
+
+                        if time.time() - start_time > timer_period:
+
+                            # prints de feedback
+                            feedback = self.node.nav2_feedback
+                            current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                            current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                            current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+                            navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                            estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                            no_recoveries = str(feedback.number_of_recoveries)
+                            distance_remaining = str(round(feedback.distance_remaining, 2))
+                            print("\nCurrent Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                            # self.get_logger().info(f"Feedback: {feedback}")
+                            
+                            start_time = time.time()
+
+                
+                if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
+                    print("FINISHED TR SUCCEEDED")
+                    nav2_goal_completed = True                
+                elif self.node.nav2_status == GoalStatus.STATUS_ABORTED:
+                    print("FINISHED TR ABORTED")
+                    print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
+                    print("FINISHED TR CANCELED")
+                    print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+
 
     def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 

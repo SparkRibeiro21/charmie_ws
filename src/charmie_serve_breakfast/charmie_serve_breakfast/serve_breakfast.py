@@ -27,7 +27,7 @@ ros2_modules = {
     "charmie_odometry":         False, #
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         False,
+    "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -101,6 +101,8 @@ class TaskMain():
         # Initial Position
         self.initial_position = self.robot.get_navigation_coords_from_furniture("Entrance")
         print(self.initial_position)
+        # self.initial_position = [1.8, -4.15, 0.0] # temp (near Tiago desk for testing)
+        self.initial_position = [2.0, -4.15, 90.0] # temp (near Tiago desk for testing)
         # Navigation Positions
         self.front_of_door = [0.0, 1.5] 
         self.cofee_table = [-0.4, 3.5]
@@ -132,6 +134,41 @@ class TaskMain():
                 self.robot.set_initial_position(self.initial_position)
 
                 print("Set Initial Position: DONE")
+
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/entrance", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("Entrance"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
+
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/couch", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("Couch"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
+
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/reading_chair", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("Reading Chair"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
+
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/bench", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("Bench"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
+
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/tv_table", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("TV Table"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
 
                 while True:
                     pass
