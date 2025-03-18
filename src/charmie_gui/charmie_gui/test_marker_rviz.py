@@ -19,9 +19,12 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_navigations_names = self.create_publisher(MarkerArray, "visualization_marker_array_navigations_names", 10)
 
         self.publisher_marker_array_detected_person =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_person", 10)
+        self.publisher_marker_array_detected_object =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_object", 10)
 
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        # Yolo Objects
+        self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -44,6 +47,7 @@ class MarkerPublisher(Node):
         
 
         self.detected_people = ListOfDetectedPerson()
+        self.detected_object = ListOfDetectedObject()
         self.previous_marker_array_detected_people = ListOfDetectedPerson() 
 
         self.COLOR_LIST = [
@@ -67,6 +71,9 @@ class MarkerPublisher(Node):
         self.detected_people = det_people
         self.publish_marker_array_detected_person()
 
+    def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
+        self.detected_object = det_object
+        self.publish_marker_array_detected_object()
 
     def publish_all_marker_arrays(self):
         self.publish_marker_array_rooms()
@@ -441,7 +448,7 @@ class MarkerPublisher(Node):
         for person in self.detected_people.persons:
             if person.index > 0:
 
-                print(person.index, round(person.position_absolute.x, 2), round(person.position_absolute.y, 2), round(person.position_absolute.z, 2), person.height, person.room_location, person.furniture_location)
+                # print(person.index, round(person.position_absolute.x, 2), round(person.position_absolute.y, 2), round(person.position_absolute.z, 2), person.height, person.room_location, person.furniture_location)
                 
                 marker = Marker()
 
@@ -552,6 +559,104 @@ class MarkerPublisher(Node):
     
         # self.previous_marker_array_detected_people = self.detected_people
 
+
+
+    def publish_marker_array_detected_object(self):
+
+        marker_array = MarkerArray()
+
+        object_size = 0.1
+
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "map"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "Detected_object_B"
+        delete_marker.id = 0  # Use the same ID to delete it
+        delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
+        marker_array.markers.append(delete_marker)
+
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "map"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "Detected_object_N"
+        delete_marker.id = 0  # Use the same ID to delete it
+        delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
+        marker_array.markers.append(delete_marker)
+
+        # marker_array.markers.clear()
+
+        ### FALTA:
+        # ORIENTATION
+
+        for object_ in self.detected_object.objects:
+            if object_.index > 0:
+
+                print(object_.index, object_.object_name, round(object_.position_absolute.x, 2), round(object_.position_absolute.y, 2), round(object_.position_absolute.z, 2), object_.room_location, object_.furniture_location)
+                
+                marker = Marker()
+
+                # Header - Defines frame and timestamp
+                marker.header.frame_id = "map"
+                marker.header.stamp = self.get_clock().now().to_msg()
+                # Namespace and ID (useful when publishing multiple markers)
+                marker.ns = "Detected_object_B"
+                marker.id = object_.index  # Each marker must have a unique ID
+                # Marker Type (Choose shape)
+                marker.type = Marker.CYLINDER  # Other options: SPHERE, CYLINDER, ARROW, etc.
+                # Marker Action
+                marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+
+                marker.pose.position.x = object_.position_absolute.x  # Set the X coordinate
+                marker.pose.position.y = object_.position_absolute.y  # Set the X coordinate
+                marker.pose.position.z = object_.position_absolute.z  # Set the Z coordinate
+
+                marker.pose.orientation.x = 0.0
+                marker.pose.orientation.y = 0.0
+                marker.pose.orientation.z = 0.0
+                marker.pose.orientation.w = 1.0  # No rotation
+
+                marker.scale.x = object_size # Width
+                marker.scale.y = object_size # Width
+                marker.scale.z = object_size  # Height
+                
+                # Color (RGBA format, values from 0 to 1)
+                marker.color.r = 0.0 # 0.0  # Red
+                marker.color.g = 0.0 # 1.0  # Green
+                marker.color.b = 1.0 # 1.0  # Blue
+                marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+                
+                # Lifetime (0 = forever, otherwise, disappears after X seconds)
+                marker.lifetime.sec = 0
+                marker.lifetime.nanosec = 0
+
+                # Frame behavior (Keeps marker always facing the camera if enabled)
+                marker.frame_locked = False
+                
+                marker_array.markers.append(marker)
+
+
+                marker_name = Marker()
+                marker_name.header.frame_id = "map"
+                marker_name.header.stamp = self.get_clock().now().to_msg()
+                marker_name.ns = "Detected_object_N"
+                marker_name.id = object_.index
+                marker_name.type = Marker.TEXT_VIEW_FACING
+                marker_name.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+                marker_name.pose.position.x = object_.position_absolute.x  # Set the X coordinate
+                marker_name.pose.position.y = object_.position_absolute.y  # Set the Y coordinate
+                marker_name.pose.position.z = object_.position_absolute.z  # Set the Z coordinate
+                marker_name.pose.orientation.w = 1.0  # No rotation
+                marker_name.scale.z = self.NAMES_TEXT_SIZE/2  # Height
+                marker_name.text = str(object_.object_name).replace(" ","_")
+                marker_name.color.r = 0.0  # Red
+                marker_name.color.g = 0.0  # Green
+                marker_name.color.b = 0.0  # Blue
+                marker_name.color.a = 1.0  # Alpha (1.0 = fully visible, 0.0 = invisible)
+
+                marker_array.markers.append(marker_name)
+            
+        self.publisher_marker_array_detected_object.publish(marker_array)
+    
 
     """
     def publish_marker_array_detected_person(self):

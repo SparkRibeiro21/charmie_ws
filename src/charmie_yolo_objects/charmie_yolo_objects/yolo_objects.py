@@ -295,8 +295,8 @@ class Yolo_obj(Node):
 
         # changes the axis of point cloud coordinates to fit with robot axis
         object_rel_pos = Point()
-        object_rel_pos.x =  -center_object_coordinates.y/1000
-        object_rel_pos.y =  center_object_coordinates.x/1000
+        object_rel_pos.x =  center_object_coordinates.x/1000
+        object_rel_pos.y =  center_object_coordinates.y/1000
         object_rel_pos.z =  center_object_coordinates.z/1000
         new_object.position_relative = object_rel_pos
 
