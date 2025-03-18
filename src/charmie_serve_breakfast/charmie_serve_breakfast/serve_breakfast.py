@@ -135,6 +135,7 @@ class TaskMain():
 
                 print("Set Initial Position: DONE")
 
+                """ 
                 time.sleep(3.0)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/entrance", wait_for_end_of=False)
@@ -169,6 +170,17 @@ class TaskMain():
                 self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("TV Table"), wait_for_end_of=True)
                 # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
                 print("BACK IN LOOP")
+                """
+
+                time.sleep(3.0)
+                move_coords = []
+                move_coords.append(self.robot.get_navigation_coords_from_furniture("Exit"))
+                move_coords.append(self.robot.get_navigation_coords_from_room("Hallway"))
+                move_coords.append(self.robot.get_navigation_coords_from_furniture("Entrance"))
+                move_coords.append(self.robot.get_navigation_coords_from_room("Kitchen"))
+                move_coords.append(self.robot.get_navigation_coords_from_furniture("Dishwasher"))
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.move_to_position_follow_waypoints(move_coords=move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True)
 
                 while True:
                     pass

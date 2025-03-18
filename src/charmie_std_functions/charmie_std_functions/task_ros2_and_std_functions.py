@@ -5,9 +5,9 @@ from rclpy.action.client import ClientGoalHandle, GoalStatus
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped
 from sensor_msgs.msg import Image
-from nav2_msgs.action import NavigateToPose
+from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
     Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
@@ -152,6 +152,7 @@ class ROS2TaskNode(Node):
 
         ### Actions (Clients) ###
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
+        self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
     
 
         self.send_node_used_to_gui()
@@ -366,6 +367,9 @@ class ROS2TaskNode(Node):
         self.nav2_goal_accepted = False
         self.nav2_feedback = NavigateToPose.Feedback()
         self.nav2_status = GoalStatus.STATUS_UNKNOWN
+        self.nav2_follow_waypoints_goal_accepted = False
+        self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
+        self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
 
     def send_node_used_to_gui(self):
@@ -1021,6 +1025,51 @@ class ROS2TaskNode(Node):
         # self.get_logger().info(f"Feedback: {feedback}")
 
 
+    # Navigate through poses
+
+    def nav2_follow_waypoints_client_goal_response_callback(self, future):
+        self.goal_follow_waypoints_handle_:ClientGoalHandle = future.result()
+        if self.goal_follow_waypoints_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.goal_follow_waypoints_handle_.get_result_async().add_done_callback(self.nav2_follow_waypoints_client_goal_result_callback)
+            self.nav2_follow_waypoints_goal_accepted = True
+        else:
+            self.get_logger().warn("Goal rejected.")
+
+    def nav2_follow_waypoints_client_cancel_goal(self):
+        self.get_logger().info("Canceling goal...")
+        # Not implemented yet
+        # self.goal_follow_waypoints_handle_.cancel_goal_async() # Not ideal, but just to test, goal_follow_waypoints_handle_ is only defined in goal_response_callback
+        # self.timer_.cancel()
+
+    def nav2_follow_waypoints_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.nav2_follow_waypoints_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.nav2_follow_waypoints_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.nav2_follow_waypoints_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+            
+        # self.get_logger().info(f"Result: {result.reached_number}")
+
+    def nav2_follow_waypoints_client_goal_feedback_callback(self, feedback_msg):
+        self.nav2_follow_waypoints_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+        # current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+        # current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+        # no_recoveries = str(feedback.number_of_recoveries)
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
 
 
 
@@ -1662,7 +1711,7 @@ class RobotStdFunctions():
                             estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
                             no_recoveries = str(feedback.number_of_recoveries)
                             distance_remaining = str(round(feedback.distance_remaining, 2))
-                            print("\nCurrent Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                            print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
                             # self.get_logger().info(f"Feedback: {feedback}")
                             
                             start_time = time.time()
@@ -1678,6 +1727,82 @@ class RobotStdFunctions():
                     print("FINISHED TR CANCELED")
                     print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
 
+    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        # Whether the nav2 goal has been successfully completed until the end
+        nav2_goal_completed = False
+
+        if move_coords:
+
+            goal_msg = FollowWaypoints.Goal()
+            goal_msg.poses = []
+
+            for x, y, yaw in move_coords: 
+                
+                pose = PoseStamped()
+                pose.header.frame_id = "map"
+                pose.header.stamp = self.node.get_clock().now().to_msg()
+                pose.pose.position.x = float(x)
+                pose.pose.position.y = float(y)
+                pose.pose.position.z = float(0.0)
+                q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(yaw)) # math.radians(initial_position[2]))        
+                pose.pose.orientation.x = q_x
+                pose.pose.orientation.y = q_y
+                pose.pose.orientation.z = q_z
+                pose.pose.orientation.w = q_w
+                
+                goal_msg.poses.append(pose)
+                    
+            while not nav2_goal_completed:
+                    
+                self.node.nav2_follow_waypoints_goal_accepted = False
+                self.node.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+
+                # Makes sure goal is accepted, and if not attempts to resend it
+                while not self.node.nav2_follow_waypoints_goal_accepted:
+                    
+                    self.node.get_logger().info("Waiting for nav2 server...")
+                    self.node.nav2_client_follow_waypoints_.wait_for_server()
+                    self.node.get_logger().info("Nav2 server is ON...")
+
+                    # Send the goal
+                    self.node.get_logger().info("Sending goal...")
+                    self.node.nav2_client_follow_waypoints_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_follow_waypoints_client_goal_feedback_callback).add_done_callback(self.node.nav2_follow_waypoints_client_goal_response_callback)
+                    self.node.get_logger().info("Goal Sent")
+
+                    time.sleep(0.5)
+
+
+                if wait_for_end_of:
+
+                    timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                    start_time = time.time()
+
+                    while self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
+                        
+                        if print_feedback:
+
+                            if time.time() - start_time > timer_period:
+
+                                # prints de feedback
+                                feedback = self.node.nav2_follow_waypoints_feedback
+                                current_waypoint = str(feedback.current_waypoint)
+                                
+                                self.node.get_logger().info(f"Current Waypoint: {current_waypoint}")
+                                # self.node.get_logger().info(f"Feedback: {feedback}")
+                                
+                                start_time = time.time()
+
+                    
+                    if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+                        print("FINISHED TR SUCCEEDED")
+                        nav2_goal_completed = True                
+                    elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_ABORTED:
+                        print("FINISHED TR ABORTED")
+                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                    elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
+                        print("FINISHED TR CANCELED")
+                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
 
     def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
