@@ -4,12 +4,12 @@ from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle, GoalStatus
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
-from example_interfaces.msg import Bool, String, Int16
+from example_interfaces.msg import Bool, String, Int16, Float32
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped
 from sensor_msgs.msg import Image
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
-    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
+    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, \
     SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking
@@ -97,6 +97,10 @@ class ROS2TaskNode(Node):
         # Low level
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for ps4 controller
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for ps4 controller
+        self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", 10, self.buttons_low_level_callback)
+        self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", 10, self.vccs_low_level_callback)
+        self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", 10, self.torso_low_level_callback)
+        self.orientation_low_level_subscriber = self.create_subscription(Float32, "orientation_low_level", 10, self.orientation_callback)
         # Neck
         self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
         # Tracking
@@ -134,11 +138,11 @@ class ROS2TaskNode(Node):
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
         # Low level
-        self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        # self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
-        self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
-        self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
-        self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
+        # self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
+        # self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
+        # self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
         # GUI
@@ -204,10 +208,8 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for GPSR Server LLM ...")
 
         if self.ros2_modules["charmie_low_level"]:
-            while not self.set_acceleration_ramp_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Low Level Acceleration Command...")
             while not self.set_rgb_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Low Level RGB Command...")
+                self.get_logger().warn("Waiting for Server Low Level ...")
 
         if self.ros2_modules["charmie_navigation"]:
             while not self.nav_trigger_client.wait_for_service(1.0):
@@ -271,9 +273,9 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
-        self.waited_for_end_of_get_vccs = False
-        self.waited_for_end_of_get_low_level_buttons = False
-        self.waited_for_end_of_get_torso_position = False
+        # self.waited_for_end_of_get_vccs = False
+        # self.waited_for_end_of_get_low_level_buttons = False
+        # self.waited_for_end_of_get_torso_position = False
         self.waited_for_end_of_set_torso_position = False
         self.waiting_for_pcloud = False
         self.waited_for_end_of_llm_demonstration = False
@@ -351,14 +353,18 @@ class ROS2TaskNode(Node):
         self.received_continuous_audio = False
 
         self.get_neck_position = [1.0, 1.0]
-        self.legs_position = 0.0
-        self.torso_position = 0.0
-        self.battery_voltage = 0.0
-        self.emergency_stop = False
-        self.start_button  = False
-        self.debug_button1 = False
-        self.debug_button2 = False
-        self.debug_button3 = False
+        self.torso_position = TorsoPosition()
+        self.vccs = VCCsLowLevel()
+        self.buttons_low_level = ButtonsLowLevel()
+        self.orientation_yaw = 0.0
+        # self.legs_position = 0.0
+        # self.torso_position = 0.0
+        # self.battery_voltage = 0.0
+        # self.emergency_stop = False
+        # self.start_button  = False
+        # self.debug_button1 = False
+        # self.debug_button2 = False
+        # self.debug_button3 = False
         self.new_controller_msg = False
         self.llm_demonstration_response = ""
         self.llm_confirm_command_response = ""
@@ -468,6 +474,21 @@ class ROS2TaskNode(Node):
     def tracking_mask_callback(self, mask: TrackingMask):
         self.tracking_mask = mask
         self.new_tracking_mask_msg = True
+
+    ### Low Level ###
+    def buttons_low_level_callback(self, buttons: ButtonsLowLevel):
+        self.buttons_low_level = buttons
+
+    def vccs_low_level_callback(self, vccs: VCCsLowLevel):
+        self.vccs = vccs
+
+    def torso_low_level_callback(self, torso: TorsoPosition):
+        self.torso_position = torso
+
+    def orientation_callback(self, orientation: Float32):
+        self.orientation_yaw = orientation.data
+
+    ### SERVICES ###
 
     # request point cloud information from point cloud node
     def call_point_cloud_server(self, request=GetPointCloudBB.Request()):
@@ -819,6 +840,7 @@ class ROS2TaskNode(Node):
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
+    """
     def call_vccs_command_server(self, request=GetVCCs.Request()):
     
         future = self.get_vccs_client.call_async(request)
@@ -878,7 +900,7 @@ class ROS2TaskNode(Node):
             self.waited_for_end_of_get_torso_position = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
-
+    """
     def call_set_torso_position_server(self, request=SetTorso.Request()):
     
         future = self.set_torso_position_client.call_async(request)
@@ -1155,42 +1177,26 @@ class RobotStdFunctions():
         return self.node.rgb_success, self.node.rgb_message
 
     def get_vccs(self, wait_for_end_of=True):
+
+        return self.node.vccs.battery_voltage, self.node.vccs.emergency_stop
     
-        request=GetVCCs.Request()
-
-        self.node.call_vccs_command_server(request=request)
-        
-        if wait_for_end_of:
-          while not self.node.waited_for_end_of_get_vccs:
-            pass
-        self.node.waited_for_end_of_get_vccs = False
-
-        return self.node.battery_voltage, self.node.emergency_stop 
-
     def get_low_level_buttons(self, wait_for_end_of=True):
-    
-        request=GetLowLevelButtons.Request()
 
-        self.node.call_low_level_buttons_command_server(request=request)
+        return self.node.buttons_low_level.start_button, self.node.buttons_low_level.debug_button1, self.node.buttons_low_level.debug_button2, self.node.buttons_low_level.debug_button3
         
-        if wait_for_end_of:
-          while not self.node.waited_for_end_of_get_low_level_buttons:
-            pass
-        self.node.waited_for_end_of_get_low_level_buttons = False
-
-        return self.node.start_button, self.node.debug_button1, self.node.debug_button2, self.node.debug_button3 
-
     def wait_for_start_button(self):
-
+        
         self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
         
-        start_button_state = False
+        print("Waiting for Start Button...")
+        while not self.node.buttons_low_level.start_button:
+            time.sleep(0.05)
+        print("Start Button Pressed")
 
-        while not start_button_state:
-            start_button_state, d1b, d2b, d3b = self.get_low_level_buttons()
-            print("Start Button State:", start_button_state)
-            time.sleep(0.1)
+    def get_orientation_yaw(self, wait_for_end_of=True):
 
+        return self.node.orientation_yaw
+        
     def wait_for_door_start(self):
         
         self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
@@ -1254,18 +1260,9 @@ class RobotStdFunctions():
         return self.node.torso_success, self.node.torso_message
     
     def get_torso_position(self,  wait_for_end_of=True):
+
+        return self.node.torso_position.legs_position, self.node.torso_position.torso_position
     
-        request=GetTorso.Request()
-
-        self.node.call_get_torso_position_server(request=request)
-        
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_get_torso_position:
-                pass
-        self.node.waited_for_end_of_get_torso_position = False
-
-        return self.node.legs_position, self.node.torso_position
-
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", max_attempts=0, face_hearing="charmie_face_green", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
