@@ -81,6 +81,10 @@ class RobotControl:
 
         self.COMMS_DELAY = 0.003
 
+        self.start_time = time.time()
+        self.data_stream = []
+        self.first_data_stream = False
+
 
     def set_omni_flags(self, comm_dict, num):
         comm_dict['Value'] = num
@@ -245,6 +249,84 @@ class RobotControl:
         self.OMNI_MOVE_ANT['Lin'] = self.OMNI_MOVE['Lin']
         self.OMNI_MOVE_ANT['Ang'] = self.OMNI_MOVE['Ang']
 
+        
+
+
+    def check_data_stream(self):
+
+        number_of_bytes_in_a_batch_of_data = 29
+
+
+        # checks whether has received the number of bytes equivalente to one batch of data
+        if self.ser.in_waiting >= number_of_bytes_in_a_batch_of_data:
+
+            # print("time:", time.time() - self.start_time)
+            # print("@@@")
+            # print(self.ser.in_waiting)
+
+            ### check for start of comms protocol bytes
+            correct_commms_protocol = False
+            while not correct_commms_protocol:
+                if self.ser.in_waiting >= number_of_bytes_in_a_batch_of_data:
+                    x1 = ord(self.ser.read().decode('latin-1'))
+                    if x1 == 35:
+                        x2 = ord(self.ser.read().decode('latin-1'))
+                        if x2 == 35:
+                            correct_commms_protocol = True
+
+            
+            if not self.first_data_stream:
+                self.first_data_stream = True
+                        
+            # print("@@@")
+            # print(self.ser.in_waiting)
+
+            self.data_stream.clear()
+
+            ctr = 0
+            for i in range(number_of_bytes_in_a_batch_of_data-2):
+                x = ord(self.ser.read().decode('latin-1'))
+                self.data_stream.append(x)
+                ctr+=1
+
+            # print("ctr = ", ctr)
+            print(self.data_stream)
+            print(self.ser.in_waiting)
+
+            # Clear the serial buffer after reading
+            # self.ser.reset_input_buffer()
+
+            # print(self.ser.in_waiting)
+            # self.start_time = time.time()
+        else:
+            print("WAITING")
+
+
+
+        """        
+        if 'GetVar' in comm_dict:  # check if it is a variable that can be 'get'
+            # print(comm_dict['GetVar'], comm_dict['NoBytes'])
+            self.ser.write(comm_dict['GetVar'].encode('utf-8'))  # sends get command
+            time.sleep(self.COMMS_DELAY)
+
+            while self.ser.in_waiting < comm_dict['NoBytes'] * 2:  # 2x NoBytes since there are two motor drivers
+                pass  # waits until all the variables have been returned
+
+            # print(self.ser.in_waiting)
+            for i in range(comm_dict['NoBytes'] * 2):  # 2x NoBytes since there are two motor drivers
+                x = ord(self.ser.read().decode('latin-1'))
+                # x2 = ord(self.ser.read().decode('latin-1'))  # removed after fixing ChipKit sending \t after each var
+                # print(x, end=', ')
+                comm_dict['Value'][i] = x  # updates the value with the 'get' value
+            return comm_dict['Value']  # returns the array of values
+
+        else:
+            print("Invalid GET Command! Please check if it makes sense!")
+            return -1  # Invalid get command error
+        pass
+        """
+
+
 class LowLevelNode(Node):
 
     def __init__(self):
@@ -273,11 +355,12 @@ class LowLevelNode(Node):
         self.vccs_low_level_publisher = self.create_publisher(VCCsLowLevel, "vccs_low_level", 10)
         # Torso
         self.torso_low_level_publisher = self.create_publisher(TorsoPosition, "torso_position", 10)
+        # Orientation (IMU)
+        self.orientation_low_level_publisher = self.create_publisher(Float32, "orientation_low_level", 10)
         # IMU (for planar robot, just the basic for efficiency)
         self.imu_base_low_level_publisher = self.create_publisher(Imu, "imu_base", 10)
 
 
-        
         ### Services (Clients) ###
         # Acceleration
         self.server_set_acceleration = self.create_service(SetAcceleration, "set_acceleration_ramp", self.callback_set_acceleration) 
@@ -299,9 +382,6 @@ class LowLevelNode(Node):
 
         self.prev_cmd_vel = Twist()
 
-        self.create_timer(0.1, self.timer_callback)
-        # self.create_timer(1.0, self.timer_callback2)
-
         self.robot = RobotControl()
 
         self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
@@ -320,10 +400,124 @@ class LowLevelNode(Node):
         else:
             self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
 
+        self.create_timer(0.05, self.timer_callback)
+        # self.create_timer(1.0, self.timer_callback2)
+
         self.flag_get_encoders = False
         self.flag_get_orientation = False
 
     
+    def timer_callback(self):
+
+        self.robot.check_data_stream()
+
+        if self.robot.first_data_stream:
+            
+            data_stream = self.robot.data_stream
+
+            # errors
+            errors = ErrorsMotorBoard()
+            errors.undervoltage_error = bool(data_stream[0]>>7 & 1 | data_stream[1]>>7 & 1)
+            errors.overvoltage_error =  bool(data_stream[0]>>6 & 1 | data_stream[1]>>6 & 1)
+            errors.undervoltage_b1_error = bool(data_stream[0]>>7 & 1)
+            errors.overvoltage_b1_error = bool(data_stream[0]>>6 & 1)
+            errors.undervoltage_b2_error = bool(data_stream[1]>>7 & 1)
+            errors.overvoltage_b2_error = bool(data_stream[1]>>6 & 1)
+            errors.motor2_b1_short_error = bool(data_stream[0]>>5 & 1)
+            errors.motor2_b1_trip_error = bool(data_stream[0]>>4 & 1)
+            errors.motor1_b1_short_error = bool(data_stream[0]>>3 & 1)
+            errors.motor1_b1_trip_error = bool(data_stream[0]>>2 & 1)
+            errors.motor2_b2_short_error = bool(data_stream[1]>>5 & 1)
+            errors.motor2_b2_trip_error = bool(data_stream[1]>>4 & 1)
+            errors.motor1_b2_short_error = bool(data_stream[1]>>3 & 1)
+            errors.motor1_b2_trip_error = bool(data_stream[1]>>2 & 1)
+            print("Errors:", errors.undervoltage_error, errors.overvoltage_error)
+            self.errors_low_level_publisher.publish(errors)
+            # when the emergency stop is pressed it initially says the robot is undervoltage and half a second later changes to overvoltage
+            # it is something that comes from the board... it is not a real error
+            
+            # encoders
+            encoders = Odometry()
+            # 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 
+
+            # buttons
+            buttons = ButtonsLowLevel()
+            buttons.debug_button1 = bool((data_stream[18] >> 0) & 1)
+            buttons.debug_button2 = bool((data_stream[18] >> 1) & 1)
+            buttons.debug_button3 = bool((data_stream[18] >> 2) & 1)
+            buttons.start_button  = bool((data_stream[18] >> 3) & 1)
+            print("Buttons:", buttons.debug_button1, buttons.debug_button2, buttons.debug_button3, buttons.start_button)
+            self.buttons_low_level_publisher.publish(buttons)
+
+            # vccs
+            vccs = VCCsLowLevel()
+            vccs.battery_voltage = ((data_stream[19]/10)*2)+1.0
+            vccs.emergency_stop = bool(data_stream[20])
+            print("VCCS:", vccs.battery_voltage, vccs.emergency_stop)
+            self.vccs_low_level_publisher.publish(vccs)
+
+            # torso
+            torso = TorsoPosition()
+            torso.legs_position = float(data_stream[21])
+            torso.torso_position = float(data_stream[22])
+            print("Torso:", torso.legs_position, torso.torso_position)
+            self.torso_low_level_publisher.publish(torso)
+
+            # orientation
+            orientation = Float32()
+            orientation.data = (data_stream[23]<<8|data_stream[24])/10
+            print("Orientation:", orientation.data)
+            self.orientation_low_level_publisher.publish(orientation)
+            
+            # imu
+            imu = Imu()
+            # 25, 26
+
+        """
+        if  self.flag_get_encoders:
+            aux_e = self.robot.get_omni_variables(self.robot.ENCODERS)
+            # print(aux_e)
+            cmd = Encoders()
+            cmd.enc_m1 = (aux_e[0] << 24) + (aux_e[1] << 16) + (aux_e[2] << 8) + aux_e[3]
+            cmd.enc_m2 = (aux_e[4] << 24) + (aux_e[5] << 16) + (aux_e[6] << 8) + aux_e[7]
+            cmd.enc_m3 = (aux_e[8] << 24) + (aux_e[9] << 16) + (aux_e[10] << 8) + aux_e[11]
+            cmd.enc_m4 = (aux_e[12] << 24) + (aux_e[13] << 16) + (aux_e[14] << 8) + aux_e[15]
+            # print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
+            # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
+            self.get_encoders_publisher.publish(cmd)
+
+        if self.flag_get_orientation:
+            aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
+            orientation = Float32()
+            orientation.data = (aux_o[0]<<8|aux_o[1])/10
+            # print("ORIENTATION:", orientation.data)
+            self.get_orientation_publisher.publish(orientation)
+        """
+
+    def errors_msgs_customization(self, error1, error2):
+
+        errors = ErrorsMotorBoard()
+
+        errors.undervoltage_error = bool(error1>>7 & 1 | error2>>7 & 1)
+        errors.overvoltage_error =  bool(error1>>6 & 1 | error2>>6 & 1)
+
+        errors.undervoltage_b1_error = bool(error1>>7 & 1)
+        errors.overvoltage_b1_error = bool(error1>>6 & 1)
+        errors.undervoltage_b2_error = bool(error2>>7 & 1)
+        errors.overvoltage_b2_error = bool(error2>>6 & 1)
+
+        errors.motor2_b1_short_error = bool(error1>>5 & 1)
+        errors.motor2_b1_trip_error = bool(error1>>4 & 1)
+        errors.motor1_b1_short_error = bool(error1>>3 & 1)
+        errors.motor1_b1_trip_error = bool(error1>>2 & 1)
+
+        errors.motor2_b2_short_error = bool(error2>>5 & 1)
+        errors.motor2_b2_trip_error = bool(error2>>4 & 1)
+        errors.motor1_b2_short_error = bool(error2>>3 & 1)
+        errors.motor1_b2_trip_error = bool(error2>>2 & 1)
+
+        return errors
+
     def callback_set_acceleration(self, request, response):
         # print(request)
 
@@ -555,29 +749,6 @@ class LowLevelNode(Node):
             self.robot.omni_move(dir_= int(omni_move_direction), lin_= int(omni_move_linear_speed), ang_= int(omni_move_angular_speed))
             print("Omni move:", "Ang:", int(omni_move_angular_speed), "Lin:", int(omni_move_linear_speed), "Dir:", int(omni_move_direction))
             self.time_cmd_vel = time.time()
-
-    def timer_callback(self):
-
-        """
-        if  self.flag_get_encoders:
-            aux_e = self.robot.get_omni_variables(self.robot.ENCODERS)
-            # print(aux_e)
-            cmd = Encoders()
-            cmd.enc_m1 = (aux_e[0] << 24) + (aux_e[1] << 16) + (aux_e[2] << 8) + aux_e[3]
-            cmd.enc_m2 = (aux_e[4] << 24) + (aux_e[5] << 16) + (aux_e[6] << 8) + aux_e[7]
-            cmd.enc_m3 = (aux_e[8] << 24) + (aux_e[9] << 16) + (aux_e[10] << 8) + aux_e[11]
-            cmd.enc_m4 = (aux_e[12] << 24) + (aux_e[13] << 16) + (aux_e[14] << 8) + aux_e[15]
-            # print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
-            # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
-            self.get_encoders_publisher.publish(cmd)
-
-        if self.flag_get_orientation:
-            aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
-            orientation = Float32()
-            orientation.data = (aux_o[0]<<8|aux_o[1])/10
-            # print("ORIENTATION:", orientation.data)
-            self.get_orientation_publisher.publish(orientation)
-        """
 
     def torso_move_callback(self, data: Pose2D): # used by ps4 controller
 

@@ -7,8 +7,15 @@
 # bit 7     bit 6	    bit 5	        bit 4	        bit 3	        bit 2	        bit 1	bit 0
 # UNDER 16V OVER 30V	MOTOR 2 SHORT	MOTOR 1 SHORT	MOTOR 2 TRIP	MOTOR 1 TRIP	-	    -
 
-bool under_voltage_error
-bool over_voltage_error
+# when the emergency stop is pressed it initially says the robot is undervoltage and half a second later changes to overvoltage
+# it is something that comes from the board... it is not a real error
+bool undervoltage_error
+bool overvoltage_error
+
+bool undervoltage_b1_error
+bool overvoltage_b1_error
+bool undervoltage_b2_error
+bool overvoltage_b2_error
 
 bool motor2_b1_short_error
 bool motor1_b1_short_error
