@@ -4,7 +4,9 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Vector3, Twist
 from example_interfaces.msg import Bool, Int16, Float32
-from charmie_interfaces.msg import Encoders
+from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
+from charmie_interfaces.msg import Encoders, ErrorsMotorBoard, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
 from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs, GetTorso, SetTorso, ActivateBool
 import serial
 import time
@@ -258,6 +260,23 @@ class LowLevelNode(Node):
         self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
         # IMU
         self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
+
+
+        ### Publishers ###
+        # Errors
+        self.errors_low_level_publisher = self.create_publisher(ErrorsMotorBoard, "errors_low_level", 10)
+        # Encoders
+        self.wheel_encoders_low_level_publisher = self.create_publisher(Odometry, "wheel_encoders", 10)
+        # Buttons
+        self.buttons_low_level_publisher = self.create_publisher(ButtonsLowLevel, "buttons_low_level", 10)
+        # VCCs
+        self.vccs_low_level_publisher = self.create_publisher(VCCsLowLevel, "vccs_low_level", 10)
+        # Torso
+        self.torso_low_level_publisher = self.create_publisher(TorsoPosition, "torso_position", 10)
+        # IMU (for planar robot, just the basic for efficiency)
+        self.imu_base_low_level_publisher = self.create_publisher(Imu, "imu_base", 10)
+
+
         
         ### Services (Clients) ###
         # Acceleration
@@ -539,6 +558,7 @@ class LowLevelNode(Node):
 
     def timer_callback(self):
 
+        """
         if  self.flag_get_encoders:
             aux_e = self.robot.get_omni_variables(self.robot.ENCODERS)
             # print(aux_e)
@@ -557,7 +577,7 @@ class LowLevelNode(Node):
             orientation.data = (aux_o[0]<<8|aux_o[1])/10
             # print("ORIENTATION:", orientation.data)
             self.get_orientation_publisher.publish(orientation)
-
+        """
 
     def torso_move_callback(self, data: Pose2D): # used by ps4 controller
 
