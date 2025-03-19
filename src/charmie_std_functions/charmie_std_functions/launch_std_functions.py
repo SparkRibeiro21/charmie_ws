@@ -210,8 +210,8 @@ class LaunchStdFunctions():
                     )
         
         self.low_level = Node(package='charmie_low_level',
-                    executable='low_level',
-                    name='low_level',
+                    executable='low_level_stream',
+                    name='low_level_stream',
                     emulate_tty=True
                     )
         
