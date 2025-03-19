@@ -256,7 +256,6 @@ class RobotControl:
 
         number_of_bytes_in_a_batch_of_data = 29
 
-
         # checks whether has received the number of bytes equivalente to one batch of data
         if self.ser.in_waiting >= number_of_bytes_in_a_batch_of_data:
 
@@ -302,31 +301,6 @@ class RobotControl:
             print("WAITING")
 
 
-
-        """        
-        if 'GetVar' in comm_dict:  # check if it is a variable that can be 'get'
-            # print(comm_dict['GetVar'], comm_dict['NoBytes'])
-            self.ser.write(comm_dict['GetVar'].encode('utf-8'))  # sends get command
-            time.sleep(self.COMMS_DELAY)
-
-            while self.ser.in_waiting < comm_dict['NoBytes'] * 2:  # 2x NoBytes since there are two motor drivers
-                pass  # waits until all the variables have been returned
-
-            # print(self.ser.in_waiting)
-            for i in range(comm_dict['NoBytes'] * 2):  # 2x NoBytes since there are two motor drivers
-                x = ord(self.ser.read().decode('latin-1'))
-                # x2 = ord(self.ser.read().decode('latin-1'))  # removed after fixing ChipKit sending \t after each var
-                # print(x, end=', ')
-                comm_dict['Value'][i] = x  # updates the value with the 'get' value
-            return comm_dict['Value']  # returns the array of values
-
-        else:
-            print("Invalid GET Command! Please check if it makes sense!")
-            return -1  # Invalid get command error
-        pass
-        """
-
-
 class LowLevelNode(Node):
 
     def __init__(self):
@@ -343,7 +317,6 @@ class LowLevelNode(Node):
         # IMU
         self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
 
-
         ### Publishers ###
         # Errors
         self.errors_low_level_publisher = self.create_publisher(ErrorsMotorBoard, "errors_low_level", 10)
@@ -359,7 +332,6 @@ class LowLevelNode(Node):
         self.orientation_low_level_publisher = self.create_publisher(Float32, "orientation_low_level", 10)
         # IMU (for planar robot, just the basic for efficiency)
         self.imu_base_low_level_publisher = self.create_publisher(Imu, "imu_base", 10)
-
 
         ### Services (Clients) ###
         # Acceleration
@@ -435,7 +407,7 @@ class LowLevelNode(Node):
             self.errors_low_level_publisher.publish(errors)
             # when the emergency stop is pressed it initially says the robot is undervoltage and half a second later changes to overvoltage
             # it is something that comes from the board... it is not a real error
-            
+
             # encoders
             encoders = Odometry()
             # 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 
@@ -466,12 +438,45 @@ class LowLevelNode(Node):
             # orientation
             orientation = Float32()
             orientation.data = (data_stream[23]<<8|data_stream[24])/10
+            orientation.data = 90.0 - orientation.data  # Convert to ROS right-handed frame
+            if orientation.data < 0:
+                orientation.data += 360.0
+            elif orientation.data >= 360:
+                orientation.data -= 360.0
             print("Orientation:", orientation.data)
             self.orientation_low_level_publisher.publish(orientation)
             
             # imu
             imu = Imu()
-            # 25, 26
+            imu.header.stamp = self.get_clock().now().to_msg()
+            imu.header.frame_id = "imu_link"
+            imu.angular_velocity.z = float(data_stream[25]<<8|data_stream[26]) 
+            if imu.angular_velocity.z >= 32768:  # Convert to signed value
+                imu.angular_velocity.z -= 65536
+            imu.angular_velocity.z = imu.angular_velocity.z * math.pi / 180.0 # Convert from °/s to rad/s
+            imu.angular_velocity_covariance = [-1.0,  0.0,    0.0,  
+                                                0.0, -1.0,    0.0,
+                                                0.0,  0.0, 1.2e-7]  # Only yaw rate is used
+            print("Imu (GyroZ):", imu.angular_velocity.z)
+
+            orientation.data = (data_stream[23]<<8|data_stream[24])/10
+            orientation.data = 90.0 - orientation.data  # Convert to ROS right-handed frame
+            if orientation.data > 180:
+                orientation.data -= 360
+            elif orientation.data < -180:
+                orientation.data += 360
+            orientation.data = math.radians(orientation.data)  # Convert from ° to rad
+            q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, yaw=orientation.data)
+            imu.orientation.x = q_x
+            imu.orientation.y = q_y
+            imu.orientation.z = q_z
+            imu.orientation.w = q_w
+            # Covariance for orientation
+            imu.orientation_covariance = [  0.000685,   0.0,        0.0,
+                                            0.0,        0.000685,   0.0,
+                                            0.0,        0.0,        0.000685]  # Based on 1.5° heading accuracy
+            
+            self.imu_base_low_level_publisher.publish(imu)
 
         """
         if  self.flag_get_encoders:
@@ -901,6 +906,26 @@ class LowLevelNode(Node):
 
         return final_str
     
+    def get_quaternion_from_euler(self, roll, pitch, yaw):
+        """
+		Convert an Euler angle to a quaternion.
+		
+		Input
+			:param roll: The roll (rotation around x-axis) angle in radians.
+			:param pitch: The pitch (rotation around y-axis) angle in radians.
+			:param yaw: The yaw (rotation around z-axis) angle in radians.
+		
+		Output
+			:return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+		"""
+        qx = math.sin(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) - math.cos(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+        qy = math.cos(roll/2) * math.sin(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.cos(pitch/2) * math.sin(yaw/2)
+        qz = math.cos(roll/2) * math.cos(pitch/2) * math.sin(yaw/2) - math.sin(roll/2) * math.sin(pitch/2) * math.cos(yaw/2)
+        qw = math.cos(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+		
+        #print(qx,qy,qz,qw)
+  
+        return [qx, qy, qz, qw]
 
 def main(args=None):
     rclpy.init(args=args)
