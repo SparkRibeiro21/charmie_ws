@@ -97,10 +97,10 @@ class ROS2TaskNode(Node):
         # Low level
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for ps4 controller
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for ps4 controller
-        self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", 10, self.buttons_low_level_callback)
-        self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", 10, self.vccs_low_level_callback)
-        self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", 10, self.torso_low_level_callback)
-        self.orientation_low_level_subscriber = self.create_subscription(Float32, "orientation_low_level", 10, self.orientation_callback)
+        self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
+        self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
+        self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", self.torso_low_level_callback, 10)
+        self.orientation_low_level_subscriber = self.create_subscription(Float32, "orientation_low_level", self.orientation_callback, 10)
         # Neck
         self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
         # Tracking

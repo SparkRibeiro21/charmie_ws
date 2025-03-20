@@ -131,7 +131,22 @@ class TaskMain():
 
             if self.state == self.Waiting_for_task_start:
 
-                self.robot.set_initial_position(self.initial_position)
+
+                self.robot.wait_for_start_button()
+
+                while True:
+
+                    print(self.robot.get_low_level_buttons())
+
+                    print(self.robot.get_orientation_yaw())
+
+                    print(self.robot.get_vccs())
+
+                    print(self.robot.get_torso_position())
+
+                    time.sleep(0.1)
+
+                # self.robot.set_initial_position(self.initial_position)
 
                 print("Set Initial Position: DONE")
 

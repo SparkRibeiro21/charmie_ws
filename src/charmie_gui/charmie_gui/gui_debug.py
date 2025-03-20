@@ -70,7 +70,7 @@ class DebugVisualNode(Node):
         
         # Low Level
         # self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10) ### OLD
-        self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", 10, self.vccs_low_level_callback)
+        self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         
         # Camera Obstacles
         self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
@@ -2054,7 +2054,7 @@ class DebugVisualMain():
         elif self.node.vccs.battery_voltage > 10.0:
             battery_colour = self.RED
 
-        self.draw_text("Battery: "+str(self.node.vccs.battery_voltage)+"V", self.text_font_t, battery_colour, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+10.0-0.9))
+        self.draw_text("Battery: "+str(round(self.node.vccs.battery_voltage, 1))+"V", self.text_font_t, battery_colour, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+10.0-0.9))
 
     def coords_to_map(self, xx, yy):
         return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(-yy/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(xx/(10*self.MAP_SCALE)))
