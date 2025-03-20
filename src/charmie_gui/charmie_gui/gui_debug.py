@@ -9,10 +9,10 @@ from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject, \
-    TrackingMask
+    TrackingMask, VCCsLowLevel
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, \
-    GetLLMDemo, ActivateTracking
+    GetLLMDemo, ActivateTracking, SetRGB
 from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
@@ -68,9 +68,10 @@ class DebugVisualNode(Node):
         self.search_for_person_subscriber = self.create_subscription(ListOfDetectedPerson, "search_for_person_detections", self.search_for_person_detections_callback, 10)
         self.search_for_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_object_detections", self.search_for_object_detections_callback, 10)
         
-        # IMU
-        self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10)
-       
+        # Low Level
+        # self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10) ### OLD
+        self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", 10, self.vccs_low_level_callback)
+        
         # Camera Obstacles
         self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
 
@@ -120,8 +121,8 @@ class DebugVisualNode(Node):
         # Point Cloud
         self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
         # Low level
-        self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
-        self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
+        self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
+        # self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
         # LLM
         self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
         self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
@@ -146,13 +147,14 @@ class DebugVisualNode(Node):
         self.activate_obstacles_success = True
         self.activate_obstacles_message = ""
 
-        self.battery_voltage = 0.0
-        self.emergency_stop = False
-        self.waited_for_end_of_get_vccs = False
-        self.battery_timer_ctr = 0
-        self.previous_is_low_level_on = False
-        self.battery_timer()
-        self.create_timer(1.0, self.battery_timer)
+        self.vccs = VCCsLowLevel()
+        # self.battery_voltage = 0.0
+        # self.emergency_stop = False
+        # self.waited_for_end_of_get_vccs = False
+        # self.battery_timer_ctr = 0
+        # self.previous_is_low_level_on = False
+        # self.battery_timer()
+        # self.create_timer(1.0, self.battery_timer)
         
         self.head_rgb = Image()
         self.hand_rgb = Image()
@@ -236,8 +238,8 @@ class DebugVisualNode(Node):
         self.lidar_radius = 0.050/2 # meters
         self.lidar_to_robot_center = 0.255 # meters
 
-        self.NORTE = -45.0
-        self.imu_orientation_norm_rad = 0.0
+        # self.NORTE = -45.0
+        # self.imu_orientation_norm_rad = 0.0
 
 
     def check_yolos_timer(self):
@@ -268,11 +270,12 @@ class DebugVisualNode(Node):
         else:
             self.is_tracking_comm = False
 
+    """
     def battery_timer(self):
         
         self.battery_timer_ctr += 1
         check = False
-        current_is_low_level_on = self.set_acceleration_ramp_client.wait_for_service(0.0)
+        current_is_low_level_on = self.set_rgb_client.wait_for_service(0.0)
         
         if current_is_low_level_on and not self.previous_is_low_level_on:
             check = True
@@ -287,6 +290,7 @@ class DebugVisualNode(Node):
             self.call_vccs_command_server(request=request)
 
         self.previous_is_low_level_on = current_is_low_level_on
+    """
 
     def nodes_used_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
         # Type of service received: 
@@ -361,6 +365,8 @@ class DebugVisualNode(Node):
         self.head_depth_camera_time = time.time()
         self.head_depth_fps = round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 1)
 
+    def vccs_low_level_callback(self, vccs: VCCsLowLevel):
+        self.vccs = vccs
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False):
@@ -435,6 +441,7 @@ class DebugVisualNode(Node):
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
 
+    """
     def get_orientation_callback(self, orientation: Float32):
         imu_orientation_norm = orientation.data - self.NORTE
         if imu_orientation_norm > 180.0:
@@ -444,7 +451,7 @@ class DebugVisualNode(Node):
 
         self.imu_orientation_norm_rad = math.radians(imu_orientation_norm)
         self.robot_pose.theta = -self.imu_orientation_norm_rad
-        
+    """ 
     def get_camera_obstacles_callback(self, points: ListOfPoints):
         self.camera_obstacle_points = points.coords
         # print("Received Points")
@@ -558,6 +565,7 @@ class DebugVisualNode(Node):
         self.search_for_object = points
         self.new_search_for_object = True
 
+    """
     def call_vccs_command_server(self, request=GetVCCs.Request()):
     
         future = self.get_vccs_client.call_async(request)
@@ -576,7 +584,8 @@ class DebugVisualNode(Node):
             self.waited_for_end_of_get_vccs = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
-    
+    """
+
 class CheckNodesMain():
 
     def __init__(self, node: DebugVisualNode):
@@ -678,10 +687,10 @@ class CheckNodesMain():
                 self.CHECK_LOCALISATION_NODE = True
 
             # LOW LEVEL
-            if not self.node.set_acceleration_ramp_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+            if not self.node.set_rgb_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
                 # self.node.get_logger().warn("Waiting for Server Navigation ...")
                 self.CHECK_LOW_LEVEL_NODE = False
-                self.node.battery_voltage = 0.0
+                self.node.vccs.battery_voltage = 0.0
             else:
                 self.CHECK_LOW_LEVEL_NODE = True
 
@@ -2038,14 +2047,14 @@ class DebugVisualMain():
 
         battery_colour = self.WHITE
 
-        if self.node.battery_voltage > 37.0:
+        if self.node.vccs.battery_voltage > 37.0:
             battery_colour = self.GREEN
-        elif self.node.battery_voltage > 35.0:
+        elif self.node.vccs.battery_voltage > 35.0:
             battery_colour = self.YELLOW
-        elif self.node.battery_voltage > 10.0:
+        elif self.node.vccs.battery_voltage > 10.0:
             battery_colour = self.RED
 
-        self.draw_text("Battery: "+str(self.node.battery_voltage)+"V", self.text_font_t, battery_colour, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+10.0-0.9))
+        self.draw_text("Battery: "+str(self.node.vccs.battery_voltage)+"V", self.text_font_t, battery_colour, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+10.0-0.9))
 
     def coords_to_map(self, xx, yy):
         return (self.map_init_width+self.xc_adj+self.MAP_SIDE*(-yy/(10*self.MAP_SCALE)), self.map_init_height+self.yc_adj-self.MAP_SIDE*(xx/(10*self.MAP_SCALE)))

@@ -250,8 +250,6 @@ class RobotControl:
         self.OMNI_MOVE_ANT['Ang'] = self.OMNI_MOVE['Ang']
 
         
-
-
     def check_data_stream(self):
 
         number_of_bytes_in_a_batch_of_data = 29
@@ -307,17 +305,12 @@ class LowLevelNode(Node):
         super().__init__("Low_Level")
         self.get_logger().info("Initialised CHARMIE Low Level Node")
         
+        ### TOPICS ### 
         # Torso
         self.torso_move_subscriber = self.create_subscription(Pose2D, "torso_move", self.torso_move_callback , 10)
         # Motors
         self.omni_move_subscriber = self.create_subscription(Vector3, "omni_move", self.omni_move_callback , 10)
         self.cmd_vel_subscriber = self.create_subscription(Twist, "cmd_vel", self.cmd_vel_callback , 10)
-        # Encoders
-        self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
-        # IMU
-        self.get_orientation_publisher = self.create_publisher(Float32, "get_orientation", 10)
-
-        ### Publishers ###
         # Errors
         self.errors_low_level_publisher = self.create_publisher(ErrorsMotorBoard, "errors_low_level", 10)
         # Encoders
@@ -334,21 +327,10 @@ class LowLevelNode(Node):
         self.imu_base_low_level_publisher = self.create_publisher(Imu, "imu_base", 10)
 
         ### Services (Clients) ###
-        # Acceleration
-        self.server_set_acceleration = self.create_service(SetAcceleration, "set_acceleration_ramp", self.callback_set_acceleration) 
         # RGB 
         self.server_set_rgb = self.create_service(SetRGB, "rgb_mode", self.callback_set_rgb) 
-        # VCCs
-        self.server_vccs = self.create_service(GetVCCs, "get_vccs", self.callback_get_vccs)
-        # Start Button and Debug Buttons
-        self.server_start_button = self.create_service(GetLowLevelButtons, "get_start_button", self.callback_get_start_button)
         # Torso
-        self.server_get_torso_position = self.create_service(GetTorso, "get_torso_position", self.callback_get_torso_position)
         self.server_set_torso_position = self.create_service(SetTorso, "set_torso_position", self.callback_set_torso_position)
-        # IMU
-        self.activate_orientation = self.create_service(ActivateBool, "activate_orientation", self.callback_activate_orientation)
-        # Encoders
-        self.activate_encoders = self.create_service(ActivateBool, "activate_encoders", self.callback_activate_encoders)
         # Motors
         self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
 
@@ -373,10 +355,6 @@ class LowLevelNode(Node):
             self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
 
         self.create_timer(0.05, self.timer_callback)
-        # self.create_timer(1.0, self.timer_callback2)
-
-        self.flag_get_encoders = False
-        self.flag_get_orientation = False
 
     
     def timer_callback(self):
@@ -478,70 +456,6 @@ class LowLevelNode(Node):
             
             self.imu_base_low_level_publisher.publish(imu)
 
-        """
-        if  self.flag_get_encoders:
-            aux_e = self.robot.get_omni_variables(self.robot.ENCODERS)
-            # print(aux_e)
-            cmd = Encoders()
-            cmd.enc_m1 = (aux_e[0] << 24) + (aux_e[1] << 16) + (aux_e[2] << 8) + aux_e[3]
-            cmd.enc_m2 = (aux_e[4] << 24) + (aux_e[5] << 16) + (aux_e[6] << 8) + aux_e[7]
-            cmd.enc_m3 = (aux_e[8] << 24) + (aux_e[9] << 16) + (aux_e[10] << 8) + aux_e[11]
-            cmd.enc_m4 = (aux_e[12] << 24) + (aux_e[13] << 16) + (aux_e[14] << 8) + aux_e[15]
-            # print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
-            # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
-            self.get_encoders_publisher.publish(cmd)
-
-        if self.flag_get_orientation:
-            aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
-            orientation = Float32()
-            orientation.data = (aux_o[0]<<8|aux_o[1])/10
-            # print("ORIENTATION:", orientation.data)
-            self.get_orientation_publisher.publish(orientation)
-        """
-
-    def errors_msgs_customization(self, error1, error2):
-
-        errors = ErrorsMotorBoard()
-
-        errors.undervoltage_error = bool(error1>>7 & 1 | error2>>7 & 1)
-        errors.overvoltage_error =  bool(error1>>6 & 1 | error2>>6 & 1)
-
-        errors.undervoltage_b1_error = bool(error1>>7 & 1)
-        errors.overvoltage_b1_error = bool(error1>>6 & 1)
-        errors.undervoltage_b2_error = bool(error2>>7 & 1)
-        errors.overvoltage_b2_error = bool(error2>>6 & 1)
-
-        errors.motor2_b1_short_error = bool(error1>>5 & 1)
-        errors.motor2_b1_trip_error = bool(error1>>4 & 1)
-        errors.motor1_b1_short_error = bool(error1>>3 & 1)
-        errors.motor1_b1_trip_error = bool(error1>>2 & 1)
-
-        errors.motor2_b2_short_error = bool(error2>>5 & 1)
-        errors.motor2_b2_trip_error = bool(error2>>4 & 1)
-        errors.motor1_b2_short_error = bool(error2>>3 & 1)
-        errors.motor1_b2_trip_error = bool(error2>>2 & 1)
-
-        return errors
-
-    def callback_set_acceleration(self, request, response):
-        # print(request)
-
-        # Type of service received:
-        # bool activate_lidar_up     # activate lidar from robot body
-        # bool activate_lidar_bottom # activate lidar to see floor objects
-        # bool activate_camera_head  # activate head camera for 3D obstacles  
-        # ---
-        # bool success    # indicate successful run of triggered service
-        # string message  # informational, e.g. for error messages.
-        self.get_logger().info("Received Set Acceleration Ramp %s" %("("+str(request.data)+")"))
-        self.robot.set_omni_variables(self.robot.ACCELERATION, request.data)
-        print(self.robot.get_omni_variables(self.robot.ACCELERATION))
-
-        # returns whether the message was played and some informations regarding status
-        response.success = True
-        response.message = "Set Acceleration Ramp for Motors to " + str(request.data)
-        return response
-
     def callback_set_rgb(self, request, response):
         # print(request)
 
@@ -569,65 +483,6 @@ class LowLevelNode(Node):
 
         return response
 
-    def callback_get_vccs(self, request, response):
-        # print(request)
-
-        # Type of service received:
-        # ---
-        # float64 battery_voltage # battery voltage level 
-        # bool emergency_stop     # boolean info of the emergency stop button
-
-        self.get_logger().info("Received Get VCCs")
-        aux_v = self.robot.get_omni_variables(self.robot.VCCS)
-
-        # returns the values requested by the get_vccs
-        response.battery_voltage = ((aux_v[0]/10)*2)+1.0
-        response.emergency_stop = bool(aux_v[1])
-
-        return response
-
-    def callback_get_start_button(self, request, response):
-        # print(request)
-
-        # Type of service received:
-        # ---
-        # bool start_button  # start button state 
-        # bool debug_button1 # debug1 button state boolean
-        # bool debug_button2 # debug2 button state boolean
-        # bool debug_button3 # debug3 button state boolean
-
-        self.get_logger().info("Received Get Start and Debug Buttons")
-        aux_b = self.robot.get_omni_variables(self.robot.ALL_BUTTONS)
-        # print(aux_b[0])
-
-        # returns the values requested by the get_low_level_buttons
-        response.start_button  = bool((aux_b[0] >> 3) & 1)
-        response.debug_button1 = bool((aux_b[0] >> 0) & 1)
-        response.debug_button2 = bool((aux_b[0] >> 1) & 1)
-        response.debug_button3 = bool((aux_b[0] >> 2) & 1)
-        # print(response.start_button, response.debug_button1, response.debug_button2, response.debug_button3)
-
-        return response
-
-    def callback_get_torso_position(self, request, response):
-        # print(request)
-
-        # Type of service received:
-        # ---
-        # int32 legs  # up and down torso movement 
-        # int32 torso # take a bow torso movement 
-        
-        self.get_logger().info("Received Get Torso Position")
-        aux_t = self.robot.get_omni_variables(self.robot.LIN_ACT)
-        print("Legs_pos: ", aux_t[0], " Torso_pos: ", aux_t[1])
-
-        # returns the values requested by the get_torso_position
-        response.legs = aux_t[0] # up and down torso movement 
-        response.torso = aux_t[1] # take a bow torso movement 
-        # print(response.legs, response.torso)
-
-        return response
-    
     def callback_set_torso_position(self, request, response):
         # print(request)
 
@@ -646,40 +501,6 @@ class LowLevelNode(Node):
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "Set torso L: " + str(request.legs) + ", T: " + str(request.torso)
-        return response
-    
-    def callback_activate_orientation(self, request, response):
-        # print(request)
-
-        # Type of service received:
-        # bool activate   # activate or deactivate
-        # ---
-        # bool success    # indicate successful run of triggered service
-        # string message  # informational, e.g. for error messages.
-
-        self.get_logger().info("Received Activate Orientation: %s" %(request.activate))
-        self.flag_get_orientation = request.activate
-
-        # returns whether the message was played and some informations regarding status
-        response.success = True
-        response.message = "Sucessfully Activated Orientation to: " + str(request.activate)
-        return response
-    
-    def callback_activate_encoders(self, request, response):
-        # print(request)
-
-        # Type of service received:
-        # bool activate   # activate or deactivate
-        # ---
-        # bool success    # indicate successful run of triggered service
-        # string message  # informational, e.g. for error messages.
-
-        self.get_logger().info("Received Activate Encoders: %s" %(request.activate))
-        self.flag_get_encoders = request.activate
-
-        # returns whether the message was played and some informations regarding status
-        response.success = True
-        response.message = "Sucessfully Activated Encoders to: " + str(request.activate)
         return response
     
     def callback_activate_motors(self, request, response):
@@ -798,26 +619,6 @@ class LowLevelNode(Node):
             # print("Torso Stopped 2")
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, False)
             # nao amnda
-
-    # here for when we add topic for readings all 9 axis of localizatio n IMU
-    """
-    def timer_callback2(self):
-
-        aux_o = self.robot.get_omni_variables(self.robot.ORIENTATION)
-        print("ORIENTATION:", (aux_o[0]<<8|aux_o[1])/10)
-
-        aux_i = self.robot.get_omni_variables(self.robot.IMU)
-        print("MAGX:", struct.unpack('!h', struct.pack('!BB', aux_i[0], aux_i[1]))[0],
-                "MAGY:", struct.unpack('!h', struct.pack('!BB', aux_i[2], aux_i[3]))[0],             
-                "MAGZ:", struct.unpack('!h', struct.pack('!BB', aux_i[4], aux_i[5]))[0],
-                "ACCX:", struct.unpack('!h', struct.pack('!BB', aux_i[6], aux_i[7]))[0],
-                "ACCY:", struct.unpack('!h', struct.pack('!BB', aux_i[8], aux_i[9]))[0],
-                "ACCZ:", struct.unpack('!h', struct.pack('!BB', aux_i[10], aux_i[11]))[0],
-                "GYRX:", struct.unpack('!h', struct.pack('!BB', aux_i[12], aux_i[13]))[0],
-                "GYRY:", struct.unpack('!h', struct.pack('!BB', aux_i[14], aux_i[15]))[0],
-                "GYRZ:", struct.unpack('!h', struct.pack('!BB', aux_i[16], aux_i[17]))[0],
-                )
-    """   
 
     def colour_to_string(self, colour=0):
         
