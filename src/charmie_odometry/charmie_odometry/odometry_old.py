@@ -26,13 +26,11 @@ class RobotOdometry():
         self.MAX_ENCODERS = 4294967295
         self.MOT_ENC = [0, 0, 0, 0]
         self.MOT_ENC_ANT = [0, 0, 0, 0]
-        self.pulse_per_rotation = 2250  # encoder pulses for a full wheel rotation
+        self.pulse_per_rotation = 980  # encoder pulses for a full wheel rotation
         self.wheel_diameter = 203  # mm
-        # self.robot_radius = 265  # this value is yet to be confimed by the 3D modulation of the robot !!!!!!!!!!
-        self.robot_radius = 510/2
-
-
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.robot_radius = 265  # this value is yet to be confimed by the 3D modulation of the robot !!!!!!!!!!
+        
+        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.scale = 0.12*1000
         
         self.xc = 400
@@ -55,8 +53,6 @@ class RobotOdometry():
         self.emergency_flag = False
         self.emergency_ant_flag = False
         self.emergency_status = 0
-
-        self.d_t = 0.05
 
     
     def localization(self, enc: Encoders):
@@ -130,7 +126,7 @@ class RobotOdometry():
         for i in range(len(self.MOT_ENC)):
             # in the report this variable is calculated, however it is not used for anything, thus is commented
             # d[i] = (((math.pi*self.wheel_diameter)/self.pulse_per_rotation)*self.MOT_ENC[i])
-            v[i] = (((math.pi*self.wheel_diameter)/self.pulse_per_rotation)*DIFF_MOT_ENC[i])/self.d_t
+            v[i] = (((math.pi*self.wheel_diameter)/self.pulse_per_rotation)*DIFF_MOT_ENC[i])/0.05
 
         # print("v:", v)
 
@@ -176,7 +172,7 @@ class RobotOdometry():
         ### xx = G[0]*0.05
         ### yy = G[1]*0.05
         ### theta = math.degrees(vel_ang_enc*0.05)
-        theta = vel_ang_enc*self.d_t
+        theta = vel_ang_enc*0.05
 
 
         # print(xxx, yyy)
@@ -202,8 +198,8 @@ class RobotOdometry():
         # yy_ = yy * math.sin(math.radians(90 - self.coord_rel_t - alfa_enc_deg))
         ### xx_ = vel_lin_enc*0.05 * math.cos(math.radians(fi))
         ### yy_ = vel_lin_enc*0.05 * math.sin(math.radians(fi))
-        xx_ = vel_lin_enc*self.d_t * math.cos(fi)
-        yy_ = vel_lin_enc*self.d_t * math.sin(fi)
+        xx_ = vel_lin_enc*0.05 * math.cos(fi)
+        yy_ = vel_lin_enc*0.05 * math.sin(fi)
 
 
         #transforms from mm to m
@@ -227,14 +223,6 @@ class RobotOdometry():
 
         self.MOT_ENC_ANT = self.MOT_ENC.copy()
 
-        ##### CONVERTING TO ROS2 AXIS SYSTEM #####
-        final_coord_rel_x_ = self.coord_rel_y_
-        final_coord_rel_y_ = -self.coord_rel_x_
-        final_coord_rel_theta_ = self.coord_rel_t
-        final_speed_rel_x_ = G[1]/1000
-        final_speed_rel_y_ = -G[0]/1000
-        final_speed_rel_theta_ = vel_ang_enc
-
 
         # end = time.time()
         # print(end - start, end=' ')
@@ -251,18 +239,20 @@ class RobotOdometry():
                 cv2.line(self.test_image, (0, int(self.yc + self.scale*i)), (self.yc*2, int(self.yc + self.scale*i)), (255, 255, 255), 1)
             
             
-            self.all_pos_x_val.append(final_coord_rel_x_)
-            self.all_pos_y_val.append(final_coord_rel_y_)
+            self.all_pos_x_val.append(self.coord_rel_x_)
+            self.all_pos_y_val.append(self.coord_rel_y_)
             for i in range(len(self.all_pos_x_val)):
-                cv2.circle(self.test_image, (int(self.yc - self.scale*self.all_pos_y_val[i]), int(self.xc - self.scale * self.all_pos_x_val[i])), 1, (255, 255, 0), -1)
+                cv2.circle(self.test_image, (int(self.xc + self.scale*self.all_pos_x_val[i]), int(self.yc - self.scale * self.all_pos_y_val[i])), 1, (255, 255, 0), -1)
 
 
-            cv2.circle(self.test_image, (int(self.yc - self.scale*final_coord_rel_y_), int(self.xc - self.scale * final_coord_rel_x_)), (int)(self.scale*self.robot_radius_d), (0, 255, 255), 1)
-            cv2.circle(self.test_image, (int(self.yc - self.scale*final_coord_rel_y_), int(self.xc - self.scale * final_coord_rel_x_)), (int)(self.scale*self.robot_radius_d/10), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.xc + self.scale*self.coord_rel_x_), int(self.yc - self.scale * self.coord_rel_y_)), (int)(self.scale*self.robot_radius_d), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.xc + self.scale*self.coord_rel_x_), int(self.yc - self.scale * self.coord_rel_y_)), (int)(self.scale*self.robot_radius_d/10), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.xc + self.scale*self.coord_rel_x_ + (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.cos(self.coord_rel_t + math.pi/2)),
+                                         int(self.yc - self.scale*self.coord_rel_y_ - (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.sin(self.coord_rel_t + math.pi/2))), (int)(self.scale*self.lidar_radius_d), (0, 255, 255), -1)
             
-            # cv2.circle(self.test_image, (int(self.xc + self.scale*self.coord_rel_x_ + (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.cos(self.coord_rel_t + math.pi/2)),
-            #                              int(self.yc - self.scale*self.coord_rel_y_ - (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.sin(self.coord_rel_t + math.pi/2))), (int)(self.scale*self.lidar_radius_d), (0, 255, 255), -1)
-            
+
+
+
             cv2.imshow("Odometry", self.test_image)
             
             k = cv2.waitKey(1)
@@ -277,8 +267,7 @@ class RobotOdometry():
             self.test_image[:, :] = 0
         
         
-        # return self.coord_rel_x_, self.coord_rel_y_, self.coord_rel_t, G[0]/1000, G[1]/1000, vel_ang_enc
-        return final_coord_rel_x_, final_coord_rel_y_, final_coord_rel_theta_, final_speed_rel_x_, final_speed_rel_y_, final_speed_rel_theta_
+        return self.coord_rel_x_, self.coord_rel_y_, self.coord_rel_t, G[0]/1000, G[1]/1000, vel_ang_enc
     
 
     def normalize_angles(self, ang):
@@ -320,40 +309,40 @@ class OdometryNode(Node):
         # Low level
         self.encoders_subscriber = self.create_subscription(Encoders, "get_encoders", self.get_encoders_callback, 10)
         self.odometry_publisher = self.create_publisher(Odometry, "odom", 10)
-        # self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
+        self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
         # Initial Pose
-        # self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.get_initialpose_callback, 10)
-        # self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
+        self.initialpose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "initialpose", self.get_initialpose_callback, 10)
+        self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         # Localisation
         self.robot_localisation_publisher = self.create_publisher(Pose2D, "robot_localisation", 10)
 
         ### SERVICES ###
         # Low level
-        # self.activate_encoders_client = self.create_client(ActivateBool, "activate_encoders")
+        self.activate_encoders_client = self.create_client(ActivateBool, "activate_encoders")
 
-        # while not self.activate_encoders_client.wait_for_service(1.0):
-        #     self.get_logger().warn("Waiting for Server Low Level...")
+        while not self.activate_encoders_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Low Level...")
 
         self.robot_odom = RobotOdometry()
         self.robot_localisation = Pose2D()
-        # self.initialpose = Pose2D()
+        self.initialpose = Pose2D()
         self.is_map_odom_link = False
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        # self.create_timer(0.1, self.tf_timer)
+        self.create_timer(0.1, self.tf_timer)
 
         self.tf_broadcaster_odom_base_link = tf2_ros.TransformBroadcaster(self)
 
         # time.sleep(0.100)
         
-        # request = ActivateBool.Request()
-        # request.activate = True
-        # self.activate_encoders_client.call_async(request)
+        request = ActivateBool.Request()
+        request.activate = True
+        self.activate_encoders_client.call_async(request)
     
         # self.create_timer(1.0, self.timer_callback)
 
-        # self.set_initial_position([0.0, 0.0, 0.0])
+        self.set_initial_position([0.0, 0.0, 0.0])
 
 
     def tf_timer(self):
@@ -388,8 +377,8 @@ class OdometryNode(Node):
         qw = orientation.w
 
         map_odom = Pose2D()
-        map_odom.x = position.x # - initial_pose_adjustement.y
-        map_odom.y = position.y # + initial_pose_adjustement.x
+        map_odom.x = -position.y # - initial_pose_adjustement.y
+        map_odom.y =  position.x # + initial_pose_adjustement.x
         # yaw = math.atan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz)
         # pitch = math.asin(-2.0*(qx*qz - qw*qy))
         # roll = math.atan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz)
@@ -404,7 +393,6 @@ class OdometryNode(Node):
 
         self.robot_localisation_publisher.publish(self.robot_localisation)
 
-    """
     def get_initialpose_callback(self, pose:PoseWithCovarianceStamped):
         
         self.initialpose.x = pose.pose.pose.position.x
@@ -427,11 +415,11 @@ class OdometryNode(Node):
             self.robot_odom.coord_rel_x_ = -self.initialpose.y
             self.robot_odom.coord_rel_y_ = self.initialpose.x
             self.robot_odom.coord_rel_t  = self.initialpose.theta
-    """
+
 
     def get_encoders_callback(self, enc: Encoders):
         coord_x, coord_y, coord_theta, vel_x, vel_y, vel_theta = self.robot_odom.localization(enc) 
-        print("DATA: ", round(coord_x,2), "\t", round(coord_y,2), "\t", round(coord_theta,2), "\t", round(vel_x,2), "\t", round(vel_y,2), "\t", round(vel_theta,2))
+        # print(coord_x, coord_y, coord_theta)
 
         quaternion = self.robot_odom.get_quaternion_from_euler(0,0,coord_theta)
 
@@ -453,7 +441,7 @@ class OdometryNode(Node):
 
 
         # print(coord_theta)
-        """
+
         quaternion_rviz = self.robot_odom.get_quaternion_from_euler(0,0,-coord_theta)
         odom_rviz = Odometry()
         odom_rviz.pose.pose.orientation.x = quaternion[0]
@@ -467,19 +455,19 @@ class OdometryNode(Node):
         transform.header.stamp = self.get_clock().now().to_msg()
         transform.header.frame_id = "odom"
         transform.child_frame_id = "base_link"
-        transform.transform.translation.x = odom.pose.pose.position.x
-        transform.transform.translation.y = odom.pose.pose.position.y
+        transform.transform.translation.x = odom.pose.pose.position.y
+        transform.transform.translation.y = -odom.pose.pose.position.x
         transform.transform.translation.z = odom.pose.pose.position.z
         transform.transform.rotation = odom_rviz.pose.pose.orientation
 
         self.tf_broadcaster_odom_base_link.sendTransform(transform)
-        """
-        # twist = Twist()
-        # twist.angular.z = vel_theta
-        # twist.linear.x = vel_x
-        # twist.linear.y = vel_y
-        # self.cmd_vel_publisher.publish(twist)
-    """
+        
+        twist = Twist()
+        twist.angular.z = vel_theta
+        twist.linear.x = vel_x
+        twist.linear.y = vel_y
+        self.cmd_vel_publisher.publish(twist)
+    
     def set_initial_position(self, initial_position):
 
         task_initialpose = PoseWithCovarianceStamped()
@@ -512,7 +500,7 @@ class OdometryNode(Node):
         task_initialpose.pose.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
         
         self.initialpose_publisher.publish(task_initialpose)
-    """
+
     def normalize_angles(self, ang):
 
         while ang < 0:

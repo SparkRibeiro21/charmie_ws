@@ -326,6 +326,11 @@ class LowLevelNode(Node):
         # IMU (for planar robot, just the basic for efficiency)
         self.imu_base_low_level_publisher = self.create_publisher(Imu, "imu_base", 10)
 
+        ########## TEMP ##########
+        self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
+
+
+
         ### Services (Clients) ###
         # RGB 
         self.server_set_rgb = self.create_service(SetRGB, "rgb_mode", self.callback_set_rgb) 
@@ -389,6 +394,17 @@ class LowLevelNode(Node):
             # encoders
             encoders = Odometry()
             # 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 
+
+
+            ########## TEMP ##########
+            cmd = Encoders()
+            cmd.enc_m1 = (data_stream[2]  << 24) + (data_stream[3]  << 16) + (data_stream[4]  << 8) + data_stream[5]
+            cmd.enc_m2 = (data_stream[6]  << 24) + (data_stream[7]  << 16) + (data_stream[8]  << 8) + data_stream[9]
+            cmd.enc_m3 = (data_stream[10] << 24) + (data_stream[11] << 16) + (data_stream[12] << 8) + data_stream[13]
+            cmd.enc_m4 = (data_stream[14] << 24) + (data_stream[15] << 16) + (data_stream[16] << 8) + data_stream[17]
+            # print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
+            # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
+            self.get_encoders_publisher.publish(cmd)
 
             # buttons
             buttons = ButtonsLowLevel()
