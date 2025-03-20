@@ -259,9 +259,8 @@ class RobotOdometry():
 
             cv2.circle(self.test_image, (int(self.yc - self.scale*final_coord_rel_y_), int(self.xc - self.scale * final_coord_rel_x_)), (int)(self.scale*self.robot_radius_d), (0, 255, 255), 1)
             cv2.circle(self.test_image, (int(self.yc - self.scale*final_coord_rel_y_), int(self.xc - self.scale * final_coord_rel_x_)), (int)(self.scale*self.robot_radius_d/10), (0, 255, 255), 1)
-            
-            # cv2.circle(self.test_image, (int(self.xc + self.scale*self.coord_rel_x_ + (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.cos(self.coord_rel_t + math.pi/2)),
-            #                              int(self.yc - self.scale*self.coord_rel_y_ - (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.sin(self.coord_rel_t + math.pi/2))), (int)(self.scale*self.lidar_radius_d), (0, 255, 255), -1)
+            cv2.circle(self.test_image, (int(self.yc - self.scale*final_coord_rel_y_ + (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.cos(self.coord_rel_t + math.pi/2)),
+                                         int(self.xc - self.scale*final_coord_rel_x_ - (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.sin(self.coord_rel_t + math.pi/2))), (int)(self.scale*self.lidar_radius_d), (0, 255, 255), -1)
             
             cv2.imshow("Odometry", self.test_image)
             

@@ -12,6 +12,8 @@ import serial
 import time
 import struct
 import math
+import cv2
+import numpy as np
 
 # TO DO:
 #   change the way NumBytes work, these only make sense for variables that are requested
@@ -297,7 +299,273 @@ class RobotControl:
             # self.start_time = time.time()
         else:
             print("WAITING")
+            pass
 
+class WheelOdometry():
+
+    def __init__(self):
+        self.MAX_ENCODERS = 4294967295
+        self.MOT_ENC = [0, 0, 0, 0]
+        self.MOT_ENC_ANT = [0, 0, 0, 0]
+        self.pulse_per_rotation = 2250  # encoder pulses for a full wheel rotation
+        self.wheel_diameter = 203  # mm
+        # self.robot_radius = 265  # this value is yet to be confimed by the 3D modulation of the robot !!!!!!!!!!
+        self.robot_radius = 510/2
+
+
+        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.scale = 0.12*1000
+        
+        self.xc = 400
+        self.yc = 400
+
+        self.test_image = np.zeros((self.xc*2, self.yc*2, 3), dtype=np.uint8)
+
+        # debug dists
+        self.robot_radius_d = 0.560/2
+        self.lidar_radius_d = 0.050/2
+
+        self.all_pos_x_val = []
+        self.all_pos_y_val = []
+
+        self.coord_rel_t = 0
+        self.coord_rel_x_ = 0 
+        self.coord_rel_y_ = 0 
+
+        self.emergency_value = (100 << 24) + (100 << 16) + (100 << 8) + 100 # 1684300900
+        self.emergency_flag = False
+        self.emergency_ant_flag = False
+        self.emergency_status = 0
+
+        self.d_t = 0.05
+
+    def localization(self, enc_m1, enc_m2, enc_m3, enc_m4):
+
+        self.MOT_ENC[0] = enc_m1
+        self.MOT_ENC[1] = enc_m2
+        self.MOT_ENC[2] = enc_m3
+        self.MOT_ENC[3] = enc_m4
+
+        ### START OF EMERGENCY STOP CODE ###
+
+        # print("---")
+        # print(self.MOT_ENC)
+
+        self.emergency_ant_flag = self.emergency_flag
+
+        # ctr_ant = self.ctr
+        self.ctr = 0
+        for i in range(len(self.MOT_ENC)):
+            if self.MOT_ENC[i] == self.emergency_value:
+                self.ctr += 1
+        if self.ctr == len(self.MOT_ENC):
+            # print("EMERGENCY")
+            self.emergency_flag = True
+        else:
+            self.emergency_flag = False
+
+        self.emergency_status = self.emergency_flag*2 + self.emergency_ant_flag
+        # print(self.emergency_status)
+        # 0 LOW  -> LOW  = OFF
+        # 1 LOW  -> HIGH = FALLING
+        # 2 HIGH -> LOW  = RISING
+        # 3 HIGH -> HIGH = ON
+        
+        # everytime it detects it is in emergency stop
+        if self.emergency_status == 2 or self.emergency_status == 3:
+            self.MOT_ENC = self.MOT_ENC_ANT
+
+        # first frame emergency stops
+        if self.emergency_status == 1:
+            self.MOT_ENC_ANT = self.MOT_ENC
+
+        # print(self.MOT_ENC, self.MOT_ENC_ANT)
+
+        ### END OF EMERGENCY STOP CODE ###
+
+        DIFF_MOT_ENC = [0, 0, 0, 0]
+
+        # print(val_enc)
+
+        for i in range(len(self.MOT_ENC)):
+            DIFF_MOT_ENC[i] = self.MOT_ENC[i] - self.MOT_ENC_ANT[i]
+            if DIFF_MOT_ENC[i] > self.MAX_ENCODERS/2:
+                DIFF_MOT_ENC[i] -= self.MAX_ENCODERS + 1  # +1 because numerically the 0 to MAX_ENCODERS transition must be considered
+            if DIFF_MOT_ENC[i] < -self.MAX_ENCODERS/2:
+                DIFF_MOT_ENC[i] += self.MAX_ENCODERS + 1  # +1 because numerically the 0 to MAX_ENCODERS transition must be considered
+            DIFF_MOT_ENC[i] *= -1
+
+        # print("CURRENT:    ", self.MOT_ENC)
+        # print("PREVIOUS:   ", self.MOT_ENC_ANT)
+        # print("DIFFERENCE: ", DIFF_MOT_ENC)
+
+        # acording to the Report of Inês Garcia and Tiago Ribeiro (P2 - 2017)
+        # check report, named: C.H.A.R.M.I.E. - PLATAFORMA MÓVEL PARA ROBÔ DE SERVIÇOS EM CASA
+        # the following equations calculate the odometry through encoders for a four wheeled omnidirectional platform
+
+        # calculate the linear speed of each wheel
+
+        # d = [0, 0, 0, 0]
+        v = [0, 0, 0, 0]
+        for i in range(len(self.MOT_ENC)):
+            # in the report this variable is calculated, however it is not used for anything, thus is commented
+            # d[i] = (((math.pi*self.wheel_diameter)/self.pulse_per_rotation)*self.MOT_ENC[i])
+            v[i] = (((math.pi*self.wheel_diameter)/self.pulse_per_rotation)*DIFF_MOT_ENC[i])/self.d_t
+
+        # print("v:", v)
+
+        G_ = [0, 0]
+        G = [0, 0]
+
+        G_[0] = (v[1] + v[3]) / 2
+        G_[1] = (v[0] + v[2]) / 2
+
+        G[0] = ((math.sqrt(2) / 2) * (-G_[0] + G_[1]))  # + ((math.sqrt(2) / 2) * G_[1])
+        G[1] = ((math.sqrt(2) / 2) * (G_[0] + G_[1]))  # + ((math.sqrt(2) / 2) * G_[1])
+
+        # print("G_:", G_)
+        # print("G:", G)
+
+        vel_lin_enc = math.sqrt(G[0]**2 + G[1]**2)
+        alfa_enc = math.pi/2 + math.pi/2 - math.atan2(G[1], -G[0])  # summed math.pi/2
+        ### alfa_enc_deg = math.degrees(alfa_enc)
+        # vel_ang_enc = (((G_[1] - v[0])+(G_[0] - v[3])) / 2) / self.robot_radius
+        # vel_ang_enc = (((G_[1] - v[0]) + (G_[0] - v[1])) / 2) / self.robot_radius
+        vel_ang_enc = (((G_[1] - v[0]) + (G_[0] - v[1]) + (-G_[1] + v[2]) + (-G_[0] + v[3])) / 4) / self.robot_radius
+
+        # print(vel_ang_enc, vel_ang_enc2)
+
+        # ##################### #
+        #         90            #
+        #     /---------\       #
+        #     |         |       #
+        # 180 |         | 360/0 #
+        #     |         |       #
+        #     \---------/       #
+        #         270           #
+        # ##################### #
+
+        # print(round(alfa_enc_deg, 2))
+        ### alfa_enc_deg = self.normalize_angles(alfa_enc_deg)
+
+        # if alfa_enc_deg < 0:
+        #     alfa_enc_deg += 360
+        # print(vel_lin_enc, alfa_enc_deg, vel_ang_enc)
+        # print(alfa_enc)
+
+        ### xx = G[0]*0.05
+        ### yy = G[1]*0.05
+        ### theta = math.degrees(vel_ang_enc*0.05)
+        theta = vel_ang_enc*self.d_t
+
+
+        # print(xxx, yyy)
+
+        ### self.coord_rel_x += xx
+        ### self.coord_rel_y += yy
+        self.coord_rel_t += theta
+
+        ### self.coord_rel_t = self.normalize_angles(self.coord_rel_t)
+        # tema que se normalizar o theta aqui!
+
+        ### fi = alfa_enc_deg + self.coord_rel_t  # + self.coord_rel_t + (alfa_enc_deg)
+        fi = alfa_enc + self.coord_rel_t ### + math.pi/2
+        # print(math.degrees(fi), math.degrees(alfa_enc), math.degrees(self.coord_rel_t))
+
+        ### fi = self.normalize_angles(fi)
+        # while fi < 0:
+        #     fi+=360
+        # while fi >= 360:
+        #     fi-=360
+
+        # xx_ = xx * math.cos(math.radians(90 - self.coord_rel_t - alfa_enc_deg))
+        # yy_ = yy * math.sin(math.radians(90 - self.coord_rel_t - alfa_enc_deg))
+        ### xx_ = vel_lin_enc*0.05 * math.cos(math.radians(fi))
+        ### yy_ = vel_lin_enc*0.05 * math.sin(math.radians(fi))
+        xx_ = vel_lin_enc*self.d_t * math.cos(fi)
+        yy_ = vel_lin_enc*self.d_t * math.sin(fi)
+
+
+        #transforms from mm to m
+        xx_ /= 1000
+        yy_ /= 1000
+
+        self.coord_rel_x_ += xx_
+        self.coord_rel_y_ += yy_
+
+        # print(round(xx_, 2), round(yy_, 2), round(fi, 2), end='\t')
+
+        """        
+        print("XX:\t", round(self.coord_rel_x / 10, 2), "\tYY:\t", round(self.coord_rel_y / 10, 2), end='\t')
+        print("X_:\t", round(self.coord_rel_x_ / 10, 2), "\tY_:\t", round(self.coord_rel_y_ / 10, 2),
+              "\tTHETA(deg/rad):\t", round(self.normalize_angles(math.degrees(self.coord_rel_t)), 2),
+               "\t", round(self.coord_rel_t, 2), end='\t|\t')
+
+        print("ALFA(deg/rad):\t", round(self.normalize_angles(math.degrees(alfa_enc)), 2),  "\t", round(alfa_enc, 2),
+              "\tVEL_LIN:\t", round(vel_lin_enc/10, 2), "\tVEL_ANG:\t", round(vel_ang_enc, 2))
+        """
+
+        self.MOT_ENC_ANT = self.MOT_ENC.copy()
+
+        ##### CONVERTING TO ROS2 AXIS SYSTEM #####
+        final_coord_rel_x_ = self.coord_rel_y_
+        final_coord_rel_y_ = -self.coord_rel_x_
+        final_coord_rel_theta_ = self.coord_rel_t
+        final_speed_rel_x_ = G[1]/1000
+        final_speed_rel_y_ = -G[0]/1000
+        final_speed_rel_theta_ = vel_ang_enc
+
+
+        # end = time.time()
+        # print(end - start, end=' ')
+        # time_to_50ms = 0.05 - (end - start)
+        # print(time_to_50ms)
+
+        if self.DEBUG_DRAW_IMAGE:
+            # cv2.circle(self.test_image, (self.xc, self.yc), (int)(self.OBS_THRESH*self.scale), (0, 255, 255), 1)
+            # cv2.line(self.test_image2, (60, (int)(self.yc + 100 - self.OBS_THRESH*self.scale)), (800-60+1, (int)(self.yc + 100 - self.OBS_THRESH*self.scale)), (0, 255, 255), 1)
+            for i in range(10):
+                cv2.line(self.test_image, (int(self.xc + self.scale*i), 0), (int(self.xc + self.scale*i), self.xc*2), (255, 255, 255), 1)
+                cv2.line(self.test_image, (int(self.xc - self.scale*i), 0), (int(self.xc - self.scale*i), self.xc*2), (255, 255, 255), 1)
+                cv2.line(self.test_image, (0, int(self.yc - self.scale*i)), (self.yc*2, int(self.yc - self.scale*i)), (255, 255, 255), 1)
+                cv2.line(self.test_image, (0, int(self.yc + self.scale*i)), (self.yc*2, int(self.yc + self.scale*i)), (255, 255, 255), 1)
+            
+            
+            self.all_pos_x_val.append(final_coord_rel_x_)
+            self.all_pos_y_val.append(final_coord_rel_y_)
+            for i in range(len(self.all_pos_x_val)):
+                cv2.circle(self.test_image, (int(self.yc - self.scale*self.all_pos_y_val[i]), int(self.xc - self.scale * self.all_pos_x_val[i])), 1, (255, 255, 0), -1)
+
+
+            cv2.circle(self.test_image, (int(self.yc - self.scale*final_coord_rel_y_), int(self.xc - self.scale * final_coord_rel_x_)), (int)(self.scale*self.robot_radius_d), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.yc - self.scale*final_coord_rel_y_), int(self.xc - self.scale * final_coord_rel_x_)), (int)(self.scale*self.robot_radius_d/10), (0, 255, 255), 1)
+            cv2.circle(self.test_image, (int(self.yc - self.scale*final_coord_rel_y_ + (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.cos(self.coord_rel_t + math.pi/2)),
+                                         int(self.xc - self.scale*final_coord_rel_x_ - (self.robot_radius_d - self.lidar_radius_d)*self.scale*math.sin(self.coord_rel_t + math.pi/2))), (int)(self.scale*self.lidar_radius_d), (0, 255, 255), -1)
+            
+            cv2.imshow("Odometry", self.test_image)
+            
+            k = cv2.waitKey(1)
+            if k == ord('+'):
+                self.scale /= 0.8
+            if k == ord('-'):
+                self.scale *= 0.8
+            if k == ord('0'):
+                self.all_pos_x_val.clear()
+                self.all_pos_y_val.clear()
+
+            self.test_image[:, :] = 0
+        
+        # return self.coord_rel_x_, self.coord_rel_y_, self.coord_rel_t, G[0]/1000, G[1]/1000, vel_ang_enc
+        return final_coord_rel_x_, final_coord_rel_y_, final_coord_rel_theta_, final_speed_rel_x_, final_speed_rel_y_, final_speed_rel_theta_
+    
+    def normalize_angles(self, ang):
+
+        while ang < 0:
+            ang += 360
+        while ang >= 360:
+            ang -= 360
+
+        return ang
 
 class LowLevelNode(Node):
 
@@ -326,11 +594,6 @@ class LowLevelNode(Node):
         # IMU (for planar robot, just the basic for efficiency)
         self.imu_base_low_level_publisher = self.create_publisher(Imu, "imu_base", 10)
 
-        ########## TEMP ##########
-        self.get_encoders_publisher = self.create_publisher(Encoders, "get_encoders", 10)
-
-
-
         ### Services (Clients) ###
         # RGB 
         self.server_set_rgb = self.create_service(SetRGB, "rgb_mode", self.callback_set_rgb) 
@@ -342,6 +605,7 @@ class LowLevelNode(Node):
         self.prev_cmd_vel = Twist()
 
         self.robot = RobotControl()
+        self.wheel_odometry = WheelOdometry()
 
         self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
         self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
@@ -390,21 +654,6 @@ class LowLevelNode(Node):
             self.errors_low_level_publisher.publish(errors)
             # when the emergency stop is pressed it initially says the robot is undervoltage and half a second later changes to overvoltage
             # it is something that comes from the board... it is not a real error
-
-            # encoders
-            encoders = Odometry()
-            # 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 
-
-
-            ########## TEMP ##########
-            cmd = Encoders()
-            cmd.enc_m1 = (data_stream[2]  << 24) + (data_stream[3]  << 16) + (data_stream[4]  << 8) + data_stream[5]
-            cmd.enc_m2 = (data_stream[6]  << 24) + (data_stream[7]  << 16) + (data_stream[8]  << 8) + data_stream[9]
-            cmd.enc_m3 = (data_stream[10] << 24) + (data_stream[11] << 16) + (data_stream[12] << 8) + data_stream[13]
-            cmd.enc_m4 = (data_stream[14] << 24) + (data_stream[15] << 16) + (data_stream[16] << 8) + data_stream[17]
-            # print(aux_e[0], aux_e[1], aux_e[2], aux_e[3], "|", aux_e[4], aux_e[5], aux_e[6], aux_e[7], "|", aux_e[8], aux_e[9], aux_e[10], aux_e[11], "|", aux_e[12], aux_e[13], aux_e[14], aux_e[15])
-            # print("Enc1: ", cmd.enc_m1, "Enc2: ", cmd.enc_m2, "Enc3: ", cmd.enc_m3, "Enc4: ", cmd.enc_m4)
-            self.get_encoders_publisher.publish(cmd)
 
             # buttons
             buttons = ButtonsLowLevel()
@@ -471,6 +720,55 @@ class LowLevelNode(Node):
                                             0.0,        0.0,        0.000685]  # Based on 1.5° heading accuracy
             
             self.imu_base_low_level_publisher.publish(imu)
+
+            # encoders
+            enc_m1 = (data_stream[2]  << 24) + (data_stream[3]  << 16) + (data_stream[4]  << 8) + data_stream[5]
+            enc_m2 = (data_stream[6]  << 24) + (data_stream[7]  << 16) + (data_stream[8]  << 8) + data_stream[9]
+            enc_m3 = (data_stream[10] << 24) + (data_stream[11] << 16) + (data_stream[12] << 8) + data_stream[13]
+            enc_m4 = (data_stream[14] << 24) + (data_stream[15] << 16) + (data_stream[16] << 8) + data_stream[17]
+            d_x, d_y, d_t, v_x, v_y, v_t = self.wheel_odometry.localization(enc_m1, enc_m2, enc_m3, enc_m4)
+            print("DATA: ", round(d_x,2), "\t", round(d_y,2), "\t", round(d_t,2), "\t", round(v_x,2), "\t", round(v_y,2), "\t", round(v_t,2))
+
+            v_t = (v_t + math.pi) % (2 * math.pi) - math.pi # wraps values between -pi and pi
+
+            encoders = Odometry()
+            encoders.header.stamp = self.get_clock().now().to_msg()
+            encoders.header.frame_id = "odom"
+            encoders.child_frame_id = "base_link"
+
+            encoders.pose.pose.position.x = d_x
+            encoders.pose.pose.position.y = d_y
+            encoders.pose.pose.position.z = 0.0
+            q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, d_t)
+            encoders.pose.pose.orientation.x = q_x
+            encoders.pose.pose.orientation.y = q_y
+            encoders.pose.pose.orientation.z = q_z
+            encoders.pose.pose.orientation.w = q_w
+
+            encoders.twist.twist.linear.x = v_x
+            encoders.twist.twist.linear.y = v_y
+            encoders.twist.twist.linear.z = 0.0
+            encoders.twist.twist.angular.x = 0.0
+            encoders.twist.twist.angular.y = 0.0
+            encoders.twist.twist.angular.z = v_t
+
+            # Covariance (Set lower values if odometry is reliable)
+            encoders.pose.covariance = [0.01,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                         0.0, 0.01,  0.0,  0.0,  0.0,  0.0,
+                                         0.0,  0.0, 0.01,  0.0,  0.0,  0.0,
+                                         0.0,  0.0,  0.0, 0.01,  0.0,  0.0,
+                                         0.0,  0.0,  0.0,  0.0, 0.01,  0.0,
+                                         0.0,  0.0,  0.0,  0.0,  0.0, 0.01]
+
+            encoders.twist.covariance = [0.01,  0.0,  0.0,  0.0,  0.0,  0.0,
+                                          0.0, 0.01,  0.0,  0.0,  0.0,  0.0,
+                                          0.0,  0.0, 0.01,  0.0,  0.0,  0.0,
+                                          0.0,  0.0,  0.0, 0.01,  0.0,  0.0,
+                                          0.0,  0.0,  0.0,  0.0, 0.01,  0.0,
+                                          0.0,  0.0,  0.0,  0.0,  0.0, 0.01]
+            
+            self.wheel_encoders_low_level_publisher.publish(encoders)
+            
 
     def callback_set_rgb(self, request, response):
         # print(request)
