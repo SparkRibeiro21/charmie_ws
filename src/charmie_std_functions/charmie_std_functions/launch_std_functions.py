@@ -280,12 +280,12 @@ class LaunchStdFunctions():
                 output='screen',
                 parameters=[{
                     'laser_scan_topic' : '/scan',
-                    'odom_topic' : '/odom',
-                    'publish_tf' : True,
+                    'odom_topic' : '/rf2o_laser_odometry/odom',
+                    'publish_tf' : False,
                     'base_frame_id' : 'base_link',
                     'odom_frame_id' : 'odom',
                     'init_pose_from_topic' : '',
-                    'freq' : 20.0}],
+                    'freq' : 10.0}],
                 )
         
         self.navigation = Node(package='charmie_navigation_sdnl',
@@ -350,7 +350,20 @@ class LaunchStdFunctions():
                     ('use_sim_time', 'false')
                     ]
         )
+
+        ### robot_localization node ###
+        robot_localization_ekf_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'config', 'ekf.yaml')
         
+
+        self.robot_localization = Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node',
+            output='screen',
+            parameters=[robot_localization_ekf_config_path],
+            )
+
         ### ROSBAG
         # Node to start rosbag recording
         self.rosbag_record = ExecuteProcess(

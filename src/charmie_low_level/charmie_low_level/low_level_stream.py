@@ -314,7 +314,7 @@ class WheelOdometry():
         self.robot_radius = 510/2
 
 
-        self.DEBUG_DRAW_IMAGE = True # debug drawing opencv
+        self.DEBUG_DRAW_IMAGE = False # debug drawing opencv
         self.scale = 0.12*1000
         
         self.xc = 400
@@ -702,9 +702,9 @@ class LowLevelNode(Node):
             if imu.angular_velocity.z >= 32768:  # Convert to signed value
                 imu.angular_velocity.z -= 65536
             imu.angular_velocity.z = imu.angular_velocity.z * math.pi / 180.0 # Convert from °/s to rad/s
-            imu.angular_velocity_covariance = [-1.0,  0.0,    0.0,  
-                                                0.0, -1.0,    0.0,
-                                                0.0,  0.0, 1.2e-7]  # Only yaw rate is used
+            imu.angular_velocity_covariance = [0.001,  0.0,    0.0,  
+                                                0.0, 0.001,    0.0,
+                                                0.0,  0.0, 0.001]  # Only yaw rate is used
             print("Imu (GyroZ):", imu.angular_velocity.z)
 
             orientation.data = (data_stream[23]<<8|data_stream[24])/10
@@ -720,9 +720,9 @@ class LowLevelNode(Node):
             imu.orientation.z = q_z
             imu.orientation.w = q_w
             # Covariance for orientation
-            imu.orientation_covariance = [  0.000685,   0.0,        0.0,
-                                            0.0,        0.000685,   0.0,
-                                            0.0,        0.0,        0.000685]  # Based on 1.5° heading accuracy
+            imu.orientation_covariance = [  0.001,   0.0,        0.0,
+                                            0.0,        0.001,   0.0,
+                                            0.0,        0.0,        0.001]  # Based on 1.5° heading accuracy
             
             self.imu_base_low_level_publisher.publish(imu)
 
@@ -773,6 +773,9 @@ class LowLevelNode(Node):
                                           0.0,  0.0,  0.0,  0.0,  0.0, 0.01]
             
             self.wheel_encoders_low_level_publisher.publish(encoders)
+
+
+            # self.publish_odom_tf2s(encoders) # JUST FOR DEBUGGING
             
 
     def callback_set_rgb(self, request, response):
@@ -948,56 +951,78 @@ class LowLevelNode(Node):
         
 
         # Publish the pan TF of the neck
-        neck_pan_transform = TransformStamped()
+        legs_transform = TransformStamped()
         # Set the timestamp to the current time
-        neck_pan_transform.header.stamp = self.get_clock().now().to_msg()
+        legs_transform.header.stamp = self.get_clock().now().to_msg()
 
         # Set the parent and child frames (the link names)
-        neck_pan_transform.header.frame_id = 'base_link'  # Parent frame
-        neck_pan_transform.child_frame_id = 'legs_link'  # Child frame
+        legs_transform.header.frame_id = 'base_link'  # Parent frame
+        legs_transform.child_frame_id = 'legs_link'  # Child frame
 
         # Set the translation (position) of the neck relative to the base
-        neck_pan_transform.transform.translation.x = -to_make_obstacles_matrixes_match  # Example value
-        neck_pan_transform.transform.translation.y = 0.0  # Example value
-        neck_pan_transform.transform.translation.z = base_link_to_legs_minimum_height+torso._legs_position
+        legs_transform.transform.translation.x = -to_make_obstacles_matrixes_match  # Example value
+        legs_transform.transform.translation.y = 0.0  # Example value
+        legs_transform.transform.translation.z = base_link_to_legs_minimum_height+torso._legs_position
 
         # deg_pan = math.radians(pose.pan)
         # Set the rotation (orientation) of the neck (in quaternion format)
-        neck_pan_transform.transform.rotation.x = 0.0
-        neck_pan_transform.transform.rotation.y = 0.0
-        neck_pan_transform.transform.rotation.z = 0.0
-        neck_pan_transform.transform.rotation.w = 1.0
+        legs_transform.transform.rotation.x = 0.0
+        legs_transform.transform.rotation.y = 0.0
+        legs_transform.transform.rotation.z = 0.0
+        legs_transform.transform.rotation.w = 1.0
 
         # Publish the transform
-        self.tf_broadcaster.sendTransform(neck_pan_transform)
+        self.tf_broadcaster.sendTransform(legs_transform)
 
 
         # Publish the pan TF of the neck
-        neck_pan_transform = TransformStamped()
+        torso_transform = TransformStamped()
         # Set the timestamp to the current time
-        neck_pan_transform.header.stamp = self.get_clock().now().to_msg()
+        torso_transform.header.stamp = self.get_clock().now().to_msg()
 
         # Set the parent and child frames (the link names)
-        neck_pan_transform.header.frame_id = 'legs_link'  # Parent frame
-        neck_pan_transform.child_frame_id = 'torso_link'  # Child frame
+        torso_transform.header.frame_id = 'legs_link'  # Parent frame
+        torso_transform.child_frame_id = 'torso_link'  # Child frame
 
         # Set the translation (position) of the neck relative to the base
-        neck_pan_transform.transform.translation.x = 0.0  # Example value
-        neck_pan_transform.transform.translation.y = 0.0  # Example value
-        neck_pan_transform.transform.translation.z = torso_height_from_legs  # Example value (height)
+        torso_transform.transform.translation.x = 0.0  # Example value
+        torso_transform.transform.translation.y = 0.0  # Example value
+        torso_transform.transform.translation.z = torso_height_from_legs  # Example value (height)
 
         q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, math.radians(torso.torso_position), 0.0)
         # deg_pan = math.radians(pose.pan)
         # Set the rotation (orientation) of the neck (in quaternion format)
-        neck_pan_transform.transform.rotation.x = q_x
-        neck_pan_transform.transform.rotation.y = q_y
-        neck_pan_transform.transform.rotation.z = q_z
-        neck_pan_transform.transform.rotation.w = q_w
+        torso_transform.transform.rotation.x = q_x
+        torso_transform.transform.rotation.y = q_y
+        torso_transform.transform.rotation.z = q_z
+        torso_transform.transform.rotation.w = q_w
 
         # Publish the transform
-        self.tf_broadcaster.sendTransform(neck_pan_transform)
+        self.tf_broadcaster.sendTransform(torso_transform)
 
+    """
+    def publish_odom_tf2s(self, encoders: Odometry):
 
+        # Publish the pan TF of the neck
+        odom_transform = TransformStamped()
+        # Set the timestamp to the current time
+        odom_transform.header.stamp = self.get_clock().now().to_msg()
+
+        # Set the parent and child frames (the link names)
+        odom_transform.header.frame_id = 'odom'  # Parent frame
+        odom_transform.child_frame_id = 'base_link'  # Child frame
+
+        # Set the translation (position) of the neck relative to the base
+        odom_transform.transform.translation.x = encoders.pose.pose.position.x
+        odom_transform.transform.translation.y = encoders.pose.pose.position.y
+        odom_transform.transform.translation.z = 0.0
+
+        # Set the rotation (orientation) of the neck (in quaternion format)
+        odom_transform.transform.rotation = encoders.pose.pose.orientation
+
+        # Publish the transform
+        self.tf_broadcaster.sendTransform(odom_transform)
+    """
 
     def colour_to_string(self, colour=0):
         
