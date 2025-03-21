@@ -2,13 +2,14 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D, Vector3, Twist
+from geometry_msgs.msg import Pose2D, Vector3, Twist, TransformStamped
 from example_interfaces.msg import Bool, Int16, Float32
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 from charmie_interfaces.msg import Encoders, ErrorsMotorBoard, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
 from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs, GetTorso, SetTorso, ActivateBool
 import serial
+import tf2_ros
 import time
 import struct
 import math
@@ -602,6 +603,9 @@ class LowLevelNode(Node):
         # Motors
         self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
 
+        # TF Broadcaster
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+
         self.prev_cmd_vel = Twist()
 
         self.robot = RobotControl()
@@ -673,10 +677,11 @@ class LowLevelNode(Node):
 
             # torso
             torso = TorsoPosition()
-            torso.legs_position = float(data_stream[21])
+            torso.legs_position = float(data_stream[21]/1000)
             torso.torso_position = float(data_stream[22])
             print("Torso:", torso.legs_position, torso.torso_position)
             self.torso_low_level_publisher.publish(torso)
+            self.publish_torso_tf2s(torso)
 
             # orientation
             orientation = Float32()
@@ -933,6 +938,66 @@ class LowLevelNode(Node):
             # print("Torso Stopped 2")
             self.robot.set_omni_flags(self.robot.LIN_ACT_TORSO_ACTIVE, False)
             # nao amnda
+
+    def publish_torso_tf2s(self, torso: TorsoPosition):
+
+        # from urdf file
+        to_make_obstacles_matrixes_match = 0.105
+        torso_height_from_legs = 0.25
+        base_link_to_legs_minimum_height = 0.215
+        
+
+        # Publish the pan TF of the neck
+        neck_pan_transform = TransformStamped()
+        # Set the timestamp to the current time
+        neck_pan_transform.header.stamp = self.get_clock().now().to_msg()
+
+        # Set the parent and child frames (the link names)
+        neck_pan_transform.header.frame_id = 'base_link'  # Parent frame
+        neck_pan_transform.child_frame_id = 'legs_link'  # Child frame
+
+        # Set the translation (position) of the neck relative to the base
+        neck_pan_transform.transform.translation.x = -to_make_obstacles_matrixes_match  # Example value
+        neck_pan_transform.transform.translation.y = 0.0  # Example value
+        neck_pan_transform.transform.translation.z = base_link_to_legs_minimum_height+torso._legs_position
+
+        # deg_pan = math.radians(pose.pan)
+        # Set the rotation (orientation) of the neck (in quaternion format)
+        neck_pan_transform.transform.rotation.x = 0.0
+        neck_pan_transform.transform.rotation.y = 0.0
+        neck_pan_transform.transform.rotation.z = 0.0
+        neck_pan_transform.transform.rotation.w = 1.0
+
+        # Publish the transform
+        self.tf_broadcaster.sendTransform(neck_pan_transform)
+
+
+        # Publish the pan TF of the neck
+        neck_pan_transform = TransformStamped()
+        # Set the timestamp to the current time
+        neck_pan_transform.header.stamp = self.get_clock().now().to_msg()
+
+        # Set the parent and child frames (the link names)
+        neck_pan_transform.header.frame_id = 'legs_link'  # Parent frame
+        neck_pan_transform.child_frame_id = 'torso_link'  # Child frame
+
+        # Set the translation (position) of the neck relative to the base
+        neck_pan_transform.transform.translation.x = 0.0  # Example value
+        neck_pan_transform.transform.translation.y = 0.0  # Example value
+        neck_pan_transform.transform.translation.z = torso_height_from_legs  # Example value (height)
+
+        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, math.radians(torso.torso_position), 0.0)
+        # deg_pan = math.radians(pose.pan)
+        # Set the rotation (orientation) of the neck (in quaternion format)
+        neck_pan_transform.transform.rotation.x = q_x
+        neck_pan_transform.transform.rotation.y = q_y
+        neck_pan_transform.transform.rotation.z = q_z
+        neck_pan_transform.transform.rotation.w = q_w
+
+        # Publish the transform
+        self.tf_broadcaster.sendTransform(neck_pan_transform)
+
+
 
     def colour_to_string(self, colour=0):
         
