@@ -84,6 +84,8 @@ class TaskMain():
         self.omni_move = Vector3()
         self.torso_pos = Pose2D()
 
+        self.start_time = time.time()
+
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
         
@@ -154,7 +156,12 @@ class TaskMain():
                         self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
 
 
-                if new_message:
+                # print(time.time()-self.start_time)
+                if new_message and time.time()-self.start_time > 0.05:
+
+                    print(time.time()-self.start_time)        
+                    self.start_time = time.time()
+
 
                     # Activate motors: only activates if ps4 controller messages are being received
                     if ros2_modules["charmie_low_level"]:
@@ -203,7 +210,10 @@ class TaskMain():
                             self.robot.node.omni_move_publisher.publish(self.omni_move)
 
                     if ros2_modules["charmie_low_level"]: # Torso
-
+                        
+                        pass
+                        ### HAVE TO REVIEW BECAUSE THIS IS SENDING DATA EVERY LOOP!!!!
+                        """
                         if self.motors_active:
 
                             # Torso Movement
@@ -222,6 +232,7 @@ class TaskMain():
                                 self.torso_pos.y = 0.0
 
                             self.robot.node.torso_movement_publisher.publish(self.torso_pos)
+                        """
 
                     if ros2_modules["charmie_speakers"]: # Speak Introduction
                         if ps4_controller.r3 == self.RISING:
