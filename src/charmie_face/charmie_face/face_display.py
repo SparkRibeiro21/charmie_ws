@@ -5,6 +5,7 @@ from rclpy.node import Node
 from example_interfaces.msg import String
 from charmie_interfaces.srv import SetFace
 
+import subprocess
 import time
 import os
 from pathlib import Path
@@ -165,8 +166,55 @@ def main(args=None):
     rclpy.spin(node)
     rclpy.shutdown()
 
+        
+    """
+    import subprocess
+
+    device_id = "10"
+    display_name = "DP-1-2"
+
+    # Build the command
+    command = ["xinput", "map-to-output", device_id, display_name]
+
+    # Run the command
+    try:
+        subprocess.run(command, check=True)
+        print(f"Touchscreen {device_id} successfully mapped to {display_name}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error mapping touchscreen: {e}")
+    """
+
+def get_touchscreen_id(name_contains="touch"):
+
+    #xinput list
+    # xrandr
+    result = subprocess.run(["xinput", "list"], capture_output=True, text=True)
+    for line in result.stdout.splitlines():
+        if name_contains.lower() in line.lower():
+            parts = line.strip().split('\t')
+            for part in parts:
+                if part.startswith("id="):
+                    return part.split('=')[1]
+    return None
+    # return "10" # defualt value for Tiago PC
+
 
 def thread_face_display(node: FaceNode):
+
+    device_id = get_touchscreen_id("Waveshare")  # Or any keyword matching your device
+    display_name = "DP-1-2"
+
+    # this maps the input of the touchscrren to the correct display 
+    if device_id:
+        try:
+            subprocess.run(["xinput", "map-to-output", device_id, display_name], check=True)
+            print(f"Touchscreen {device_id} successfully mapped to {display_name}")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to map: {e}")
+    else:
+        print("Touchscreen not found.")
+
+    print(device_id)
 
     FULLSCREEN = True
     RESOLUTION = [0, 0]
