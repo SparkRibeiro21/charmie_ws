@@ -123,12 +123,6 @@ def generate_launch_description():
                 emulate_tty=True
                 )
     
-    odometry = Node(package='charmie_odometry',
-                executable='odometry',
-                name='odometry',
-                emulate_tty=True
-                )
-    
     navigation = Node(package='charmie_navigation_sdnl',
                 executable='navigation',
                 name='navigation',
@@ -158,7 +152,7 @@ def generate_launch_description():
     # Add a half-second delay before launching each node
     delay = 0.5
 
-    for node in [speakers, low_level, odometry, navigation]: #---------> CHANGE ME
+    for node in [speakers, low_level, navigation]: #---------> CHANGE ME
         delayed_actions.append(TimerAction(period=delay, actions=[node]))
         delay += 1.0
     

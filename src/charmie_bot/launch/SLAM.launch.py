@@ -32,12 +32,6 @@ def generate_launch_description():
     # Add a half-second delay before launching each node
     delay = 0.5
 
-    #create node odometry
-    odometry = Node(package='charmie_odometry',
-                      executable='odometry',
-                      name = 'odometry',
-                      )
-
     #create node low_level 
     low_level = Node(package='charmie_low_level',
                       executable='low_level',
@@ -56,7 +50,7 @@ def generate_launch_description():
                       name = 'ps4_controller',
                       )
     
-    for node in [speakers, low_level, odometry, ps4]: #---------> CHANGE ME
+    for node in [speakers, low_level, ps4]: #---------> CHANGE ME
         delayed_actions.append(TimerAction(period=delay, actions=[node]))
         delay += 0.5
 

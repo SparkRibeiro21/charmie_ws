@@ -268,12 +268,6 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
-        self.odometry = Node(package='charmie_odometry',
-                    executable='odometry',
-                    name='odometry',
-                    emulate_tty=True
-                    )
-        
         self.odometry_lidar = Node(package='rf2o_laser_odometry',
                 executable='rf2o_laser_odometry_node',
                 name='rf2o_laser_odometry',

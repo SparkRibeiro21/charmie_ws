@@ -63,9 +63,6 @@ This folder contains a set of ROS packages developed for the CHARMIE robot, cove
 - **[charmie_obstacles](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_obstacles)**  
   Manages obstacle detection and response for safe navigation.
 
-- **[charmie_odometry](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_odometry)**  
-  Provides odometry data for tracking the robot’s movements and position.
-
 - **[charmie_point_cloud](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_point_cloud)**  
   Processes point cloud data from depth sensors for 3D mapping and perception.
 
