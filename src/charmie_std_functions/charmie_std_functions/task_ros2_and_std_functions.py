@@ -395,6 +395,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_low_level        = self.ros2_modules["charmie_low_level"]
         nodes_used.charmie_llm              = self.ros2_modules["charmie_llm"]
         nodes_used.charmie_navigation       = self.ros2_modules["charmie_navigation"]
+        nodes_used.charmie_nav2             = self.ros2_modules["charmie_nav2"]
         nodes_used.charmie_neck             = self.ros2_modules["charmie_neck"]
         nodes_used.charmie_obstacles        = self.ros2_modules["charmie_obstacles"]
         nodes_used.charmie_point_cloud      = self.ros2_modules["charmie_point_cloud"]
