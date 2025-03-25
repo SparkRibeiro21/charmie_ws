@@ -215,6 +215,12 @@ class LaunchStdFunctions():
                     emulate_tty=True
                     )
         
+        self.charmie_localisation = Node(package='charmie_localisation',
+                    executable='localisation',
+                    name='localisation',
+                    emulate_tty=True
+                    )
+        
         self.face = Node(package='charmie_face',
                     executable='face',
                     name='face',
