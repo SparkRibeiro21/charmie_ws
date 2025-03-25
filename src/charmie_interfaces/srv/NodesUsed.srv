@@ -5,7 +5,9 @@ bool charmie_audio
 bool charmie_face
 bool charmie_head_camera
 bool charmie_hand_camera
+bool charmie_base_camera
 bool charmie_lidar
+bool charmie_lidar_bottom
 bool charmie_llm
 bool charmie_localisation
 bool charmie_low_level

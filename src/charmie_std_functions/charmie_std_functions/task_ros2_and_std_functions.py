@@ -167,7 +167,9 @@ class ROS2TaskNode(Node):
             "charmie_face":             True,
         "charmie_head_camera":      True,
         "charmie_hand_camera":      True,
+        "charmie_base_camera":      False,
         "charmie_lidar":            True,
+        "charmie_lidar_bottom":     False,
             "charmie_llm":              False,
         "charmie_localisation":     False,
             "charmie_low_level":        True,
@@ -386,7 +388,9 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_face             = self.ros2_modules["charmie_face"]
         nodes_used.charmie_head_camera      = self.ros2_modules["charmie_head_camera"]
         nodes_used.charmie_hand_camera      = self.ros2_modules["charmie_hand_camera"]
+        nodes_used.charmie_base_camera      = self.ros2_modules["charmie_base_camera"]
         nodes_used.charmie_lidar            = self.ros2_modules["charmie_lidar"]
+        nodes_used.charmie_lidar_bottom     = self.ros2_modules["charmie_lidar_bottom"]
         nodes_used.charmie_localisation     = self.ros2_modules["charmie_localisation"]
         nodes_used.charmie_low_level        = self.ros2_modules["charmie_low_level"]
         nodes_used.charmie_llm              = self.ros2_modules["charmie_llm"]
