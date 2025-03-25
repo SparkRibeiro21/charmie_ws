@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from tf2_ros import TransformListener, Buffer
+from rclpy.duration import Duration
 from geometry_msgs.msg import Pose2D
 
 import numpy as np
@@ -16,43 +17,64 @@ class LocalisationNode(Node):
         self.get_logger().info("Initialised CHARMIE Localisation Node")
 
         # TF2 Buffer and Listener
-        self.tf_buffer = Buffer()
+        # self.tf_buffer = Buffer()
+        self.tf_buffer = Buffer(cache_time=Duration(seconds=1.0))
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
         # Create a publisher for the robot pose
         self.pose_publisher = self.create_publisher(Pose2D, "robot_localisation", 10)
 
-        # Timer to update the pose at 10Hz
-        self.timer = self.create_timer(0.1, self.publish_robot_pose)
+        # Timer to update the pose at 20Hz
+        self.timer = self.create_timer(0.05, self.publish_robot_pose)
 
 
     def publish_robot_pose(self):
         try:
-            # Get robot pose in map frame
-            transform = self.tf_buffer.lookup_transform("map", "base_link", rclpy.time.Time())
 
-            # Extract position
-            x = transform.transform.translation.x
-            y = transform.transform.translation.y
+            requested_time = rclpy.time.Time()
 
-            # Extract orientation (convert quaternion to yaw)
-            qx = transform.transform.rotation.x
-            qy = transform.transform.rotation.y
-            qz = transform.transform.rotation.z
-            qw = transform.transform.rotation.w
-            yaw = self.get_yaw_from_quaternion(qx, qy, qz, qw)
+            if self.tf_buffer.can_transform("map", "base_link", requested_time):
+                # Get robot pose in map frame
+                transform = self.tf_buffer.lookup_transform("map", "base_link", requested_time)
+                
+                # Check if the transform is recent (less than 0.5s old)
+                tf_time = rclpy.time.Time.from_msg(transform.header.stamp)
+                now = self.get_clock().now()
+                age = now - tf_time
 
-            # Publish Pose2D message
-            pose_msg = Pose2D()
-            pose_msg.x = x
-            pose_msg.y = y
-            pose_msg.theta = yaw  # In radians
-            self.pose_publisher.publish(pose_msg)
+                if age.nanoseconds > 500_000_000:  # 0.5 seconds
+                    print(f"⚠️ Transform is too old! Age: {age.nanoseconds / 1e9:.2f}s")
+                    # self.get_logger().warn(f"⚠️ Transform is too old! Age: {age.nanoseconds / 1e9:.2f}s")
+                    return  # Skip publishing
 
-            self.get_logger().info(f"Published Robot Pose: x={x:.2f}, y={y:.2f}, yaw={math.degrees(yaw):.2f}°")
+                # Extract position
+                x = transform.transform.translation.x
+                y = transform.transform.translation.y
+
+                # Extract orientation (convert quaternion to yaw)
+                qx = transform.transform.rotation.x
+                qy = transform.transform.rotation.y
+                qz = transform.transform.rotation.z
+                qw = transform.transform.rotation.w
+                yaw = self.get_yaw_from_quaternion(qx, qy, qz, qw)
+
+                # Publish Pose2D message
+                pose_msg = Pose2D()
+                pose_msg.x = x
+                pose_msg.y = y
+                pose_msg.theta = yaw  # In radians
+                self.pose_publisher.publish(pose_msg)
+
+                print(f"Published Robot Pose: x={x:.2f}, y={y:.2f}, yaw={math.degrees(yaw):.2f}°")
+            
+            else:
+                print("2 Could not get transform: map -> base_link")
+                # self.get_logger().warn("222 Could not get transform: map -> base_link")
+                pass
 
         except Exception as e:
-            self.get_logger().warn(f"Could not get transform: {str(e)}")
+            print(f"Could not get transform: {str(e)}")
+            # self.get_logger().warn(f"Could not get transform: {str(e)}")
 
     def get_yaw_from_quaternion(self, x, y, z, w):
         """ Convert quaternion (x, y, z, w) to Yaw (rotation around Z-axis). """
