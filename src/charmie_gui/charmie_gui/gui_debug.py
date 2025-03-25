@@ -595,6 +595,7 @@ class CheckNodesMain():
         self.CHECK_HEAD_CAMERA_NODE = False
         self.CHECK_HAND_CAMERA_NODE = False
         self.CHECK_LIDAR_NODE = False
+        self.CHECK_LIDAR_BOTTOM_NODE = False
         self.CHECK_LLM_NODE = False
         self.CHECK_LOCALISATION_NODE = False
         self.CHECK_LOW_LEVEL_NODE = False
@@ -661,13 +662,18 @@ class CheckNodesMain():
             else:
                 self.CHECK_HAND_CAMERA_NODE = True
 
-            ########## MISSING CHECK FOR BOTTOM LIDAR, IF NEEDED ##########
             # LIDAR
             if current_time - self.node.lidar_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
                 # self.node.get_logger().warn("Waiting for Topic Lidar ...")
                 self.CHECK_LIDAR_NODE = False
             else:
                 self.CHECK_LIDAR_NODE = True
+            # LIDAR Bottom
+            if current_time - self.node.lidar_bottom_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                self.CHECK_LIDAR_BOTTOM_NODE = False
+            else:
+                self.CHECK_LIDAR_BOTTOM_NODE = True
 
             # LLM
             if not self.node.llm_demonstration_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -910,6 +916,7 @@ class DebugVisualMain():
         self.init_pos_w_rect_check_nodes = 15
         self.init_pos_h_rect_check_nodes = 40
         self.deviation_pos_h_rect_check_nodes = 24
+        self.deviation_pos_w_rect_check_nodes = 20
         self.square_size_rect_check_nodes = 10
 
         self.ARM_UFACTORY_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*0, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -919,6 +926,7 @@ class DebugVisualMain():
         self.HEAD_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.HAND_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LIDAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LIDAR_BOTTOM_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LLM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOCALISATION_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1095,8 +1103,12 @@ class DebugVisualMain():
         
         # LIDAR
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar, self.check_nodes.CHECK_LIDAR_NODE)
-        self.draw_text("Lidar", self.text_font, tc, self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
+        # self.draw_text("Lidar", self.text_font, tc, self.CHARMIE_LIDAR_NODE_RECT.x+2*self.CHARMIE_LIDAR_NODE_RECT.width, self.CHARMIE_LIDAR_NODE_RECT.y-2)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_NODE_RECT)
+        # LIDAR Bottom
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar, self.check_nodes.CHECK_LIDAR_BOTTOM_NODE)
+        self.draw_text("LIDARs (T, B)", self.text_font, tc, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT.x+2*self.CHARMIE_LIDAR_BOTTOM_NODE_RECT.width, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT)
         
         # LLM
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_llm, self.check_nodes.CHECK_LLM_NODE)
