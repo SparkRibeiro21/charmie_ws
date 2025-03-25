@@ -176,7 +176,6 @@ class DebugVisualNode(Node):
 
         self.lidar_time = 0.0
         self.lidar_bottom_time = 0.0
-        self.odometry_time = 0.0
         self.ps4_controller_time = 0.0
         self.localisation_time = 0.0
         self.amcl_time = 0.0
@@ -307,7 +306,6 @@ class DebugVisualNode(Node):
         # bool charmie_nav2
         # bool charmie_neck
         # bool charmie_obstacles
-        # bool charmie_odometry
         # bool charmie_point_cloud
         # bool charmie_ps4_controller
         # bool charmie_speakers
@@ -550,7 +548,6 @@ class DebugVisualNode(Node):
         self.all_pos_x_val.append(self.robot_pose.x)
         self.all_pos_y_val.append(self.robot_pose.y)
         
-        # self.odometry_time = time.time()
         # self.robot_pose.theta = pose.theta
     
     def amcl_pose_callback(self, msg: PoseWithCovarianceStamped):
@@ -605,7 +602,7 @@ class CheckNodesMain():
         self.CHECK_NAV2_NODE = False
         self.CHECK_NECK_NODE = False
         self.CHECK_OBSTACLES_NODE = False
-        self.CHECK_ODOMETRY_NODE = False
+        # self.CHECK_ODOMETRY_NODE = False
         self.CHECK_POINT_CLOUD_NODE = False
         self.CHECK_PS4_CONTROLLER_NODE = False
         self.CHECK_SPEAKERS_NODE = False
@@ -723,11 +720,11 @@ class CheckNodesMain():
                 self.CHECK_OBSTACLES_NODE = True
 
             # ODOMETRY
-            if current_time - self.node.odometry_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
-                # self.node.get_logger().warn("Waiting for Topic Odometry ...")
-                self.CHECK_ODOMETRY_NODE = False
-            else:
-                self.CHECK_ODOMETRY_NODE = True
+            # if current_time - self.node.odometry_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+            #     # self.node.get_logger().warn("Waiting for Topic Odometry ...")
+            #     self.CHECK_ODOMETRY_NODE = False
+            # else:
+            #     self.CHECK_ODOMETRY_NODE = True
 
             # POINT CLOUD
             if not self.node.point_cloud_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -930,7 +927,7 @@ class DebugVisualMain():
         self.CHARMIE_NAV2_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_ODOMETRY_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        # self.CHARMIE_ODOMETRY_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_POINT_CLOUD_NODE_RECT      = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_PS4_CONTROLLER_NODE_RECT   = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1137,9 +1134,9 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_OBSTACLES_NODE_RECT)
 
         # ODOMETRY
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_odometry, self.check_nodes.CHECK_ODOMETRY_NODE)
-        self.draw_text("Odometry", self.text_font, tc, self.CHARMIE_ODOMETRY_NODE_RECT.x+2*self.CHARMIE_ODOMETRY_NODE_RECT.width, self.CHARMIE_ODOMETRY_NODE_RECT.y-2)
-        pygame.draw.rect(self.WIN, rc, self.CHARMIE_ODOMETRY_NODE_RECT)
+        # tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_odometry, self.check_nodes.CHECK_ODOMETRY_NODE)
+        # self.draw_text("Odometry", self.text_font, tc, self.CHARMIE_ODOMETRY_NODE_RECT.x+2*self.CHARMIE_ODOMETRY_NODE_RECT.width, self.CHARMIE_ODOMETRY_NODE_RECT.y-2)
+        # pygame.draw.rect(self.WIN, rc, self.CHARMIE_ODOMETRY_NODE_RECT)
 
         # POINT CLOUD
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_point_cloud, self.check_nodes.CHECK_POINT_CLOUD_NODE)
