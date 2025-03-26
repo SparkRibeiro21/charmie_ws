@@ -7,11 +7,10 @@ from example_interfaces.msg import Bool, Int16, Float32
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 from charmie_interfaces.msg import Encoders, ErrorsMotorBoard, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
-from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs, GetTorso, SetTorso, ActivateBool
+from charmie_interfaces.srv import SetAcceleration, SetRGB, GetLowLevelButtons, GetVCCs, GetTorso, SetTorso, ActivateBool, SetPoseWithCovarianceStamped
 import serial
 import tf2_ros
 import time
-import struct
 import math
 import cv2
 import numpy as np
@@ -600,6 +599,8 @@ class LowLevelNode(Node):
         self.server_set_rgb = self.create_service(SetRGB, "rgb_mode", self.callback_set_rgb) 
         # Torso
         self.server_set_torso_position = self.create_service(SetTorso, "set_torso_position", self.callback_set_torso_position)
+        # Initial Position
+        self.internal_set_initial_position_define_north = self.create_service(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north", self.callback_set_initial_position_define_north)
         # Motors
         self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
 
@@ -824,6 +825,21 @@ class LowLevelNode(Node):
         response.success = True
         response.message = "Set torso L: " + str(request.legs) + ", T: " + str(request.torso)
         return response
+    
+    def callback_set_initial_position_define_north(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # geometry_msgs/PoseWithCovarianceStamped pose  # PoseWithCovarianceStamped pose to be set
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages.
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "..."
+        return response
+    
     
     def callback_activate_motors(self, request, response):
         # print(request)

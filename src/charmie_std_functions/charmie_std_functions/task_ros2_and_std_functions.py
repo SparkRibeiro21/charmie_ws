@@ -12,7 +12,8 @@ from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, B
     Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, \
-    SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking
+    SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking, \
+    SetPoseWithCovarianceStamped
 
 import cv2 
 # import threading
@@ -144,6 +145,7 @@ class ROS2TaskNode(Node):
         # self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
         # self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
+        self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
         # GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
@@ -1648,6 +1650,8 @@ class RobotStdFunctions():
                 else:
                     self.node.new_amcl_pose_msg = False
                     initial_pose_correctly_received_by_nav2 = False
+
+            # here put code for internal definition of NORTH for yaw from imu 
 
         else:
 
