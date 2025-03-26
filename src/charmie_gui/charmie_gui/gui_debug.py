@@ -184,6 +184,8 @@ class DebugVisualNode(Node):
         self.head_depth_camera_time = 0.0
         self.hand_camera_time = 0.0
         self.hand_depth_camera_time = 0.0
+        self.base_camera_time = 0.0
+        self.base_depth_camera_time = 0.0
 
         self.last_head_camera_time = 0.0
         self.last_head_depth_camera_time = 0.0
@@ -353,7 +355,6 @@ class DebugVisualNode(Node):
         self.last_hand_depth_camera_time = self.hand_depth_camera_time
         self.hand_depth_camera_time = time.time()
         self.hand_depth_fps = round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 1)
-
 
     def get_aligned_depth_image_head_callback(self, img: Image):
         self.head_depth = img
@@ -594,6 +595,7 @@ class CheckNodesMain():
         self.CHECK_FACE_NODE = False
         self.CHECK_HEAD_CAMERA_NODE = False
         self.CHECK_HAND_CAMERA_NODE = False
+        self.CHECK_BASE_CAMERA_NODE = False
         self.CHECK_LIDAR_NODE = False
         self.CHECK_LIDAR_BOTTOM_NODE = False
         self.CHECK_LLM_NODE = False
@@ -654,13 +656,18 @@ class CheckNodesMain():
                 self.CHECK_HEAD_CAMERA_NODE = False
             else:
                 self.CHECK_HEAD_CAMERA_NODE = True
-
             # HAND CAMERA
             if current_time - self.node.hand_camera_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
                 # self.node.get_logger().warn("Waiting for Topic Hand Camera ...")
                 self.CHECK_HAND_CAMERA_NODE = False
             else:
                 self.CHECK_HAND_CAMERA_NODE = True
+            # BASE CAMERA
+            if current_time - self.node.base_camera_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Topic Hand Camera ...")
+                self.CHECK_BASE_CAMERA_NODE = False
+            else:
+                self.CHECK_BASE_CAMERA_NODE = True
 
             # LIDAR
             if current_time - self.node.lidar_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
@@ -813,7 +820,7 @@ class DebugVisualMain():
         self.PURPLE  = (132, 56,255)
         self.CYAN    = (  0,255,255)
 
-        self.WIDTH, self.HEIGHT = 1387, 752
+        self.WIDTH, self.HEIGHT = 1420, 752
 
         self.BB_WIDTH = 3
 
@@ -821,7 +828,7 @@ class DebugVisualMain():
         self.cam_height_ = 360
         self.camera_resize_ratio = 1.0
         self.cams_initial_height = 10
-        self.cams_initial_width = 165
+        self.cams_initial_width = 200
 
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
         self.map_init_height = 260
@@ -924,7 +931,8 @@ class DebugVisualMain():
         self.CHARMIE_AUDIO_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*2, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_FACE_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.HEAD_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.HAND_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.HAND_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.BASE_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LIDAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LIDAR_BOTTOM_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LLM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1092,14 +1100,21 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_FACE_NODE_RECT)
 
         # HEAD CAMERA
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_head_camera, self.check_nodes.CHECK_HEAD_CAMERA_NODE)
-        self.draw_text("Head Camera", self.text_font, tc, self.HEAD_CAMERA_NODE_RECT.x+2*self.HEAD_CAMERA_NODE_RECT.width, self.HEAD_CAMERA_NODE_RECT.y-2)
+        tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_head_camera, self.check_nodes.CHECK_HEAD_CAMERA_NODE)
+        # self.draw_text("Head Camera", self.text_font, tc, self.HEAD_CAMERA_NODE_RECT.x+2*self.HEAD_CAMERA_NODE_RECT.width, self.HEAD_CAMERA_NODE_RECT.y-2)
         pygame.draw.rect(self.WIN, rc, self.HEAD_CAMERA_NODE_RECT)
-        
         # HAND CAMERA
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_hand_camera, self.check_nodes.CHECK_HAND_CAMERA_NODE)
-        self.draw_text("Hand Camera", self.text_font, tc, self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
+        tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_hand_camera, self.check_nodes.CHECK_HAND_CAMERA_NODE)
+        # self.draw_text("Hand Camera", self.text_font, tc, self.HAND_CAMERA_NODE_RECT.x+2*self.HAND_CAMERA_NODE_RECT.width, self.HAND_CAMERA_NODE_RECT.y-2)
         pygame.draw.rect(self.WIN, rc, self.HAND_CAMERA_NODE_RECT)
+        # BASE CAMERA
+        tc3, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_base_camera, self.check_nodes.CHECK_BASE_CAMERA_NODE)
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L or tc3 == self.BLUE_L:
+            tc = self.BLUE_L
+        else:
+            tc = self.WHITE
+        self.draw_text("Cams (H, G, B)", self.text_font, tc, self.BASE_CAMERA_NODE_RECT.x+2*self.BASE_CAMERA_NODE_RECT.width, self.BASE_CAMERA_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.BASE_CAMERA_NODE_RECT)
         
         # LIDAR
         tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar, self.check_nodes.CHECK_LIDAR_NODE)
