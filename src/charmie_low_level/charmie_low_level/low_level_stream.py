@@ -289,8 +289,8 @@ class RobotControl:
                 ctr+=1
 
             # print("ctr = ", ctr)
-            print(self.data_stream)
-            print(self.ser.in_waiting)
+            # print(self.data_stream)
+            # print(self.ser.in_waiting)
 
             # Clear the serial buffer after reading
             # self.ser.reset_input_buffer()
@@ -612,6 +612,10 @@ class LowLevelNode(Node):
         self.robot = RobotControl()
         self.wheel_odometry = WheelOdometry()
 
+        self.current_orientation = 0.0
+        self.orientation_at_received_initialpose = 0.0
+        self.initialpose_to_north_orientation = 0.0
+
         self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
         self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
@@ -655,7 +659,7 @@ class LowLevelNode(Node):
             errors.motor2_b2_trip_error = bool(data_stream[1]>>4 & 1)
             errors.motor1_b2_short_error = bool(data_stream[1]>>3 & 1)
             errors.motor1_b2_trip_error = bool(data_stream[1]>>2 & 1)
-            print("Errors:", errors.undervoltage_error, errors.overvoltage_error)
+            # print("Errors:", errors.undervoltage_error, errors.overvoltage_error)
             self.errors_low_level_publisher.publish(errors)
             # when the emergency stop is pressed it initially says the robot is undervoltage and half a second later changes to overvoltage
             # it is something that comes from the board... it is not a real error
@@ -666,31 +670,34 @@ class LowLevelNode(Node):
             buttons.debug_button2 = bool((data_stream[18] >> 1) & 1)
             buttons.debug_button3 = bool((data_stream[18] >> 2) & 1)
             buttons.start_button  = bool((data_stream[18] >> 3) & 1)
-            print("Buttons:", buttons.debug_button1, buttons.debug_button2, buttons.debug_button3, buttons.start_button)
+            # print("Buttons:", buttons.debug_button1, buttons.debug_button2, buttons.debug_button3, buttons.start_button)
             self.buttons_low_level_publisher.publish(buttons)
 
             # vccs
             vccs = VCCsLowLevel()
             vccs.battery_voltage = ((data_stream[19]/10)*2)+1.0
             vccs.emergency_stop = bool(data_stream[20])
-            print("VCCS:", vccs.battery_voltage, vccs.emergency_stop)
+            # print("VCCS:", vccs.battery_voltage, vccs.emergency_stop)
             self.vccs_low_level_publisher.publish(vccs)
 
             # torso
             torso = TorsoPosition()
             torso.legs_position = float(data_stream[21]/1000)
             torso.torso_position = float(data_stream[22])
-            print("Torso:", torso.legs_position, torso.torso_position)
+            # print("Torso:", torso.legs_position, torso.torso_position)
             self.torso_low_level_publisher.publish(torso)
             self.publish_torso_tf2s(torso)
 
             # orientation
             orientation = Float32()
-            orientation.data = (data_stream[23]<<8|data_stream[24])/10
-            orientation.data = 90.0 - orientation.data  # Convert to ROS right-handed frame
-            if orientation.data < 0:
+            orientation.data = -(data_stream[23]<<8|data_stream[24])/10
+            self.current_orientation = orientation.data # for standardization with initial_pose NORTH configuration
+            
+            orientation.data = orientation.data - self.orientation_at_received_initialpose + self.initialpose_to_north_orientation
+
+            while orientation.data < 0:
                 orientation.data += 360.0
-            elif orientation.data >= 360:
+            while orientation.data >= 360:
                 orientation.data -= 360.0
             print("Orientation:", orientation.data)
             self.orientation_low_level_publisher.publish(orientation)
@@ -706,7 +713,7 @@ class LowLevelNode(Node):
             imu.angular_velocity_covariance = [0.001,  0.0,    0.0,  
                                                 0.0, 0.001,    0.0,
                                                 0.0,  0.0, 0.001]  # Only yaw rate is used
-            print("Imu (GyroZ):", imu.angular_velocity.z)
+            # print("Imu (GyroZ):", imu.angular_velocity.z)
 
             orientation.data = (data_stream[23]<<8|data_stream[24])/10
             orientation.data = 90.0 - orientation.data  # Convert to ROS right-handed frame
@@ -733,7 +740,7 @@ class LowLevelNode(Node):
             enc_m3 = (data_stream[10] << 24) + (data_stream[11] << 16) + (data_stream[12] << 8) + data_stream[13]
             enc_m4 = (data_stream[14] << 24) + (data_stream[15] << 16) + (data_stream[16] << 8) + data_stream[17]
             d_x, d_y, d_t, v_x, v_y, v_t = self.wheel_odometry.localization(enc_m1, enc_m2, enc_m3, enc_m4)
-            print("DATA: ", round(d_x,2), "\t", round(d_y,2), "\t", round(d_t,2), "\t", round(v_x,2), "\t", round(v_y,2), "\t", round(v_t,2))
+            # print("DATA: ", round(d_x,2), "\t", round(d_y,2), "\t", round(d_t,2), "\t", round(v_x,2), "\t", round(v_y,2), "\t", round(v_t,2))
 
             v_t = (v_t + math.pi) % (2 * math.pi) - math.pi # wraps values between -pi and pi
 
@@ -836,8 +843,17 @@ class LowLevelNode(Node):
         # string message  # informational, e.g. for error messages.
 
         # returns whether the message was played and some informations regarding status
+
+        qx = request.pose.pose.pose.orientation.x
+        qy = request.pose.pose.pose.orientation.y
+        qz = request.pose.pose.pose.orientation.z
+        qw = request.pose.pose.pose.orientation.w
+        
+        self.orientation_at_received_initialpose = self.current_orientation
+        self.initialpose_to_north_orientation = math.degrees(self.get_yaw_from_quaternion(qx, qy, qz, qw))
+
         response.success = True
-        response.message = "..."
+        response.message = "Successfully Defined North Orientation"
         return response
     
     
@@ -855,7 +871,7 @@ class LowLevelNode(Node):
 
         # returns whether the message was played and some informations regarding status
         response.success = True
-        response.message = "Sucessfully Activated Motors to: " + str(request.activate)
+        response.message = "Successfully Activated Motors to: " + str(request.activate)
         return response
 
     def omni_move_callback(self, omni:Vector3):
@@ -1147,6 +1163,12 @@ class LowLevelNode(Node):
         #print(qx,qy,qz,qw)
   
         return [qx, qy, qz, qw]
+
+    def get_yaw_from_quaternion(self, x, y, z, w):
+        """ Convert quaternion (x, y, z, w) to Yaw (rotation around Z-axis). """
+        t3 = 2.0 * (w * z + x * y)
+        t4 = 1.0 - 2.0 * (y * y + z * z)
+        return math.atan2(t3, t4)  # Yaw angle in radians
 
 def main(args=None):
     rclpy.init(args=args)

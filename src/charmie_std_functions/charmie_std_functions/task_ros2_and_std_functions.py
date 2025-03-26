@@ -929,6 +929,11 @@ class ROS2TaskNode(Node):
     
         future = self.activate_motors_client.call_async(request)
         future.add_done_callback(self.callback_call_activate_motors)
+
+    def call_internal_set_initial_position_define_north_command_server(self, request=SetPoseWithCovarianceStamped.Request(), wait_for_end_of=True):
+
+        self.internal_set_initial_position_define_north_client.call_async(request)
+        
         
     def callback_call_activate_motors(self, future): 
 
@@ -1651,7 +1656,10 @@ class RobotStdFunctions():
                     self.node.new_amcl_pose_msg = False
                     initial_pose_correctly_received_by_nav2 = False
 
-            # here put code for internal definition of NORTH for yaw from imu 
+            # Internal definition of NORTH for standardization of orientation from low_level  
+            request = SetPoseWithCovarianceStamped.Request()
+            request.pose = initial_pose
+            self.node.call_internal_set_initial_position_define_north_command_server(request=request)
 
         else:
 
