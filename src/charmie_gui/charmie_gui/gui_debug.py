@@ -820,15 +820,16 @@ class DebugVisualMain():
         self.PURPLE  = (132, 56,255)
         self.CYAN    = (  0,255,255)
 
-        self.WIDTH, self.HEIGHT = 1420, 752
+        self.WIDTH, self.HEIGHT = 1450, 752
 
         self.BB_WIDTH = 3
 
+        self.button_size = 30
         self.cam_width_ = 640
         self.cam_height_ = 360
         self.camera_resize_ratio = 1.0
         self.cams_initial_height = 10
-        self.cams_initial_width = 200
+        self.cams_initial_width = int(205 + 0.5 + self.button_size*self.camera_resize_ratio)
 
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
         self.map_init_height = 260
@@ -867,7 +868,6 @@ class DebugVisualMain():
         self.text_font   = pygame.font.SysFont(None, 24)
         self.text_map_font   = pygame.font.SysFont(None, 20)
 
-        self.button_size = 30
 
         self.button_zoom_in = Button(self.WIN, self.map_init_width+self.MAP_SIDE-(5.5*self.button_size*self.camera_resize_ratio), self.map_init_height-(self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
                                      text='Z+', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
@@ -893,6 +893,44 @@ class DebugVisualMain():
                                      text='R', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
                                      onClick=lambda: self.button_shift_right_function())
         
+        self.top_placeholder_cam1_rgb = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), self.cams_initial_height+(0*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='H', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="head", rgb_or_depth="rgb", top_or_bottom="top"))
+        self.top_placeholder_cam2_rgb = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), self.cams_initial_height+(1*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='G', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="gripper", rgb_or_depth="rgb", top_or_bottom="top"))
+        self.top_placeholder_cam3_rgb = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), self.cams_initial_height+(2*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='B', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="base", rgb_or_depth="rgb", top_or_bottom="top"))
+        self.top_placeholder_cam1_depth = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), self.cams_initial_height+(3.5*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='HD', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="head", rgb_or_depth="depth", top_or_bottom="top"))
+        self.top_placeholder_cam2_depth = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), self.cams_initial_height+(4.5*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='GD', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="gripper", rgb_or_depth="depth", top_or_bottom="top"))
+        self.top_placeholder_cam3_depth = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), self.cams_initial_height+(5.5*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='BD', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="base", rgb_or_depth="depth", top_or_bottom="top"))
+        
+        self.bottom_placeholder_cam1_rgb = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), 2*self.cams_initial_height+self.cam_height_+(0*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='H', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="head", rgb_or_depth="rgb", top_or_bottom="bottom"))
+        self.bottom_placeholder_cam2_rgb = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), 2*self.cams_initial_height+self.cam_height_+(1*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='G', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="gripper", rgb_or_depth="rgb", top_or_bottom="bottom"))
+        self.bottom_placeholder_cam3_rgb = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), 2*self.cams_initial_height+self.cam_height_+(2*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='B', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="base", rgb_or_depth="rgb", top_or_bottom="bottom"))
+        self.bottom_placeholder_cam1_depth = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), 2*self.cams_initial_height+self.cam_height_+(3.5*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='HD', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="head", rgb_or_depth="depth", top_or_bottom="bottom"))
+        self.bottom_placeholder_cam2_depth = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), 2*self.cams_initial_height+self.cam_height_+(4.5*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='GD', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="gripper", rgb_or_depth="depth", top_or_bottom="bottom"))
+        self.bottom_placeholder_cam3_depth = Button(self.WIN, self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio), 2*self.cams_initial_height+self.cam_height_+(5.5*self.button_size*self.camera_resize_ratio), self.button_size*self.camera_resize_ratio, self.button_size*self.camera_resize_ratio,
+                                                text='BD', fontSize=16, textColour=self.WHITE, inactiveColour=(200, 50, 0), hoverColour=(150, 0, 0), pressedColour=(255, 75, 0), radius=5,
+                                                onClick=lambda: self.set_camera_visualization(camera_id="base", rgb_or_depth="depth", top_or_bottom="bottom"))
+
         # self.textbox = TextBox(self.WIN, 500, 500, 800, 80, fontSize=50,
         #           borderColour=(255, 0, 0), textColour=(0, 200, 0),
         #           onSubmit=self.output, radius=10, borderThickness=5)        
@@ -1014,6 +1052,11 @@ class DebugVisualMain():
         self.curr_tracking = TrackingMask()
         self.last_tracking = TrackingMask()
 
+        self.top_camera_id = "head"
+        self.top_caemra_type = "rgb"
+        self.bottom_camera_id = "gripper"
+        self.bottom_camera_type = "rgb"
+
         self.show_navigation_locations = False
 
         # robot info
@@ -1065,6 +1108,15 @@ class DebugVisualMain():
 
     def button_shift_right_function(self):
         self.MAP_ADJUST_X += self.MAP_SHIFT_INC
+
+    def set_camera_visualization(self, camera_id, rgb_or_depth, top_or_bottom):
+        print(camera_id, rgb_or_depth, top_or_bottom)
+        if top_or_bottom == "top":
+            self.top_camera_id = camera_id
+            self.top_caemra_type = rgb_or_depth
+        else: # bottom
+            self.bottom_camera_id = camera_id
+            self.bottom_camera_type = rgb_or_depth
     
     def draw_text(self, text, font, text_col, x, y):
         img = font.render(text, True, text_col)
@@ -1425,7 +1477,6 @@ class DebugVisualMain():
         self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+7.5-0.6))
 
     def draw_activates(self):
-
 
         self.draw_text("Activate YOLO Objects: (Head/Hand)", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, self.cams_initial_height)
         self.draw_text("Activate YOLO Pose:", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+self.cams_initial_height)
@@ -1815,6 +1866,8 @@ class DebugVisualMain():
         # self.cam_width_ = 640
         # self.cam_height_ = 360
 
+        self.cams_initial_width = int(205 + 0.5 + self.button_size*self.camera_resize_ratio)
+
         # Get current window size
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
         # print(self.WIDTH, self.HEIGHT)
@@ -1871,7 +1924,60 @@ class DebugVisualMain():
         self.button_shift_down.setWidth(self.button_size*self.camera_resize_ratio)
         self.button_shift_left.setWidth(self.button_size*self.camera_resize_ratio)
         self.button_shift_right.setWidth(self.button_size*self.camera_resize_ratio)
+
+        # camera buttons        
+        self.top_placeholder_cam1_rgb.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam2_rgb.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam3_rgb.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam1_depth.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam2_depth.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam3_depth.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam1_rgb.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam2_rgb.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam3_rgb.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam1_depth.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam2_depth.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam3_depth.setX(self.cams_initial_width-(1*self.button_size*self.camera_resize_ratio))
+
+        self.top_placeholder_cam1_rgb.setY(self.cams_initial_height+(0*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam2_rgb.setY(self.cams_initial_height+(1*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam3_rgb.setY(self.cams_initial_height+(2*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam1_depth.setY(self.cams_initial_height+(3.5*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam2_depth.setY(self.cams_initial_height+(4.5*self.button_size*self.camera_resize_ratio))
+        self.top_placeholder_cam3_depth.setY(self.cams_initial_height+(5.5*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam1_rgb.setY(2*self.cams_initial_height+self.cam_height_+(0*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam2_rgb.setY(2*self.cams_initial_height+self.cam_height_+(1*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam3_rgb.setY(2*self.cams_initial_height+self.cam_height_+(2*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam1_depth.setY(2*self.cams_initial_height+self.cam_height_+(3.5*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam2_depth.setY(2*self.cams_initial_height+self.cam_height_+(4.5*self.button_size*self.camera_resize_ratio))
+        self.bottom_placeholder_cam3_depth.setY(2*self.cams_initial_height+self.cam_height_+(5.5*self.button_size*self.camera_resize_ratio))
         
+        self.top_placeholder_cam1_rgb.setHeight(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam2_rgb.setHeight(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam3_rgb.setHeight(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam1_depth.setHeight(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam2_depth.setHeight(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam3_depth.setHeight(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam1_rgb.setHeight(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam2_rgb.setHeight(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam3_rgb.setHeight(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam1_depth.setHeight(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam2_depth.setHeight(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam3_depth.setHeight(self.button_size*self.camera_resize_ratio)
+        
+        self.top_placeholder_cam1_rgb.setWidth(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam2_rgb.setWidth(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam3_rgb.setWidth(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam1_depth.setWidth(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam2_depth.setWidth(self.button_size*self.camera_resize_ratio)
+        self.top_placeholder_cam3_depth.setWidth(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam1_rgb.setWidth(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam2_rgb.setWidth(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam3_rgb.setWidth(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam1_depth.setWidth(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam2_depth.setWidth(self.button_size*self.camera_resize_ratio)
+        self.bottom_placeholder_cam3_depth.setWidth(self.button_size*self.camera_resize_ratio)
+
     def draw_map(self):
         
         self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
