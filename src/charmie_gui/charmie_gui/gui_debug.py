@@ -501,7 +501,7 @@ class DebugVisualNode(Node):
 
         self.lidar_bottom_time = time.time()
 
-        START_RAD = scan.angle_min
+        START_RAD = -scan.angle_min
         STEP_RAD = scan.angle_increment
         self.min_dist_error = 0.1
         self.max_dist_error = 5.0
@@ -512,7 +512,7 @@ class DebugVisualNode(Node):
         for i in range(len(scan.ranges)):
             
             value = scan.ranges[i]
-            key = START_RAD+i*STEP_RAD
+            key = START_RAD-i*STEP_RAD
             
             if value > self.min_dist_error: # and value < self.max_dist_error:
 
