@@ -48,6 +48,8 @@ class DebugVisualNode(Node):
         self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
         self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)
+        self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
+        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
         
         # get neck position
         self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
@@ -158,12 +160,16 @@ class DebugVisualNode(Node):
         
         self.head_rgb = Image()
         self.hand_rgb = Image()
+        self.base_rgb = Image()
         self.head_depth = Image()
         self.hand_depth = Image()
+        self.base_depth = Image()
         self.new_head_rgb = False
         self.new_hand_rgb = False
+        self.new_base_rgb = False
         self.new_head_depth = False
         self.new_hand_depth = False
+        self.new_base_depth = False
 
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
@@ -191,11 +197,15 @@ class DebugVisualNode(Node):
         self.last_head_depth_camera_time = 0.0
         self.last_hand_camera_time = 0.0
         self.last_hand_depth_camera_time = 0.0
+        self.last_base_camera_time = 0.0
+        self.last_base_depth_camera_time = 0.0
 
         self.head_rgb_fps = 0.0
         self.head_depth_fps = 0.0
         self.hand_rgb_fps = 0.0
         self.hand_depth_fps = 0.0
+        self.base_rgb_fps = 0.0
+        self.base_depth_fps = 0.0
 
         self.head_yp_time = 0.0
         self.head_yo_time = 0.0
@@ -363,6 +373,26 @@ class DebugVisualNode(Node):
         self.last_head_depth_camera_time = self.head_depth_camera_time
         self.head_depth_camera_time = time.time()
         self.head_depth_fps = round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 1)
+
+    def get_color_image_base_callback(self, img: Image):
+        self.base_rgb = img
+        self.new_base_rgb = True
+
+        self.last_base_camera_time = self.base_camera_time
+        self.base_camera_time = time.time()
+        self.base_rgb_fps = round(1/(self.base_camera_time-self.last_base_camera_time), 1)
+
+        print("base_rgb_fps:", self.base_rgb_fps)
+
+    def get_depth_base_image_callback(self, img: Image):
+        self.base_depth = img
+        self.new_base_depth = True
+        
+        self.last_base_depth_camera_time = self.base_depth_camera_time
+        self.base_depth_camera_time = time.time()
+        self.base_depth_fps = round(1/(self.base_depth_camera_time-self.last_base_depth_camera_time), 1)
+
+        print("base_depth_fps:", self.base_depth_fps)
 
     def vccs_low_level_callback(self, vccs: VCCsLowLevel):
         self.vccs = vccs
