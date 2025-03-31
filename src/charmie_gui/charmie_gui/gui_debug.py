@@ -348,7 +348,7 @@ class DebugVisualNode(Node):
 
         self.last_hand_camera_time = self.hand_camera_time
         self.hand_camera_time = time.time()
-        self.hand_rgb_fps = round(1/(self.hand_camera_time-self.last_hand_camera_time), 1)
+        self.hand_rgb_fps = min(round(1/(self.hand_camera_time-self.last_hand_camera_time), 0), 99)
 
     def get_color_image_head_callback(self, img: Image):
         self.head_rgb = img
@@ -356,7 +356,7 @@ class DebugVisualNode(Node):
 
         self.last_head_camera_time = self.head_camera_time
         self.head_camera_time = time.time()
-        self.head_rgb_fps = round(1/(self.head_camera_time-self.last_head_camera_time), 1)
+        self.head_rgb_fps = min(round(1/(self.head_camera_time-self.last_head_camera_time), 0), 99)
 
     def get_aligned_depth_image_hand_callback(self, img: Image):
         self.hand_depth = img
@@ -364,7 +364,7 @@ class DebugVisualNode(Node):
 
         self.last_hand_depth_camera_time = self.hand_depth_camera_time
         self.hand_depth_camera_time = time.time()
-        self.hand_depth_fps = round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 1)
+        self.hand_depth_fps = min(round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 0), 99)
 
     def get_aligned_depth_image_head_callback(self, img: Image):
         self.head_depth = img
@@ -372,7 +372,7 @@ class DebugVisualNode(Node):
         
         self.last_head_depth_camera_time = self.head_depth_camera_time
         self.head_depth_camera_time = time.time()
-        self.head_depth_fps = round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 1)
+        self.head_depth_fps = min(round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 0), 99)
 
     def get_color_image_base_callback(self, img: Image):
         self.base_rgb = img
@@ -380,7 +380,7 @@ class DebugVisualNode(Node):
 
         self.last_base_camera_time = self.base_camera_time
         self.base_camera_time = time.time()
-        self.base_rgb_fps = round(1/(self.base_camera_time-self.last_base_camera_time), 1)
+        self.base_rgb_fps = min(round(1/(self.base_camera_time-self.last_base_camera_time), 0), 99)
         # print("base_rgb_fps:", self.base_rgb_fps)
 
     def get_depth_base_image_callback(self, img: Image):
@@ -389,7 +389,7 @@ class DebugVisualNode(Node):
         
         self.last_base_depth_camera_time = self.base_depth_camera_time
         self.base_depth_camera_time = time.time()
-        self.base_depth_fps = round(1/(self.base_depth_camera_time-self.last_base_depth_camera_time), 1)
+        self.base_depth_fps = min(round(1/(self.base_depth_camera_time-self.last_base_depth_camera_time), 0), 99)
         # print("base_depth_fps:", self.base_depth_fps)
 
     def vccs_low_level_callback(self, vccs: VCCsLowLevel):
@@ -995,34 +995,34 @@ class DebugVisualMain():
         self.ARM_UFACTORY_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*0, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_ARM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*1, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_AUDIO_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*2, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_FACE_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.HEAD_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.HAND_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.BASE_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LIDAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LIDAR_BOTTOM_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LLM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LOCALISATION_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.HEAD_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.HAND_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.BASE_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_FACE_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LIDAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LIDAR_BOTTOM_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LLM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LOCALISATION_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         # the two navs have the same node rect for now, only nav2 will be used for now
-        self.CHARMIE_NAVIGATION_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_NAV2_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAVIGATION_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAV2_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         # self.CHARMIE_ODOMETRY_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_POINT_CLOUD_NODE_RECT      = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_PS4_CONTROLLER_NODE_RECT   = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_TRACKING_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*17, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*18, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_POINT_CLOUD_NODE_RECT      = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_PS4_CONTROLLER_NODE_RECT   = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_TRACKING_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*17, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
 
         toggle_h_init = 21.0
         toggle_h_diff = 2.25
-        self.toggle_record =         Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+0*toggle_h_diff)), 40, 16)
-        self.toggle_pause_cams =     Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+1*toggle_h_diff)), 40, 16)
+        self.toggle_record =         Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+2*toggle_h_diff)), 40, 16)
+        self.toggle_pause_cams =     Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+3*toggle_h_diff)), 40, 16)
         # self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+2*toggle_h_diff)), 40, 16)
-        # self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+3*toggle_h_diff)), 40, 16)
+        #self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(toggle_h_init+3*toggle_h_diff)), 40, 16)
 
         self.toggle_activate_objects_head =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+50, 40, 16)
         self.toggle_activate_furniture_head = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90,  self.cams_initial_height+50, 40, 16)
@@ -1073,6 +1073,14 @@ class DebugVisualMain():
         self.last_top_cam = Image()
         self.curr_bottom_cam = Image()
         self.last_bottom_cam = Image()
+        self.curr_top_cam_type = ""
+        self.last_top_cam_type = ""
+        self.curr_bottom_cam_type = ""
+        self.last_bottom_cam_type = ""
+        self.curr_top_cam_depth_max_value = 0
+        self.last_top_cam_depth_max_value = 0
+        self.curr_bottom_cam_depth_max_value = 0
+        self.last_bottom_cam_depth_max_value = 0
 
         self.curr_detected_people = ListOfDetectedPerson()
         self.last_detected_people = ListOfDetectedPerson()
@@ -1515,6 +1523,8 @@ class DebugVisualMain():
         bottom_camera = Image()
         top_camera_new_frame = False
         bottom_camera_new_frame = False
+        max_value_depth_top_cam = 0
+        max_value_depth_bottom_cam = 0
 
         match self.top_camera_id:
             case "head":
@@ -1524,6 +1534,7 @@ class DebugVisualMain():
                 else: # depth
                     top_camera = self.node.head_depth
                     top_camera_new_frame = self.node.new_head_depth
+                    max_value_depth_top_cam = 6000
             case "gripper":
                 if self.top_camera_type == "rgb":
                     top_camera = self.node.hand_rgb
@@ -1531,6 +1542,7 @@ class DebugVisualMain():
                 else: # depth
                     top_camera = self.node.hand_depth
                     top_camera_new_frame = self.node.new_hand_depth
+                    max_value_depth_top_cam = 1000
             case "base":
                 if self.top_camera_type == "rgb":
                     top_camera = self.node.base_rgb
@@ -1538,6 +1550,7 @@ class DebugVisualMain():
                 else: # depth
                     top_camera = self.node.base_depth
                     top_camera_new_frame = self.node.new_base_depth
+                    max_value_depth_top_cam = 6000
             case _: # default
                 top_camera = self.node.head_rgb
 
@@ -1550,6 +1563,7 @@ class DebugVisualMain():
                 else: # depth
                     bottom_camera = self.node.head_depth
                     bottom_camera_new_frame = self.node.new_head_depth
+                    max_value_depth_bottom_cam = 6000
             case "gripper":
                 if self.bottom_camera_type == "rgb":
                     bottom_camera = self.node.hand_rgb
@@ -1557,6 +1571,7 @@ class DebugVisualMain():
                 else: # depth
                     bottom_camera = self.node.hand_depth
                     bottom_camera_new_frame = self.node.new_hand_depth
+                    max_value_depth_bottom_cam = 1000
             case "base":
                 if self.bottom_camera_type == "rgb":
                     bottom_camera = self.node.base_rgb
@@ -1564,6 +1579,7 @@ class DebugVisualMain():
                 else: # depth
                     bottom_camera = self.node.base_depth
                     bottom_camera_new_frame = self.node.new_base_depth
+                    max_value_depth_bottom_cam = 6000
             case _: # default
                 bottom_camera = self.node.hand_rgb
 
@@ -1575,19 +1591,32 @@ class DebugVisualMain():
         ### ESTA LOGICA TEM DE SER DIFERENTE PORQUE O TOPCAMERA E BOTTOMCAMERA SAO LOCAIS...
         self.curr_top_cam = top_camera
         self.curr_bottom_cam = bottom_camera
+        self.curr_top_cam_type = self.top_camera_type
+        self.curr_bottom_cam_type = self.bottom_camera_type
+        self.curr_top_cam_depth_max_value = max_value_depth_top_cam
+        self.curr_bottom_cam_depth_max_value = max_value_depth_bottom_cam
 
         if self.toggle_pause_cams.getValue():
             used_top_image = self.last_top_cam
             used_bottom_image = self.last_bottom_cam
+            used_top_camera_type = self.last_top_cam_type
+            used_bottom_camera_type = self.last_bottom_cam_type
+            used_top_cam_depth_max_value = self.last_top_cam_depth_max_value
+            used_bottom_cam_depth_max_value = self.last_bottom_cam_depth_max_value
         else:
             used_top_image = self.curr_top_cam 
             used_bottom_image = self.curr_bottom_cam
+            used_top_camera_type = self.curr_top_cam_type
+            used_bottom_camera_type = self.curr_bottom_cam_type
+            used_top_cam_depth_max_value = self.curr_top_cam_depth_max_value
+            used_bottom_cam_depth_max_value = self.curr_bottom_cam_depth_max_value
 
         self.last_top_cam = used_top_image 
         self.last_bottom_cam = used_bottom_image
-
-
-
+        self.last_top_cam_type = used_top_camera_type
+        self.last_bottom_cam_type = used_bottom_camera_type
+        self.last_top_cam_depth_max_value = used_top_cam_depth_max_value
+        self.last_bottom_cam_depth_max_value = used_bottom_cam_depth_max_value
 
 
 
@@ -1595,7 +1624,7 @@ class DebugVisualMain():
 
         ###########
 
-        if self.top_camera_type == "rgb":
+        if used_top_camera_type == "rgb":
 
             if top_camera_new_frame:
                 
@@ -1638,7 +1667,7 @@ class DebugVisualMain():
                 opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
             
                 min_val = 0
-                max_val = 6000
+                max_val = used_top_cam_depth_max_value
 
                 # Normalize the depth image to fall between 0 and 1
                 # depth_normalized = cv2.normalize(opencv_image, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
@@ -1676,7 +1705,7 @@ class DebugVisualMain():
 
 
 
-        if self.bottom_camera_type == "rgb":
+        if used_bottom_camera_type == "rgb":
 
             if bottom_camera_new_frame:
 
@@ -1718,7 +1747,7 @@ class DebugVisualMain():
                 opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
 
                 min_val = 0
-                max_val = 3000
+                max_val = used_bottom_cam_depth_max_value
 
                 # Normalize the depth image to fall between 0 and 1
                 # depth_normalized = cv2.normalize(opencv_image, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
@@ -1755,16 +1784,37 @@ class DebugVisualMain():
 
 
         ###########
+        
+
+        # self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 80, 6*self.cams_initial_height, self.BLACK, 85)
+        self.draw_text("CAM Head:", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*18)
+        self.draw_text("RGB: "+str(int(self.node.head_rgb_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19)
+        self.draw_text("D: "+str(int(self.node.head_depth_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19)
+        self.draw_text("Y: "+str(int(self.node.head_yo_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19)
+        self.draw_text("Y_P: "+str(int(99)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20)
+        self.draw_text("T: "+str(int(99)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20)
+        self.draw_text("CAM Gripper:", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21)
+        self.draw_text("RGB: "+str(int(self.node.hand_rgb_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22)
+        self.draw_text("D: "+str(int(self.node.hand_depth_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22)
+        self.draw_text("Y: "+str(int(self.node.hand_yo_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22)
+        self.draw_text("CAM Base:", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23)
+        self.draw_text("RGB: "+str(int(99)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24)
+        self.draw_text("D: "+str(int(99)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24)
+        self.draw_text("Y: "+str(int(99)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24)
 
 
 
-        self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*self.first_pos_h)
-        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+2.5-0.2))
-        # self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+5.0-0.4))
-        # self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+7.5-0.6))
 
 
 
+
+
+        self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+5.0-0.4))
+        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+7.5-0.6))
+
+
+
+        # self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*17, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
 
 
 
