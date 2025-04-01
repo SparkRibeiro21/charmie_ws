@@ -29,12 +29,12 @@ objects_filename = "24_25_october_v1_LAR_seg.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
 # objects_filename = "lar_dataset_post_fnr2024.pt"
 shoes_filename = "shoes_socks_v1.pt"
-doors_filename = "door_bruno_2.pt"
-# doors_filename = "furniture_robocup.pt"
+furniture_filename = "door_bruno_2.pt"
+# furniture_filename = "furniture_robocup.pt"
 
 MIN_OBJECT_CONF_VALUE = 0.5
 MIN_SHOES_CONF_VALUE = 0.5
-MIN_DOORS_CONF_VALUE = 0.5
+MIN_FURNITURE_CONF_VALUE = 0.5
 
 DRAW_OBJECT_CONF = True
 DRAW_OBJECT_ID = True
@@ -54,11 +54,14 @@ class Yolo_obj(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("debug_draw", False) 
         self.declare_parameter("activate_objects", False)
-        self.declare_parameter("activate_shoes", False)
-        self.declare_parameter("activate_doors", False)
+        # self.declare_parameter("activate_shoes", False)
+        self.declare_parameter("activate_furniture", False)
         self.declare_parameter("activate_objects_hand", False)
-        self.declare_parameter("activate_shoes_hand", False)
-        self.declare_parameter("activate_doors_hand", False)
+        # self.declare_parameter("activate_shoes_hand", False)
+        self.declare_parameter("activate_furniture_hand", False)
+        self.declare_parameter("activate_objects_base", False)
+        # self.declare_parameter("activate_shoes_base", False)
+        self.declare_parameter("activate_furniture_base", False)
     
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -96,8 +99,8 @@ class Yolo_obj(Node):
         self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
 
         # gets list of detected furniture from detected_furniture.json and alphabetically orders it to match YOLO detections 
-        self.doors_class_names = [item["name"] for item in self.detected_furniture_file]
-        self.doors_class_names.sort()
+        self.furniture_class_names = [item["name"] for item in self.detected_furniture_file]
+        self.furniture_class_names.sort()
 
         # list of detections from Stickler for the Rules: check if person is wearing shoes...
         self.shoes_class_names = ['Shoe', 'Sock']        
@@ -110,17 +113,25 @@ class Yolo_obj(Node):
         # whether the activate objects flag starts as ON or OFF 
         self.ACTIVATE_YOLO_OBJECTS = self.get_parameter("activate_objects").value
         # whether the activate shoes flag starts as ON or OFF 
-        self.ACTIVATE_YOLO_SHOES = self.get_parameter("activate_shoes").value
-        # whether the activate doors flag starts as ON or OFF 
-        self.ACTIVATE_YOLO_DOORS = self.get_parameter("activate_doors").value
+        self.ACTIVATE_YOLO_SHOES = False # self.get_parameter("activate_shoes").value
+        # whether the activate furniture flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_FURNITURE = self.get_parameter("activate_furniture").value
 
         # HAND
         # whether the activate objects flag starts as ON or OFF 
         self.ACTIVATE_YOLO_OBJECTS_HAND = self.get_parameter("activate_objects_hand").value
         # whether the activate shoes flag starts as ON or OFF 
-        self.ACTIVATE_YOLO_SHOES_HAND = self.get_parameter("activate_shoes_hand").value
-        # whether the activate doors flag starts as ON or OFF 
-        self.ACTIVATE_YOLO_DOORS_HAND = self.get_parameter("activate_doors_hand").value
+        self.ACTIVATE_YOLO_SHOES_HAND = False # self.get_parameter("activate_shoes_hand").value
+        # whether the activate furniture flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_FURNITURE_HAND = self.get_parameter("activate_furniture_hand").value
+
+        # BASE
+        # whether the activate objects flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_OBJECTS_BASE = self.get_parameter("activate_objects_base").value
+        # whether the activate shoes flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_SHOES_BASE = False # self.get_parameter("activate_shoes_base").value
+        # whether the activate furniture flag starts as ON or OFF 
+        self.ACTIVATE_YOLO_FURNITURE_BASE = self.get_parameter("activate_furniture_base").value
 
         # print(self.home+'/'+objects_filename)
         yolo_models_sucessful_imported = False
@@ -131,11 +142,11 @@ class Yolo_obj(Node):
                 # Import the models, one for each category
                 self.object_model = YOLO(self.complete_path_yolo_models + objects_filename)
                 self.shoes_model = YOLO(self.complete_path_yolo_models + shoes_filename)
-                self.doors_model = YOLO(self.complete_path_yolo_models + doors_filename)
+                self.furniture_model = YOLO(self.complete_path_yolo_models + furniture_filename)
                 # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
                 self.object_model_hand = YOLO(self.complete_path_yolo_models + objects_filename)
                 self.shoes_model_hand = YOLO(self.complete_path_yolo_models + shoes_filename)
-                self.doors_model_hand = YOLO(self.complete_path_yolo_models + doors_filename)
+                self.furniture_model_hand = YOLO(self.complete_path_yolo_models + furniture_filename)
 
                 self.get_logger().info("Successfully imported YOLO models (objects, furniture, shoes)")
 
@@ -229,41 +240,45 @@ class Yolo_obj(Node):
             self.get_logger().error("Service call failed %r" % (e,))
 
     def callback_activate_yolo_objects(self, request, response):
-        
-        # Type of service received: 
-        # bool activate_objects                       # activate or deactivate yolo object detection
-        # bool activate_shoes                         # activate or deactivate yolo shoes detection
-        # bool activate_doors                         # activate or deactivate yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
-        # bool activate_objects_hand                  # activate or deactivate hand yolo object detection
-        # bool activate_shoes_hand                    # activate or deactivate hand yolo shoes detection
-        # bool activate_doors_hand                    # activate or deactivate hand yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
-        # float64 minimum_objects_confidence          # adjust the minimum accuracy to assume as an object
-        # float64 minimum_shoes_confidence            # adjust the minimum accuracy to assume as a shoe
-        # float64 minimum_doors_confidence            # adjust the minimum accuracy to assume as a door or handle
+
+        # bool activate_objects                                       # activate or deactivate yolo object detection
+        # bool activate_furniture                                     # activate or deactivate yolo furniture detection (includes doors, drawers, washing machine, closet with doors)
+        # bool activate_objects_hand                                  # activate or deactivate hand yolo object detection
+        # bool activate_furniture_hand                                # activate or deactivate hand yolo furniture detection (includes doors, drawers, washing machine, closet with doors)
+        # bool activate_objects_base                                  # activate or deactivate base yolo object detection
+        # bool activate_furniture_base                                # activate or deactivate base yolo furniture detection (includes doors, drawers, washing machine, closet with doors)
+        # float64 minimum_objects_confidence                          # adjust the minimum accuracy to assume as an object
+        # float64 minimum_furniture_confidence                        # adjust the minimum accuracy to assume as a furniture
+        # # bool activate_shoes               # NOT USED ANYMORE      # activate or deactivate yolo shoes detection
+        # # bool activate_shoes_hand          # NOT USED ANYMORE      # activate or deactivate hand yolo shoes detection
+        # # float64 minimum_shoes_confidence  # NOT USED ANYMORE      # adjust the minimum accuracy to assume as a shoe
         # ---
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
-        global MIN_OBJECT_CONF_VALUE, MIN_SHOES_CONF_VALUE, MIN_DOORS_CONF_VALUE
+        global MIN_OBJECT_CONF_VALUE, MIN_SHOES_CONF_VALUE, MIN_FURNITURE_CONF_VALUE
 
         self.get_logger().info("Received Activate Yolo Objects %s" %("("+str(request.activate_objects)+", "
-                                                                        +str(request.activate_shoes)+", "
-                                                                        +str(request.activate_doors)+", "
+                                                                        +str(request.activate_furniture)+", "
                                                                         +str(request.activate_objects_hand)+", "
-                                                                        +str(request.activate_shoes_hand)+", "
-                                                                        +str(request.activate_doors_hand)+", "
+                                                                        +str(request.activate_furniture_hand)+", "
+                                                                        +str(request.activate_objects_base)+", "
+                                                                        +str(request.activate_furniture_base)+", "
                                                                         +str(request.minimum_objects_confidence)+", "
-                                                                        +str(request.minimum_shoes_confidence)+", "
-                                                                        +str(request.minimum_doors_confidence)+")"))
+                                                                        +str(request.minimum_furniture_confidence)+")"))
 
-        self.ACTIVATE_YOLO_OBJECTS = request.activate_objects
-        self.ACTIVATE_YOLO_SHOES = request.activate_shoes
-        self.ACTIVATE_YOLO_DOORS = request.activate_doors
-        self.ACTIVATE_YOLO_OBJECTS_HAND = request.activate_objects_hand
-        self.ACTIVATE_YOLO_SHOES_HAND = request.activate_shoes_hand
-        self.ACTIVATE_YOLO_DOORS_HAND = request.activate_doors_hand
-        MIN_OBJECT_CONF_VALUE = request.minimum_objects_confidence
-        MIN_SHOES_CONF_VALUE = request.minimum_shoes_confidence
-        MIN_DOORS_CONF_VALUE = request.minimum_doors_confidence
+        self.ACTIVATE_YOLO_OBJECTS          = request.activate_objects
+        self.ACTIVATE_YOLO_SHOES            = False # NOT USED ANYMORE
+        self.ACTIVATE_YOLO_FURNITURE        = request.activate_furniture
+        self.ACTIVATE_YOLO_OBJECTS_HAND     = request.activate_objects_hand
+        self.ACTIVATE_YOLO_SHOES_HAND       = False # NOT USED ANYMORE
+        self.ACTIVATE_YOLO_FURNITURE_HAND   = request.activate_furniture_hand
+        self.ACTIVATE_YOLO_OBJECTS_BASE     = request.activate_objects_base
+        self.ACTIVATE_YOLO_SHOES_BASE       = False # NOT USED ANYMORE
+        self.ACTIVATE_YOLO_FURNITURE_BASE   = request.activate_furniture_base
+
+        MIN_OBJECT_CONF_VALUE       = request.minimum_objects_confidence
+        MIN_SHOES_CONF_VALUE        = 0.5 # NOT USED ANYMORE
+        MIN_FURNITURE_CONF_VALUE    = request.minimum_furniture_confidence
         
         # returns whether the message was played and some informations regarding status
         response.success = True
@@ -428,8 +443,8 @@ class YoloObjectsMain():
                 object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
             elif model == "shoes":  
                 object_results = self.node.shoes_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
-            elif model == "doors":  
-                object_results = self.node.doors_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+            elif model == "furniture":  
+                object_results = self.node.furniture_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
             # else: # just so there is no error in case of wrong model name
             #     object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
         else: # camera == "hand" 
@@ -437,8 +452,8 @@ class YoloObjectsMain():
                 object_results = self.node.object_model_hand.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
             elif model == "shoes":  
                 object_results = self.node.shoes_model_hand.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
-            elif model == "doors":  
-                object_results = self.node.doors_model_hand.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
+            elif model == "furniture":  
+                object_results = self.node.furniture_model_hand.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
             # else: # just so there is no error in case of wrong model name
             #     object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
 
@@ -493,8 +508,8 @@ class YoloObjectsMain():
                     elif model == "shoes":  
                         object_name = self.node.shoes_class_names[int(box.cls[0])]
                         object_class = "Footwear"
-                    elif model == "doors":  
-                        object_name = self.node.doors_class_names[int(box.cls[0])]
+                    elif model == "furniture":  
+                        object_name = self.node.furniture_class_names[int(box.cls[0])]
                         object_class = "Furniture"
                 
                     # adds object to "object_pose" without any restriction
@@ -519,11 +534,11 @@ class YoloObjectsMain():
                             ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                             # print("- Misses minimum shoe confidence level")
 
-                    elif model == "doors":  
-                        # checks whether the doors confidence is above a selected level
-                        if not box.conf >= MIN_DOORS_CONF_VALUE:
+                    elif model == "furniture":  
+                        # checks whether the furniture confidence is above a selected level
+                        if not box.conf >= MIN_FURNITURE_CONF_VALUE:
                             ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                            # print("- Misses minimum door confidence level")
+                            # print("- Misses minimum furniture confidence level")
 
                     # if the object detection passes all selected conditions, the detected object is added to the publishing list
                     if ALL_CONDITIONS_MET:
@@ -574,8 +589,8 @@ class YoloObjectsMain():
                     elif model == "shoes":  
                         object_name = self.node.shoes_class_names[int(box.cls[0])]
                         object_class = "Footwear"
-                    elif model == "doors":  
-                        object_name = self.node.doors_class_names[int(box.cls[0])]
+                    elif model == "furniture":  
+                        object_name = self.node.furniture_class_names[int(box.cls[0])]
                         object_class = "Furniture"
                 
                     # adds object to "object_pose" without any restriction
@@ -597,11 +612,11 @@ class YoloObjectsMain():
                             ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                             # print("- Misses minimum shoe confidence level")
 
-                    elif model == "doors":  
-                        # checks whether the doors confidence is above a selected level
-                        if not box.conf >= MIN_DOORS_CONF_VALUE:
+                    elif model == "furniture":  
+                        # checks whether the furniture confidence is above a selected level
+                        if not box.conf >= MIN_FURNITURE_CONF_VALUE:
                             ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                            # print("- Misses minimum door confidence level")
+                            # print("- Misses minimum furniture confidence level")
 
                     # if the object detection passes all selected conditions, the detected object is added to the publishing list
                     if ALL_CONDITIONS_MET:
@@ -854,10 +869,10 @@ class YoloObjectsMain():
                     for o in list_detected_objects.objects:
                         list_all_objects_detected.objects.append(o)
                     
-                if self.node.ACTIVATE_YOLO_DOORS:
-                    list_detected_doors, td = self.detect_with_yolo_model(model="doors", camera="head", current_frame_draw=current_frame_draw, current_img=current_img)
+                if self.node.ACTIVATE_YOLO_FURNITURE:
+                    list_detected_furniture, td = self.detect_with_yolo_model(model="furniture", camera="head", current_frame_draw=current_frame_draw, current_img=current_img)
                     total_obj += td
-                    for o in list_detected_doors.objects:
+                    for o in list_detected_furniture.objects:
                         list_all_objects_detected.objects.append(o)
                 
                 if self.node.ACTIVATE_YOLO_SHOES:
@@ -866,7 +881,7 @@ class YoloObjectsMain():
                     for o in list_detected_shoes.objects:
                         list_all_objects_detected.objects.append(o)
 
-                if self.node.ACTIVATE_YOLO_OBJECTS or self.node.ACTIVATE_YOLO_DOORS or self.node.ACTIVATE_YOLO_SHOES:
+                if self.node.ACTIVATE_YOLO_OBJECTS or self.node.ACTIVATE_YOLO_FURNITURE or self.node.ACTIVATE_YOLO_SHOES:
                     # if len(list_all_objects_detected.objects) > 0:
                     self.node.objects_filtered_publisher.publish(list_all_objects_detected)
 
@@ -902,10 +917,10 @@ class YoloObjectsMain():
                     for o in list_detected_objects_hand.objects:
                         list_all_objects_detected_hand.objects.append(o)
                     
-                if self.node.ACTIVATE_YOLO_DOORS_HAND:
-                    list_detected_doors_hand, td = self.detect_with_yolo_model(model="doors", camera="hand", current_frame_draw=current_frame_draw, current_img=current_img)
+                if self.node.ACTIVATE_YOLO_FURNITURE_HAND:
+                    list_detected_furniture_hand, td = self.detect_with_yolo_model(model="furniture", camera="hand", current_frame_draw=current_frame_draw, current_img=current_img)
                     total_obj += td
-                    for o in list_detected_doors_hand.objects:
+                    for o in list_detected_furniture_hand.objects:
                         list_all_objects_detected_hand.objects.append(o)
                 
                 if self.node.ACTIVATE_YOLO_SHOES_HAND:
@@ -914,7 +929,7 @@ class YoloObjectsMain():
                     for o in list_detected_shoes_hand.objects:
                         list_all_objects_detected_hand.objects.append(o)
 
-                if self.node.ACTIVATE_YOLO_OBJECTS_HAND or self.node.ACTIVATE_YOLO_DOORS_HAND or self.node.ACTIVATE_YOLO_SHOES_HAND:
+                if self.node.ACTIVATE_YOLO_OBJECTS_HAND or self.node.ACTIVATE_YOLO_FURNITURE_HAND or self.node.ACTIVATE_YOLO_SHOES_HAND:
                     # if len(list_all_objects_detected_hand.objects) > 0:
                     self.node.objects_filtered_hand_publisher.publish(list_all_objects_detected_hand)
 

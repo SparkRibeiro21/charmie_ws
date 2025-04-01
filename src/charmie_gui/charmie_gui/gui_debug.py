@@ -427,7 +427,6 @@ class DebugVisualNode(Node):
         self.new_detected_objects = True
         self.head_yo_time = time.time()
         self.head_yo_fps_ctr += 1
-        print(self.head_yo_fps_ctr)
         
     def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
