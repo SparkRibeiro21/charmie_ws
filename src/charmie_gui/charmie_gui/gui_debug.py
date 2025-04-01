@@ -31,7 +31,6 @@ from pygame_widgets.toggle import Toggle
 from pygame_widgets.button import Button
 from pygame_widgets.textbox import TextBox
 
-
 # specific colors for FPS
 # add yolo fps similar to new cams fps 
 
@@ -140,10 +139,6 @@ class DebugVisualNode(Node):
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
-        self.time_for_cams_fps_verification = 0.25
-        self.create_timer(1.0, self.check_yolos_timer)
-        self.create_timer(0.4, self.check_tracking_timer)
-        self.create_timer(self.time_for_cams_fps_verification, self.check_cameras_fps_timer)
         self.is_yolo_pose_comm = False
         self.is_yolo_obj_head_comm = False
         self.is_yolo_obj_hand_comm = False
@@ -154,15 +149,6 @@ class DebugVisualNode(Node):
         self.activate_yolo_objects_message = ""
         self.activate_obstacles_success = True
         self.activate_obstacles_message = ""
-
-        self.vccs = VCCsLowLevel()
-        # self.battery_voltage = 0.0
-        # self.emergency_stop = False
-        # self.waited_for_end_of_get_vccs = False
-        # self.battery_timer_ctr = 0
-        # self.previous_is_low_level_on = False
-        # self.battery_timer()
-        # self.create_timer(1.0, self.battery_timer)
         
         self.head_rgb = Image()
         self.hand_rgb = Image()
@@ -184,6 +170,7 @@ class DebugVisualNode(Node):
         self.new_detected_objects = False
         self.new_detected_objects_hand = False
 
+        self.vccs = VCCsLowLevel()
         self.robot_pose = Pose2D()
 
         self.lidar_time = 0.0
@@ -255,9 +242,10 @@ class DebugVisualNode(Node):
         self.lidar_radius = 0.050/2 # meters
         self.lidar_to_robot_center = 0.255 # meters
 
-        # self.NORTE = -45.0
-        # self.imu_orientation_norm_rad = 0.0
-
+        self.time_for_cams_fps_verification = 0.25
+        self.create_timer(1.0, self.check_yolos_timer)
+        self.create_timer(0.4, self.check_tracking_timer)
+        self.create_timer(self.time_for_cams_fps_verification, self.check_cameras_fps_timer)
 
     def check_yolos_timer(self):
         
@@ -296,38 +284,12 @@ class DebugVisualNode(Node):
         self.base_rgb_fps   = self.base_rgb_fps_ctr  /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
         self.base_depth_fps = self.base_depth_fps_ctr/self.time_for_cams_fps_verification
         
-        # print(self.head_rgb_fps_, self.head_rgb_fps_ctr/0.5, end="")
-
         self.head_rgb_fps_ctr = 0
         self.head_depth_fps_ctr = 0
         self.hand_rgb_fps_ctr = 0
         self.hand_depth_fps_ctr = 0
         self.base_rgb_fps_ctr = 0
         self.base_depth_fps_ctr = 0
-
-        # print(self.head_rgb_fps_, self.head_rgb_fps_ctr/0.5)
-        
-    """
-    def battery_timer(self):
-        
-        self.battery_timer_ctr += 1
-        check = False
-        current_is_low_level_on = self.set_rgb_client.wait_for_service(0.0)
-        
-        if current_is_low_level_on and not self.previous_is_low_level_on:
-            check = True
-            self.battery_timer_ctr = 0
-        elif self.battery_timer_ctr >= 60.0 and current_is_low_level_on:
-            check = True
-            self.battery_timer_ctr = 0
-
-        if check:
-            print("CHECKING BATTERY VOLTAGE")
-            request=GetVCCs.Request()
-            self.call_vccs_command_server(request=request)
-
-        self.previous_is_low_level_on = current_is_low_level_on
-    """
 
     def nodes_used_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
         # Type of service received: 
@@ -480,17 +442,6 @@ class DebugVisualNode(Node):
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
 
-    """
-    def get_orientation_callback(self, orientation: Float32):
-        imu_orientation_norm = orientation.data - self.NORTE
-        if imu_orientation_norm > 180.0:
-            imu_orientation_norm -= 360.0
-        if imu_orientation_norm < -180.0:
-            imu_orientation_norm += 360.0
-
-        self.imu_orientation_norm_rad = math.radians(imu_orientation_norm)
-        self.robot_pose.theta = -self.imu_orientation_norm_rad
-    """ 
     def get_camera_obstacles_callback(self, points: ListOfPoints):
         self.camera_obstacle_points = points.coords
         # print("Received Points")
@@ -603,26 +554,6 @@ class DebugVisualNode(Node):
         self.search_for_object = points
         self.new_search_for_object = True
 
-    """
-    def call_vccs_command_server(self, request=GetVCCs.Request()):
-    
-        future = self.get_vccs_client.call_async(request)
-        future.add_done_callback(self.callback_call_vccs_command)
-        
-    def callback_call_vccs_command(self, future): 
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            self.get_logger().info("Battery_Voltage: "+str(response.battery_voltage) + ", Emergency_Button: " + str(response.emergency_stop))
-            self.battery_voltage = response.battery_voltage
-            self.emergency_stop = response.emergency_stop
-            self.waited_for_end_of_get_vccs = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))  
-    """
 
 class CheckNodesMain():
 
@@ -1567,7 +1498,6 @@ class DebugVisualMain():
             case _: # default
                 top_camera = self.node.head_rgb
 
-
         match self.bottom_camera_id:
             case "head":
                 if self.bottom_camera_type == "rgb":
@@ -1596,9 +1526,6 @@ class DebugVisualMain():
             case _: # default
                 bottom_camera = self.node.hand_rgb
 
-        # print("TOP CAM:", self.top_camera_id, self.top_camera_type)
-        # print("BOT CAM:", self.bottom_camera_id, self.bottom_camera_type)
-        
         self.curr_top_cam = top_camera
         self.curr_bottom_cam = bottom_camera
         self.curr_top_cam_type = self.top_camera_type
@@ -1627,10 +1554,6 @@ class DebugVisualMain():
         self.last_bottom_cam_type = used_bottom_camera_type
         self.last_top_cam_depth_max_value = used_top_cam_depth_max_value
         self.last_bottom_cam_depth_max_value = used_bottom_cam_depth_max_value
-
-
-
-        ###########
 
         if used_top_camera_type == "rgb":
 
@@ -1761,31 +1684,37 @@ class DebugVisualMain():
                 pygame.draw.rect(self.WIN, self.GREY, temp_rect)
                 self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cam_height_+2*self.cams_initial_height+(self.cam_height_//2))
 
-        ###########
-        
-
         # self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 80, 6*self.cams_initial_height, self.BLACK, 85)
-        self.draw_text("CAM Head:", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*18.5)
-        self.draw_text("RGB: "+str(int(self.node.head_rgb_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
-        self.draw_text("D: "+str(int(self.node.head_depth_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
-        self.draw_text("Y: "+str(int(self.node.head_yo_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
-        self.draw_text("Y_P: "+str(int(99)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
-        self.draw_text("T: "+str(int(99)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
-        self.draw_text("CAM Gripper:", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21.5)
-        self.draw_text("RGB: "+str(int(self.node.hand_rgb_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
-        self.draw_text("D: "+str(int(self.node.hand_depth_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
-        self.draw_text("Y: "+str(int(self.node.hand_yo_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
-        self.draw_text("CAM Base:", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23.5)
-        self.draw_text("RGB: "+str(int(self.node.base_rgb_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
-        self.draw_text("D: "+str(int(self.node.base_depth_fps)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
-        self.draw_text("Y: "+str(int(99)), self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
+        self.draw_text("Head Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*18.5)
+        self.draw_text("RGB: "+str(int(self.node.head_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.head_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
+        self.draw_text("D: "+str(int(self.node.head_depth_fps)), self.text_font, self.fps_to_color(int(self.node.head_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
+        self.draw_text("Y: "+str(int(self.node.head_yo_fps)), self.text_font, self.fps_to_color(int(self.node.head_yo_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
+        self.draw_text("Y_P: "+str(int(0)), self.text_font, self.fps_to_color(int(0)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
+        self.draw_text("T: "+str(int(0)), self.text_font, self.fps_to_color(int(0)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
+        self.draw_text("Gripper Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21.5)
+        self.draw_text("RGB: "+str(int(self.node.hand_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.hand_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
+        self.draw_text("D: "+str(int(self.node.hand_depth_fps)), self.text_font, self.fps_to_color(int(self.node.hand_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
+        self.draw_text("Y: "+str(int(self.node.hand_yo_fps)), self.text_font, self.fps_to_color(int(self.node.hand_yo_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
+        self.draw_text("Base Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23.5)
+        self.draw_text("RGB: "+str(int(self.node.base_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.base_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
+        self.draw_text("D: "+str(int(self.node.base_depth_fps)), self.text_font, self.fps_to_color(int(self.node.base_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
+        self.draw_text("Y: "+str(int(0)), self.text_font, self.fps_to_color(int(0)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
 
         self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.2*self.toggle_h_diff)))
         self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.8*self.toggle_h_diff)))
 
+    def fps_to_color(self, fps):
 
+        if fps >= 20.0:
+            bb_color = self.GREEN
+        elif fps >= 10.0:
+            bb_color = self.YELLOW
+        elif fps >= 1.0:
+            bb_color = self.ORANGE
+        else: #  fps < 1.0:
+            bb_color = self.RED
 
-
+        return bb_color
         
     def draw_activates(self):
 
