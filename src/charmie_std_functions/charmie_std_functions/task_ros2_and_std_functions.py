@@ -1444,18 +1444,17 @@ class RobotStdFunctions():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5, wait_for_end_of=True):
         
         request = ActivateYoloObjects.Request()
-        request.activate_objects = activate_objects
-        request.activate_shoes = activate_shoes
-        request.activate_doors = activate_doors
-        request.activate_objects_hand = activate_objects_hand
-        request.activate_shoes_hand = activate_shoes_hand
-        request.activate_doors_hand = activate_doors_hand
-        request.minimum_objects_confidence = float(minimum_objects_confidence)
-        request.minimum_shoes_confidence = float(minimum_shoes_confidence)
-        request.minimum_doors_confidence = float(minimum_doors_confidence)
+        request.activate_objects             = activate_objects
+        request.activate_furniture           = activate_furniture
+        request.activate_objects_hand        = activate_objects_hand
+        request.activate_furniture_hand      = activate_furniture_hand
+        request.activate_objects_base        = activate_objects_base
+        request.activate_furniture_base      = activate_furniture_base
+        request.minimum_objects_confidence   = float(minimum_objects_confidence)
+        request.minimum_furniture_confidence = float(minimum_furniture_confidence)
 
         self.node.call_activate_yolo_objects_server(request=request)
 
@@ -1978,7 +1977,7 @@ class RobotStdFunctions():
         
         return face_path
 
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_shoes=False, detect_furniture=False, detect_objects_hand=False, detect_shoes_hand=False, detect_furniture_hand=False):
+    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -2008,9 +2007,10 @@ class RobotStdFunctions():
             objects_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_furniture,
-                                        activate_objects_hand=detect_objects_hand, activate_shoes_hand=detect_shoes_hand, activate_doors_hand=detect_furniture_hand,
-                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
+            self.activate_yolo_objects(activate_objects=detect_objects,             activate_furniture=detect_furniture,
+                                       activate_objects_hand=detect_objects_hand,   activate_furniture_hand=detect_furniture_hand,
+                                       activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
+                                        minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
             # time.sleep(0.5)
@@ -2118,9 +2118,10 @@ class RobotStdFunctions():
                 if is_break_list_of_objects: 
                     break
 
-            self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
-                                        activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
-                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
+            self.activate_yolo_objects(activate_objects=False, activate_furniture=False,
+                                       activate_objects_hand=False, activate_furniture_hand=False,
+                                       activate_objects_base=False, activate_furniture_base=False,
+                                       minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
             
             # DEBUG
             # print("TOTAL objects in this neck pos:")

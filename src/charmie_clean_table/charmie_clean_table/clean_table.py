@@ -206,7 +206,7 @@ class TaskMain():
                 
                     list_of_objects_copy = list_of_objects.copy()   
                     
-                    objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                    objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_furniture=False)
                     
                     print("while_start:", list_of_objects) 
                     print("while_start_copy:", list_of_objects_copy)    
@@ -305,7 +305,7 @@ class TaskMain():
                         else:
                             tetas = [[0, -30]]
                         # tetas = [[0, -30], [20, -30], [-20, -30], [-40, -30], [40, -30]]
-                        objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_shoes=False, detect_furniture=True)
+                        objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=False, detect_furniture=True)
                         print('pos-search')
                         for obj in objects_found:
                             if obj.object_name == 'Dishwasher':

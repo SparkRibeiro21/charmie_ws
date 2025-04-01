@@ -255,13 +255,13 @@ class DebugVisualNode(Node):
         else:
             self.is_yolo_pose_comm = False
 
-        if self.new_detected_objects: # or self.new_detected_shoes or self.new_detected_doors:
+        if self.new_detected_objects:
             self.new_detected_objects = False
             self.is_yolo_obj_head_comm = True
         else:
             self.is_yolo_obj_head_comm = False
     
-        if self.new_detected_objects_hand: # or self.new_detected_shoes_hand or self.new_detected_doors_hand:
+        if self.new_detected_objects_hand:
             self.new_detected_objects_hand = False
             self.is_yolo_obj_hand_comm = True
         else:
@@ -1716,13 +1716,13 @@ class DebugVisualMain():
         self.last_detected_objects_hand = used_detected_objects_hand
 
         if self.node.is_yolo_obj_head_comm:
-            if len(used_detected_objects.objects) > 0: # or len(used_detected_shoes.objects) > 0 or len(used_detected_furniture.objects) > 0:
+            if len(used_detected_objects.objects) > 0:
                 # print("DETECTED OBJECTS HEAD:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects, "head")
 
         if self.node.is_yolo_obj_hand_comm:
-            if len(used_detected_objects_hand.objects) > 0: # or len(used_detected_shoes_hand.objects) > 0 or len(used_detected_furniture_hand.objects) > 0:
+            if len(used_detected_objects_hand.objects) > 0:
                 # print("DETECTED OBJECTS HAND:")
                 pass
             self.draw_object_bounding_boxes(used_detected_objects_hand, "hand")
