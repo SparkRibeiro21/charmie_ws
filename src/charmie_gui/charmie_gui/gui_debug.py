@@ -393,17 +393,16 @@ class DebugVisualNode(Node):
         self.activate_yolo_pose_client.call_async(request)
 
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_objects_server(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5):
+    def call_activate_yolo_objects_server(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5):
         request = ActivateYoloObjects.Request()
         request.activate_objects = activate_objects
-        request.activate_shoes = activate_shoes
-        request.activate_doors = activate_doors
+        request.activate_furniture = activate_furniture
         request.activate_objects_hand = activate_objects_hand
-        request.activate_shoes_hand = activate_shoes_hand
-        request.activate_doors_hand = activate_doors_hand
+        request.activate_furniture_hand = activate_furniture_hand
+        request.activate_objects_base = activate_objects_base
+        request.activate_furniture_base = activate_furniture_base
         request.minimum_objects_confidence = minimum_objects_confidence
-        request.minimum_shoes_confidence = minimum_shoes_confidence
-        request.minimum_doors_confidence = minimum_doors_confidence
+        request.minimum_furniture_confidence = minimum_furniture_confidence
 
         self.activate_yolo_objects_client.call_async(request)
 
@@ -971,12 +970,12 @@ class DebugVisualMain():
         # self.toggle_head_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2*self.toggle_h_diff)), 40, 16)
         #self.toggle_hand_rgb_depth = Toggle(self.WIN, int(3.5*self.init_pos_w_rect_check_nodes), int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+3*self.toggle_h_diff)), 40, 16)
 
-        self.toggle_activate_objects_head =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_objects_head   = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+50, 40, 16)
         self.toggle_activate_furniture_head = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90,  self.cams_initial_height+50, 40, 16)
-        self.toggle_activate_shoes_head =     Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192, self.cams_initial_height+50, 40, 16)
-        self.toggle_activate_objects_hand =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+298, self.cams_initial_height+50, 40, 16)
-        self.toggle_activate_furniture_hand = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+390, self.cams_initial_height+50, 40, 16)
-        self.toggle_activate_shoes_hand =     Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+492, self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_objects_hand   = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192, self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_furniture_hand = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+282, self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_objects_base   = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+384, self.cams_initial_height+50, 40, 16)
+        self.toggle_activate_furniture_base = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+474, self.cams_initial_height+50, 40, 16)
 
         self.toggle_pose_activate =       Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+80+50, 40, 16)
         self.toggle_pose_waving =         Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+93,  self.cams_initial_height+80+50, 40, 16)
@@ -990,12 +989,12 @@ class DebugVisualMain():
 
         self.last_toggle_record = False
 
-        self.last_toggle_activate_objects_head =   False
+        self.last_toggle_activate_objects_head   = False
         self.last_toggle_activate_furniture_head = False
-        self.last_toggle_activate_shoes_head =     False
-        self.last_toggle_activate_objects_hand =   False
+        self.last_toggle_activate_objects_hand   = False
         self.last_toggle_activate_furniture_hand = False
-        self.last_toggle_activate_shoes_hand =     False
+        self.last_toggle_activate_objects_base   = False
+        self.last_toggle_activate_furniture_base = False
 
         self.last_toggle_pose_activate =       False
         self.last_toggle_pose_waving =         False
@@ -1050,9 +1049,9 @@ class DebugVisualMain():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5, wait_for_end_of=True):
         
-        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_shoes=activate_shoes, activate_doors=activate_doors, activate_objects_hand=activate_objects_hand, activate_shoes_hand=activate_shoes_hand, activate_doors_hand=activate_doors_hand, minimum_objects_confidence=minimum_objects_confidence, minimum_shoes_confidence=minimum_shoes_confidence, minimum_doors_confidence=minimum_doors_confidence)
+        self.node.call_activate_yolo_objects_server(activate_objects=activate_objects, activate_furniture=activate_furniture, activate_objects_hand=activate_objects_hand, activate_furniture_hand=activate_furniture_hand, activate_objects_base=activate_objects_base, activate_furniture_base=activate_furniture_base, minimum_objects_confidence=minimum_objects_confidence, minimum_furniture_confidence=minimum_furniture_confidence)
 
         self.node.activate_yolo_objects_success = True
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
@@ -1506,23 +1505,22 @@ class DebugVisualMain():
         
     def draw_activates(self):
 
-        self.draw_text("Activate YOLO Objects: (Head/Hand)", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, self.cams_initial_height)
+        self.draw_text("Activate YOLO Objects: (Head/Gripper/Base)", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, self.cams_initial_height)
         self.draw_text("Activate YOLO Pose:", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+self.cams_initial_height)
         self.draw_text("Activate Obstacles:", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+self.cams_initial_height)
         
-        self.draw_text("Objects:      Furniture:      Shoes:      /      Objects:      Furniture:      Shoes:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 25+self.cams_initial_height)
+        self.draw_text("Objects:     Furniture:   /   Objects:     Furniture:   /   Objects:     Furniture:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 25+self.cams_initial_height)
         self.draw_text("Activate:      Waving:      Front Close:      Legs Visible:      Characteristics:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+25+self.cams_initial_height)
         self.draw_text("Lidar Top:      Lidar Bottom:      Head Camera:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+25+self.cams_initial_height)
         
-
         # this is done to make sure that the same value used for checking pressed is the same used to attribute to last toggle
         # YOLO OBJECTS ACTIVATE
         toggle_activate_objects_head   = self.toggle_activate_objects_head.getValue()
         toggle_activate_furniture_head = self.toggle_activate_furniture_head.getValue()
-        toggle_activate_shoes_head     = self.toggle_activate_shoes_head.getValue()
         toggle_activate_objects_hand   = self.toggle_activate_objects_hand.getValue()
         toggle_activate_furniture_hand = self.toggle_activate_furniture_hand.getValue()
-        toggle_activate_shoes_hand     = self.toggle_activate_shoes_hand.getValue()
+        toggle_activate_objects_base   = self.toggle_activate_objects_base.getValue()
+        toggle_activate_furniture_base = self.toggle_activate_furniture_base.getValue()
 
         # YOLO POSE ACTIVATE
         toggle_pose_activate        = self.toggle_pose_activate.getValue()
@@ -1536,18 +1534,19 @@ class DebugVisualMain():
         toggle_obstacles_lidar_bottom   = self.toggle_obstacles_lidar_bottom.getValue()
         toggle_obstacles_head_camera    = self.toggle_obstacles_head_camera.getValue()
 
-        if toggle_activate_objects_head     != self.last_toggle_activate_objects_head or \
-            toggle_activate_furniture_head  != self.last_toggle_activate_furniture_head or \
-            toggle_activate_shoes_head      != self.last_toggle_activate_shoes_head or \
-            toggle_activate_objects_hand    != self.last_toggle_activate_objects_hand or \
-            toggle_activate_furniture_hand  != self.last_toggle_activate_furniture_hand or \
-            toggle_activate_shoes_hand      != self.last_toggle_activate_shoes_hand:
+        if toggle_activate_objects_head    != self.last_toggle_activate_objects_head or \
+           toggle_activate_furniture_head  != self.last_toggle_activate_furniture_head or \
+           toggle_activate_objects_hand    != self.last_toggle_activate_objects_hand or \
+           toggle_activate_furniture_hand  != self.last_toggle_activate_furniture_hand or \
+           toggle_activate_objects_base    != self.last_toggle_activate_objects_base or \
+           toggle_activate_furniture_base  != self.last_toggle_activate_furniture_base:
             
             print("YOLO OBJECTS - CHANGED STATUS.")
 
-            self.activate_yolo_objects(activate_objects=toggle_activate_objects_head, activate_shoes=toggle_activate_shoes_head, \
-                                       activate_doors=toggle_activate_furniture_head, activate_objects_hand=toggle_activate_objects_hand, \
-                                       activate_shoes_hand=toggle_activate_shoes_hand, activate_doors_hand=toggle_activate_furniture_hand)
+            ############################################################################################################################################################################################
+            self.activate_yolo_objects(activate_objects     =toggle_activate_objects_head, activate_furniture     =toggle_activate_furniture_head, \
+                                       activate_objects_hand=toggle_activate_objects_hand, activate_furniture_hand=toggle_activate_furniture_hand, \
+                                       activate_objects_base=toggle_activate_objects_base, activate_furniture_base=toggle_activate_furniture_base)
 
 
         if toggle_pose_activate         != self.last_toggle_pose_activate or \
@@ -1573,12 +1572,12 @@ class DebugVisualMain():
                                     obstacles_camera_head=toggle_obstacles_head_camera)
 
 
-        self.last_toggle_activate_objects_head =   toggle_activate_objects_head 
+        self.last_toggle_activate_objects_head   = toggle_activate_objects_head 
         self.last_toggle_activate_furniture_head = toggle_activate_furniture_head
-        self.last_toggle_activate_shoes_head =     toggle_activate_shoes_head
-        self.last_toggle_activate_objects_hand =   toggle_activate_objects_hand
+        self.last_toggle_activate_objects_hand   = toggle_activate_objects_hand
         self.last_toggle_activate_furniture_hand = toggle_activate_furniture_hand
-        self.last_toggle_activate_shoes_hand =     toggle_activate_shoes_hand
+        self.last_toggle_activate_objects_base   = toggle_activate_objects_base
+        self.last_toggle_activate_furniture_base = toggle_activate_furniture_base
 
         self.last_toggle_pose_activate =       toggle_pose_activate
         self.last_toggle_pose_waving =         toggle_pose_waving
@@ -1910,10 +1909,10 @@ class DebugVisualMain():
         # adjust activate toggle positions
         self.toggle_activate_objects_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
         self.toggle_activate_furniture_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90)
-        self.toggle_activate_shoes_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192)
-        self.toggle_activate_objects_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+298)
-        self.toggle_activate_furniture_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+390)
-        self.toggle_activate_shoes_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+492)
+        self.toggle_activate_objects_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192)
+        self.toggle_activate_furniture_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+282)
+        self.toggle_activate_objects_base.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+384)
+        self.toggle_activate_furniture_base.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+474)
 
         self.toggle_pose_activate.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
         self.toggle_pose_waving.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+93)
