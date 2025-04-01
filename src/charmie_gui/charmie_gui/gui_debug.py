@@ -202,7 +202,7 @@ class DebugVisualNode(Node):
         self.hand_yo_time = 0.0
         self.base_yo_time = 0.0
         self.track_time = 0.0
-        
+
         self.head_yp_fps = 0.0
         self.head_yo_fps = 0.0
         self.hand_yo_fps = 0.0
@@ -1007,15 +1007,6 @@ class DebugVisualMain():
         self.last_toggle_obstacles_lidar_bottom = False
         self.last_toggle_obstacles_head_camera =  False
 
-        self.curr_head_rgb = Image()
-        self.last_head_rgb = Image()
-        self.curr_head_depth = Image()
-        self.last_head_depth = Image()
-        self.curr_hand_rgb = Image()
-        self.last_hand_rgb = Image()
-        self.curr_hand_depth = Image()
-        self.last_hand_depth = Image()
-
         self.curr_top_cam = Image()
         self.last_top_cam = Image()
         self.curr_bottom_cam = Image()
@@ -1257,212 +1248,6 @@ class DebugVisualMain():
             rectangle_color = rectangle_color_not_checked
         
         return text_color, rectangle_color
-
-
-    def draw_cameras(self):
-
-        self.curr_head_rgb = self.node.head_rgb
-        self.curr_head_depth = self.node.head_depth
-        self.curr_hand_rgb = self.node.hand_rgb
-        self.curr_hand_depth = self.node.hand_depth
-
-        if self.toggle_pause_cams.getValue():
-            used_img_head_rgb = self.last_head_rgb
-            used_img_head_depth = self.last_head_depth
-            used_img_hand_rgb = self.last_hand_rgb
-            used_img_hand_depth = self.last_hand_depth
-
-        else:
-            used_img_head_rgb = self.curr_head_rgb 
-            used_img_head_depth = self.curr_head_depth 
-            used_img_hand_rgb = self.curr_hand_rgb
-            used_img_hand_depth = self.curr_hand_depth
-
-        self.last_head_rgb = used_img_head_rgb 
-        self.last_head_depth = used_img_head_depth 
-        self.last_hand_rgb = used_img_hand_rgb
-        self.last_hand_depth = used_img_hand_depth
-
-
-        if not self.toggle_head_rgb_depth.getValue():
-
-            if self.node.new_head_rgb:
-                
-                try:
-                    opencv_image = self.br.imgmsg_to_cv2(used_img_head_rgb, "bgr8")
-                except CvBridgeError as e:
-                    self.node.get_logger().error(f"Conversion error (HEAD RGB): {e}")
-                    opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
-                
-                opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
-                # Convert the image to RGB (OpenCV loads as BGR by default)
-                opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-                # Convert the image to a banded surface (Pygame compatible format)
-                height, width, channels = opencv_image.shape
-                # print(height, width)
-                image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-                self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 10*self.cams_initial_height, self.BLACK, 85)
-                self.draw_text("RGB: "+str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
-                self.draw_text("Dep: "+str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
-                self.draw_text("Y_O: "+str(self.node.head_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, 5*self.cams_initial_height)
-                self.draw_text("Y_P: "+str(self.node.head_yp_fps), self.text_font, self.WHITE, self.cams_initial_width, 7*self.cams_initial_height)
-                self.draw_text("Track: "+str(self.node.track_fps), self.text_font, self.WHITE, self.cams_initial_width, 9*self.cams_initial_height)
-
-            else:
-                temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
-                pygame.draw.rect(self.WIN, self.GREY, temp_rect)
-                self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cams_initial_height+(self.cam_height_//2))
-        else:
-            if self.node.new_head_depth:
-
-                try:
-                    opencv_image = self.br.imgmsg_to_cv2(used_img_head_depth, "passthrough")
-                except CvBridgeError as e:
-                    self.node.get_logger().error(f"Conversion error (HEAD Depth): {e}")
-                    opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
-                
-                opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
-                
-                """
-                # Get the minimum and maximum values in the depth image
-                min_val, max_val, _, _ = cv2.minMaxLoc(opencv_image)
-
-                # Avoid zero values (invalid measurements) in the depth image
-                if min_val == 0:
-                    min_val = np.min(opencv_image[opencv_image > 0])
-                if max_val == 0:
-                    max_val = np.max(opencv_image[opencv_image > 0])
-
-                print(min_val, max_val)
-                """
-
-                min_val = 0
-                max_val = 6000
-
-                # Normalize the depth image to fall between 0 and 1
-                # depth_normalized = cv2.normalize(opencv_image, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-                # Normalize the depth image to fall between 0 and 1
-                depth_normalized = (opencv_image - min_val) / (max_val - min_val)
-                depth_normalized = np.clip(depth_normalized, 0, 1)
-                
-                # Convert the normalized depth image to an 8-bit image (0-255)
-                depth_8bit = (depth_normalized * 255).astype(np.uint8)
-
-                # Apply a colormap to the 8-bit depth image
-                opencv_image = cv2.applyColorMap(depth_8bit, cv2.COLORMAP_JET)
-                
-                # Convert the image to RGB (OpenCV loads as BGR by default)
-                opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-                
-                # Convert the image to a banded surface (Pygame compatible format)
-                height, width, channels = opencv_image.shape
-                # print(height, width)
-                image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-                self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 10*self.cams_initial_height, self.BLACK, 85)
-                self.draw_text("RGB: "+str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
-                self.draw_text("Dep: "+str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
-                self.draw_text("Y_O: "+str(self.node.head_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, 5*self.cams_initial_height)
-                self.draw_text("Y_P: "+str(self.node.head_yp_fps), self.text_font, self.WHITE, self.cams_initial_width, 7*self.cams_initial_height)
-                self.draw_text("Track: "+str(self.node.track_fps), self.text_font, self.WHITE, self.cams_initial_width, 9*self.cams_initial_height)
-
-            else:
-                temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
-                pygame.draw.rect(self.WIN, self.GREY, temp_rect)
-                self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cams_initial_height+(self.cam_height_//2))
-
-
-        if not self.toggle_hand_rgb_depth.getValue():
-
-            if self.node.new_hand_rgb:
-
-                try:
-                    opencv_image = self.br.imgmsg_to_cv2(used_img_hand_rgb, "bgr8")
-                except CvBridgeError as e:
-                    self.node.get_logger().error(f"Conversion error (HAND RGB): {e}")
-                    opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
-                
-                opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
-                # Convert the image to RGB (OpenCV loads as BGR by default)
-                opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-                # Convert the image to a banded surface (Pygame compatible format)
-                height, width, channels = opencv_image.shape
-                # print(height, width)
-                image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-                self.WIN.blit(image_surface, (self.cams_initial_width, self.cam_height_+2*self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 80, 6*self.cams_initial_height, self.BLACK, 85)
-                self.draw_text("RGB: "+str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
-                self.draw_text("Dep: "+str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
-                self.draw_text("Y_O: "+str(self.node.hand_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+5*self.cams_initial_height+self.cams_initial_height)
-                
-            else:
-                temp_rect = pygame.Rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, self.cam_width_, self.cam_height_)
-                pygame.draw.rect(self.WIN, self.GREY, temp_rect)
-                self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cam_height_+2*self.cams_initial_height+(self.cam_height_//2))
-
-        else:
-
-            if self.node.new_hand_depth:
-
-                try:
-                    opencv_image = self.br.imgmsg_to_cv2(used_img_hand_depth, "passthrough")
-                except CvBridgeError as e:
-                    self.node.get_logger().error(f"Conversion error (HEAD Depth): {e}")
-                    opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
-                
-                opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
-                
-                """
-                # Get the minimum and maximum values in the depth image
-                min_val, max_val, _, _ = cv2.minMaxLoc(opencv_image)
-
-                # Avoid zero values (invalid measurements) in the depth image
-                if min_val == 0:
-                    min_val = np.min(opencv_image[opencv_image > 0])
-                if max_val == 0:
-                    max_val = np.max(opencv_image[opencv_image > 0])
-
-                print(min_val, max_val)
-                """
-
-                min_val = 0
-                max_val = 3000
-
-                # Normalize the depth image to fall between 0 and 1
-                # depth_normalized = cv2.normalize(opencv_image, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-                # Normalize the depth image to fall between 0 and 1
-                depth_normalized = (opencv_image - min_val) / (max_val - min_val)
-                depth_normalized = np.clip(depth_normalized, 0, 1)
-                
-                # Convert the normalized depth image to an 8-bit image (0-255)
-                depth_8bit = (depth_normalized * 255).astype(np.uint8)
-
-                # Apply a colormap to the 8-bit depth image
-                opencv_image = cv2.applyColorMap(depth_8bit, cv2.COLORMAP_JET)
-                
-                # Convert the image to RGB (OpenCV loads as BGR by default)
-                opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-                
-                # Convert the image to a banded surface (Pygame compatible format)
-                height, width, channels = opencv_image.shape
-                # print(height, width)
-                image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
-                self.WIN.blit(image_surface, (self.cams_initial_width, self.cam_height_+2*self.cams_initial_height))
-                self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 80, 6*self.cams_initial_height, self.BLACK, 85)
-                self.draw_text("RGB: "+str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
-                self.draw_text("Dep: "+str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
-                self.draw_text("Y_O: "+str(self.node.hand_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+5*self.cams_initial_height+self.cams_initial_height)
-                
-            else:
-                temp_rect = pygame.Rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, self.cam_width_, self.cam_height_)
-                pygame.draw.rect(self.WIN, self.GREY, temp_rect)
-                self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cam_height_+2*self.cams_initial_height+(self.cam_height_//2))
-
-        self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*self.first_pos_h)
-        self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+2.5-0.2))
-        self.draw_text("Depth Head:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+5.0-0.4))
-        self.draw_text("Depth Hand:", self.text_font_t, self.WHITE, 10, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.first_pos_h+7.5-0.6))
 
     def draw_cameras_choosing_menu(self):
 
@@ -2502,7 +2287,6 @@ class DebugVisualMain():
             self.adjust_window_size()  
             self.draw_nodes_check()
             self.draw_battery()
-            # self.draw_cameras()
             self.draw_cameras_choosing_menu()
             self.draw_activates()
             self.draw_pose_detections()
