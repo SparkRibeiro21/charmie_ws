@@ -31,6 +31,10 @@ from pygame_widgets.toggle import Toggle
 from pygame_widgets.button import Button
 from pygame_widgets.textbox import TextBox
 
+
+# specific colors for FPS
+# add yolo fps similar to new cams fps 
+
 class DebugVisualNode(Node):
 
     def __init__(self):
@@ -136,8 +140,10 @@ class DebugVisualNode(Node):
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
+        self.time_for_cams_fps_verification = 0.25
         self.create_timer(1.0, self.check_yolos_timer)
         self.create_timer(0.4, self.check_tracking_timer)
+        self.create_timer(self.time_for_cams_fps_verification, self.check_cameras_fps_timer)
         self.is_yolo_pose_comm = False
         self.is_yolo_obj_head_comm = False
         self.is_yolo_obj_hand_comm = False
@@ -193,19 +199,19 @@ class DebugVisualNode(Node):
         self.base_camera_time = 0.0
         self.base_depth_camera_time = 0.0
 
-        self.last_head_camera_time = 0.0
-        self.last_head_depth_camera_time = 0.0
-        self.last_hand_camera_time = 0.0
-        self.last_hand_depth_camera_time = 0.0
-        self.last_base_camera_time = 0.0
-        self.last_base_depth_camera_time = 0.0
-
         self.head_rgb_fps = 0.0
         self.head_depth_fps = 0.0
         self.hand_rgb_fps = 0.0
         self.hand_depth_fps = 0.0
         self.base_rgb_fps = 0.0
         self.base_depth_fps = 0.0
+
+        self.head_rgb_fps_ctr = 0
+        self.head_depth_fps_ctr = 0
+        self.hand_rgb_fps_ctr = 0
+        self.hand_depth_fps_ctr = 0
+        self.base_rgb_fps_ctr = 0
+        self.base_depth_fps_ctr = 0
 
         self.head_yp_time = 0.0
         self.head_yo_time = 0.0
@@ -281,6 +287,26 @@ class DebugVisualNode(Node):
         else:
             self.is_tracking_comm = False
 
+    def check_cameras_fps_timer(self):
+
+        self.head_rgb_fps   = self.head_rgb_fps_ctr  /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
+        self.head_depth_fps = self.head_depth_fps_ctr/self.time_for_cams_fps_verification
+        self.hand_rgb_fps   = self.hand_rgb_fps_ctr  /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
+        self.hand_depth_fps = self.hand_depth_fps_ctr/self.time_for_cams_fps_verification
+        self.base_rgb_fps   = self.base_rgb_fps_ctr  /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
+        self.base_depth_fps = self.base_depth_fps_ctr/self.time_for_cams_fps_verification
+        
+        # print(self.head_rgb_fps_, self.head_rgb_fps_ctr/0.5, end="")
+
+        self.head_rgb_fps_ctr = 0
+        self.head_depth_fps_ctr = 0
+        self.hand_rgb_fps_ctr = 0
+        self.hand_depth_fps_ctr = 0
+        self.base_rgb_fps_ctr = 0
+        self.base_depth_fps_ctr = 0
+
+        # print(self.head_rgb_fps_, self.head_rgb_fps_ctr/0.5)
+        
     """
     def battery_timer(self):
         
@@ -345,52 +371,38 @@ class DebugVisualNode(Node):
     def get_color_image_hand_callback(self, img: Image):
         self.hand_rgb = img
         self.new_hand_rgb = True
-
-        self.last_hand_camera_time = self.hand_camera_time
         self.hand_camera_time = time.time()
-        self.hand_rgb_fps = min(round(1/(self.hand_camera_time-self.last_hand_camera_time), 0), 99)
+        self.hand_rgb_fps_ctr += 1
 
     def get_color_image_head_callback(self, img: Image):
         self.head_rgb = img
         self.new_head_rgb = True
-
-        self.last_head_camera_time = self.head_camera_time
         self.head_camera_time = time.time()
-        self.head_rgb_fps = min(round(1/(self.head_camera_time-self.last_head_camera_time), 0), 99)
+        self.head_rgb_fps_ctr += 1
 
     def get_aligned_depth_image_hand_callback(self, img: Image):
         self.hand_depth = img
         self.new_hand_depth = True
-
-        self.last_hand_depth_camera_time = self.hand_depth_camera_time
         self.hand_depth_camera_time = time.time()
-        self.hand_depth_fps = min(round(1/(self.hand_depth_camera_time-self.last_hand_depth_camera_time), 0), 99)
+        self.hand_depth_fps_ctr += 1
 
     def get_aligned_depth_image_head_callback(self, img: Image):
         self.head_depth = img
         self.new_head_depth = True
-        
-        self.last_head_depth_camera_time = self.head_depth_camera_time
         self.head_depth_camera_time = time.time()
-        self.head_depth_fps = min(round(1/(self.head_depth_camera_time-self.last_head_depth_camera_time), 0), 99)
+        self.head_depth_fps_ctr += 1
 
     def get_color_image_base_callback(self, img: Image):
         self.base_rgb = img
         self.new_base_rgb = True
-
-        self.last_base_camera_time = self.base_camera_time
         self.base_camera_time = time.time()
-        self.base_rgb_fps = min(round(1/(self.base_camera_time-self.last_base_camera_time), 0), 99)
-        # print("base_rgb_fps:", self.base_rgb_fps)
+        self.base_rgb_fps_ctr += 1
 
     def get_depth_base_image_callback(self, img: Image):
         self.base_depth = img
         self.new_base_depth = True
-        
-        self.last_base_depth_camera_time = self.base_depth_camera_time
         self.base_depth_camera_time = time.time()
-        self.base_depth_fps = min(round(1/(self.base_depth_camera_time-self.last_base_depth_camera_time), 0), 99)
-        # print("base_depth_fps:", self.base_depth_fps)
+        self.base_depth_fps_ctr += 1
 
     def vccs_low_level_callback(self, vccs: VCCsLowLevel):
         self.vccs = vccs
@@ -1584,12 +1596,9 @@ class DebugVisualMain():
             case _: # default
                 bottom_camera = self.node.hand_rgb
 
-        print("TOP CAM:", self.top_camera_id, self.top_camera_type)
-        print("BOT CAM:", self.bottom_camera_id, self.bottom_camera_type)
+        # print("TOP CAM:", self.top_camera_id, self.top_camera_type)
+        # print("BOT CAM:", self.bottom_camera_id, self.bottom_camera_type)
         
-
-
-        ### ESTA LOGICA TEM DE SER DIFERENTE PORQUE O TOPCAMERA E BOTTOMCAMERA SAO LOCAIS...
         self.curr_top_cam = top_camera
         self.curr_bottom_cam = bottom_camera
         self.curr_top_cam_type = self.top_camera_type
@@ -1621,8 +1630,6 @@ class DebugVisualMain():
 
 
 
-
-
         ###########
 
         if used_top_camera_type == "rgb":
@@ -1643,13 +1650,6 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
-                
-                # self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 10*self.cams_initial_height, self.BLACK, 85)
-                # self.draw_text("RGB: "+str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
-                # self.draw_text("Dep: "+str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
-                # self.draw_text("Y_O: "+str(self.node.head_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, 5*self.cams_initial_height)
-                # self.draw_text("Y_P: "+str(self.node.head_yp_fps), self.text_font, self.WHITE, self.cams_initial_width, 7*self.cams_initial_height)
-                # self.draw_text("Track: "+str(self.node.track_fps), self.text_font, self.WHITE, self.cams_initial_width, 9*self.cams_initial_height)
 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
@@ -1690,13 +1690,6 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cams_initial_height))
-                
-                # self.draw_transparent_rect(self.cams_initial_width, self.cams_initial_height, 80, 10*self.cams_initial_height, self.BLACK, 85)
-                # self.draw_text("RGB: "+str(self.node.head_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cams_initial_height)
-                # self.draw_text("Dep: "+str(self.node.head_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, 3*self.cams_initial_height)
-                # self.draw_text("Y_O: "+str(self.node.head_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, 5*self.cams_initial_height)
-                # self.draw_text("Y_P: "+str(self.node.head_yp_fps), self.text_font, self.WHITE, self.cams_initial_width, 7*self.cams_initial_height)
-                # self.draw_text("Track: "+str(self.node.track_fps), self.text_font, self.WHITE, self.cams_initial_width, 9*self.cams_initial_height)
 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cams_initial_height, self.cam_width_, self.cam_height_)
@@ -1721,11 +1714,6 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cam_height_+2*self.cams_initial_height))
-                
-                # self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 80, 6*self.cams_initial_height, self.BLACK, 85)
-                # self.draw_text("RGB: "+str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
-                # self.draw_text("Dep: "+str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
-                # self.draw_text("Y_O: "+str(self.node.hand_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+5*self.cams_initial_height+self.cams_initial_height)
                 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, self.cam_width_, self.cam_height_)
@@ -1767,11 +1755,6 @@ class DebugVisualMain():
                 # print(height, width)
                 image_surface = pygame.image.frombuffer(opencv_image.tobytes(), (width, height), 'RGB')
                 self.WIN.blit(image_surface, (self.cams_initial_width, self.cam_height_+2*self.cams_initial_height))
-                
-                # self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 80, 6*self.cams_initial_height, self.BLACK, 85)
-                # self.draw_text("RGB: "+str(self.node.hand_rgb_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+2*self.cams_initial_height)
-                # self.draw_text("Dep: "+str(self.node.hand_depth_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+3*self.cams_initial_height+self.cams_initial_height)
-                # self.draw_text("Y_O: "+str(self.node.hand_yo_fps), self.text_font, self.WHITE, self.cams_initial_width, self.cam_height_+5*self.cams_initial_height+self.cams_initial_height)
                 
             else:
                 temp_rect = pygame.Rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, self.cam_width_, self.cam_height_)
