@@ -473,9 +473,9 @@ class YoloPoseNode(Node):
                 self.waiting_for_pcloud = True
                 self.call_point_cloud_server(req2)
         
-        else:
-            yolov8_pose_filtered = ListOfDetectedPerson()
-            self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
+        # else:
+        #     yolov8_pose_filtered = ListOfDetectedPerson()
+        #     self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
         
 

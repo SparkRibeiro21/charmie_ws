@@ -31,9 +31,6 @@ from pygame_widgets.toggle import Toggle
 from pygame_widgets.button import Button
 from pygame_widgets.textbox import TextBox
 
-# specific colors for FPS
-# add yolo fps similar to new cams fps 
-
 class DebugVisualNode(Node):
 
     def __init__(self):
@@ -203,17 +200,20 @@ class DebugVisualNode(Node):
         self.head_yp_time = 0.0
         self.head_yo_time = 0.0
         self.hand_yo_time = 0.0
+        self.base_yo_time = 0.0
         self.track_time = 0.0
-
-        self.last_head_yp_time = 0.0
-        self.last_head_yo_time = 0.0
-        self.last_hand_yo_time = 0.0
-        self.last_track_time = 0.0
-
+        
         self.head_yp_fps = 0.0
         self.head_yo_fps = 0.0
         self.hand_yo_fps = 0.0
+        self.base_yo_fps = 0.0
         self.track_fps = 0.0
+
+        self.head_yp_fps_ctr = 0
+        self.head_yo_fps_ctr = 0
+        self.hand_yo_fps_ctr = 0
+        self.base_yo_fps_ctr = 0
+        self.track_fps_ctr = 0
 
         self.all_pos_x_val = []
         self.all_pos_y_val = []
@@ -277,12 +277,17 @@ class DebugVisualNode(Node):
 
     def check_cameras_fps_timer(self):
 
-        self.head_rgb_fps   = self.head_rgb_fps_ctr  /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
-        self.head_depth_fps = self.head_depth_fps_ctr/self.time_for_cams_fps_verification
-        self.hand_rgb_fps   = self.hand_rgb_fps_ctr  /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
-        self.hand_depth_fps = self.hand_depth_fps_ctr/self.time_for_cams_fps_verification
-        self.base_rgb_fps   = self.base_rgb_fps_ctr  /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
-        self.base_depth_fps = self.base_depth_fps_ctr/self.time_for_cams_fps_verification
+        self.head_rgb_fps   = self.head_rgb_fps_ctr   /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
+        self.head_depth_fps = self.head_depth_fps_ctr /self.time_for_cams_fps_verification
+        self.hand_rgb_fps   = self.hand_rgb_fps_ctr   /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
+        self.hand_depth_fps = self.hand_depth_fps_ctr /self.time_for_cams_fps_verification
+        self.base_rgb_fps   = self.base_rgb_fps_ctr   /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
+        self.base_depth_fps = self.base_depth_fps_ctr /self.time_for_cams_fps_verification
+        self.head_yp_fps    = self.head_yp_fps_ctr    /self.time_for_cams_fps_verification
+        self.head_yo_fps    = self.head_yo_fps_ctr    /self.time_for_cams_fps_verification
+        self.hand_yo_fps    = self.hand_yo_fps_ctr    /self.time_for_cams_fps_verification
+        self.base_yo_fps    = self.base_yo_fps_ctr    /self.time_for_cams_fps_verification
+        self.track_fps      = self.track_fps_ctr      /self.time_for_cams_fps_verification
         
         self.head_rgb_fps_ctr = 0
         self.head_depth_fps_ctr = 0
@@ -290,6 +295,11 @@ class DebugVisualNode(Node):
         self.hand_depth_fps_ctr = 0
         self.base_rgb_fps_ctr = 0
         self.base_depth_fps_ctr = 0
+        self.head_yp_fps_ctr = 0
+        self.head_yo_fps_ctr = 0
+        self.hand_yo_fps_ctr = 0
+        self.base_yo_fps_ctr = 0
+        self.track_fps_ctr = 0
 
     def nodes_used_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
         # Type of service received: 
@@ -410,34 +420,27 @@ class DebugVisualNode(Node):
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
         self.new_detected_people = True
-    
-        self.last_head_yp_time = self.head_yp_time
         self.head_yp_time = time.time()
-        self.head_yp_fps = round(1/(self.head_yp_time-self.last_head_yp_time), 1)
-
+        self.head_yp_fps_ctr += 1
+        
     def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
         self.new_detected_objects = True
-
-        self.last_head_yo_time = self.head_yo_time
         self.head_yo_time = time.time()
-        self.head_yo_fps = round(1/(self.head_yo_time-self.last_head_yo_time), 1)
-
+        self.head_yo_fps_ctr += 1
+        print(self.head_yo_fps_ctr)
+        
     def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
         self.new_detected_objects_hand = True
-
-        self.last_hand_yo_time = self.hand_yo_time
         self.hand_yo_time = time.time()
-        self.hand_yo_fps = round(1/(self.hand_yo_time-self.last_hand_yo_time), 1)
+        self.hand_yo_fps_ctr += 1
 
     def tracking_mask_callback(self, mask: TrackingMask):
         self.tracking_mask = mask
         self.new_tracking_mask_msg = True
-    
-        self.last_track_time = self.track_time
         self.track_time = time.time()
-        self.track_fps = round(1/(self.track_time-self.last_track_time), 1)
+        self.track_fps_ctr += 1
 
     def ps4_controller_callback(self, controller: PS4Controller):
         self.ps4_controller_time = time.time()
@@ -1689,8 +1692,8 @@ class DebugVisualMain():
         self.draw_text("RGB: "+str(int(self.node.head_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.head_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
         self.draw_text("D: "+str(int(self.node.head_depth_fps)), self.text_font, self.fps_to_color(int(self.node.head_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
         self.draw_text("Y: "+str(int(self.node.head_yo_fps)), self.text_font, self.fps_to_color(int(self.node.head_yo_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
-        self.draw_text("Y_P: "+str(int(0)), self.text_font, self.fps_to_color(int(0)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
-        self.draw_text("T: "+str(int(0)), self.text_font, self.fps_to_color(int(0)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
+        self.draw_text("Y_P: "+str(int(self.node.head_yp_fps)), self.text_font, self.fps_to_color(int(self.node.head_yp_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
+        self.draw_text("T: "+str(int(self.node.track_fps)), self.text_font, self.fps_to_color(int(self.node.track_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
         self.draw_text("Gripper Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21.5)
         self.draw_text("RGB: "+str(int(self.node.hand_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.hand_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
         self.draw_text("D: "+str(int(self.node.hand_depth_fps)), self.text_font, self.fps_to_color(int(self.node.hand_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
@@ -1698,7 +1701,7 @@ class DebugVisualMain():
         self.draw_text("Base Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23.5)
         self.draw_text("RGB: "+str(int(self.node.base_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.base_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
         self.draw_text("D: "+str(int(self.node.base_depth_fps)), self.text_font, self.fps_to_color(int(self.node.base_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
-        self.draw_text("Y: "+str(int(0)), self.text_font, self.fps_to_color(int(0)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
+        self.draw_text("Y: "+str(int(self.node.base_yo_fps)), self.text_font, self.fps_to_color(int(self.node.base_yo_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
 
         self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.2*self.toggle_h_diff)))
         self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.8*self.toggle_h_diff)))

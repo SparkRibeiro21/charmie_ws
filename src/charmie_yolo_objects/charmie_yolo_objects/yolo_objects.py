@@ -866,7 +866,8 @@ class YoloObjectsMain():
                     for o in list_detected_shoes.objects:
                         list_all_objects_detected.objects.append(o)
 
-                if len(list_all_objects_detected.objects) > 0:
+                if self.node.ACTIVATE_YOLO_OBJECTS or self.node.ACTIVATE_YOLO_DOORS or self.node.ACTIVATE_YOLO_SHOES:
+                    # if len(list_all_objects_detected.objects) > 0:
                     self.node.objects_filtered_publisher.publish(list_all_objects_detected)
 
 
@@ -913,7 +914,8 @@ class YoloObjectsMain():
                     for o in list_detected_shoes_hand.objects:
                         list_all_objects_detected_hand.objects.append(o)
 
-                if len(list_all_objects_detected_hand.objects) > 0:
+                if self.node.ACTIVATE_YOLO_OBJECTS_HAND or self.node.ACTIVATE_YOLO_DOORS_HAND or self.node.ACTIVATE_YOLO_SHOES_HAND:
+                    # if len(list_all_objects_detected_hand.objects) > 0:
                     self.node.objects_filtered_hand_publisher.publish(list_all_objects_detected_hand)
 
 
