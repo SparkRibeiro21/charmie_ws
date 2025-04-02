@@ -89,6 +89,7 @@ class DebugVisualNode(Node):
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
         self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
+        self.objects_filtered_base_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_base', self.object_detected_filtered_base_callback, 10)
 
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
@@ -139,6 +140,7 @@ class DebugVisualNode(Node):
         self.is_yolo_pose_comm = False
         self.is_yolo_obj_head_comm = False
         self.is_yolo_obj_hand_comm = False
+        self.is_yolo_obj_base_comm = False
 
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
@@ -163,9 +165,11 @@ class DebugVisualNode(Node):
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
         self.detected_objects_hand = ListOfDetectedObject()
+        self.detected_objects_base = ListOfDetectedObject()
         self.new_detected_people = False
         self.new_detected_objects = False
         self.new_detected_objects_hand = False
+        self.new_detected_objects_base = False
 
         self.vccs = VCCsLowLevel()
         self.robot_pose = Pose2D()
@@ -197,11 +201,11 @@ class DebugVisualNode(Node):
         self.base_rgb_fps_ctr = 0
         self.base_depth_fps_ctr = 0
 
-        self.head_yp_time = 0.0
-        self.head_yo_time = 0.0
-        self.hand_yo_time = 0.0
-        self.base_yo_time = 0.0
-        self.track_time = 0.0
+        # self.head_yp_time = 0.0
+        # self.head_yo_time = 0.0
+        # self.hand_yo_time = 0.0
+        # self.base_yo_time = 0.0
+        # self.track_time = 0.0
 
         self.head_yp_fps = 0.0
         self.head_yo_fps = 0.0
@@ -266,6 +270,12 @@ class DebugVisualNode(Node):
             self.is_yolo_obj_hand_comm = True
         else:
             self.is_yolo_obj_hand_comm = False
+    
+        if self.new_detected_objects_base:
+            self.new_detected_objects_base = False
+            self.is_yolo_obj_base_comm = True
+        else:
+            self.is_yolo_obj_base_comm = False
 
     def check_tracking_timer(self):
 
@@ -419,25 +429,31 @@ class DebugVisualNode(Node):
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
         self.new_detected_people = True
-        self.head_yp_time = time.time()
+        # self.head_yp_time = time.time()
         self.head_yp_fps_ctr += 1
         
     def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
         self.new_detected_objects = True
-        self.head_yo_time = time.time()
+        # self.head_yo_time = time.time()
         self.head_yo_fps_ctr += 1
         
     def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
         self.new_detected_objects_hand = True
-        self.hand_yo_time = time.time()
+        # self.hand_yo_time = time.time()
         self.hand_yo_fps_ctr += 1
+        
+    def object_detected_filtered_base_callback(self, det_object: ListOfDetectedObject):
+        self.detected_objects_base = det_object
+        self.new_detected_objects_base = True
+        # self.base_yo_time = time.time()
+        self.base_yo_fps_ctr += 1
 
     def tracking_mask_callback(self, mask: TrackingMask):
         self.tracking_mask = mask
         self.new_tracking_mask_msg = True
-        self.track_time = time.time()
+        # self.track_time = time.time()
         self.track_fps_ctr += 1
 
     def ps4_controller_callback(self, controller: PS4Controller):
@@ -1025,6 +1041,8 @@ class DebugVisualMain():
         self.last_detected_objects = ListOfDetectedObject()
         self.curr_detected_objects_hand = ListOfDetectedObject()
         self.last_detected_objects_hand = ListOfDetectedObject()
+        self.curr_detected_objects_base = ListOfDetectedObject()
+        self.last_detected_objects_base = ListOfDetectedObject()
 
         self.curr_tracking = TrackingMask()
         self.last_tracking = TrackingMask()
@@ -1718,18 +1736,22 @@ class DebugVisualMain():
             
     def draw_object_detections(self):
 
-        self.curr_detected_objects = self.node.detected_objects
+        self.curr_detected_objects      = self.node.detected_objects
         self.curr_detected_objects_hand = self.node.detected_objects_hand
+        self.curr_detected_objects_base = self.node.detected_objects_base
 
         if self.toggle_pause_cams.getValue():
-            used_detected_objects = self.last_detected_objects
-            used_detected_objects_hand = self.last_detected_objects_hand
+            used_detected_objects       = self.last_detected_objects
+            used_detected_objects_hand  = self.last_detected_objects_hand
+            used_detected_objects_base  = self.last_detected_objects_base
         else:
-            used_detected_objects = self.curr_detected_objects 
-            used_detected_objects_hand = self.curr_detected_objects_hand
+            used_detected_objects       = self.curr_detected_objects 
+            used_detected_objects_hand  = self.curr_detected_objects_hand
+            used_detected_objects_base  = self.curr_detected_objects_base
 
-        self.last_detected_objects = used_detected_objects 
+        self.last_detected_objects      = used_detected_objects 
         self.last_detected_objects_hand = used_detected_objects_hand
+        self.last_detected_objects_base = used_detected_objects_base
 
         if self.node.is_yolo_obj_head_comm:
             if len(used_detected_objects.objects) > 0:
@@ -1743,11 +1765,17 @@ class DebugVisualMain():
                 pass
             self.draw_object_bounding_boxes(used_detected_objects_hand, "hand")
 
+        if self.node.is_yolo_obj_base_comm:
+            if len(used_detected_objects_base.objects) > 0:
+                # print("DETECTED OBJECTS BASE:")
+                pass
+            self.draw_object_bounding_boxes(used_detected_objects_base, "base")
+
     def draw_object_bounding_boxes(self, objects, head_or_hand):
 
         if head_or_hand.lower() == "head":
             window_cam_height = self.cams_initial_height
-        else: # "hand"
+        else: # "hand" # OR MORE RECENTLY BASE
             window_cam_height = self.cam_height_+2*self.cams_initial_height
 
         if len(objects.objects) > 0:
