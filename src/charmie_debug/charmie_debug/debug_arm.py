@@ -30,7 +30,7 @@ ros2_modules = {
     "charmie_odometry":         False,
     "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -90,6 +90,12 @@ class TaskMain():
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
                 
+                # APRIL 1 TEST
+
+                self.robot.set_arm(command="teste1", wait_for_end_of=True)
+
+                while True:
+                    pass
 
                 # INITIAL STATE
 
