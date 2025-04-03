@@ -1368,7 +1368,31 @@ class DebugVisualMain():
                 except CvBridgeError as e:
                     self.node.get_logger().error(f"Conversion error (HEAD RGB): {e}")
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
-                
+
+                if self.top_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 1280×720 (16:9) 848x480 is 2/3 de 1280/720
+                    target_width = 848
+                    target_height = 480
+
+                    # Original image size
+                    h, w = opencv_image.shape[:2]
+
+                    # Compute padding
+                    top_pad = (target_height - h) // 2
+                    bottom_pad = target_height - h - top_pad
+                    left_pad = (target_width - w) // 2
+                    right_pad = target_width - w - left_pad
+
+                    # Pad with black pixels
+                    opencv_image = cv2.copyMakeBorder(
+                        opencv_image,
+                        top=top_pad,
+                        bottom=bottom_pad,
+                        left=left_pad,
+                        right=right_pad,
+                        borderType=cv2.BORDER_CONSTANT,
+                        value=[0, 0, 0]  # Black padding
+                    )
+
                 opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
                 # Convert the image to RGB (OpenCV loads as BGR by default)
                 opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
@@ -1392,6 +1416,30 @@ class DebugVisualMain():
                     self.node.get_logger().error(f"Conversion error (HEAD Depth): {e}")
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
                 
+                if self.top_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 1280×720 (16:9) 848x480 is 2/3 de 1280/720
+                    target_width = 848
+                    target_height = 480
+
+                    # Original image size
+                    h, w = opencv_image.shape[:2]
+
+                    # Compute padding
+                    top_pad = (target_height - h) // 2
+                    bottom_pad = target_height - h - top_pad
+                    left_pad = (target_width - w) // 2
+                    right_pad = target_width - w - left_pad
+
+                    # Pad with black pixels
+                    opencv_image = cv2.copyMakeBorder(
+                        opencv_image,
+                        top=top_pad,
+                        bottom=bottom_pad,
+                        left=left_pad,
+                        right=right_pad,
+                        borderType=cv2.BORDER_CONSTANT,
+                        value=[0, 0, 0]  # Black padding
+                    )
+
                 opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
             
                 min_val = 0
@@ -1433,6 +1481,30 @@ class DebugVisualMain():
                     self.node.get_logger().error(f"Conversion error (HAND RGB): {e}")
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
                 
+                if self.bottom_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 1280×720 (16:9) 848x480 is 2/3 de 1280/720
+                    target_width = 848
+                    target_height = 480
+
+                    # Original image size
+                    h, w = opencv_image.shape[:2]
+
+                    # Compute padding
+                    top_pad = (target_height - h) // 2
+                    bottom_pad = target_height - h - top_pad
+                    left_pad = (target_width - w) // 2
+                    right_pad = target_width - w - left_pad
+
+                    # Pad with black pixels
+                    opencv_image = cv2.copyMakeBorder(
+                        opencv_image,
+                        top=top_pad,
+                        bottom=bottom_pad,
+                        left=left_pad,
+                        right=right_pad,
+                        borderType=cv2.BORDER_CONSTANT,
+                        value=[0, 0, 0]  # Black padding
+                    )
+
                 opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
                 # Convert the image to RGB (OpenCV loads as BGR by default)
                 opencv_image = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
@@ -1457,6 +1529,30 @@ class DebugVisualMain():
                     self.node.get_logger().error(f"Conversion error (HEAD Depth): {e}")
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
                 
+                if self.bottom_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 1280×720 (16:9) 848x480 is 2/3 de 1280/720
+                    target_width = 848
+                    target_height = 480
+
+                    # Original image size
+                    h, w = opencv_image.shape[:2]
+
+                    # Compute padding
+                    top_pad = (target_height - h) // 2
+                    bottom_pad = target_height - h - top_pad
+                    left_pad = (target_width - w) // 2
+                    right_pad = target_width - w - left_pad
+
+                    # Pad with black pixels
+                    opencv_image = cv2.copyMakeBorder(
+                        opencv_image,
+                        top=top_pad,
+                        bottom=bottom_pad,
+                        left=left_pad,
+                        right=right_pad,
+                        borderType=cv2.BORDER_CONSTANT,
+                        value=[0, 0, 0]  # Black padding
+                    )
+
                 opencv_image = cv2.resize(opencv_image, (self.cam_width_, self.cam_height_), interpolation=cv2.INTER_NEAREST)
 
                 min_val = 0
