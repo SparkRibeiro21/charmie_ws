@@ -1606,16 +1606,15 @@ class DebugVisualMain():
         self.last_toggle_obstacles_lidar_bottom = toggle_obstacles_lidar_bottom
         self.last_toggle_obstacles_head_camera =  toggle_obstacles_head_camera
 
-
     def camera_selection_for_detection_drawings(self):
 
         if self.top_camera_id == "head":
             self.draw_pose_detections("top")
         if self.bottom_camera_id == "head":
             self.draw_pose_detections("bottom")
-        
 
-
+        self.draw_object_detections("top", self.top_camera_id)
+        self.draw_object_detections("bottom", self.bottom_camera_id)
 
     def draw_pose_detections(self, camera_select):
 
@@ -1734,7 +1733,12 @@ class DebugVisualMain():
                 self.draw_text(str(p.shirt_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio+5*(30/2)))
                 self.draw_text(str(p.pants_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio+6*(30/2)))
             
-    def draw_object_detections(self):
+    def draw_object_detections(self, camera_select, camera_id):
+
+        if camera_select == "top":
+            camera_height = self.cams_initial_height
+        else: # bottom
+            camera_height = self.cam_height_+2*self.cams_initial_height
 
         self.curr_detected_objects      = self.node.detected_objects
         self.curr_detected_objects_hand = self.node.detected_objects_hand
@@ -1753,30 +1757,28 @@ class DebugVisualMain():
         self.last_detected_objects_hand = used_detected_objects_hand
         self.last_detected_objects_base = used_detected_objects_base
 
-        if self.node.is_yolo_obj_head_comm:
-            if len(used_detected_objects.objects) > 0:
-                # print("DETECTED OBJECTS HEAD:")
-                pass
-            self.draw_object_bounding_boxes(used_detected_objects, "head")
+        if camera_id == "head":
+            if self.node.is_yolo_obj_head_comm:
+                if len(used_detected_objects.objects) > 0:
+                    # print("DETECTED OBJECTS HEAD:")
+                    pass
+                self.draw_object_bounding_boxes(used_detected_objects, camera_height)
 
-        if self.node.is_yolo_obj_hand_comm:
-            if len(used_detected_objects_hand.objects) > 0:
-                # print("DETECTED OBJECTS HAND:")
-                pass
-            self.draw_object_bounding_boxes(used_detected_objects_hand, "hand")
+        if camera_id == "gripper":
+            if self.node.is_yolo_obj_hand_comm:
+                if len(used_detected_objects_hand.objects) > 0:
+                    # print("DETECTED OBJECTS HAND:")
+                    pass
+                self.draw_object_bounding_boxes(used_detected_objects_hand, camera_height)
 
-        if self.node.is_yolo_obj_base_comm:
-            if len(used_detected_objects_base.objects) > 0:
-                # print("DETECTED OBJECTS BASE:")
-                pass
-            self.draw_object_bounding_boxes(used_detected_objects_base, "base")
+        if camera_id == "base":
+            if self.node.is_yolo_obj_base_comm:
+                if len(used_detected_objects_base.objects) > 0:
+                    # print("DETECTED OBJECTS BASE:")
+                    pass
+                self.draw_object_bounding_boxes(used_detected_objects_base, camera_height)
 
-    def draw_object_bounding_boxes(self, objects, head_or_hand):
-
-        if head_or_hand.lower() == "head":
-            window_cam_height = self.cams_initial_height
-        else: # "hand" # OR MORE RECENTLY BASE
-            window_cam_height = self.cam_height_+2*self.cams_initial_height
+    def draw_object_bounding_boxes(self, objects, camera_height):
 
         if len(objects.objects) > 0:
             # print("DETECTED OBJECTS ("+head_or_hand.lower()+"):")
@@ -1790,7 +1792,7 @@ class DebugVisualMain():
                 # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
                 # print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
                 bb_color = self.object_class_to_bb_color(o.object_class)
-                OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))
+                OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))
                 pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
             
             else: # if object has mask, we should segmentation mask
@@ -1799,7 +1801,7 @@ class DebugVisualMain():
                 for p in o.mask.point: # converts received mask into local coordinates and numpy array
                     p_list = []
                     p_list.append(int(self.cams_initial_width+(p.x/2)*self.camera_resize_ratio))
-                    p_list.append(int(window_cam_height+(p.y/2)*self.camera_resize_ratio))
+                    p_list.append(int(camera_height+(p.y/2)*self.camera_resize_ratio))
                     temp_mask.append(p_list)
 
                 np_mask = np.array(temp_mask)
@@ -1816,11 +1818,11 @@ class DebugVisualMain():
             bb_color = self.object_class_to_bb_color(o.object_class)
 
             if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio))
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio))
             else:
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(window_cam_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2))
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2))
 
     def draw_polygon_alpha(self, surface, color, points):
         lx, ly = zip(*points)
@@ -2333,7 +2335,7 @@ class DebugVisualMain():
             self.draw_activates()
             self.camera_selection_for_detection_drawings()
             # self.draw_pose_detections()
-            self.draw_object_detections()
+            # self.draw_object_detections()
             self.draw_tracking()
             
             pygame_widgets.update(events)
