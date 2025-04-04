@@ -452,7 +452,7 @@ class YoloObjectsMain():
         # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
         # results = self.object_model(current_frame, stream = True)
 
-        if camera == "head:":
+        if camera == "head":
             if model == "objects":  
                 object_results = self.node.object_model.track(current_frame_draw, persist=True, tracker="bytetrack.yaml")
             elif model == "shoes":  
@@ -962,11 +962,6 @@ class YoloObjectsMain():
                     cv2.waitKey(1)
 
                 self.node.new_hand_rgb = False
-
-
-            ### TEMP
-            # self.node.DEBUG_DRAW = True
-            # self.node.ACTIVATE_YOLO_OBJECTS_BASE = True
             
             if self.node.new_base_rgb:
 
@@ -974,7 +969,31 @@ class YoloObjectsMain():
                 current_img = self.node.base_rgb
                 current_frame = self.node.br.imgmsg_to_cv2(current_img, "bgr8")
 
-                # current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
+                ### UPDATE FROM GUI, SO THAT CAMERAS ALL HAVE THE SAME ASPECT RATIO FOR EASIER VISUALIZATION
+                target_width = 848
+                target_height = 480
+
+                # Original image size
+                h, w = current_frame.shape[:2]
+
+                # Compute padding
+                top_pad = (target_height - h) // 2
+                bottom_pad = target_height - h - top_pad
+                left_pad = (target_width - w) // 2
+                right_pad = target_width - w - left_pad
+
+                # Pad with black pixels
+                current_frame = cv2.copyMakeBorder(
+                    current_frame,
+                    top=top_pad,
+                    bottom=bottom_pad,
+                    left=left_pad,
+                    right=right_pad,
+                    borderType=cv2.BORDER_CONSTANT,
+                    value=[0, 0, 0]  # Black padding
+                )
+
+                current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
                 list_all_objects_detected_base = ListOfDetectedObject()
@@ -1012,8 +1031,3 @@ class YoloObjectsMain():
                     cv2.waitKey(1)
 
                 self.node.new_base_rgb = False
-
-
-            ### TEMP
-            # self.node.DEBUG_DRAW = False
-            # self.node.ACTIVATE_YOLO_OBJECTS_BASE = False
