@@ -135,8 +135,19 @@ class NeckNode(Node):
         # Get methods and members of PortHandlerLinux or PortHandlerWindows
         self.portHandler = PortHandler(DEVICENAME)
 
-        ########## CHANGE TO LOGGER ##########
-        print("Connected to Neck Board via:", DEVICENAME)  # check which port was really used
+        port_successfullly_opened = False
+        while not port_successfullly_opened:
+            
+            # Attempts to open port. This way software does not crash, can be reconnected midway and alerts the user for a wrong connection
+            try:
+                if self.portHandler.openPort():
+                    self.get_logger().info("Connected to Neck Board via: " + DEVICENAME)
+                    port_successfullly_opened = True
+            except:
+                self.get_logger().error("Failed to open NECK port: " + DEVICENAME)
+                self.get_logger().error("Please reset NECK physical connection. Attempting to reconnect...")
+                port_successfullly_opened = False
+                time.sleep(1.0)
         
         self.robot_pose = Pose2D()
 
@@ -385,15 +396,6 @@ class NeckNode(Node):
 
         global read_pan_open_loop, read_tilt_open_loop
         
-        # Open port
-        if self.portHandler.openPort():
-            print("Succeeded to open the port")
-        else:
-            print("Failed to open the port")
-            print("Press any key to terminate...")
-            getch()
-            quit()
-
         # Set port baudrate
         if self.portHandler.setBaudRate(BAUDRATE):
             print("Succeeded to change the baudrate")

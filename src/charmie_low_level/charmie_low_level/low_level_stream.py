@@ -23,11 +23,9 @@ import numpy as np
 
 class RobotControl:
 
-    def __init__(self):
+    def __init__(self, ser):
         
-        # open serial port by id, this removes problems with volative port names: "/dev/ttyUSBX"
-        self.ser = serial.Serial('/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0', baudrate=9600)
-        print("Connected to Motor Board via:", self.ser.name)  # check which port was really used
+        self.ser = ser
 
         # FLAGS
         self.RESET_ENCODERS = {'EnableVar': 'r', 'DisableVar': 'r', 'Value': True}  # same value for enable and disable
@@ -572,6 +570,24 @@ class LowLevelNode(Node):
     def __init__(self):
         super().__init__("Low_Level")
         self.get_logger().info("Initialised CHARMIE Low Level Node")
+
+        ### INITIALIZE COMMS WITH LOW LEVEL BOARD (HERE TO ALLOW LOGGERS) ###
+
+        DEVICENAME = "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0"
+
+        port_successfullly_opened = False
+        while not port_successfullly_opened:
+            
+            # Attempts to open port. This way software does not crash, can be reconnected midway and alerts the user for a wrong connection
+            try:
+                ser_port = serial.Serial(DEVICENAME, baudrate=9600)
+                self.get_logger().info("Connected to LOW LEVEL Board via: " + DEVICENAME)
+                port_successfullly_opened = True
+            except:
+                self.get_logger().error("Failed to open LOW LEVEL port: " + DEVICENAME)
+                self.get_logger().error("Please reset LOW LEVEL physical connection. Attempting to reconnect...")
+                port_successfullly_opened = False
+                time.sleep(1.0)
         
         ### TOPICS ### 
         # Torso
@@ -609,7 +625,7 @@ class LowLevelNode(Node):
 
         self.prev_cmd_vel = Twist()
 
-        self.robot = RobotControl()
+        self.robot = RobotControl(ser_port)
         self.wheel_odometry = WheelOdometry()
 
         self.current_orientation = 0.0

@@ -462,7 +462,20 @@ class LidarNode(Node):
         
         self.lidar_publisher = self.create_publisher(LaserScan, "scan", 10)
         
-        laser_serial = serial.Serial(port=uart_port, baudrate=uart_speed, timeout=0.5)
+        port_successfullly_opened = False
+        while not port_successfullly_opened:
+            
+            # Attempts to open port. This way software does not crash, can be reconnected midway and alerts the user for a wrong connection
+            try:
+                laser_serial = serial.Serial(port=uart_port, baudrate=uart_speed, timeout=0.5)
+                self.get_logger().info("Connected to LIDAR_top via: " + uart_port)
+                port_successfullly_opened = True
+            except:
+                self.get_logger().error("Failed to open LIDAR_top port: " + uart_port)
+                self.get_logger().error("Please reset LIDAR_top physical connection. Attempting to reconnect...")
+                port_successfullly_opened = False
+                time.sleep(1.0)
+        
         port = SerialPort(laser_serial)
 
         self.laser = Hokuyo(port)
