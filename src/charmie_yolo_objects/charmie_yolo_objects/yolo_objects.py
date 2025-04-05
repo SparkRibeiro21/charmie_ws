@@ -923,7 +923,8 @@ class YoloObjectsMain():
                 total_obj = 0
                 current_img = self.node.hand_rgb
                 current_frame = self.node.br.imgmsg_to_cv2(current_img, "bgr8")
-                current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
+                # current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST) ### AFTER SYNC CHANGES
+                # current_frame = cv2.resize(current_frame, (848, 480), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
                 list_all_objects_detected_hand = ListOfDetectedObject()
@@ -993,7 +994,8 @@ class YoloObjectsMain():
                     value=[0, 0, 0]  # Black padding
                 )
 
-                current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST)
+                # current_frame = cv2.resize(current_frame, (1280, 720), interpolation=cv2.INTER_NEAREST) ### AFTER SYNC CHANGES
+                # current_frame = cv2.resize(current_frame, (848, 480), interpolation=cv2.INTER_NEAREST)
                 _height, _width, _ = current_frame.shape
                 current_frame_draw = current_frame.copy()
                 list_all_objects_detected_base = ListOfDetectedObject()

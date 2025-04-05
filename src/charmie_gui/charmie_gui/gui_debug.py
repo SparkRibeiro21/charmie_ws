@@ -356,7 +356,7 @@ class DebugVisualNode(Node):
         self.head_camera_time = time.time()
         self.head_rgb_fps_ctr += 1
         self.head_depth_fps_ctr += 1
-        print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+        # print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_rgbd_hand_callback(self, rgbd: RGBD):
         self.hand_rgb = rgbd.rgb
@@ -366,7 +366,7 @@ class DebugVisualNode(Node):
         self.hand_camera_time = time.time()
         self.hand_rgb_fps_ctr += 1
         self.hand_depth_fps_ctr += 1
-        print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+        # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_color_image_base_callback(self, img: Image):
         self.base_rgb = img
@@ -806,8 +806,8 @@ class DebugVisualMain():
         self.BB_WIDTH = 3
 
         self.button_size = 30
-        self.cam_width_ = 640
-        self.cam_height_ = 360
+        self.cam_width_ = 848
+        self.cam_height_ = 480
         self.camera_resize_ratio = 1.0
         self.cams_initial_height = 10
         self.cams_initial_width = int(205 + 0.5 + self.button_size*self.camera_resize_ratio)
@@ -1737,15 +1737,15 @@ class DebugVisualMain():
                 # relative_coords_str = str("("+str(round(p.position_relative.x,2))+", "+str(round(p.position_relative.y,2))+", "+str(round(p.position_relative.z,2))+")")
                 # print("id:", p.index, "|", str(int(round(p.confidence,2)*100)) + "%", "|", room_and_furn_str.ljust(22), "|", relative_coords_str.ljust(22), "|", "wave:", p.arm_raised, "|", "point:", p.pointing_at)
 
-                PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio), int(p.box_width/2*self.camera_resize_ratio), int(p.box_height/2*self.camera_resize_ratio))
+                PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio), int(p.box_width*self.camera_resize_ratio), int(p.box_height*self.camera_resize_ratio))
                 pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=self.BB_WIDTH)
 
                 if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
-                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio), int(p.box_width/2*self.camera_resize_ratio), 30/2, self.RED, 85)
-                    self.draw_text("id:"+str(p.index)+" "+str(int(round(p.confidence,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio))
+                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio), int(p.box_width*self.camera_resize_ratio), 30/2, self.RED, 85)
+                    self.draw_text("id:"+str(p.index)+" "+str(int(round(p.confidence,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio))
                 else:
-                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio-30/2), int(p.box_width/2*self.camera_resize_ratio), 30/2, self.RED, 85)
-                    self.draw_text("id:"+str(p.index)+" "+str(int(round(p.confidence,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio-30/2))
+                    self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio-30/2), int(p.box_width*self.camera_resize_ratio), 30/2, self.RED, 85)
+                    self.draw_text("id:"+str(p.index)+" "+str(int(round(p.confidence,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio-30/2))
                 
                 self.draw_line_between_two_keypoints(p.kp_nose_conf, p.kp_nose_x, p.kp_nose_y, p.kp_eye_left_conf, p.kp_eye_left_x, p.kp_eye_left_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH, camera_height)
                 self.draw_line_between_two_keypoints(p.kp_nose_conf, p.kp_nose_x, p.kp_nose_y, p.kp_eye_right_conf, p.kp_eye_right_x, p.kp_eye_right_y, self.GREEN, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH, camera_height)
@@ -1795,11 +1795,11 @@ class DebugVisualMain():
 
     def draw_circle_keypoint(self, conf, x, y, color, min_draw_conf, circle_radius, camera_height):
         if conf > min_draw_conf:
-            pygame.draw.circle(self.WIN, color, (self.cams_initial_width+(x/2)*self.camera_resize_ratio, camera_height+(y/2)*self.camera_resize_ratio), radius=circle_radius, width=0)
+            pygame.draw.circle(self.WIN, color, (self.cams_initial_width+x*self.camera_resize_ratio, camera_height+y*self.camera_resize_ratio), radius=circle_radius, width=0)
                 
     def draw_line_between_two_keypoints(self, conf1, x1, y1, conf2, x2, y2, color, min_draw_conf, min_kp_line_width, camera_height):
         if conf1 > min_draw_conf and conf2 > min_draw_conf:  
-            pygame.draw.line(self.WIN, color, (self.cams_initial_width+(x1/2)*self.camera_resize_ratio, camera_height+(y1/2)*self.camera_resize_ratio), (self.cams_initial_width+(x2/2)*self.camera_resize_ratio, camera_height+(y2/2)*self.camera_resize_ratio), min_kp_line_width)
+            pygame.draw.line(self.WIN, color, (self.cams_initial_width+x1*self.camera_resize_ratio, camera_height+y1*self.camera_resize_ratio), (self.cams_initial_width+x2*self.camera_resize_ratio, camera_height+y2*self.camera_resize_ratio), min_kp_line_width)
     
     def check_face_for_characteristics(self, p: DetectedPerson, min_draw_conf, camera_height):
 
@@ -1816,13 +1816,13 @@ class DebugVisualMain():
                 x2 = max(p.kp_shoulder_right_x, p.kp_shoulder_left_x, p.kp_nose_x, p.kp_eye_right_x, p.kp_eye_left_x)
                 x_width = x2-x1
             
-                self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio+30/2), int(p.box_width/2*self.camera_resize_ratio), 6*(30/2), self.RED, 85)
-                self.draw_text(str(p.gender), self.text_font, self.BLACK,          int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio+1*(30/2)))
-                self.draw_text(str(p.ethnicity), self.text_font, self.BLACK,       int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio+2*(30/2)))
-                self.draw_text(str(p.age_estimate), self.text_font, self.BLACK,    int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio+3*(30/2)))
-                self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio+4*(30/2)))
-                self.draw_text(str(p.shirt_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio+5*(30/2)))
-                self.draw_text(str(p.pants_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y/2)*self.camera_resize_ratio+6*(30/2)))
+                self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+30/2), int(p.box_width/2*self.camera_resize_ratio), 6*(30/2), self.RED, 85)
+                self.draw_text(str(p.gender), self.text_font, self.BLACK,          int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+1*(30/2)))
+                self.draw_text(str(p.ethnicity), self.text_font, self.BLACK,       int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+2*(30/2)))
+                self.draw_text(str(p.age_estimate), self.text_font, self.BLACK,    int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+3*(30/2)))
+                self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+4*(30/2)))
+                self.draw_text(str(p.shirt_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+5*(30/2)))
+                self.draw_text(str(p.pants_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+6*(30/2)))
             
     def draw_object_detections(self, camera_select, camera_id):
 
@@ -1883,7 +1883,7 @@ class DebugVisualMain():
                 # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
                 # print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
                 bb_color = self.object_class_to_bb_color(o.object_class)
-                OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio), int(o.box_width/2*self.camera_resize_ratio), int(o.box_height/2*self.camera_resize_ratio))
+                OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), int(o.box_width*self.camera_resize_ratio), int(o.box_height*self.camera_resize_ratio))
                 pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
             
             else: # if object has mask, we should segmentation mask
@@ -1891,8 +1891,8 @@ class DebugVisualMain():
                 temp_mask = []
                 for p in o.mask.point: # converts received mask into local coordinates and numpy array
                     p_list = []
-                    p_list.append(int(self.cams_initial_width+(p.x/2)*self.camera_resize_ratio))
-                    p_list.append(int(camera_height+(p.y/2)*self.camera_resize_ratio))
+                    p_list.append(int(self.cams_initial_width+(p.x)*self.camera_resize_ratio))
+                    p_list.append(int(camera_height+(p.y)*self.camera_resize_ratio))
                     temp_mask.append(p_list)
 
                 np_mask = np.array(temp_mask)
@@ -1909,11 +1909,11 @@ class DebugVisualMain():
             bb_color = self.object_class_to_bb_color(o.object_class)
 
             if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio))
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio))
             else:
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x/2)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y/2)*self.camera_resize_ratio-30/2))
+                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
+                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio-30/2))
 
     def draw_polygon_alpha(self, surface, color, points):
         lx, ly = zip(*points)
@@ -1969,8 +1969,8 @@ class DebugVisualMain():
                 temp_mask = []
                 for p in used_point.point: # converts received mask into local coordinates and numpy array
                     p_list = []
-                    p_list.append(int(self.cams_initial_width+(p.x/2)*self.camera_resize_ratio))
-                    p_list.append(int(camera_height+(p.y/2)*self.camera_resize_ratio))
+                    p_list.append(int(self.cams_initial_width+(p.x)*self.camera_resize_ratio))
+                    p_list.append(int(camera_height+(p.y)*self.camera_resize_ratio))
                     temp_mask.append(p_list)
                 
                 np_mask = np.array(temp_mask)
@@ -2027,21 +2027,16 @@ class DebugVisualMain():
 
     def adjust_window_size(self):
 
-        # default values are: 
-        # self.WIDTH, self.HEIGHT = 1387, 752
-        # self.cam_width_ = 640
-        # self.cam_height_ = 360
-
         self.cams_initial_width = int(205 + 0.5 + self.button_size*self.camera_resize_ratio)
 
         # Get current window size
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
         # print(self.WIDTH, self.HEIGHT)
 
-        custom_height = self.HEIGHT - 752
-        self.cam_height_ = int(360 + custom_height/2)
-        cam_height_ratio = self.cam_height_/360
-        self.cam_width_ = int(640*cam_height_ratio)
+        custom_height = self.HEIGHT - ((752-8.5)/0.75)
+        self.cam_height_ = int(480 + custom_height/2)
+        cam_height_ratio = self.cam_height_/480
+        self.cam_width_ = int(848*cam_height_ratio)
         self.camera_resize_ratio = cam_height_ratio
         # print(self.cam_width_, self.cam_height_, self.camera_resize_ratio )
         
