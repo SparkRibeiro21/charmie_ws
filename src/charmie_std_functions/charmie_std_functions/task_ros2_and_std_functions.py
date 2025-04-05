@@ -8,6 +8,7 @@ from example_interfaces.msg import Bool, String, Int16, Float32
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped
 from sensor_msgs.msg import Image
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
+from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
     Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
@@ -64,13 +65,16 @@ class ROS2TaskNode(Node):
         except:
             self.get_logger().error("Could NOT import data from json configuration files.")
 
-        # Intel Realsense Subscribers 
+        # Intel Realsense Subscribers (RGBD) Head and Hand Cameras
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+        self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
+        
         # Head Camera
-        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
+        # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        # self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
         # Hand Camera
-        self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
-        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)  
+        # self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
+        # self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)  
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -425,25 +429,19 @@ class ROS2TaskNode(Node):
     def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
 
-    def get_color_image_head_callback(self, img: Image):
-        self.rgb_head_img = img
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        self.rgb_head_img = rgbd.rgb
         self.first_rgb_head_image_received = True
-        # print("Received HEAD RGB Image")
-
-    def get_color_image_hand_callback(self, img: Image):
-        self.rgb_hand_img = img
-        self.first_rgb_hand_image_received = True
-        # print("Received HAND RGB Image")   
-    
-    def get_aligned_depth_image_head_callback(self, img: Image):
-        self.depth_head_img = img
+        self.depth_head_img = rgbd.depth
         self.first_depth_head_image_received = True
-        # print("Received HEAD Depth Image")
+        # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
-    def get_aligned_depth_image_hand_callback(self, img: Image):
-        self.depth_hand_img = img
+    def get_rgbd_hand_callback(self, rgbd: RGBD):
+        self.rgb_hand_img = rgbd.rgb
+        self.first_rgb_hand_image_received = True
+        self.depth_hand_img = rgbd.depth
         self.first_depth_hand_image_received = True
-        # print("Received HAND Depth Image")
+        # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     ### OBSTACLES
     def obstacles_callback(self, obs: Obstacles):
@@ -2300,12 +2298,6 @@ class RobotStdFunctions():
     def get_point_cloud(self, bb=BoundingBox(), camera="head", wait_for_end_of=True):
 
         requested_objects = []
-            
-        # bb = BoundingBox()
-        # bb.box_top_left_x = 0
-        # bb.box_top_left_y = 0
-        # bb.box_width = 1280
-        # bb.box_height = 720
 
         get_pc = BoundingBoxAndPoints()
         get_pc.bbox = bb
