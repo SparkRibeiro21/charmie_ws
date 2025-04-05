@@ -69,17 +69,16 @@ class ROS2TaskNode(Node):
         self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
         self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
         
-        # Head Camera
-        # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        # self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
-        # Hand Camera
-        # self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
-        # self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)  
+        # Orbbec Camera (Base)
+        self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
+        self.aligned_depth_image_base_subscriber = self.create_subscription(Image, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
+
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
         self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
+        self.objects_filtered_base_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_base', self.object_detected_filtered_base_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
@@ -292,15 +291,20 @@ class ROS2TaskNode(Node):
         self.br = CvBridge()
         self.rgb_head_img = Image()
         self.rgb_hand_img = Image()
+        self.rgb_base_img = Image()
         self.depth_head_img = Image()
         self.depth_hand_img = Image()
+        self.depth_base_img = Image()
         self.first_rgb_head_image_received = False
         self.first_rgb_hand_image_received = False
+        self.first_rgb_base_image_received = False
         self.first_depth_head_image_received = False
         self.first_depth_hand_image_received = False
+        self.first_depth_base_image_received = False
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
         self.detected_objects_hand = ListOfDetectedObject()
+        self.detected_objects_base = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
         self.point_cloud_response = GetPointCloudBB.Response()
@@ -432,6 +436,9 @@ class ROS2TaskNode(Node):
     def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects_hand = det_object
 
+    def object_detected_filtered_base_callback(self, det_object: ListOfDetectedObject):
+        self.detected_objects_base = det_object
+
     def get_rgbd_head_callback(self, rgbd: RGBD):
         self.rgb_head_img = rgbd.rgb
         self.first_rgb_head_image_received = True
@@ -445,6 +452,14 @@ class ROS2TaskNode(Node):
         self.depth_hand_img = rgbd.depth
         self.first_depth_hand_image_received = True
         # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_color_image_base_callback(self, img: Image):
+        self.rgb_base_img = img
+        self.first_rgb_base_image_received = True
+
+    def get_depth_base_image_callback(self, img: Image):
+        self.depth_base_img = img
+        self.first_depth_base_image_received = True
 
     ### OBSTACLES
     def obstacles_callback(self, obs: Obstacles):
@@ -2374,6 +2389,24 @@ class RobotStdFunctions():
             current_frame_depth_hand = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
         return self.node.first_depth_hand_image_received, current_frame_depth_hand
+
+    def get_base_rgb_image(self):
+
+        if self.node.first_rgb_base_image_received:
+            current_frame_rgb_base = self.node.br.imgmsg_to_cv2(self.node.rgb_base_img, "bgr8")
+        else:
+            current_frame_rgb_base = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
+        
+        return self.node.first_rgb_base_image_received, current_frame_rgb_base
+
+    def get_base_depth_image(self):
+
+        if self.node.first_depth_base_image_received:
+            current_frame_depth_base = self.node.br.imgmsg_to_cv2(self.node.depth_base_img, desired_encoding="passthrough")
+        else:
+            current_frame_depth_base = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
+        
+        return self.node.first_depth_base_image_received, current_frame_depth_base
 
     def get_controller_state(self):
 
