@@ -14,6 +14,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, \
     GetLLMDemo, ActivateTracking, SetRGB
 from cv_bridge import CvBridge, CvBridgeError
+from realsense2_camera_msgs.msg import RGBD
 
 import cv2
 import numpy as np
@@ -43,14 +44,14 @@ class DebugVisualNode(Node):
         self.audio_interpreted_subscriber = self.create_subscription(String, "audio_interpreted", self.audio_interpreted_callback, 10)
         self.audio_final_subscriber = self.create_subscription(String, "audio_final", self.audio_final_callback, 10)
 
-        # Intel Realsense
-        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
-        self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
-        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)
+        # Intel Cameras (Head and Hand/Gripper)
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+        self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
+        
+        # Orbbec Camera (Base)
         self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
         self.aligned_depth_image_base_subscriber = self.create_subscription(Image, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
-        
+
         # get neck position
         self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
         
@@ -181,11 +182,8 @@ class DebugVisualNode(Node):
         self.amcl_time = 0.0
 
         self.head_camera_time = 0.0
-        self.head_depth_camera_time = 0.0
         self.hand_camera_time = 0.0
-        self.hand_depth_camera_time = 0.0
         self.base_camera_time = 0.0
-        self.base_depth_camera_time = 0.0
 
         self.head_rgb_fps = 0.0
         self.head_depth_fps = 0.0
@@ -350,29 +348,25 @@ class DebugVisualNode(Node):
     def audio_final_callback(self, str: String):
         print("Audio Final:", str.data)
 
-    def get_color_image_hand_callback(self, img: Image):
-        self.hand_rgb = img
-        self.new_hand_rgb = True
-        self.hand_camera_time = time.time()
-        self.hand_rgb_fps_ctr += 1
-
-    def get_color_image_head_callback(self, img: Image):
-        self.head_rgb = img
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        self.head_rgb = rgbd.rgb
+        self.head_depth = rgbd.depth
         self.new_head_rgb = True
+        self.new_head_depth = True
         self.head_camera_time = time.time()
         self.head_rgb_fps_ctr += 1
-
-    def get_aligned_depth_image_hand_callback(self, img: Image):
-        self.hand_depth = img
-        self.new_hand_depth = True
-        self.hand_depth_camera_time = time.time()
-        self.hand_depth_fps_ctr += 1
-
-    def get_aligned_depth_image_head_callback(self, img: Image):
-        self.head_depth = img
-        self.new_head_depth = True
-        self.head_depth_camera_time = time.time()
         self.head_depth_fps_ctr += 1
+        print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_rgbd_hand_callback(self, rgbd: RGBD):
+        self.hand_rgb = rgbd.rgb
+        self.hand_depth = rgbd.depth
+        self.new_hand_rgb = True
+        self.new_hand_depth = True
+        self.hand_camera_time = time.time()
+        self.hand_rgb_fps_ctr += 1
+        self.hand_depth_fps_ctr += 1
+        print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_color_image_base_callback(self, img: Image):
         self.base_rgb = img
@@ -383,7 +377,6 @@ class DebugVisualNode(Node):
     def get_depth_base_image_callback(self, img: Image):
         self.base_depth = img
         self.new_base_depth = True
-        self.base_depth_camera_time = time.time()
         self.base_depth_fps_ctr += 1
 
     def vccs_low_level_callback(self, vccs: VCCsLowLevel):
@@ -1369,7 +1362,7 @@ class DebugVisualMain():
                     self.node.get_logger().error(f"Conversion error (HEAD RGB): {e}")
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
 
-                if self.top_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 1280×720 (16:9) 848x480 is 2/3 de 1280/720
+                if self.top_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 848x480 (16:9) which is 2/3 of 1280x720
                     target_width = 848
                     target_height = 480
 
@@ -1416,7 +1409,7 @@ class DebugVisualMain():
                     self.node.get_logger().error(f"Conversion error (HEAD Depth): {e}")
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
                 
-                if self.top_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 1280×720 (16:9) 848x480 is 2/3 de 1280/720
+                if self.top_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 848x480 (16:9) which is 2/3 of 1280x720
                     target_width = 848
                     target_height = 480
 
@@ -1481,7 +1474,7 @@ class DebugVisualMain():
                     self.node.get_logger().error(f"Conversion error (HAND RGB): {e}")
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
                 
-                if self.bottom_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 1280×720 (16:9) 848x480 is 2/3 de 1280/720
+                if self.bottom_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 848x480 (16:9) which is 2/3 of 1280x720
                     target_width = 848
                     target_height = 480
 
@@ -1529,7 +1522,7 @@ class DebugVisualMain():
                     self.node.get_logger().error(f"Conversion error (HEAD Depth): {e}")
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
                 
-                if self.bottom_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 1280×720 (16:9) 848x480 is 2/3 de 1280/720
+                if self.bottom_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 848x480 (16:9) which is 2/3 of 1280x720
                     target_width = 848
                     target_height = 480
 
@@ -2435,7 +2428,7 @@ class DebugVisualMain():
             self.draw_cameras_choosing_menu()
             self.draw_activates()
             self.camera_selection_for_detection_drawings()
-            
+
             pygame_widgets.update(events)
             pygame.display.update()
 
