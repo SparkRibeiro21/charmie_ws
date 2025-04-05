@@ -305,8 +305,8 @@ class TrackingMain():
 
                     # changes the axis of point cloud coordinates to fit with robot axis
                     object_rel_pos = Point()
-                    object_rel_pos.x =  -y_f/1000
-                    object_rel_pos.y =  x_f/1000
+                    object_rel_pos.x =  x_f/1000
+                    object_rel_pos.y =  y_f/1000
                     object_rel_pos.z =  z_f/1000
                     msg.position_relative = object_rel_pos
                     
