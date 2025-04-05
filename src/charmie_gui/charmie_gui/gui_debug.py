@@ -805,9 +805,12 @@ class DebugVisualMain():
 
         self.BB_WIDTH = 3
 
+        self.CAM_IMAGE_WIDTH = 848
+        self.CAM_IMAGE_HEIGHT = 480
+
         self.button_size = 30
-        self.cam_width_ = 848
-        self.cam_height_ = 480
+        self.cam_width_ = self.CAM_IMAGE_WIDTH
+        self.cam_height_ = self.CAM_IMAGE_HEIGHT
         self.camera_resize_ratio = 1.0
         self.cams_initial_height = 10
         self.cams_initial_width = int(205 + 0.5 + self.button_size*self.camera_resize_ratio)
@@ -1363,8 +1366,8 @@ class DebugVisualMain():
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
 
                 if self.top_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 848x480 (16:9) which is 2/3 of 1280x720
-                    target_width = 848
-                    target_height = 480
+                    target_width = self.CAM_IMAGE_WIDTH
+                    target_height = self.CAM_IMAGE_HEIGHT
 
                     # Original image size
                     h, w = opencv_image.shape[:2]
@@ -1410,8 +1413,8 @@ class DebugVisualMain():
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
                 
                 if self.top_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 848x480 (16:9) which is 2/3 of 1280x720
-                    target_width = 848
-                    target_height = 480
+                    target_width = self.CAM_IMAGE_WIDTH
+                    target_height = self.CAM_IMAGE_HEIGHT
 
                     # Original image size
                     h, w = opencv_image.shape[:2]
@@ -1475,8 +1478,8 @@ class DebugVisualMain():
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
                 
                 if self.bottom_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 848x480 (16:9) which is 2/3 of 1280x720
-                    target_width = 848
-                    target_height = 480
+                    target_width = self.CAM_IMAGE_WIDTH
+                    target_height = self.CAM_IMAGE_HEIGHT
 
                     # Original image size
                     h, w = opencv_image.shape[:2]
@@ -1523,8 +1526,8 @@ class DebugVisualMain():
                     opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
                 
                 if self.bottom_camera_id == "base": # special case for base camera since it is 640×480 (4:3), and we want to make it 848x480 (16:9) which is 2/3 of 1280x720
-                    target_width = 848
-                    target_height = 480
+                    target_width = self.CAM_IMAGE_WIDTH
+                    target_height = self.CAM_IMAGE_HEIGHT
 
                     # Original image size
                     h, w = opencv_image.shape[:2]
@@ -2034,9 +2037,9 @@ class DebugVisualMain():
         # print(self.WIDTH, self.HEIGHT)
 
         custom_height = self.HEIGHT - ((752-8.5)/0.75)
-        self.cam_height_ = int(480 + custom_height/2)
-        cam_height_ratio = self.cam_height_/480
-        self.cam_width_ = int(848*cam_height_ratio)
+        self.cam_height_ = int(self.CAM_IMAGE_HEIGHT + custom_height/2)
+        cam_height_ratio = self.cam_height_/self.CAM_IMAGE_HEIGHT
+        self.cam_width_ = int(self.CAM_IMAGE_WIDTH*cam_height_ratio)
         self.camera_resize_ratio = cam_height_ratio
         # print(self.cam_width_, self.cam_height_, self.camera_resize_ratio )
         

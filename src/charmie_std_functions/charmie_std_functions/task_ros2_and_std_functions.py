@@ -359,6 +359,9 @@ class ROS2TaskNode(Node):
         self.audio_command = ""
         self.received_continuous_audio = False
 
+        self.CAM_IMAGE_WIDTH = 848
+        self.CAM_IMAGE_HEIGHT = 480
+
         self.get_neck_position = [1.0, 1.0]
         self.torso_position = TorsoPosition()
         self.vccs = VCCsLowLevel()
@@ -1916,8 +1919,8 @@ class RobotStdFunctions():
                     
                     if same_person_ctr > 0:
 
-                        same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
-                        same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
+                        same_person_old_distance_center = abs(self.node.CAM_IMAGE_WIDTH/2 - same_person_old.body_center_x) 
+                        same_person_new_distance_center = abs(self.node.CAM_IMAGE_WIDTH/2 - same_person_new.body_center_x) 
 
                         # print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
                         # print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
@@ -2163,7 +2166,7 @@ class RobotStdFunctions():
                         
                         if same_object_ctr > 0:
 
-                            image_center = (1280/2, 720/2)
+                            image_center = (self.node.CAM_IMAGE_WIDTH/2, self.node.CAM_IMAGE_HEIGHT/2)
                             same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
                             same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
                             
@@ -2281,7 +2284,7 @@ class RobotStdFunctions():
         cv2.rectangle(cf, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), bb_color, -1)
         cv2.putText(cf, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
     
-        object_image = cf[max(object.box_top_left_y-thresh_v,0):min(object.box_top_left_y+object.box_height+thresh_v,720), max(object.box_top_left_x-thresh_h,0):min(object.box_top_left_x+object.box_width+thresh_h,1280)]
+        object_image = cf[max(object.box_top_left_y-thresh_v,0):min(object.box_top_left_y+object.box_height+thresh_v,self.node.CAM_IMAGE_HEIGHT), max(object.box_top_left_x-thresh_h,0):min(object.box_top_left_x+object.box_width+thresh_h,self.node.CAM_IMAGE_WIDTH)]
         # cv2.imshow("Search for Person", object_image)
         # cv2.waitKey(100)
         
@@ -2341,7 +2344,7 @@ class RobotStdFunctions():
         if self.node.first_rgb_head_image_received:
             current_frame_rgb_head = self.node.br.imgmsg_to_cv2(self.node.rgb_head_img, "bgr8")
         else:
-            current_frame_rgb_head = np.zeros((360, 640, 3), dtype=np.uint8)
+            current_frame_rgb_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
         
         return self.node.first_rgb_head_image_received, current_frame_rgb_head
 
@@ -2350,7 +2353,7 @@ class RobotStdFunctions():
         if self.node.first_depth_head_image_received:
             current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
         else:
-            current_frame_depth_head = np.zeros((360, 640), dtype=np.uint8)
+            current_frame_depth_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
         return self.node.first_depth_head_image_received, current_frame_depth_head
 
@@ -2359,7 +2362,7 @@ class RobotStdFunctions():
         if self.node.first_rgb_hand_image_received:
             current_frame_rgb_hand = self.node.br.imgmsg_to_cv2(self.node.rgb_hand_img, "bgr8")
         else:
-            current_frame_rgb_hand = np.zeros((360, 640, 3), dtype=np.uint8)
+            current_frame_rgb_hand = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
         
         return self.node.first_rgb_hand_image_received, current_frame_rgb_hand
 
@@ -2368,7 +2371,7 @@ class RobotStdFunctions():
         if self.node.first_depth_hand_image_received:
             current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
         else:
-            current_frame_depth_hand = np.zeros((360, 640), dtype=np.uint8)
+            current_frame_depth_hand = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
         return self.node.first_depth_hand_image_received, current_frame_depth_hand
 
