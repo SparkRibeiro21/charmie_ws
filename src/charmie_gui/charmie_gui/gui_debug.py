@@ -1706,8 +1706,10 @@ class DebugVisualMain():
 
         if self.top_camera_id == "head":
             self.draw_pose_detections("top")
+            self.draw_tracking("top")
         if self.bottom_camera_id == "head":
             self.draw_pose_detections("bottom")
+            self.draw_tracking("bottom")
 
         self.draw_object_detections("top", self.top_camera_id)
         self.draw_object_detections("bottom", self.bottom_camera_id)
@@ -1953,7 +1955,12 @@ class DebugVisualMain():
 
         return bb_color
 
-    def draw_tracking(self):
+    def draw_tracking(self, camera_select):
+
+        if camera_select == "top":
+            camera_height = self.cams_initial_height
+        else: # bottom
+            camera_height = self.cam_height_+2*self.cams_initial_height
 
         self.curr_tracking = self.node.tracking_mask
         if self.toggle_pause_cams.getValue():
@@ -1962,8 +1969,6 @@ class DebugVisualMain():
             used_tracking = self.curr_tracking 
         self.last_tracking = used_tracking
 
-        window_cam_height = self.cams_initial_height
-        
         if self.node.is_tracking_comm:
            
             for used_point in used_tracking.mask.masks:
@@ -1972,7 +1977,7 @@ class DebugVisualMain():
                 for p in used_point.point: # converts received mask into local coordinates and numpy array
                     p_list = []
                     p_list.append(int(self.cams_initial_width+(p.x/2)*self.camera_resize_ratio))
-                    p_list.append(int(window_cam_height+(p.y/2)*self.camera_resize_ratio))
+                    p_list.append(int(camera_height+(p.y/2)*self.camera_resize_ratio))
                     temp_mask.append(p_list)
                 
                 np_mask = np.array(temp_mask)
@@ -2000,8 +2005,8 @@ class DebugVisualMain():
             self.WIN.blit(mask_surface, (self.cams_initial_width, self.cams_initial_height))
             """
 
-            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.BLACK, 0.0, 9)
-            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.WHITE, 0.0, 5)
+            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.BLACK, 0.0, 9, camera_height)
+            self.draw_circle_keypoint(1.0, used_tracking.centroid.x, used_tracking.centroid.y, self.WHITE, 0.0, 5, camera_height)
         
     def check_record_data(self):
         
@@ -2430,9 +2435,6 @@ class DebugVisualMain():
             self.draw_cameras_choosing_menu()
             self.draw_activates()
             self.camera_selection_for_detection_drawings()
-            # self.draw_pose_detections()
-            # self.draw_object_detections()
-            self.draw_tracking()
             
             pygame_widgets.update(events)
             pygame.display.update()
