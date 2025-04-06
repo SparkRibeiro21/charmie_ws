@@ -440,6 +440,9 @@ class YoloObjectsMain():
         self.prev_hand_frame_time = time.time()
         self.new_base_frame_time = time.time()
         self.prev_base_frame_time = time.time()
+
+        initial_test_time_pcloud_mask = time.time()
+        initial_test_time_pcloud_bb = time.time()
         
     def detect_with_yolo_model(self, model, camera, current_frame_draw, current_img):
 
@@ -509,11 +512,15 @@ class YoloObjectsMain():
 
                 # print(requested_objects)
 
+                initial_test_time_pcloud_mask = time.time()
+
                 self.node.waiting_for_pcloud = True
                 self.node.call_point_cloud_mask_server(requested_objects, camera)
 
                 while self.node.waiting_for_pcloud:
                     pass
+
+                self.node.get_logger().info(f"Time Mask PC Yolo_Objects: {time.time() - initial_test_time_pcloud_mask}")
 
                 new_pcloud = self.node.point_cloud_mask_response.coords
                 
@@ -640,7 +647,7 @@ class YoloObjectsMain():
                         yolov8_obj_filtered.objects.append(new_object)
 
             self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
-            self.node.get_logger().info(f"Time Yolo_Objects: {round(time.perf_counter() - self.tempo_total,2)}")
+            self.node.get_logger().info(f"Time Yolo_Objects: {time.perf_counter() - self.tempo_total}")
 
 
             if self.node.DEBUG_DRAW:
@@ -825,6 +832,10 @@ class YoloObjectsMain():
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In YoloObjects Main...")
 
+        time_till_head_done = time.time()
+        time_till_hand_done = time.time()
+        time_till_base_done = time.time()
+
         while True:
 
             # type(results) = <class 'list'>
@@ -867,6 +878,15 @@ class YoloObjectsMain():
             # orig_shape	tuple	Original image shape in (height, width) format.
             # xy	List[ndarray]	A list of segments in pixel coordinates.
             # xyn	List[ndarray]	A list of normalized segments.
+
+            if self.node.new_head_rgb:
+                time_till_head_done = time.time()
+
+            if self.node.new_hand_rgb:
+                time_till_hand_done = time.time()
+            
+            if self.node.new_base_rgb:
+                time_till_base_done = time.time()
             
 
             if self.node.new_head_rgb:
@@ -918,6 +938,8 @@ class YoloObjectsMain():
 
                 self.node.new_head_rgb = False
 
+                print("TR Time Yolo_Objects Head: ", time.time() - time_till_head_done)
+
             if self.node.new_hand_rgb:
 
                 total_obj = 0
@@ -963,6 +985,8 @@ class YoloObjectsMain():
                     cv2.waitKey(1)
 
                 self.node.new_hand_rgb = False
+
+                print("TR Time Yolo_Objects Hand: ", time.time() - time_till_hand_done)
             
             if self.node.new_base_rgb:
 
@@ -1033,3 +1057,5 @@ class YoloObjectsMain():
                     cv2.waitKey(1)
 
                 self.node.new_base_rgb = False
+
+                print("TR Time Yolo_Objects Base: ", time.time() - time_till_base_done)
