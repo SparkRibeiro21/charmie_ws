@@ -7,7 +7,8 @@ from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, BoundingBox, BoundingBoxAndPoints, ListOfDetectedObject, MaskDetection
-from charmie_interfaces.srv import GetPointCloudBB, GetPointCloudMask, ActivateYoloObjects
+from charmie_interfaces.srv import ActivateYoloObjects
+from realsense2_camera_msgs.msg import RGBD
 from cv_bridge import CvBridge
 import cv2 
 import json
@@ -43,6 +44,17 @@ DRAW_OBJECT_NAME = True
 DRAW_OBJECT_CLASS = True
 DRAW_OBJECT_LOCATION_COORDS = True
 DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
+
+
+
+
+
+
+########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ##########
+
+
+
+
 
 
 class Yolo_obj(Node):
@@ -136,6 +148,8 @@ class Yolo_obj(Node):
         # print(self.home+'/'+objects_filename)
         yolo_models_sucessful_imported = False
 
+
+        ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ##########
         while not yolo_models_sucessful_imported:
             
             try: 
@@ -160,92 +174,51 @@ class Yolo_obj(Node):
                 self.get_logger().error("Could NOT import YOLO models (objects, furniture, shoes)")
                 time.sleep(1.0)
 
+
+        ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ##########
         ### Topics ###
+        # Intel Realsense Subscribers (RGBD) Head and Hand Cameras
+        # self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+        # self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
+        # Orbbec Camera (Base)
+        # self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
+        # self.aligned_depth_image_base_subscriber = self.create_subscription(Image, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
+
         # Intel Realsense
         self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
         self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
         self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
-         
+        
+        ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ########## 
         # Publish Results
         self.objects_filtered_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered', 10)
         self.objects_filtered_hand_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered_hand', 10)
         self.objects_filtered_base_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered_base', 10)
         
+        ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ########## 
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-
-        ### Services (Clients) ###
-        # Point Cloud
-        self.point_cloud_bb_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
-        self.point_cloud_mask_client = self.create_client(GetPointCloudMask, "get_point_cloud_mask")
-
-        while not self.point_cloud_bb_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Point Cloud BB...")
-        while not self.point_cloud_mask_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Point Cloud Mask...")
 
         ### Services ###
         self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
 
         ### Variables ###
-
         # robot localization
         self.robot_pose = Pose2D()
         
         self.br = CvBridge()
         self.head_rgb = Image()
+        self.head_depth = Image()
         self.hand_rgb = Image()
+        self.hand_depth = Image()
         self.base_rgb = Image()
+        self.base_depth = Image()
         self.new_head_rgb = False
+        self.new_head_depth = False
         self.new_hand_rgb = False
+        self.new_hand_depth = False
         self.new_base_rgb = False
-        self.waiting_for_pcloud = False
-        self.point_cloud_bb_response = GetPointCloudBB.Response()
-        self.point_cloud_mask_response = GetPointCloudMask.Response()
-
-
-    # request point cloud information from point cloud node
-    def call_point_cloud_bb_server(self, req, camera):
-        request = GetPointCloudBB.Request()
-        request.data = req
-        request.retrieve_bbox = False
-        request.camera = camera
-    
-        future = self.point_cloud_bb_client.call_async(request)
-        future.add_done_callback(self.callback_call_point_cloud_bb)
-
-    def callback_call_point_cloud_bb(self, future):
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            self.point_cloud_bb_response = future.result()
-            self.waiting_for_pcloud = False
-            # print("Received Back")
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
-
-    # request point cloud information from point cloud node
-    def call_point_cloud_mask_server(self, req, camera):
-        request = GetPointCloudMask.Request()
-        request.data = req
-        request.camera = camera
-    
-        future = self.point_cloud_mask_client.call_async(request)
-        future.add_done_callback(self.callback_call_point_cloud_mask)
-
-    def callback_call_point_cloud_mask(self, future):
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            self.point_cloud_mask_response = future.result()
-            self.waiting_for_pcloud = False
-            # print("Received Back")
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
+        self.new_base_depth = False
 
     def callback_activate_yolo_objects(self, request, response):
 
@@ -292,6 +265,30 @@ class Yolo_obj(Node):
         response.success = True
         response.message = "Activated with selected parameters"
         return response
+    
+    """ # READY WHEN I HAVE THE NEW ROSBAG WITH RGBD
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        self.head_rgb = rgbd.rgb
+        self.new_head_rgb = True
+        self.head_depth = rgbd.depth
+        self.new_head_depth = True
+        # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_rgbd_hand_callback(self, rgbd: RGBD):
+        self.hand_rgb = rgbd.rgb
+        self.first_rgb_hand_image_received = True
+        self.hand_depth = rgbd.depth
+        self.new_hand_depth = True
+        # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+    
+    def get_color_image_base_callback(self, img: Image):
+        self.base_rgb = img
+        self.new_base_rgb = True
+
+    def get_depth_base_image_callback(self, img: Image):
+        self.base_depth = img
+        self.new_base_depth = True
+    """
 
     def get_color_image_head_callback(self, img: Image):
         self.head_rgb = img
@@ -320,7 +317,6 @@ class Yolo_obj(Node):
 
         # print(center_object_coordinates)
 
-        # changes the axis of point cloud coordinates to fit with robot axis
         object_rel_pos = Point()
         object_rel_pos.x =  center_object_coordinates.x/1000
         object_rel_pos.y =  center_object_coordinates.y/1000
@@ -440,9 +436,6 @@ class YoloObjectsMain():
         self.prev_hand_frame_time = time.time()
         self.new_base_frame_time = time.time()
         self.prev_base_frame_time = time.time()
-
-        initial_test_time_pcloud_mask = time.time()
-        initial_test_time_pcloud_bb = time.time()
         
     def detect_with_yolo_model(self, model, camera, current_frame_draw, current_img):
 
@@ -513,18 +506,12 @@ class YoloObjectsMain():
                 # print(requested_objects)
 
                 initial_test_time_pcloud_mask = time.time()
-
-                self.node.waiting_for_pcloud = True
-                self.node.call_point_cloud_mask_server(requested_objects, camera)
-
-                while self.node.waiting_for_pcloud:
-                    pass
-
+                ########## HERE IS WHERE OLD PCLOUD WAS CALCULATED ##########
                 self.node.get_logger().info(f"Time Mask PC Yolo_Objects: {time.time() - initial_test_time_pcloud_mask}")
 
-                new_pcloud = self.node.point_cloud_mask_response.coords
-                
-                for box, mask, mask_d, track_id, pcloud in zip(boxes, masks, masks.xy, track_ids, new_pcloud):
+                ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ##########
+                # for box, mask, mask_d, track_id, pcloud in zip(boxes, masks, masks.xy, track_ids, new_pcloud):
+                for box, mask, mask_d, track_id in zip(boxes, masks, masks.xy, track_ids):
 
                     if model == "objects":
                         object_name = self.node.objects_class_names[int(box.cls[0])]
@@ -538,13 +525,18 @@ class YoloObjectsMain():
                 
                     # adds object to "object_pose" without any restriction
                     new_object = DetectedObject()
-                    self.node.get_logger().info(f"'{object_name}' Mask Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
-                    new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=pcloud.center_coords, camera=camera, current_img=current_img, mask=mask)
+                    ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ##########
+                    # self.node.get_logger().info(f"'{object_name}' Mask Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
+                    # new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=pcloud.center_coords, camera=camera, current_img=current_img, mask=mask)
+                    
+                    temp_center_coords = Point()
+                    new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=current_img, mask=mask)
                     
                     ALL_CONDITIONS_MET = 1
-
-                    if pcloud.center_coords.x == 0 and pcloud.center_coords.y == 0 and pcloud.center_coords.x == 0: # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
-                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                    
+                    ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ##########
+                    # if pcloud.center_coords.x == 0 and pcloud.center_coords.y == 0 and pcloud.center_coords.x == 0: # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
+                    #    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
 
                     if model == "objects":   
                         # checks whether the object confidence is above a selected level
@@ -597,15 +589,11 @@ class YoloObjectsMain():
 
                     requested_objects.append(get_pc)
 
-                self.node.waiting_for_pcloud = True
-                self.node.call_point_cloud_bb_server(requested_objects, camera)
-
-                while self.node.waiting_for_pcloud:
-                    pass
-
-                new_pcloud = self.node.point_cloud_bb_response.coords
+                initial_test_time_pcloud_mask = time.time()
+                ########## HERE IS WHERE OLD PCLOUD WAS CALCULATED ##########
+                self.node.get_logger().info(f"Time Mask PC Yolo_Objects: {time.time() - initial_test_time_pcloud_mask}")
                 
-                for box, track_id, pcloud in zip(boxes, track_ids, new_pcloud):
+                for box, track_id in zip(boxes, track_ids):
 
                     if model == "objects":
                         object_name = self.node.objects_class_names[int(box.cls[0])]
@@ -619,8 +607,12 @@ class YoloObjectsMain():
                 
                     # adds object to "object_pose" without any restriction
                     new_object = DetectedObject()
-                    self.node.get_logger().info(f"'{object_name}' BB Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
-                    new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=pcloud.center_coords, camera=camera, current_img=current_img)
+                    ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ##########
+                    # self.node.get_logger().info(f"'{object_name}' BB Coords. x:{pcloud.center_coords.x}, y:{pcloud.center_coords.y}, z:{pcloud.center_coords.z}")
+                    # new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=pcloud.center_coords, camera=camera, current_img=current_img)
+                    
+                    temp_center_coords = Point()
+                    new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=current_img)
                     
                     ALL_CONDITIONS_MET = 1
 
