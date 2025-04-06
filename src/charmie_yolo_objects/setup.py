@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
         "yolo_objects = charmie_yolo_objects.yolo_objects:main",
-        "yolo_doors = charmie_yolo_objects.yolo_doors:main"
+        "yolo_objects_merged_lists = charmie_yolo_objects.yolo_objects_merged_lists:main"
         ],
     },
 )
