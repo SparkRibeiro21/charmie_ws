@@ -20,6 +20,8 @@ from pathlib import Path
 import math
 import time
 
+from charmie_point_cloud.point_cloud_class import PointCloud
+
 # objects_filename = "segmentation_M_size_model_600_epochs.pt"
 # objects_filename = "epoch20.pt"
 # objects_filename = "new_best.pt"
@@ -204,6 +206,11 @@ class Yolo_obj(Node):
 
         ### Services ###
         self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
+
+        ### Class ###
+        self.point_cloud = PointCloud(camera="head")
+
+        print(self.point_cloud.cy)
 
         ### Variables ###
         # robot localization
