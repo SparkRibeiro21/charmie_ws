@@ -26,7 +26,7 @@ from charmie_point_cloud.point_cloud_class import PointCloud
 # objects_filename = "epoch20.pt"
 # objects_filename = "new_best.pt"
 # objects_filename = "new_best_2.pt"
-objects_filename = "24_25_october_v1_LAR_seg.pt"
+objects_filename = "24_25_october_v1_LAR_seg.engine"
 # objects_filename = "detect_hands_2.pt"
 # objects_filename = "50_epochs.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
@@ -159,17 +159,17 @@ class Yolo_obj(Node):
             
             try: 
                 # Import the models, one for each category
-                self.object_model = YOLO(self.complete_path_yolo_models + objects_filename)
-                self.shoes_model = YOLO(self.complete_path_yolo_models + shoes_filename)
-                self.furniture_model = YOLO(self.complete_path_yolo_models + furniture_filename)
+                self.object_model = YOLO(self.complete_path_yolo_models + objects_filename, task="segment")
+                # self.shoes_model = YOLO(self.complete_path_yolo_models + shoes_filename)
+                self.furniture_model = YOLO(self.complete_path_yolo_models + furniture_filename, task="detect")
                 # it needs to have a different model for head and hand image because of the track parameter, otherwise it is always creating new track ids
-                # self.object_model_hand = YOLO(self.complete_path_yolo_models + objects_filename)
+                self.object_model_hand = YOLO(self.complete_path_yolo_models + objects_filename, task="segment")
                 # self.shoes_model_hand = YOLO(self.complete_path_yolo_models + shoes_filename)
-                # self.furniture_model_hand = YOLO(self.complete_path_yolo_models + furniture_filename)
+                self.furniture_model_hand = YOLO(self.complete_path_yolo_models + furniture_filename, task="detect")
 
-                # self.object_model_base = YOLO(self.complete_path_yolo_models + objects_filename)
+                self.object_model_base = YOLO(self.complete_path_yolo_models + objects_filename, task="segment")
                 # self.shoes_model_base = YOLO(self.complete_path_yolo_models + shoes_filename)
-                # self.furniture_model_base = YOLO(self.complete_path_yolo_models + furniture_filename)
+                self.furniture_model_base = YOLO(self.complete_path_yolo_models + furniture_filename, task="detect")
 
                 self.get_logger().info("Successfully imported YOLO models (objects, furniture, shoes)")
 
@@ -934,7 +934,7 @@ class YoloObjectsMain():
                 # current_frame_draw = current_frame.copy()
                 list_all_objects_detected = ListOfDetectedObject()
 
-                cv2.imshow("Head", head_image_frame)
+                
 
                 if False:
                     self.select_camera_models(head_image_frame=head_image_frame, hand_image_frame=hand_image_frame, base_image_frame=base_image_frame)
@@ -949,25 +949,35 @@ class YoloObjectsMain():
 
 
                     bbb = time.time()
-                    object_results = self.node.object_model.track([empty_frame], persist=True, tracker="bytetrack.yaml")
+                    object_results = self.node.object_model.track([head_image_frame], persist=True, tracker="bytetrack.yaml", verbose=False)
                     print("TRACK TIME 2:", time.time()-bbb)
+
+                    print(object_results[0].boxes)
 
                         
                     if self.node.DEBUG_DRAW:
+                        print("A")
+                        # cv2.imshow("Head", head_image_frame)
+                        print("C")
+                        # cv2.waitKey(1)
+                        print("B")
                         current_frame_draw_a = cv2.cvtColor(head_image_frame, cv2.COLOR_BGR2BGRA)
                         annotator = Annotator(current_frame_draw_a, line_width=1)
                         b_mask = np.zeros(head_image_frame.shape[:2], np.uint8)
 
-                    print("A")
+                    # print("A")
 
                     if object_results[0].boxes.id is not None:
 
+
+                        # cv2.imshow("teste", object_results[0].plot())
+                        
                         boxes = object_results[0].boxes
                         masks = object_results[0].masks
                         track_ids = object_results[0].boxes.id.int().cpu().tolist()
 
 
-                        print("B")
+                        # print("B")
 
                         if masks is not None: # if model has segmentation mask
                     
@@ -988,23 +998,22 @@ class YoloObjectsMain():
 
 
                         self.node.objects_filtered_publisher.publish(list_all_objects_detected) ### just to check FPS on GUI
-                        print("C")
+                        # print("C")
 
                         if self.node.DEBUG_DRAW:
                             new_color = np.array([255, 255, 255, 128])
                             for c in range(0,3):
                                 current_frame_draw_a[:, :, c][b_mask != 0] = (current_frame_draw_a[:, :, c][b_mask != 0] * (1 - new_color[3]/255)) + (new_color[c]*(new_color[3]/255))
                             
-                            print("D")
-                            cv2.imshow("mask", b_mask)
-                            cv2.imshow("instance-segmentation-object-tracking2", current_frame_draw_a)
+                            # print("D")
+                            # cv2.imshow("mask", b_mask)
+                            # cv2.imshow("instance-segmentation-object-tracking2", current_frame_draw_a)
 
-                cv2.waitKey(10)
 
                 # cv2.waitKey(100)
                 # self.draw_detected_objects(yolov8_obj_filtered, head_frame)
                         
-                print("E")
+                # print("E")
 
                 self.node.new_head_rgb = False
 
