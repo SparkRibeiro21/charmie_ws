@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Set required flags used by xarm_description flags -->
+  <xacro:property name="is_ros2" value="true"/>
+  <xacro:property name="use_xacro_load_yaml" value="true"/>
+  <xacro:property name="mesh_path" value="xarm_description/meshes"/>
+  <xacro:property name="mesh_suffix" value=".STL"/>
+
+  <xacro:property name="kinematics_params_file" value="$(find xarm_description)/config/kinematics/default/xarm6_default_kinematics.yaml"/>
+
+  <!-- Include xArm6 macro definition -->
+  <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6_robot_macro.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/common/common.link.xacro" />
+
+  <!-- Instantiate the xArm6 robot with a safe prefix -->
+  <xacro:xarm6_robot
+    prefix="xarm_"
+    hw_ns="xarm"
+    limited="false"
+    velocity_control="false"
+    add_gripper="false"
+    add_bio_gripper="false"
+    ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware"
+    robot_ip=""
+    report_type="normal"
+    baud_checkset="true"
+    default_gripper_baud="2000000"
+    model1300="false"
+    kinematics_params_filename="${kinematics_params_file}"
+    inertial_params_filename=""
+    hard_interface="PositionJointInterface" />
+
+  <!-- Mount the xArm6 on CHARMIE -->
+  <joint name="xarm_mount_joint" type="fixed">
+    <parent link="top_torso_link"/>
+    <child link="xarm_link_base"/>
+    <!-- Adjust this origin if needed for proper placement -->
+    <origin xyz="0.0 0.0 0.0" rpy="-${pi/2} 0 0"/>
+  </joint>
+</robot>
