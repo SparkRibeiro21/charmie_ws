@@ -6,7 +6,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedObject, BoundingBox, BoundingBoxAndPoints, ListOfDetectedObject, MaskDetection
+from charmie_interfaces.msg import DetectedObject, ListOfDetectedObject, MaskDetection
 from charmie_interfaces.srv import ActivateYoloObjects
 from realsense2_camera_msgs.msg import RGBD
 from cv_bridge import CvBridge
@@ -53,19 +53,12 @@ DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
 # print("Device count:", torch.cuda.device_count())
 # print("Device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
 
-
-
 ########## MISSING TO IMPLEMENT ##########
 # point cloud
 # lock for vars
-    # change to new rgbd system
-# clean code
 
 # ON OTHER FILES:
-# remove subscriber: 'objects_all_detected_filtered_hand' and 'objects_all_detected_filtered_base'
-# Update showing on gui for respective images (not showing all in head frame)
 # test check face
-
 
 class Yolo_obj(Node):
     def __init__(self):
@@ -195,17 +188,8 @@ class Yolo_obj(Node):
         # Orbbec Camera (Base)
         self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
         self.aligned_depth_image_base_subscriber = self.create_subscription(Image, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
-
-        # Intel Realsense
-        # self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        # self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
-        # self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
-        
-        ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ########## 
         # Publish Results
         self.objects_filtered_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered', 10)
-        
-        ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ########## 
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
@@ -322,38 +306,6 @@ class Yolo_obj(Node):
         self.base_depth = img
         self.base_depth_cv2_frame = self.br.imgmsg_to_cv2(img, "passthrough")
         self.new_base_depth = True
-    
-
-    """
-    try:
-        opencv_image = self.br.imgmsg_to_cv2(used_top_image, "bgr8")
-    except CvBridgeError as e:
-        self.node.get_logger().error(f"Conversion error (HEAD RGB): {e}")
-        opencv_image = np.zeros((self.cam_height_, self.cam_width_, 3), np.uint8)
-
-    try:
-        opencv_image = self.br.imgmsg_to_cv2(used_top_image, "passthrough")
-    except CvBridgeError as e:
-        self.node.get_logger().error(f"Conversion error (HEAD Depth): {e}")
-        opencv_image = np.zeros((self.cam_height_, self.cam_width_), np.uint8)
-
-
-    def get_color_image_head_callback(self, img: Image):
-        self.head_rgb = img
-        self.head_rgb_cv2_frame = self.br.imgmsg_to_cv2(img, "bgr8")
-        self.new_head_rgb = True
-
-    def get_color_image_hand_callback(self, img: Image):
-        self.hand_rgb = img
-        self.hand_rgb_cv2_frame = self.br.imgmsg_to_cv2(img, "bgr8")
-        self.new_hand_rgb = True
-
-    def get_color_image_base_callback(self, img: Image):
-        self.base_rgb = img
-        self.base_rgb_cv2_frame = self.br.imgmsg_to_cv2(img, "bgr8")
-        self.new_base_rgb = True
-
-    """
 
     def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera, current_img, mask=None):
 

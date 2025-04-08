@@ -89,8 +89,6 @@ class DebugVisualNode(Node):
 
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
-        self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
-        self.objects_filtered_base_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_base', self.object_detected_filtered_base_callback, 10)
 
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
@@ -139,9 +137,7 @@ class DebugVisualNode(Node):
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
         self.is_yolo_pose_comm = False
-        self.is_yolo_obj_head_comm = False
-        self.is_yolo_obj_hand_comm = False
-        self.is_yolo_obj_base_comm = False
+        self.is_yolo_obj_camm = False
 
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
@@ -165,12 +161,8 @@ class DebugVisualNode(Node):
 
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
-        self.detected_objects_hand = ListOfDetectedObject()
-        self.detected_objects_base = ListOfDetectedObject()
         self.new_detected_people = False
         self.new_detected_objects = False
-        self.new_detected_objects_hand = False
-        self.new_detected_objects_base = False
 
         self.vccs = VCCsLowLevel()
         self.robot_pose = Pose2D()
@@ -199,22 +191,12 @@ class DebugVisualNode(Node):
         self.base_rgb_fps_ctr = 0
         self.base_depth_fps_ctr = 0
 
-        # self.head_yp_time = 0.0
-        # self.head_yo_time = 0.0
-        # self.hand_yo_time = 0.0
-        # self.base_yo_time = 0.0
-        # self.track_time = 0.0
-
         self.head_yp_fps = 0.0
-        self.head_yo_fps = 0.0
-        self.hand_yo_fps = 0.0
-        self.base_yo_fps = 0.0
+        self.yolo_objects_fps = 0.0
         self.track_fps = 0.0
 
         self.head_yp_fps_ctr = 0
-        self.head_yo_fps_ctr = 0
-        self.hand_yo_fps_ctr = 0
-        self.base_yo_fps_ctr = 0
+        self.yolo_objects_fps_ctr = 0
         self.track_fps_ctr = 0
 
         self.all_pos_x_val = []
@@ -259,22 +241,10 @@ class DebugVisualNode(Node):
 
         if self.new_detected_objects:
             self.new_detected_objects = False
-            self.is_yolo_obj_head_comm = True
+            self.is_yolo_obj_camm = True
         else:
-            self.is_yolo_obj_head_comm = False
+            self.is_yolo_obj_camm = False
     
-        if self.new_detected_objects_hand:
-            self.new_detected_objects_hand = False
-            self.is_yolo_obj_hand_comm = True
-        else:
-            self.is_yolo_obj_hand_comm = False
-    
-        if self.new_detected_objects_base:
-            self.new_detected_objects_base = False
-            self.is_yolo_obj_base_comm = True
-        else:
-            self.is_yolo_obj_base_comm = False
-
     def check_tracking_timer(self):
 
         if self.new_tracking_mask_msg:
@@ -285,17 +255,16 @@ class DebugVisualNode(Node):
 
     def check_cameras_fps_timer(self):
 
-        self.head_rgb_fps   = self.head_rgb_fps_ctr   /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
-        self.head_depth_fps = self.head_depth_fps_ctr /self.time_for_cams_fps_verification
-        self.hand_rgb_fps   = self.hand_rgb_fps_ctr   /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
-        self.hand_depth_fps = self.hand_depth_fps_ctr /self.time_for_cams_fps_verification
-        self.base_rgb_fps   = self.base_rgb_fps_ctr   /self.time_for_cams_fps_verification # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
-        self.base_depth_fps = self.base_depth_fps_ctr /self.time_for_cams_fps_verification
-        self.head_yp_fps    = self.head_yp_fps_ctr    /self.time_for_cams_fps_verification
-        self.head_yo_fps    = self.head_yo_fps_ctr    /self.time_for_cams_fps_verification
-        self.hand_yo_fps    = self.hand_yo_fps_ctr    /self.time_for_cams_fps_verification
-        self.base_yo_fps    = self.base_yo_fps_ctr    /self.time_for_cams_fps_verification
-        self.track_fps      = self.track_fps_ctr      /self.time_for_cams_fps_verification
+        # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
+        self.head_rgb_fps       = self.head_rgb_fps_ctr     /self.time_for_cams_fps_verification
+        self.head_depth_fps     = self.head_depth_fps_ctr   /self.time_for_cams_fps_verification
+        self.hand_rgb_fps       = self.hand_rgb_fps_ctr     /self.time_for_cams_fps_verification
+        self.hand_depth_fps     = self.hand_depth_fps_ctr   /self.time_for_cams_fps_verification
+        self.base_rgb_fps       = self.base_rgb_fps_ctr     /self.time_for_cams_fps_verification
+        self.base_depth_fps     = self.base_depth_fps_ctr   /self.time_for_cams_fps_verification
+        self.head_yp_fps        = self.head_yp_fps_ctr      /self.time_for_cams_fps_verification
+        self.yolo_objects_fps   = self.yolo_objects_fps_ctr /self.time_for_cams_fps_verification
+        self.track_fps          = self.track_fps_ctr        /self.time_for_cams_fps_verification
         
         self.head_rgb_fps_ctr = 0
         self.head_depth_fps_ctr = 0
@@ -304,9 +273,7 @@ class DebugVisualNode(Node):
         self.base_rgb_fps_ctr = 0
         self.base_depth_fps_ctr = 0
         self.head_yp_fps_ctr = 0
-        self.head_yo_fps_ctr = 0
-        self.hand_yo_fps_ctr = 0
-        self.base_yo_fps_ctr = 0
+        self.yolo_objects_fps_ctr = 0
         self.track_fps_ctr = 0
 
     def nodes_used_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
@@ -429,19 +396,7 @@ class DebugVisualNode(Node):
         self.detected_objects = det_object
         self.new_detected_objects = True
         # self.head_yo_time = time.time()
-        self.head_yo_fps_ctr += 1
-        
-    def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
-        self.detected_objects_hand = det_object
-        self.new_detected_objects_hand = True
-        # self.hand_yo_time = time.time()
-        self.hand_yo_fps_ctr += 1
-        
-    def object_detected_filtered_base_callback(self, det_object: ListOfDetectedObject):
-        self.detected_objects_base = det_object
-        self.new_detected_objects_base = True
-        # self.base_yo_time = time.time()
-        self.base_yo_fps_ctr += 1
+        self.yolo_objects_fps_ctr += 1
 
     def tracking_mask_callback(self, mask: TrackingMask):
         self.tracking_mask = mask
@@ -807,6 +762,7 @@ class DebugVisualMain():
 
         self.CAM_IMAGE_WIDTH = 848
         self.CAM_IMAGE_HEIGHT = 480
+        self.LEFT_PAD = 104 # (848-640)/2
 
         self.button_size = 30
         self.cam_width_ = self.CAM_IMAGE_WIDTH
@@ -1035,10 +991,6 @@ class DebugVisualMain():
     
         self.curr_detected_objects = ListOfDetectedObject()
         self.last_detected_objects = ListOfDetectedObject()
-        self.curr_detected_objects_hand = ListOfDetectedObject()
-        self.last_detected_objects_hand = ListOfDetectedObject()
-        self.curr_detected_objects_base = ListOfDetectedObject()
-        self.last_detected_objects_base = ListOfDetectedObject()
 
         self.curr_tracking = TrackingMask()
         self.last_tracking = TrackingMask()
@@ -1581,21 +1533,20 @@ class DebugVisualMain():
                 self.draw_text("No image available ...", self.text_font_t, self.WHITE, self.cams_initial_width+(self.cam_width_//3), self.cam_height_+2*self.cams_initial_height+(self.cam_height_//2))
 
         # self.draw_transparent_rect(self.cams_initial_width, self.cam_height_+2*self.cams_initial_height, 80, 6*self.cams_initial_height, self.BLACK, 85)
-        self.draw_text("Head Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*18.5)
-        self.draw_text("RGB: "+str(int(self.node.head_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.head_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
-        self.draw_text("D: "+str(int(self.node.head_depth_fps)), self.text_font, self.fps_to_color(int(self.node.head_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
-        self.draw_text("Y: "+str(int(self.node.head_yo_fps)), self.text_font, self.fps_to_color(int(self.node.head_yo_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19.5)
-        self.draw_text("Y_P: "+str(int(self.node.head_yp_fps)), self.text_font, self.fps_to_color(int(self.node.head_yp_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
-        self.draw_text("T: "+str(int(self.node.track_fps)), self.text_font, self.fps_to_color(int(self.node.track_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20.5)
-        self.draw_text("Gripper Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21.5)
-        self.draw_text("RGB: "+str(int(self.node.hand_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.hand_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
-        self.draw_text("D: "+str(int(self.node.hand_depth_fps)), self.text_font, self.fps_to_color(int(self.node.hand_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
-        self.draw_text("Y: "+str(int(self.node.hand_yo_fps)), self.text_font, self.fps_to_color(int(self.node.hand_yo_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22.5)
-        self.draw_text("Base Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23.5)
-        self.draw_text("RGB: "+str(int(self.node.base_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.base_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
-        self.draw_text("D: "+str(int(self.node.base_depth_fps)), self.text_font, self.fps_to_color(int(self.node.base_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
-        self.draw_text("Y: "+str(int(self.node.base_yo_fps)), self.text_font, self.fps_to_color(int(self.node.base_yo_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24.5)
-
+        self.draw_text("Head Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*18)
+        self.draw_text("RGB: "+str(int(self.node.head_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.head_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19)
+        self.draw_text("D: "+str(int(self.node.head_depth_fps)), self.text_font, self.fps_to_color(int(self.node.head_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*19)
+        self.draw_text("Gripper Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*20)
+        self.draw_text("RGB: "+str(int(self.node.hand_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.hand_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21)
+        self.draw_text("D: "+str(int(self.node.hand_depth_fps)), self.text_font, self.fps_to_color(int(self.node.hand_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*21)
+        self.draw_text("Base Cam (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*22)
+        self.draw_text("RGB: "+str(int(self.node.base_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.base_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23)
+        self.draw_text("D: "+str(int(self.node.base_depth_fps)), self.text_font, self.fps_to_color(int(self.node.base_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23)
+        self.draw_text("Detections (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24)
+        self.draw_text("Y_P: "+str(int(self.node.head_yp_fps)), self.text_font, self.fps_to_color(int(self.node.head_yp_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("Y: "+str(int(self.node.yolo_objects_fps)), self.text_font, self.fps_to_color(int(self.node.yolo_objects_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("T: "+str(int(self.node.track_fps)), self.text_font, self.fps_to_color(int(self.node.track_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        
         self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.2*self.toggle_h_diff)))
         self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.8*self.toggle_h_diff)))
 
@@ -1834,45 +1785,40 @@ class DebugVisualMain():
         else: # bottom
             camera_height = self.cam_height_+2*self.cams_initial_height
 
-        self.curr_detected_objects      = self.node.detected_objects
-        self.curr_detected_objects_hand = self.node.detected_objects_hand
-        self.curr_detected_objects_base = self.node.detected_objects_base
-
+        self.curr_detected_objects = self.node.detected_objects
         if self.toggle_pause_cams.getValue():
-            used_detected_objects       = self.last_detected_objects
-            used_detected_objects_hand  = self.last_detected_objects_hand
-            used_detected_objects_base  = self.last_detected_objects_base
+            used_detected_objects  = self.last_detected_objects
         else:
-            used_detected_objects       = self.curr_detected_objects 
-            used_detected_objects_hand  = self.curr_detected_objects_hand
-            used_detected_objects_base  = self.curr_detected_objects_base
+            used_detected_objects  = self.curr_detected_objects 
+        self.last_detected_objects = used_detected_objects 
 
-        self.last_detected_objects      = used_detected_objects 
-        self.last_detected_objects_hand = used_detected_objects_hand
-        self.last_detected_objects_base = used_detected_objects_base
+        temp_objects_head = ListOfDetectedObject()
+        temp_objects_hand = ListOfDetectedObject()
+        temp_objects_base = ListOfDetectedObject()
 
-        if camera_id == "head":
-            if self.node.is_yolo_obj_head_comm:
-                if len(used_detected_objects.objects) > 0:
-                    # print("DETECTED OBJECTS HEAD:")
-                    pass
-                self.draw_object_bounding_boxes(used_detected_objects, camera_height)
+        # Divides detections per camera (for visualization)
+        for obj in used_detected_objects.objects:
+            match obj.camera:
+                case "head":
+                    temp_objects_head.objects.append(obj)
+                case "hand":
+                    temp_objects_hand.objects.append(obj)
+                case "base":
+                    temp_objects_base.objects.append(obj)
+        
+        # Check number of detections of each camera
+        # print(len(temp_objects_head.objects), len(temp_objects_hand.objects), len(temp_objects_base.objects))
 
-        if camera_id == "gripper":
-            if self.node.is_yolo_obj_hand_comm:
-                if len(used_detected_objects_hand.objects) > 0:
-                    # print("DETECTED OBJECTS HAND:")
-                    pass
-                self.draw_object_bounding_boxes(used_detected_objects_hand, camera_height)
+        if self.node.is_yolo_obj_camm:
+            if camera_id == "head":
+                self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id)
+            if camera_id == "gripper":
+                self.draw_object_bounding_boxes(temp_objects_hand, camera_height, camera_id)
+            if camera_id == "base":
+                self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id)
 
-        if camera_id == "base":
-            if self.node.is_yolo_obj_base_comm:
-                if len(used_detected_objects_base.objects) > 0:
-                    # print("DETECTED OBJECTS BASE:")
-                    pass
-                self.draw_object_bounding_boxes(used_detected_objects_base, camera_height)
 
-    def draw_object_bounding_boxes(self, objects, camera_height):
+    def draw_object_bounding_boxes(self, objects, camera_height, camera_id):
 
         if len(objects.objects) > 0:
             # print("DETECTED OBJECTS ("+head_or_hand.lower()+"):")
@@ -1886,7 +1832,10 @@ class DebugVisualMain():
                 # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
                 # print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
                 bb_color = self.object_class_to_bb_color(o.object_class)
-                OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), int(o.box_width*self.camera_resize_ratio), int(o.box_height*self.camera_resize_ratio))
+                if camera_id == "base": # special case for base camera different resolution
+                    OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(self.LEFT_PAD+o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), int(o.box_width*self.camera_resize_ratio), int(o.box_height*self.camera_resize_ratio))
+                else:
+                    OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), int(o.box_width*self.camera_resize_ratio), int(o.box_height*self.camera_resize_ratio))
                 pygame.draw.rect(self.WIN, bb_color, OBJECT_BB, width=self.BB_WIDTH)
             
             else: # if object has mask, we should segmentation mask
@@ -1894,7 +1843,11 @@ class DebugVisualMain():
                 temp_mask = []
                 for p in o.mask.point: # converts received mask into local coordinates and numpy array
                     p_list = []
-                    p_list.append(int(self.cams_initial_width+(p.x)*self.camera_resize_ratio))
+
+                    if camera_id == "base": # special case for base camera different resolution
+                        p_list.append(int(self.cams_initial_width+(self.LEFT_PAD+p.x)*self.camera_resize_ratio))
+                    else:
+                        p_list.append(int(self.cams_initial_width+(p.x)*self.camera_resize_ratio))
                     p_list.append(int(camera_height+(p.y)*self.camera_resize_ratio))
                     temp_mask.append(p_list)
 
@@ -1911,12 +1864,20 @@ class DebugVisualMain():
             text_width, text_height = self.text_font_t.size(text)
             bb_color = self.object_class_to_bb_color(o.object_class)
 
-            if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio))
+            if camera_id == "base": # special case for base camera different resolution
+                if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
+                    self.draw_transparent_rect(int(self.cams_initial_width+(self.LEFT_PAD+o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), text_width, text_height, bb_color, 255)
+                    self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(self.LEFT_PAD+o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio))
+                else:
+                    self.draw_transparent_rect(int(self.cams_initial_width+(self.LEFT_PAD+o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
+                    self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(self.LEFT_PAD+o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio-30/2))
             else:
-                self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
-                self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio-30/2))
+                if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
+                    self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), text_width, text_height, bb_color, 255)
+                    self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio))
+                else:
+                    self.draw_transparent_rect(int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio-30/2), text_width, text_height, bb_color, 255)
+                    self.draw_text(text, self.text_font_t, self.BLACK, int(self.cams_initial_width+(o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio-30/2))
 
     def draw_polygon_alpha(self, surface, color, points):
         lx, ly = zip(*points)
