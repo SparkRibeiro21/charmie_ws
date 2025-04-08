@@ -77,8 +77,6 @@ class ROS2TaskNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
-        self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
-        self.objects_filtered_base_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_base', self.object_detected_filtered_base_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
@@ -303,8 +301,6 @@ class ROS2TaskNode(Node):
         self.first_depth_base_image_received = False
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
-        self.detected_objects_hand = ListOfDetectedObject()
-        self.detected_objects_base = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
         self.point_cloud_response = GetPointCloudBB.Response()
@@ -432,12 +428,6 @@ class ROS2TaskNode(Node):
     def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
         self.new_object_frame_for_tracking = True
-
-    def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
-        self.detected_objects_hand = det_object
-
-    def object_detected_filtered_base_callback(self, det_object: ListOfDetectedObject):
-        self.detected_objects_base = det_object
 
     def get_rgbd_head_callback(self, rgbd: RGBD):
         self.rgb_head_img = rgbd.rgb
@@ -2026,7 +2016,7 @@ class RobotStdFunctions():
             self.activate_yolo_objects(activate_objects=detect_objects,             activate_furniture=detect_furniture,
                                        activate_objects_hand=detect_objects_hand,   activate_furniture_hand=detect_furniture_hand,
                                        activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
-                                        minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
+                                       minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
             # time.sleep(0.5)
