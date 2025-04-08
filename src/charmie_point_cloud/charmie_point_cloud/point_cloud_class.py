@@ -13,6 +13,20 @@ import cv2
 import math
 import time
 
+class Camera():
+    def __init__(self, camera, fx, fy, cx, cy, width, height, max_dist, min_dist):
+        
+        self.camera = camera        # name da camara
+        self.fx = fx                # Distancia Focal em pixels (x-direction)
+        self.fy = fy                # Distancia Focal em pixels (y-direction)
+        self.cx = cx                # Ponto Principal em pixels (x-coordinate)
+        self.cy = cy                # Ponto Principal em pixels (y-coordinate)
+        self.width = width          # Largura da Imagem
+        self.height = height        # Altura da Imagem
+        self.max_dist = max_dist    # Maxima distancia detetada pela camara
+        self.min_dist = min_dist    # Minima distancia detetada pela camara
+
+
 # x increases from the back of the robot to the front of the robot
 # y increases from the robot left to the robot right
 # z increases from the floor to the ceiling
@@ -44,7 +58,27 @@ import time
     # self.cy = 346.93829812  # Ponto Principal em pixels (y-coordinate)
 
 class PointCloud():
-    def __init__(self, camera):
+    def __init__(self):
+
+        self.head_camera = Camera(camera="head", fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718, width=848, height=480, max_dist=6000, min_dist=300)
+        self.hand_camera = Camera(camera="hand", fx=658.65612382,     fy=658.56268970,     cx=642.88868778,     cy=346.93829812,     width=848, height=480, max_dist=1000, min_dist=70)
+        self.base_camera = Camera(camera="base", fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718, width=640, height=480, max_dist=6000, min_dist=400)
+        
+
+        camera = "base"
+
+        match camera:
+            case "head":
+                camera_used = self.head_camera
+            case "hand":
+                camera_used = self.hand_camera
+            case "base":
+                camera_used = self.base_camera
+        
+
+        print(camera_used.min_dist)
+
+        """
         # print("New PointCloud Class Initialised")
 
         self.camera = camera
@@ -58,35 +92,6 @@ class PointCloud():
         
         
         # print(linhas, colunas)
-        
-        # Parametros intrinsecos da Camera (Dados pelo Tiago)
-        if self.camera == "head":
-            self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
-            self.fy = 633.234680175781  # Distancia Focal em pixels (y-direction)
-            self.cx = 629.688598632812  # Ponto Principal em pixels (x-coordinate)
-            self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
-            # maximum and minimum distnace considered, outside this range is 0
-            self.MAX_DIST = 6000
-            self.MIN_DIST = 300
-            # shifts from the center of the bottom servo to the center of the robot platform
-            # self.X_SHIFT = 50
-            # self.Z_SHIFT = 1260
-            
-            # post lidar obstacles_fusion calibration
-            # self.X_SHIFT = -100
-            # self.Y_SHIFT = 50
-            # self.Z_SHIFT = 1260
-
-            # had to come back to originals
-            # self.X_SHIFT = 50
-            # self.Y_SHIFT = 0
-            # self.Z_SHIFT = 1260
-            
-            # after hardware neck 2.0
-            self.X_SHIFT = 60
-            self.Y_SHIFT = 0
-            self.Z_SHIFT = 1300
-        
 
         elif self.camera == "hand":
             self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
@@ -115,21 +120,25 @@ class PointCloud():
             self.Z_SHIFT = 0
         
         self.teta = [  0,   0,   0] # neck values to adjust the kinematics
+        
+        """
+
+
 
         # self.rgb_img_pc = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
-        self.depth_img_pc = np.zeros((self.linhas, self.colunas), dtype=np.uint8)
+        ###self.depth_img_pc = np.zeros((self.linhas, self.colunas), dtype=np.uint8)
 
         self.ESCALA = 16  # Por questões de eficiencia, só vamos considerar 1 pixel em cada 4
 
-        self.RECEBO = []
-        self.ENVIO = []
+        ###self.RECEBO = []
+        ###self.ENVIO = []
 
-        self.T = np.identity(4)
+        ###self.T = np.identity(4)
 
-        if self.camera == "head":
-            self.robo_head()
-        else: # self.camera == "hand":
-            pass
+        ###if self.camera == "head":
+        ###    self.robo_head()
+        ###else: # self.camera == "hand":
+        ###    pass
             
     def Trans(self, tx, ty, tz):
         M = np.identity(4)
