@@ -8,6 +8,7 @@ def generate_launch_description():
     return LaunchDescription([
         std_lf.robot_state_publisher_real_node,
         # std_lf.joint_state_publisher,
+        std_lf.joint_state_publisher_gui,
         std_lf.static_transforms_launch,
         std_lf.rviz2_basic_node
     ])
