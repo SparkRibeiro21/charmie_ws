@@ -296,7 +296,7 @@ class RobotControl:
             # print(self.ser.in_waiting)
             # self.start_time = time.time()
         else:
-            print("WAITING")
+            # print("WAITING")
             pass
 
 class WheelOdometry():
@@ -639,14 +639,15 @@ class LowLevelNode(Node):
 
         self.time_cmd_vel = time.time()
 
+        ### THERE IS NO WARNING THAT THE MOTOR BOARD IS NOT POWERED
         # test and reorganize
-        aaa = self.robot.get_omni_variables(self.robot.ACCELERATION)
+        # aaa = self.robot.get_omni_variables(self.robot.ACCELERATION)
         # print(aaa)
         
-        if aaa[0] == 100:
-            self.get_logger().warning(f"Motors are not being powered!")
-        else:
-            self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
+        # if aaa[0] == 100:
+        #     self.get_logger().warning(f"Motors are not being powered!")
+        # else:
+        #     self.get_logger().info(f"Connected to Motor Boards! Accel Ramp Lvl = {aaa[0]}")
 
         self.create_timer(0.05, self.timer_callback)
 
@@ -715,7 +716,7 @@ class LowLevelNode(Node):
                 orientation.data += 360.0
             while orientation.data >= 360:
                 orientation.data -= 360.0
-            print("Orientation:", orientation.data)
+            # print("Orientation:", orientation.data)
             self.orientation_low_level_publisher.publish(orientation)
             
             # imu

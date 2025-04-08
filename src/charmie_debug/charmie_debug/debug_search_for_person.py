@@ -14,8 +14,8 @@ ros2_modules = {
     "charmie_audio":            False,
     "charmie_face":             False,
     "charmie_head_camera":      True,
-    "charmie_hand_camera":      False,
-    "charmie_base_camera":      False,
+    "charmie_hand_camera":      True,
+    "charmie_base_camera":      True,
     "charmie_lidar":            False,
     "charmie_lidar_bottom":     False,
     "charmie_llm":              False,
@@ -23,13 +23,13 @@ ros2_modules = {
     "charmie_low_level":        False,
     "charmie_navigation":       False,
     "charmie_nav2":             False,
-    "charmie_neck":             False,
+    "charmie_neck":             True,
     "charmie_obstacles":        False,
-    "charmie_point_cloud":      True,
+    "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         False,
-    "charmie_tracking":         True,
-    "charmie_yolo_objects":     False,
+    "charmie_tracking":         False,
+    "charmie_yolo_objects":     True,
     "charmie_yolo_pose":        False,
 }
 
@@ -61,7 +61,7 @@ class TaskMain():
         Final_State = 4
 
         # VARS ...
-        self.state = Continuous_tracking
+        self.state = Search_for_objects
 
         print("IN NEW MAIN")
 
@@ -114,7 +114,7 @@ class TaskMain():
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-15, -45], [-15, -15], [-15, 15]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=True)
+                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_objects_hand=True, detect_objects_base=True)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:

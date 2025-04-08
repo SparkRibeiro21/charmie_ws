@@ -47,6 +47,8 @@ DRAW_OBJECT_CLASS = True
 DRAW_OBJECT_LOCATION_COORDS = True
 DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
 
+data_lock = threading.Lock()
+
 # Just to check if everything is OK with CUDA
 # import torch
 # print("CUDA available:", torch.cuda.is_available())
@@ -55,10 +57,9 @@ DRAW_OBJECT_LOCATION_HOUSE_FURNITURE = False
 
 ########## MISSING TO IMPLEMENT ##########
 # point cloud
-# lock for vars
 
 # ON OTHER FILES:
-# test check face
+# check everything ok with search_for_obejcts (after implementing PC)
 
 class Yolo_obj(Node):
     def __init__(self):
@@ -280,31 +281,35 @@ class Yolo_obj(Node):
         return response
     
     def get_rgbd_head_callback(self, rgbd: RGBD):
-        self.head_rgb = rgbd.rgb
-        self.head_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
-        self.head_depth = rgbd.depth
-        self.head_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
+        with data_lock: 
+            self.head_rgb = rgbd.rgb
+            self.head_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            self.head_depth = rgbd.depth
+            self.head_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
         self.new_head_rgb = True
         self.new_head_depth = True
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_rgbd_hand_callback(self, rgbd: RGBD):
-        self.hand_rgb = rgbd.rgb
-        self.hand_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
-        self.hand_depth = rgbd.depth
-        self.hand_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
+        with data_lock: 
+            self.hand_rgb = rgbd.rgb
+            self.hand_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            self.hand_depth = rgbd.depth
+            self.hand_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
         self.new_hand_rgb = True
         self.new_hand_depth = True
         # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
     
     def get_color_image_base_callback(self, img: Image):
-        self.base_rgb = img
-        self.base_rgb_cv2_frame = self.br.imgmsg_to_cv2(img, "bgr8")
+        with data_lock: 
+            self.base_rgb = img
+            self.base_rgb_cv2_frame = self.br.imgmsg_to_cv2(img, "bgr8")
         self.new_base_rgb = True
 
     def get_depth_base_image_callback(self, img: Image):
-        self.base_depth = img
-        self.base_depth_cv2_frame = self.br.imgmsg_to_cv2(img, "passthrough")
+        with data_lock: 
+            self.base_depth = img
+            self.base_depth_cv2_frame = self.br.imgmsg_to_cv2(img, "passthrough")
         self.new_base_depth = True
 
     def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera, current_img, mask=None):
@@ -461,8 +466,7 @@ class YoloObjectsMain():
             }
 
         # self.get_logger().info('Receiving color video frame head')
-        self.tempo_total = time.perf_counter()
-        init_track_time = time.time()
+        tempo_total = time.perf_counter()
 
         ### OBJECTS
         
@@ -554,17 +558,16 @@ class YoloObjectsMain():
         if self.node.DEBUG_DRAW:
             cv2.waitKey(1)
 
-        print("TRACK TIME:", time.time()-init_track_time)
+        print("TRACK TIME:", time.perf_counter()-tempo_total)
 
         reverse_models_dict = {v: k for k, v in models_dict.items() if v != -1}
 
-        print(num_obj)
+        # print(num_obj)
         for idx, obj_res in enumerate(objects_result_list):
 
             camera, model = reverse_models_dict[idx].split("_")
-            print(idx, "->", camera, model)
-            # print(obj_res[0])
-
+            # print(idx, "->", camera, model)
+            
             rgb_img = Image()
 
             # specific camera settings
@@ -608,7 +611,7 @@ class YoloObjectsMain():
                             object_name = self.node.furniture_class_names[int(box.cls[0])]
                             object_class = "Furniture"
                     
-                        print(object_name)
+                        # print(object_name)
                         
                         ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
                         temp_center_coords = Point()
@@ -662,8 +665,8 @@ class YoloObjectsMain():
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=rgb_img)
                             yolov8_obj_filtered.objects.append(new_object)
 
-        self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
-        self.node.get_logger().info(f"Time Yolo_Objects: {time.perf_counter() - self.tempo_total}")
+        # self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
+        # self.node.get_logger().info(f"Time Yolo_Objects: {time.perf_counter() - tempo_total}")
 
         return yolov8_obj_filtered, num_obj
 
@@ -837,6 +840,10 @@ class YoloObjectsMain():
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In YoloObjects Main...")
         time_till_done = time.time()
+
+        # init serves the purpose of allocating the memory necessary for each model, this takes some seconds, 
+        # by doing this in the first frame, everytime you call one of the models it will instantly responde instead of loading the model
+        init = True
         
         while True:
 
@@ -881,25 +888,41 @@ class YoloObjectsMain():
             # xy	List[ndarray]	A list of segments in pixel coordinates.
             # xyn	List[ndarray]	A list of normalized segments.
 
+            if init:
+
+                self.node.new_head_rgb = True
+                self.node.new_hand_rgb = True 
+                self.node.new_base_rgb = True
+
+                self.node.ACTIVATE_YOLO_OBJECTS = True
+                self.node.ACTIVATE_YOLO_OBJECTS_HAND = True
+                self.node.ACTIVATE_YOLO_OBJECTS_BASE = True
+                self.node.ACTIVATE_YOLO_FURNITURE = True
+                self.node.ACTIVATE_YOLO_FURNITURE_HAND = True
+                self.node.ACTIVATE_YOLO_FURNITURE_BASE = True
+
+
             if self.node.new_head_rgb or self.node.new_hand_rgb or self.node.new_base_rgb:
 
                 time_till_done = time.time()
                 
-                head_image_frame = self.node.head_rgb_cv2_frame.copy()
-                hand_image_frame = self.node.hand_rgb_cv2_frame.copy()
-                base_image_frame = self.node.base_rgb_cv2_frame.copy()
-                head_depth_frame = self.node.head_depth_cv2_frame.copy()
-                hand_depth_frame = self.node.hand_depth_cv2_frame.copy()
-                base_depth_frame = self.node.base_depth_cv2_frame.copy()
+                with data_lock: 
+                    head_image_frame = self.node.head_rgb_cv2_frame.copy()
+                    hand_image_frame = self.node.hand_rgb_cv2_frame.copy()
+                    base_image_frame = self.node.base_rgb_cv2_frame.copy()
+                    head_depth_frame = self.node.head_depth_cv2_frame.copy()
+                    hand_depth_frame = self.node.hand_depth_cv2_frame.copy()
+                    base_depth_frame = self.node.base_depth_cv2_frame.copy()
+                    head_image = self.node.head_rgb
+                    hand_image = self.node.hand_rgb
+                    base_image = self.node.base_rgb
 
-                head_image = self.node.head_rgb
-                hand_image = self.node.hand_rgb
-                base_image = self.node.base_rgb
-
-                if self.node.ACTIVATE_YOLO_OBJECTS and self.node.new_head_rgb or \
-                    self.node.ACTIVATE_YOLO_OBJECTS_HAND and self.node.new_hand_rgb or \
-                    self.node.ACTIVATE_YOLO_OBJECTS_BASE and self.node.new_base_rgb or \
-                    self.node.ACTIVATE_YOLO_FURNITURE and self.node.new_head_rgb:
+                if self.node.ACTIVATE_YOLO_OBJECTS          and self.node.new_head_rgb or \
+                    self.node.ACTIVATE_YOLO_OBJECTS_HAND    and self.node.new_hand_rgb or \
+                    self.node.ACTIVATE_YOLO_OBJECTS_BASE    and self.node.new_base_rgb or \
+                    self.node.ACTIVATE_YOLO_FURNITURE       and self.node.new_head_rgb or \
+                    self.node.ACTIVATE_YOLO_FURNITURE_HAND  and self.node.new_hand_rgb or \
+                    self.node.ACTIVATE_YOLO_FURNITURE_BASE  and self.node.new_base_rgb:
 
                     self.node.new_head_rgb = False
                     self.node.new_hand_rgb = False
@@ -915,3 +938,18 @@ class YoloObjectsMain():
                     #     cv2.putText(current_frame_draw, 'np:' + str(len(list_detected_objects.objects)) + '/' + str(total_obj), (180, self.node.CAM_IMAGE_HEIGHT-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
                     #     cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
                     #     cv2.waitKey(1)
+
+            if init:
+                
+                self.node.new_head_rgb = False
+                self.node.new_hand_rgb = False
+                self.node.new_base_rgb = False
+
+                self.node.ACTIVATE_YOLO_OBJECTS = False
+                self.node.ACTIVATE_YOLO_OBJECTS_HAND = False
+                self.node.ACTIVATE_YOLO_OBJECTS_BASE = False
+                self.node.ACTIVATE_YOLO_FURNITURE = False
+                self.node.ACTIVATE_YOLO_FURNITURE_HAND = False
+                self.node.ACTIVATE_YOLO_FURNITURE_BASE = False
+
+                init=False
