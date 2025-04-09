@@ -17,6 +17,7 @@
   * [RoboCup 2024 :netherlands:](#robocup-2024-netherlands)
   * [RoboCup Portugal Open 2024 :portugal:](#robocup-portugal-open-2024-portugal)
   * [RoboCup@Home 2023 :fr:](#robocup-2023-fr)
+* [Team Description Papers :bookmark_tabs:](#bookmark_tabs-team-description-papers)
 * [Results :trophy:](#trophy-results)
 * [Extended Scores :chart_with_upwards_trend:](#chart_with_upwards_trend-extended-scores)
 * [Contributors :technologist:](#technologist-contributors)
@@ -162,6 +163,21 @@ To setup the orbebc package in your workspace, please follow the installation in
   [Youtube Link for Receptionist Task from RoboCup 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
   
 </details>
+
+## :bookmark_tabs: Team Description Papers
+
+  ### LAR@Home 2025 Team Description Paper
+  
+  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15178542.svg)](https://doi.org/10.5281/zenodo.15178542)
+
+  ### LAR@Home 2024 Team Description Paper
+  
+  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15178581.svg)](https://doi.org/10.5281/zenodo.15178581)
+
+  ### LAR@Home 2023 Team Description Paper
+  
+  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15178597.svg)](https://doi.org/10.5281/zenodo.15178597)
+
 
 ## :trophy: Results
 
