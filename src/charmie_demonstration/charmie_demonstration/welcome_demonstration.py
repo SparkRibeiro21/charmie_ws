@@ -14,7 +14,7 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
+    "charmie_arm":              True,
     "charmie_audio":            False,
     "charmie_face":             False,
     "charmie_head_camera":      False,
@@ -29,12 +29,12 @@ ros2_modules = {
     "charmie_nav2":             False,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
-    "charmie_point_cloud":      False,
+    "charmie_point_cloud":      True,
     "charmie_ps4_controller":   True,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
-    "charmie_yolo_pose":        False,
+    "charmie_yolo_pose":        True,
 }
 
 # main function that already creates the thread for the task state machine
