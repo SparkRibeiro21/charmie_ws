@@ -591,7 +591,7 @@ class YoloObjectsMain():
         #     models_dict["head_shoes"] = len(objects_result_list) - 1
         #     num_obj += len(object_results[0])
         #     if num_obj > 0:
-        #         transform_head = self.get_transform("head")
+        #         transform_head, head_link = self.get_transform("head")
         # 
         #     if self.node.DEBUG_DRAW:
         #         cv2.imshow("HEAD SHOES DEBUG", object_results[0].plot())
@@ -699,7 +699,6 @@ class YoloObjectsMain():
 
                         # if the object detection passes all selected conditions, the detected object is added to the publishing list
                         if ALL_CONDITIONS_MET:
-                            new_object = DetectedObject()
 
                             ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
                             ### VARS:
@@ -718,6 +717,7 @@ class YoloObjectsMain():
                             # transformed_point = do_transform_point(point_cam, transform)
                             # self.get_logger().info(f"Object in base_link frame: {transformed_point.point}")
 
+                            new_object = DetectedObject()
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=rgb_img, mask=mask)
                             yolov8_obj_filtered.objects.append(new_object)
 
@@ -749,10 +749,25 @@ class YoloObjectsMain():
 
                         # if the object detection passes all selected conditions, the detected object is added to the publishing list
                         if ALL_CONDITIONS_MET:
+
+                            ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
+                            ### VARS:
+                            # fazer confirmacoes que a transform e map_transform não são None
+                            # map_transform
+                            # transform
+                            # camera_link
+                            #  
+                            # point_cam = PointStamped()
+                            # point_cam.header.stamp = self.get_clock().now().to_msg()
+                            # point_cam.header.frame_id = 'camera_link'
+                            # point_cam.point.x = detection.x
+                            # point_cam.point.y = detection.y
+                            # point_cam.point.z = detection.z
+                            # 
+                            # transformed_point = do_transform_point(point_cam, transform)
+                            # self.get_logger().info(f"Object in base_link frame: {transformed_point.point}")
+                            
                             new_object = DetectedObject()
-
-                            ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ##########
-
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=rgb_img)
                             yolov8_obj_filtered.objects.append(new_object)
 
