@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from ultralytics import YOLO
-from ultralytics.utils.plotting import Annotator, colors
+# from ultralytics.utils.plotting import Annotator, colors
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool
-from geometry_msgs.msg import Point, Pose2D
+# from example_interfaces.msg import Bool
+from geometry_msgs.msg import Point, Pose2D, PointStamped
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, ListOfDetectedObject, MaskDetection
 from charmie_interfaces.srv import ActivateYoloObjects
@@ -14,6 +14,8 @@ import cv2
 import json
 import threading
 import numpy as np
+import tf2_ros
+from tf2_geometry_msgs import do_transform_point
 
 from pathlib import Path
 
@@ -196,6 +198,10 @@ class Yolo_obj(Node):
 
         ### Services ###
         self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
+
+        ### TF buffer and listener ###
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
         ### Class ###
         self.point_cloud = PointCloud(camera="head")
@@ -446,7 +452,44 @@ class YoloObjectsMain():
         self.prev_hand_frame_time = time.time()
         self.new_base_frame_time = time.time()
         self.prev_base_frame_time = time.time()
+
+    def get_transform(self, camera):
+
+        ### STRUCTURE IS DONE, MISSING ADAPT TO THIS CODE
+
+        """
+        match camera:
+            case "head":
+                child_link = 'camera_link'
+                parent_link = 'base_link'
+            case "hand":
+                child_link = 'camera_link'
+                parent_link = 'base_link'
+            case "base":
+                child_link = 'camera_link'
+                parent_link = 'base_link'
+            case "":
+                child_link = 'base_link'
+                parent_link = 'map'
+
+        # proceed to lookup_transform
+        if self.node.tf_buffer.can_transform('base_link', 'camera_link', rclpy.time.Time()):
+            try:
+                transform = self.tf_buffer.lookup_transform(
+                    'base_link',      # target frame
+                    'camera_link',    # source frame
+                    rclpy.time.Time(),  # latest available
+                    timeout=rclpy.duration.Duration(seconds=0.1)
+                )
+            except Exception as e:
+                self.get_logger().warn(f"TF lookup failed: {e}")
+                transform = None
+                return  # or handle the error appropriately
         
+        return transform, child_link
+        """
+        return 0.0, "camera_link"
+
     def detect_with_yolo_model(self, head_frame, hand_frame, base_frame, head_depth_frame, hand_depth_frame, base_depth_frame, head_image, hand_image, base_image):
 
         yolov8_obj_filtered = ListOfDetectedObject()
@@ -468,6 +511,8 @@ class YoloObjectsMain():
         # self.get_logger().info('Receiving color video frame head')
         tempo_total = time.perf_counter()
 
+        map_transform, _ = self.get_transform() # base_link -> map
+
         ### OBJECTS
         
         if self.node.ACTIVATE_YOLO_OBJECTS:
@@ -475,6 +520,8 @@ class YoloObjectsMain():
             objects_result_list.append(object_results)
             models_dict["head_objects"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_head, head_link = self.get_transform("head")
 
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HEAD OBJECTS DEBUG", object_results[0].plot())
@@ -484,6 +531,8 @@ class YoloObjectsMain():
             objects_result_list.append(object_results)
             models_dict["hand_objects"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_hand, hand_link = self.get_transform("hand")
 
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HAND OBJECTS DEBUG", object_results[0].plot())
@@ -493,6 +542,8 @@ class YoloObjectsMain():
             objects_result_list.append(object_results)
             models_dict["base_objects"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_base, base_link = self.get_transform("base")
 
             if self.node.DEBUG_DRAW:
                 cv2.imshow("BASE OBJECTS DEBUG", object_results[0].plot())
@@ -504,6 +555,8 @@ class YoloObjectsMain():
             objects_result_list.append(object_results)
             models_dict["head_furniture"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_head, head_link = self.get_transform("head")
 
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HEAD FURNITURE DEBUG", object_results[0].plot())
@@ -513,6 +566,8 @@ class YoloObjectsMain():
             objects_result_list.append(object_results)
             models_dict["hand_furniture"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_hand, hand_link = self.get_transform("hand")
 
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HAND FURNITURE DEBUG", object_results[0].plot())
@@ -522,6 +577,8 @@ class YoloObjectsMain():
             objects_result_list.append(object_results)
             models_dict["base_furniture"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_base, base_link = self.get_transform("base")
 
             if self.node.DEBUG_DRAW:
                 cv2.imshow("BASE FURNITURE DEBUG", object_results[0].plot())
@@ -533,6 +590,8 @@ class YoloObjectsMain():
         #     objects_result_list.append(object_results)
         #     models_dict["head_shoes"] = len(objects_result_list) - 1
         #     num_obj += len(object_results[0])
+        #     if num_obj > 0:
+        #         transform_head = self.get_transform("head")
         # 
         #     if self.node.DEBUG_DRAW:
         #         cv2.imshow("HEAD SHOES DEBUG", object_results[0].plot())
@@ -542,6 +601,8 @@ class YoloObjectsMain():
         #     objects_result_list.append(object_results)
         #     models_dict["hand_shoes"] = len(objects_result_list) - 1
         #     num_obj += len(object_results[0])
+        #     if num_obj > 0:
+        #         transform_hand, hand_link = self.get_transform("hand")
         # 
         #     if self.node.DEBUG_DRAW:
         #         cv2.imshow("HAND SHOES DEBUG", object_results[0].plot())
@@ -551,6 +612,8 @@ class YoloObjectsMain():
         #     objects_result_list.append(object_results)
         #     models_dict["base_shoes"] = len(objects_result_list) - 1
         #     num_obj += len(object_results[0])
+        #     if num_obj > 0:
+        #         transform_base, base_link = self.get_transform("base")
         # 
         #     if self.node.DEBUG_DRAW:
         #         cv2.imshow("BASE SHOES DEBUG", object_results[0].plot())
@@ -575,12 +638,18 @@ class YoloObjectsMain():
                 case "head":
                     rgb_img = head_image
                     depth_frame = head_depth_frame
+                    transform = transform_head
+                    camera_link = head_link
                 case "hand":
                     rgb_img = hand_image
                     depth_frame = hand_depth_frame
+                    transform = transform_hand
+                    camera_link = hand_link
                 case "base":
                     rgb_img = base_image
                     depth_frame = base_depth_frame
+                    transform = transform_base
+                    camera_link = base_link
 
             # specific model settings
             match model:
@@ -615,6 +684,7 @@ class YoloObjectsMain():
                         
                         ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
                         temp_center_coords = Point()
+                        ###x_cam, y_cam, z_cam = get_xyz_from_camera(msg)
                         
                         ALL_CONDITIONS_MET = 1
                         
@@ -630,6 +700,24 @@ class YoloObjectsMain():
                         # if the object detection passes all selected conditions, the detected object is added to the publishing list
                         if ALL_CONDITIONS_MET:
                             new_object = DetectedObject()
+
+                            ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
+                            ### VARS:
+                            # fazer confirmacoes que a transform e map_transform não são None
+                            # map_transform
+                            # transform
+                            # camera_link
+                            #  
+                            # point_cam = PointStamped()
+                            # point_cam.header.stamp = self.get_clock().now().to_msg()
+                            # point_cam.header.frame_id = 'camera_link'
+                            # point_cam.point.x = detection.x
+                            # point_cam.point.y = detection.y
+                            # point_cam.point.z = detection.z
+                            # 
+                            # transformed_point = do_transform_point(point_cam, transform)
+                            # self.get_logger().info(f"Object in base_link frame: {transformed_point.point}")
+
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=rgb_img, mask=mask)
                             yolov8_obj_filtered.objects.append(new_object)
 
@@ -662,6 +750,9 @@ class YoloObjectsMain():
                         # if the object detection passes all selected conditions, the detected object is added to the publishing list
                         if ALL_CONDITIONS_MET:
                             new_object = DetectedObject()
+
+                            ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ##########
+
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=rgb_img)
                             yolov8_obj_filtered.objects.append(new_object)
 
