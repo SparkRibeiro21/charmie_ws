@@ -16,5 +16,7 @@
     <xacro:include filename="head_camera.xacro"/>
     
     <xacro:include filename="base_camera.xacro"/>
+    
+    <xacro:include filename="hand_camera.xacro"/>
 
 </robot>

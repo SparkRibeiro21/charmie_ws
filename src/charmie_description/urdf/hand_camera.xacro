@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+
+    <xacro:property name="camera_height_from_base" value="0.25" />
+    <xacro:property name="camera_dist_from_base_limit" value="0.01" />
+
+    <xacro:property name="hand_camera_length" value="0.04" />
+    <xacro:property name="hand_camera_width" value="0.165" />
+    <xacro:property name="hand_camera_height" value="0.03" />
+
+    <joint name="hand_camera_joint" type="fixed">
+        <parent link="top_torso_link"/>
+        <child link="hand_camera_link"/>
+        <origin xyz="${(base_length/2-camera_dist_from_base_limit)} -0.05 ${camera_height_from_base}" rpy="0 0 0.05"/>
+    </joint>
+
+    <link name="hand_camera_link">
+        <visual>
+            <origin xyz="${-head_camera_length/2} 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="${-head_camera_length/2} 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.5" x="${head_camera_length}" y="${head_camera_width}" z="${head_camera_height}" >
+            <origin xyz="${-head_camera_length/2} 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+    </link>
+
+</robot>

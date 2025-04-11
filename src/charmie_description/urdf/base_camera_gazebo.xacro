@@ -14,8 +14,8 @@
                 <horizontal_fov>1.5708</horizontal_fov> <!-- 90 degrees -->
                 <image_width>640</image_width>
                 <image_height>480</image_height>
-                <near>0.1</near>
-                <far>10.0</far>
+                <near>0.4</near>
+                <far>6.0</far>
             </depth_camera>
 
             <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
