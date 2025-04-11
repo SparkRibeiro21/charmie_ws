@@ -457,13 +457,12 @@ class YoloObjectsMain():
 
         ### STRUCTURE IS DONE, MISSING ADAPT TO THIS CODE
 
-        """
         match camera:
             case "head":
-                child_link = 'camera_link'
+                child_link = 'D455_head_link'
                 parent_link = 'base_link'
             case "hand":
-                child_link = 'camera_link'
+                child_link = 'D455_head_link'
                 parent_link = 'base_link'
             case "base":
                 child_link = 'camera_link'
@@ -473,22 +472,20 @@ class YoloObjectsMain():
                 parent_link = 'map'
 
         # proceed to lookup_transform
-        if self.node.tf_buffer.can_transform('base_link', 'camera_link', rclpy.time.Time()):
+        if self.node.tf_buffer.can_transform(parent_link, child_link, rclpy.time.Time()):
             try:
-                transform = self.tf_buffer.lookup_transform(
-                    'base_link',      # target frame
-                    'camera_link',    # source frame
-                    rclpy.time.Time(),  # latest available
-                    timeout=rclpy.duration.Duration(seconds=0.1)
+                transform = self.node.tf_buffer.lookup_transform(
+                    parent_link,        # target frame
+                    child_link,         # source frame
+                    rclpy.time.Time()   # latest available
+                    # timeout=rclpy.duration.Duration(seconds=0.1) quero por isto???
                 )
             except Exception as e:
-                self.get_logger().warn(f"TF lookup failed: {e}")
+                self.node.get_logger().warn(f"TF lookup failed: {e}")
                 transform = None
                 return  # or handle the error appropriately
         
         return transform, child_link
-        """
-        return 0.0, "camera_link"
 
     def detect_with_yolo_model(self, head_frame, hand_frame, base_frame, head_depth_frame, hand_depth_frame, base_depth_frame, head_image, hand_image, base_image):
 
@@ -703,6 +700,11 @@ class YoloObjectsMain():
                             ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
                             ### VARS:
                             # fazer confirmacoes que a transform e map_transform não são None
+                            # 
+                            # if transform is not None:
+                            # 
+                            # if map_transform is not None:
+                            # 
                             # map_transform
                             # transform
                             # camera_link
@@ -766,7 +768,7 @@ class YoloObjectsMain():
                             # 
                             # transformed_point = do_transform_point(point_cam, transform)
                             # self.get_logger().info(f"Object in base_link frame: {transformed_point.point}")
-                            
+
                             new_object = DetectedObject()
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=rgb_img)
                             yolov8_obj_filtered.objects.append(new_object)
