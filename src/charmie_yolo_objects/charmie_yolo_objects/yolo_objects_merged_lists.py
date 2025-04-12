@@ -204,9 +204,8 @@ class Yolo_obj(Node):
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
         ### Class ###
-        self.point_cloud = PointCloud(camera="head")
-
-        print(self.point_cloud.cy)
+        self.point_cloud = PointCloud()
+        print(self.point_cloud.base_camera.cy)
 
         ### Variables ###
         # robot localization
@@ -453,26 +452,28 @@ class YoloObjectsMain():
         self.new_base_frame_time = time.time()
         self.prev_base_frame_time = time.time()
 
-    def get_transform(self, camera):
+    def get_transform(self, camera=""):
 
         ### STRUCTURE IS DONE, MISSING ADAPT TO THIS CODE
 
         match camera:
             case "head":
                 child_link = 'D455_head_link'
-                parent_link = 'base_link'
+                parent_link = 'base_footprint'
             case "hand":
                 child_link = 'D455_head_link'
-                parent_link = 'base_link'
+                parent_link = 'base_footprint'
             case "base":
                 child_link = 'camera_link'
-                parent_link = 'base_link'
+                parent_link = 'base_footprint'
             case "":
-                child_link = 'base_link'
+                child_link = 'base_footprint'
                 parent_link = 'map'
 
         # proceed to lookup_transform
         if self.node.tf_buffer.can_transform(parent_link, child_link, rclpy.time.Time()):
+            
+            print(parent_link, child_link, "GOOD")
             try:
                 transform = self.node.tf_buffer.lookup_transform(
                     parent_link,        # target frame
@@ -484,6 +485,9 @@ class YoloObjectsMain():
                 self.node.get_logger().warn(f"TF lookup failed: {e}")
                 transform = None
                 return  # or handle the error appropriately
+        else:
+            print(parent_link, child_link, "BAD")
+            transform = None
         
         return transform, child_link
 
@@ -508,7 +512,7 @@ class YoloObjectsMain():
         # self.get_logger().info('Receiving color video frame head')
         tempo_total = time.perf_counter()
 
-        map_transform, _ = self.get_transform() # base_link -> map
+        map_transform, _ = self.get_transform() # base_footprint -> map
 
         ### OBJECTS
         
@@ -625,40 +629,40 @@ class YoloObjectsMain():
         # print(num_obj)
         for idx, obj_res in enumerate(objects_result_list):
 
-            camera, model = reverse_models_dict[idx].split("_")
-            # print(idx, "->", camera, model)
-            
-            rgb_img = Image()
-
-            # specific camera settings
-            match camera:
-                case "head":
-                    rgb_img = head_image
-                    depth_frame = head_depth_frame
-                    transform = transform_head
-                    camera_link = head_link
-                case "hand":
-                    rgb_img = hand_image
-                    depth_frame = hand_depth_frame
-                    transform = transform_hand
-                    camera_link = hand_link
-                case "base":
-                    rgb_img = base_image
-                    depth_frame = base_depth_frame
-                    transform = transform_base
-                    camera_link = base_link
-
-            # specific model settings
-            match model:
-                case "objects":
-                    MIN_CONF_NALUE = MIN_OBJECT_CONF_VALUE
-                case "furniture":
-                    MIN_CONF_NALUE = MIN_FURNITURE_CONF_VALUE
-                case "shoes":
-                    MIN_CONF_NALUE = MIN_SHOES_CONF_VALUE
-
             if obj_res[0].boxes.id is not None:
 
+                camera, model = reverse_models_dict[idx].split("_")
+                # print(idx, "->", camera, model)
+                
+                rgb_img = Image()
+
+                # specific camera settings
+                match camera:
+                    case "head":
+                        rgb_img = head_image
+                        depth_frame = head_depth_frame
+                        transform = transform_head
+                        camera_link = head_link
+                    case "hand":
+                        rgb_img = hand_image
+                        depth_frame = hand_depth_frame
+                        transform = transform_hand
+                        camera_link = hand_link
+                    case "base":
+                        rgb_img = base_image
+                        depth_frame = base_depth_frame
+                        transform = transform_base
+                        camera_link = base_link
+
+                # specific model settings
+                match model:
+                    case "objects":
+                        MIN_CONF_NALUE = MIN_OBJECT_CONF_VALUE
+                    case "furniture":
+                        MIN_CONF_NALUE = MIN_FURNITURE_CONF_VALUE
+                    case "shoes":
+                        MIN_CONF_NALUE = MIN_SHOES_CONF_VALUE
+                        
                 boxes = obj_res[0].boxes
                 masks = obj_res[0].masks
                 track_ids = obj_res[0].boxes.id.int().cpu().tolist()
@@ -682,7 +686,11 @@ class YoloObjectsMain():
                         ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
                         temp_center_coords = Point()
                         ###x_cam, y_cam, z_cam = get_xyz_from_camera(msg)
-                        
+                        temp_coords = Point()
+                        temp_coords.x = 1.0
+                        temp_coords.y = 0.0
+                        temp_coords.z = 0.0
+
                         ALL_CONDITIONS_MET = 1
                         
                         ########## MISSING HERE: CASE WHERE NO POINTS WERE AVALILABLE SO WE DONT KNOW HOW TO COMPUTE 3D ##########
@@ -698,26 +706,19 @@ class YoloObjectsMain():
                         if ALL_CONDITIONS_MET:
 
                             ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
-                            ### VARS:
-                            # fazer confirmacoes que a transform e map_transform não são None
-                            # 
-                            # if transform is not None:
-                            # 
-                            # if map_transform is not None:
-                            # 
-                            # map_transform
-                            # transform
-                            # camera_link
-                            #  
-                            # point_cam = PointStamped()
-                            # point_cam.header.stamp = self.get_clock().now().to_msg()
-                            # point_cam.header.frame_id = 'camera_link'
-                            # point_cam.point.x = detection.x
-                            # point_cam.point.y = detection.y
-                            # point_cam.point.z = detection.z
-                            # 
-                            # transformed_point = do_transform_point(point_cam, transform)
-                            # self.get_logger().info(f"Object in base_link frame: {transformed_point.point}")
+                            
+                            point_cam = PointStamped()
+                            point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                            point_cam.header.frame_id = camera_link
+                            point_cam.point = temp_coords
+
+                            if transform is not None:
+                                transformed_point = do_transform_point(point_cam, transform)
+                                self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+
+                                if map_transform is not None:
+                                    transformed_point_map = do_transform_point(transformed_point, map_transform)
+                                    self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
 
                             new_object = DetectedObject()
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=rgb_img, mask=mask)
