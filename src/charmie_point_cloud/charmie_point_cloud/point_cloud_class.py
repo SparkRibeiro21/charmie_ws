@@ -205,7 +205,7 @@ class PointCloud():
         # Clean all reference axis changes (now all values returned from PC are in reference to the camera)
 
         # POST PROCESSING (MADE IN OLD PC MAIN):
-        # None
+        # Coords must be in meters
  
         # return (x,y,z) Point (in reference to camera)
 
@@ -288,7 +288,7 @@ class PointCloud():
         # Clean all reference axis changes (now all values returned from PC are in reference to the camera)
 
         # POST PROCESSING (MADE IN OLD PC MAIN):
-        # None
+        # Coords must be in meters
 
         # return (x,y,z) Point (in reference to camera)
 
@@ -345,6 +345,7 @@ class PointCloud():
         # Clean all reference axis changes (now all values returned from PC are in reference to the camera)
 
         # POST PROCESSING (MADE IN OLD PC MAIN):
+        # Coords must be in meters
         """
         # le os dados da BouundingBox
         # u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]

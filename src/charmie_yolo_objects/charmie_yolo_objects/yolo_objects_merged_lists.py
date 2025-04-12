@@ -317,7 +317,7 @@ class Yolo_obj(Node):
             self.base_depth_cv2_frame = self.br.imgmsg_to_cv2(img, "passthrough")
         self.new_base_depth = True
 
-    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, center_object_coordinates, camera, current_img, mask=None):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, object_coords_to_cam, object_coords_to_base, object_coords_to_map, camera, current_img, mask=None):
 
         object_id = boxes_id.id
         if boxes_id.id == None:
@@ -330,13 +330,12 @@ class Yolo_obj(Node):
         new_object.index = int(object_id)
         new_object.confidence = float(boxes_id.conf)
 
-        # print(center_object_coordinates)
-
-        object_rel_pos = Point()
-        object_rel_pos.x =  center_object_coordinates.x/1000
-        object_rel_pos.y =  center_object_coordinates.y/1000
-        object_rel_pos.z =  center_object_coordinates.z/1000
-        new_object.position_relative = object_rel_pos
+        # print(object_coords_to_cam)
+        new_object.position_cam = object_coords_to_cam
+        # print(object_coords_to_base)
+        new_object.position_relative = object_coords_to_base
+        # print(object_coords_to_map)
+        new_object.position_absolute = object_coords_to_map
 
         # if there is a segmentation mask, it adds to DetectedObject 
         new_mask = MaskDetection()
@@ -361,38 +360,18 @@ class Yolo_obj(Node):
         new_object.mask = new_mask
         new_object.mask_norm = new_mask_norm
 
-        # calculate the absolute position according to the robot localisation
-        angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
-        dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
-
-        theta_aux = math.pi/2 - (angle_obj - self.robot_pose.theta)
-
-        target_x = dist_obj * math.cos(theta_aux) + self.robot_pose.x
-        target_y = dist_obj * math.sin(theta_aux) + self.robot_pose.y
-
-        a_ref = (target_x, target_y)
-        # print("Rel:", (object_rel_pos.x, object_rel_pos.y), "Abs:", a_ref)
-
-        object_abs_pos = Point()
-        object_abs_pos.x = target_x
-        object_abs_pos.y = target_y
-        object_abs_pos.z = center_object_coordinates.z/1000
-        new_object.position_absolute = object_abs_pos
-
         new_object.box_top_left_x = int(boxes_id.xyxy[0][0])
         new_object.box_top_left_y = int(boxes_id.xyxy[0][1])
         new_object.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
         new_object.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
-        new_object.room_location, new_object.furniture_location = self.position_to_house_rooms_and_furniture(object_abs_pos)
+        new_object.room_location, new_object.furniture_location = self.position_to_house_rooms_and_furniture(new_object.position_absolute)
 
         new_object.box_center_x = new_object.box_top_left_x + new_object.box_width//2
         new_object.box_center_y = new_object.box_top_left_y + new_object.box_height//2
 
         new_object.camera = camera
-
         new_object.orientation = 0.0 # still missing... (says the object angle so the gripper can adjust to correctly pick up the object)
-        
         new_object.image_rgb_frame = current_img
             
         return new_object
@@ -680,11 +659,8 @@ class YoloObjectsMain():
                         elif model == "furniture":  
                             object_name = self.node.furniture_class_names[int(box.cls[0])]
                             object_class = "Furniture"
-                    
-                        # print(object_name)
                         
                         ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
-                        temp_center_coords = Point()
                         ###x_cam, y_cam, z_cam = get_xyz_from_camera(msg)
                         temp_coords = Point()
                         temp_coords.x = 1.0
@@ -706,12 +682,13 @@ class YoloObjectsMain():
                         if ALL_CONDITIONS_MET:
 
                             ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
-                            
                             point_cam = PointStamped()
                             point_cam.header.stamp = self.node.get_clock().now().to_msg()
                             point_cam.header.frame_id = camera_link
                             point_cam.point = temp_coords
 
+                            transformed_point = PointStamped()
+                            transformed_point_map = PointStamped()
                             if transform is not None:
                                 transformed_point = do_transform_point(point_cam, transform)
                                 self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
@@ -721,7 +698,8 @@ class YoloObjectsMain():
                                     self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
 
                             new_object = DetectedObject()
-                            new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=rgb_img, mask=mask)
+                            new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
+                                                                                    object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img, mask=mask)
                             yolov8_obj_filtered.objects.append(new_object)
 
                 else: # if for some reason, a used model does not have 'segmentation' masks
@@ -739,7 +717,11 @@ class YoloObjectsMain():
                             object_class = "Furniture"
 
                         ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
-                        temp_center_coords = Point()
+                        ###x_cam, y_cam, z_cam = get_xyz_from_camera(msg)
+                        temp_coords = Point()
+                        temp_coords.x = 1.0
+                        temp_coords.y = 0.0
+                        temp_coords.z = 0.0
                         
                         ALL_CONDITIONS_MET = 1
 
@@ -754,24 +736,24 @@ class YoloObjectsMain():
                         if ALL_CONDITIONS_MET:
 
                             ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
-                            ### VARS:
-                            # fazer confirmacoes que a transform e map_transform não são None
-                            # map_transform
-                            # transform
-                            # camera_link
-                            #  
-                            # point_cam = PointStamped()
-                            # point_cam.header.stamp = self.get_clock().now().to_msg()
-                            # point_cam.header.frame_id = 'camera_link'
-                            # point_cam.point.x = detection.x
-                            # point_cam.point.y = detection.y
-                            # point_cam.point.z = detection.z
-                            # 
-                            # transformed_point = do_transform_point(point_cam, transform)
-                            # self.get_logger().info(f"Object in base_link frame: {transformed_point.point}")
+                            point_cam = PointStamped()
+                            point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                            point_cam.header.frame_id = camera_link
+                            point_cam.point = temp_coords
+
+                            transformed_point = PointStamped()
+                            transformed_point_map = PointStamped()
+                            if transform is not None:
+                                transformed_point = do_transform_point(point_cam, transform)
+                                self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+
+                                if map_transform is not None:
+                                    transformed_point_map = do_transform_point(transformed_point, map_transform)
+                                    self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
 
                             new_object = DetectedObject()
-                            new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, center_object_coordinates=temp_center_coords, camera=camera, current_img=rgb_img)
+                            new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
+                                                                                    object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img)
                             yolov8_obj_filtered.objects.append(new_object)
 
         # self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
