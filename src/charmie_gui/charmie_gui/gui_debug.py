@@ -43,53 +43,39 @@ class DebugVisualNode(Node):
         # Audio: Help in Debug
         self.audio_interpreted_subscriber = self.create_subscription(String, "audio_interpreted", self.audio_interpreted_callback, 10)
         self.audio_final_subscriber = self.create_subscription(String, "audio_final", self.audio_final_callback, 10)
-
         # Intel Cameras (Head and Hand/Gripper)
         self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
         self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
-        
         # Orbbec Camera (Base)
         self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
         self.aligned_depth_image_base_subscriber = self.create_subscription(Image, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
-
         # get neck position
         self.get_neck_position_subscriber = self.create_subscription(NeckPosition, "get_neck_pos_topic", self.get_neck_position_callback, 10)
-        
         # lidar
         self.lidar_subscriber = self.create_subscription(LaserScan, "scan", self.lidar_callback , 10)
         self.lidar_bottom_subscriber = self.create_subscription(LaserScan, "scan_bottom", self.lidar_bottom_callback , 10)
-
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
-
         # Navigation
         self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
-
         # search for person and object 
         self.search_for_person_subscriber = self.create_subscription(ListOfDetectedPerson, "search_for_person_detections", self.search_for_person_detections_callback, 10)
         self.search_for_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_object_detections", self.search_for_object_detections_callback, 10)
-        
         # Low Level
         # self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10) ### OLD
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
-        
         # Camera Obstacles
         self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
-
         # Obstacles
         self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
-
         # PS4 Controller
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_callback, 10)
-
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
-
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
-
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         
@@ -385,7 +371,6 @@ class DebugVisualNode(Node):
 
         self.activate_obstacles_client.call_async(request)
 
-    
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
         self.new_detected_people = True
@@ -397,6 +382,8 @@ class DebugVisualNode(Node):
         self.new_detected_objects = True
         # self.head_yo_time = time.time()
         self.yolo_objects_fps_ctr += 1
+        for obj in self.detected_objects.objects:
+            print(obj.object_name, "(", obj.position_cam.x, obj.position_cam.y, obj.position_cam.z, ") (", obj.position_relative.x, obj.position_relative.y, obj.position_relative.z, ") (", obj.position_absolute.x, obj.position_absolute.y, obj.position_absolute.z, ")" )
 
     def tracking_mask_callback(self, mask: TrackingMask):
         self.tracking_mask = mask
