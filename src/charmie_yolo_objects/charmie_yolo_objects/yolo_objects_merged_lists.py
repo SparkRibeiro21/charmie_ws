@@ -1020,7 +1020,8 @@ class YoloObjectsMain():
                     self.node.new_base_rgb = False
 
                     list_detected_objects, total_obj = self.detect_with_yolo_model(head_frame=head_image_frame, hand_frame=hand_image_frame, base_frame=base_image_frame, head_depth_frame=head_depth_frame, hand_depth_frame=hand_depth_frame, base_depth_frame=base_depth_frame, head_image=head_image, hand_image=hand_image, base_image=base_image)
-                    self.node.objects_filtered_publisher.publish(list_detected_objects)
+                    if not init:
+                        self.node.objects_filtered_publisher.publish(list_detected_objects)
 
                     print("TR Time Yolo_Objects Head: ", time.time() - time_till_done)
 
