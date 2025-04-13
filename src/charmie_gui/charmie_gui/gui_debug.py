@@ -382,8 +382,8 @@ class DebugVisualNode(Node):
         self.new_detected_objects = True
         # self.head_yo_time = time.time()
         self.yolo_objects_fps_ctr += 1
-        for obj in self.detected_objects.objects:
-            print(obj.object_name, "(", obj.position_cam.x, obj.position_cam.y, obj.position_cam.z, ") (", obj.position_relative.x, obj.position_relative.y, obj.position_relative.z, ") (", obj.position_absolute.x, obj.position_absolute.y, obj.position_absolute.z, ")" )
+        # for obj in self.detected_objects.objects:
+        #     print(obj.object_name, "(", obj.position_cam.x, obj.position_cam.y, obj.position_cam.z, ") (", obj.position_relative.x, obj.position_relative.y, obj.position_relative.z, ") (", obj.position_absolute.x, obj.position_absolute.y, obj.position_absolute.z, ")" )
 
     def tracking_mask_callback(self, mask: TrackingMask):
         self.tracking_mask = mask

@@ -63,20 +63,6 @@ class PointCloud():
         self.hand_camera = Camera(camera="hand", fx=658.65612382,     fy=658.56268970,     cx=642.88868778,     cy=346.93829812,     width=848, height=480, max_dist=1000, min_dist=70)
         self.base_camera = Camera(camera="base", fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718, width=640, height=480, max_dist=6000, min_dist=400)
         
-
-        camera = "base"
-
-        match camera:
-            case "head":
-                camera_used = self.head_camera
-            case "hand":
-                camera_used = self.hand_camera
-            case "base":
-                camera_used = self.base_camera
-        
-
-        print(camera_used.min_dist)
-
         """
         # print("New PointCloud Class Initialised")
 
@@ -190,7 +176,22 @@ class PointCloud():
     """
     
     ### Receives a (u, v) point and a depth image of the corresponding camera, returns the (x,y,z) according to the camera TF (filtered in case depth point can not be retrieved)
-    def converter_2D_3D_unico(self, u, v):
+    # def converter_2D_3D_unico(self, u, v):
+    def convert_pixel_to_3dpoint(self, depth_img, camera, pixel):
+
+        match camera:
+            case "head":
+                camera_used = self.head_camera
+            case "hand":
+                camera_used = self.hand_camera
+            case "base":
+                camera_used = self.base_camera
+        
+        # camera_used to get all camera parameters
+        # u = pixel[0]
+        # v = pixel[1]
+        # self.depth_img_pc = depth_img 
+
 
         ### UPDATED FUNCTION ALGORITHM (AFTER PointCloudNodeToClass update)
 
@@ -264,7 +265,21 @@ class PointCloud():
         return result
 
     ### Receives a segmentation mask and a depth image of the corresponding camera, returns the (x,y,z) according to the camera TF (0,0,0 if no depth point is available inside mask)
-    def converter_2D_3D_mask(self, depth_with_mask):
+    # def converter_2D_3D_mask(self, depth_with_mask):
+    def convert_mask_to_3dpoint(self, depth_img, camera, mask):
+
+        match camera:
+            case "head":
+                camera_used = self.head_camera
+            case "hand":
+                camera_used = self.hand_camera
+            case "base":
+                camera_used = self.base_camera
+        
+        # camera_used to get all camera parameters
+        # mask 
+        # self.depth_img_pc = depth_img 
+
 
         ### UPDATED FUNCTION ALGORITHM (AFTER PointCloudNodeToClass update)
 
@@ -330,8 +345,8 @@ class PointCloud():
         return final_coords
     
     ### Receives a bounding box and a depth image of the corresponding camera, returns the (x,y,z) of the average of the filtered bounding box points according to the camera TF
-    def converter_2D_3D(self, u, v, height, width):
-
+    # def converter_2D_3D(self, u, v, height, width):
+    def convert_bbox_to_3d_point(self, depth_img, camera, bbox):
         ### UPDATED FUNCTION ALGORITHM (AFTER PointCloudNodeToClass update)
 
         # Receive bounding box

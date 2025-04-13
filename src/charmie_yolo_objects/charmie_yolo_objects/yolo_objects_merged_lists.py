@@ -661,6 +661,13 @@ class YoloObjectsMain():
                             object_class = "Furniture"
                         
                         ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
+                        # obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask)
+                        # print(box)
+                        # print(box.xyxy[0])
+                        # print(box.xyxy[0][0])
+                        # print("-")
+                        # print(mask)
+
                         ###x_cam, y_cam, z_cam = get_xyz_from_camera(msg)
                         temp_coords = Point()
                         temp_coords.x = 1.0
@@ -717,7 +724,7 @@ class YoloObjectsMain():
                             object_class = "Furniture"
 
                         ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
-                        ###x_cam, y_cam, z_cam = get_xyz_from_camera(msg)
+                        # obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
                         temp_coords = Point()
                         temp_coords.x = 1.0
                         temp_coords.y = 0.0
