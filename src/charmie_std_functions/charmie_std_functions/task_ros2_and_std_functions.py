@@ -12,10 +12,9 @@ from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
     Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
-    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, \
-    SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking, \
-    SetPoseWithCovarianceStamped
-
+    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, \
+    GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking, SetPoseWithCovarianceStamped
+from charmie_point_cloud.point_cloud_class import PointCloud
 import cv2 
 # import threading
 import time
@@ -65,14 +64,16 @@ class ROS2TaskNode(Node):
         except:
             self.get_logger().error("Could NOT import data from json configuration files.")
 
+        ### Class ###
+        self.point_cloud = PointCloud()
+
+        ### TOPICS ###
         # Intel Realsense Subscribers (RGBD) Head and Hand Cameras
         self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
         self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
-        
         # Orbbec Camera (Base)
         self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
         self.aligned_depth_image_base_subscriber = self.create_subscription(Image, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
-
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -126,7 +127,6 @@ class ROS2TaskNode(Node):
         self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
         self.neck_continuous_tracking_client = self.create_client(TrackContinuous, "set_continuous_tracking")
-        
         # Yolo Pose
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
@@ -137,8 +137,6 @@ class ROS2TaskNode(Node):
         self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
-        # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
         # Low level
         # self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
@@ -239,10 +237,6 @@ class ROS2TaskNode(Node):
             while not self.activate_obstacles_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
 
-        if self.ros2_modules["charmie_point_cloud"]:
-            while not self.point_cloud_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Point Cloud...")
-
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Speech Command...")
@@ -280,7 +274,6 @@ class ROS2TaskNode(Node):
         # self.waited_for_end_of_get_low_level_buttons = False
         # self.waited_for_end_of_get_torso_position = False
         self.waited_for_end_of_set_torso_position = False
-        self.waiting_for_pcloud = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
@@ -302,7 +295,6 @@ class ROS2TaskNode(Node):
         self.detected_objects = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
-        self.point_cloud_response = GetPointCloudBB.Response()
         self.obstacles = Obstacles()
         self.ps4_controller_state = PS4Controller()
         self.new_object_frame_for_tracking = False
@@ -498,23 +490,6 @@ class ROS2TaskNode(Node):
         self.orientation_yaw = orientation.data
 
     ### SERVICES ###
-
-    # request point cloud information from point cloud node
-    def call_point_cloud_server(self, request=GetPointCloudBB.Request()):
-    
-        future = self.point_cloud_client.call_async(request)
-        future.add_done_callback(self.callback_call_point_cloud)
-
-    def callback_call_point_cloud(self, future):
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            self.point_cloud_response = future.result()
-            self.waiting_for_pcloud = False
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, request=ActivateYoloPose.Request()):
@@ -2300,29 +2275,21 @@ class RobotStdFunctions():
             self.set_face(custom=face_path)
         
         return face_path
+    
+    def get_point_cloud(self, camera, wait_for_end_of=True):
 
-    def get_point_cloud(self, bb=BoundingBox(), camera="head", wait_for_end_of=True):
+        # small example that must be continued adter point cloud is complete
 
-        requested_objects = []
-
-        get_pc = BoundingBoxAndPoints()
-        get_pc.bbox = bb
-
-        requested_objects.append(get_pc)
-
-        request = GetPointCloudBB.Request()
-        request.data = requested_objects
-        request.retrieve_bbox = False
-        request.camera = camera
-
-        self.node.waiting_for_pcloud = True
-        self.node.call_point_cloud_server(request=request)
-
-        if wait_for_end_of:
-            while self.node.waiting_for_pcloud:
-                pass
-
-        return self.node.point_cloud_response.coords[0]
+        match camera:
+            case "head":
+                depth_img = self.node.depth_head_img
+            case "hand":
+                depth_img = self.node.depth_hand_img
+            case "base":
+                depth_img = self.node.depth_base_img
+        
+        self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_img, camera=camera, bbox=None)
+        
 
     def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
         
