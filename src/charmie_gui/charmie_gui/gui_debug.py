@@ -277,7 +277,6 @@ class DebugVisualNode(Node):
         # bool charmie_nav2
         # bool charmie_neck
         # bool charmie_obstacles
-        # bool charmie_point_cloud
         # bool charmie_ps4_controller
         # bool charmie_speakers
         # bool charmie_tracking

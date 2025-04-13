@@ -29,7 +29,6 @@ ros2_modules = {
     "charmie_nav2":             False,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
-    "charmie_point_cloud":      True,
     "charmie_ps4_controller":   True,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
@@ -296,15 +295,15 @@ class TaskMain():
 
 
                     if not self.current_task:
-                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"]:
                             if ps4_controller.share == self.RISING:
                                 self.state = self.Search_for_objects_demonstration
                         
-                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"]:
                             if ps4_controller.options == self.RISING:
                                 self.state = self.Search_for_people_demonstration
 
-                        if ros2_modules["charmie_audio"] and ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                        if ros2_modules["charmie_audio"] and ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"]:
                             if ps4_controller.r1 == self.RISING:
                                 self.state = self.Audio_receptionist_and_restaurant_demonstration
 

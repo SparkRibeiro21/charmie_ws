@@ -180,7 +180,6 @@ class ROS2TaskNode(Node):
             "charmie_nav2":             False,
             "charmie_neck":             True,
             "charmie_obstacles":        True,
-            "charmie_point_cloud":      True,
         "charmie_ps4_controller":   False,
             "charmie_speakers":         True,
             "charmie_tracking":        False,
@@ -407,7 +406,6 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_nav2             = self.ros2_modules["charmie_nav2"]
         nodes_used.charmie_neck             = self.ros2_modules["charmie_neck"]
         nodes_used.charmie_obstacles        = self.ros2_modules["charmie_obstacles"]
-        nodes_used.charmie_point_cloud      = self.ros2_modules["charmie_point_cloud"]
         nodes_used.charmie_ps4_controller   = self.ros2_modules["charmie_ps4_controller"]
         nodes_used.charmie_speakers         = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_tracking         = self.ros2_modules["charmie_tracking"]

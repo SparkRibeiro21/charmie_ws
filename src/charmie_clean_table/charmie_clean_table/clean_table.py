@@ -27,7 +27,6 @@ ros2_modules = {
     "charmie_nav2":             False,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
-    "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
