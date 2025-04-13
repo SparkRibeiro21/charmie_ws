@@ -2289,7 +2289,7 @@ class RobotStdFunctions():
                 depth_img = self.node.depth_base_img
         
         self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_img, camera=camera, bbox=None)
-        
+        pass
 
     def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
         

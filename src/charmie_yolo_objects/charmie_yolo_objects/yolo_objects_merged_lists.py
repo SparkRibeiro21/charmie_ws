@@ -662,6 +662,21 @@ class YoloObjectsMain():
                         
                         ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
                         # obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask)
+
+                        # temp
+                        box_top_left_x = int(box.xyxy[0][0])
+                        box_top_left_y = int(box.xyxy[0][1])
+                        box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
+                        box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
+                        box_center = []
+                        box_center.append(box_top_left_y + box_height//2)
+                        box_center.append(box_top_left_x + box_width//2)
+                        
+                        obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=box_center)
+                        
+
+                        print(object_name, "center", box_center, obj_3d_cam_coords)
+
                         # print(box)
                         # print(box.xyxy[0])
                         # print(box.xyxy[0][0])

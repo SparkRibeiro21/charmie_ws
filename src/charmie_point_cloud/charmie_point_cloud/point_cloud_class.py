@@ -186,6 +186,9 @@ class PointCloud():
                 camera_used = self.hand_camera
             case "base":
                 camera_used = self.base_camera
+
+        u = pixel[0]
+        v = pixel[1]
         
         # camera_used to get all camera parameters
         # u = pixel[0]
@@ -212,15 +215,15 @@ class PointCloud():
 
         
         # this is to prevent 'bug' regarding maximum values on each axis
-        if u >= self.linhas:
-            u = self.linhas-1
+        if u >= camera_used.height:
+            u = camera_used.height-1
         
-        if v >= self.colunas:
-            v = self.colunas-1
+        if v >= camera_used.width:
+            v = camera_used.width-1
 
         # print(u, v)
 
-        depth = self.depth_img_pc[u][v]
+        depth = depth_img[u][v]
         if depth == 0:      # Só faz os cálculos se o ponto for válido (OPTIMIZAÇÃO)
 
             # casos especiais, mas só em coordenadas especificas (não faz para a bounding box toda)
@@ -237,32 +240,41 @@ class PointCloud():
             # new version (post bug inspection robocup 2024)
             raio = 1
             max_radius = 16
-            while np.all(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0) and raio <= max_radius:
+            while np.all(depth_img[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0) and raio <= max_radius:
                 raio += 1
             
             if raio < max_radius:
-                nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
-                depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
+                nao_zeros = (depth_img[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
+                depth = np.min(depth_img[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
                 #print('u, v, min ', u, v, depth)
             else: # error case
-                depth = self.MIN_DIST
+                depth = camera_used.min_dist
                 # print("ERROR - BUG INSPECTION ROBOCUP 2024")
 
-        Z = depth
-        X = (v - self.cx) * depth / self.fx
-        Y = (u - self.cy) * depth / self.fy
 
-        xn = Z
-        yn = -X
-        zn = -Y
-        result = np.dot(self.T, [xn, yn, zn, 1])
-        result[0] += self.X_SHIFT
-        result[1] += self.Y_SHIFT
-        result[2] += self.Z_SHIFT  # Z=0 is the floor
+        ### ACHO QUE O SISTEMA DE EIXOS NÃO ESTÁ STANDARD COM O ROS2
+        # ROS2(x:frente, y:esquerda, z:cima)
 
-        result = result[0:3].astype(np.int16)
-        result = result.tolist()
-        return result
+        point3d = Point()
+        point3d.x = float(((v - camera_used.cx) * depth / camera_used.fx)/1000)
+        point3d.y = float(((u - camera_used.cy) * depth / camera_used.fy)/1000)
+        point3d.z = float(depth/1000) 
+
+        # X = (v - self.cx) * depth / self.fx
+        # Y = (u - self.cy) * depth / self.fy
+        # Z = depth
+
+        # xn = Z
+        # yn = -X
+        # zn = -Y
+        # result = np.dot(self.T, [xn, yn, zn, 1])
+        # result[0] += self.X_SHIFT
+        # result[1] += self.Y_SHIFT
+        # result[2] += self.Z_SHIFT  # Z=0 is the floor
+
+        # result = result[0:3].astype(np.int16)
+        # result = result.tolist()
+        return point3d
 
     ### Receives a segmentation mask and a depth image of the corresponding camera, returns the (x,y,z) according to the camera TF (0,0,0 if no depth point is available inside mask)
     # def converter_2D_3D_mask(self, depth_with_mask):
