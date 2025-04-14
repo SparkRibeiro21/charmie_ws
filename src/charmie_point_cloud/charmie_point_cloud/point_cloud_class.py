@@ -6,11 +6,11 @@
 # from charmie_interfaces.msg import NeckPosition, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
 # from charmie_interfaces.srv import GetPointCloudBB, GetPointCloudMask, ActivateObstacles
 from geometry_msgs.msg import Point
-from cv_bridge import CvBridge
+# from cv_bridge import CvBridge
 import numpy as np
-import cv2
-import math
-import time
+# import cv2
+# import math
+# import time
 
 class Camera():
     def __init__(self, camera, fx, fy, cx, cy, width, height, max_dist, min_dist):
@@ -24,6 +24,37 @@ class Camera():
         self.height = height        # Altura da Imagem
         self.max_dist = max_dist    # Maxima distancia detetada pela camara
         self.min_dist = min_dist    # Minima distancia detetada pela camara
+
+### CAMERAS INTRINSIC PARAMETERS ###
+# Read from /camera_info topic of each camera (colour and depth_aligned)
+# The used intrinsic parameters are from the k matrix:
+
+# [fx 0  cx]
+# [0  fy cy]
+# [0  0  1 ]
+
+# k:
+# - fx
+# - 0
+# - cx
+# - 0
+# - fy
+# - cy
+# - 0
+# - 0
+# - 1
+
+# fx: Distancia Focal em pixels (x-direction)
+# fy: Distancia Focal em pixels (y-direction)
+# cx: Ponto Principal em pixels (x-coordinate)
+# cy: Ponto Principal em pixels (y-coordinate)
+
+
+
+
+
+
+
 
 
 # x increases from the back of the robot to the front of the robot
@@ -45,10 +76,10 @@ class Camera():
 # Z_SHIFT = 1260
 
 # Head camera intrinsic parameters (Data by subscribing to topic of camera parameters)
-    # self.fx = 633.811950683593  # Distancia Focal em pixels (x-direction)
-    # self.fy = 633.234680175781  # Distancia Focal em pixels (y-direction)
-    # self.cx = 629.688598632812  # Ponto Principal em pixels (x-coordinate)
-    # self.cy = 393.705749511718  # Ponto Principal em pixels (y-coordinate)
+    # self.fx = 633.811950683593  # fx: Distancia Focal em pixels (x-direction)
+    # self.fy = 633.234680175781  # fy: Distancia Focal em pixels (y-direction)
+    # self.cx = 629.688598632812  # cx: Ponto Principal em pixels (x-coordinate)
+    # self.cy = 393.705749511718  # cy: Ponto Principal em pixels (y-coordinate)
 
 # Hand camera intrinsic parameters (Data by subscribing to topic of camera parameters)
     # self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
@@ -59,9 +90,14 @@ class Camera():
 class PointCloud():
     def __init__(self):
 
-        self.head_camera = Camera(camera="head", fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718, width=848, height=480, max_dist=6000, min_dist=300)
-        self.hand_camera = Camera(camera="hand", fx=658.65612382,     fy=658.56268970,     cx=642.88868778,     cy=346.93829812,     width=848, height=480, max_dist=1000, min_dist=70)
-        self.base_camera = Camera(camera="base", fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718, width=640, height=480, max_dist=6000, min_dist=400)
+        # self.head_camera = Camera(camera="head", fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718, width=848, height=480, max_dist=6000, min_dist=300)
+        # self.hand_camera = Camera(camera="hand", fx=658.65612382,     fy=658.56268970,     cx=642.88868778,     cy=346.93829812,     width=848, height=480, max_dist=1000, min_dist=70)
+        # self.base_camera = Camera(camera="base", fx=633.811950683593, fy=633.234680175781, cx=629.688598632812, cy=393.705749511718, width=640, height=480, max_dist=6000, min_dist=400)
+        
+        self.head_camera = Camera(camera="head", fx=420.814270019531, fy=420.430999755859, cx=417.168701171875, cy=262.330047607422, width=848, height=480, max_dist=6000, min_dist=300)
+        self.hand_camera = Camera(camera="hand", fx=434.083312988281, fy=433.659149169922, cx=421.407775878906, cy=236.390808105469, width=848, height=480, max_dist=1000, min_dist=70 )
+        self.base_camera = Camera(camera="base", fx=545.646362304688, fy=545.646362304688, cx=321.721069335937, cy=238.693023681641, width=640, height=480, max_dist=6000, min_dist=400)
+        
         
         """
         # print("New PointCloud Class Initialised")
