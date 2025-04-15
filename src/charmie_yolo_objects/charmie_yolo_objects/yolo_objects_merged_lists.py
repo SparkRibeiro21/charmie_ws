@@ -3,7 +3,6 @@ from ultralytics import YOLO
 # from ultralytics.utils.plotting import Annotator, colors
 import rclpy
 from rclpy.node import Node
-# from example_interfaces.msg import Bool
 from geometry_msgs.msg import Point, Pose2D, PointStamped
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, ListOfDetectedObject, MaskDetection
@@ -56,9 +55,6 @@ data_lock = threading.Lock()
 # print("CUDA available:", torch.cuda.is_available())
 # print("Device count:", torch.cuda.device_count())
 # print("Device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
-
-########## MISSING TO IMPLEMENT ##########
-# point cloud
 
 # ON OTHER FILES:
 # check everything ok with search_for_obejcts (after implementing PC)
@@ -433,8 +429,6 @@ class YoloObjectsMain():
 
     def get_transform(self, camera=""):
 
-        ### STRUCTURE IS DONE, MISSING ADAPT TO THIS CODE
-
         match camera:
             case "head":
                 child_link = 'D455_head_link'
@@ -648,7 +642,7 @@ class YoloObjectsMain():
 
                 if masks is not None: # if model has segmentation mask
                     
-                    for box, mask, mask_d, track_id in zip(boxes, masks, masks.xy, track_ids):
+                    for box, mask in zip(boxes, masks):
 
                         if model == "objects":
                             object_name = self.node.objects_class_names[int(box.cls[0])]
@@ -660,40 +654,15 @@ class YoloObjectsMain():
                             object_name = self.node.furniture_class_names[int(box.cls[0])]
                             object_class = "Furniture"
                         
-                        ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
-                        # obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask)
-
-                        # temp
-                        box_top_left_x = int(box.xyxy[0][0])
-                        box_top_left_y = int(box.xyxy[0][1])
-                        box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
-                        box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
-                        box_center = []
-                        box_center.append(box_top_left_y + box_height//2)
-                        box_center.append(box_top_left_x + box_width//2)
-                        
-                        obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=box_center)
-                        
-
-                        print(object_name, "center", box_center, obj_3d_cam_coords)
-
-                        # print(box)
-                        # print(box.xyxy[0])
-                        # print(box.xyxy[0][0])
-                        # print("-")
-                        # print(mask)
-
-                        ###x_cam, y_cam, z_cam = get_xyz_from_camera(msg)
-                        temp_coords = Point()
-                        temp_coords.x = 1.0
-                        temp_coords.y = 0.0
-                        temp_coords.z = 0.0
+                        obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
+                        print(object_name, "3D Coords", obj_3d_cam_coords)
 
                         ALL_CONDITIONS_MET = 1
                         
-                        ########## MISSING HERE: CASE WHERE NO POINTS WERE AVALILABLE SO WE DONT KNOW HOW TO COMPUTE 3D ##########
-                        # if pcloud.center_coords.x == 0 and pcloud.center_coords.y == 0 and pcloud.center_coords.x == 0: # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
-                        #    ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                        # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
+                        if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0:
+                           ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                           print ("REMOVED")
 
                         # checks whether the object confidence is above a selected level
                         if not box.conf >= MIN_CONF_NALUE:
@@ -703,11 +672,10 @@ class YoloObjectsMain():
                         # if the object detection passes all selected conditions, the detected object is added to the publishing list
                         if ALL_CONDITIONS_MET:
 
-                            ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
                             point_cam = PointStamped()
                             point_cam.header.stamp = self.node.get_clock().now().to_msg()
                             point_cam.header.frame_id = camera_link
-                            point_cam.point = temp_coords
+                            point_cam.point = obj_3d_cam_coords
 
                             transformed_point = PointStamped()
                             transformed_point_map = PointStamped()
@@ -726,7 +694,7 @@ class YoloObjectsMain():
 
                 else: # if for some reason, a used model does not have 'segmentation' masks
 
-                    for box, track_id in zip(boxes, track_ids):
+                    for box in boxes:
 
                         if model == "objects":
                             object_name = self.node.objects_class_names[int(box.cls[0])]

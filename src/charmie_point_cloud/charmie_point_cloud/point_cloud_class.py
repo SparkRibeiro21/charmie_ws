@@ -1,16 +1,8 @@
 #!/usr/bin/env python3
-# import rclpy
-# from rclpy.node import Node
-
-# from sensor_msgs.msg import Image
-# from charmie_interfaces.msg import NeckPosition, PointCloudCoordinates, BoundingBox, BoundingBoxAndPoints
-# from charmie_interfaces.srv import GetPointCloudBB, GetPointCloudMask, ActivateObstacles
 from geometry_msgs.msg import Point
-# from cv_bridge import CvBridge
 import numpy as np
-# import cv2
-# import math
-# import time
+import time
+import cv2
 
 class Camera():
     def __init__(self, camera, fx, fy, cx, cy, width, height, max_dist, min_dist):
@@ -115,9 +107,10 @@ class PointCloud():
 
         return point3d
 
-    ### Receives a segmentation mask and a depth image of the corresponding camera, returns the (x,y,z) according to the camera TF (0,0,0 if no depth point is available inside mask)
-    # def converter_2D_3D_mask(self, depth_with_mask):
+    # Receives a segmentation mask and a depth image of the corresponding camera, returns the (x,y,z) according to the camera TF (0,0,0 if no depth point is available inside mask)
     def convert_mask_to_3dpoint(self, depth_img, camera, mask):
+
+        # aaa = time.time()
 
         match camera:
             case "head":
@@ -127,42 +120,17 @@ class PointCloud():
             case "base":
                 camera_used = self.base_camera
         
-        # camera_used to get all camera parameters
-        # mask 
-        # self.depth_img_pc = depth_img 
-
-
-        ### UPDATED FUNCTION ALGORITHM (AFTER PointCloudNodeToClass update)
-
-        # Receive mask
-        # Receive depth_image
-        # Get Correct Camera
-
-        # PRE PROCESSING (MADE IN OLD PC MAIN):
-        """
-        b_mask = np.zeros(depth_frame_res.shape[:2], np.uint8) # creates new empty window
+        b_mask = np.zeros(depth_img.shape[:2], np.uint8) # creates new empty window
         contour = mask
         contour = contour.astype(np.int32)
         contour = contour.reshape(-1, 1, 2)
         cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED) # creates mask window with just the inside pixesl of the detected objects
-        depth_frame_res_mask = depth_frame_res.copy()
+        depth_frame_res_mask = depth_img.copy()
         depth_frame_res_mask[b_mask == 0] = [0]
-        self.pcloud_head.ENVIO.append(self.pcloud_head.converter_2D_3D_mask(depth_frame_res_mask))
-        """
- 
-        # Calculate the average of all mask (same code as before)
-        # Clean all reference axis changes (now all values returned from PC are in reference to the camera)
+        # cv2.imwrite('output_image.png', depth_frame_res_mask)
 
-        # POST PROCESSING (MADE IN OLD PC MAIN):
-        # Coords must be in meters
-
-        # return (x,y,z) Point (in reference to camera)
-
-        
-        # s = time.time()
-        non_zero_indices = np.nonzero(depth_with_mask)
-        non_zero_values = depth_with_mask[non_zero_indices] 
-        # print(non_zero_values)
+        non_zero_indices = np.nonzero(depth_frame_res_mask)
+        non_zero_values = depth_frame_res_mask[non_zero_indices] 
         point3d = Point()
 
         if non_zero_values.size:
@@ -178,6 +146,8 @@ class PointCloud():
 
         # else: # sends the point as x:0, y:0, z:0 
             # there are no elements on the non_zero_indices from the mask
+
+        # print("PC TIME:", time.time() - aaa)
 
         return point3d
     
