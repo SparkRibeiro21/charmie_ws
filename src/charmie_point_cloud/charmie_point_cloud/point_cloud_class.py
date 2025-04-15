@@ -49,166 +49,14 @@ class Camera():
 # cx: Ponto Principal em pixels (x-coordinate)
 # cy: Ponto Principal em pixels (y-coordinate)
 
-
-
-
-
-
-
-
-
-# x increases from the back of the robot to the front of the robot
-# y increases from the robot left to the robot right
-# z increases from the floor to the ceiling
-
-# maximum and minimum distnace considered, outside this range is 0
-# MAX_DIST_HEAD = 6000
-# MIN_DIST_HEAD = 300
-
-# MAX_DIST_HAND = 6000
-# MIN_DIST_HAND = 300
-
-# Z_MIN_OBSTACLES = 200 # when applying the point cloud to the obstacles, this is the minimum height to be considered an object, filter the floor
-# Z_MAX_OBSTACLES = 1900 # when applying the point cloud to the obstacles, this is the minimum height to be considered an object, filter the ceiling
-
-# shifts from the center of the bottom servo to the center of the robot platform
-# X_SHIFT = 50
-# Z_SHIFT = 1260
-
-# Head camera intrinsic parameters (Data by subscribing to topic of camera parameters)
-    # self.fx = 633.811950683593  # fx: Distancia Focal em pixels (x-direction)
-    # self.fy = 633.234680175781  # fy: Distancia Focal em pixels (y-direction)
-    # self.cx = 629.688598632812  # cx: Ponto Principal em pixels (x-coordinate)
-    # self.cy = 393.705749511718  # cy: Ponto Principal em pixels (y-coordinate)
-
-# Hand camera intrinsic parameters (Data by subscribing to topic of camera parameters)
-    # self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
-    # self.fy = 658.5626897  # Distancia Focal em pixels (y-direction)
-    # self.cx = 642.88868778  # Ponto Principal em pixels (x-coordinate)
-    # self.cy = 346.93829812  # Ponto Principal em pixels (y-coordinate)
-
 class PointCloud():
     def __init__(self):
 
         self.head_camera = Camera(camera="head", fx=420.814270019531, fy=420.430999755859, cx=417.168701171875, cy=262.330047607422, width=848, height=480, max_dist=6000, min_dist=300)
         self.hand_camera = Camera(camera="hand", fx=434.083312988281, fy=433.659149169922, cx=421.407775878906, cy=236.390808105469, width=848, height=480, max_dist=1000, min_dist=70 )
         self.base_camera = Camera(camera="base", fx=545.646362304688, fy=545.646362304688, cx=321.721069335937, cy=238.693023681641, width=640, height=480, max_dist=6000, min_dist=400)
-        
-        
-        """
-        # print("New PointCloud Class Initialised")
-
-        self.camera = camera
-
-        ### AFTER SYNCHED CHANGES
-        # self.linhas = 720
-        # self.colunas = 1280
-        self.linhas = 480
-        self.colunas = 848
-        
-        
-        
-        # print(linhas, colunas)
-
-        elif self.camera == "hand":
-            self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
-            self.fy = 658.56268970  # Distancia Focal em pixels (y-direction)
-            self.cx = 642.88868778  # Ponto Principal em pixels (x-coordinate)
-            self.cy = 346.93829812  # Ponto Principal em pixels (y-coordinate)
-            # maximum and minimum distnace considered, outside this range is 0
-            self.MAX_DIST = 1000
-            self.MIN_DIST = 70
-            # shifts from the center of the bottom servo to the center of the robot platform
-            self.X_SHIFT = 0
-            self.Y_SHIFT = 0
-            self.Z_SHIFT = 0
-        
-        elif self.camera == "base":
-            self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
-            self.fy = 658.56268970  # Distancia Focal em pixels (y-direction)
-            self.cx = 642.88868778  # Ponto Principal em pixels (x-coordinate)
-            self.cy = 346.93829812  # Ponto Principal em pixels (y-coordinate)
-            # maximum and minimum distnace considered, outside this range is 0
-            self.MAX_DIST = 6000
-            self.MIN_DIST = 400
-            # shifts from the center of the bottom servo to the center of the robot platform
-            self.X_SHIFT = 0
-            self.Y_SHIFT = 0
-            self.Z_SHIFT = 0
-        
-        self.teta = [  0,   0,   0] # neck values to adjust the kinematics
-        
-        """
-
-
-
-        # self.rgb_img_pc = np.zeros((self.linhas, self.colunas,3), dtype=np.uint8)
-        ###self.depth_img_pc = np.zeros((self.linhas, self.colunas), dtype=np.uint8)
-
-        # self.ESCALA = 16  # Por questões de eficiencia, só vamos considerar 1 pixel em cada 4
-
-        ###self.RECEBO = []
-        ###self.ENVIO = []
-
-        ###self.T = np.identity(4)
-
-        ###if self.camera == "head":
-        ###    self.robo_head()
-        ###else: # self.camera == "hand":
-        ###    pass
     
-    """
-    def Trans(self, tx, ty, tz):
-        M = np.identity(4)
-        M[0][3] = tx
-        M[1][3] = ty
-        M[2][3] = tz
-        return M
-
-    def Rot(self, eixo, angulo):
-        ang_rad = angulo*math.pi/180.0
-        c = math.cos(ang_rad)
-        s = math.sin(ang_rad)
-        M = np.identity(4)
-        if (eixo == 'x' or eixo == 'X'):
-            M[1][1] = M[2][2] = c
-            M[1][2] = -s
-            M[2][1] = s
-        elif (eixo == 'y' or eixo == 'Y'):
-            M[0][0] = M[2][2] = c
-            M[0][2] = s
-            M[2][0] = -s
-        elif (eixo == 'z' or eixo == 'Z'):
-            M[0][0] = M[1][1] = c
-            M[0][1] = -s
-            M[1][0] = s
-        return M
-
-
-    def robo_head(self):
-        A4 = self.Trans(95, 11.5, 195)
-        A3 = self.Rot('y', self.teta[1])
-        A2 = self.Trans(30, 0, 25)
-        A1 = self.Rot('z', self.teta[0])
-        T = np.dot(A1, A2)
-        T = np.dot(T, A3)
-        T = np.dot(T, A4)
-        self.T = T
-        
-    def robo_hand(self):
-        # A4 = self.Trans(90, 11.5, 195)
-        # A3 = self.Rot('y', self.teta[1])
-        # A2 = self.Trans(30, 0, 25)
-        # A1 = self.Rot('z', self.teta[0])
-        # T = np.dot(A1, A2)
-        # T = np.dot(T, A3)
-        # T = np.dot(T, A4)
-        # self.T = T
-        pass
-    """
-    
-    ### Receives a (u, v) point and a depth image of the corresponding camera, returns the (x,y,z) according to the camera TF (filtered in case depth point can not be retrieved)
-    # def converter_2D_3D_unico(self, u, v):
+    # Receives a (u, v) point and a depth image of the corresponding camera, returns the (x,y,z) according to the camera TF (filtered in case depth point can not be retrieved)
     def convert_pixel_to_3dpoint(self, depth_img, camera, pixel):
 
         match camera:
@@ -222,30 +70,6 @@ class PointCloud():
         u = pixel[0]
         v = pixel[1]
         
-        # camera_used to get all camera parameters
-        # u = pixel[0]
-        # v = pixel[1]
-        # self.depth_img_pc = depth_img 
-
-
-        ### UPDATED FUNCTION ALGORITHM (AFTER PointCloudNodeToClass update)
-
-        # Receive (u,v) coords
-        # Receive depth_image
-        # Get Correct Camera
-
-        # PRE PROCESSING (MADE IN OLD PC MAIN):
-        # None
- 
-        # Calculate the filtered version of unique point (same code as before)
-        # Clean all reference axis changes (now all values returned from PC are in reference to the camera)
-
-        # POST PROCESSING (MADE IN OLD PC MAIN):
-        # Coords must be in meters
- 
-        # return (x,y,z) Point (in reference to camera)
-
-        
         # this is to prevent 'bug' regarding maximum values on each axis
         if u >= camera_used.height:
             u = camera_used.height-1
@@ -256,20 +80,9 @@ class PointCloud():
         # print(u, v)
 
         depth = depth_img[u][v]
-        if depth == 0:      # Só faz os cálculos se o ponto for válido (OPTIMIZAÇÃO)
+        if depth == 0: # Only makes calculations if depth is invalid
 
-            # casos especiais, mas só em coordenadas especificas (não faz para a bounding box toda)
-            # procuro a distancia mais próxima nos pixeis vizinhos
-
-            # old version (pre bug inspection robocup 2024):
-            # raio = 1
-            # while np.all(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0)z:
-            #     raio += 1
-            # nao_zeros = (self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1] != 0)
-            # depth = np.min(self.depth_img_pc[u - raio:u + raio + 1, v - raio:v + raio + 1][nao_zeros])
-            #print('u, v, min ', u, v, depth)
-
-            # new version (post bug inspection robocup 2024)
+            # new version (post fixed bug: inspection robocup 2024)
             raio = 1
             max_radius = 16
             while np.all(depth_img[u - raio:u + raio + 1, v - raio:v + raio + 1] == 0) and raio <= max_radius:
@@ -292,25 +105,12 @@ class PointCloud():
         # X    =  z
         # Y    = -x
         # Z    = -y 
+
         point3d = Point()
         point3d.x = float(depth/1000)
         point3d.y = -float(((v - camera_used.cx) * depth / camera_used.fx)/1000)
         point3d.z = -float(((u - camera_used.cy) * depth / camera_used.fy)/1000)
 
-        # X = (v - self.cx) * depth / self.fx
-        # Y = (u - self.cy) * depth / self.fy
-        # Z = depth
-
-        # xn = Z
-        # yn = -X
-        # zn = -Y
-        # result = np.dot(self.T, [xn, yn, zn, 1])
-        # result[0] += self.X_SHIFT
-        # result[1] += self.Y_SHIFT
-        # result[2] += self.Z_SHIFT  # Z=0 is the floor
-
-        # result = result[0:3].astype(np.int16)
-        # result = result.tolist()
         return point3d
 
     ### Receives a segmentation mask and a depth image of the corresponding camera, returns the (x,y,z) according to the camera TF (0,0,0 if no depth point is available inside mask)
