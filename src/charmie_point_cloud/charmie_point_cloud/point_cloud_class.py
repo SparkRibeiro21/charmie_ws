@@ -49,6 +49,17 @@ class Camera():
 # cx: Ponto Principal em pixels (x-coordinate)
 # cy: Ponto Principal em pixels (y-coordinate)
 
+
+### The FR axis system does not match ROS2 standards, must be converted
+# FR    (x:right, y:down, z:front)
+# ROS2  (x:front, y:left, z:up)
+# FR to ROS2 Conversion:
+# ROS2 = FR
+# X    =  z
+# Y    = -x
+# Z    = -y 
+
+
 class PointCloud():
     def __init__(self):
 
@@ -94,17 +105,8 @@ class PointCloud():
                 # print('u, v, min ', u, v, depth)
             else: # error case
                 depth = camera_used.min_dist
+                depth = 0
                 # print("ERROR - BUG INSPECTION ROBOCUP 2024")
-
-
-        ### The FR axis system does not match ROS2 standards, must be converted
-        # FR    (x:right, y:down, z:front)
-        # ROS2  (x:front, y:left, z:up)
-        # FR to ROS2 Conversion:
-        # ROS2 = FR
-        # X    =  z
-        # Y    = -x
-        # Z    = -y 
 
         point3d = Point()
         point3d.x = float(depth/1000)
@@ -161,7 +163,7 @@ class PointCloud():
         non_zero_indices = np.nonzero(depth_with_mask)
         non_zero_values = depth_with_mask[non_zero_indices] 
         # print(non_zero_values)
-        final_coords = []
+        point3d = Point()
 
         if non_zero_values.size:
 
@@ -170,28 +172,14 @@ class PointCloud():
             v = np.mean(non_zero_indices[1])
             # print("avg np:", depth, u, v)
 
-            Z = depth
-            X = (v - self.cx) * depth / self.fx
-            Y = (u - self.cy) * depth / self.fy
+            point3d.x = float(depth/1000)
+            point3d.y = -float(((v - camera_used.cx) * depth / camera_used.fx)/1000)
+            point3d.z = -float(((u - camera_used.cy) * depth / camera_used.fy)/1000)
 
-            xn = Z
-            yn = -X
-            zn = -Y
-            result = np.dot(self.T, [xn, yn, zn, 1])
-            result[0] += self.X_SHIFT
-            result[1] += self.Y_SHIFT
-            result[2] += self.Z_SHIFT  # Z=0 is the floor
-
-            result = result[0:3].astype(np.int16)
-            final_coords = result.tolist()
-
-        else:   
+        # else: # sends the point as x:0, y:0, z:0 
             # there are no elements on the non_zero_indices from the mask
-            final_coords = [0, 0, 0]         
 
-        # elapsed = time.time() - s
-        # print(elapsed)
-        return final_coords
+        return point3d
     
     ### Receives a bounding box and a depth image of the corresponding camera, returns the (x,y,z) of the average of the filtered bounding box points according to the camera TF
     # def converter_2D_3D(self, u, v, height, width):
