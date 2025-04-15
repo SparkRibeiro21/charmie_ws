@@ -13,6 +13,9 @@
   <xacro:include filename="$(find xarm_description)/urdf/common/common.link.xacro" />
   <xacro:include filename="$(find xarm_description)/urdf/common/common.material.xacro" />
 
+  <!-- Instantiate the common materials with xarm prefix -->
+  <xacro:common_material prefix="xarm_" />
+
   <!-- Instantiate the xArm6 robot with a safe prefix -->
   <xacro:xarm6_robot
     prefix="xarm_"
