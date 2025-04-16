@@ -19,6 +19,7 @@
 
   <!-- Instantiate the common materials with xarm prefix -->
   <xacro:common_material prefix="xarm_" />
+  <xacro:common_material prefix="xarm_gripper_" />
 
   <!-- Instantiate the xArm6 robot with xarm prefix -->
   <xacro:xarm6_robot
