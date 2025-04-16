@@ -167,10 +167,32 @@ class LaunchStdFunctions():
         #Publishes the joint_states of the robot
         self.joint_state_publisher = Node(package='joint_state_publisher',
                        executable='joint_state_publisher',
-                       name='joint_state_publisher')
+                       name='joint_state_publisher',
+                       parameters=[{
+                            'zeros': {
+                                'xarm_joint1': -3.926,
+                                'xarm_joint2': 1.449,
+                                'xarm_joint3': -1.134,
+                                'xarm_joint4': -0.017,
+                                'xarm_joint5': 1.309,
+                                'xarm_joint6': 4.712
+                            }
+                        }]
+        )
 
         self.joint_state_publisher_gui = Node(package='joint_state_publisher_gui',
-                       executable='joint_state_publisher_gui')
+                       executable='joint_state_publisher_gui',
+                       parameters=[{
+                            'zeros': {
+                                'xarm_joint1': -3.926,
+                                'xarm_joint2': 1.449,
+                                'xarm_joint3': -1.134,
+                                'xarm_joint4': -0.017,
+                                'xarm_joint5': 1.309,
+                                'xarm_joint6': 4.712
+                            }
+                        }]
+        )
         
         # Use IncludeLaunchDescription to include the launch file
         self.charmie_multi_camera_launch_description = IncludeLaunchDescription(
