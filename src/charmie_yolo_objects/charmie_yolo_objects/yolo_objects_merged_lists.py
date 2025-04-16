@@ -446,7 +446,7 @@ class YoloObjectsMain():
         # proceed to lookup_transform
         if self.node.tf_buffer.can_transform(parent_link, child_link, rclpy.time.Time()):
             
-            print(parent_link, child_link, "GOOD")
+            # print(parent_link, child_link, "GOOD")
             try:
                 transform = self.node.tf_buffer.lookup_transform(
                     parent_link,        # target frame
@@ -459,7 +459,7 @@ class YoloObjectsMain():
                 transform = None
                 return  # or handle the error appropriately
         else:
-            print(parent_link, child_link, "BAD")
+            # print(parent_link, child_link, "BAD")
             transform = None
         
         return transform, child_link
@@ -626,6 +626,15 @@ class YoloObjectsMain():
                         depth_frame = base_depth_frame
                         transform = transform_base
                         camera_link = base_link
+                
+                if map_transform is None:
+                    print("MAP TF: OFF!", end='')
+                else:
+                    print("MAP TF:  ON!", end='')
+                if transform is None:
+                    print("\tROBOT TF: OFF!")
+                else:
+                    print("\tROBOT TF:  ON!")
 
                 # specific model settings
                 match model:
@@ -638,59 +647,77 @@ class YoloObjectsMain():
                         
                 boxes = obj_res[0].boxes
                 masks = obj_res[0].masks
-                track_ids = obj_res[0].boxes.id.int().cpu().tolist()
+                # track_ids = obj_res[0].boxes.id.int().cpu().tolist()
 
                 if masks is not None: # if model has segmentation mask
                     
                     for box, mask in zip(boxes, masks):
 
-                        if model == "objects":
-                            object_name = self.node.objects_class_names[int(box.cls[0])]
-                            object_class = self.node.objects_class_names_dict[object_name]
-                        elif model == "shoes":  
-                            object_name = self.node.shoes_class_names[int(box.cls[0])]
-                            object_class = "Footwear"
-                        elif model == "furniture":  
-                            object_name = self.node.furniture_class_names[int(box.cls[0])]
-                            object_class = "Furniture"
-                        
-                        obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
-                        print(object_name, "3D Coords", obj_3d_cam_coords)
+                        # print(mask.xy[0])
+                        # print(len(mask.xy[0]))
+                        # mask.xy[0] = np.array([], dtype=np.float32) # used to test the bug prevented on the next line
+                        if len(mask.xy[0]) >= 3: # this prevents a BUG where sometimes the mask had less than 3 points, which caused PC (if empty) and GUI (if less than 3 points) to crash
 
-                        ALL_CONDITIONS_MET = 1
-                        
-                        # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
-                        if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0:
-                           ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                           print ("REMOVED")
+                            if model == "objects":
+                                object_name = self.node.objects_class_names[int(box.cls[0])]
+                                object_class = self.node.objects_class_names_dict[object_name]
+                            elif model == "shoes":  
+                                object_name = self.node.shoes_class_names[int(box.cls[0])]
+                                object_class = "Footwear"
+                            elif model == "furniture":  
+                                object_name = self.node.furniture_class_names[int(box.cls[0])]
+                                object_class = "Furniture"
+                            
+                            # aaa_ = time.time()
+                            obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
+                            # print("3D Coords Time", time.time() - aaa_)
+                            # print(object_name, "3D Coords", obj_3d_cam_coords)
 
-                        # checks whether the object confidence is above a selected level
-                        if not box.conf >= MIN_CONF_NALUE:
-                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                            # print("- Misses minimum confidence level")
+                            # bbb_ = time.time()
 
-                        # if the object detection passes all selected conditions, the detected object is added to the publishing list
-                        if ALL_CONDITIONS_MET:
+                            ALL_CONDITIONS_MET = 1
+                            
+                            # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
+                            if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0:
+                                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                                print ("REMOVED")
 
-                            point_cam = PointStamped()
-                            point_cam.header.stamp = self.node.get_clock().now().to_msg()
-                            point_cam.header.frame_id = camera_link
-                            point_cam.point = obj_3d_cam_coords
+                            # checks whether the object confidence is above a selected level
+                            if not box.conf >= MIN_CONF_NALUE:
+                                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                                # print("- Misses minimum confidence level")
 
-                            transformed_point = PointStamped()
-                            transformed_point_map = PointStamped()
-                            if transform is not None:
-                                transformed_point = do_transform_point(point_cam, transform)
-                                self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+                            # if the object detection passes all selected conditions, the detected object is added to the publishing list
+                            if ALL_CONDITIONS_MET:
 
-                                if map_transform is not None:
-                                    transformed_point_map = do_transform_point(transformed_point, map_transform)
-                                    self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
+                                point_cam = PointStamped()
+                                point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                                point_cam.header.frame_id = camera_link
+                                point_cam.point = obj_3d_cam_coords
 
-                            new_object = DetectedObject()
-                            new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
-                                                                                    object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img, mask=mask)
-                            yolov8_obj_filtered.objects.append(new_object)
+                                transformed_point = PointStamped()
+                                transformed_point_map = PointStamped()
+                                if transform is not None:
+                                    transformed_point = do_transform_point(point_cam, transform)
+                                    self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+
+                                    if map_transform is not None:
+                                        transformed_point_map = do_transform_point(transformed_point, map_transform)
+                                        self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
+
+                                new_object = DetectedObject()
+                                new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
+                                                                                        object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img, mask=mask)
+                                # print(new_object.object_name, "ID:", new_object.index, str(round(new_object.confidence*100,0)) + "%", round(new_object.position_cam.x, 2), round(new_object.position_cam.y, 2), round(new_object.position_cam.z, 2) )
+                                
+                                conf = f"{new_object.confidence * 100:.0f}%"
+                                x_ = f"{new_object.position_cam.x:4.2f}"
+                                y_ = f"{new_object.position_cam.y:5.2f}"
+                                z_ = f"{new_object.position_cam.z:5.2f}"
+                                print(f"{new_object.object_name:<17} {'ID:'+str(new_object.index):<6} {conf:<3} ({x_}, {y_}, {z_})")
+
+                                yolov8_obj_filtered.objects.append(new_object)
+                                # print("Create obj time:", time.time() - bbb_)
 
                 else: # if for some reason, a used model does not have 'segmentation' masks
 
@@ -1013,7 +1040,7 @@ class YoloObjectsMain():
                     if not init:
                         self.node.objects_filtered_publisher.publish(list_detected_objects)
 
-                    print("TR Time Yolo_Objects Head: ", time.time() - time_till_done)
+                    print("TR Time Yolo_Objects: ", time.time() - time_till_done)
 
                     # if self.node.DEBUG_DRAW:
                     #     cv2.putText(current_frame_draw, 'fps:' + self.hand_fps, (0, self.node.CAM_IMAGE_HEIGHT-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
