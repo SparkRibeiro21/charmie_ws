@@ -10,7 +10,7 @@
     <xacro:property name="base_camera_height" value="0.03" />
 
     <xacro:property name="yy_shift_for_optical_frame" value="-0.05" />
-    <xacro:property name="yaw_shift_for_optical_frame" value="-0.05" />
+    <xacro:property name="yaw_shift_for_optical_frame" value="0.05" />
 
     <joint name="base_camera_joint" type="fixed">
         <parent link="base_link"/>

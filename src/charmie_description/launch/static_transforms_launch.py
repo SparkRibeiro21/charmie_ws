@@ -88,22 +88,22 @@ def generate_launch_description():
             ]
         ),
 
-        # # Static transform for the hand camera
-        # Node(
-        #     package='tf2_ros',
-        #     executable='static_transform_publisher',
-        #     name='static_transform_hand_camera',
-        #     arguments=[
-        #         '0',  # x
-        #         '0',  # y
-        #         '0',  # z
-        #         '0',  # roll
-        #         '0',  # pitch
-        #         '0',  # yaw
-        #         'hand_camera_link',  # parent frame
-        #         'D455_hand_link'  # child frame
-        #     ]
-        # ),
+        # Static transform for the hand camera
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='static_transform_hand_camera',
+            arguments=[
+                '0',  # x
+                '0',  # y
+                '0',  # z
+                '0',  # roll
+                '0',  # pitch
+                '0',  # yaw
+                'hand_camera_link',  # parent frame
+                'D405_hand_link'  # child frame
+            ]
+        ),
 
         # Static transform for the base camera
         Node(

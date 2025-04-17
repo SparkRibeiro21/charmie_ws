@@ -431,13 +431,13 @@ class YoloObjectsMain():
 
         match camera:
             case "head":
-                child_link = 'D455_head_link'
+                child_link = 'D455_head_color_frame'
                 parent_link = 'base_footprint'
             case "hand":
-                child_link = 'D455_head_link'
+                child_link = 'D405_hand_color_frame'
                 parent_link = 'base_footprint'
             case "base":
-                child_link = 'camera_link'
+                child_link = 'camera_color_frame'
                 parent_link = 'base_footprint'
             case "":
                 child_link = 'base_footprint'
@@ -668,6 +668,17 @@ class YoloObjectsMain():
                                 object_name = self.node.furniture_class_names[int(box.cls[0])]
                                 object_class = "Furniture"
                             
+                            # temp
+                            # box_top_left_x = int(box.xyxy[0][0])
+                            # box_top_left_y = int(box.xyxy[0][1])
+                            # box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
+                            # box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
+                            # box_center = []
+                            # box_center.append(box_top_left_y + box_height//2)
+                            # box_center.append(box_top_left_x + box_width//2)
+                            
+                            # obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=box_center)
+                         
                             # aaa_ = time.time()
                             obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
                             # print("3D Coords Time", time.time() - aaa_)
