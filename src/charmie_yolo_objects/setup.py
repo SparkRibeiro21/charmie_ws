@@ -20,8 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-        "yolo_objects = charmie_yolo_objects.yolo_objects:main",
-        "yolo_objects_merged_lists = charmie_yolo_objects.yolo_objects_merged_lists:main"
+        "yolo_objects_pre_update_04_2025 = charmie_yolo_objects.yolo_objects_pre_update_04_2025:main",
+        "yolo_objects = charmie_yolo_objects.yolo_objects:main"
         ],
     },
 )

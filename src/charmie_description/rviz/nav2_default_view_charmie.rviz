@@ -7,8 +7,6 @@ Panels:
         - /Global Options1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /PointCloud21
-        - /PointCloud22
       Splitter Ratio: 0.5833333134651184
     Tree Height: 399
   - Class: rviz_common/Selection
