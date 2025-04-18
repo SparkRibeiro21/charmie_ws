@@ -111,13 +111,13 @@ class TaskMain():
                 time.sleep(2.0)
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[-15, -45], [-15, -15], [-15, 15]]
+                tetas = [[-30, -45], [0, -45], [30, -45]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
                 objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_objects_hand=True, detect_objects_base=True)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
-                    print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
+                    print(o.index, o.object_name, o.camera, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
 
                 self.robot.set_rgb(CYAN+HALF_ROTATE)
                 time.sleep(0.5)

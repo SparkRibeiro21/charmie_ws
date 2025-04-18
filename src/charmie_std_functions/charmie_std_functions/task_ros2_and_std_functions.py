@@ -2015,16 +2015,17 @@ class RobotStdFunctions():
                         for object in objects_detected:
 
                             # filters by same index
-                            if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
+                            if temp_objects.index == object.index and temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
                                 is_already_in_list = True
                                 object_already_in_list = object
 
                             # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                            if temp_objects.object_name == object.object_name: # and 
-                                dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                if dist < MIN_DIST_SAME_FRAME:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
+                            if temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
+                                if temp_objects.position_absolute.x != 0 and temp_objects.position_absolute.y != 0 and temp_objects.position_absolute.z != 0:
+                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
+                                    if dist < MIN_DIST_SAME_FRAME:
+                                        is_already_in_list = True
+                                        object_already_in_list = object
 
                         if is_already_in_list:
                             objects_detected.remove(object_already_in_list)
@@ -2103,11 +2104,11 @@ class RobotStdFunctions():
                                        minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
             
             # DEBUG
-            # print("TOTAL objects in this neck pos:")
-            # for frame in total_objects_detected:
-            #     for object in frame:    
-            #         print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
-            #     print("-")
+            print("TOTAL objects in this neck pos:")
+            for frame in total_objects_detected:
+                for object in frame:    
+                    print(object.index, object.object_name, object.camera, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
+                print("-")
 
             ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
             
@@ -2130,18 +2131,20 @@ class RobotStdFunctions():
 
                         for filtered in range(len(filtered_objects)):
 
-                            if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name: 
+                            if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name and total_objects_detected[frame][object].camera == filtered_objects[filtered].camera: 
 
-                                # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
-                                dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
-                                # print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
-                                
-                                if dist < MIN_DIST_DIFFERENT_FRAMES:
-                                    same_object_ctr+=1
-                                    same_object_old = filtered_objects[filtered]
-                                    same_object_new = total_objects_detected[frame][object]
-                                    # print("SAME OBJECT")                        
-                        
+                                if total_objects_detected[frame][object].position_absolute.x != 0 and total_objects_detected[frame][object].position_absolute.y != 0 and total_objects_detected[frame][object].position_absolute.z:
+                                    # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
+                                    dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
+                                    # print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
+                                    
+                                    if dist < MIN_DIST_DIFFERENT_FRAMES:
+                                        same_object_ctr+=1
+                                        same_object_old = filtered_objects[filtered]
+                                        same_object_new = total_objects_detected[frame][object]
+                                        # print("SAME OBJEcCT")                        
+
+                        # the criteria for selecting which image is saved, is which center pixel of an object is closer to center of the image (avoiding images where object may be cut) 
                         if same_object_ctr > 0:
 
                             image_center = (self.node.CAM_IMAGE_WIDTH/2, self.node.CAM_IMAGE_HEIGHT/2)
@@ -2176,7 +2179,7 @@ class RobotStdFunctions():
 
             print("FILTERED:")
             for o in filtered_objects:
-                print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
+                print(o.index, o.object_name, o.camera, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
 
 
             if list_of_objects: #only does this if there are items in the list of mandatory detection objects
@@ -2266,7 +2269,8 @@ class RobotStdFunctions():
         # cv2.imshow("Search for Person", object_image)
         # cv2.waitKey(100)
         
-        face_path = current_datetime + str(object.index) + str(object.object_name)
+        face_path = current_datetime + str(object.index) + " " + str(object.object_name) + " " + str(object.camera)
+        face_path = face_path.replace(" ","_").lower()
         
         cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", object_image) 
         time.sleep(0.1)
