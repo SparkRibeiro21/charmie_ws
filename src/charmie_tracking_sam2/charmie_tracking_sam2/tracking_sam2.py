@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Point
 from sensor_msgs.msg import Image
+from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import TrackingMask, ListOfPoints, BoundingBox, MaskDetection, ListOfMaskDetections
 from charmie_interfaces.srv import ActivateTracking
 
@@ -17,6 +18,11 @@ import numpy as np
 import time
 import math
 
+import tf2_ros
+from tf2_geometry_msgs import do_transform_point
+from charmie_point_cloud.point_cloud_class import PointCloud
+
+data_lock = threading.Lock()
 
 class TrackingNode(Node):
 
@@ -34,24 +40,25 @@ class TrackingNode(Node):
 
         self.br = CvBridge()
         self.head_rgb = Image()
+        self.head_depth = Image()
         self.new_head_rgb = False
-        # self.waiting_for_pcloud = False
+        self.new_head_depth = False
+        
+        self.CAM_IMAGE_WIDTH = 848
+        self.CAM_IMAGE_HEIGHT = 480
 
-        # robot localization
-        # self.robot_pose = Pose2D()
+        self.head_rgb_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH, 3), np.uint8)
+        self.head_depth_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH), np.uint8)
 
         ### Topics ###
         # Intel Realsense
-        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
         # Publica a máscara do objecto a ser seguido
         self.tracking_mask_publisher = self.create_publisher(TrackingMask, 'tracking_mask', 10)
-        # Robot Localisation
-        # self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-
+        
         # SERVICES:
         # Acitvate and Deactivate Tracking Service
         self.activate_yolo_objects_service = self.create_service(ActivateTracking, "activate_tracking", self.callback_activate_tracking)
-       
 
     def callback_activate_tracking(self, request, response):
         
@@ -91,12 +98,15 @@ class TrackingNode(Node):
         response.message = "Activated with selected parameters"
         return response
     
-    def get_color_image_head_callback(self, img: Image):
-        self.head_rgb = img
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        with data_lock: 
+            self.head_rgb = rgbd.rgb
+            self.head_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            self.head_depth = rgbd.depth
+            self.head_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
         self.new_head_rgb = True
- 
-    # def robot_localisation_callback(self, pose: Pose2D):
-    #     self.robot_pose = pose
+        self.new_head_depth = True
+        # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
 
 def main(args=None):
@@ -126,7 +136,7 @@ class TrackingMain():
 
         self.initial_obj_id = 1  # Object ID for tracking
         
-        self.DEBUG_DRAW = True
+        self.DEBUG_DRAW = False
 
         self.prev_frame_time = time.time() # used to record the time when we processed last frame
         self.new_frame_time = time.time() # used to record the time at which we processed current frame
@@ -317,16 +327,23 @@ class TrackingMain():
             while True:
 
                 if self.node.new_head_rgb:
+
+                    tot = time.time()
+                    
+                    with data_lock:
+                        head_image_frame = self.node.head_rgb_cv2_frame.copy()
+                        head_depth_frame = self.node.head_depth_cv2_frame.copy()
+                    
                     self.node.new_head_rgb = False
-                    frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
-                    height, width = frame.shape[:2]
-                    main_with_mask = frame.copy()
+                    # frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+                    height, width = head_image_frame.shape[:2]
+                    main_with_mask = head_image_frame.copy()
     
                     if self.node.tracking_flag:
 
                         if self.node.calibration_mode:
 
-                            self.predictor.load_first_frame(frame)
+                            self.predictor.load_first_frame(head_image_frame)
 
                             if self.node.tracking_received_points:
                                 # Use points and object ID as prompts to multiple points:
@@ -353,8 +370,11 @@ class TrackingMain():
                   
                         else: # Standard work mode (tracking)  
                             
+                            aaa = time.time()
                             # Track object in subsequent frames
-                            out_obj_ids, out_mask_logits = self.predictor.track(frame)
+                            out_obj_ids, out_mask_logits = self.predictor.track(head_image_frame)
+
+                            print("PREDICT TIME:", time.time() - aaa)
 
                             # Convert logits to binary mask
                             mask = (out_mask_logits[0] > 0).cpu().numpy().astype("uint8") * 255  # Binary mask, 2D
@@ -368,7 +388,7 @@ class TrackingMain():
 
                             if self.DEBUG_DRAW:
                                 # Apply the white mask to the frame
-                                frame_with_mask = cv2.bitwise_and(frame, frame, mask=white_mask)
+                                frame_with_mask = cv2.bitwise_and(head_image_frame, head_image_frame, mask=white_mask)
                                 # Display the result
                                 cv2.imshow("Frame with Mask", frame_with_mask)
 
@@ -380,10 +400,10 @@ class TrackingMain():
                                 # # Display the result
                                 # v2.imshow("Segmented Object", overlay)
 
-                                green_overlay = np.zeros_like(frame)
+                                green_overlay = np.zeros_like(head_image_frame)
                                 green_overlay[:, :] = [0, 255, 0]  # BGR for green
                                 green_part = cv2.bitwise_and(green_overlay, green_overlay, mask=mask)
-                                overlay_green = cv2.addWeighted(frame, 1.0, green_part, 0.3, 0)
+                                overlay_green = cv2.addWeighted(head_image_frame, 1.0, green_part, 0.3, 0)
                                 
                                 # cv2.imshow("Frame with Green Mask", overlay_green)
                                 main_with_mask = overlay_green
@@ -405,7 +425,7 @@ class TrackingMain():
 
                             if self.DEBUG_DRAW:
                             
-                                teste = frame.copy()
+                                teste = head_image_frame.copy()
 
                                 if updated_filtered_polygons:
                                     for p in updated_filtered_polygons:
@@ -456,6 +476,9 @@ class TrackingMain():
                         cv2.imshow("Segmented Objects TR", main_with_mask)
                         # cv2.imshow("Frame with Mask", cv2.bitwise_and(frame, frame, ))
                         cv2.waitKey(1)
+
+
+                    print("TOTAL TIME:", time.time() - tot)
 
         if self.DEBUG_DRAW:
             cv2.destroyAllWindows()
