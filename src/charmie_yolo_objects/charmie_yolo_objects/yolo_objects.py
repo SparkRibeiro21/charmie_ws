@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 from ultralytics import YOLO
-# from ultralytics.utils.plotting import Annotator, colors
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Point, Pose2D, PointStamped
+from geometry_msgs.msg import Point, PointStamped
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, ListOfDetectedObject, MaskDetection
 from charmie_interfaces.srv import ActivateYoloObjects
@@ -15,10 +14,7 @@ import threading
 import numpy as np
 import tf2_ros
 from tf2_geometry_msgs import do_transform_point
-
 from pathlib import Path
-
-import math
 import time
 
 from charmie_point_cloud.point_cloud_class import PointCloud
@@ -189,11 +185,10 @@ class Yolo_obj(Node):
         self.aligned_depth_image_base_subscriber = self.create_subscription(Image, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
         # Publish Results
         self.objects_filtered_publisher = self.create_publisher(ListOfDetectedObject, 'objects_all_detected_filtered', 10)
-        # Robot Localisation
-        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         ### Services ###
-        self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
+        # This service is initialized on a function that is explained in comments on that timer function
+        # self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
 
         ### TF buffer and listener ###
         self.tf_buffer = tf2_ros.Buffer()
@@ -201,12 +196,8 @@ class Yolo_obj(Node):
 
         ### Class ###
         self.point_cloud = PointCloud()
-        print(self.point_cloud.base_camera.cy)
 
-        ### Variables ###
-        # robot localization
-        self.robot_pose = Pose2D()
-        
+        ### Variables ###        
         self.br = CvBridge()
         self.head_rgb = Image()
         self.head_depth = Image()
@@ -233,7 +224,26 @@ class Yolo_obj(Node):
 
         self.base_rgb_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_BASE_IMAGE_WIDTH, 3), np.uint8)
         self.base_depth_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_BASE_IMAGE_WIDTH), np.uint8)
+        
+        # this code forces the ROS2 component to wait for the models initialization with an empty frame, so that when turned ON does spend time with initializations and sends detections imediatly 
+        # Allocates the memory necessary for each model, this takes some seconds, by doing this in the first frame, everytime one of the models is called instantly responde instead of loading the model
+        self.yolo_models_initialized = False
+        
+        self.timer = self.create_timer(0.1, self.timer_callback)
 
+    # This type of structure was done to make sure the YOLO models were initializes and only after the service was created, 
+    # Because other nodes use this service to make sure yolo is ready to work, and there were some conflicts with receiving commands
+    # while initializing the models, this ways we have a timer that checks when the yolo models finished initializing and 
+    # only then creates the service. Not common but works.
+    def timer_callback(self):
+        if self.yolo_models_initialized:
+            self.temp_activate_yolo_service()
+            self.get_logger().info('Condition met, destroying timer.')
+            self.timer.cancel()  # Cancel the timer
+
+    def temp_activate_yolo_service(self):
+        ### Services ###
+        self.activate_yolo_objects_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_objects)
 
     def callback_activate_yolo_objects(self, request, response):
 
@@ -395,10 +405,6 @@ class Yolo_obj(Node):
                 furniture_location = furniture['name'] 
 
         return room_location, furniture_location
- 
-    def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_pose = pose
-
         
 # main function that already creates the thread for the task state machine
 def main(args=None):
@@ -959,10 +965,6 @@ class YoloObjectsMain():
         # debug print to know we are on the main start of the task
         self.node.get_logger().info("In YoloObjects Main...")
         time_till_done = time.time()
-
-        # init serves the purpose of allocating the memory necessary for each model, this takes some seconds, 
-        # by doing this in the first frame, everytime you call one of the models it will instantly responde instead of loading the model
-        init = True
         
         while True:
 
@@ -1007,7 +1009,7 @@ class YoloObjectsMain():
             # xy	List[ndarray]	A list of segments in pixel coordinates.
             # xyn	List[ndarray]	A list of normalized segments.
 
-            if init:
+            if not self.node.yolo_models_initialized:
 
                 self.node.new_head_rgb = True
                 self.node.new_hand_rgb = True 
@@ -1048,7 +1050,7 @@ class YoloObjectsMain():
                     self.node.new_base_rgb = False
 
                     list_detected_objects, total_obj = self.detect_with_yolo_model(head_frame=head_image_frame, hand_frame=hand_image_frame, base_frame=base_image_frame, head_depth_frame=head_depth_frame, hand_depth_frame=hand_depth_frame, base_depth_frame=base_depth_frame, head_image=head_image, hand_image=hand_image, base_image=base_image)
-                    if not init:
+                    if self.node.yolo_models_initialized:
                         self.node.objects_filtered_publisher.publish(list_detected_objects)
 
                     print("TR Time Yolo_Objects: ", time.time() - time_till_done)
@@ -1059,7 +1061,7 @@ class YoloObjectsMain():
                     #     cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
                     #     cv2.waitKey(1)
 
-            if init:
+            if not self.node.yolo_models_initialized:
                 
                 self.node.new_head_rgb = False
                 self.node.new_hand_rgb = False
@@ -1072,4 +1074,4 @@ class YoloObjectsMain():
                 self.node.ACTIVATE_YOLO_FURNITURE_HAND = False
                 self.node.ACTIVATE_YOLO_FURNITURE_BASE = False
 
-                init=False
+                self.node.yolo_models_initialized = True
