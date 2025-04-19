@@ -135,7 +135,9 @@ class PointCloud():
 
         if non_zero_values.size:
 
-            depth = np.mean(non_zero_values)
+            # depth_average = np.mean(non_zero_values)
+            depth_median = np.median(non_zero_values)
+            depth = depth_median
             u = np.mean(non_zero_indices[0])
             v = np.mean(non_zero_indices[1])
             # print("avg np:", depth, u, v)
