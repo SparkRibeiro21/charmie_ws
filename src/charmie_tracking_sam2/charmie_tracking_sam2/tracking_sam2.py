@@ -2,10 +2,10 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D, Point
+from geometry_msgs.msg import Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import TrackingMask, ListOfPoints, BoundingBox, MaskDetection, ListOfMaskDetections
-from charmie_interfaces.srv import ActivateTracking, GetPointCloudMask
+from charmie_interfaces.srv import ActivateTracking
 
 import threading
 import cv2
@@ -35,10 +35,10 @@ class TrackingNode(Node):
         self.br = CvBridge()
         self.head_rgb = Image()
         self.new_head_rgb = False
-        self.waiting_for_pcloud = False
+        # self.waiting_for_pcloud = False
 
         # robot localization
-        self.robot_pose = Pose2D()
+        # self.robot_pose = Pose2D()
 
         ### Topics ###
         # Intel Realsense
@@ -46,15 +46,9 @@ class TrackingNode(Node):
         # Publica a máscara do objecto a ser seguido
         self.tracking_mask_publisher = self.create_publisher(TrackingMask, 'tracking_mask', 10)
         # Robot Localisation
-        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
+        # self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
 
         # SERVICES:
-         # Point Cloud Mask Service
-        self.point_cloud_mask_client = self.create_client(GetPointCloudMask, "get_point_cloud_mask")
-
-        while not self.point_cloud_mask_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Point Cloud Mask...")
-
         # Acitvate and Deactivate Tracking Service
         self.activate_yolo_objects_service = self.create_service(ActivateTracking, "activate_tracking", self.callback_activate_tracking)
        
@@ -97,33 +91,12 @@ class TrackingNode(Node):
         response.message = "Activated with selected parameters"
         return response
     
-    # request point cloud information from point cloud node
-    def call_point_cloud_mask_server(self, req, camera):
-        request = GetPointCloudMask.Request()
-        request.data = req
-        request.camera = camera
-    
-        future = self.point_cloud_mask_client.call_async(request)
-        future.add_done_callback(self.callback_call_point_cloud_mask)
-
-    def callback_call_point_cloud_mask(self, future):
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            self.point_cloud_mask_response = future.result()
-            self.waiting_for_pcloud = False
-            # print("Received Back")
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
-
     def get_color_image_head_callback(self, img: Image):
         self.head_rgb = img
         self.new_head_rgb = True
  
-    def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_pose = pose
+    # def robot_localisation_callback(self, pose: Pose2D):
+    #     self.robot_pose = pose
 
 
 def main(args=None):
@@ -153,7 +126,7 @@ class TrackingMain():
 
         self.initial_obj_id = 1  # Object ID for tracking
         
-        self.DEBUG_DRAW = False
+        self.DEBUG_DRAW = True
 
         self.prev_frame_time = time.time() # used to record the time when we processed last frame
         self.new_frame_time = time.time() # used to record the time at which we processed current frame
@@ -251,12 +224,14 @@ class TrackingMain():
                 
                 # msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
                 msg.mask = list_masks
-                                            
-                self.node.waiting_for_pcloud = True
-                self.node.call_point_cloud_mask_server(requested_objects, "head")
 
-                while self.node.waiting_for_pcloud:
-                    pass
+                # POINT CLOUD HERE
+                #                             
+                # self.node.waiting_for_pcloud = True
+                # self.node.call_point_cloud_mask_server(requested_objects, "head")
+                # 
+                # while self.node.waiting_for_pcloud:
+                #     pass
 
                 ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
                 """
@@ -284,6 +259,7 @@ class TrackingMain():
                 """
                 
                 ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
+                """
                 max_area = 0
                 x_f, y_f, z_f = 0.0, 0.0, 0.0
                 print("NEW PC:", len(self.node.point_cloud_mask_response.coords))
@@ -324,8 +300,8 @@ class TrackingMain():
                     object_abs_pos.y = target_y
                     object_abs_pos.z = z_f/1000
                     msg.position_absolute = object_abs_pos
-                    
-                    self.node.tracking_mask_publisher.publish(msg)
+                """                    
+                self.node.tracking_mask_publisher.publish(msg)
 
             return centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon
         
