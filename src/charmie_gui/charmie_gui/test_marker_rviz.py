@@ -591,7 +591,11 @@ class MarkerPublisher(Node):
         for object_ in self.detected_object.objects:
             if object_.index > 0:
 
-                print(object_.index, object_.object_name, round(object_.position_absolute.x, 2), round(object_.position_absolute.y, 2), round(object_.position_absolute.z, 2), object_.room_location, object_.furniture_location)
+                conf = f"{object_.confidence * 100:.0f}%"
+                x_ = f"{object_.position_absolute.x:4.2f}"
+                y_ = f"{object_.position_absolute.y:5.2f}"
+                z_ = f"{object_.position_absolute.z:5.2f}"
+                print(f"{'ID:'+str(object_.index):<7} {object_.object_name:<17} {conf:<3} {object_.camera} ({x_}, {y_}, {z_}) {object_.room_location:<12} {object_.furniture_location}")
                 
                 marker = Marker()
 

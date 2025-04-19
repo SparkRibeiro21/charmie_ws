@@ -122,8 +122,7 @@ class TaskMain():
                     y_ = f"{o.position_absolute.y:5.2f}"
                     z_ = f"{o.position_absolute.z:5.2f}"
                     print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({x_}, {y_}, {z_})")
-                    # print(o.index, o.object_name, o.camera, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
-
+                    
                 self.robot.set_rgb(CYAN+HALF_ROTATE)
                 time.sleep(0.5)
 
