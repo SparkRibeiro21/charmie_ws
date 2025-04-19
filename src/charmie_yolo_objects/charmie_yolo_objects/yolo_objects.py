@@ -32,9 +32,9 @@ shoes_filename = "shoes_socks_v1.pt"
 furniture_filename = "door_bruno_2.pt"
 # furniture_filename = "furniture_robocup.pt"
 
-MIN_OBJECT_CONF_VALUE = 0.25
-MIN_SHOES_CONF_VALUE = 0.25
-MIN_FURNITURE_CONF_VALUE = 0.25
+MIN_OBJECT_CONF_VALUE = 0.5
+MIN_SHOES_CONF_VALUE = 0.5
+MIN_FURNITURE_CONF_VALUE = 0.5
 
 DRAW_OBJECT_CONF = True
 DRAW_OBJECT_ID = True

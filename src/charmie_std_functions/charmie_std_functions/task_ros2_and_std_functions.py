@@ -2104,11 +2104,15 @@ class RobotStdFunctions():
                                        minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
             
             # DEBUG
-            print("TOTAL objects in this neck pos:")
-            for frame in total_objects_detected:
-                for object in frame:    
-                    print(object.index, object.object_name, object.camera, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
-                print("-")
+            # print("TOTAL objects in this neck pos:")
+            # for frame in total_objects_detected:
+            #     for object in frame:
+            #         conf = f"{object.confidence * 100:.0f}%"
+            #         x_ = f"{object.position_absolute.x:4.2f}"
+            #         y_ = f"{object.position_absolute.y:5.2f}"
+            #         z_ = f"{object.position_absolute.z:5.2f}"
+            #         print(f"{'ID:'+str(object.index):<7} {object.object_name:<17} {conf:<3} {object.camera} ({x_}, {y_}, {z_})")
+            #     print("-")
 
             ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
             
@@ -2130,6 +2134,13 @@ class RobotStdFunctions():
                         same_object_ctr = 0
 
                         for filtered in range(len(filtered_objects)):
+
+                            if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name and \
+                                total_objects_detected[frame][object].camera == filtered_objects[filtered].camera and \
+                                total_objects_detected[frame][object].index == filtered_objects[filtered].index :
+                                        same_object_ctr+=1
+                                        same_object_old = filtered_objects[filtered]
+                                        same_object_new = total_objects_detected[frame][object]
 
                             if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name and total_objects_detected[frame][object].camera == filtered_objects[filtered].camera: 
 
@@ -2179,7 +2190,13 @@ class RobotStdFunctions():
 
             print("FILTERED:")
             for o in filtered_objects:
-                print(o.index, o.object_name, o.camera, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
+                conf = f"{o.confidence * 100:.0f}%"
+                x_ = f"{o.position_absolute.x:4.2f}"
+                y_ = f"{o.position_absolute.y:5.2f}"
+                z_ = f"{o.position_absolute.z:5.2f}"
+                print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({x_}, {y_}, {z_})")
+                # print(o.index, o.object_name, o.camera, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
+            print()
 
 
             if list_of_objects: #only does this if there are items in the list of mandatory detection objects
