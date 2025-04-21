@@ -248,7 +248,7 @@ class TrackingMain():
         combined_C = (combined_Cx, combined_Cy)
         return combined_C, updated_filtered_polygons, area_of_each_polygon, centroid_of_each_polygon
     
-    def filter_and_publish_tracking_data(self, polygons, binary_mask):
+    def filter_and_publish_tracking_data(self, polygons, binary_mask, depth_frame):
 
         MIN_AREA_FOR_PC_CALCULATION = 4000
 
@@ -275,18 +275,30 @@ class TrackingMain():
                         new_mask.point.append(points_mask)
 
                     list_masks.masks.append(new_mask)
-                    requested_objects.append(new_mask)
                 
-                # msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
                 msg.mask = list_masks
+                ALL_CONDITIONS_MET = 1
+                
+                ### CREIO QUE AAQUI JA POSSA IR BUSCAR AS POINTS DE CADA POLIGONO
+                ### VER O FORMATO: no yolo_objetcs é o seguinte: mask.xy[0]
+                # requested_objects.append(new_mask)
+            
 
+                # criar um novo for para percorrer os updated filtered polygons 
+                # este novo for só vai se a seguinte condição se confirmar:
+                # if len(mask.xy[0]) >= 3: # this prevents a BUG where sometimes the mask had less than 3 points, which caused PC (if empty) and GUI (if less than 3 points) to crash
+
+
+
+                # msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
+                
                 map_transform, _ = self.get_transform() # base_footprint -> map
                 transform, camera_link = self.get_transform("head")
 
-                ### obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
+                ### obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera="head", mask=mask.xy[0])
                 obj_3d_cam_coords = Point()
 
-                ALL_CONDITIONS_MET = 1
+                # ersta parte do codigo só deveria ser chamada quando se escolhe qual o poligono
                 if ALL_CONDITIONS_MET:
 
                     point_cam = PointStamped()
@@ -332,7 +344,7 @@ class TrackingMain():
 
 
 
-
+                ### creio que este ja estava em comentario
                 ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
                 """
                 weighted_sum_x = 0
@@ -358,6 +370,7 @@ class TrackingMain():
                     z_f = weighted_sum_z / max_area
                 """
                 
+                # I think this just uses the bigger area... version after trying to get the average of all polygons
                 ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
                 """
                 max_area = 0
@@ -511,7 +524,7 @@ class TrackingMain():
                                 polygons.append(coords)
                                 # polygons.append(coords)
 
-                            centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon = self.filter_and_publish_tracking_data(polygons, white_mask)
+                            centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon = self.filter_and_publish_tracking_data(polygons, white_mask, head_depth_frame)
 
                             if self.DEBUG_DRAW:
                             
