@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, PointStamped
 from sensor_msgs.msg import Image
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import TrackingMask, ListOfPoints, BoundingBox, MaskDetection, ListOfMaskDetections
@@ -59,6 +59,14 @@ class TrackingNode(Node):
         # SERVICES:
         # Acitvate and Deactivate Tracking Service
         self.activate_yolo_objects_service = self.create_service(ActivateTracking, "activate_tracking", self.callback_activate_tracking)
+
+        ### TF buffer and listener ###
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+
+        ### Class ###
+        self.point_cloud = PointCloud()
+
 
     def callback_activate_tracking(self, request, response):
         
@@ -141,6 +149,43 @@ class TrackingMain():
         self.prev_frame_time = time.time() # used to record the time when we processed last frame
         self.new_frame_time = time.time() # used to record the time at which we processed current frame
         
+    def get_transform(self, camera=""):
+
+        match camera:
+            case "head":
+                child_link = 'D455_head_color_frame'
+                parent_link = 'base_footprint'
+            case "hand":
+                child_link = 'D405_hand_color_frame'
+                parent_link = 'base_footprint'
+            case "base":
+                child_link = 'camera_color_frame'
+                parent_link = 'base_footprint'
+            case "":
+                child_link = 'base_footprint'
+                parent_link = 'map'
+
+        # proceed to lookup_transform
+        if self.node.tf_buffer.can_transform(parent_link, child_link, rclpy.time.Time()):
+            
+            # print(parent_link, child_link, "GOOD")
+            try:
+                transform = self.node.tf_buffer.lookup_transform(
+                    parent_link,        # target frame
+                    child_link,         # source frame
+                    rclpy.time.Time()   # latest available
+                    # timeout=rclpy.duration.Duration(seconds=0.1) quero por isto???
+                )
+            except Exception as e:
+                self.node.get_logger().warn(f"TF lookup failed: {e}")
+                transform = None
+                return  # or handle the error appropriately
+        else:
+            # print(parent_link, child_link, "BAD")
+            transform = None
+        
+        return transform, child_link
+
     def combined_polygon_centroid(self, polygons, binary_mask):
         
         MIN_ACCEPTABLE_AREA = 100
@@ -235,6 +280,37 @@ class TrackingMain():
                 # msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
                 msg.mask = list_masks
 
+                map_transform, _ = self.get_transform() # base_footprint -> map
+                transform, camera_link = self.get_transform("head")
+
+                ### obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
+                obj_3d_cam_coords = Point()
+
+                ALL_CONDITIONS_MET = 1
+                if ALL_CONDITIONS_MET:
+
+                    point_cam = PointStamped()
+                    point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                    point_cam.header.frame_id = camera_link
+                    point_cam.point = obj_3d_cam_coords
+                    msg.position_cam = point_cam.point
+
+                    transformed_point = PointStamped()
+                    transformed_point_map = PointStamped()
+                    if transform is not None:
+                        transformed_point = do_transform_point(point_cam, transform)
+                        msg.position_relative = transformed_point.point
+                        self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+
+                        if map_transform is not None:
+                            transformed_point_map = do_transform_point(transformed_point, map_transform)
+                            msg.position_absolute = transformed_point_map.point
+                            self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
+
+
+
+                ### TR TR TR TO DO: WEIGHTED AVERAGE ALSO FOR #D COORDS ARE NOT ONLY FOR CENTROID
+                            
                 # POINT CLOUD HERE
                 #                             
                 # self.node.waiting_for_pcloud = True
@@ -242,6 +318,20 @@ class TrackingMain():
                 # 
                 # while self.node.waiting_for_pcloud:
                 #     pass
+
+
+
+
+
+
+                ### CONFIRMAR SE OS DOIS MASS COMMENTS ABAIXO, SAO OS DOIS USADOS...
+
+
+
+
+
+
+
 
                 ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
                 """
