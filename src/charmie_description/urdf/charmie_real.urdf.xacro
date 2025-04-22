@@ -14,7 +14,8 @@
     <xacro:include filename="torso.xacro"/>
     
     <xacro:include filename="neck.xacro"/>
-    
+
+    <xacro:include filename="face_v3.xacro"/>
     <xacro:include filename="head_camera.xacro"/>
     
     <xacro:include filename="base_camera.xacro"/>

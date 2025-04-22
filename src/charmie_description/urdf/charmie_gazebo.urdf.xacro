@@ -13,6 +13,7 @@
     <xacro:include filename="torso_gazebo.xacro"/>
     <xacro:include filename="neck.xacro"/>
     <xacro:include filename="neck_gazebo.xacro"/>
+    <xacro:include filename="face_v2.xacro"/>
     <xacro:include filename="head_camera.xacro"/>
     <xacro:include filename="head_camera_gazebo.xacro"/>
     <xacro:include filename="base_camera.xacro"/>

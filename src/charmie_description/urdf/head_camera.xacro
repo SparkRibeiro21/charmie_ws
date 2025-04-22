@@ -1,34 +1,38 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-
-    <xacro:property name="neck_tilt_to_head_camera_length" value="0.095" />
-    <xacro:property name="neck_tilt_to_head_camera_width" value="0.0115" />
-    <xacro:property name="neck_tilt_to_head_camera_height" value="0.195" />
+    <xacro:property name="camera_dist_from_face_link" value="${face_length + head_camera_length}" />
+    <xacro:property name="camera_height_from_face_link" value="${face_height_shift+face_height/2-head_camera_height/2-0.008}" />
+    
+    <xacro:property name="head_camera_length" value="0.034" />
+    <xacro:property name="head_camera_width" value="0.145" />
+    <xacro:property name="head_camera_height" value="0.052" />
 
     <joint name="head_camera_joint" type="fixed">
-        <parent link="neck_tilt_link"/>
+        <parent link="face_link"/>
         <child link="head_camera_link"/>
-        <origin xyz="${neck_tilt_to_head_camera_length} ${neck_tilt_to_head_camera_width} ${neck_tilt_to_head_camera_height}" rpy="0 0 0"/>
+        <origin xyz="${camera_dist_from_face_link} 0 ${camera_height_from_face_link}" rpy="0 0 0"/>
     </joint>
 
     <link name="head_camera_link">
-        <!-- <visual>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
+
+        <visual>
+            <origin xyz="${-head_camera_length/2} 0 0" rpy="0 0 0"/>
             <geometry>
-                <box size="0.1 0.1 0.1" />
+                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
             </geometry>
             <material name="grey"/>
-        </visual> -->
+        </visual>
+        <collision>
+            <origin xyz="${-head_camera_length/2} 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.5" x="${head_camera_length}" y="${head_camera_width}" z="${head_camera_height}" >
+            <origin xyz="${-head_camera_length/2} 0 0" rpy="0 0 0"/>
+        </xacro:inertial_box>
+        
     </link>
 
-    <joint name="head_camera_optical_joint" type="fixed">
-        <parent link="head_camera_link"/>
-        <child link="head_camera_optical_link"/>
-        <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
-    </joint>
-
-    <link name="head_camera_optical_link">
-    </link>
-    
 </robot>
