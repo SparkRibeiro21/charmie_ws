@@ -10,7 +10,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     # Declare launch arguments
     wheel_radius_arg = DeclareLaunchArgument('wheel_radius', default_value='0.1')
-    head_version_arg = DeclareLaunchArgument('head_version', default_value='1')
+    head_version_arg = DeclareLaunchArgument('head_version', default_value='2')
     
     # Use launch configuration variables
     wheel_radius = LaunchConfiguration('wheel_radius')

@@ -22,6 +22,10 @@
     <xacro:if value="${float($(arg head_version)) == 3}">
         <xacro:include filename="face_v3.xacro"/>
     </xacro:if>
+    <xacro:unless value="${float($(arg head_version)) == 2 or float($(arg head_version)) == 3}">
+        <xacro:include filename="face_v2.xacro"/>
+    </xacro:unless>
+    
     <xacro:include filename="head_camera.xacro"/>
     
     <xacro:include filename="base_camera.xacro"/>
