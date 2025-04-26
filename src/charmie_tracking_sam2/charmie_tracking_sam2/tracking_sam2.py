@@ -254,6 +254,7 @@ class TrackingMain():
 
         if polygons:
             centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon = self.combined_polygon_centroid(polygons, binary_mask)
+            # print(area_each_polygon, updated_filtered_polygons)
             if centroid is not None:
                 
                 msg = TrackingMask()
@@ -261,11 +262,12 @@ class TrackingMain():
                 msg.centroid.y = float(centroid[1])
                 
                 list_masks = ListOfMaskDetections()
-                requested_objects = []
+                list_masks_for_pc = []
                 
                 for p in updated_filtered_polygons: # only goes through filtres polygons, rather than all polygons
 
                     new_mask = MaskDetection()
+                    new_mask_for_pc = []
                     for c in p:
                             
                         points_mask = Point()
@@ -274,50 +276,66 @@ class TrackingMain():
                         points_mask.z = 0.0
                         new_mask.point.append(points_mask)
 
+                        points_mask_for_pc = np.array([float(c[0]), float(c[1])], dtype=np.float32)
+                        new_mask_for_pc.append(points_mask_for_pc)
+
                     list_masks.masks.append(new_mask)
+                    
+                    new_mask_for_pc = np.array(new_mask_for_pc)
+                    list_masks_for_pc.append(new_mask_for_pc)
+
+                list_masks_for_pc = np.array(list_masks_for_pc, dtype=object)  # dtype=object if polygons have different number of points
                 
                 msg.mask = list_masks
-                ALL_CONDITIONS_MET = 1
-                
-                ### CREIO QUE AAQUI JA POSSA IR BUSCAR AS POINTS DE CADA POLIGONO
-                ### VER O FORMATO: no yolo_objetcs é o seguinte: mask.xy[0]
-                # requested_objects.append(new_mask)
-            
 
-                # criar um novo for para percorrer os updated filtered polygons 
-                # este novo for só vai se a seguinte condição se confirmar:
-                # if len(mask.xy[0]) >= 3: # this prevents a BUG where sometimes the mask had less than 3 points, which caused PC (if empty) and GUI (if less than 3 points) to crash
+                ### PREVIOUSLY THE POINT CLOUD WAS CALCULATED BYA WEIGHTED AVERAGE OF ALL MASKS
+                ### HOWEVER, WE CAME TO THE CONCLUSION THAT THIS ADDED SOME ERRORS TO THE DISTANCE READING
+                ### THE MOST STABLE VERSION USES THE POINT CLOUD FROM THE MASK WITH BIGGEST AREA
 
+                highest_area_polygon = []
+                max_area = 0
+                # print("AREAS PRE:", len(area_each_polygon), area_each_polygon)
+                # Selects the mask with higher area
+                for p, a in zip(list_masks_for_pc, area_each_polygon):
+                    # print(a, p)
+                    if a > max_area:
+                        # Update the maximum area and the corresponding coordinates
+                        max_area = a
+                        highest_area_polygon = p
 
+                # print("FINAL:")
+                # print(max_area)
+                # print(max_area, highest_area_polygon)
 
-                # msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
-                
-                map_transform, _ = self.get_transform() # base_footprint -> map
-                transform, camera_link = self.get_transform("head")
+                # if we have a correct mask 
+                if len(highest_area_polygon) >= 3 and max_area > 0:
+                    
+                    obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera="head", mask=highest_area_polygon)
+                    print(round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
 
-                ### obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera="head", mask=mask.xy[0])
-                obj_3d_cam_coords = Point()
+                    if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0: # if there is no correct depth point available, it returns (0, 0, 0) 
 
-                # ersta parte do codigo só deveria ser chamada quando se escolhe qual o poligono
-                if ALL_CONDITIONS_MET:
+                        # creates transforms to base_footprint and map if available
+                        map_transform, _ = self.get_transform() # base_footprint -> map
+                        transform, camera_link = self.get_transform("head")
 
-                    point_cam = PointStamped()
-                    point_cam.header.stamp = self.node.get_clock().now().to_msg()
-                    point_cam.header.frame_id = camera_link
-                    point_cam.point = obj_3d_cam_coords
-                    msg.position_cam = point_cam.point
+                        point_cam = PointStamped()
+                        point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                        point_cam.header.frame_id = camera_link
+                        point_cam.point = obj_3d_cam_coords
+                        msg.position_cam = point_cam.point
 
-                    transformed_point = PointStamped()
-                    transformed_point_map = PointStamped()
-                    if transform is not None:
-                        transformed_point = do_transform_point(point_cam, transform)
-                        msg.position_relative = transformed_point.point
-                        self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+                        transformed_point = PointStamped()
+                        transformed_point_map = PointStamped()
+                        if transform is not None:
+                            transformed_point = do_transform_point(point_cam, transform)
+                            msg.position_relative = transformed_point.point
+                            self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
 
-                        if map_transform is not None:
-                            transformed_point_map = do_transform_point(transformed_point, map_transform)
-                            msg.position_absolute = transformed_point_map.point
-                            self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
+                            if map_transform is not None:
+                                transformed_point_map = do_transform_point(transformed_point, map_transform)
+                                msg.position_absolute = transformed_point_map.point
+                                self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
 
 
 
