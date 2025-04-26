@@ -250,8 +250,6 @@ class TrackingMain():
     
     def filter_and_publish_tracking_data(self, polygons, binary_mask, depth_frame):
 
-        MIN_AREA_FOR_PC_CALCULATION = 4000
-
         if polygons:
             centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon = self.combined_polygon_centroid(polygons, binary_mask)
             # print(area_each_polygon, updated_filtered_polygons)
@@ -307,35 +305,65 @@ class TrackingMain():
                 # print(max_area)
                 # print(max_area, highest_area_polygon)
 
+                obj_3d_cam_coords = Point()
+                
                 # if we have a correct mask 
                 if len(highest_area_polygon) >= 3 and max_area > 0:
                     
                     obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera="head", mask=highest_area_polygon)
-                    print(round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
+                    print("Max Area:", round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
 
-                    if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0: # if there is no correct depth point available, it returns (0, 0, 0) 
 
-                        # creates transforms to base_footprint and map if available
-                        map_transform, _ = self.get_transform() # base_footprint -> map
-                        transform, camera_link = self.get_transform("head")
+                ### HOWEVER IF IT IS NECESSARY TO GO BACK TO WIGHTED AVERAGE FOR ALL FILTERED MASKS:
+                total_area = 0
+                obj_3d_cam_coords = Point()
+                for p, a in zip(list_masks_for_pc, area_each_polygon):
+                
+                    # if we have a correct mask 
+                    if len(p) >= 3 and a > 0:
+                        
+                        temp_obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera="head", mask=p)
+                        # print(round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
+                        total_area += a
+                        obj_3d_cam_coords.x += temp_obj_3d_cam_coords.x * a
+                        obj_3d_cam_coords.y += temp_obj_3d_cam_coords.y * a
+                        obj_3d_cam_coords.z += temp_obj_3d_cam_coords.z * a
+                        
 
-                        point_cam = PointStamped()
-                        point_cam.header.stamp = self.node.get_clock().now().to_msg()
-                        point_cam.header.frame_id = camera_link
-                        point_cam.point = obj_3d_cam_coords
-                        msg.position_cam = point_cam.point
+                if total_area > 0:
+                    # Compute weighted averages
+                    obj_3d_cam_coords.x = obj_3d_cam_coords.x / total_area
+                    obj_3d_cam_coords.y = obj_3d_cam_coords.y / total_area
+                    obj_3d_cam_coords.z = obj_3d_cam_coords.z / total_area
+                
+                print("Weighted Avg Area:", round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
 
-                        transformed_point = PointStamped()
-                        transformed_point_map = PointStamped()
-                        if transform is not None:
-                            transformed_point = do_transform_point(point_cam, transform)
-                            msg.position_relative = transformed_point.point
-                            self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+                
+                # if there is no correct depth point available, it returns (0, 0, 0) 
+                # or no correct mask
+                if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0: 
 
-                            if map_transform is not None:
-                                transformed_point_map = do_transform_point(transformed_point, map_transform)
-                                msg.position_absolute = transformed_point_map.point
-                                self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
+                    # creates transforms to base_footprint and map if available
+                    map_transform, _ = self.get_transform() # base_footprint -> map
+                    transform, camera_link = self.get_transform("head")
+
+                    point_cam = PointStamped()
+                    point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                    point_cam.header.frame_id = camera_link
+                    point_cam.point = obj_3d_cam_coords
+                    msg.position_cam = point_cam.point
+
+                    transformed_point = PointStamped()
+                    transformed_point_map = PointStamped()
+                    if transform is not None:
+                        transformed_point = do_transform_point(point_cam, transform)
+                        msg.position_relative = transformed_point.point
+                        self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+
+                        if map_transform is not None:
+                            transformed_point_map = do_transform_point(transformed_point, map_transform)
+                            msg.position_absolute = transformed_point_map.point
+                            self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
 
 
 
