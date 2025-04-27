@@ -5,13 +5,9 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /LaserScan1
-        - /LaserScan2
-        - /PointCloud21
         - /PointCloud21/Topic1
-        - /Image1
       Splitter Ratio: 0.5
-    Tree Height: 354
+    Tree Height: 638
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -29,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -88,7 +84,17 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        face_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         front_caster_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        hand_camera_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -97,10 +103,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        head_camera_optical_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
+          Value: true
         left_wheel_link:
           Alpha: 1
           Show Axes: false
@@ -163,23 +166,7 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        D405_hand_color_frame:
-          Value: true
-        D405_hand_color_optical_frame:
-          Value: true
-        D405_hand_depth_frame:
-          Value: true
-        D405_hand_depth_optical_frame:
-          Value: true
         D405_hand_link:
-          Value: true
-        D455_head_color_frame:
-          Value: true
-        D455_head_color_optical_frame:
-          Value: true
-        D455_head_depth_frame:
-          Value: true
-        D455_head_depth_optical_frame:
           Value: true
         D455_head_link:
           Value: true
@@ -191,21 +178,15 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
-        camera_color_frame:
-          Value: true
-        camera_color_optical_frame:
-          Value: true
-        camera_depth_frame:
-          Value: true
-        camera_depth_optical_frame:
-          Value: true
         camera_link:
+          Value: true
+        face_link:
           Value: true
         front_caster_wheel_link:
           Value: true
-        head_camera_link:
+        hand_camera_link:
           Value: true
-        head_camera_optical_link:
+        head_camera_link:
           Value: true
         left_wheel_link:
           Value: true
@@ -221,37 +202,11 @@ Visualization Manager:
           Value: true
         neck_tilt_link:
           Value: true
-        panda_hand:
-          Value: true
-        panda_leftfinger:
-          Value: true
-        panda_link0:
-          Value: true
-        panda_link1:
-          Value: true
-        panda_link2:
-          Value: true
-        panda_link3:
-          Value: true
-        panda_link4:
-          Value: true
-        panda_link5:
-          Value: true
-        panda_link6:
-          Value: true
-        panda_link7:
-          Value: true
-        panda_link8:
-          Value: true
-        panda_rightfinger:
-          Value: true
         right_wheel_link:
           Value: true
         top_torso_link:
           Value: true
         torso_link:
-          Value: true
-        world:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -264,12 +219,7 @@ Visualization Manager:
             {}
           base_camera_link:
             camera_link:
-              camera_depth_frame:
-                camera_color_frame:
-                  camera_color_optical_frame:
-                    {}
-                camera_depth_optical_frame:
-                  {}
+              {}
           base_footprint:
             {}
           front_caster_wheel_link:
@@ -279,19 +229,16 @@ Visualization Manager:
           legs_link:
             torso_link:
               top_torso_link:
+                hand_camera_link:
+                  D405_hand_link:
+                    {}
                 neck_base_link:
                   neck_pan_link:
                     neck_tilt_link:
-                      head_camera_link:
-                        D455_head_link:
-                          D455_head_color_frame:
-                            D455_head_color_optical_frame:
-                              {}
-                          D455_head_depth_frame:
-                            D455_head_depth_optical_frame:
-                              {}
-                        head_camera_optical_link:
-                          {}
+                      face_link:
+                        head_camera_link:
+                          D455_head_link:
+                            {}
           lidar_bottom_frame:
             {}
           lidar_frame:
@@ -554,12 +501,12 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1043
+  Height: 1536
   Hide Left Dock: false
   Hide Right Dock: false
   Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000015600000375fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000019f000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006501000001e2000001020000002800fffffffb0000000a0049006d00610067006501000002ea000000c80000002800ffffff000000010000010f00000375fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000375000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007800000003efc0100000002fb0000000800540069006d0065010000000000000780000002fb00fffffffb0000000800540069006d006501000000000000045000000000000000000000050f0000037500000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000015600000562fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000002bb000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006501000002fe000001770000002800fffffffb0000000a0049006d006100670065010000047b000001240000002800ffffff000000010000010f00000562fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000562000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000009ba0000003efc0100000002fb0000000800540069006d00650100000000000009ba000002fb00fffffffb0000000800540069006d00650100000000000004500000000000000000000007490000056200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -568,6 +515,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1920
-  X: 2560
-  Y: 181
+  Width: 2490
+  X: 70
+  Y: 27
