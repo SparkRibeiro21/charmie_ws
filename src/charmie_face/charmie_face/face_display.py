@@ -281,6 +281,7 @@ class FaceMain():
             
             if self.node.new_face_received:
                 self.update_received_face()
+                self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
 
             if self.gif_flag:
                 self.SCREEN.blit(self.gif_frames[self.frame_index], (0, 0))
