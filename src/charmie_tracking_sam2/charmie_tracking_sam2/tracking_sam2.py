@@ -311,14 +311,19 @@ class TrackingMain():
                 if len(highest_area_polygon) >= 3 and max_area > 0:
                     
                     obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera="head", mask=highest_area_polygon)
-                    print("Max Area:", round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
+                    # print("Max Area Coords:", round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
 
-
-                ### HOWEVER IF IT IS NECESSARY TO GO BACK TO WIGHTED AVERAGE FOR ALL FILTERED MASKS:
+                """
+                ### HOWEVER IF IT IS NECESSARY TO GO BACK TO WEIGHTED AVERAGE FOR ALL FILTERED MASKS:
+                max_area = 0
                 total_area = 0
                 obj_3d_cam_coords = Point()
                 for p, a in zip(list_masks_for_pc, area_each_polygon):
-                
+                    
+                    # This is only here so that when checking if a correct object was detected and 3d point cloud coords were selected
+                    if a > max_area:
+                        max_area = a
+                    
                     # if we have a correct mask 
                     if len(p) >= 3 and a > 0:
                         
@@ -337,11 +342,12 @@ class TrackingMain():
                     obj_3d_cam_coords.z = obj_3d_cam_coords.z / total_area
                 
                 print("Weighted Avg Area:", round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
-
+                """
                 
                 # if there is no correct depth point available, it returns (0, 0, 0) 
                 # or no correct mask
-                if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0: 
+                if not (obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0) and max_area > 0:
+                    # print("INSIDE") 
 
                     # creates transforms to base_footprint and map if available
                     map_transform, _ = self.get_transform() # base_footprint -> map
@@ -365,101 +371,11 @@ class TrackingMain():
                             msg.position_absolute = transformed_point_map.point
                             self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
 
-
-
-                ### TR TR TR TO DO: WEIGHTED AVERAGE ALSO FOR #D COORDS ARE NOT ONLY FOR CENTROID
-                            
-                # POINT CLOUD HERE
-                #                             
-                # self.node.waiting_for_pcloud = True
-                # self.node.call_point_cloud_mask_server(requested_objects, "head")
-                # 
-                # while self.node.waiting_for_pcloud:
-                #     pass
-
-
-
-
-
-
-                ### CONFIRMAR SE OS DOIS MASS COMMENTS ABAIXO, SAO OS DOIS USADOS...
-
-
-
-
-
-
-
-                ### creio que este ja estava em comentario
-                ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
-                """
-                weighted_sum_x = 0
-                weighted_sum_y = 0
-                weighted_sum_z = 0
-                max_area = 0
-                print("NEW PC:", len(self.node.point_cloud_mask_response.coords))
-                for p, a in zip(self.node.point_cloud_mask_response.coords, area_each_polygon):
-                    print(f"(x,y,z)): ({p.center_coords.x}, {p.center_coords.y}, {p.center_coords.z}), Area: {a}")
-
-                    # Remove the points whose mask does not have a valid depth point inside (returned by PC as: (x=0.0, y=0.0, z=0.0))
-                    if p.center_coords.x != 0 and p.center_coords.y != 0 and p.center_coords.z != 0 and a > MIN_AREA_FOR_PC_CALCULATION:
-                        # Use the area of each mask to weight the position of the object
-                        weighted_sum_x += p.center_coords.x * a
-                        weighted_sum_y += p.center_coords.y * a
-                        weighted_sum_z += p.center_coords.z * a
-                        max_area += a
-
-                if max_area > 0:
-                    # Compute weighted averages
-                    x_f = weighted_sum_x / max_area
-                    y_f = weighted_sum_y / max_area
-                    z_f = weighted_sum_z / max_area
-                """
-                
-                # I think this just uses the bigger area... version after trying to get the average of all polygons
-                ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
-                """
-                max_area = 0
-                x_f, y_f, z_f = 0.0, 0.0, 0.0
-                print("NEW PC:", len(self.node.point_cloud_mask_response.coords))
-                for p, a in zip(self.node.point_cloud_mask_response.coords, area_each_polygon):
-                    print(f"(x,y,z)): ({p.center_coords.x}, {p.center_coords.y}, {p.center_coords.z}), Area: {a}")
-
-                    # Remove the points whose mask does not have a valid depth point inside (returned by PC as: (x=0.0, y=0.0, z=0.0))
-                    if p.center_coords.x != 0 and p.center_coords.y != 0 and p.center_coords.z != 0 and a > max_area:
-                        # Update the maximum area and the corresponding coordinates
-                        max_area = a
-                        x_f = p.center_coords.x
-                        y_f = p.center_coords.y
-                        z_f = p.center_coords.z
-
-                if max_area > 0:
-
-                    # Output result
-                    print(f"Weighted Average (x, y, z): ({x_f}, {y_f}, {z_f})")
-
-                    # changes the axis of point cloud coordinates to fit with robot axis
-                    object_rel_pos = Point()
-                    object_rel_pos.x =  x_f/1000
-                    object_rel_pos.y =  y_f/1000
-                    object_rel_pos.z =  z_f/1000
-                    msg.position_relative = object_rel_pos
+                    print(msg.position_cam)
+                    print(msg.position_relative)
+                    print(msg.position_absolute)
                     
-                    # calculate the absolute position according to the robot localisation
-                    angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
-                    dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
-
-                    theta_aux = math.pi/2 - (angle_obj - self.node.robot_pose.theta)
-
-                    target_x = dist_obj * math.cos(theta_aux) + self.node.robot_pose.x
-                    target_y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
-
-                    object_abs_pos = Point()
-                    object_abs_pos.x = target_x
-                    object_abs_pos.y = target_y
-                    object_abs_pos.z = z_f/1000
-                    msg.position_absolute = object_abs_pos
-                """                    
+                ### Publishes track msg
                 self.node.tracking_mask_publisher.publish(msg)
 
             return centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon
