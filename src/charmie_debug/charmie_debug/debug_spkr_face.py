@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              False,
     "charmie_audio":            False,
-    "charmie_face":             False,
+    "charmie_face":             True,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
     "charmie_base_camera":      False,
@@ -27,7 +27,7 @@ ros2_modules = {
     "charmie_neck":             False,
     "charmie_obstacles":        False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -81,6 +81,21 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
+
+                while True:
+                    self.robot.set_face("help_pick_milk")
+                    print("help_pick_milk")
+                    time.sleep(5.0)
+                    self.robot.set_face("charmie_face")
+                    print("charmie_face")
+                    time.sleep(5.0)
+                    self.robot.set_face("help_pick_orange_juice")
+                    print("help_pick_orange_juice")
+                    time.sleep(5.0)
+                    self.robot.set_face("charmie_face_green")
+                    print("charmie_face_green_my_order")
+                    time.sleep(5.0)
+
                 o = "juice pack"
                 c = self.robot.get_object_class_from_object(o)
                 f = self.robot.get_furniture_from_object_class(c)
@@ -103,9 +118,6 @@ class TaskMain():
                 #                            wait_for_end_of=True)
                 # self.robot.set_neck_coords(self.robot.get_location_coords_from_furniture("dishwasher"), 
                 #                            wait_for_end_of=True)
-
-                while True:
-                    pass
                 
                 self.robot.get_detected_person_characteristics(first_sentence="demonstration/demo_characteristics_first_sentence", shirt_color=True, age=True)
 

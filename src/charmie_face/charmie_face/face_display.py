@@ -21,8 +21,6 @@ class FaceNode(Node):
         super().__init__("Face")
         self.get_logger().info("Initialised CHARMIE FACE Node")
 
-        # self.face = Face()
-
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
@@ -52,15 +50,11 @@ class FaceNode(Node):
         
         self.get_logger().info("Initial Face Received is: %s" %self.INITIAL_FACE)
 
-
         self.new_face_received = False
         self.new_face_received_name = ""
 
-
-
         # sends initial face
         self.image_to_face(self.INITIAL_FACE)
-
         # easier debug when testing custom faces 
         # self.image_to_face("charmie_face_green")
     
@@ -161,134 +155,143 @@ class FaceNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = FaceNode()
-    th_face_display = threading.Thread(target=thread_face_display, args=(node,), daemon=True)
+    th_face_display = threading.Thread(target=ThreadMainFace, args=(node,), daemon=True)
     th_face_display.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
+def ThreadMainFace(node: FaceNode):
+    main = FaceMain(node)
+    main.main()
+
+
+class FaceMain():
+
+    def __init__(self, node: FaceNode):
+        # create a ROS2 node instance
+        self.node = node
+        self.device_id = self.get_touchscreen_id("Waveshare")  # Or any keyword matching the device
+        self.display_name = "DP-1-2"
+        self.map_touchscreen_to_correct_display(device_id=self.device_id, display_name=self.display_name)
+        self.resolution = self.get_display_resolution()
+        self.SCREEN = self.initiliase_pygame_screen()
+
+        self.running = True
+        self.gif_flag = False
+        self.gif_frames = []
+        self.frame_index = 0
+        self.clock = pygame.time.Clock()
+        self.previous_image_extension = ""
         
-    """
-    import subprocess
+    def get_touchscreen_id(self, name_contains="touch"):
 
-    device_id = "10"
-    display_name = "DP-1-2"
+        # xinput list
+        # xrandr
+        result = subprocess.run(["xinput", "list"], capture_output=True, text=True)
+        for line in result.stdout.splitlines():
+            if name_contains.lower() in line.lower():
+                parts = line.strip().split('\t')
+                for part in parts:
+                    if part.startswith("id="):
+                        return part.split('=')[1]
+        return None
 
-    # Build the command
-    command = ["xinput", "map-to-output", device_id, display_name]
+    def map_touchscreen_to_correct_display(self, device_id, display_name):
+        # this maps the input of the touchscrren to the correct display 
+        if device_id:
+            try:
+                subprocess.run(["xinput", "map-to-output", device_id, display_name], check=True)
+                print(f"Touchscreen {device_id} successfully mapped to {display_name}")
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to map: {e}")
+        else:
+            print("Touchscreen not found.")
 
-    # Run the command
-    try:
-        subprocess.run(command, check=True)
-        print(f"Touchscreen {device_id} successfully mapped to {display_name}")
-    except subprocess.CalledProcessError as e:
-        print(f"Error mapping touchscreen: {e}")
-    """
+        print(device_id)
 
-def get_touchscreen_id(name_contains="touch"):
-
-    #xinput list
-    # xrandr
-    result = subprocess.run(["xinput", "list"], capture_output=True, text=True)
-    for line in result.stdout.splitlines():
-        if name_contains.lower() in line.lower():
-            parts = line.strip().split('\t')
-            for part in parts:
-                if part.startswith("id="):
-                    return part.split('=')[1]
-    return None
-    # return "10" # defualt value for Tiago PC
-
-
-def thread_face_display(node: FaceNode):
-
-    device_id = get_touchscreen_id("Waveshare")  # Or any keyword matching your device
-    display_name = "DP-1-2"
-
-    # this maps the input of the touchscrren to the correct display 
-    if device_id:
-        try:
-            subprocess.run(["xinput", "map-to-output", device_id, display_name], check=True)
-            print(f"Touchscreen {device_id} successfully mapped to {display_name}")
-        except subprocess.CalledProcessError as e:
-            print(f"Failed to map: {e}")
-    else:
-        print("Touchscreen not found.")
-
-    print(device_id)
-
-    FULLSCREEN = True
-    RESOLUTION = [0, 0]
-
-    if FULLSCREEN:
-        """Este loop verifica os ecras todos, para saber a resolução do ecra principal"""
+    def get_display_resolution(self):
+        
+        resolution = [0, 0]
+        # Tihs loop goes through all monitors and checks the resolution
         for m in get_monitors():
             # print(m)
-            # if(m.is_primary == True):
-            RESOLUTION[0] = m.width
-            RESOLUTION[1] = m.height
-            # break 
-
-    pygame.init()
-    flags = pygame.DOUBLEBUF | pygame.NOFRAME
-    SCREEN = pygame.display.set_mode(tuple(RESOLUTION), flags, 8, display=1, vsync=1)
-    # Aui o display = 0, é que define para por no ecra principal, se puseres 1 mete no secundario e assim sucessivamente
-    # As flags de DOUBLEBUF e NOFRAME é so para correr um bocadinho mais rapido em fullscreen, nao faz grande diferença mas prontos
-    pygame.display.set_caption("Main Window")
-
-    logo_midpath = "/charmie_ws/src/configuration_files/docs/logos/"
-
-    icon = pygame.image.load(node.home+logo_midpath+"charmie_face.png")
-    pygame.display.set_icon(icon)
-
-    # just for initialization
-    image = pygame.image.load(node.home+logo_midpath+"charmie_face.png") 
-
-    gif_flag = False
-    gif_frames = []
-    frame_index = 0
-    clock = pygame.time.Clock()
-
-
-    running = True
-    while running:
-        # SCREEN.fill((50, 50, 50))
+            if(m.is_primary == False):
+                resolution[0] = m.width
+                resolution[1] = m.height
         
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-        
-        if node.new_face_received:
+        return resolution
+    
+    def initiliase_pygame_screen(self):
+
+        pygame.init()
+        flags = pygame.DOUBLEBUF | pygame.NOFRAME
+        SCREEN = pygame.display.set_mode(tuple(self.resolution), flags, 8, display=1, vsync=1)
+        # Aui o display = 0, é que define para por no ecra principal, se puseres 1 mete no secundario e assim sucessivamente
+        # As flags de DOUBLEBUF e NOFRAME é so para correr um bocadinho mais rapido em fullscreen, nao faz grande diferença mas prontos
+        pygame.display.set_caption("Main Window")
+
+        logo_midpath = "/charmie_ws/src/configuration_files/docs/logos/"
+
+        icon = pygame.image.load(self.node.home+logo_midpath+"charmie_face.png")
+        pygame.display.set_icon(icon)
+
+        return SCREEN
+    
+    def update_received_face(self):
+                
+        self.node.new_face_received = False
+        self.gif_flag = False
+        print(self.node.new_face_received_name)
+        print("New Face Received in Pygame")
+
+        file_name, file_extension = os.path.splitext(self.node.new_face_received_name)
+
+        print(file_extension)
+        if file_extension == ".jpg":
+            self.gif_flag = False
+            self.image = pygame.image.load(self.node.new_face_received_name)
+        elif file_extension == ".gif":
+            self.gif_flag = True
+            gif = Image.open(self.node.new_face_received_name)
+            self.gif_frames.clear()
+            if self.previous_image_extension != ".gif":
+                self.frame_index = 0 # I do not reset the frame_index! 
             
-            node.new_face_received = False
-            gif_flag = False
-            print(node.new_face_received_name)
-            print("New Face Received in Pygame")
-
-            file_name, file_extension = os.path.splitext(node.new_face_received_name)
-
-            print(file_extension)
-            if file_extension == ".jpg":
-                image = pygame.image.load(node.new_face_received_name)
-            elif file_extension == ".gif":
-                gif_flag = True
-                gif = Image.open(node.new_face_received_name)
-                for frame in range(gif.n_frames):
-                    gif.seek(frame)
-                    frame = pygame.image.fromstring(gif.tobytes(), gif.size, gif.mode)
-                    gif_frames.append(frame)
-            else:
-                pass
-
-        if gif_flag:
-            SCREEN.blit(gif_frames[frame_index], (0, 0))
-            pygame.display.update()
-            frame_index = (frame_index + 1) % len(gif_frames)
-            if frame_index == 0: # needs this line to avoid a blank frame everytime the gif resets
-                frame_index = 1
-            # print(frame_index)
-            clock.tick(30)
+            # self.frame_index = 0 # I do not reset the frame_index when the last face is a gif! 
+            # This way, when changing between faces (since all of them have the same number of frames),
+            # if the face is making any movement, the new face will continue that movement (eyes or mouth moving)
+            
+            for frame in range(gif.n_frames):
+                gif.seek(frame)
+                frame = pygame.image.fromstring(gif.tobytes(), gif.size, gif.mode)
+                self.gif_frames.append(frame)
         else:
-            SCREEN.blit(image, (0, 0))
-            pygame.display.update()
+            pass
 
-    pygame.quit()
+        self.previous_image_extension = file_extension
+
+
+    def main(self):
+        
+        while self.running:
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+            
+            if self.node.new_face_received:
+                self.update_received_face()
+
+            if self.gif_flag:
+                self.SCREEN.blit(self.gif_frames[self.frame_index], (0, 0))
+                pygame.display.update()
+                self.frame_index = (self.frame_index + 1) % len(self.gif_frames)
+                if self.frame_index == 0: # needs this line to avoid a blank frame everytime the gif resets
+                    self.frame_index = 1
+                # print(self.frame_index)
+                self.clock.tick(30)
+            elif self.previous_image_extension != "": # use self.previous_image_extension for initial case
+                self.SCREEN.blit(self.image, (0, 0))
+                pygame.display.update()
+
+        pygame.quit()
