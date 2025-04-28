@@ -13,7 +13,6 @@ import threading
 from screeninfo import get_monitors
 from PIL import Image
 
-
 # ROS2 Face Node
 class FaceNode(Node):
     def __init__(self):
@@ -42,15 +41,16 @@ class FaceNode(Node):
         
         self.get_logger().info("Initial Face Received is: %s" %self.INITIAL_FACE)
 
+        # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
+        self.AFTER_SPEECH_TIMER_SHORT = 0.2
+        self.AFTER_SPEECH_TIMER_LONG = 1.0
+
         self.new_face_received = False
         self.new_face_received_name = ""
 
         self.new_text_received = False
         self.new_text_received_name = ""
-        
-        # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
-        self.AFTER_SPEECH_TIMER_SHORT = 0.2
-        self.AFTER_SPEECH_TIMER_LONG = 1.0
+        self.new_text_received_delay = self.AFTER_SPEECH_TIMER_SHORT
         
         # sends initial face
         self.image_to_face(self.INITIAL_FACE)
@@ -97,13 +97,12 @@ class FaceNode(Node):
                 self.get_logger().info("FACE received (text) - %s" %request.data)
                 # print("Received Speech String:", command.data)
             else:
+                self.new_text_received = True
+                self.new_text_received_name = request.data
                 if request.long_pause:
-                    time.sleep(self.AFTER_SPEECH_TIMER_LONG)
+                    self.new_text_received_delay = self.AFTER_SPEECH_TIMER_LONG + self.AFTER_SPEECH_TIMER_SHORT
                 else:
-                    time.sleep(self.AFTER_SPEECH_TIMER_SHORT)
-                # after receiving the end of speech command, it sends to the face the latest face sent before the speech command
-                self.new_text_received = False
-                # print("Back to last face:", self.face.last_face_path)
+                    self.new_text_received_delay = self.AFTER_SPEECH_TIMER_SHORT
         
         response.success = True
         response.message = "Received and displayed text on face."
@@ -339,9 +338,15 @@ class FaceMain():
             
             if self.node.new_text_received:
                 self.SCREEN.fill((216, 231, 240))  # clear screen (black background)
-                self.add_text_to_face()
-                pygame.display.update()
-                
+                if self.node.new_text_received_name != "":
+                    self.add_text_to_face()
+                    pygame.display.update()
+                else: # == ""
+                    start_time = time.time()
+                    self.node.new_text_received = False
+                    while time.time() - start_time < self.node.new_text_received_delay:
+                        pass # stales the display thread, so that new faces may be received, however the text has higher priority
+
             else:
                 if self.node.new_face_received:
                     self.update_received_face()
