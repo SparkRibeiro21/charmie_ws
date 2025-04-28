@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool, String
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, SetString
 
 from TTS.utils.manage import ModelManager
 from TTS.utils.synthesizer import Synthesizer
@@ -92,10 +92,9 @@ class RobotSpeak():
 
                     string_from_file = open(self.complete_path+filename+".txt", "r")
 
-                    # send string to face to ease UI
-                    str = String()
+                    str = SetString.Request()
                     str.data = string_from_file.read()
-                    self.node.speech_to_face_publisher.publish(str)
+                    self.node.speech_to_face_command.call_async(str)
 
                     message = "Text Sent to Face Node"
                     # print("File sent to face! - '", str.data, "'")
@@ -115,11 +114,11 @@ class RobotSpeak():
 
             if show_in_face:
                 # sends empty string to tell face that the audio has finished to be played
-                str = String()
+                str = SetString.Request()
                 str.data = ""
                 # print(str.data)
                 # print("File sent to face! - End of Sentence")
-                self.node.speech_to_face_publisher.publish(str)
+                self.node.speech_to_face_command.call_async(str)
 
             success = True
             message = ""
@@ -194,14 +193,12 @@ class SpeakerNode(Node):
         # initialize robot speech class with acess to node variables
         self.charmie_speech = RobotSpeak(self)
 
-        # TOPICS:
-        # To publish the received strings to the face node
-        self.speech_to_face_publisher = self.create_publisher(String, "display_speech_face", 10)
-        
         # SERVICES:
         # Main receive commads 
         self.server_speech_command = self.create_service(SpeechCommand, "speech_command", self.callback_speech_command) 
         self.save_server_speech_command = self.create_service(SaveSpeechCommand, "save_speech_command", self.callback_save_speech_command) 
+        # To publish the received strings to the face node
+        self.speech_to_face_command = self.create_client(SetString, "display_speech_face")
         self.get_logger().info("Speech Servers have been started")
 
         # Get Information regarding which speakers are being used 
@@ -226,7 +223,7 @@ class SpeakerNode(Node):
 
     # Test Function for some quick tests if necessary
     def test(self):
-        self.charmie_speech.load_and_play_command(command="What is your friend name and favourite drink?", quick_voice=False, play_command=True)
+        self.charmie_speech.load_and_play_command(command="What is your friend name and favourite drink?", quick_voice=False, show_in_face=False, play_command=True)
 
 
     # Main Function regarding received commands

@@ -81,21 +81,6 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
-
-                while True:
-                    self.robot.set_face("help_pick_milk")
-                    print("help_pick_milk")
-                    time.sleep(5.0)
-                    self.robot.set_face("charmie_face")
-                    print("charmie_face")
-                    time.sleep(5.0)
-                    self.robot.set_face("help_pick_orange_juice")
-                    print("help_pick_orange_juice")
-                    time.sleep(5.0)
-                    self.robot.set_face("charmie_face_green")
-                    print("charmie_face_green_my_order")
-                    time.sleep(5.0)
-
                 o = "juice pack"
                 c = self.robot.get_object_class_from_object(o)
                 f = self.robot.get_furniture_from_object_class(c)
@@ -104,6 +89,31 @@ class TaskMain():
                 flc = self.robot.get_location_coords_from_furniture(f)
                 rnc = self.robot.get_navigation_coords_from_room(r)
                 print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
+
+                while True:
+                    self.robot.set_face("help_pick_milk")
+                    print("help_pick_milk")
+                    time.sleep(5.0)
+                    self.robot.set_speech(filename="serve_breakfast/sb_finished", show_in_face=True, wait_for_end_of=False)
+                    time.sleep(5.0)
+                    self.robot.set_face("charmie_face")
+                    print("charmie_face")
+                    time.sleep(5.0)
+                    self.robot.set_speech(filename="generic/moving", show_in_face=True, wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)), show_in_face=True, wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_face("help_pick_orange_juice")
+                    print("help_pick_orange_juice")
+                    time.sleep(5.0)        
+                    self.robot.set_speech(filename="generic/found_following_items", show_in_face=True, )
+                    self.robot.set_speech(filename="objects_names/"+o.replace(" ","_").lower(), show_in_face=True, wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_face("charmie_face_green")
+                    print("charmie_face_green_my_order")
+                    time.sleep(5.0)
+                    self.robot.set_speech(filename="gpsr/stand_front_of_me_egpsr", show_in_face=True, wait_for_end_of=False)
+                    time.sleep(5.0)
+
 
                 if self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)) is not None:
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)

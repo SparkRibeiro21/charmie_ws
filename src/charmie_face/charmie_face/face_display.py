@@ -2,8 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-from example_interfaces.msg import String
-from charmie_interfaces.srv import SetFace
+from charmie_interfaces.srv import SetFace, SetString
 
 import subprocess
 import time
@@ -33,12 +32,9 @@ class FaceNode(Node):
         self.media_faces_path = self.home + midpath_faces + "list_of_media_faces/"
         self.temp_faces_path = self.home + midpath_faces + "list_of_temp_faces/"
         
-        ### Topics (Subscribers) ###   
-        # Receive speech strings to show in face
-        ### self.speech_to_face_subscriber = self.create_subscription(String, "display_speech_face", self.speech_to_face_callback, 10)
-        
         ### Services (Server) ###   
         self.server_face_command = self.create_service(SetFace, "face_command", self.callback_face_command) 
+        self.speech_to_face_command = self.create_service(SetString, "display_speech_face", self.callback_speech_to_face)
         self.get_logger().info("Face Servers have been started")
 
         # whether or not it is intended to show the speech strings on the face while the robot talks
@@ -79,9 +75,27 @@ class FaceNode(Node):
 
         return response
 
+    # Callback for all face commands received
+    def callback_speech_to_face(self, request, response):
+        
+        # Type of service received: 
+        # string data # informational, e.g. for error messages.
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        print("Received (text):", request.data)
+
+
+        response.success = True
+        response.message = "Received and displayed text on face."
+
+        return response
+    
+
     """
     # Receive speech strings to show in face  
-    def speech_to_face_callback(self, command: String):
+    def callback_speech_to_face(self, command: String):
 
         if self.SHOW_SPEECH:
             if command.data != "":
