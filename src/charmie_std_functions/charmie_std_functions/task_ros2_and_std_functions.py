@@ -1100,13 +1100,14 @@ class RobotStdFunctions():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
-    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause_show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 
         request = SpeechCommand.Request()
         request.filename = filename
         request.command = command
         request.quick_voice = quick_voice
         request.show_in_face = show_in_face
+        request.long_pause_show_in_face = long_pause_show_in_face
         request.breakable_play = breakable_play
         request.break_play = break_play
 
@@ -1119,7 +1120,7 @@ class RobotStdFunctions():
 
         return self.node.speech_success, self.node.speech_message
     
-    def save_speech(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
+    def save_speech(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, long_pause_show_in_face=False, wait_for_end_of=True):
 
         # the commands should be lists, because you can send a list of commands and a list of filenames,
         # making it possible to create multiple temp commands with one instruction
@@ -1141,6 +1142,7 @@ class RobotStdFunctions():
             request.quick_voice = quick_voice
             request.play_command = play_command
             request.show_in_face = show_in_face
+            request.long_pause_show_in_face = long_pause_show_in_face
 
             self.node.call_save_speech_command_server(request=request, wait_for_end_of=wait_for_end_of)
             

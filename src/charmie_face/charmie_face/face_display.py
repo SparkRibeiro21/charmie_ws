@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-from charmie_interfaces.srv import SetFace, SetString
+from charmie_interfaces.srv import SetFace, SetTextFace
 
 import subprocess
 import time
@@ -32,7 +32,7 @@ class FaceNode(Node):
         
         ### Services (Server) ###   
         self.server_face_command = self.create_service(SetFace, "face_command", self.callback_face_command) 
-        self.speech_to_face_command = self.create_service(SetString, "display_speech_face", self.callback_speech_to_face)
+        self.speech_to_face_command = self.create_service(SetTextFace, "display_speech_face", self.callback_speech_to_face)
         self.get_logger().info("Face Servers have been started")
 
         # whether or not it is intended to show the speech strings on the face while the robot talks
@@ -49,7 +49,7 @@ class FaceNode(Node):
         self.new_text_received_name = ""
         
         # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
-        self.AFTER_SPEECH_TIMER_SHORT = 0.15
+        self.AFTER_SPEECH_TIMER_SHORT = 0.2
         self.AFTER_SPEECH_TIMER_LONG = 1.0
         
         # sends initial face
@@ -82,7 +82,8 @@ class FaceNode(Node):
     def callback_speech_to_face(self, request, response):
         
         # Type of service received: 
-        # string data # informational, e.g. for error messages.
+        # string data     # informational, e.g. for error messages.
+        # bool long_pause # whether after showing in face, a long or a short pause should be added, for user easier reading
         # ---
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
@@ -96,7 +97,10 @@ class FaceNode(Node):
                 self.get_logger().info("FACE received (text) - %s" %request.data)
                 # print("Received Speech String:", command.data)
             else:
-                time.sleep(self.AFTER_SPEECH_TIMER)
+                if request.long_pause:
+                    time.sleep(self.AFTER_SPEECH_TIMER_LONG)
+                else:
+                    time.sleep(self.AFTER_SPEECH_TIMER_SHORT)
                 # after receiving the end of speech command, it sends to the face the latest face sent before the speech command
                 self.new_text_received = False
                 # print("Back to last face:", self.face.last_face_path)

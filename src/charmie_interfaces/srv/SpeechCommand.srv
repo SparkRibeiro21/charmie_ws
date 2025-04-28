@@ -1,11 +1,12 @@
 # Service to send commands to charmie speakers about the command to be played
 
-string filename     # name of audio file to be played
-string command      # if there is no filename, a command string can be sent to be played in real time 
-bool quick_voice    # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
-bool show_in_face   # whether or not it is intended for the speech command to be shown in the face
-bool breakable_play # if this command is inteded to be stopped by a following command
-bool break_play     # if a command is already playing, it stopps the previous command
+string filename                 # name of audio file to be played
+string command                  # if there is no filename, a command string can be sent to be played in real time 
+bool quick_voice                # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
+bool show_in_face               # whether or not it is intended for the speech command to be shown in the face
+bool long_pause_show_in_face    # whether after showing in face, a long or a short pause should be added, for user easier reading
+bool breakable_play             # if this command is inteded to be stopped by a following command
+bool break_play                 # if a command is already playing, it stopps the previous command
 ---
 bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages.

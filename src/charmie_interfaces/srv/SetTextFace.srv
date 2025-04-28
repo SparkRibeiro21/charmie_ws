@@ -1,0 +1,7 @@
+# Service to set the string to be shown in the face for easier understanding of the robot in noisy environments
+
+string data     # informational, e.g. for error messages.
+bool long_pause # whether after showing in face, a long or a short pause should be added, for user easier reading
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.
