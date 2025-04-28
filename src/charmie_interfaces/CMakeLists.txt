@@ -76,6 +76,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetNeckPosition.srv"
   "srv/SetPoseWithCovarianceStamped.srv"
   "srv/SetRGB.srv"
+  "srv/SetString.srv"
   "srv/SetTorso.srv"
   "srv/SpeechCommand.srv"
   "srv/TrackContinuous.srv"
