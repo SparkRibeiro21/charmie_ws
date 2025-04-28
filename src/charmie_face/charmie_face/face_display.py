@@ -23,9 +23,7 @@ class FaceNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
-        self.declare_parameter("after_speech_timer", 0.0) 
         self.declare_parameter("initial_face", "charmie_face") 
-
         
         self.home = str(Path.home())
         midpath_faces = "/charmie_ws/src/charmie_face/charmie_face/"
@@ -39,8 +37,6 @@ class FaceNode(Node):
 
         # whether or not it is intended to show the speech strings on the face while the robot talks
         self.SHOW_SPEECH = self.get_parameter("show_speech").value
-        # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
-        self.AFTER_SPEECH_TIMER = self.get_parameter("after_speech_timer").value
         # which face should be displayed after initialising the face node (string) 
         self.INITIAL_FACE = self.get_parameter("initial_face").value
         
@@ -49,6 +45,13 @@ class FaceNode(Node):
         self.new_face_received = False
         self.new_face_received_name = ""
 
+        self.new_text_received = False
+        self.new_text_received_name = ""
+        
+        # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
+        self.AFTER_SPEECH_TIMER_SHORT = 0.15
+        self.AFTER_SPEECH_TIMER_LONG = 1.0
+        
         # sends initial face
         self.image_to_face(self.INITIAL_FACE)
         # easier debug when testing custom faces 
@@ -75,7 +78,7 @@ class FaceNode(Node):
 
         return response
 
-    # Callback for all face commands received
+    # Receive speech strings to show in face
     def callback_speech_to_face(self, request, response):
         
         # Type of service received: 
@@ -86,30 +89,23 @@ class FaceNode(Node):
 
         print("Received (text):", request.data)
 
-
-        response.success = True
-        response.message = "Received and displayed text on face."
-
-        return response
-    
-
-    """
-    # Receive speech strings to show in face  
-    def callback_speech_to_face(self, command: String):
-
         if self.SHOW_SPEECH:
-            if command.data != "":
-                self.face.save_text_file(command.data)
-                self.get_logger().info("FACE received (text) - %s" %command.data)
+            if request.data != "":
+                self.new_text_received = True
+                self.new_text_received_name = request.data
+                self.get_logger().info("FACE received (text) - %s" %request.data)
                 # print("Received Speech String:", command.data)
             else:
                 time.sleep(self.AFTER_SPEECH_TIMER)
                 # after receiving the end of speech command, it sends to the face the latest face sent before the speech command
-                self.face.save_text_file(self.face.last_face_path)
+                self.new_text_received = False
                 # print("Back to last face:", self.face.last_face_path)
-    """
+        
+        response.success = True
+        response.message = "Received and displayed text on face."
 
-                
+        return response
+                    
     # Receive image or video files name to show in face
     def image_to_face(self, command):
         # self.get_logger().info("init image to face")
@@ -124,10 +120,6 @@ class FaceNode(Node):
                 correct_extension = file_extension
                 file_exists = True
         
-        
-        # self.get_logger().info("PASS  GET FILES")
-        
-
         if file_exists:
             self.get_logger().info("FACE received (standard) - %s" %command)
             # self.face.save_text_file("media/" + command)
@@ -135,7 +127,6 @@ class FaceNode(Node):
             self.new_face_received_name = self.media_faces_path + command + correct_extension
             return True, "Face received (standard) sucessfully displayed"
         
-            
         else:
             self.get_logger().error("FACE received (standard) does not exist! - %s" %command)
             return False, "FACE received (standard) does not exist."
@@ -196,6 +187,9 @@ class FaceMain():
         self.frame_index = 0
         self.clock = pygame.time.Clock()
         self.previous_image_extension = ""
+
+        self.font = pygame.font.SysFont("Comic Sans MS", 150)  # (font name, font size) – you can change!
+        self.font_color = (0, 0, 0)  # White color for the text
         
     def get_touchscreen_id(self, name_contains="touch"):
 
@@ -283,8 +277,54 @@ class FaceMain():
             pass
 
         self.previous_image_extension = file_extension
+    
+    def wrap_text(self, text, font, max_width):
+        words = text.split(' ')
+        lines = []
+        current_line = ''
 
+        for word in words:
+            # Check the width if we add the next word
+            test_line = current_line + ' ' + word if current_line else word
+            if font.size(test_line)[0] <= max_width:
+                current_line = test_line
+            else:
+                lines.append(current_line)
+                current_line = word
 
+        if current_line:
+            lines.append(current_line)
+
+        return lines
+        
+    def add_text_to_face(self):
+        
+        # Wrap the text into multiple lines
+        lines = self.wrap_text(self.node.new_text_received_name, self.font, self.resolution[0] - 50)  # 50 pixels margin
+
+        # First render all lines into surfaces
+        rendered_lines = []
+        max_width = 0
+        total_height = 0
+
+        for line in lines:
+            surface = self.font.render(line, True, self.font_color)
+            rect = surface.get_rect()
+            rendered_lines.append((surface, rect))
+            max_width = max(max_width, rect.width)
+            total_height += rect.height
+
+        # Calculate start position for vertical centering
+        start_y = (self.resolution[1] - total_height) // 2
+
+        # Draw all lines centered
+        current_y = start_y
+        for surface, rect in rendered_lines:
+            rect.centerx = self.resolution[0] // 2
+            rect.top = current_y
+            self.SCREEN.blit(surface, rect)
+            current_y += rect.height
+                
     def main(self):
         
         while self.running:
@@ -293,20 +333,26 @@ class FaceMain():
                 if event.type == pygame.QUIT:
                     self.running = False
             
-            if self.node.new_face_received:
-                self.update_received_face()
-                self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
+            if self.node.new_text_received:
+                self.SCREEN.fill((216, 231, 240))  # clear screen (black background)
+                self.add_text_to_face()
+                pygame.display.update()
+                
+            else:
+                if self.node.new_face_received:
+                    self.update_received_face()
+                    self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
 
-            if self.gif_flag:
-                self.SCREEN.blit(self.gif_frames[self.frame_index], (0, 0))
-                pygame.display.update()
-                self.frame_index = (self.frame_index + 1) % len(self.gif_frames)
-                if self.frame_index == 0: # needs this line to avoid a blank frame everytime the gif resets
-                    self.frame_index = 1
-                # print(self.frame_index)
-                self.clock.tick(30)
-            elif self.previous_image_extension != "": # use self.previous_image_extension for initial case
-                self.SCREEN.blit(self.image, (0, 0))
-                pygame.display.update()
+                if self.gif_flag:
+                    self.SCREEN.blit(self.gif_frames[self.frame_index], (0, 0))
+                    pygame.display.update()
+                    self.frame_index = (self.frame_index + 1) % len(self.gif_frames)
+                    if self.frame_index == 0: # needs this line to avoid a blank frame everytime the gif resets
+                        self.frame_index = 1
+                    # print(self.frame_index)
+                    self.clock.tick(30)
+                elif self.previous_image_extension != "": # use self.previous_image_extension for initial case
+                    self.SCREEN.blit(self.image, (0, 0))
+                    pygame.display.update()
 
         pygame.quit()
