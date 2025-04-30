@@ -1,0 +1,44 @@
+ekf_filter_node:
+  ros__parameters:
+    frequency: 20.0
+    sensor_timeout: 0.1
+
+    two_d_mode: true
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+
+    publish_tf: true
+    publish_acceleration: false
+
+    # Wheel Odometry
+    odom0: /wheel_encoders
+    odom0_config: [true, true, false,
+                   false, false, true,
+                   true, true, false,
+                   false, false, true]
+    odom0_differential: false
+    odom0_relative: false
+
+    # IMU
+    imu0: /imu_base
+    imu0_config: [false, false, false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, true]
+    imu0_differential: false
+    imu0_relative: false
+    # imu0_remove_gravitational_acceleration: true
+
+    # RF2O LiDAR Odometry
+    odom1: /rf2o_laser_odometry/odom
+    odom1_config: [true, true, false,
+                  false, false, true,
+                   true, true, false,
+                   false, false, true]
+    odom1_differential: true
+    odom1_relative: false
+
+    print_diagnostics: true

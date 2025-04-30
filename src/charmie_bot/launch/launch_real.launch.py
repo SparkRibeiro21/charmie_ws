@@ -169,12 +169,6 @@ def generate_launch_description():
                       name = 'ps4_controller',
                       )
     
-    #create node odometry
-    odometry = Node(package='charmie_odometry',
-                      executable='odometry',
-                      name = 'odometry',
-                      )
-    
     #create node obstacles
     obstacles = Node(package='charmie_obstacles',
                       executable='obstacles',

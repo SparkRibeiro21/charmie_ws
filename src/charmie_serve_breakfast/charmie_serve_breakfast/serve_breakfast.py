@@ -16,17 +16,18 @@ ros2_modules = {
     "charmie_face":             False,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
+    "charmie_base_camera":      False,
     "charmie_lidar":            False,
+    "charmie_lidar_bottom":     False,
     "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        False,
     "charmie_navigation":       False, # 
+    "charmie_nav2":             True,
     "charmie_neck":             False,
-    "charmie_obstacles":        False, # 
-    "charmie_odometry":         False, #
-    "charmie_point_cloud":      False,
+    "charmie_obstacles":        False, #
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         False,
+    "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -100,6 +101,8 @@ class TaskMain():
         # Initial Position
         self.initial_position = self.robot.get_navigation_coords_from_furniture("Entrance")
         print(self.initial_position)
+        # self.initial_position = [1.8, -4.15, 0.0] # temp (near Tiago desk for testing)
+        self.initial_position = [2.0, -4.15, 90.0] # temp (near Tiago desk for testing)
         # Navigation Positions
         self.front_of_door = [0.0, 1.5] 
         self.cofee_table = [-0.4, 3.5]
@@ -128,9 +131,71 @@ class TaskMain():
 
             if self.state == self.Waiting_for_task_start:
 
-                self.robot.set_initial_position(self.initial_position)
+
+                self.robot.wait_for_start_button()
+
+                while True:
+
+                    print(self.robot.get_low_level_buttons())
+
+                    print(self.robot.get_orientation_yaw())
+
+                    print(self.robot.get_vccs())
+
+                    print(self.robot.get_torso_position())
+
+                    time.sleep(0.1)
+
+                # self.robot.set_initial_position(self.initial_position)
 
                 print("Set Initial Position: DONE")
+
+                """ 
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/entrance", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("Entrance"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
+
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/couch", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("Couch"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
+
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/reading_chair", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("Reading Chair"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
+
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/bench", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("Bench"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
+
+                time.sleep(3.0)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/tv_table", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("TV Table"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                print("BACK IN LOOP")
+                """
+
+                time.sleep(3.0)
+                move_coords = []
+                move_coords.append(self.robot.get_navigation_coords_from_furniture("Exit"))
+                move_coords.append(self.robot.get_navigation_coords_from_room("Hallway"))
+                move_coords.append(self.robot.get_navigation_coords_from_furniture("Entrance"))
+                move_coords.append(self.robot.get_navigation_coords_from_room("Kitchen"))
+                move_coords.append(self.robot.get_navigation_coords_from_furniture("Dishwasher"))
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.move_to_position_follow_waypoints(move_coords=move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True)
 
                 while True:
                     pass
@@ -184,7 +249,7 @@ class TaskMain():
 
                     object_in_gripper = False
                     while not object_in_gripper:
-                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_furniture=False)
                         object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                         if not object_in_gripper:
                             self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
@@ -244,7 +309,7 @@ class TaskMain():
 
                     object_in_gripper = False
                     while not object_in_gripper:
-                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
                         
                         if self.IS_CORNFLAKES_BIG:
                             object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, alternative_help_pick_face="help_pick_cornflakes1", bb_color=(0, 255, 0))
@@ -289,8 +354,8 @@ class TaskMain():
                     correct_object_spoon = DetectedObject()
                     while not object_in_gripper:
 
-                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
-                        # objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_furniture=False)
+                        # objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_furniture=False)
                     
                         for of in objects_found:
                             print(of.object_name.lower(), of.index)

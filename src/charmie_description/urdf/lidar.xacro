@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-    <xacro:property name="lidar_height_from_base" value="0.3" />
+    <xacro:property name="lidar_height_from_base" value="0.34" />
     <xacro:property name="lidar_dist_from_base_limit" value="0.015" />
 
     <joint name="laser_joint" type="fixed">

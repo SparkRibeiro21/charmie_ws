@@ -2,35 +2,38 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
 
-    <xacro:property name="camera_height_from_base" value="0.4" />
-    <xacro:property name="camera_dist_from_base_limit" value="0.0" />
+    <xacro:property name="camera_height_from_base" value="0.25" />
+    <xacro:property name="camera_dist_from_base_limit" value="0.01" />
 
     <xacro:property name="base_camera_length" value="0.04" />
     <xacro:property name="base_camera_width" value="0.165" />
     <xacro:property name="base_camera_height" value="0.03" />
 
+    <xacro:property name="yy_shift_for_optical_frame" value="-0.05" />
+    <xacro:property name="yaw_shift_for_optical_frame" value="0.05" />
+
     <joint name="base_camera_joint" type="fixed">
         <parent link="base_link"/>
         <child link="base_camera_link"/>
-        <origin xyz="${(base_length/2-camera_dist_from_base_limit)} 0 ${camera_height_from_base}" rpy="0 0 0"/>
+        <origin xyz="${(base_length/2-camera_dist_from_base_limit)} ${yy_shift_for_optical_frame} ${camera_height_from_base}" rpy="0 0 ${yaw_shift_for_optical_frame}"/>
     </joint>
 
     <link name="base_camera_link">
         <visual>
-            <origin xyz="${-head_camera_length/2} 0 0" rpy="0 0 0"/>
+            <origin xyz="${-base_camera_length/2} ${-yy_shift_for_optical_frame} 0" rpy="0 0 ${-yaw_shift_for_optical_frame}"/>
             <geometry>
-                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
+                <box size="${base_camera_length} ${base_camera_width} ${base_camera_height}" />
             </geometry>
             <material name="grey"/>
         </visual>
         <collision>
-            <origin xyz="${-head_camera_length/2} 0 0" rpy="0 0 0"/>
+            <origin xyz="${-base_camera_length/2} ${-yy_shift_for_optical_frame} 0" rpy="0 0 ${-yaw_shift_for_optical_frame}"/>
             <geometry>
-                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
+                <box size="${base_camera_length} ${base_camera_width} ${base_camera_height}" />
             </geometry>
         </collision>
-        <xacro:inertial_box mass="0.5" x="${head_camera_length}" y="${head_camera_width}" z="${head_camera_height}" >
-            <origin xyz="${-head_camera_length/2} 0 0" rpy="0 0 0"/>
+        <xacro:inertial_box mass="0.5" x="${base_camera_length}" y="${base_camera_width}" z="${base_camera_height}" >
+            <origin xyz="${-base_camera_length/2} ${-yy_shift_for_optical_frame} 0" rpy="0 0 ${-yaw_shift_for_optical_frame}"/>
         </xacro:inertial_box>
     </link>
 

@@ -1,16 +1,20 @@
 # import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
+from rclpy.action.client import ClientGoalHandle, GoalStatus
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
-from example_interfaces.msg import Bool, String, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point
+from example_interfaces.msg import Bool, String, Int16, Float32
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped
 from sensor_msgs.msg import Image
+from nav2_msgs.action import NavigateToPose, FollowWaypoints
+from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
-    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask
+    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
-    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, GetPointCloudBB, SetAcceleration, NodesUsed, ContinuousGetAudio, \
-    SetRGB, GetVCCs, GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking
-
+    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, \
+    GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking, SetPoseWithCovarianceStamped
+from charmie_point_cloud.point_cloud_class import PointCloud
 import cv2 
 # import threading
 import time
@@ -60,18 +64,20 @@ class ROS2TaskNode(Node):
         except:
             self.get_logger().error("Could NOT import data from json configuration files.")
 
-        # Intel Realsense Subscribers 
-        # Head Camera
-        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-        self.aligned_depth_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_head_callback, 10)
-        # Hand Camera
-        self.color_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/color/image_rect_raw", self.get_color_image_hand_callback, 10)
-        self.aligned_depth_image_hand_subscriber = self.create_subscription(Image, "/CHARMIE/D405_hand/aligned_depth_to_color/image_raw", self.get_aligned_depth_image_hand_callback, 10)  
+        ### Class ###
+        self.point_cloud = PointCloud()
+
+        ### TOPICS ###
+        # Intel Realsense Subscribers (RGBD) Head and Hand Cameras
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+        self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
+        # Orbbec Camera (Base)
+        self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
+        self.aligned_depth_image_base_subscriber = self.create_subscription(Image, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
-        self.objects_filtered_hand_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered_hand', self.object_detected_filtered_hand_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
@@ -94,6 +100,10 @@ class ROS2TaskNode(Node):
         # Low level
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for ps4 controller
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for ps4 controller
+        self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
+        self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
+        self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", self.torso_low_level_callback, 10)
+        self.orientation_low_level_subscriber = self.create_subscription(Float32, "orientation_low_level", self.orientation_callback, 10)
         # Neck
         self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
         # Tracking
@@ -117,7 +127,6 @@ class ROS2TaskNode(Node):
         self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
         self.neck_continuous_tracking_client = self.create_client(TrackContinuous, "set_continuous_tracking")
-        
         # Yolo Pose
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
@@ -128,15 +137,14 @@ class ROS2TaskNode(Node):
         self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
-        # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
         # Low level
-        self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
+        # self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
-        self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
-        self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
-        self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
+        # self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
+        # self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
+        # self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
+        self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
         # GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
@@ -147,7 +155,11 @@ class ROS2TaskNode(Node):
         # Tracking (SAM2)
         self.activate_tracking_client = self.create_client(ActivateTracking, "activate_tracking")
 
+        ### Actions (Clients) ###
+        self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
+        self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
     
+
         self.send_node_used_to_gui()
 
         """
@@ -156,15 +168,16 @@ class ROS2TaskNode(Node):
             "charmie_face":             True,
         "charmie_head_camera":      True,
         "charmie_hand_camera":      True,
+        "charmie_base_camera":      False,
         "charmie_lidar":            True,
+        "charmie_lidar_bottom":     False,
             "charmie_llm":              False,
         "charmie_localisation":     False,
             "charmie_low_level":        True,
             "charmie_navigation":       True,
+            "charmie_nav2":             False,
             "charmie_neck":             True,
             "charmie_obstacles":        True,
-        "charmie_odometry":         True,
-            "charmie_point_cloud":      True,
         "charmie_ps4_controller":   False,
             "charmie_speakers":         True,
             "charmie_tracking":        False,
@@ -196,14 +209,17 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for GPSR Server LLM ...")
 
         if self.ros2_modules["charmie_low_level"]:
-            while not self.set_acceleration_ramp_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Low Level Acceleration Command...")
             while not self.set_rgb_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Low Level RGB Command...")
+                self.get_logger().warn("Waiting for Server Low Level ...")
 
         if self.ros2_modules["charmie_navigation"]:
             while not self.nav_trigger_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+
+        if self.ros2_modules["charmie_nav2"]:
+            while not self.nav2_client_.server_is_ready():
+                self.get_logger().warn("Waiting for Server Nav2 Trigger Command...")
+                time.sleep(1.0)
 
         if self.ros2_modules["charmie_neck"]:
             while not self.set_neck_position_client.wait_for_service(1.0):
@@ -220,10 +236,6 @@ class ROS2TaskNode(Node):
         if self.ros2_modules["charmie_obstacles"]:
             while not self.activate_obstacles_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
-
-        if self.ros2_modules["charmie_point_cloud"]:
-            while not self.point_cloud_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Point Cloud...")
 
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
@@ -258,11 +270,10 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
-        self.waited_for_end_of_get_vccs = False
-        self.waited_for_end_of_get_low_level_buttons = False
-        self.waited_for_end_of_get_torso_position = False
+        # self.waited_for_end_of_get_vccs = False
+        # self.waited_for_end_of_get_low_level_buttons = False
+        # self.waited_for_end_of_get_torso_position = False
         self.waited_for_end_of_set_torso_position = False
-        self.waiting_for_pcloud = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
@@ -270,18 +281,20 @@ class ROS2TaskNode(Node):
         self.br = CvBridge()
         self.rgb_head_img = Image()
         self.rgb_hand_img = Image()
+        self.rgb_base_img = Image()
         self.depth_head_img = Image()
         self.depth_hand_img = Image()
+        self.depth_base_img = Image()
         self.first_rgb_head_image_received = False
         self.first_rgb_hand_image_received = False
+        self.first_rgb_base_image_received = False
         self.first_depth_head_image_received = False
         self.first_depth_hand_image_received = False
+        self.first_depth_base_image_received = False
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
-        self.detected_objects_hand = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
-        self.point_cloud_response = GetPointCloudBB.Response()
         self.obstacles = Obstacles()
         self.ps4_controller_state = PS4Controller()
         self.new_object_frame_for_tracking = False
@@ -337,19 +350,34 @@ class ROS2TaskNode(Node):
         self.audio_command = ""
         self.received_continuous_audio = False
 
+        self.CAM_IMAGE_WIDTH = 848
+        self.CAM_IMAGE_HEIGHT = 480
+
         self.get_neck_position = [1.0, 1.0]
-        self.legs_position = 0.0
-        self.torso_position = 0.0
-        self.battery_voltage = 0.0
-        self.emergency_stop = False
-        self.start_button  = False
-        self.debug_button1 = False
-        self.debug_button2 = False
-        self.debug_button3 = False
+        self.torso_position = TorsoPosition()
+        self.vccs = VCCsLowLevel()
+        self.buttons_low_level = ButtonsLowLevel()
+        self.orientation_yaw = 0.0
+        # self.legs_position = 0.0
+        # self.torso_position = 0.0
+        # self.battery_voltage = 0.0
+        # self.emergency_stop = False
+        # self.start_button  = False
+        # self.debug_button1 = False
+        # self.debug_button2 = False
+        # self.debug_button3 = False
         self.new_controller_msg = False
         self.llm_demonstration_response = ""
         self.llm_confirm_command_response = ""
         self.llm_gpsr_response = ListOfStrings()
+
+        self.nav2_goal_accepted = False
+        self.nav2_feedback = NavigateToPose.Feedback()
+        self.nav2_status = GoalStatus.STATUS_UNKNOWN
+        self.nav2_follow_waypoints_goal_accepted = False
+        self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
+        self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+
 
     def send_node_used_to_gui(self):
 
@@ -360,15 +388,16 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_face             = self.ros2_modules["charmie_face"]
         nodes_used.charmie_head_camera      = self.ros2_modules["charmie_head_camera"]
         nodes_used.charmie_hand_camera      = self.ros2_modules["charmie_hand_camera"]
+        nodes_used.charmie_base_camera      = self.ros2_modules["charmie_base_camera"]
         nodes_used.charmie_lidar            = self.ros2_modules["charmie_lidar"]
+        nodes_used.charmie_lidar_bottom     = self.ros2_modules["charmie_lidar_bottom"]
         nodes_used.charmie_localisation     = self.ros2_modules["charmie_localisation"]
         nodes_used.charmie_low_level        = self.ros2_modules["charmie_low_level"]
         nodes_used.charmie_llm              = self.ros2_modules["charmie_llm"]
         nodes_used.charmie_navigation       = self.ros2_modules["charmie_navigation"]
+        nodes_used.charmie_nav2             = self.ros2_modules["charmie_nav2"]
         nodes_used.charmie_neck             = self.ros2_modules["charmie_neck"]
         nodes_used.charmie_obstacles        = self.ros2_modules["charmie_obstacles"]
-        nodes_used.charmie_odometry         = self.ros2_modules["charmie_odometry"]
-        nodes_used.charmie_point_cloud      = self.ros2_modules["charmie_point_cloud"]
         nodes_used.charmie_ps4_controller   = self.ros2_modules["charmie_ps4_controller"]
         nodes_used.charmie_speakers         = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_tracking         = self.ros2_modules["charmie_tracking"]
@@ -390,28 +419,27 @@ class ROS2TaskNode(Node):
         self.detected_objects = det_object
         self.new_object_frame_for_tracking = True
 
-    def object_detected_filtered_hand_callback(self, det_object: ListOfDetectedObject):
-        self.detected_objects_hand = det_object
-
-    def get_color_image_head_callback(self, img: Image):
-        self.rgb_head_img = img
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        self.rgb_head_img = rgbd.rgb
         self.first_rgb_head_image_received = True
-        # print("Received HEAD RGB Image")
-
-    def get_color_image_hand_callback(self, img: Image):
-        self.rgb_hand_img = img
-        self.first_rgb_hand_image_received = True
-        # print("Received HAND RGB Image")   
-    
-    def get_aligned_depth_image_head_callback(self, img: Image):
-        self.depth_head_img = img
+        self.depth_head_img = rgbd.depth
         self.first_depth_head_image_received = True
-        # print("Received HEAD Depth Image")
+        # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
-    def get_aligned_depth_image_hand_callback(self, img: Image):
-        self.depth_hand_img = img
+    def get_rgbd_hand_callback(self, rgbd: RGBD):
+        self.rgb_hand_img = rgbd.rgb
+        self.first_rgb_hand_image_received = True
+        self.depth_hand_img = rgbd.depth
         self.first_depth_hand_image_received = True
-        # print("Received HAND Depth Image")
+        # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_color_image_base_callback(self, img: Image):
+        self.rgb_base_img = img
+        self.first_rgb_base_image_received = True
+
+    def get_depth_base_image_callback(self, img: Image):
+        self.depth_base_img = img
+        self.first_depth_base_image_received = True
 
     ### OBSTACLES
     def obstacles_callback(self, obs: Obstacles):
@@ -448,22 +476,20 @@ class ROS2TaskNode(Node):
         self.tracking_mask = mask
         self.new_tracking_mask_msg = True
 
-    # request point cloud information from point cloud node
-    def call_point_cloud_server(self, request=GetPointCloudBB.Request()):
-    
-        future = self.point_cloud_client.call_async(request)
-        future.add_done_callback(self.callback_call_point_cloud)
+    ### Low Level ###
+    def buttons_low_level_callback(self, buttons: ButtonsLowLevel):
+        self.buttons_low_level = buttons
 
-    def callback_call_point_cloud(self, future):
+    def vccs_low_level_callback(self, vccs: VCCsLowLevel):
+        self.vccs = vccs
 
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            self.point_cloud_response = future.result()
-            self.waiting_for_pcloud = False
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
+    def torso_low_level_callback(self, torso: TorsoPosition):
+        self.torso_position = torso
+
+    def orientation_callback(self, orientation: Float32):
+        self.orientation_yaw = orientation.data
+
+    ### SERVICES ###
 
     ### ACTIVATE YOLO POSE SERVER FUNCTIONS ###
     def call_activate_yolo_pose_server(self, request=ActivateYoloPose.Request()):
@@ -798,6 +824,7 @@ class ROS2TaskNode(Node):
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
+    """
     def call_vccs_command_server(self, request=GetVCCs.Request()):
     
         future = self.get_vccs_client.call_async(request)
@@ -857,7 +884,7 @@ class ROS2TaskNode(Node):
             self.waited_for_end_of_get_torso_position = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
-
+    """
     def call_set_torso_position_server(self, request=SetTorso.Request()):
     
         future = self.set_torso_position_client.call_async(request)
@@ -881,6 +908,11 @@ class ROS2TaskNode(Node):
     
         future = self.activate_motors_client.call_async(request)
         future.add_done_callback(self.callback_call_activate_motors)
+
+    def call_internal_set_initial_position_define_north_command_server(self, request=SetPoseWithCovarianceStamped.Request(), wait_for_end_of=True):
+
+        self.internal_set_initial_position_define_north_client.call_async(request)
+        
         
     def callback_call_activate_motors(self, future): 
 
@@ -956,8 +988,99 @@ class ROS2TaskNode(Node):
         self.amcl_pose = msg
         self.new_amcl_pose_msg = True
 
+    ### Nav2 Action Client ###
+    # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
+
+    def nav2_client_goal_response_callback(self, future):
+        self.goal_handle_:ClientGoalHandle = future.result()
+        if self.goal_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.goal_handle_.get_result_async().add_done_callback(self.nav2_client_goal_result_callback)
+            self.nav2_goal_accepted = True
+        else:
+            self.get_logger().warn("Goal rejected.")
+
+    def nav2_client_cancel_goal(self):
+        self.get_logger().info("Canceling goal...")
+        # Not implemented yet
+        # self.goal_handle_.cancel_goal_async() # Not ideal, but just to test, goal_handle_ is only defined in goal_response_callback
+        # self.timer_.cancel()
+
+    def nav2_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.nav2_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.nav2_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.nav2_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+            
+        # self.get_logger().info(f"Result: {result.reached_number}")
+
+    def nav2_client_goal_feedback_callback(self, feedback_msg):
+        self.nav2_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+        # current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+        # current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+        # no_recoveries = str(feedback.number_of_recoveries)
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
 
 
+    # Navigate through poses
+
+    def nav2_follow_waypoints_client_goal_response_callback(self, future):
+        self.goal_follow_waypoints_handle_:ClientGoalHandle = future.result()
+        if self.goal_follow_waypoints_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.goal_follow_waypoints_handle_.get_result_async().add_done_callback(self.nav2_follow_waypoints_client_goal_result_callback)
+            self.nav2_follow_waypoints_goal_accepted = True
+        else:
+            self.get_logger().warn("Goal rejected.")
+
+    def nav2_follow_waypoints_client_cancel_goal(self):
+        self.get_logger().info("Canceling goal...")
+        # Not implemented yet
+        # self.goal_follow_waypoints_handle_.cancel_goal_async() # Not ideal, but just to test, goal_follow_waypoints_handle_ is only defined in goal_response_callback
+        # self.timer_.cancel()
+
+    def nav2_follow_waypoints_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.nav2_follow_waypoints_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.nav2_follow_waypoints_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.nav2_follow_waypoints_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+            
+        # self.get_logger().info(f"Result: {result.reached_number}")
+
+    def nav2_follow_waypoints_client_goal_feedback_callback(self, feedback_msg):
+        self.nav2_follow_waypoints_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+        # current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+        # current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+        # no_recoveries = str(feedback.number_of_recoveries)
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
 
 
 
@@ -977,13 +1100,14 @@ class RobotStdFunctions():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
-    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause_show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 
         request = SpeechCommand.Request()
         request.filename = filename
         request.command = command
         request.quick_voice = quick_voice
         request.show_in_face = show_in_face
+        request.long_pause_show_in_face = long_pause_show_in_face
         request.breakable_play = breakable_play
         request.break_play = break_play
 
@@ -996,7 +1120,7 @@ class RobotStdFunctions():
 
         return self.node.speech_success, self.node.speech_message
     
-    def save_speech(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True):
+    def save_speech(self, filename="", command="", quick_voice=False, play_command=False, show_in_face=False, long_pause_show_in_face=False, wait_for_end_of=True):
 
         # the commands should be lists, because you can send a list of commands and a list of filenames,
         # making it possible to create multiple temp commands with one instruction
@@ -1018,6 +1142,7 @@ class RobotStdFunctions():
             request.quick_voice = quick_voice
             request.play_command = play_command
             request.show_in_face = show_in_face
+            request.long_pause_show_in_face = long_pause_show_in_face
 
             self.node.call_save_speech_command_server(request=request, wait_for_end_of=wait_for_end_of)
             
@@ -1043,42 +1168,26 @@ class RobotStdFunctions():
         return self.node.rgb_success, self.node.rgb_message
 
     def get_vccs(self, wait_for_end_of=True):
+
+        return self.node.vccs.battery_voltage, self.node.vccs.emergency_stop
     
-        request=GetVCCs.Request()
-
-        self.node.call_vccs_command_server(request=request)
-        
-        if wait_for_end_of:
-          while not self.node.waited_for_end_of_get_vccs:
-            pass
-        self.node.waited_for_end_of_get_vccs = False
-
-        return self.node.battery_voltage, self.node.emergency_stop 
-
     def get_low_level_buttons(self, wait_for_end_of=True):
-    
-        request=GetLowLevelButtons.Request()
 
-        self.node.call_low_level_buttons_command_server(request=request)
+        return self.node.buttons_low_level.start_button, self.node.buttons_low_level.debug_button1, self.node.buttons_low_level.debug_button2, self.node.buttons_low_level.debug_button3
         
-        if wait_for_end_of:
-          while not self.node.waited_for_end_of_get_low_level_buttons:
-            pass
-        self.node.waited_for_end_of_get_low_level_buttons = False
-
-        return self.node.start_button, self.node.debug_button1, self.node.debug_button2, self.node.debug_button3 
-
     def wait_for_start_button(self):
-
+        
         self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
         
-        start_button_state = False
+        print("Waiting for Start Button...")
+        while not self.node.buttons_low_level.start_button:
+            time.sleep(0.05)
+        print("Start Button Pressed")
 
-        while not start_button_state:
-            start_button_state, d1b, d2b, d3b = self.get_low_level_buttons()
-            print("Start Button State:", start_button_state)
-            time.sleep(0.1)
+    def get_orientation_yaw(self, wait_for_end_of=True):
 
+        return self.node.orientation_yaw
+        
     def wait_for_door_start(self):
         
         self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
@@ -1142,18 +1251,9 @@ class RobotStdFunctions():
         return self.node.torso_success, self.node.torso_message
     
     def get_torso_position(self,  wait_for_end_of=True):
+
+        return self.node.torso_position.legs_position, self.node.torso_position.torso_position
     
-        request=GetTorso.Request()
-
-        self.node.call_get_torso_position_server(request=request)
-        
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_get_torso_position:
-                pass
-        self.node.waited_for_end_of_get_torso_position = False
-
-        return self.node.legs_position, self.node.torso_position
-
     def get_audio(self, yes_or_no=False, receptionist=False, gpsr=False, restaurant=False, question="", max_attempts=0, face_hearing="charmie_face_green", wait_for_end_of=True):
 
         if yes_or_no or receptionist or gpsr or restaurant:
@@ -1325,18 +1425,17 @@ class RobotStdFunctions():
 
         return self.node.activate_yolo_pose_success, self.node.activate_yolo_pose_message
 
-    def activate_yolo_objects(self, activate_objects=False, activate_shoes=False, activate_doors=False, activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False, minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_objects(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5, wait_for_end_of=True):
         
         request = ActivateYoloObjects.Request()
-        request.activate_objects = activate_objects
-        request.activate_shoes = activate_shoes
-        request.activate_doors = activate_doors
-        request.activate_objects_hand = activate_objects_hand
-        request.activate_shoes_hand = activate_shoes_hand
-        request.activate_doors_hand = activate_doors_hand
-        request.minimum_objects_confidence = float(minimum_objects_confidence)
-        request.minimum_shoes_confidence = float(minimum_shoes_confidence)
-        request.minimum_doors_confidence = float(minimum_doors_confidence)
+        request.activate_objects             = activate_objects
+        request.activate_furniture           = activate_furniture
+        request.activate_objects_hand        = activate_objects_hand
+        request.activate_furniture_hand      = activate_furniture_hand
+        request.activate_objects_base        = activate_objects_base
+        request.activate_furniture_base      = activate_furniture_base
+        request.minimum_objects_confidence   = float(minimum_objects_confidence)
+        request.minimum_furniture_confidence = float(minimum_furniture_confidence)
 
         self.node.call_activate_yolo_objects_server(request=request)
 
@@ -1537,9 +1636,165 @@ class RobotStdFunctions():
                     self.node.new_amcl_pose_msg = False
                     initial_pose_correctly_received_by_nav2 = False
 
+            # Internal definition of NORTH for standardization of orientation from low_level  
+            request = SetPoseWithCovarianceStamped.Request()
+            request.pose = initial_pose
+            self.node.call_internal_set_initial_position_define_north_command_server(request=request)
+
         else:
 
             print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
+
+    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        # Whether the nav2 goal has been successfully completed until the end
+        nav2_goal_completed = False
+
+        # Create a goal
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose.header.frame_id = "map"
+        goal_msg.pose.header.stamp = self.node.get_clock().now().to_msg()
+        goal_msg.pose.pose.position.x = float(move_coords[0])
+        goal_msg.pose.pose.position.y = float(move_coords[1])
+        goal_msg.pose.pose.position.z = float(0.0)
+        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(move_coords[2]))        
+        goal_msg.pose.pose.orientation.x = q_x
+        goal_msg.pose.pose.orientation.y = q_y
+        goal_msg.pose.pose.orientation.z = q_z
+        goal_msg.pose.pose.orientation.w = q_w
+
+        while not nav2_goal_completed:
+                
+            self.node.nav2_goal_accepted = False
+            self.node.nav2_status = GoalStatus.STATUS_UNKNOWN
+
+            # Makes sure goal is accepted, and if not attempts to resend it
+            while not self.node.nav2_goal_accepted:
+                
+                self.node.get_logger().info("Waiting for nav2 server...")
+                self.node.nav2_client_.wait_for_server()
+                self.node.get_logger().info("Nav2 server is ON...")
+
+                # Send the goal
+                self.node.get_logger().info("Sending goal...")
+                self.node.nav2_client_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_client_goal_feedback_callback).add_done_callback(self.node.nav2_client_goal_response_callback)
+                self.node.get_logger().info("Goal Sent")
+
+                time.sleep(0.5)
+
+
+            if wait_for_end_of:
+
+                timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                start_time = time.time()
+
+                while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
+                    
+                    if print_feedback:
+
+                        if time.time() - start_time > timer_period:
+
+                            # prints de feedback
+                            feedback = self.node.nav2_feedback
+                            current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                            current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                            current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+                            navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                            estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                            no_recoveries = str(feedback.number_of_recoveries)
+                            distance_remaining = str(round(feedback.distance_remaining, 2))
+                            print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                            # self.get_logger().info(f"Feedback: {feedback}")
+                            
+                            start_time = time.time()
+
+                
+                if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
+                    print("FINISHED TR SUCCEEDED")
+                    nav2_goal_completed = True                
+                elif self.node.nav2_status == GoalStatus.STATUS_ABORTED:
+                    print("FINISHED TR ABORTED")
+                    print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
+                    print("FINISHED TR CANCELED")
+                    print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+
+    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        # Whether the nav2 goal has been successfully completed until the end
+        nav2_goal_completed = False
+
+        if move_coords:
+
+            goal_msg = FollowWaypoints.Goal()
+            goal_msg.poses = []
+
+            for x, y, yaw in move_coords: 
+                
+                pose = PoseStamped()
+                pose.header.frame_id = "map"
+                pose.header.stamp = self.node.get_clock().now().to_msg()
+                pose.pose.position.x = float(x)
+                pose.pose.position.y = float(y)
+                pose.pose.position.z = float(0.0)
+                q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(yaw)) # math.radians(initial_position[2]))        
+                pose.pose.orientation.x = q_x
+                pose.pose.orientation.y = q_y
+                pose.pose.orientation.z = q_z
+                pose.pose.orientation.w = q_w
+                
+                goal_msg.poses.append(pose)
+                    
+            while not nav2_goal_completed:
+                    
+                self.node.nav2_follow_waypoints_goal_accepted = False
+                self.node.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+
+                # Makes sure goal is accepted, and if not attempts to resend it
+                while not self.node.nav2_follow_waypoints_goal_accepted:
+                    
+                    self.node.get_logger().info("Waiting for nav2 server...")
+                    self.node.nav2_client_follow_waypoints_.wait_for_server()
+                    self.node.get_logger().info("Nav2 server is ON...")
+
+                    # Send the goal
+                    self.node.get_logger().info("Sending goal...")
+                    self.node.nav2_client_follow_waypoints_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_follow_waypoints_client_goal_feedback_callback).add_done_callback(self.node.nav2_follow_waypoints_client_goal_response_callback)
+                    self.node.get_logger().info("Goal Sent")
+
+                    time.sleep(0.5)
+
+
+                if wait_for_end_of:
+
+                    timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                    start_time = time.time()
+
+                    while self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
+                        
+                        if print_feedback:
+
+                            if time.time() - start_time > timer_period:
+
+                                # prints de feedback
+                                feedback = self.node.nav2_follow_waypoints_feedback
+                                current_waypoint = str(feedback.current_waypoint)
+                                
+                                self.node.get_logger().info(f"Current Waypoint: {current_waypoint}")
+                                # self.node.get_logger().info(f"Feedback: {feedback}")
+                                
+                                start_time = time.time()
+
+                    
+                    if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+                        print("FINISHED TR SUCCEEDED")
+                        nav2_goal_completed = True                
+                    elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_ABORTED:
+                        print("FINISHED TR ABORTED")
+                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                    elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
+                        print("FINISHED TR CANCELED")
+                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
 
     def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
@@ -1644,8 +1899,8 @@ class RobotStdFunctions():
                     
                     if same_person_ctr > 0:
 
-                        same_person_old_distance_center = abs(1280/2 - same_person_old.body_center_x) 
-                        same_person_new_distance_center = abs(1280/2 - same_person_new.body_center_x) 
+                        same_person_old_distance_center = abs(self.node.CAM_IMAGE_WIDTH/2 - same_person_old.body_center_x) 
+                        same_person_new_distance_center = abs(self.node.CAM_IMAGE_WIDTH/2 - same_person_new.body_center_x) 
 
                         # print("OLD (pixel):", same_person_old.body_center_x, same_person_old_distance_center)
                         # print("NEW (pixel):", same_person_new.body_center_x, same_person_new_distance_center)
@@ -1703,7 +1958,7 @@ class RobotStdFunctions():
         
         return face_path
 
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_shoes=False, detect_furniture=False, detect_objects_hand=False, detect_shoes_hand=False, detect_furniture_hand=False):
+    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -1733,9 +1988,10 @@ class RobotStdFunctions():
             objects_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=detect_objects, activate_shoes=detect_shoes, activate_doors=detect_furniture,
-                                        activate_objects_hand=detect_objects_hand, activate_shoes_hand=detect_shoes_hand, activate_doors_hand=detect_furniture_hand,
-                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
+            self.activate_yolo_objects(activate_objects=detect_objects,             activate_furniture=detect_furniture,
+                                       activate_objects_hand=detect_objects_hand,   activate_furniture_hand=detect_furniture_hand,
+                                       activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
+                                       minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
             # time.sleep(0.5)
@@ -1761,16 +2017,17 @@ class RobotStdFunctions():
                         for object in objects_detected:
 
                             # filters by same index
-                            if temp_objects.index == object.index and temp_objects.object_name == object.object_name:
+                            if temp_objects.index == object.index and temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
                                 is_already_in_list = True
                                 object_already_in_list = object
 
                             # second filter: sometimes yolo loses the IDS and creates different IDS for same objects, this filters the duplicates
-                            if temp_objects.object_name == object.object_name: # and 
-                                dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
-                                if dist < MIN_DIST_SAME_FRAME:
-                                    is_already_in_list = True
-                                    object_already_in_list = object
+                            if temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
+                                if temp_objects.position_absolute.x != 0 and temp_objects.position_absolute.y != 0 and temp_objects.position_absolute.z != 0:
+                                    dist = math.dist((temp_objects.position_absolute.x, temp_objects.position_absolute.y, temp_objects.position_absolute.z), (object.position_absolute.x, object.position_absolute.y, object.position_absolute.z))
+                                    if dist < MIN_DIST_SAME_FRAME:
+                                        is_already_in_list = True
+                                        object_already_in_list = object
 
                         if is_already_in_list:
                             objects_detected.remove(object_already_in_list)
@@ -1843,15 +2100,20 @@ class RobotStdFunctions():
                 if is_break_list_of_objects: 
                     break
 
-            self.activate_yolo_objects(activate_objects=False, activate_shoes=False, activate_doors=False,
-                                        activate_objects_hand=False, activate_shoes_hand=False, activate_doors_hand=False,
-                                        minimum_objects_confidence=0.5, minimum_shoes_confidence=0.5, minimum_doors_confidence=0.5)
+            self.activate_yolo_objects(activate_objects=False, activate_furniture=False,
+                                       activate_objects_hand=False, activate_furniture_hand=False,
+                                       activate_objects_base=False, activate_furniture_base=False,
+                                       minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
             
             # DEBUG
             # print("TOTAL objects in this neck pos:")
             # for frame in total_objects_detected:
-            #     for object in frame:    
-            #         print(object.index, object.object_name, "\t", round(object.position_absolute.x, 2), round(object.position_absolute.y, 2), round(object.position_absolute.z, 2))
+            #     for object in frame:
+            #         conf = f"{object.confidence * 100:.0f}%"
+            #         x_ = f"{object.position_absolute.x:4.2f}"
+            #         y_ = f"{object.position_absolute.y:5.2f}"
+            #         z_ = f"{object.position_absolute.z:5.2f}"
+            #         print(f"{'ID:'+str(object.index):<7} {object.object_name:<17} {conf:<3} {object.camera} ({x_}, {y_}, {z_})")
             #     print("-")
 
             ### DETECTS ALL THE OBJECTS SHOW IN EVERY FRAME ###
@@ -1875,21 +2137,30 @@ class RobotStdFunctions():
 
                         for filtered in range(len(filtered_objects)):
 
-                            if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name: 
+                            if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name and \
+                                total_objects_detected[frame][object].camera == filtered_objects[filtered].camera and \
+                                total_objects_detected[frame][object].index == filtered_objects[filtered].index :
+                                        same_object_ctr+=1
+                                        same_object_old = filtered_objects[filtered]
+                                        same_object_new = total_objects_detected[frame][object]
 
-                                # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
-                                dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
-                                # print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
-                                
-                                if dist < MIN_DIST_DIFFERENT_FRAMES:
-                                    same_object_ctr+=1
-                                    same_object_old = filtered_objects[filtered]
-                                    same_object_new = total_objects_detected[frame][object]
-                                    # print("SAME OBJECT")                        
-                        
+                            if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name and total_objects_detected[frame][object].camera == filtered_objects[filtered].camera: 
+
+                                if total_objects_detected[frame][object].position_absolute.x != 0 and total_objects_detected[frame][object].position_absolute.y != 0 and total_objects_detected[frame][object].position_absolute.z:
+                                    # dist_xy = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y))
+                                    dist = math.dist((total_objects_detected[frame][object].position_absolute.x, total_objects_detected[frame][object].position_absolute.y, total_objects_detected[frame][object].position_absolute.z), (filtered_objects[filtered].position_absolute.x, filtered_objects[filtered].position_absolute.y, filtered_objects[filtered].position_absolute.z))
+                                    # print("new:", total_objects_detected[frame][object].index, total_objects_detected[frame][object].object_name, ", old:", filtered_objects[filtered].index, filtered_objects[filtered].object_name, ", dist:", round(dist,3)) # , dist_xy) 
+                                    
+                                    if dist < MIN_DIST_DIFFERENT_FRAMES:
+                                        same_object_ctr+=1
+                                        same_object_old = filtered_objects[filtered]
+                                        same_object_new = total_objects_detected[frame][object]
+                                        # print("SAME OBJEcCT")                        
+
+                        # the criteria for selecting which image is saved, is which center pixel of an object is closer to center of the image (avoiding images where object may be cut) 
                         if same_object_ctr > 0:
 
-                            image_center = (1280/2, 720/2)
+                            image_center = (self.node.CAM_IMAGE_WIDTH/2, self.node.CAM_IMAGE_HEIGHT/2)
                             same_object_old_distance_center = math.dist(image_center, (same_object_old.box_center_x, same_object_old.box_center_y))
                             same_object_new_distance_center = math.dist(image_center, (same_object_new.box_center_x, same_object_new.box_center_y))
                             
@@ -1921,7 +2192,12 @@ class RobotStdFunctions():
 
             print("FILTERED:")
             for o in filtered_objects:
-                print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
+                conf = f"{o.confidence * 100:.0f}%"
+                x_ = f"{o.position_absolute.x:4.2f}"
+                y_ = f"{o.position_absolute.y:5.2f}"
+                z_ = f"{o.position_absolute.z:5.2f}"
+                print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({x_}, {y_}, {z_})")
+            print()
 
 
             if list_of_objects: #only does this if there are items in the list of mandatory detection objects
@@ -2007,11 +2283,12 @@ class RobotStdFunctions():
         cv2.rectangle(cf, (start_point_text[0], start_point_text[1]), (start_point_text[0] + text_w, start_point_text[1] + text_h), bb_color, -1)
         cv2.putText(cf, f"{object.object_name}", (start_point_text[0], start_point_text[1]+text_h+1-1), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2, cv2.LINE_AA)
     
-        object_image = cf[max(object.box_top_left_y-thresh_v,0):min(object.box_top_left_y+object.box_height+thresh_v,720), max(object.box_top_left_x-thresh_h,0):min(object.box_top_left_x+object.box_width+thresh_h,1280)]
+        object_image = cf[max(object.box_top_left_y-thresh_v,0):min(object.box_top_left_y+object.box_height+thresh_v,self.node.CAM_IMAGE_HEIGHT), max(object.box_top_left_x-thresh_h,0):min(object.box_top_left_x+object.box_width+thresh_h,self.node.CAM_IMAGE_WIDTH)]
         # cv2.imshow("Search for Person", object_image)
         # cv2.waitKey(100)
         
-        face_path = current_datetime + str(object.index) + str(object.object_name)
+        face_path = current_datetime + str(object.index) + " " + str(object.object_name) + " " + str(object.camera)
+        face_path = face_path.replace(" ","_").lower()
         
         cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", object_image) 
         time.sleep(0.1)
@@ -2020,35 +2297,21 @@ class RobotStdFunctions():
             self.set_face(custom=face_path)
         
         return face_path
+    
+    def get_point_cloud(self, camera, wait_for_end_of=True):
 
-    def get_point_cloud(self, bb=BoundingBox(), camera="head", wait_for_end_of=True):
+        # small example that must be continued adter point cloud is complete
 
-        requested_objects = []
-            
-        # bb = BoundingBox()
-        # bb.box_top_left_x = 0
-        # bb.box_top_left_y = 0
-        # bb.box_width = 1280
-        # bb.box_height = 720
-
-        get_pc = BoundingBoxAndPoints()
-        get_pc.bbox = bb
-
-        requested_objects.append(get_pc)
-
-        request = GetPointCloudBB.Request()
-        request.data = requested_objects
-        request.retrieve_bbox = False
-        request.camera = camera
-
-        self.node.waiting_for_pcloud = True
-        self.node.call_point_cloud_server(request=request)
-
-        if wait_for_end_of:
-            while self.node.waiting_for_pcloud:
-                pass
-
-        return self.node.point_cloud_response.coords[0]
+        match camera:
+            case "head":
+                depth_img = self.node.depth_head_img
+            case "hand":
+                depth_img = self.node.depth_hand_img
+            case "base":
+                depth_img = self.node.depth_base_img
+        
+        self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_img, camera=camera, bbox=None)
+        pass
 
     def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
         
@@ -2073,7 +2336,7 @@ class RobotStdFunctions():
         if self.node.first_rgb_head_image_received:
             current_frame_rgb_head = self.node.br.imgmsg_to_cv2(self.node.rgb_head_img, "bgr8")
         else:
-            current_frame_rgb_head = np.zeros((360, 640, 3), dtype=np.uint8)
+            current_frame_rgb_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
         
         return self.node.first_rgb_head_image_received, current_frame_rgb_head
 
@@ -2082,7 +2345,7 @@ class RobotStdFunctions():
         if self.node.first_depth_head_image_received:
             current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
         else:
-            current_frame_depth_head = np.zeros((360, 640), dtype=np.uint8)
+            current_frame_depth_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
         return self.node.first_depth_head_image_received, current_frame_depth_head
 
@@ -2091,7 +2354,7 @@ class RobotStdFunctions():
         if self.node.first_rgb_hand_image_received:
             current_frame_rgb_hand = self.node.br.imgmsg_to_cv2(self.node.rgb_hand_img, "bgr8")
         else:
-            current_frame_rgb_hand = np.zeros((360, 640, 3), dtype=np.uint8)
+            current_frame_rgb_hand = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
         
         return self.node.first_rgb_hand_image_received, current_frame_rgb_hand
 
@@ -2100,9 +2363,27 @@ class RobotStdFunctions():
         if self.node.first_depth_hand_image_received:
             current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
         else:
-            current_frame_depth_hand = np.zeros((360, 640), dtype=np.uint8)
+            current_frame_depth_hand = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
         return self.node.first_depth_hand_image_received, current_frame_depth_hand
+
+    def get_base_rgb_image(self):
+
+        if self.node.first_rgb_base_image_received:
+            current_frame_rgb_base = self.node.br.imgmsg_to_cv2(self.node.rgb_base_img, "bgr8")
+        else:
+            current_frame_rgb_base = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
+        
+        return self.node.first_rgb_base_image_received, current_frame_rgb_base
+
+    def get_base_depth_image(self):
+
+        if self.node.first_depth_base_image_received:
+            current_frame_depth_base = self.node.br.imgmsg_to_cv2(self.node.depth_base_img, desired_encoding="passthrough")
+        else:
+            current_frame_depth_base = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
+        
+        return self.node.first_depth_base_image_received, current_frame_depth_base
 
     def get_controller_state(self):
 
@@ -2419,7 +2700,6 @@ class RobotStdFunctions():
             else: # pour
                 self.set_speech(filename="objects_names/"+furniture_name_for_files, wait_for_end_of=False)
 
-
     def get_object_class_from_object(self, object_name):
 
         # Iterate through the list of dictionaries
@@ -2552,7 +2832,6 @@ class RobotStdFunctions():
         request.status = False
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
 
-
     def set_follow_person(self):
 
         self.activate_yolo_pose(activate=True) 
@@ -2600,7 +2879,6 @@ class RobotStdFunctions():
             points.coords.append(Point(x=float(p.kp_ankle_left_x), y=float(p.kp_ankle_left_y), z=1.0))
         if p.kp_ankle_right_conf > 0.5:
             points.coords.append(Point(x=float(p.kp_ankle_right_x), y=float(p.kp_ankle_right_y), z=1.0))
-        
 
         # points.coords.append(Point(x=640.0//2, y=480.0//2, z=1.0))
         # points.coords.append(Point(x=320.0, y=150.0, z=1.0))

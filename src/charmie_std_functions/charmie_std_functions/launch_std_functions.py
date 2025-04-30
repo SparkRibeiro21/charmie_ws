@@ -62,7 +62,7 @@ class LaunchStdFunctions():
         )
 
         rviz_nav2_config_path = os.path.join(get_package_share_path('charmie_description'), 
-                                'rviz', 'nav2_config.rviz')
+                                'rviz', 'nav2_default_view_charmie.rviz')
         
         self.rviz2_nav2_node = Node(
             package="rviz2",
@@ -243,8 +243,14 @@ class LaunchStdFunctions():
                     )
         
         self.low_level = Node(package='charmie_low_level',
-                    executable='low_level',
-                    name='low_level',
+                    executable='low_level_stream',
+                    name='low_level_stream',
+                    emulate_tty=True
+                    )
+        
+        self.charmie_localisation = Node(package='charmie_localisation',
+                    executable='localisation',
+                    name='localisation',
                     emulate_tty=True
                     )
         
@@ -301,24 +307,18 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
-        self.odometry = Node(package='charmie_odometry',
-                    executable='odometry',
-                    name='odometry',
-                    emulate_tty=True
-                    )
-        
         self.odometry_lidar = Node(package='rf2o_laser_odometry',
                 executable='rf2o_laser_odometry_node',
                 name='rf2o_laser_odometry',
                 output='screen',
                 parameters=[{
                     'laser_scan_topic' : '/scan',
-                    'odom_topic' : '/odom',
-                    'publish_tf' : True,
+                    'odom_topic' : '/rf2o_laser_odometry/odom',
+                    'publish_tf' : False,
                     'base_frame_id' : 'base_link',
                     'odom_frame_id' : 'odom',
                     'init_pose_from_topic' : '',
-                    'freq' : 20.0}],
+                    'freq' : 10.0}],
                 )
         
         self.navigation = Node(package='charmie_navigation_sdnl',
@@ -360,7 +360,7 @@ class LaunchStdFunctions():
         ### LOCALIZATION
 
         # Exmaples of how the map should be added to launch file
-        map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', '2025_LAR_house_final_save.yaml')
+        map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', 'LAR_map_03_2025_save.yaml')
         # map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', 'Robocup2023', 'robocup23_house_save.yaml')
 
         # Adds localization mode (AMCL) from nav2
@@ -383,7 +383,20 @@ class LaunchStdFunctions():
                     ('use_sim_time', 'false')
                     ]
         )
+
+        ### robot_localization node ###
+        robot_localization_ekf_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'config', 'ekf.yaml')
         
+
+        self.robot_localization = Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node',
+            output='screen',
+            parameters=[robot_localization_ekf_config_path],
+            )
+
         ### ROSBAG
         # Node to start rosbag recording
         self.rosbag_record = ExecuteProcess(

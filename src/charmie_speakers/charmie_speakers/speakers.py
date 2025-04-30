@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool, String
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, SetTextFace
 
 from TTS.utils.manage import ModelManager
 from TTS.utils.synthesizer import Synthesizer
@@ -80,7 +79,7 @@ class RobotSpeak():
 
 
     # function for pre recorded commands 
-    def play_command(self, filename, show_in_face=False, breakable_play=False, break_play=False):
+    def play_command(self, filename, show_in_face=False, long_pause=False, breakable_play=False, break_play=False):
                 
         # if there is an audio
         if os.path.isfile(self.complete_path+filename+".wav"):
@@ -92,10 +91,9 @@ class RobotSpeak():
 
                     string_from_file = open(self.complete_path+filename+".txt", "r")
 
-                    # send string to face to ease UI
-                    str = String()
+                    str = SetTextFace.Request()
                     str.data = string_from_file.read()
-                    self.node.speech_to_face_publisher.publish(str)
+                    self.node.speech_to_face_command.call_async(str)
 
                     message = "Text Sent to Face Node"
                     # print("File sent to face! - '", str.data, "'")
@@ -115,11 +113,12 @@ class RobotSpeak():
 
             if show_in_face:
                 # sends empty string to tell face that the audio has finished to be played
-                str = String()
+                str = SetTextFace.Request()
                 str.data = ""
+                str.long_pause = long_pause # long pause only needs to be sent here, because here is the end of the face showing
                 # print(str.data)
                 # print("File sent to face! - End of Sentence")
-                self.node.speech_to_face_publisher.publish(str)
+                self.node.speech_to_face_command.call_async(str)
 
             success = True
             message = ""
@@ -133,7 +132,7 @@ class RobotSpeak():
 
 
     # function for commands to be created in the moment 
-    def load_and_play_command(self, filename="", command="", quick_voice=False, show_in_face=False, play_command=False):
+    def load_and_play_command(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause=False, play_command=False):
         
         if filename == "":
             temp_filename = "temp/temp"
@@ -159,7 +158,7 @@ class RobotSpeak():
         print(time.time()-init_time)
 
         if play_command:
-            self.play_command(filename=temp_filename, show_in_face=show_in_face) 
+            self.play_command(filename=temp_filename, show_in_face=show_in_face, long_pause=long_pause) 
 
 
     # function to know which speaker is being used by the PC - debug purposes
@@ -194,14 +193,12 @@ class SpeakerNode(Node):
         # initialize robot speech class with acess to node variables
         self.charmie_speech = RobotSpeak(self)
 
-        # TOPICS:
-        # To publish the received strings to the face node
-        self.speech_to_face_publisher = self.create_publisher(String, "display_speech_face", 10)
-        
         # SERVICES:
         # Main receive commads 
         self.server_speech_command = self.create_service(SpeechCommand, "speech_command", self.callback_speech_command) 
         self.save_server_speech_command = self.create_service(SaveSpeechCommand, "save_speech_command", self.callback_save_speech_command) 
+        # To publish the received strings to the face node
+        self.speech_to_face_command = self.create_client(SetTextFace, "display_speech_face")
         self.get_logger().info("Speech Servers have been started")
 
         # Get Information regarding which speakers are being used 
@@ -226,7 +223,7 @@ class SpeakerNode(Node):
 
     # Test Function for some quick tests if necessary
     def test(self):
-        self.charmie_speech.load_and_play_command(command="What is your friend name and favourite drink?", quick_voice=False, play_command=True)
+        self.charmie_speech.load_and_play_command(command="What is your friend name and favourite drink?", quick_voice=False, show_in_face=False, play_command=True)
 
 
     # Main Function regarding received commands
@@ -238,6 +235,7 @@ class SpeakerNode(Node):
         # string command      # if there is no filename, a command string can be sent to be played in real time 
         # bool quick_voice    # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
         # bool show_in_face   # whether or not it is intended for the speech command to be shown in the face
+        # bool long_pause_show_in_face    # whether after showing in face, a long or a short pause should be added, for user easier reading
         # bool breakable_play # if this command is inteded to be stopped by a following command
         # bool break_play     # if a command is already playing, it stopps the previous command
         # ---
@@ -256,13 +254,15 @@ class SpeakerNode(Node):
             else:
                 self.get_logger().info("SPEAKERS received (custom) - %s" %request.command)
                 self.charmie_speech.load_and_play_command(command=request.command, quick_voice=request.quick_voice, \
-                                                        show_in_face=request.show_in_face, play_command=True)
+                                                        show_in_face=request.show_in_face, long_pause=request.long_pause_show_in_face, \
+                                                        play_command=True)
                 success = True
                 message = ""
         
         else:
             # speakers mode where received filename must be played
             success, message = self.charmie_speech.play_command(filename=request.filename, show_in_face=request.show_in_face, \
+                                                                long_pause=request.long_pause_show_in_face, \
                                                                 breakable_play=request.breakable_play, break_play=request.break_play)
             if success == False:
                 self.get_logger().error("SPEAKERS received (file) does not exist! - %s" %request.filename)
@@ -284,6 +284,7 @@ class SpeakerNode(Node):
         # bool quick_voice  # if you do not want to use the pretty voice that takes more time to load, raising this flag uses the secondary quick voice
         # bool play_command   # if you want to play the sound right after saving it 
         # bool show_in_face   # whether or not it is intended for the speech command to be shown in the face
+        # bool long_pause_show_in_face    # whether after showing in face, a long or a short pause should be added, for user easier reading
         # ---
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.

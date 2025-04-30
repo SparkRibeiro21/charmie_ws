@@ -13,20 +13,21 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              False,
     "charmie_audio":            False,
-    "charmie_face":             False,
+    "charmie_face":             True,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
+    "charmie_base_camera":      False,
     "charmie_lidar":            False,
+    "charmie_lidar_bottom":     False,
     "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        False,
     "charmie_navigation":       False,
+    "charmie_nav2":             False,
     "charmie_neck":             False,
     "charmie_obstacles":        False,
-    "charmie_odometry":         False,
-    "charmie_point_cloud":      False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -89,6 +90,35 @@ class TaskMain():
                 rnc = self.robot.get_navigation_coords_from_room(r)
                 print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
 
+                while True:
+                    self.robot.set_face("help_pick_milk")
+                    print("help_pick_milk")
+                    time.sleep(5.0)
+                    self.robot.set_speech(filename="generic/arrived", show_in_face=True, wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/moving", show_in_face=True, long_pause_show_in_face=True, wait_for_end_of=True)
+                    time.sleep(1.0)
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)), \
+                                          show_in_face=True, long_pause_show_in_face=True, wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_face("help_pick_orange_juice")
+                    print("help_pick_orange_juice")
+                    time.sleep(5.0)        
+                    self.robot.set_speech(filename="generic/found_following_items", show_in_face=True)
+                    self.robot.set_speech(filename="objects_names/"+o.replace(" ","_").lower(), show_in_face=True, long_pause_show_in_face=True, \
+                                          wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_face("charmie_face_green")
+                    print("charmie_face_green_my_order")
+                    time.sleep(5.0)
+                    self.robot.set_speech(filename="serve_breakfast/sb_finished", show_in_face=True, wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_face("charmie_face")
+                    print("charmie_face")
+                    time.sleep(5.0)
+                    self.robot.set_speech(filename="gpsr/stand_front_of_me_egpsr", show_in_face=True, wait_for_end_of=True)
+                    time.sleep(5.0)
+
+
                 if self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)) is not None:
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)), wait_for_end_of=True)
@@ -102,9 +132,6 @@ class TaskMain():
                 #                            wait_for_end_of=True)
                 # self.robot.set_neck_coords(self.robot.get_location_coords_from_furniture("dishwasher"), 
                 #                            wait_for_end_of=True)
-
-                while True:
-                    pass
                 
                 self.robot.get_detected_person_characteristics(first_sentence="demonstration/demo_characteristics_first_sentence", shirt_color=True, age=True)
 

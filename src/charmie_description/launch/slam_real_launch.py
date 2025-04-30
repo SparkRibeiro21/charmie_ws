@@ -16,6 +16,10 @@ def generate_launch_description():
         std_lf.speakers,
         std_lf.lidar,
         std_lf.low_level,
+
+        std_lf.robot_localization,
+        std_lf.charmie_localisation,
+
         std_lf.ps4_controller,
         std_lf.neck,
 

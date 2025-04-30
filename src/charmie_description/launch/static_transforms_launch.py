@@ -37,39 +37,39 @@ def generate_launch_description():
             ]
         ),
 
-        # Static transform for the torso and legs
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='static_transform_torso_legs',
-            arguments=[
-                '0',  # x
-                '0',  # y
-                '0.475',  # z
-                '0',  # roll
-                '0',  # pitch
-                '0',  # yaw
-                'base_link',  # parent frame
-                'legs_link'  # child frame
-            ]
-        ),
-
-        # Static transform for torso to torso link
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='static_transform_torso_torso',
-            arguments=[
-                '0',  # x
-                '0',  # y
-                '0.25',  # z
-                '0',  # roll
-                '0.15708',  # pitch
-                '0',  # yaw
-                'legs_link',  # parent frame
-                'torso_link'  # child frame
-            ]
-        ),
+        # # Static transform for the torso and legs
+        # Node(
+        #     package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     name='static_transform_torso_legs',
+        #     arguments=[
+        #         '-0.105', #'0.0',  # x
+        #         '0',  # y
+        #         '0.355',  #'0.475',  # z
+        #         '0',  # roll
+        #         '0',  # pitch
+        #         '0',  # yaw
+        #         'base_link',  # parent frame
+        #         'legs_link'  # child frame
+        #     ]
+        # ),
+        
+        # # Static transform for torso to torso link
+        # Node(
+        #     package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     name='static_transform_torso_torso',
+        #     arguments=[
+        #         '0',  # x
+        #         '0',  # y
+        #         '0.25',  # z
+        #         '0',  # roll
+        #         '0.15708',  # pitch
+        #         '0',  # yaw
+        #         'legs_link',  # parent frame
+        #         'torso_link'  # child frame
+        #    ]
+        # ),
 
         # Static transform for the head camera
         Node(
@@ -88,11 +88,28 @@ def generate_launch_description():
             ]
         ),
 
-        # Static transform for the head camera
+        # Static transform for the hand camera
         Node(
             package='tf2_ros',
             executable='static_transform_publisher',
-            name='static_transform_head_camera',
+            name='static_transform_hand_camera',
+            arguments=[
+                '0',  # x
+                '0',  # y
+                '0',  # z
+                '0',  # roll
+                '0',  # pitch
+                '0',  # yaw
+                'hand_camera_link',  # parent frame
+                'D405_hand_link'  # child frame
+            ]
+        ),
+
+        # Static transform for the base camera
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='static_transform_base_camera',
             arguments=[
                 '0',  # x
                 '0',  # y

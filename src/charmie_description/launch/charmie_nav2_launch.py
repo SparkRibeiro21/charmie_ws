@@ -16,10 +16,15 @@ def generate_launch_description():
         std_lf.lidar,
         std_lf.lidar_bottom,
         std_lf.low_level,
-        std_lf.charmie_multi_camera_launch_description,
+        # std_lf.charmie_multi_camera_launch_description,
         std_lf.neck,
+
+        std_lf.robot_localization,
+        std_lf.charmie_localisation,
 
         std_lf.delayed_nav2_localization,        
         std_lf.nav2_navigation,
+
+        # std_lf.charmie_orbbec_base_camera_launch_description,
         
     ])

@@ -84,12 +84,6 @@ def generate_launch_description():
                         name='obstacles_fusion',
                         emulate_tty=True
                         )
-        
-    odometry = Node(package='charmie_odometry',
-                executable='odometry',
-                name='odometry',
-                emulate_tty=True
-                )
     
     navigation = Node(package='charmie_navigation_sdnl',
                 executable='navigation',
@@ -110,7 +104,6 @@ def generate_launch_description():
         face,
         speakers,
         neck,
-        odometry,
         navigation,
         point_cloud,
         yolo_pose,

@@ -136,12 +136,6 @@ def generate_launch_description():
                       name = 'ps4_controller',
                       )
     
-    #create node odometry
-    odometry = Node(package='charmie_odometry',
-                      executable='odometry',
-                      name = 'odometry',
-                      )
-    
     #create node obstacles
     obstacles = Node(package='charmie_obstacles',
                       executable='obstacles',
@@ -215,7 +209,7 @@ def generate_launch_description():
     ### This cycle is for cases where the order of launching the nodes is important due to dependancies of some nodes on others.
     ### Like this, each node on the list "delayed_actions" will be launched with a time difference of "delay".
     ### In this project, there are some nodes that depend on others, and those are explained at the end of this script.
-    for node in [node_robot_state_publisher, joint_state, low_level, odometry, localization, navigation, lidar, obstacles, audio, speakers_offline, neck]: #---------> CHANGE ME FOR THE NODES YOU WANT TO LAUNCH DELAYED
+    for node in [node_robot_state_publisher, joint_state, low_level, localization, navigation, lidar, obstacles, audio, speakers_offline, neck]: #---------> CHANGE ME FOR THE NODES YOU WANT TO LAUNCH DELAYED
         delayed_actions.append(TimerAction(period=delay, actions=[node]))
         delay += 0.5
 

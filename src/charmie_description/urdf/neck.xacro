@@ -19,18 +19,6 @@
     <xacro:property name="neck_tilt_shaft_width" value="0.051" />
     <xacro:property name="neck_tilt_shaft_height" value="0.028" />
 
-    <xacro:property name="face_length" value="0.013" />
-    <xacro:property name="face_width" value="0.16" />
-    <xacro:property name="face_height" value="0.26" />
-
-    <xacro:property name="face_height_shift" value="0.0975" />
-
-    <xacro:property name="head_camera_length" value="0.034" />
-    <xacro:property name="head_camera_width" value="0.145" />
-    <xacro:property name="head_camera_height" value="0.052" />
-
-    <xacro:property name="head_camera_height_shift" value="0.0975" />
-
     <joint name="neck_base" type="fixed">
         <parent link="top_torso_link"/>
         <child link="neck_base_link"/>
@@ -51,7 +39,7 @@
                 <box size="${neck_pan_length} ${neck_pan_width} ${neck_pan_height}" />
             </geometry>
         </collision>
-        <xacro:inertial_box mass="2.0" x="${neck_pan_length}" y="${neck_pan_width}" z="${legs_height}" >
+        <xacro:inertial_box mass="2.0" x="${neck_pan_length}" y="${neck_pan_width}" z="${-neck_pan_height/2}" >
             <origin xyz="${-servo_center_to_rotation_axis} 0 ${-neck_pan_height/2}" rpy="0 0 0" />
         </xacro:inertial_box>
     </link>
@@ -107,41 +95,6 @@
         </collision>
         <xacro:inertial_box mass="0.5" x="${neck_tilt_shaft_length}" y="${neck_tilt_shaft_width}" z="${neck_tilt_shaft_height}" >
             <origin xyz="${neck_tilt_shaft_length/2} 0 0" rpy="0 0 0"/>
-        </xacro:inertial_box>
-
-        <visual>
-            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
-            <geometry>
-                <box size="${face_length} ${face_width} ${face_height}" />
-            </geometry>
-            <material name="grey"/>
-        </visual>
-        <collision>
-            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
-            <geometry>
-                <box size="${face_length} ${face_width} ${face_height}" />
-            </geometry>
-        </collision>
-        <xacro:inertial_box mass="0.5" x="${face_length}" y="${face_width}" z="${face_height}" >
-            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
-        </xacro:inertial_box>
-
-
-        <visual>
-            <origin xyz="${neck_tilt_shaft_length + face_length + head_camera_length/2} 0 ${face_height_shift+face_height/2-head_camera_height/2-0.008}" rpy="0 0 0"/>
-            <geometry>
-                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
-            </geometry>
-            <material name="grey"/>
-        </visual>
-        <collision>
-            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
-            <geometry>
-                <box size="${head_camera_length} ${head_camera_width} ${head_camera_height}" />
-            </geometry>
-        </collision>
-        <xacro:inertial_box mass="0.5" x="${head_camera_length}" y="${head_camera_width}" z="${head_camera_height}" >
-            <origin xyz="${neck_tilt_shaft_length + face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
         </xacro:inertial_box>
 
     </link>

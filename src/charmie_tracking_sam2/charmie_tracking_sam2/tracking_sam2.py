@@ -2,10 +2,11 @@
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D, Point
+from geometry_msgs.msg import Point, PointStamped
 from sensor_msgs.msg import Image
+from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import TrackingMask, ListOfPoints, BoundingBox, MaskDetection, ListOfMaskDetections
-from charmie_interfaces.srv import ActivateTracking, GetPointCloudMask
+from charmie_interfaces.srv import ActivateTracking
 
 import threading
 import cv2
@@ -17,6 +18,11 @@ import numpy as np
 import time
 import math
 
+import tf2_ros
+from tf2_geometry_msgs import do_transform_point
+from charmie_point_cloud.point_cloud_class import PointCloud
+
+data_lock = threading.Lock()
 
 class TrackingNode(Node):
 
@@ -34,30 +40,33 @@ class TrackingNode(Node):
 
         self.br = CvBridge()
         self.head_rgb = Image()
+        self.head_depth = Image()
         self.new_head_rgb = False
-        self.waiting_for_pcloud = False
+        self.new_head_depth = False
+        
+        self.CAM_IMAGE_WIDTH = 848
+        self.CAM_IMAGE_HEIGHT = 480
 
-        # robot localization
-        self.robot_pose = Pose2D()
+        self.head_rgb_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH, 3), np.uint8)
+        self.head_depth_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH), np.uint8)
 
         ### Topics ###
         # Intel Realsense
-        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
         # Publica a máscara do objecto a ser seguido
         self.tracking_mask_publisher = self.create_publisher(TrackingMask, 'tracking_mask', 10)
-        # Robot Localisation
-        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-
+        
         # SERVICES:
-         # Point Cloud Mask Service
-        self.point_cloud_mask_client = self.create_client(GetPointCloudMask, "get_point_cloud_mask")
-
-        while not self.point_cloud_mask_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Point Cloud Mask...")
-
         # Acitvate and Deactivate Tracking Service
         self.activate_yolo_objects_service = self.create_service(ActivateTracking, "activate_tracking", self.callback_activate_tracking)
-       
+
+        ### TF buffer and listener ###
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+
+        ### Class ###
+        self.point_cloud = PointCloud()
+
 
     def callback_activate_tracking(self, request, response):
         
@@ -97,33 +106,15 @@ class TrackingNode(Node):
         response.message = "Activated with selected parameters"
         return response
     
-    # request point cloud information from point cloud node
-    def call_point_cloud_mask_server(self, req, camera):
-        request = GetPointCloudMask.Request()
-        request.data = req
-        request.camera = camera
-    
-        future = self.point_cloud_mask_client.call_async(request)
-        future.add_done_callback(self.callback_call_point_cloud_mask)
-
-    def callback_call_point_cloud_mask(self, future):
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            self.point_cloud_mask_response = future.result()
-            self.waiting_for_pcloud = False
-            # print("Received Back")
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
-
-    def get_color_image_head_callback(self, img: Image):
-        self.head_rgb = img
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        with data_lock: 
+            self.head_rgb = rgbd.rgb
+            self.head_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            self.head_depth = rgbd.depth
+            self.head_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
         self.new_head_rgb = True
- 
-    def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_pose = pose
+        self.new_head_depth = True
+        # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
 
 def main(args=None):
@@ -158,6 +149,43 @@ class TrackingMain():
         self.prev_frame_time = time.time() # used to record the time when we processed last frame
         self.new_frame_time = time.time() # used to record the time at which we processed current frame
         
+    def get_transform(self, camera=""):
+
+        match camera:
+            case "head":
+                child_link = 'D455_head_color_frame'
+                parent_link = 'base_footprint'
+            case "hand":
+                child_link = 'D405_hand_color_frame'
+                parent_link = 'base_footprint'
+            case "base":
+                child_link = 'camera_color_frame'
+                parent_link = 'base_footprint'
+            case "":
+                child_link = 'base_footprint'
+                parent_link = 'map'
+
+        # proceed to lookup_transform
+        if self.node.tf_buffer.can_transform(parent_link, child_link, rclpy.time.Time()):
+            
+            # print(parent_link, child_link, "GOOD")
+            try:
+                transform = self.node.tf_buffer.lookup_transform(
+                    parent_link,        # target frame
+                    child_link,         # source frame
+                    rclpy.time.Time()   # latest available
+                    # timeout=rclpy.duration.Duration(seconds=0.1) quero por isto???
+                )
+            except Exception as e:
+                self.node.get_logger().warn(f"TF lookup failed: {e}")
+                transform = None
+                return  # or handle the error appropriately
+        else:
+            # print(parent_link, child_link, "BAD")
+            transform = None
+        
+        return transform, child_link
+
     def combined_polygon_centroid(self, polygons, binary_mask):
         
         MIN_ACCEPTABLE_AREA = 100
@@ -220,12 +248,11 @@ class TrackingMain():
         combined_C = (combined_Cx, combined_Cy)
         return combined_C, updated_filtered_polygons, area_of_each_polygon, centroid_of_each_polygon
     
-    def filter_and_publish_tracking_data(self, polygons, binary_mask):
-
-        MIN_AREA_FOR_PC_CALCULATION = 4000
+    def filter_and_publish_tracking_data(self, polygons, binary_mask, depth_frame):
 
         if polygons:
             centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon = self.combined_polygon_centroid(polygons, binary_mask)
+            # print(area_each_polygon, updated_filtered_polygons)
             if centroid is not None:
                 
                 msg = TrackingMask()
@@ -233,11 +260,12 @@ class TrackingMain():
                 msg.centroid.y = float(centroid[1])
                 
                 list_masks = ListOfMaskDetections()
-                requested_objects = []
+                list_masks_for_pc = []
                 
                 for p in updated_filtered_polygons: # only goes through filtres polygons, rather than all polygons
 
                     new_mask = MaskDetection()
+                    new_mask_for_pc = []
                     for c in p:
                             
                         points_mask = Point()
@@ -246,86 +274,109 @@ class TrackingMain():
                         points_mask.z = 0.0
                         new_mask.point.append(points_mask)
 
+                        points_mask_for_pc = np.array([float(c[0]), float(c[1])], dtype=np.float32)
+                        new_mask_for_pc.append(points_mask_for_pc)
+
                     list_masks.masks.append(new_mask)
-                    requested_objects.append(new_mask)
+                    
+                    new_mask_for_pc = np.array(new_mask_for_pc)
+                    list_masks_for_pc.append(new_mask_for_pc)
+
+                list_masks_for_pc = np.array(list_masks_for_pc, dtype=object)  # dtype=object if polygons have different number of points
                 
-                # msg.binary_mask = self.node.br.cv2_to_imgmsg(white_mask, encoding='mono8')
                 msg.mask = list_masks
-                                            
-                self.node.waiting_for_pcloud = True
-                self.node.call_point_cloud_mask_server(requested_objects, "head")
 
-                while self.node.waiting_for_pcloud:
-                    pass
+                ### PREVIOUSLY THE POINT CLOUD WAS CALCULATED BYA WEIGHTED AVERAGE OF ALL MASKS
+                ### HOWEVER, WE CAME TO THE CONCLUSION THAT THIS ADDED SOME ERRORS TO THE DISTANCE READING
+                ### THE MOST STABLE VERSION USES THE POINT CLOUD FROM THE MASK WITH BIGGEST AREA
 
-                ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
-                """
-                weighted_sum_x = 0
-                weighted_sum_y = 0
-                weighted_sum_z = 0
+                highest_area_polygon = []
                 max_area = 0
-                print("NEW PC:", len(self.node.point_cloud_mask_response.coords))
-                for p, a in zip(self.node.point_cloud_mask_response.coords, area_each_polygon):
-                    print(f"(x,y,z)): ({p.center_coords.x}, {p.center_coords.y}, {p.center_coords.z}), Area: {a}")
-
-                    # Remove the points whose mask does not have a valid depth point inside (returned by PC as: (x=0.0, y=0.0, z=0.0))
-                    if p.center_coords.x != 0 and p.center_coords.y != 0 and p.center_coords.z != 0 and a > MIN_AREA_FOR_PC_CALCULATION:
-                        # Use the area of each mask to weight the position of the object
-                        weighted_sum_x += p.center_coords.x * a
-                        weighted_sum_y += p.center_coords.y * a
-                        weighted_sum_z += p.center_coords.z * a
-                        max_area += a
-
-                if max_area > 0:
-                    # Compute weighted averages
-                    x_f = weighted_sum_x / max_area
-                    y_f = weighted_sum_y / max_area
-                    z_f = weighted_sum_z / max_area
-                """
-                
-                ### CALCULATES FINAL 3D TRACKING COORDINATES USING A WEIGHTED AVERAGE
-                max_area = 0
-                x_f, y_f, z_f = 0.0, 0.0, 0.0
-                print("NEW PC:", len(self.node.point_cloud_mask_response.coords))
-                for p, a in zip(self.node.point_cloud_mask_response.coords, area_each_polygon):
-                    print(f"(x,y,z)): ({p.center_coords.x}, {p.center_coords.y}, {p.center_coords.z}), Area: {a}")
-
-                    # Remove the points whose mask does not have a valid depth point inside (returned by PC as: (x=0.0, y=0.0, z=0.0))
-                    if p.center_coords.x != 0 and p.center_coords.y != 0 and p.center_coords.z != 0 and a > max_area:
+                # print("AREAS PRE:", len(area_each_polygon), area_each_polygon)
+                # Selects the mask with higher area
+                for p, a in zip(list_masks_for_pc, area_each_polygon):
+                    # print(a, p)
+                    if a > max_area:
                         # Update the maximum area and the corresponding coordinates
                         max_area = a
-                        x_f = p.center_coords.x
-                        y_f = p.center_coords.y
-                        z_f = p.center_coords.z
+                        highest_area_polygon = p
 
-                if max_area > 0:
+                # print("FINAL:")
+                # print(max_area)
+                # print(max_area, highest_area_polygon)
 
-                    # Output result
-                    print(f"Weighted Average (x, y, z): ({x_f}, {y_f}, {z_f})")
-
-                    # changes the axis of point cloud coordinates to fit with robot axis
-                    object_rel_pos = Point()
-                    object_rel_pos.x =  -y_f/1000
-                    object_rel_pos.y =  x_f/1000
-                    object_rel_pos.z =  z_f/1000
-                    msg.position_relative = object_rel_pos
+                obj_3d_cam_coords = Point()
+                
+                # if we have a correct mask 
+                if len(highest_area_polygon) >= 3 and max_area > 0:
                     
-                    # calculate the absolute position according to the robot localisation
-                    angle_obj = math.atan2(object_rel_pos.x, object_rel_pos.y)
-                    dist_obj = math.sqrt(object_rel_pos.x**2 + object_rel_pos.y**2)
+                    obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera="head", mask=highest_area_polygon)
+                    # print("Max Area Coords:", round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
 
-                    theta_aux = math.pi/2 - (angle_obj - self.node.robot_pose.theta)
-
-                    target_x = dist_obj * math.cos(theta_aux) + self.node.robot_pose.x
-                    target_y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
-
-                    object_abs_pos = Point()
-                    object_abs_pos.x = target_x
-                    object_abs_pos.y = target_y
-                    object_abs_pos.z = z_f/1000
-                    msg.position_absolute = object_abs_pos
+                """
+                ### HOWEVER IF IT IS NECESSARY TO GO BACK TO WEIGHTED AVERAGE FOR ALL FILTERED MASKS:
+                max_area = 0
+                total_area = 0
+                obj_3d_cam_coords = Point()
+                for p, a in zip(list_masks_for_pc, area_each_polygon):
                     
-                    self.node.tracking_mask_publisher.publish(msg)
+                    # This is only here so that when checking if a correct object was detected and 3d point cloud coords were selected
+                    if a > max_area:
+                        max_area = a
+                    
+                    # if we have a correct mask 
+                    if len(p) >= 3 and a > 0:
+                        
+                        temp_obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera="head", mask=p)
+                        # print(round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
+                        total_area += a
+                        obj_3d_cam_coords.x += temp_obj_3d_cam_coords.x * a
+                        obj_3d_cam_coords.y += temp_obj_3d_cam_coords.y * a
+                        obj_3d_cam_coords.z += temp_obj_3d_cam_coords.z * a
+                        
+
+                if total_area > 0:
+                    # Compute weighted averages
+                    obj_3d_cam_coords.x = obj_3d_cam_coords.x / total_area
+                    obj_3d_cam_coords.y = obj_3d_cam_coords.y / total_area
+                    obj_3d_cam_coords.z = obj_3d_cam_coords.z / total_area
+                
+                print("Weighted Avg Area:", round(obj_3d_cam_coords.x, 2), round(obj_3d_cam_coords.y, 2), round(obj_3d_cam_coords.z, 2))
+                """
+                
+                # if there is no correct depth point available, it returns (0, 0, 0) 
+                # or no correct mask
+                if not (obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0) and max_area > 0:
+                    # print("INSIDE") 
+
+                    # creates transforms to base_footprint and map if available
+                    map_transform, _ = self.get_transform() # base_footprint -> map
+                    transform, camera_link = self.get_transform("head")
+
+                    point_cam = PointStamped()
+                    point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                    point_cam.header.frame_id = camera_link
+                    point_cam.point = obj_3d_cam_coords
+                    msg.position_cam = point_cam.point
+
+                    transformed_point = PointStamped()
+                    transformed_point_map = PointStamped()
+                    if transform is not None:
+                        transformed_point = do_transform_point(point_cam, transform)
+                        msg.position_relative = transformed_point.point
+                        self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+
+                        if map_transform is not None:
+                            transformed_point_map = do_transform_point(transformed_point, map_transform)
+                            msg.position_absolute = transformed_point_map.point
+                            self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
+
+                    print(msg.position_cam)
+                    print(msg.position_relative)
+                    print(msg.position_absolute)
+                    
+                ### Publishes track msg
+                self.node.tracking_mask_publisher.publish(msg)
 
             return centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon
         
@@ -341,16 +392,23 @@ class TrackingMain():
             while True:
 
                 if self.node.new_head_rgb:
+
+                    tot = time.time()
+                    
+                    with data_lock:
+                        head_image_frame = self.node.head_rgb_cv2_frame.copy()
+                        head_depth_frame = self.node.head_depth_cv2_frame.copy()
+                    
                     self.node.new_head_rgb = False
-                    frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
-                    height, width = frame.shape[:2]
-                    main_with_mask = frame.copy()
+                    # frame = self.node.br.imgmsg_to_cv2(self.node.head_rgb, "bgr8")
+                    height, width = head_image_frame.shape[:2]
+                    main_with_mask = head_image_frame.copy()
     
                     if self.node.tracking_flag:
 
                         if self.node.calibration_mode:
 
-                            self.predictor.load_first_frame(frame)
+                            self.predictor.load_first_frame(head_image_frame)
 
                             if self.node.tracking_received_points:
                                 # Use points and object ID as prompts to multiple points:
@@ -377,8 +435,11 @@ class TrackingMain():
                   
                         else: # Standard work mode (tracking)  
                             
+                            aaa = time.time()
                             # Track object in subsequent frames
-                            out_obj_ids, out_mask_logits = self.predictor.track(frame)
+                            out_obj_ids, out_mask_logits = self.predictor.track(head_image_frame)
+
+                            print("PREDICT TIME:", time.time() - aaa)
 
                             # Convert logits to binary mask
                             mask = (out_mask_logits[0] > 0).cpu().numpy().astype("uint8") * 255  # Binary mask, 2D
@@ -392,7 +453,7 @@ class TrackingMain():
 
                             if self.DEBUG_DRAW:
                                 # Apply the white mask to the frame
-                                frame_with_mask = cv2.bitwise_and(frame, frame, mask=white_mask)
+                                frame_with_mask = cv2.bitwise_and(head_image_frame, head_image_frame, mask=white_mask)
                                 # Display the result
                                 cv2.imshow("Frame with Mask", frame_with_mask)
 
@@ -404,10 +465,10 @@ class TrackingMain():
                                 # # Display the result
                                 # v2.imshow("Segmented Object", overlay)
 
-                                green_overlay = np.zeros_like(frame)
+                                green_overlay = np.zeros_like(head_image_frame)
                                 green_overlay[:, :] = [0, 255, 0]  # BGR for green
                                 green_part = cv2.bitwise_and(green_overlay, green_overlay, mask=mask)
-                                overlay_green = cv2.addWeighted(frame, 1.0, green_part, 0.3, 0)
+                                overlay_green = cv2.addWeighted(head_image_frame, 1.0, green_part, 0.3, 0)
                                 
                                 # cv2.imshow("Frame with Green Mask", overlay_green)
                                 main_with_mask = overlay_green
@@ -425,11 +486,11 @@ class TrackingMain():
                                 polygons.append(coords)
                                 # polygons.append(coords)
 
-                            centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon = self.filter_and_publish_tracking_data(polygons, white_mask)
+                            centroid, updated_filtered_polygons, area_each_polygon, centroid_each_polygon = self.filter_and_publish_tracking_data(polygons, white_mask, head_depth_frame)
 
                             if self.DEBUG_DRAW:
                             
-                                teste = frame.copy()
+                                teste = head_image_frame.copy()
 
                                 if updated_filtered_polygons:
                                     for p in updated_filtered_polygons:
@@ -480,6 +541,9 @@ class TrackingMain():
                         cv2.imshow("Segmented Objects TR", main_with_mask)
                         # cv2.imshow("Frame with Mask", cv2.bitwise_and(frame, frame, ))
                         cv2.waitKey(1)
+
+
+                    print("TOTAL TIME:", time.time() - tot)
 
         if self.DEBUG_DRAW:
             cv2.destroyAllWindows()

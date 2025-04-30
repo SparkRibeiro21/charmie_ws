@@ -152,12 +152,6 @@ def generate_launch_description():
                         emulate_tty=True
                         )
     
-    odometry = Node(package='charmie_odometry',
-                executable='odometry',
-                name='odometry',
-                emulate_tty=True
-                )
-    
     navigation = Node(package='charmie_navigation_sdnl',
                 executable='navigation',
                 name='navigation',
@@ -181,7 +175,6 @@ def generate_launch_description():
         speakers,
         neck,
         #arm,
-        odometry,
         navigation,
         point_cloud,
         # yolo_objects,

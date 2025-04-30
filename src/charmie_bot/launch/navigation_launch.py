@@ -61,12 +61,6 @@ def generate_launch_description():
         command=['ros2 run nav2_util lifecycle_bringup amcl']  # Your original command
     ) """
 
-    #create node odometry
-    odometry = Node(package='charmie_odometry',
-                      executable='odometry',
-                      name = 'odometry',
-                      )
-
     #create node low_level 
     low_level = Node(package='charmie_low_level',
                       executable='low_level',
@@ -113,7 +107,7 @@ def generate_launch_description():
     delayed_actions = []
     delay_amcl_map_server = []
 
-    for node in [low_level, odometry, ps4]: #---------> CHANGE ME
+    for node in [low_level, ps4]: #---------> CHANGE ME
         delayed_actions.append(TimerAction(period=delay, actions=[node]))
         delay += 0.5
 

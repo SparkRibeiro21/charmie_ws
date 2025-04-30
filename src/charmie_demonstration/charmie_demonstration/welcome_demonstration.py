@@ -14,25 +14,26 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
+    "charmie_arm":              True,
     "charmie_audio":            False,
     "charmie_face":             False,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
+    "charmie_base_camera":      False,
     "charmie_lidar":            False,
+    "charmie_lidar_bottom":     False,
     "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
     "charmie_navigation":       False,
+    "charmie_nav2":             False,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
-    "charmie_odometry":         False,
-    "charmie_point_cloud":      False,
     "charmie_ps4_controller":   True,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
-    "charmie_yolo_pose":        False,
+    "charmie_yolo_pose":        True,
 }
 
 # main function that already creates the thread for the task state machine
@@ -294,15 +295,15 @@ class TaskMain():
 
 
                     if not self.current_task:
-                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"]:
                             if ps4_controller.share == self.RISING:
                                 self.state = self.Search_for_objects_demonstration
                         
-                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                        if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"]:
                             if ps4_controller.options == self.RISING:
                                 self.state = self.Search_for_people_demonstration
 
-                        if ros2_modules["charmie_audio"] and ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"] and ros2_modules["charmie_point_cloud"]:
+                        if ros2_modules["charmie_audio"] and ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"]:
                             if ps4_controller.r1 == self.RISING:
                                 self.state = self.Audio_receptionist_and_restaurant_demonstration
 
@@ -344,8 +345,8 @@ class TaskMain():
                 self.safety_stop_modules()
     
                 tetas = [[35, -35], [45, -15], [55, -35]]
-                # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=2.0, use_arm=False, detect_objects=True, detect_furniture=False)
                 
                 self.robot.set_neck(self.look_forward, wait_for_end_of=True)
 
@@ -609,7 +610,7 @@ class TaskMain():
                     ### MILK 
                     object_in_gripper = False
                     while not object_in_gripper:
-                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_furniture=False)
                         object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
@@ -627,7 +628,7 @@ class TaskMain():
                     ### CORNFLAKES
                     object_in_gripper = False                    
                     while not object_in_gripper:
-                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
                         object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=2.0, wait_time_show_help_face=2.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                     self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
@@ -648,8 +649,8 @@ class TaskMain():
                     correct_object_spoon = DetectedObject()
                     while not object_in_gripper:
 
-                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
-                        # objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_shoes=False, detect_furniture=False)
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_furniture=False)
+                        # objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_furniture=False)
                     
                         for of in objects_found:
                             print(of.object_name.lower(), of.index)

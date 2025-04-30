@@ -473,9 +473,9 @@ class YoloPoseNode(Node):
                 self.waiting_for_pcloud = True
                 self.call_point_cloud_server(req2)
         
-        else:
-            yolov8_pose_filtered = ListOfDetectedPerson()
-            self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
+        # else:
+        #     yolov8_pose_filtered = ListOfDetectedPerson()
+        #     self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
         
 
@@ -1004,7 +1004,6 @@ class YoloPoseNode(Node):
         head_rel_pos.x =  head_localisation.x/1000
         head_rel_pos.y =  head_localisation.y/1000
         head_rel_pos.z =  head_localisation.z/1000
-
         new_person.position_relative_head = head_rel_pos
         
         # calculate the absolute head position according to the robot localisation

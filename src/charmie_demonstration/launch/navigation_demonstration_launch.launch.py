@@ -22,7 +22,6 @@ def generate_launch_description():
         # std_lf.lidar,
         # std_lf.llm
         # std_lf.obstacles,
-        # std_lf.odometry,
         # std_lf.navigation
         
         # std_lf.node_robot_state_publisher,

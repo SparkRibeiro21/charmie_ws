@@ -1,14 +1,16 @@
 # Service to activate the yolo object detection, thus publishing it on the topic
 
-bool activate_objects                       # activate or deactivate yolo object detection
-bool activate_shoes                         # activate or deactivate yolo shoes detection
-bool activate_doors                         # activate or deactivate yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
-bool activate_objects_hand                  # activate or deactivate hand yolo object detection
-bool activate_shoes_hand                    # activate or deactivate hand yolo shoes detection
-bool activate_doors_hand                    # activate or deactivate hand yolo doors detection (includes doors, drawers, washing machine door, closet with doors)
-float64 minimum_objects_confidence          # adjust the minimum accuracy to assume as an object
-float64 minimum_shoes_confidence            # adjust the minimum accuracy to assume as a shoe
-float64 minimum_doors_confidence            # adjust the minimum accuracy to assume as a door or handle
+bool activate_objects                                       # activate or deactivate yolo object detection
+bool activate_furniture                                     # activate or deactivate yolo furniture detection (includes doors, drawers, washing machine door, closet with doors)
+bool activate_objects_hand                                  # activate or deactivate hand yolo object detection
+bool activate_furniture_hand                                # activate or deactivate hand yolo furniture detection (includes doors, drawers, washing machine door, closet with doors)
+bool activate_objects_base                                  # activate or deactivate base yolo object detection
+bool activate_furniture_base                                # activate or deactivate base yolo furniture detection (includes doors, drawers, washing machine door, closet with doors)
+float64 minimum_objects_confidence                          # adjust the minimum accuracy to assume as an object
+float64 minimum_furniture_confidence                        # adjust the minimum accuracy to assume as a furniture
+# bool activate_shoes               # NOT USED ANYMORE      # activate or deactivate yolo shoes detection
+# bool activate_shoes_hand          # NOT USED ANYMORE      # activate or deactivate hand yolo shoes detection
+# float64 minimum_shoes_confidence  # NOT USED ANYMORE      # adjust the minimum accuracy to assume as a shoe
 ---
 bool success    # indicate successful run of triggered service
 string message  # informational, e.g. for error messages.

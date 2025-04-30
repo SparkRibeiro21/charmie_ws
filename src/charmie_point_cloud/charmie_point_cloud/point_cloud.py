@@ -49,8 +49,14 @@ class PointCloud():
 
         self.camera = camera
 
-        self.linhas = 720
-        self.colunas = 1280
+        ### AFTER SYNCHED CHANGES
+        # self.linhas = 720
+        # self.colunas = 1280
+        self.linhas = 480
+        self.colunas = 848
+        
+        
+        
         # print(linhas, colunas)
         
         # Parametros intrinsecos da Camera (Dados pelo Tiago)
@@ -82,7 +88,7 @@ class PointCloud():
             self.Z_SHIFT = 1300
         
 
-        else: #  self.camera == "hand":
+        elif self.camera == "hand":
             self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
             self.fy = 658.56268970  # Distancia Focal em pixels (y-direction)
             self.cx = 642.88868778  # Ponto Principal em pixels (x-coordinate)
@@ -90,6 +96,19 @@ class PointCloud():
             # maximum and minimum distnace considered, outside this range is 0
             self.MAX_DIST = 1000
             self.MIN_DIST = 70
+            # shifts from the center of the bottom servo to the center of the robot platform
+            self.X_SHIFT = 0
+            self.Y_SHIFT = 0
+            self.Z_SHIFT = 0
+        
+        elif self.camera == "base":
+            self.fx = 658.65612382  # Distancia Focal em pixels (x-direction)
+            self.fy = 658.56268970  # Distancia Focal em pixels (y-direction)
+            self.cx = 642.88868778  # Ponto Principal em pixels (x-coordinate)
+            self.cy = 346.93829812  # Ponto Principal em pixels (y-coordinate)
+            # maximum and minimum distnace considered, outside this range is 0
+            self.MAX_DIST = 6000
+            self.MIN_DIST = 400
             # shifts from the center of the bottom servo to the center of the robot platform
             self.X_SHIFT = 0
             self.Y_SHIFT = 0
@@ -756,7 +775,8 @@ class PointCloudNode(Node):
                 width = self.hand_rgb_img.width
                 height = self.hand_rgb_img.height
 
-                depth_frame_res = cv2.resize(depth_frame, (1280, 720), interpolation = cv2.INTER_NEAREST)
+                # depth_frame_res = cv2.resize(depth_frame, (1280, 720), interpolation = cv2.INTER_NEAREST)
+                depth_frame_res = cv2.resize(depth_frame, (width, height), interpolation = cv2.INTER_NEAREST)
 
                 depth_frame_res[depth_frame_res > self.pcloud_hand.MAX_DIST] = 0
                 depth_frame_res[depth_frame_res < self.pcloud_hand.MIN_DIST] = 0
@@ -1014,7 +1034,8 @@ class PointCloudNode(Node):
                 width = self.hand_rgb_img.width
                 height = self.hand_rgb_img.height
 
-                depth_frame_res = cv2.resize(depth_frame, (1280, 720), interpolation = cv2.INTER_NEAREST)
+                # depth_frame_res = cv2.resize(depth_frame, (1280, 720), interpolation = cv2.INTER_NEAREST)
+                depth_frame_res = cv2.resize(depth_frame, (width, height), interpolation = cv2.INTER_NEAREST)
 
                 depth_frame_res[depth_frame_res > self.pcloud_hand.MAX_DIST] = 0
                 depth_frame_res[depth_frame_res < self.pcloud_hand.MIN_DIST] = 0

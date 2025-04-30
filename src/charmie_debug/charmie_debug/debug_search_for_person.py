@@ -14,21 +14,22 @@ ros2_modules = {
     "charmie_audio":            False,
     "charmie_face":             False,
     "charmie_head_camera":      True,
-    "charmie_hand_camera":      True,
+    "charmie_hand_camera":      False,
+    "charmie_base_camera":      False,
     "charmie_lidar":            False,
+    "charmie_lidar_bottom":     False,
     "charmie_llm":              False,
     "charmie_localisation":     False,
     "charmie_low_level":        False,
     "charmie_navigation":       False,
+    "charmie_nav2":             False,
     "charmie_neck":             False,
     "charmie_obstacles":        False,
-    "charmie_odometry":         False,
-    "charmie_point_cloud":      True,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         False,
     "charmie_tracking":         True,
     "charmie_yolo_objects":     False,
-    "charmie_yolo_pose":        False,
+    "charmie_yolo_pose":        True,
 }
 
 # main function that already creates the thread for the task state machine
@@ -110,14 +111,18 @@ class TaskMain():
                 time.sleep(2.0)
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[-15, -45], [-15, -15], [-15, 15]]
-                # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_shoes=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_shoes=True, detect_furniture=False)
+                tetas = [[-30, -45], [0, -45], [30, -45]]
+                # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_objects_hand=True, detect_objects_base=True)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
-                    print(o.index, o.object_name, "\t", round(o.position_absolute.x, 2), round(o.position_absolute.y, 2), round(o.position_absolute.z, 2))
-
+                    conf = f"{o.confidence * 100:.0f}%"
+                    x_ = f"{o.position_absolute.x:4.2f}"
+                    y_ = f"{o.position_absolute.y:5.2f}"
+                    z_ = f"{o.position_absolute.z:5.2f}"
+                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({x_}, {y_}, {z_})")
+                    
                 self.robot.set_rgb(CYAN+HALF_ROTATE)
                 time.sleep(0.5)
 

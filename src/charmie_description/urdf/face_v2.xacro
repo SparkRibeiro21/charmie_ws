@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+    <xacro:property name="face_length" value="0.013" />
+    <xacro:property name="face_width" value="0.16" />
+    <xacro:property name="face_height" value="0.26" />
+
+    <xacro:property name="face_height_shift" value="0.0975" />
+
+    <joint name="face" type="fixed">
+        <parent link="neck_tilt_link"/>
+        <child link="face_link"/>
+        <origin xyz="${neck_tilt_shaft_length} 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="face_link">
+
+        <visual>
+            <origin xyz="${face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${face_length} ${face_width} ${face_height}" />
+            </geometry>
+            <material name="grey"/>
+        </visual>
+        <collision>
+            <origin xyz="${face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${face_length} ${face_width} ${face_height}" />
+            </geometry>
+        </collision>
+        <xacro:inertial_box mass="0.5" x="${face_length}" y="${face_width}" z="${face_height}" >
+            <origin xyz="${face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+        </xacro:inertial_box>
+
+    </link>
+
+</robot>

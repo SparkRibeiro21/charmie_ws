@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+
+    <gazebo reference="hand_camera_link">
+        <material>Gazebo/Black</material>
+        <sensor type="depth" name="camera_sensor_orbbec">
+            <pose> 0 0 0 0 0 0 </pose>
+            <visualize>true</visualize>
+            <update_rate>10</update_rate>
+
+            <!-- Point Cloud Configuration for Depth Camera -->
+            <depth_camera>
+                <horizontal_fov>1.5708</horizontal_fov> <!-- 90 degrees -->
+                <image_width>848</image_width>
+                <image_height>480</image_height>
+                <near>0.07</near>
+                <far>1.0</far>
+            </depth_camera>
+
+            <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+                <frame_name>hand_camera_link</frame_name>
+            </plugin>
+        </sensor>
+    </gazebo>
+
+</robot>

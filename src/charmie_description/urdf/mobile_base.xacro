@@ -8,7 +8,7 @@
 
     <xacro:property name="base_floor_height" value="0.05" />
     
-    <xacro:property name="wheel_radius" value="0.1" />
+    <xacro:property name="wheel_radius" value="$(arg wheel_radius)" />
     <xacro:property name="wheel_length" value="0.038" />
     <xacro:property name="wheel_shift_from_base_length" value="0.025" />
 
@@ -88,7 +88,7 @@
 
 
     <!-- BASE FOOTPRINT -->
-      
+
     <joint name="base_footprint_joint" type="fixed">
         <parent link="base_link"/>
         <child link="base_footprint"/>
