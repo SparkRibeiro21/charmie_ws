@@ -42,7 +42,7 @@ class FaceNode(Node):
         self.get_logger().info("Initial Face Received is: %s" %self.INITIAL_FACE)
 
         # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
-        self.AFTER_SPEECH_TIMER_SHORT = 0.2
+        self.AFTER_SPEECH_TIMER_SHORT = 0.25
         self.AFTER_SPEECH_TIMER_LONG = 1.0
 
         self.new_face_received = False
