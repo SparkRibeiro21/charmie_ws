@@ -5,6 +5,8 @@
   <xacro:property name="use_xacro_load_yaml" value="true"/>
   <xacro:property name="mesh_path" value="package://xarm_description/meshes"/>
   <xacro:property name="mesh_suffix" value="stl"/>
+  <!--<xacro:property name="torso_initial_angle_rads" value="0.15708" />-->
+  <xacro:property name="torso_initial_angle_rads" value="0"/>
 
   <xacro:property name="kinematics_params_file" value="$(find xarm_description)/config/kinematics/default/xarm6_default_kinematics.yaml"/>
 
@@ -44,6 +46,6 @@
     <parent link="top_torso_link"/>
     <child link="xarm_link_base"/>
     <!-- Adjust this origin if needed for proper placement -->
-    <origin xyz="-0.12 0.06 -0.09" rpy="${pi/2} ${pi} 0"/>
+    <origin xyz="-0.11 0.0585 -0.0623" rpy="${pi/2} ${pi+torso_initial_angle_rads} 0"/>
   </joint>
 </robot>

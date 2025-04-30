@@ -184,6 +184,7 @@ class LaunchStdFunctions():
                        executable='joint_state_publisher_gui',
                        parameters=[{
                             'zeros': {
+                                'xarm_gripper_drive_joint': 0.850,
                                 'xarm_joint1': -3.926,
                                 'xarm_joint2': 1.449,
                                 'xarm_joint3': -1.134,
@@ -194,6 +195,16 @@ class LaunchStdFunctions():
                         }]
         )
         
+        #Test joint values
+        #                        'xarm_gripper_drive_joint': 0.850,
+        #                        'xarm_joint1': -2.988,
+        #                        'xarm_joint2': 0.776672,
+        #                        'xarm_joint3': -1.05767,
+        #                        'xarm_joint4': 0.150098,
+        #                        'xarm_joint5': 1.88496,
+        #                        'xarm_joint6': 4.75951
+
+
         # Use IncludeLaunchDescription to include the launch file
         self.charmie_multi_camera_launch_description = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('realsense2_camera'), 'launch', 'charmie_multi_camera_launch.py')])
