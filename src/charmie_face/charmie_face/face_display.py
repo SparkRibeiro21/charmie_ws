@@ -353,6 +353,8 @@ class FaceMain():
                     self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
 
                 if self.gif_flag:
+                    if self.frame_index >= len(self.gif_frames): # safety for gifs with a higher amount of frames stop and a new one with less frames wants to be used 
+                        self.frame_index = 1
                     self.SCREEN.blit(self.gif_frames[self.frame_index], (0, 0))
                     pygame.display.update()
                     self.frame_index = (self.frame_index + 1) % len(self.gif_frames)
