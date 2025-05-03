@@ -994,7 +994,7 @@ class ServeBreakfastMain():
 
                 time.sleep(5)
 
-                self.set_face(command="spoon_inside_traycup")
+                self.set_face(command="place_spoon_in_tray")
 
 
                 self.set_speech(filename="serve_breakfast/place_object_in_funilocopo", wait_for_end_of=True)

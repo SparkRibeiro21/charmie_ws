@@ -1918,7 +1918,7 @@ class ServeBreakfastMain():
 
                         self.set_speech(filename="serve_breakfast/place_object_in_funilocopo", wait_for_end_of=True)
 
-                        self.set_face(command="spoon_inside_traycup")
+                        self.set_face(command="place_spoon_in_tray")
 
                         time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME*1.5)
 
