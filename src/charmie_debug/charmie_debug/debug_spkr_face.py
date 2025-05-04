@@ -27,7 +27,7 @@ ros2_modules = {
     "charmie_neck":             False,
     "charmie_obstacles":        False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -91,6 +91,41 @@ class TaskMain():
                 print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
 
                 while True:
+                    self.robot.set_face("help_pick_spoon")
+                    print("help_pick_spoon")
+                    time.sleep(3.0)
+
+                    self.robot.set_face("help_pick_milk")
+                    print("help_pick_milk")
+                    time.sleep(3.0)
+
+                    self.robot.set_face("help_pick_cornflakes")
+                    print("help_pick_cornflakes")
+                    time.sleep(3.0)
+
+                    self.robot.set_face("help_pick_bowl")
+                    print("help_pick_bowl")
+                    time.sleep(3.0)
+
+                    self.robot.set_face("help_pick_water")
+                    print("help_pick_water")
+                    time.sleep(3.0)
+
+                    self.robot.set_face("help_pick_orange")
+                    print("help_pick_orange")
+                    time.sleep(3.0)
+
+                    self.robot.set_face("help_pick_red_wine")
+                    print("help_pick_red_wine")
+                    time.sleep(3.0)
+
+                    self.robot.set_face("help_pick_mustard")
+                    print("help_pick_mustard")
+                    time.sleep(3.0)
+                    
+
+
+                    """
                     self.robot.set_face("charmie_face_green")
                     print("charmie_face_green")
                     self.robot.set_speech(filename="sound_effects/you_have_to_pick_renata", show_in_face=True, wait_for_end_of=True)
@@ -127,7 +162,7 @@ class TaskMain():
                     self.robot.set_face("charmie_face")
                     print("charmie_face")
                     time.sleep(5.0)
-
+                    """
 
                 if self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(o)) is not None:
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)

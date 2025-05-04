@@ -13,6 +13,8 @@ import threading
 from screeninfo import get_monitors
 from PIL import Image
 
+DEBUG_WITHOUT_DISPLAY = True
+
 # ROS2 Face Node
 class FaceNode(Node):
     def __init__(self):
@@ -178,12 +180,17 @@ class FaceMain():
     def __init__(self, node: FaceNode):
         # create a ROS2 node instance
         self.node = node
-        self.device_id = self.get_touchscreen_id("Waveshare")  # Or any keyword matching the device
-        self.display_name = "DP-1-2"
-        self.map_touchscreen_to_correct_display(device_id=self.device_id, display_name=self.display_name)
-        self.resolution = self.get_display_resolution()
-        self.SCREEN = self.initiliase_pygame_screen()
 
+        if not DEBUG_WITHOUT_DISPLAY:
+            self.device_id = self.get_touchscreen_id("Waveshare")  # Or any keyword matching the device
+            self.display_name = "DP-1-2"
+            self.map_touchscreen_to_correct_display(device_id=self.device_id, display_name=self.display_name)
+            self.resolution = self.get_display_resolution()
+            self.SCREEN = self.initiliase_pygame_screen(screen=1)
+        else:
+            self.resolution = [1200, 800]
+            self.SCREEN = self.initiliase_pygame_screen(screen=0)
+            
         self.running = True
         self.gif_flag = False
         self.gif_frames = []
@@ -232,11 +239,11 @@ class FaceMain():
         
         return resolution
     
-    def initiliase_pygame_screen(self):
+    def initiliase_pygame_screen(self, screen=0):
 
         pygame.init()
         flags = pygame.DOUBLEBUF | pygame.NOFRAME
-        SCREEN = pygame.display.set_mode(tuple(self.resolution), flags, 8, display=1, vsync=1)
+        SCREEN = pygame.display.set_mode(tuple(self.resolution), flags, 8, display=screen, vsync=1)
         # Aui o display = 0, é que define para por no ecra principal, se puseres 1 mete no secundario e assim sucessivamente
         # As flags de DOUBLEBUF e NOFRAME é so para correr um bocadinho mais rapido em fullscreen, nao faz grande diferença mas prontos
         pygame.display.set_caption("Main Window")
