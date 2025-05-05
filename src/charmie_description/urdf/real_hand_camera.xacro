@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+  <xacro:arg name="use_nominal_extrinsics" default="false"/>
+  <xacro:property name="support_mesh_path" value="package://xarm_description/meshes"/>
+  <xacro:property name="camera_mesh_path" value="package://realsense2_description/meshes"/>
+  <xacro:property name="mesh_suffix" value="stl"/>
+
+  <!-- Include d405 urdf and materials-->
+  <xacro:include filename="$(find realsense2_description)/urdf/_d405.urdf.xacro" />
+  <xacro:include filename="$(find realsense2_description)/urdf/_materials.urdf.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/common/common.link.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/common/common.material.xacro" />
+
+
+  <!-- HAND CAMERA SUPPORT -->
+  <joint name="hand_camera_support_joint" type="fixed">
+    <parent link="xarm_link6"/>
+    <child link="hand_camera_support_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="hand_camera_support_link">
+    <visual>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="${support_mesh_path}/camera/realsense/visual/Suporte_Camara_Garra_Vertical_v6.${mesh_suffix}" scale="0.001 0.001 0.001"/>
+       </geometry>
+      <material name="aluminum" />
+      </visual>
+    <collision>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="${support_mesh_path}/camera/realsense/collision/Suporte_Camara_Garra_Vertical_v6.${mesh_suffix}" scale="0.001 0.001 0.001"/>
+      </geometry>  
+    </collision>
+  </link>
+
+  <!-- HAND CAMERA -->
+  <joint name="hand_camera_joint" type="fixed">
+    <parent link="hand_camera_support_link"/>
+    <child link="hand_camera_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="hand_camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${camera_mesh_path}/d405.${mesh_suffix}" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="aluminum"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="${camera_mesh_path}/d405.${mesh_suffix}" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+</robot>
