@@ -9,15 +9,12 @@
   <!-- Include d405 urdf and materials-->
   <xacro:include filename="$(find realsense2_description)/urdf/_d405.urdf.xacro" />
   <xacro:include filename="$(find realsense2_description)/urdf/_materials.urdf.xacro" />
-  <xacro:include filename="$(find xarm_description)/urdf/common/common.link.xacro" />
-  <xacro:include filename="$(find xarm_description)/urdf/common/common.material.xacro" />
-
 
   <!-- HAND CAMERA SUPPORT -->
   <joint name="hand_camera_support_joint" type="fixed">
     <parent link="xarm_link6"/>
     <child link="hand_camera_support_link"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
   </joint>
 
   <link name="hand_camera_support_link">
@@ -40,7 +37,7 @@
   <joint name="hand_camera_joint" type="fixed">
     <parent link="hand_camera_support_link"/>
     <child link="hand_camera_link"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0.0725 0.032" rpy="0 0 0"/>
   </joint>
 
   <link name="hand_camera_link">
