@@ -25,7 +25,9 @@ class FaceNode(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
         # self.declare_parameter("initial_face", "charmie_face") 
-        self.declare_parameter("initial_face", "6") 
+        # self.declare_parameter("initial_face", "6")  
+        # self.declare_parameter("initial_face", "place_bowl_in_tray") 
+        self.declare_parameter("initial_face", "charmie_face_old_tablet") 
         
         self.home = str(Path.home())
         midpath_faces = "/charmie_ws/src/charmie_face/charmie_face/"
@@ -256,6 +258,38 @@ class FaceMain():
 
         return SCREEN
     
+    def dynamic_image_resize(self, image):
+    
+        # return (400, 400) new size for image to be added to resize function
+        width, height = image.get_size()
+
+
+
+        print(width, height)
+
+        ### change position to always be centered (test in jpg and gif)
+        ### change scale so that the image always fits the screen (test in jpg and gif)
+
+
+        ### change .blit(0,0) to => 
+        """
+        # Get screen dimensions
+        screen_width, screen_height = screen.get_size()
+
+        # Get image dimensions
+        image_width, image_height = self.image.get_size()
+
+        # Compute top-left position to center the image
+        x = (screen_width - image_width) // 2
+        y = (screen_height - image_height) // 2
+
+        # Draw the image centered on screen
+        screen.blit(self.image, (x, y))
+        """
+
+        return (width//2, height)
+
+
     def update_received_face(self):
                 
         self.node.new_face_received = False
@@ -269,8 +303,7 @@ class FaceMain():
         if file_extension == ".jpg" or file_extension == ".jpeg" or file_extension == ".png":
             self.gif_flag = False
             self.image = pygame.image.load(self.node.new_face_received_name)
-                
-            # self.image = pygame.transform.scale(self.image, (400, 400))
+            self.image = pygame.transform.scale(self.image, self.dynamic_image_resize(self.image))
         
         elif file_extension == ".gif":
             self.gif_flag = True
@@ -286,6 +319,7 @@ class FaceMain():
             for frame in range(gif.n_frames):
                 gif.seek(frame)
                 frame = pygame.image.fromstring(gif.tobytes(), gif.size, gif.mode)
+                frame = pygame.transform.scale(frame, self.dynamic_image_resize(frame))
                 self.gif_frames.append(frame)
         else:
             pass
