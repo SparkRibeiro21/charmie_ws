@@ -24,7 +24,8 @@ class FaceNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
-        self.declare_parameter("initial_face", "charmie_face") 
+        # self.declare_parameter("initial_face", "charmie_face") 
+        self.declare_parameter("initial_face", "6") 
         
         self.home = str(Path.home())
         midpath_faces = "/charmie_ws/src/charmie_face/charmie_face/"
@@ -265,9 +266,12 @@ class FaceMain():
         file_name, file_extension = os.path.splitext(self.node.new_face_received_name)
 
         print(file_extension)
-        if file_extension == ".jpg":
+        if file_extension == ".jpg" or file_extension == ".jpeg" or file_extension == ".png":
             self.gif_flag = False
             self.image = pygame.image.load(self.node.new_face_received_name)
+                
+            # self.image = pygame.transform.scale(self.image, (400, 400))
+        
         elif file_extension == ".gif":
             self.gif_flag = True
             gif = Image.open(self.node.new_face_received_name)
