@@ -24,10 +24,9 @@ class FaceNode(Node):
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
-        # self.declare_parameter("initial_face", "charmie_face") 
-        # self.declare_parameter("initial_face", "6")  
+        self.declare_parameter("initial_face", "charmie_face") 
         # self.declare_parameter("initial_face", "place_bowl_in_tray") 
-        self.declare_parameter("initial_face", "charmie_face_old_tablet") 
+        # self.declare_parameter("initial_face", "charmie_face_old_tablet") 
         
         self.home = str(Path.home())
         midpath_faces = "/charmie_ws/src/charmie_face/charmie_face/"
@@ -191,7 +190,7 @@ class FaceMain():
             self.resolution = self.get_display_resolution()
             self.SCREEN = self.initiliase_pygame_screen(screen=1)
         else:
-            self.resolution = [1200, 800]
+            self.resolution = [1280, 800]
             self.SCREEN = self.initiliase_pygame_screen(screen=0)
             
         self.running = True
@@ -204,6 +203,9 @@ class FaceMain():
         self.font = pygame.font.SysFont("Comic Sans MS", 150)  # (font name, font size) – you can change!
         self.font_color = (0, 0, 0)  # White color for the text
         
+        self.xx_shift = 0.0
+        self.yy_shift = 0.0
+
     def get_touchscreen_id(self, name_contains="touch"):
 
         # xinput list
@@ -260,35 +262,34 @@ class FaceMain():
     
     def dynamic_image_resize(self, image):
     
-        # return (400, 400) new size for image to be added to resize function
-        width, height = image.get_size()
+        # get image and screen size
+        image_width, image_height = image.get_size()
+        screen_width, screen_height = self.SCREEN.get_size()
 
+        # rates from screen size to image size
+        x_rate = image_width/screen_width
+        y_rate = image_height/screen_height
 
+        # adjust width and height depending on rates
+        if x_rate < y_rate:
+            width  = int(image_width/y_rate)
+            height = int(image_height/y_rate)
+        else:
+            width  = int(image_width/x_rate)
+            height = int(image_height/x_rate)
 
-        print(width, height)
+       # Compute top-left position to center the image
+        self.xx_shift = (screen_width  - width)  // 2
+        self.yy_shift = (screen_height - height) // 2
 
-        ### change position to always be centered (test in jpg and gif)
-        ### change scale so that the image always fits the screen (test in jpg and gif)
+        # print("-")
+        # print(image_width, image_height)
+        # print(screen_width, screen_height)
+        # print(x_rate, y_rate) 
+        # print(self.xx_shift, self.yy_shift)
+        # print(width, height)
 
-
-        ### change .blit(0,0) to => 
-        """
-        # Get screen dimensions
-        screen_width, screen_height = screen.get_size()
-
-        # Get image dimensions
-        image_width, image_height = self.image.get_size()
-
-        # Compute top-left position to center the image
-        x = (screen_width - image_width) // 2
-        y = (screen_height - image_height) // 2
-
-        # Draw the image centered on screen
-        screen.blit(self.image, (x, y))
-        """
-
-        return (width//2, height)
-
+        return (width, height)
 
     def update_received_face(self):
                 
@@ -400,7 +401,7 @@ class FaceMain():
                 if self.gif_flag:
                     if self.frame_index >= len(self.gif_frames): # safety for gifs with a higher amount of frames stop and a new one with less frames wants to be used 
                         self.frame_index = 1
-                    self.SCREEN.blit(self.gif_frames[self.frame_index], (0, 0))
+                    self.SCREEN.blit(self.gif_frames[self.frame_index], (self.xx_shift, self.yy_shift))
                     pygame.display.update()
                     self.frame_index = (self.frame_index + 1) % len(self.gif_frames)
                     if self.frame_index == 0: # needs this line to avoid a blank frame everytime the gif resets
@@ -408,7 +409,8 @@ class FaceMain():
                     # print(self.frame_index)
                     self.clock.tick(30)
                 elif self.previous_image_extension != "": # use self.previous_image_extension for initial case
-                    self.SCREEN.blit(self.image, (0, 0))
+                    # self.SCREEN.blit(self.image, (0, 0))
+                    self.SCREEN.blit(self.image, (self.xx_shift, self.yy_shift))
                     pygame.display.update()
 
         pygame.quit()
