@@ -1,7 +1,9 @@
-# Service to send a the name of a file to the robot face (tablet) 
+# Service to send a the name of a file to the robot face 
 
-string command # type of face that is commonly used and is always the same, already in face (tablet) SD card (i.e. hearing face and standard blinking eyes face)
-string custom # type of face that is custom, not previously in face (tablet) SD card (i.e. show detected person or object in the moment)
+string command          # type of face that is commonly used and is always the same, already in face (i.e. hearing face and standard blinking eyes face)
+string custom           # type of face that is custom, not previously in face (i.e. show detected person or object in the moment)
+string camera           # select which camera must be shown in face (can be rgb or depth)
+bool show_detections    # select if in addition to show the camera on the face, shows the detections being used with that camera
 ---
 bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages.
