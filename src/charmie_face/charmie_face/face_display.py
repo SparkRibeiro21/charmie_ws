@@ -3,7 +3,10 @@ import rclpy
 from rclpy.node import Node
 
 from charmie_interfaces.srv import SetFace, SetTextFace
+from sensor_msgs.msg import Image as Image_ ### ADD TO CHANGE IMAGE TO IMAGE_ because of: from PIL import Image
+from realsense2_camera_msgs.msg import RGBD
 
+from cv_bridge import CvBridge, CvBridgeError
 import subprocess
 import time
 import os
@@ -12,6 +15,9 @@ import pygame
 import threading
 from screeninfo import get_monitors
 from PIL import Image
+import cv2
+import numpy as np
+
 
 DEBUG_WITHOUT_DISPLAY = True
 
@@ -32,6 +38,13 @@ class FaceNode(Node):
         midpath_faces = "/charmie_ws/src/charmie_face/charmie_face/"
         self.media_faces_path = self.home + midpath_faces + "list_of_media_faces/"
         self.temp_faces_path = self.home + midpath_faces + "list_of_temp_faces/"
+
+        # Intel Cameras (Head and Hand/Gripper)
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+        self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
+        # Orbbec Camera (Base)
+        self.color_image_base_subscriber = self.create_subscription(Image_, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
+        self.aligned_depth_image_base_subscriber = self.create_subscription(Image_, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
         
         ### Services (Server) ###   
         self.server_face_command = self.create_service(SetFace, "face_command", self.callback_face_command) 
@@ -55,6 +68,26 @@ class FaceNode(Node):
         self.new_text_received = False
         self.new_text_received_name = ""
         self.new_text_received_delay = self.AFTER_SPEECH_TIMER_SHORT
+
+        self.cams_flag = True
+
+        self.HEAD_CAM_WIDTH = 848
+        self.BASE_CAM_WIDTH = 640
+        self.HEAD_CAM_HEIGHT = 480
+        self.head_rgb =   np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
+        self.hand_rgb =   np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
+        self.base_rgb =   np.zeros((self.HEAD_CAM_HEIGHT, self.BASE_CAM_WIDTH, 3), np.uint8)
+        self.head_depth = np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
+        self.hand_depth = np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
+        self.base_depth = np.zeros((self.HEAD_CAM_HEIGHT, self.BASE_CAM_WIDTH, 3), np.uint8)
+        self.new_head_rgb = False
+        self.new_hand_rgb = False
+        self.new_base_rgb = False
+        self.new_head_depth = False
+        self.new_hand_depth = False
+        self.new_base_depth = False
+
+        self.br = CvBridge()
         
         # sends initial face
         self.image_to_face(self.INITIAL_FACE)
@@ -156,6 +189,35 @@ class FaceNode(Node):
             self.get_logger().error("FACE received (custom) does not exist! - %s" %command)
             return False, "FACE received (custom) does not exist."
     
+    # CAMERAS 
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        # self.head_rgb = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+        # self.head_rgb = cv2.cvtColor(self.head_rgb, cv2.COLOR_BGR2RGB)
+        self.head_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
+        
+        self.head_depth = rgbd.depth
+        self.new_head_rgb = True
+        self.new_head_depth = True
+
+
+
+
+        # print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_rgbd_hand_callback(self, rgbd: RGBD):
+        self.hand_rgb = rgbd.rgb
+        self.hand_depth = rgbd.depth
+        self.new_hand_rgb = True
+        self.new_hand_depth = True
+        # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_color_image_base_callback(self, img: Image):
+        self.base_rgb = img
+        self.new_base_rgb = True
+
+    def get_depth_base_image_callback(self, img: Image):
+        self.base_depth = img
+        self.new_base_depth = True
 
 def main(args=None):
     rclpy.init(args=args)
@@ -385,6 +447,18 @@ class FaceMain():
                     self.node.new_text_received = False
                     while time.time() - start_time < self.node.new_text_received_delay:
                         pass # stales the display thread, so that new faces may be received, however the text has higher priority
+            
+            elif self.node.cams_flag:
+                
+                
+                surface = pygame.surfarray.make_surface(np.transpose(self.node.head_rgb, (1, 0, 2)))  # Pygame expects (width, height, channels)
+    
+                aaa = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
+                # self.SCREEN.blit(self.image, (0, 0))
+                # pygame.display.update()
+
+                self.SCREEN.blit(aaa, (self.xx_shift, self.yy_shift))
+                pygame.display.update()
 
             else:
                 if self.node.new_face_received:
