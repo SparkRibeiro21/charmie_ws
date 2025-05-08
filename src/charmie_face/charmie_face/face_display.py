@@ -74,8 +74,8 @@ class FaceNode(Node):
 
         if request.command != "":
             response.success, response.message = self.image_to_face(command=request.command)
-        # elif request.custom != "":
-        #     response.success, response.message = self.custom_image_to_face(command=request.custom)
+        elif request.custom != "":
+            response.success, response.message = self.custom_image_to_face(command=request.custom)
         else:
             response.success = False
             response.message = "No standard or custom face received."
@@ -137,32 +137,24 @@ class FaceNode(Node):
         else:
             self.get_logger().error("FACE received (standard) does not exist! - %s" %command)
             return False, "FACE received (standard) does not exist."
-    
-    """
+        
     # Receive custom image name to send to tablet and show in face
     def custom_image_to_face(self, command):
 
         # checks whether file exists, maybe there was some typo 
-        file_exists = os.path.exists(self.face.complete_path + command + ".jpg")
+        file_exists = os.path.exists(self.temp_faces_path + command + ".jpg")
         
         if file_exists:
-            self.get_logger().info("FACE received (custom) - %s" %command)
-            
-            # checks the filename of custom faces being sent and changes the name so there is no conflict in files with similar names
-            new_filename = self.face.get_filename(command, ".jpg")
-            
-            # the name afther complete path is received from the topic 
-            self.face.copy_file(self.face.complete_path + command + ".jpg", new_filename + ".jpg")
-            
-            # checks if file exist on the tablet SD card and writes in file so it will appear on face
-            self.face.save_text_file("temp/" + new_filename)
-            # print("File copied successfully.")
-            return True, "Face received (custom) sucessfully displayed"
+            self.get_logger().info("FACE received (standard) - %s" %command)
+            # self.face.save_text_file("media/" + command)
+            self.new_face_received = True
+            self.new_face_received_name = self.temp_faces_path + command + ".jpg"
+            return True, "Face received (standard) sucessfully displayed"
 
         else:
             self.get_logger().error("FACE received (custom) does not exist! - %s" %command)
             return False, "FACE received (custom) does not exist."
-    """
+    
 
 def main(args=None):
     rclpy.init(args=args)

@@ -91,15 +91,15 @@ class TaskMain():
                 print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
 
                 while True:
-                    self.robot.set_face("help_pick_spoon")
+                    self.robot.set_face(custom="2024-07-16_18-34-13_Big Coke")
                     print("help_pick_spoon")
                     time.sleep(3.0)
 
-                    self.robot.set_face("help_pick_milk")
+                    self.robot.set_face(custom="2024-07-19 18-20-45 15")
                     print("help_pick_milk")
                     time.sleep(3.0)
 
-                    self.robot.set_face("help_pick_cornflakes")
+                    self.robot.set_face(custom="2024-07-20 09-22-11 38")
                     print("help_pick_cornflakes")
                     time.sleep(3.0)
 
