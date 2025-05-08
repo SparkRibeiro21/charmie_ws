@@ -66,11 +66,10 @@ class FaceNode(Node):
         print("Received request", request.command)
  
         # Type of service received: 
-        # string command # type of face that is commonly used and is always the same, already in face (tablet) SD card (i.e. hearing face and standard blinking eyes face)
-        # string custom # type of face that is custom, not previously in face (tablet) SD card (i.e. show detected person or object in the moment)
-        # ---
-        # bool success   # indicate successful run of triggered service
-        # string message # informational, e.g. for error messages.
+        # string command          # type of face that is commonly used and is always the same, already in face (i.e. hearing face and standard blinking eyes face)
+        # string custom           # type of face that is custom, not previously in face (i.e. show detected person or object in the moment)
+        # string camera           # select which camera must be shown in face (can be rgb or depth)
+        # bool show_detections    # select if in addition to show the camera on the face, shows the detections being used with that camera
 
         if request.command != "":
             response.success, response.message = self.image_to_face(command=request.command)
@@ -79,6 +78,8 @@ class FaceNode(Node):
         else:
             response.success = False
             response.message = "No standard or custom face received."
+
+        print("CAMS:", request.camera, request.show_detections)
 
         return response
 
@@ -183,7 +184,7 @@ class FaceMain():
             self.SCREEN = self.initiliase_pygame_screen(screen=1)
         else:
             self.resolution = [1280, 800]
-            self.SCREEN = self.initiliase_pygame_screen(screen=0)
+            self.SCREEN = self.initiliase_pygame_screen(screen=1)
             
         self.running = True
         self.gif_flag = False
