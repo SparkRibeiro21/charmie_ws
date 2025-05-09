@@ -1650,8 +1650,42 @@ class YoloPoseMain():
                 self.node.yolo_models_initialized = True
 
 ### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
-### adicionar caracteristicas ao add_person_to_detected_msg
+    
+    ### adicionar caracteristicas ao add_person_to_detected_msg
+    # ethnicity: None
+    # ethnicity_probability: 0.0
+    # age_estimate: None
+    # age_estimate_probability: 0.0
+    # gender: None
+    # gender_probability: 0.0
+    # shirt_color: ''
+    # shirt_rgb:
+    #   red: 0
+    #   green: 0
+    #   blue: 0
+    # pants_color: ''
+    # pants_rgb:
+    #   red: 0
+    #   green: 0
+    #   blue: 0
+
+    # testar arm_raised
+
+    # pointing at
+    # pointing with arm
+
+    # testar image (c/ search for person)
+
+    ### localizacao torso e cabeça
+    # coordenadas point cloud cabeça
+    # coordenadas point cloud torso
+    # coordenadas point cloud pessoad
+
+    # room_location
+    # furniture_location
+    # height
+
+
+    
 ### draw_detected_people
-### localizacao torso e cabeça
 ### verificar flags do gui (waving e legs visible seem OK)
-### rever todo o codigo antigo

@@ -11,6 +11,10 @@ geometry_msgs/Point position_cam_head      # position relative to the camera fra
 geometry_msgs/Point position_relative_head # position relative to the base_footprint frame
 geometry_msgs/Point position_absolute_head # position relative to the map frame
 
+geometry_msgs/Point position_cam_torso      # position relative to the camera frame
+geometry_msgs/Point position_relative_torso # position relative to the base_footprint frame
+geometry_msgs/Point position_absolute_torso # position relative to the map frame
+
 int32 box_top_left_x
 int32 box_top_left_y
 int32 box_width
