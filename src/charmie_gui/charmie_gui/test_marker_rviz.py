@@ -678,7 +678,7 @@ class MarkerPublisher(Node):
 
         ### DO I NEED TO DELETE, SINCE IT IS ONLY ONE OBJECT?
         delete_marker = Marker()
-        delete_marker.header.frame_id = "base_footprint"
+        delete_marker.header.frame_id = "map"
         delete_marker.header.stamp = self.get_clock().now().to_msg()
         delete_marker.ns = "Track"
         delete_marker.id = 0  # Use the same ID to delete it
@@ -697,7 +697,7 @@ class MarkerPublisher(Node):
         marker = Marker()
 
         # Header - Defines frame and timestamp
-        marker.header.frame_id = "base_footprint"
+        marker.header.frame_id = "map"
         marker.header.stamp = self.get_clock().now().to_msg()
         # Namespace and ID (useful when publishing multiple markers)
         marker.ns = "Track"
@@ -707,8 +707,8 @@ class MarkerPublisher(Node):
         # Marker Action
         marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
 
-        marker.pose.position.x = track_entity.position_cam.x  # Set the X coordinate
-        marker.pose.position.y = track_entity.position_cam.y  # Set the X coordinate
+        marker.pose.position.x = track_entity.position_absolute.x  # Set the X coordinate
+        marker.pose.position.y = track_entity.position_absolute.y  # Set the X coordinate
         marker.pose.position.z = temp_height/2 # abs(track_entity.position_cam.z)  # Set the Z coordinate
 
         marker.pose.orientation.x = 0.0
