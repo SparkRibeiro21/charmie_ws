@@ -52,9 +52,6 @@ data_lock = threading.Lock()
 # print("Device count:", torch.cuda.device_count())
 # print("Device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
 
-# ON OTHER FILES:
-# check everything ok with search_for_obejcts (after implementing PC)
-
 class Yolo_obj(Node):
     def __init__(self):
         super().__init__("Yolo_obj")
@@ -146,8 +143,6 @@ class Yolo_obj(Node):
         # print(self.home+'/'+objects_filename)
         yolo_models_sucessful_imported = False
 
-
-        ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ##########
         while not yolo_models_sucessful_imported:
             
             try: 
@@ -174,8 +169,6 @@ class Yolo_obj(Node):
                 self.get_logger().error("Could NOT import YOLO models (objects, furniture, shoes)")
                 time.sleep(1.0)
 
-
-        ########## I THINK WILL NEED TO BE CHANGED IN THE MERGED_LISTS UPDATE ##########
         ### Topics ###
         # Intel Realsense Subscribers (RGBD) Head and Hand Cameras
         self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)

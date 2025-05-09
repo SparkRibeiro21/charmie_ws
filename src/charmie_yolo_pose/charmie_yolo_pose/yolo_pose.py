@@ -6,15 +6,20 @@ from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, BoundingBox, BoundingBoxAndPoints, RGB, ListOfDetectedPerson
 from charmie_interfaces.srv import GetPointCloudBB, ActivateYoloPose
+from realsense2_camera_msgs.msg import RGBD
 from cv_bridge import CvBridge, CvBridgeError
+import tf2_ros
+from tf2_geometry_msgs import do_transform_point
 import cv2
 import numpy as np
 import time
 import math
 import json
 from keras.models import load_model
-
+import threading
 from pathlib import Path
+
+from charmie_point_cloud.point_cloud_class import PointCloud
 
 # configurable parameters through ros topics
 ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects people whose legs are visible 
@@ -31,7 +36,6 @@ GET_CHARACTERISTICS = False
 NUMBER_OF_LEG_KP_TO_BE_DETECTED = 4
 MIN_KP_CONF_VALUE = 0.5
 
-
 DRAW_PERSON_CONF = True
 DRAW_PERSON_ID = True
 DRAW_PERSON_BOX = True
@@ -46,11 +50,18 @@ DRAW_PERSON_CLOTHES_COLOR = True
 DRAW_CHARACTERISTICS = True
 DRAW_FACE_RECOGNITION = True
 
+data_lock = threading.Lock()
+
+# Just to check if everything is OK with CUDA
+# import torch
+# print("CUDA available:", torch.cuda.is_available())
+# print("Device count:", torch.cuda.device_count())
+# print("Device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
 
 class YoloPoseNode(Node):
     def __init__(self):
         super().__init__("YoloPose")
-        self.get_logger().info("Initialised YoloPose Node NEW")
+        self.get_logger().info("Initialised YoloPose Node")
 
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
@@ -105,53 +116,68 @@ class YoloPoseNode(Node):
         full_yolo_model = self.complete_path + yolo_model
         self.get_logger().info(f"Using YOLO pose model: {yolo_model}")
 
-        ### Topics ###
-        # Yolo Model - Yolov8 Pose:
-        # If the PC used has lower frame rates switch in: self.declare_parameter("yolo_model", "s")
-        self.model = YOLO(full_yolo_model)
+        yolo_models_sucessful_imported = False
 
-        # Publisher (Pose of People Detected Filtered and Non Filtered)
+        while not yolo_models_sucessful_imported:
+            
+            try: 
+
+                self.model = YOLO(full_yolo_model)
+                self.get_logger().info("Successfully imported YOLO pose model.")
+                yolo_models_sucessful_imported = True
+
+            except:
+                self.get_logger().error("Could NOT import YOLO pose model.")
+                time.sleep(1.0)
+
+        ### Topics ###
+        # Intel Realsense Subscribers (RGBD) Head Camera
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+        # Publishe Results
         self.person_pose_filtered_publisher = self.create_publisher(ListOfDetectedPerson, "person_pose_filtered", 10)
 
-        # Subscriber (Yolov8_Pose TR Parameters)
-        # self.only_detect_person_legs_visible_subscriber = self.create_subscription(Bool, "only_det_per_legs_vis", self.get_only_detect_person_legs_visible_callback, 10)
-        # self.minimum_person_confidence_subscriber = self.create_subscription(Float32, "min_per_conf", self.get_minimum_person_confidence_callback, 10)
-        # self.minimum_keypoints_to_detect_person_subscriber = self.create_subscription(Int16, "min_kp_det_per", self.get_minimum_keypoints_to_detect_person_callback, 10)
-        # self.only_detect_person_right_in_front_subscriber = self.create_subscription(Bool, "only_det_per_right_in_front", self.get_only_detect_person_right_in_front_callback, 10)
-        # self.only_detect_person_arm_raised_subscriber = self.create_subscription(Bool, "only_det_per_arm_raised", self.get_only_detect_person_arm_raised_callback, 10)
-
-        # Intel Realsense Subscribers
-        self.color_image_head_subscriber = self.create_subscription(Image, "/CHARMIE/D455_head/color/image_raw", self.get_color_image_head_callback, 10)
-
-        # Robot Localisation
-        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
-
-        ### Services (Clients) ###
-        # Point Cloud
-        self.point_cloud_client = self.create_client(GetPointCloudBB, "get_point_cloud_bb")
-
-        while not self.point_cloud_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Point Cloud...")
-
         ### Services ###
-        self.activate_yolo_pose_service = self.create_service(ActivateYoloPose, "activate_yolo_pose", self.callback_activate_yolo_pose)
+        # This service is initialized on a function that is explained in comments on that timer function
+        # self.activate_yolo_pose_service = self.create_service(ActivateYoloPose, "activate_yolo_pose", self.callback_activate_yolo_pose)
         
+        ### TF buffer and listener ###
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+
+        ### Class ###
+        self.point_cloud = PointCloud()
+
+        ### Variables ###        
+        self.br = CvBridge()
+        self.head_rgb = Image()
+        self.head_depth = Image()
+        self.new_head_rgb = False
+        self.new_head_depth = False
+
+        self.CAM_IMAGE_WIDTH = 848
+        self.CAM_IMAGE_HEIGHT = 480
+
+        self.head_rgb_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH, 3), np.uint8)
+        self.head_depth_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH), np.uint8)
+
+
+
+
+
+
+
+        ########## VARIABLES TO CHECK IF STILL NECESSARY ##########
+
         ### Variables ###
         # to calculate the FPS
         self.prev_frame_time = 0 # used to record the time when we processed last frame
         self.new_frame_time = 0 # used to record the time at which we processed current frame
-        
-        self.br = CvBridge()
-        self.rgb_img = Image()
-        self.detpth_img = Image()
 
         self.results = []
         self.waiting_for_pcloud = False
         self.tempo_total = time.perf_counter()
         self.center_torso_person_list = []
         self.center_head_person_list = []
-
-        self.robot_pose = Pose2D()
 
         self.N_KEYPOINTS = 17
         self.NUMBER_OF_LEGS_KP = 4
@@ -174,31 +200,33 @@ class YoloPoseNode(Node):
         self.ANKLE_RIGHT_KP = 16
 
 
-    # request point cloud information from point cloud node
-    def call_point_cloud_server(self, req):
-        request = GetPointCloudBB.Request()
-        request.data = req
-        request.retrieve_bbox = False
-        request.camera = "head"
-    
-        future = self.point_cloud_client.call_async(request)
-        #print("Sent Command")
 
-        future.add_done_callback(self.callback_call_point_cloud)
 
-    def callback_call_point_cloud(self, future):
 
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            self.post_receiving_pcloud(response.coords)
-            self.waiting_for_pcloud = False
-            # print("Received Back")
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))
 
+
+
+
+
+        # this code forces the ROS2 component to wait for the models initialization with an empty frame, so that when turned ON does spend time with initializations and sends detections imediatly 
+        # Allocates the memory necessary for each model, this takes some seconds, by doing this in the first frame, everytime one of the models is called instantly responde instead of loading the model
+        self.yolo_models_initialized = False
+        
+        self.timer = self.create_timer(0.1, self.timer_callback)
+
+    # This type of structure was done to make sure the YOLO models were initializes and only after the service was created, 
+    # Because other nodes use this service to make sure yolo is ready to work, and there were some conflicts with receiving commands
+    # while initializing the models, this ways we have a timer that checks when the yolo models finished initializing and 
+    # only then creates the service. Not common but works.
+    def timer_callback(self):
+        if self.yolo_models_initialized:
+            self.temp_activate_yolo_service()
+            self.get_logger().info('Condition met, destroying timer.')
+            self.timer.cancel()  # Cancel the timer
+
+    def temp_activate_yolo_service(self):
+        ### Services ###
+        self.activate_yolo_pose_service = self.create_service(ActivateYoloPose, "activate_yolo_pose", self.callback_activate_yolo_pose)
 
     def callback_activate_yolo_pose(self, request, response):
         
@@ -238,53 +266,204 @@ class YoloPoseNode(Node):
         response.success = True
         response.message = "Activated with selected parameters"
         return response
+    
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        with data_lock: 
+            self.head_rgb = rgbd.rgb
+            self.head_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            self.head_depth = rgbd.depth
+            self.head_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
+        self.new_head_rgb = True
+        self.new_head_depth = True
+        # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
-    """
-    def get_only_detect_person_legs_visible_callback(self, state: Bool):
-        global ONLY_DETECT_PERSON_LEGS_VISIBLE
-        # print(state.data)
-        ONLY_DETECT_PERSON_LEGS_VISIBLE = state.data
-        if ONLY_DETECT_PERSON_LEGS_VISIBLE:
-            self.get_logger().info('ONLY_DETECT_PERSON_LEGS_VISIBLE = True')
-        else:
-            self.get_logger().info('ONLY_DETECT_PERSON_LEGS_VISIBLE = False')        
+    def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
+        # receives the box and keypoints of a specidic person and returns the detected person 
+        # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
-    def get_minimum_person_confidence_callback(self, state: Float32):
-        global MIN_PERSON_CONF_VALUE
-        # print(state.data)
-        if 0.0 <= state.data <= 1.0:
-            MIN_PERSON_CONF_VALUE = state.data
-            self.get_logger().info('NEW MIN_PERSON_CONF_VALUE RECEIVED')    
-        else:
-            self.get_logger().info('ERROR SETTING MIN_PERSON_CONF_VALUE')    
+        global GET_CHARACTERISTICS
 
-    def get_minimum_keypoints_to_detect_person_callback(self, state: Int16):
-        global MIN_KP_TO_DETECT_PERSON
-        # print(state.data)
-        if 0 < state.data <= self.N_KEYPOINTS - self.NUMBER_OF_LEGS_KP:  # all keypoints without the legs
-            MIN_KP_TO_DETECT_PERSON = state.data
-            self.get_logger().info('NEW MIN_KP_TO_DETECT_PERSON RECEIVED')    
-        else:
-            self.get_logger().info('ERROR SETTING MIN_KP_TO_DETECT_PERSON')  
+        person_id = boxes_id.id
+        if boxes_id.id == None:
+            person_id = 0 
 
-    def get_only_detect_person_right_in_front_callback(self, state: Bool):
-        global ONLY_DETECT_PERSON_RIGHT_IN_FRONT
-        # print(state.data)
-        ONLY_DETECT_PERSON_RIGHT_IN_FRONT = state.data
-        if ONLY_DETECT_PERSON_RIGHT_IN_FRONT:
-            self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = True')
-        else:
-            self.get_logger().info('ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False')  
+        new_person = DetectedPerson()
 
-    def get_only_detect_person_arm_raised_callback(self, state: Bool):
-        global ONLY_DETECT_PERSON_ARM_RAISED
-        # print(state.data)
-        ONLY_DETECT_PERSON_ARM_RAISED = state.data
-        if ONLY_DETECT_PERSON_ARM_RAISED:
-            self.get_logger().info('ONLY_DETECT_PERSON_ARM_RAISED = True')
-        else:
-            self.get_logger().info('ONLY_DETECT_PERSON_ARM_RAISED = False')  
-    """
+        new_person.image_rgb_frame = self.head_rgb
+
+        new_person.index = int(person_id)
+        new_person.confidence = float(boxes_id.conf)
+        new_person.box_top_left_x = int(boxes_id.xyxy[0][0])
+        new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
+        new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
+        new_person.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+
+        new_person.arm_raised = arm_raised
+        new_person.body_posture = "None" # still missing... (says whether the person is standing up, sitting, laying down, ...)
+
+        new_person.kp_nose_x = int(keypoints_id.xy[0][self.NOSE_KP][0])
+        new_person.kp_nose_y = int(keypoints_id.xy[0][self.NOSE_KP][1])
+        new_person.kp_nose_conf = float(keypoints_id.conf[0][self.NOSE_KP])
+
+        new_person.kp_eye_left_x = int(keypoints_id.xy[0][self.EYE_LEFT_KP][0])
+        new_person.kp_eye_left_y = int(keypoints_id.xy[0][self.EYE_LEFT_KP][1])
+        new_person.kp_eye_left_conf = float(keypoints_id.conf[0][self.EYE_LEFT_KP])
+
+        new_person.kp_eye_right_x = int(keypoints_id.xy[0][self.EYE_RIGHT_KP][0])
+        new_person.kp_eye_right_y = int(keypoints_id.xy[0][self.EYE_RIGHT_KP][1])
+        new_person.kp_eye_right_conf = float(keypoints_id.conf[0][self.EYE_RIGHT_KP])
+
+        new_person.kp_ear_left_x = int(keypoints_id.xy[0][self.EAR_LEFT_KP][0])
+        new_person.kp_ear_left_y = int(keypoints_id.xy[0][self.EAR_LEFT_KP][1])
+        new_person.kp_ear_left_conf = float(keypoints_id.conf[0][self.EAR_LEFT_KP])
+
+        new_person.kp_ear_right_x = int(keypoints_id.xy[0][self.EAR_RIGHT_KP][0])
+        new_person.kp_ear_right_y = int(keypoints_id.xy[0][self.EAR_RIGHT_KP][1])
+        new_person.kp_ear_right_conf = float(keypoints_id.conf[0][self.EAR_RIGHT_KP])
+
+        new_person.kp_shoulder_left_x = int(keypoints_id.xy[0][self.SHOULDER_LEFT_KP][0])
+        new_person.kp_shoulder_left_y = int(keypoints_id.xy[0][self.SHOULDER_LEFT_KP][1])
+        new_person.kp_shoulder_left_conf = float(keypoints_id.conf[0][self.SHOULDER_LEFT_KP])
+
+        new_person.kp_shoulder_right_x = int(keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][0])
+        new_person.kp_shoulder_right_y = int(keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][1])
+        new_person.kp_shoulder_right_conf = float(keypoints_id.conf[0][self.SHOULDER_RIGHT_KP])
+
+        new_person.kp_elbow_left_x = int(keypoints_id.xy[0][self.ELBOW_LEFT_KP][0])
+        new_person.kp_elbow_left_y = int(keypoints_id.xy[0][self.ELBOW_LEFT_KP][1])
+        new_person.kp_elbow_left_conf = float(keypoints_id.conf[0][self.ELBOW_LEFT_KP])
+
+        new_person.kp_elbow_right_x = int(keypoints_id.xy[0][self.ELBOW_RIGHT_KP][0])
+        new_person.kp_elbow_right_y = int(keypoints_id.xy[0][self.ELBOW_RIGHT_KP][1])
+        new_person.kp_elbow_right_conf = float(keypoints_id.conf[0][self.ELBOW_RIGHT_KP])
+
+        new_person.kp_wrist_left_x = int(keypoints_id.xy[0][self.WRIST_LEFT_KP][0])
+        new_person.kp_wrist_left_y = int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1])
+        new_person.kp_wrist_left_conf = float(keypoints_id.conf[0][self.WRIST_LEFT_KP])
+
+        new_person.kp_wrist_right_x = int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][0])
+        new_person.kp_wrist_right_y = int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1])
+        new_person.kp_wrist_right_conf = float(keypoints_id.conf[0][self.WRIST_RIGHT_KP])
+
+        new_person.kp_hip_left_x = int(keypoints_id.xy[0][self.HIP_LEFT_KP][0])
+        new_person.kp_hip_left_y = int(keypoints_id.xy[0][self.HIP_LEFT_KP][1])
+        new_person.kp_hip_left_conf = float(keypoints_id.conf[0][self.HIP_LEFT_KP])
+
+        new_person.kp_hip_right_x = int(keypoints_id.xy[0][self.HIP_RIGHT_KP][0])
+        new_person.kp_hip_right_y = int(keypoints_id.xy[0][self.HIP_RIGHT_KP][1])
+        new_person.kp_hip_right_conf = float(keypoints_id.conf[0][self.HIP_RIGHT_KP])
+
+        new_person.kp_knee_left_x = int(keypoints_id.xy[0][self.KNEE_LEFT_KP][0])
+        new_person.kp_knee_left_y = int(keypoints_id.xy[0][self.KNEE_LEFT_KP][1])
+        new_person.kp_knee_left_conf = float(keypoints_id.conf[0][self.KNEE_LEFT_KP])
+
+        new_person.kp_knee_right_x = int(keypoints_id.xy[0][self.KNEE_RIGHT_KP][0])
+        new_person.kp_knee_right_y = int(keypoints_id.xy[0][self.KNEE_RIGHT_KP][1])
+        new_person.kp_knee_right_conf = float(keypoints_id.conf[0][self.KNEE_RIGHT_KP])
+
+        new_person.kp_ankle_left_x = int(keypoints_id.xy[0][self.ANKLE_LEFT_KP][0])
+        new_person.kp_ankle_left_y = int(keypoints_id.xy[0][self.ANKLE_LEFT_KP][1])
+        new_person.kp_ankle_left_conf = float(keypoints_id.conf[0][self.ANKLE_LEFT_KP])
+
+        new_person.kp_ankle_right_x = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][0])
+        new_person.kp_ankle_right_y = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][1])
+        new_person.kp_ankle_right_conf = float(keypoints_id.conf[0][self.ANKLE_RIGHT_KP])
+
+        new_person.body_center_x = center_torso_person[0]
+        new_person.body_center_y = center_torso_person[1]
+
+        new_person.head_center_x = center_head_person[0]
+        new_person.head_center_y = center_head_person[1]
+
+        """
+        # changes the axis of point cloud coordinates to fit with robot axis
+        person_rel_pos = Point()
+        person_rel_pos.x =  center_person_filtered.x/1000
+        person_rel_pos.y =  center_person_filtered.y/1000
+        person_rel_pos.z =  center_person_filtered.z/1000
+        
+        new_person.position_relative = person_rel_pos
+        
+        # calculate the absolute position according to the robot localisation
+        angle_person = math.atan2(person_rel_pos.x, person_rel_pos.y)
+        dist_person = math.sqrt(person_rel_pos.x**2 + person_rel_pos.y**2)
+
+        theta_aux = math.pi/2 - (angle_person - self.robot_pose.theta)
+
+        target_x = dist_person * math.cos(theta_aux) + self.robot_pose.x
+        target_y = dist_person * math.sin(theta_aux) + self.robot_pose.y
+
+        a_ref = (target_x, target_y)
+        # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
+
+        person_abs_pos = Point()
+        person_abs_pos.x = target_x
+        person_abs_pos.y = target_y
+        person_abs_pos.z = center_person_filtered.z/1000
+        
+        new_person.position_absolute = person_abs_pos
+
+        # changes the axis of point cloud coordinates to fit with robot axis
+        head_rel_pos = Point()
+        head_rel_pos.x =  head_localisation.x/1000
+        head_rel_pos.y =  head_localisation.y/1000
+        head_rel_pos.z =  head_localisation.z/1000
+        new_person.position_relative_head = head_rel_pos
+        
+        # calculate the absolute head position according to the robot localisation
+        angle_head = math.atan2(head_rel_pos.x, head_rel_pos.y)
+        dist_head = math.sqrt(head_rel_pos.x**2 + head_rel_pos.y**2)
+
+        theta_aux = math.pi/2 - (angle_head - self.robot_pose.theta)
+
+        target_x = dist_head * math.cos(theta_aux) + self.robot_pose.x
+        target_y = dist_head * math.sin(theta_aux) + self.robot_pose.y
+
+        a_ref = (target_x, target_y)
+        # print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)
+
+        head_abs_pos = Point()
+        head_abs_pos.x = target_x
+        head_abs_pos.y = target_y
+        head_abs_pos.z = head_localisation.z/1000
+        
+        new_person.position_absolute_head = head_abs_pos
+        
+
+        new_person.height = head_localisation.z/1000 + 0.08 # average person middle of face to top of head distance
+
+        new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
+
+        new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
+
+        new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
+        new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
+
+        # characteristics will only be updated after we confirm that the person is inside the filteredpersons
+        # otherwise the large amount of time spent getting the characteristics from the models is applied to
+        # every detected person and not only the filtered 
+
+        # new_person.pointing_at = "None"
+        # new_person.pointing_with_arm = "None"
+        # new_person.shirt_color = "None"
+        # new_person.pants_color = "None"
+        new_person.ethnicity = "None"
+        new_person.ethnicity_probability = 0.0
+        new_person.age_estimate = "None"
+        new_person.age_estimate_probability = 0.0
+        new_person.gender = "None"
+        new_person.gender_probability = 0.0
+        """
+
+        return new_person
+
+
+
+
+
+
+
+
 
     def get_color_image_head_callback(self, img: Image):
         # print("Received rgb cam")
@@ -295,15 +474,15 @@ class YoloPoseNode(Node):
             if not self.waiting_for_pcloud:
                 # self.get_logger().info('Receiving color video frame')
                 self.tempo_total = time.perf_counter()
-                self.rgb_img = img
+                self.head_rgb = img
 
                 # ROS2 Image Bridge for OpenCV
-                current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
+                current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
                 # current_frame_draw = current_frame.copy()
 
                 # Getting image dimensions
-                self.img_width = self.rgb_img.width
-                self.img_height = self.rgb_img.height
+                self.img_width = self.head_rgb.width
+                self.img_height = self.head_rgb.height
                 # print(self.img_width)
                 # print(self.img_height)
 
@@ -477,8 +656,6 @@ class YoloPoseNode(Node):
         #     yolov8_pose_filtered = ListOfDetectedPerson()
         #     self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
-        
-
     def post_receiving_pcloud(self, new_pcloud):
 
         global GET_CHARACTERISTICS
@@ -487,7 +664,7 @@ class YoloPoseNode(Node):
         # print(new_pcloud)
 
         # ROS2 Image Bridge for OpenCV
-        current_frame = self.br.imgmsg_to_cv2(self.rgb_img, "bgr8")
+        current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
         current_frame_draw = current_frame.copy()
         # annotated_frame = self.results[0].plot()
 
@@ -870,187 +1047,12 @@ class YoloPoseNode(Node):
         self.get_logger().info(f"Time Yolo_Pose: {round(time.perf_counter() - self.tempo_total,2)}")
 
 
-    def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_pose = pose
 
 
-    def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
-        # receives the box and keypoints of a specidic person and returns the detected person 
-        # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
-
-        global GET_CHARACTERISTICS
-
-        person_id = boxes_id.id
-        if boxes_id.id == None:
-            person_id = 0 
-
-        new_person = DetectedPerson()
-
-        new_person.image_rgb_frame = self.rgb_img
-
-        new_person.index = int(person_id)
-        new_person.confidence = float(boxes_id.conf)
-        new_person.box_top_left_x = int(boxes_id.xyxy[0][0])
-        new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
-        new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
-        new_person.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
-
-        new_person.arm_raised = arm_raised
-        new_person.body_posture = "None" # still missing... (says whether the person is standing up, sitting, laying down, ...)
-
-        new_person.kp_nose_x = int(keypoints_id.xy[0][self.NOSE_KP][0])
-        new_person.kp_nose_y = int(keypoints_id.xy[0][self.NOSE_KP][1])
-        new_person.kp_nose_conf = float(keypoints_id.conf[0][self.NOSE_KP])
-
-        new_person.kp_eye_left_x = int(keypoints_id.xy[0][self.EYE_LEFT_KP][0])
-        new_person.kp_eye_left_y = int(keypoints_id.xy[0][self.EYE_LEFT_KP][1])
-        new_person.kp_eye_left_conf = float(keypoints_id.conf[0][self.EYE_LEFT_KP])
-
-        new_person.kp_eye_right_x = int(keypoints_id.xy[0][self.EYE_RIGHT_KP][0])
-        new_person.kp_eye_right_y = int(keypoints_id.xy[0][self.EYE_RIGHT_KP][1])
-        new_person.kp_eye_right_conf = float(keypoints_id.conf[0][self.EYE_RIGHT_KP])
-
-        new_person.kp_ear_left_x = int(keypoints_id.xy[0][self.EAR_LEFT_KP][0])
-        new_person.kp_ear_left_y = int(keypoints_id.xy[0][self.EAR_LEFT_KP][1])
-        new_person.kp_ear_left_conf = float(keypoints_id.conf[0][self.EAR_LEFT_KP])
-
-        new_person.kp_ear_right_x = int(keypoints_id.xy[0][self.EAR_RIGHT_KP][0])
-        new_person.kp_ear_right_y = int(keypoints_id.xy[0][self.EAR_RIGHT_KP][1])
-        new_person.kp_ear_right_conf = float(keypoints_id.conf[0][self.EAR_RIGHT_KP])
-
-        new_person.kp_shoulder_left_x = int(keypoints_id.xy[0][self.SHOULDER_LEFT_KP][0])
-        new_person.kp_shoulder_left_y = int(keypoints_id.xy[0][self.SHOULDER_LEFT_KP][1])
-        new_person.kp_shoulder_left_conf = float(keypoints_id.conf[0][self.SHOULDER_LEFT_KP])
-
-        new_person.kp_shoulder_right_x = int(keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][0])
-        new_person.kp_shoulder_right_y = int(keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][1])
-        new_person.kp_shoulder_right_conf = float(keypoints_id.conf[0][self.SHOULDER_RIGHT_KP])
-
-        new_person.kp_elbow_left_x = int(keypoints_id.xy[0][self.ELBOW_LEFT_KP][0])
-        new_person.kp_elbow_left_y = int(keypoints_id.xy[0][self.ELBOW_LEFT_KP][1])
-        new_person.kp_elbow_left_conf = float(keypoints_id.conf[0][self.ELBOW_LEFT_KP])
-
-        new_person.kp_elbow_right_x = int(keypoints_id.xy[0][self.ELBOW_RIGHT_KP][0])
-        new_person.kp_elbow_right_y = int(keypoints_id.xy[0][self.ELBOW_RIGHT_KP][1])
-        new_person.kp_elbow_right_conf = float(keypoints_id.conf[0][self.ELBOW_RIGHT_KP])
-
-        new_person.kp_wrist_left_x = int(keypoints_id.xy[0][self.WRIST_LEFT_KP][0])
-        new_person.kp_wrist_left_y = int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1])
-        new_person.kp_wrist_left_conf = float(keypoints_id.conf[0][self.WRIST_LEFT_KP])
-
-        new_person.kp_wrist_right_x = int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][0])
-        new_person.kp_wrist_right_y = int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1])
-        new_person.kp_wrist_right_conf = float(keypoints_id.conf[0][self.WRIST_RIGHT_KP])
-
-        new_person.kp_hip_left_x = int(keypoints_id.xy[0][self.HIP_LEFT_KP][0])
-        new_person.kp_hip_left_y = int(keypoints_id.xy[0][self.HIP_LEFT_KP][1])
-        new_person.kp_hip_left_conf = float(keypoints_id.conf[0][self.HIP_LEFT_KP])
-
-        new_person.kp_hip_right_x = int(keypoints_id.xy[0][self.HIP_RIGHT_KP][0])
-        new_person.kp_hip_right_y = int(keypoints_id.xy[0][self.HIP_RIGHT_KP][1])
-        new_person.kp_hip_right_conf = float(keypoints_id.conf[0][self.HIP_RIGHT_KP])
-
-        new_person.kp_knee_left_x = int(keypoints_id.xy[0][self.KNEE_LEFT_KP][0])
-        new_person.kp_knee_left_y = int(keypoints_id.xy[0][self.KNEE_LEFT_KP][1])
-        new_person.kp_knee_left_conf = float(keypoints_id.conf[0][self.KNEE_LEFT_KP])
-
-        new_person.kp_knee_right_x = int(keypoints_id.xy[0][self.KNEE_RIGHT_KP][0])
-        new_person.kp_knee_right_y = int(keypoints_id.xy[0][self.KNEE_RIGHT_KP][1])
-        new_person.kp_knee_right_conf = float(keypoints_id.conf[0][self.KNEE_RIGHT_KP])
-
-        new_person.kp_ankle_left_x = int(keypoints_id.xy[0][self.ANKLE_LEFT_KP][0])
-        new_person.kp_ankle_left_y = int(keypoints_id.xy[0][self.ANKLE_LEFT_KP][1])
-        new_person.kp_ankle_left_conf = float(keypoints_id.conf[0][self.ANKLE_LEFT_KP])
-
-        new_person.kp_ankle_right_x = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][0])
-        new_person.kp_ankle_right_y = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][1])
-        new_person.kp_ankle_right_conf = float(keypoints_id.conf[0][self.ANKLE_RIGHT_KP])
-
-        new_person.body_center_x = center_torso_person[0]
-        new_person.body_center_y = center_torso_person[1]
-
-        new_person.head_center_x = center_head_person[0]
-        new_person.head_center_y = center_head_person[1]
-
-        # changes the axis of point cloud coordinates to fit with robot axis
-        person_rel_pos = Point()
-        person_rel_pos.x =  center_person_filtered.x/1000
-        person_rel_pos.y =  center_person_filtered.y/1000
-        person_rel_pos.z =  center_person_filtered.z/1000
-        
-        new_person.position_relative = person_rel_pos
-        
-        # calculate the absolute position according to the robot localisation
-        angle_person = math.atan2(person_rel_pos.x, person_rel_pos.y)
-        dist_person = math.sqrt(person_rel_pos.x**2 + person_rel_pos.y**2)
-
-        theta_aux = math.pi/2 - (angle_person - self.robot_pose.theta)
-
-        target_x = dist_person * math.cos(theta_aux) + self.robot_pose.x
-        target_y = dist_person * math.sin(theta_aux) + self.robot_pose.y
-
-        a_ref = (target_x, target_y)
-        # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
-
-        person_abs_pos = Point()
-        person_abs_pos.x = target_x
-        person_abs_pos.y = target_y
-        person_abs_pos.z = center_person_filtered.z/1000
-        
-        new_person.position_absolute = person_abs_pos
-
-        # changes the axis of point cloud coordinates to fit with robot axis
-        head_rel_pos = Point()
-        head_rel_pos.x =  head_localisation.x/1000
-        head_rel_pos.y =  head_localisation.y/1000
-        head_rel_pos.z =  head_localisation.z/1000
-        new_person.position_relative_head = head_rel_pos
-        
-        # calculate the absolute head position according to the robot localisation
-        angle_head = math.atan2(head_rel_pos.x, head_rel_pos.y)
-        dist_head = math.sqrt(head_rel_pos.x**2 + head_rel_pos.y**2)
-
-        theta_aux = math.pi/2 - (angle_head - self.robot_pose.theta)
-
-        target_x = dist_head * math.cos(theta_aux) + self.robot_pose.x
-        target_y = dist_head * math.sin(theta_aux) + self.robot_pose.y
-
-        a_ref = (target_x, target_y)
-        # print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)
-
-        head_abs_pos = Point()
-        head_abs_pos.x = target_x
-        head_abs_pos.y = target_y
-        head_abs_pos.z = head_localisation.z/1000
-        
-        new_person.position_absolute_head = head_abs_pos
-
-        new_person.height = head_localisation.z/1000 + 0.08 # average person middle of face to top of head distance
-
-        new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
-
-        new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
-
-        new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
-        new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
-
-        # characteristics will only be updated after we confirm that the person is inside the filteredpersons
-        # otherwise the large amount of time spent getting the characteristics from the models is applied to
-        # every detected person and not only the filtered 
-
-        # new_person.pointing_at = "None"
-        # new_person.pointing_with_arm = "None"
-        # new_person.shirt_color = "None"
-        # new_person.pants_color = "None"
-        new_person.ethnicity = "None"
-        new_person.ethnicity_probability = 0.0
-        new_person.age_estimate = "None"
-        new_person.age_estimate_probability = 0.0
-        new_person.gender = "None"
-        new_person.gender_probability = 0.0
 
 
-        return new_person
+
+
 
     def crop_face(self, current_frame, current_frame_draw, new_person):
 
@@ -1180,7 +1182,6 @@ class YoloPoseNode(Node):
                 p2 = (int(xy[0][KP_TWO][0]), int(xy[0][KP_TWO][1]))
                 cv2.line(current_frame_draw, p1, p2, (0,0,255), 2) 
 
-
     def position_to_house_rooms_and_furniture(self, person_pos):
         
         room_location = "Outside"
@@ -1205,7 +1206,6 @@ class YoloPoseNode(Node):
 
         return room_location, furniture_location
 
-     
     def arm_pointing_at(self, person):
 
         MIN_ANGLE_POINTING = 25
@@ -1258,7 +1258,6 @@ class YoloPoseNode(Node):
         
         return side_pointed, arm_pointed_with
 
-
     def calculate_3angle(self, p1, p2, p3):
         vector_1 = (p2[0] - p1[0], p2[1] - p1[1])
         vector_2 = (p3[0] - p1[0], p3[1] - p1[1])
@@ -1277,7 +1276,6 @@ class YoloPoseNode(Node):
         except:
             return 0
         
-
     def get_shirt_color(self, new_person, current_frame, current_frame_draw):
         color_name = "None"
         color_rgb = RGB()
@@ -1290,7 +1288,6 @@ class YoloPoseNode(Node):
             color_rgb.blue = int(color_value_rgb[2])
 
         return color_name, color_rgb
-
 
     def get_pants_color(self, new_person, current_frame, current_frame_draw):
         left_leg_color_name = "None"
@@ -1322,7 +1319,6 @@ class YoloPoseNode(Node):
         
         return color_name, color_rgb
     
-
     def rgb_to_string_tr(self, color_value_rgb):
 
         # Convert the RGB to BGR
@@ -1431,7 +1427,6 @@ class YoloPoseNode(Node):
             color_name = "Brown"
 
         return color_name, hsv_info
-
 
     def get_color_of_line_between_two_points(self, image, image_draw, p1, p2):
 
@@ -1581,8 +1576,495 @@ class YoloPoseNode(Node):
         return color_name, color_value_rgb, n_points
 
 
+# main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
     node = YoloPoseNode()
+    th_main = threading.Thread(target=ThreadMainYoloPose, args=(node,), daemon=True)
+    th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
+
+def ThreadMainYoloPose(node: YoloPoseNode):
+    main = YoloPoseMain(node)
+    main.main()
+
+
+class YoloPoseMain():
+
+    def __init__(self, node: YoloPoseNode):
+        # create a node instance so all variables ros related can be acessed
+        self.node = node
+
+        self.new_head_frame_time = time.time()
+        self.prev_head_frame_time = time.time()
+
+    def get_transform(self, camera=""):
+
+        match camera:
+            case "head":
+                child_link = 'D455_head_color_frame'
+                parent_link = 'base_footprint'
+            case "hand":
+                child_link = 'D405_hand_color_frame'
+                parent_link = 'base_footprint'
+            case "base":
+                child_link = 'camera_color_frame'
+                parent_link = 'base_footprint'
+            case "":
+                child_link = 'base_footprint'
+                parent_link = 'map'
+
+        # proceed to lookup_transform
+        if self.node.tf_buffer.can_transform(parent_link, child_link, rclpy.time.Time()):
+            
+            # print(parent_link, child_link, "GOOD")
+            try:
+                transform = self.node.tf_buffer.lookup_transform(
+                    parent_link,        # target frame
+                    child_link,         # source frame
+                    rclpy.time.Time()   # latest available
+                    # timeout=rclpy.duration.Duration(seconds=0.1) quero por isto???
+                )
+            except Exception as e:
+                self.node.get_logger().warn(f"TF lookup failed: {e}")
+                transform = None
+                return  # or handle the error appropriately
+        else:
+            # print(parent_link, child_link, "BAD")
+            transform = None
+        
+        return transform, child_link
+
+    def detect_with_yolo_model(self, head_frame, hand_frame, base_frame, head_depth_frame, hand_depth_frame, base_depth_frame, head_image, hand_image, base_image):
+
+        yolov8_obj_filtered = ListOfDetectedObject()
+        objects_result_list = []
+        num_obj = 0
+
+        models_dict = {
+            "head_objects": -1,
+            "hand_objects": -1,
+            "base_objects": -1,
+            "head_furniture": -1,
+            "hand_furniture": -1,
+            "base_furniture": -1,
+            "head_shoes": -1,
+            "hand_shoes": -1,
+            "base_shoes": -1
+            }
+
+        # self.get_logger().info('Receiving color video frame head')
+        tempo_total = time.perf_counter()
+
+        map_transform, _ = self.get_transform() # base_footprint -> map
+
+        ### OBJECTS
+        
+        if self.node.ACTIVATE_YOLO_OBJECTS:
+            object_results = self.node.object_model.track(head_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+            objects_result_list.append(object_results)
+            models_dict["head_objects"] = len(objects_result_list) - 1
+            num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_head, head_link = self.get_transform("head")
+
+            if self.node.DEBUG_DRAW:
+                cv2.imshow("HEAD OBJECTS DEBUG", object_results[0].plot())
+
+        if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
+            object_results = self.node.object_model_hand.track(hand_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+            objects_result_list.append(object_results)
+            models_dict["hand_objects"] = len(objects_result_list) - 1
+            num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_hand, hand_link = self.get_transform("hand")
+
+            if self.node.DEBUG_DRAW:
+                cv2.imshow("HAND OBJECTS DEBUG", object_results[0].plot())
+
+        if self.node.ACTIVATE_YOLO_OBJECTS_BASE:
+            object_results = self.node.object_model_base.track(base_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+            objects_result_list.append(object_results)
+            models_dict["base_objects"] = len(objects_result_list) - 1
+            num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_base, base_link = self.get_transform("base")
+
+            if self.node.DEBUG_DRAW:
+                cv2.imshow("BASE OBJECTS DEBUG", object_results[0].plot())
+
+        ### FURNITURE
+
+        if self.node.ACTIVATE_YOLO_FURNITURE:
+            object_results = self.node.furniture_model.track(head_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+            objects_result_list.append(object_results)
+            models_dict["head_furniture"] = len(objects_result_list) - 1
+            num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_head, head_link = self.get_transform("head")
+
+            if self.node.DEBUG_DRAW:
+                cv2.imshow("HEAD FURNITURE DEBUG", object_results[0].plot())
+            
+        if self.node.ACTIVATE_YOLO_FURNITURE_HAND:
+            object_results = self.node.furniture_model_hand.track(hand_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+            objects_result_list.append(object_results)
+            models_dict["hand_furniture"] = len(objects_result_list) - 1
+            num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_hand, hand_link = self.get_transform("hand")
+
+            if self.node.DEBUG_DRAW:
+                cv2.imshow("HAND FURNITURE DEBUG", object_results[0].plot())
+            
+        if self.node.ACTIVATE_YOLO_FURNITURE_BASE:
+            object_results = self.node.furniture_model_base.track(base_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+            objects_result_list.append(object_results)
+            models_dict["base_furniture"] = len(objects_result_list) - 1
+            num_obj += len(object_results[0])
+            if num_obj > 0:
+                transform_base, base_link = self.get_transform("base")
+
+            if self.node.DEBUG_DRAW:
+                cv2.imshow("BASE FURNITURE DEBUG", object_results[0].plot())
+            
+        ### SHOES (NOT USED BUT EVERYTHING IS READY IF NEEDED TO BE RESTORED)
+        # 
+        # if self.node.ACTIVATE_YOLO_SHOES:
+        #     object_results = self.node.shoes_model.track(head_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+        #     objects_result_list.append(object_results)
+        #     models_dict["head_shoes"] = len(objects_result_list) - 1
+        #     num_obj += len(object_results[0])
+        #     if num_obj > 0:
+        #         transform_head, head_link = self.get_transform("head")
+        # 
+        #     if self.node.DEBUG_DRAW:
+        #         cv2.imshow("HEAD SHOES DEBUG", object_results[0].plot())
+        #    
+        # if self.node.ACTIVATE_YOLO_SHOES_HAND:
+        #     object_results = self.node.shoes_model_hand.track(hand_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+        #     objects_result_list.append(object_results)
+        #     models_dict["hand_shoes"] = len(objects_result_list) - 1
+        #     num_obj += len(object_results[0])
+        #     if num_obj > 0:
+        #         transform_hand, hand_link = self.get_transform("hand")
+        # 
+        #     if self.node.DEBUG_DRAW:
+        #         cv2.imshow("HAND SHOES DEBUG", object_results[0].plot())
+        #     
+        # if self.node.ACTIVATE_YOLO_SHOES_BASE:
+        #     object_results = self.node.shoes_model_base.track(base_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+        #     objects_result_list.append(object_results)
+        #     models_dict["base_shoes"] = len(objects_result_list) - 1
+        #     num_obj += len(object_results[0])
+        #     if num_obj > 0:
+        #         transform_base, base_link = self.get_transform("base")
+        # 
+        #     if self.node.DEBUG_DRAW:
+        #         cv2.imshow("BASE SHOES DEBUG", object_results[0].plot())
+        
+        if self.node.DEBUG_DRAW:
+            cv2.waitKey(1)
+
+        print("TRACK TIME:", time.perf_counter()-tempo_total)
+
+        reverse_models_dict = {v: k for k, v in models_dict.items() if v != -1}
+
+        # print(num_obj)
+        for idx, obj_res in enumerate(objects_result_list):
+
+            if obj_res[0].boxes.id is not None:
+
+                camera, model = reverse_models_dict[idx].split("_")
+                # print(idx, "->", camera, model)
+                
+                rgb_img = Image()
+
+                # specific camera settings
+                match camera:
+                    case "head":
+                        rgb_img = head_image
+                        depth_frame = head_depth_frame
+                        transform = transform_head
+                        camera_link = head_link
+                    case "hand":
+                        rgb_img = hand_image
+                        depth_frame = hand_depth_frame
+                        transform = transform_hand
+                        camera_link = hand_link
+                    case "base":
+                        rgb_img = base_image
+                        depth_frame = base_depth_frame
+                        transform = transform_base
+                        camera_link = base_link
+                
+                if map_transform is None:
+                    print("MAP TF: OFF!", end='')
+                else:
+                    print("MAP TF:  ON!", end='')
+                if transform is None:
+                    print("\tROBOT TF: OFF!")
+                else:
+                    print("\tROBOT TF:  ON!")
+
+                # specific model settings
+                match model:
+                    case "objects":
+                        MIN_CONF_NALUE = MIN_OBJECT_CONF_VALUE
+                    case "furniture":
+                        MIN_CONF_NALUE = MIN_FURNITURE_CONF_VALUE
+                    case "shoes":
+                        MIN_CONF_NALUE = MIN_SHOES_CONF_VALUE
+                        
+                boxes = obj_res[0].boxes
+                masks = obj_res[0].masks
+                # track_ids = obj_res[0].boxes.id.int().cpu().tolist()
+
+                if masks is not None: # if model has segmentation mask
+                    
+                    for box, mask in zip(boxes, masks):
+
+                        # print(mask.xy[0])
+                        # print(len(mask.xy[0]))
+                        # mask.xy[0] = np.array([], dtype=np.float32) # used to test the bug prevented on the next line
+                        if len(mask.xy[0]) >= 3: # this prevents a BUG where sometimes the mask had less than 3 points, which caused PC (if empty) and GUI (if less than 3 points) to crash
+
+                            if model == "objects":
+                                object_name = self.node.objects_class_names[int(box.cls[0])]
+                                object_class = self.node.objects_class_names_dict[object_name]
+                            elif model == "shoes":  
+                                object_name = self.node.shoes_class_names[int(box.cls[0])]
+                                object_class = "Footwear"
+                            elif model == "furniture":  
+                                object_name = self.node.furniture_class_names[int(box.cls[0])]
+                                object_class = "Furniture"
+                            
+                            # temp
+                            # box_top_left_x = int(box.xyxy[0][0])
+                            # box_top_left_y = int(box.xyxy[0][1])
+                            # box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
+                            # box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
+                            # box_center = []
+                            # box_center.append(box_top_left_y + box_height//2)
+                            # box_center.append(box_top_left_x + box_width//2)
+                            
+                            # obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=box_center)
+                         
+                            # aaa_ = time.time()
+                            obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
+                            # print("3D Coords Time", time.time() - aaa_)
+                            # print(object_name, "3D Coords", obj_3d_cam_coords)
+
+                            # bbb_ = time.time()
+
+                            ALL_CONDITIONS_MET = 1
+                            
+                            # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
+                            if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0:
+                                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                                print ("REMOVED")
+
+                            # checks whether the object confidence is above a selected level
+                            if not box.conf >= MIN_CONF_NALUE:
+                                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                                # print("- Misses minimum confidence level")
+
+                            # if the object detection passes all selected conditions, the detected object is added to the publishing list
+                            if ALL_CONDITIONS_MET:
+
+                                point_cam = PointStamped()
+                                point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                                point_cam.header.frame_id = camera_link
+                                point_cam.point = obj_3d_cam_coords
+
+                                transformed_point = PointStamped()
+                                transformed_point_map = PointStamped()
+                                if transform is not None:
+                                    transformed_point = do_transform_point(point_cam, transform)
+                                    self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+
+                                    if map_transform is not None:
+                                        transformed_point_map = do_transform_point(transformed_point, map_transform)
+                                        self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
+
+                                new_object = DetectedObject()
+                                new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
+                                                                                        object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img, mask=mask)
+                                # print(new_object.object_name, "ID:", new_object.index, str(round(new_object.confidence*100,0)) + "%", round(new_object.position_cam.x, 2), round(new_object.position_cam.y, 2), round(new_object.position_cam.z, 2) )
+                                
+                                conf = f"{new_object.confidence * 100:.0f}%"
+                                x_ = f"{new_object.position_cam.x:4.2f}"
+                                y_ = f"{new_object.position_cam.y:5.2f}"
+                                z_ = f"{new_object.position_cam.z:5.2f}"
+                                print(f"{new_object.object_name:<17} {'ID:'+str(new_object.index):<6} {conf:<3} ({x_}, {y_}, {z_})")
+
+                                yolov8_obj_filtered.objects.append(new_object)
+                                # print("Create obj time:", time.time() - bbb_)
+
+                else: # if for some reason, a used model does not have 'segmentation' masks
+
+                    for box in boxes:
+
+                        if model == "objects":
+                            object_name = self.node.objects_class_names[int(box.cls[0])]
+                            object_class = self.node.objects_class_names_dict[object_name]
+                        elif model == "shoes":  
+                            object_name = self.node.shoes_class_names[int(box.cls[0])]
+                            object_class = "Footwear"
+                        elif model == "furniture":  
+                            object_name = self.node.furniture_class_names[int(box.cls[0])]
+                            object_class = "Furniture"
+
+                        ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
+                        # obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
+                        temp_coords = Point()
+                        temp_coords.x = 1.0
+                        temp_coords.y = 0.0
+                        temp_coords.z = 0.0
+                        
+                        ALL_CONDITIONS_MET = 1
+
+                        ########## MISSING HERE: CASE WHERE NO POINTS WERE AVALILABLE SO WE DONT KNOW HOW TO COMPUTE 3D ##########
+
+                        # checks whether the object confidence is above a selected level
+                        if not box.conf >= MIN_CONF_NALUE:
+                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                            # print("- Misses minimum confidence level")
+
+                        # if the object detection passes all selected conditions, the detected object is added to the publishing list
+                        if ALL_CONDITIONS_MET:
+
+                            ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
+                            point_cam = PointStamped()
+                            point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                            point_cam.header.frame_id = camera_link
+                            point_cam.point = temp_coords
+
+                            transformed_point = PointStamped()
+                            transformed_point_map = PointStamped()
+                            if transform is not None:
+                                transformed_point = do_transform_point(point_cam, transform)
+                                self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+
+                                if map_transform is not None:
+                                    transformed_point_map = do_transform_point(transformed_point, map_transform)
+                                    self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
+
+                            new_object = DetectedObject()
+                            new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
+                                                                                    object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img)
+                            yolov8_obj_filtered.objects.append(new_object)
+
+        # self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
+        # self.node.get_logger().info(f"Time Yolo_Objects: {time.perf_counter() - tempo_total}")
+
+        return yolov8_obj_filtered, num_obj
+
+    # main state-machine function
+    def main(self):
+        
+        # debug print to know we are on the main start of the task
+        self.node.get_logger().info("In YoloPose Main...")
+        time_till_done = time.time()
+        
+        while True:
+
+            # type(results) = <class 'list'>
+            # type(results[0]) = <class 'ultralytics.engine.results.Results'>
+            # type(results[0].keypoints) = <class 'ultralytics.engine.results.Keypoints'>
+            # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
+
+            # /*** ultralytics.engine.results.Results ***/
+            # A class for storing and manipulating inference results.
+            # Attributes:
+            # Name 	        Type 	    Description
+            # orig_img 	    ndarray 	The original image as a numpy array.
+            # orig_shape 	tuple 	    The original image shape in (height, width) format.
+            # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
+            # masks 	    Masks 	    A Masks object containing the detection masks.
+            # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
+            # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
+            # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
+            # names 	    dict 	    A dictionary of class names.
+            # path 	        str 	    The path to the image file.
+            # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
+            
+            # /*** ultralytics.engine.results.Keypoints ***/
+            # A class for storing and   manipulating detection keypoints.
+            # Attributes:
+            # Name 	Type 	Description
+            # xy 	Tensor 	A collection of keypoints containing x, y coordinates for each detection.
+            # xyn 	Tensor 	A normalized version of xy with coordinates in the range [0, 1].
+            # conf 	Tensor 	Confidence values associated with keypoints if available, otherwise None.
+
+            # /*** ultralytics.engine.results.Boxes ***/
+            # A class for storing and manipulating detection boxes.
+            # Attributes:
+            # Name      Type                Description
+            # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
+            # conf 	    Tensor | ndarray 	The confidence values of the boxes.
+            # cls 	    Tensor | ndarray 	The class values of the boxes.
+            # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
+            # xywh 	    Tensor | ndarray 	The boxes in xywh format.
+            # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
+            # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
+            # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
+
+
+            # Index     Keypoint
+            # 0         Nose                              2   1
+            # 1         Left Eye                         / \ / \ 
+            # 2         Right Eye                       4   0   3 
+            # 3         Left Ear                        
+            # 4         Right Ear                              
+            # 5         Left Shoulder                  6---------5 
+            # 6         Right Shoulder                / |       | \  
+            # 7         Left Elbow                   /  |       |  \  
+            # 8         Right Elbow                8/   |       |   \7  
+            # 9         Left Wrist                  \   |       |   /
+            # 10        Right Wrist                10\  |       |  /9 
+            # 11        Left Hip                        ---------
+            # 12        Right Hip                     12|       |11  
+            # 13        Left Knee                       |       |
+            # 14        Right Knee                    14|       |13  
+            # 15        Left Ankle                      |       |
+            # 16        Right Ankle                   16|       |15  
+
+            if not self.node.yolo_models_initialized:
+
+                self.node.new_head_rgb = True
+                self.node.ACTIVATE_YOLO_POSE = True
+
+            if self.node.new_head_rgb:
+
+                time_till_done = time.time()
+                
+                with data_lock: 
+                    head_image_frame = self.node.head_rgb_cv2_frame.copy()
+                    head_depth_frame = self.node.head_depth_cv2_frame.copy()
+                    head_image = self.node.head_rgb
+
+                if self.node.ACTIVATE_YOLO_POSE and self.node.new_head_rgb:
+
+                    self.node.new_head_rgb = False
+
+                    ### temp:
+                    list_detected_people = ListOfDetectedPerson()
+                    # list_detected_people, total_obj = self.detect_with_yolo_model(head_frame=head_image_frame, hand_frame=hand_image_frame, base_frame=base_image_frame, head_depth_frame=head_depth_frame, hand_depth_frame=hand_depth_frame, base_depth_frame=base_depth_frame, head_image=head_image, hand_image=hand_image, base_image=base_image)
+                    if self.node.yolo_models_initialized:
+                        self.node.person_pose_filtered_publisher.publish(list_detected_people)
+
+                    print("TR Time Yolo_Objects: ", time.time() - time_till_done)
+
+                    # if self.node.DEBUG_DRAW:
+                    #     cv2.putText(current_frame_draw, 'fps:' + self.hand_fps, (0, self.node.CAM_IMAGE_HEIGHT-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    #     cv2.putText(current_frame_draw, 'np:' + str(len(list_detected_objects.objects)) + '/' + str(total_obj), (180, self.node.CAM_IMAGE_HEIGHT-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    #     cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
+                    #     cv2.waitKey(1)
+
+            if not self.node.yolo_models_initialized:
+                
+                self.node.new_head_rgb = False
+                self.node.ACTIVATE_YOLO_POSE = False
+                self.node.yolo_models_initialized = True
