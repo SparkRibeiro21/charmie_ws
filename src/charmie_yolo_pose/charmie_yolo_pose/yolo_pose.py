@@ -50,7 +50,7 @@ DRAW_FACE_RECOGNITION = True
 class YoloPoseNode(Node):
     def __init__(self):
         super().__init__("YoloPose")
-        self.get_logger().info("Initialised YoloPose Node")
+        self.get_logger().info("Initialised YoloPose Node NEW")
 
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
