@@ -1541,7 +1541,6 @@ class YoloPoseMain():
             # cv2.imshow("Camera Image", current_frame)
             cv2.waitKey(1)
 
-
     # main state-machine function
     def main(self):
         
@@ -1650,9 +1649,9 @@ class YoloPoseMain():
                 self.node.ACTIVATE_YOLO_POSE = False
                 self.node.yolo_models_initialized = True
 
-
+### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
 ### adicionar caracteristicas ao add_person_to_detected_msg
 ### draw_detected_people
 ### localizacao torso e cabeça
-### verificar flags do gui
+### verificar flags do gui (waving e legs visible seem OK)
 ### rever todo o codigo antigo

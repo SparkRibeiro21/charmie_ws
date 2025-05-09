@@ -1700,6 +1700,12 @@ class DebugVisualMain():
                 self.draw_circle_keypoint(p.kp_ankle_left_conf,     p.kp_ankle_left_x,      p.kp_ankle_left_y,      self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS, camera_height)
                 self.draw_circle_keypoint(p.kp_ankle_right_conf,    p.kp_ankle_right_x,     p.kp_ankle_right_y,     self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS, camera_height)
                 
+                # add special keypoints for torso and head filtered pixel
+                self.draw_circle_keypoint(1.0, p.body_center_x, p.body_center_y, self.BLACK, 0.0, 9, camera_height)
+                self.draw_circle_keypoint(1.0, p.body_center_x, p.body_center_y, self.RED, 0.0, 5, camera_height)
+                self.draw_circle_keypoint(1.0, p.head_center_x, p.head_center_y, self.BLACK, 0.0, 9, camera_height)
+                self.draw_circle_keypoint(1.0, p.head_center_x, p.head_center_y, self.RED, 0.0, 5, camera_height)
+
                 self.check_face_for_characteristics(p, MIN_DRAW_CONF, camera_height)
 
     def draw_circle_keypoint(self, conf, x, y, color, min_draw_conf, circle_radius, camera_height):
