@@ -3,10 +3,13 @@
 int32 index
 float32 confidence
 
-geometry_msgs/Point position_relative # position relative to the robot frame
+geometry_msgs/Point position_cam      # position relative to the camera frame
+geometry_msgs/Point position_relative # position relative to the base_footprint frame
 geometry_msgs/Point position_absolute # position relative to the map frame
-geometry_msgs/Point position_relative_head # head position relative to the robot frame
-geometry_msgs/Point position_absolute_head # head position relative to the map frame
+
+geometry_msgs/Point position_cam_head      # position relative to the camera frame
+geometry_msgs/Point position_relative_head # position relative to the base_footprint frame
+geometry_msgs/Point position_absolute_head # position relative to the map frame
 
 int32 box_top_left_x
 int32 box_top_left_y
