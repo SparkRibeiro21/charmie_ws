@@ -276,7 +276,7 @@ class YoloPoseNode(Node):
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     # def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
-    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, object_coords_to_cam, object_coords_to_base, object_coords_to_map, camera, current_img):
+    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, arm_raised, object_coords_to_cam, object_coords_to_base, object_coords_to_map, center_torso_person, center_head_person, torso_localisation, head_localisation, camera, current_img):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -297,7 +297,7 @@ class YoloPoseNode(Node):
         new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
         new_person.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
-        # new_person.arm_raised = arm_raised
+        new_person.arm_raised = arm_raised
         new_person.body_posture = "None" # still missing... (says whether the person is standing up, sitting, laying down, ...)
 
         new_person.kp_nose_x = int(keypoints_id.xy[0][self.NOSE_KP][0])
@@ -368,11 +368,11 @@ class YoloPoseNode(Node):
         new_person.kp_ankle_right_y = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][1])
         new_person.kp_ankle_right_conf = float(keypoints_id.conf[0][self.ANKLE_RIGHT_KP])
 
-        # new_person.body_center_x = center_torso_person[0]
-        # new_person.body_center_y = center_torso_person[1]
+        new_person.body_center_x = center_torso_person[0]
+        new_person.body_center_y = center_torso_person[1]
 
-        # new_person.head_center_x = center_head_person[0]
-        # new_person.head_center_y = center_head_person[1]
+        new_person.head_center_x = center_head_person[0]
+        new_person.head_center_y = center_head_person[1]
 
         """
         # changes the axis of point cloud coordinates to fit with robot axis
@@ -434,9 +434,10 @@ class YoloPoseNode(Node):
         new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
 
         new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
-
+        
         new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
         new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
+        """
 
         # characteristics will only be updated after we confirm that the person is inside the filteredpersons
         # otherwise the large amount of time spent getting the characteristics from the models is applied to
@@ -452,606 +453,9 @@ class YoloPoseNode(Node):
         new_person.age_estimate_probability = 0.0
         new_person.gender = "None"
         new_person.gender_probability = 0.0
-        """
+        
 
         return new_person
-
-
-
-
-
-
-
-
-
-    def get_color_image_head_callback(self, img: Image):
-        # print("Received rgb cam")
-
-        # only when activated via service, the model computes the person detection
-        if self.ACTIVATE_YOLO_POSE:
-
-            if not self.waiting_for_pcloud:
-                # self.get_logger().info('Receiving color video frame')
-                self.tempo_total = time.perf_counter()
-                self.head_rgb = img
-
-                # ROS2 Image Bridge for OpenCV
-                current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
-                # current_frame_draw = current_frame.copy()
-
-                # Getting image dimensions
-                self.img_width = self.head_rgb.width
-                self.img_height = self.head_rgb.height
-                # print(self.img_width)
-                # print(self.img_height)
-
-                # The persist=True argument tells the tracker that the current image or frame is the next in a sequence and to expect tracks from the previous image in the current image.
-                # tempo_calculo = time.perf_counter()
-                self.results = self.model.track(current_frame, persist=True, tracker="bytetrack.yaml")
-                # print('tempo calculo = ', time.perf_counter() - tempo_calculo)   # imprime o tempo de calculo em segundos
-
-                # tf = time.perf_counter()
-
-                # type(results) = <class 'list'>
-                # type(results[0]) = <class 'ultralytics.engine.results.Results'>
-                # type(results[0].keypoints) = <class 'ultralytics.engine.results.Keypoints'>
-                # type(results[0].boxes) = <class 'ultralytics.engine.results.Boxes'>
-                
-                # /*** ultralytics.engine.results.Results ***/
-                # A class for storing and manipulating inference results.
-                # Attributes:
-                # Name 	        Type 	    Description
-                # orig_img 	    ndarray 	The original image as a numpy array.
-                # orig_shape 	tuple 	    The original image shape in (height, width) format.
-                # boxes 	    Boxes 	    A Boxes object containing the detection bounding boxes.
-                # masks 	    Masks 	    A Masks object containing the detection masks.
-                # probs 	    Probs 	    A Probs object containing probabilities of each class for classification task.
-                # keypoints 	Keypoints 	A Keypoints object containing detected keypoints for each object.
-                # speed 	    dict 	    A dictionary of preprocess, inference, and postprocess speeds in milliseconds per image.
-                # names 	    dict 	    A dictionary of class names.
-                # path 	        str 	    The path to the image file.
-                # keys 	        tuple 	    A tuple of attribute names for non-empty attributes. 
-                
-                # /*** ultralytics.engine.results.Keypoints ***/
-                # A class for storing and   manipulating detection keypoints.
-                # Attributes:
-                # Name 	Type 	Description
-                # xy 	Tensor 	A collection of keypoints containing x, y coordinates for each detection.
-                # xyn 	Tensor 	A normalized version of xy with coordinates in the range [0, 1].
-                # conf 	Tensor 	Confidence values associated with keypoints if available, otherwise None.
-
-                # /*** ultralytics.engine.results.Boxes ***/
-                # A class for storing and manipulating detection boxes.
-                # Attributes:
-                # Name      Type                Description
-                # xyxy 	    Tensor | ndarray 	The boxes in xyxy format.
-                # conf 	    Tensor | ndarray 	The confidence values of the boxes.
-                # cls 	    Tensor | ndarray 	The class values of the boxes.
-                # id 	    Tensor | ndarray 	The track IDs of the boxes (if available).
-                # xywh 	    Tensor | ndarray 	The boxes in xywh format.
-                # xyxyn 	Tensor | ndarray 	The boxes in xyxy format normalized by original image size.
-                # xywhn 	Tensor | ndarray 	The boxes in xywh format normalized by original image size.
-                # data 	    Tensor 	            The raw bboxes tensor (alias for boxes). 
-
-
-                # Index     Keypoint
-                # 0         Nose                              2   1
-                # 1         Left Eye                         / \ / \ 
-                # 2         Right Eye                       4   0   3 
-                # 3         Left Ear                        
-                # 4         Right Ear                              
-                # 5         Left Shoulder                  6---------5 
-                # 6         Right Shoulder                / |       | \  
-                # 7         Left Elbow                   /  |       |  \  
-                # 8         Right Elbow                8/   |       |   \7  
-                # 9         Left Wrist                  \   |       |   /
-                # 10        Right Wrist                10\  |       |  /9 
-                # 11        Left Hip                        ---------
-                # 12        Right Hip                     12|       |11  
-                # 13        Left Knee                       |       |
-                # 14        Right Knee                    14|       |13  
-                # 15        Left Ankle                      |       |
-                # 16        Right Ankle                   16|       |15  
-
-                # Calculate the number of persons detected
-                num_persons = len(self.results[0].keypoints)
-                if not self.results[0].keypoints.has_visible:
-                    num_persons = 0
-
-                # print("Number of people detected =", num_persons)
-                self.get_logger().info(f"People detected: {num_persons}")
-
-                self.center_torso_person_list = []
-                self.center_head_person_list = []
-
-                req2 = []
-                
-                for person_idx in range(num_persons):
-
-                    keypoints_id = self.results[0].keypoints[person_idx]
-                    boxes_id = self.results[0].boxes[person_idx]
-                    
-                    bb = BoundingBox()
-                    bb.box_top_left_x = int(boxes_id.xyxy[0][0])
-                    bb.box_top_left_y = int(boxes_id.xyxy[0][1])
-                    bb.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
-                    bb.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
-
-                    # Conditions to safely select the pixel to calculate the person location 
-                    if keypoints_id.conf[0][self.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and \
-                        keypoints_id.conf[0][self.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE and \
-                        keypoints_id.conf[0][self.HIP_LEFT_KP] > MIN_KP_CONF_VALUE and \
-                        keypoints_id.conf[0][self.HIP_RIGHT_KP] > MIN_KP_CONF_VALUE:
-                    
-                        ### After the yolo update, i must check if the conf value of the keypoint
-                        person_center_x = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][0] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][0] + keypoints_id.xy[0][self.HIP_LEFT_KP][0] + keypoints_id.xy[0][self.HIP_RIGHT_KP][0]) / 4)
-                        person_center_y = int((keypoints_id.xy[0][self.SHOULDER_LEFT_KP][1] + keypoints_id.xy[0][self.SHOULDER_RIGHT_KP][1] + keypoints_id.xy[0][self.HIP_LEFT_KP][1] + keypoints_id.xy[0][self.HIP_RIGHT_KP][1]) / 4)
-
-                    else:
-                        person_center_x = int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2
-                        person_center_y = int(boxes_id.xyxy[0][1]+boxes_id.xyxy[0][3])//2
-
-                    self.center_torso_person_list.append((person_center_x, person_center_y))
-
-                    # head center position 
-                    head_ctr = 0
-                    head_center_x = 0
-                    head_center_y = 0
-                    if keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE:
-                        head_center_x += int(keypoints_id.xy[0][self.NOSE_KP][0])
-                        head_center_y += int(keypoints_id.xy[0][self.NOSE_KP][1])
-                        head_ctr +=1
-                    if keypoints_id.conf[0][self.EYE_LEFT_KP] > MIN_KP_CONF_VALUE:
-                        head_center_x += int(keypoints_id.xy[0][self.EYE_LEFT_KP][0])
-                        head_center_y += int(keypoints_id.xy[0][self.EYE_LEFT_KP][1])
-                        head_ctr +=1
-                    if keypoints_id.conf[0][self.EYE_RIGHT_KP] > MIN_KP_CONF_VALUE:
-                        head_center_x += int(keypoints_id.xy[0][self.EYE_RIGHT_KP][0])
-                        head_center_y += int(keypoints_id.xy[0][self.EYE_RIGHT_KP][1])
-                        head_ctr +=1
-                    if keypoints_id.conf[0][self.EAR_LEFT_KP] > MIN_KP_CONF_VALUE:
-                        head_center_x += int(keypoints_id.xy[0][self.EAR_LEFT_KP][0])
-                        head_center_y += int(keypoints_id.xy[0][self.EAR_LEFT_KP][1])
-                        head_ctr +=1
-                    if keypoints_id.conf[0][self.EAR_RIGHT_KP] > MIN_KP_CONF_VALUE:
-                        head_center_x += int(keypoints_id.xy[0][self.EAR_RIGHT_KP][0])
-                        head_center_y += int(keypoints_id.xy[0][self.EAR_RIGHT_KP][1])
-                        head_ctr +=1
-
-                    if head_ctr > 0:
-                        head_center_x /= head_ctr
-                        head_center_y /= head_ctr
-                    else:
-                        head_center_x = int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2
-                        head_center_y = int(boxes_id.xyxy[0][1]*3+boxes_id.xyxy[0][3])//4
-
-
-                    head_center_x = int(head_center_x)
-                    head_center_y = int(head_center_y)
-
-                    self.center_head_person_list.append((head_center_x, head_center_y))
-
-                    head_center_point = Pose2D()
-                    head_center_point.x = float(head_center_x)
-                    head_center_point.y = float(head_center_y)
-
-                    torso_center_point = Pose2D()
-                    torso_center_point.x = float(person_center_x)
-                    torso_center_point.y = float(person_center_y)
-
-                    # more points can be added here...
-
-                    aux = BoundingBoxAndPoints()
-                    aux.bbox = bb
-                    aux.requested_point_coords.append(head_center_point)
-                    aux.requested_point_coords.append(torso_center_point)
-
-                    req2.append(aux)
-
-                self.waiting_for_pcloud = True
-                self.call_point_cloud_server(req2)
-        
-        # else:
-        #     yolov8_pose_filtered = ListOfDetectedPerson()
-        #     self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
-
-    def post_receiving_pcloud(self, new_pcloud):
-
-        global GET_CHARACTERISTICS
-
-        # print("points")
-        # print(new_pcloud)
-
-        # ROS2 Image Bridge for OpenCV
-        current_frame = self.br.imgmsg_to_cv2(self.head_rgb, "bgr8")
-        current_frame_draw = current_frame.copy()
-        # annotated_frame = self.results[0].plot()
-
-        # Calculate the number of persons detected
-        num_persons = len(self.results[0].keypoints)
-        if not self.results[0].keypoints.has_visible:
-            num_persons = 0
-
-        # yolov8_pose = ListOfDetectedPerson()  # test removed person_pose (non-filtered)
-        yolov8_pose_filtered = ListOfDetectedPerson()
-        # num_persons_filtered = 0
-
-        for person_idx in range(num_persons):
-            keypoints_id = self.results[0].keypoints[person_idx]
-            boxes_id = self.results[0].boxes[person_idx]
-            ALL_CONDITIONS_MET = 1
-            
-            # condition whether the person has their arm raised, or waiving
-            # at the current time, we are using the wrist coordinates and somparing with the nose coordinate
-            is_hand_raised = False
-            hand_raised = "None"
-            if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]) and \
-                int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]) and \
-                keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE and \
-                keypoints_id.conf[0][self.WRIST_RIGHT_KP] > MIN_KP_CONF_VALUE and \
-                keypoints_id.conf[0][self.WRIST_LEFT_KP] > MIN_KP_CONF_VALUE:
-                    
-                # print("Both Arms Up")
-                hand_raised = "Both"
-                is_hand_raised = True
-            else:
-                if int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_RIGHT_KP][1]) and \
-                    keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE and \
-                    keypoints_id.conf[0][self.WRIST_RIGHT_KP] > MIN_KP_CONF_VALUE:
-                    # print("Right Arm Up")
-                    hand_raised = "Right"
-                    is_hand_raised = True
-                elif int(keypoints_id.xy[0][self.NOSE_KP][1]) >= int(keypoints_id.xy[0][self.WRIST_LEFT_KP][1]) and \
-                    keypoints_id.conf[0][self.NOSE_KP] > MIN_KP_CONF_VALUE and \
-                    keypoints_id.conf[0][self.WRIST_LEFT_KP] > MIN_KP_CONF_VALUE:
-                    # print("Left Arm Up")
-                    hand_raised = "Left"
-                    is_hand_raised = True
-                else: 
-                    # print("Both Arms Down")
-                    hand_raised = "None"
-                    is_hand_raised = False
-            # print("Hand Raised:", hand_raised, is_hand_raised)
-
-            # print(new_pcloud)
-            new_person = DetectedPerson()
-            new_person = self.add_person_to_detectedperson_msg(current_frame, current_frame_draw, boxes_id, keypoints_id, new_pcloud[person_idx].center_coords, \
-                                                               self.center_torso_person_list[person_idx], self.center_head_person_list[person_idx], \
-                                                               new_pcloud[person_idx].requested_point_coords[1], new_pcloud[person_idx].requested_point_coords[0], \
-                                                               hand_raised)
-            
-            # adds people to "person_pose" without any restriction
-            # yolov8_pose.persons.append(new_person) # test removed person_pose (non-filtered)
-            
-            legs_ctr = 0
-            if keypoints_id.conf[0][self.KNEE_LEFT_KP] > MIN_KP_CONF_VALUE:
-                legs_ctr+=1
-            if keypoints_id.conf[0][self.KNEE_RIGHT_KP] > MIN_KP_CONF_VALUE:
-                legs_ctr+=1
-            if keypoints_id.conf[0][self.ANKLE_LEFT_KP] > MIN_KP_CONF_VALUE:
-                legs_ctr+=1
-            if keypoints_id.conf[0][self.ANKLE_RIGHT_KP] > MIN_KP_CONF_VALUE:
-                legs_ctr+=1
-
-            person_id = boxes_id.id
-            if boxes_id.id == None:
-                person_id = 0 
-
-            # print("id = ", person_id)
-            # print("conf", boxes_id.conf)
-            # print("legs_ctr = ", legs_ctr)
-
-            body_kp_high_conf_counter = 0
-            for kp in range(self.N_KEYPOINTS - self.NUMBER_OF_LEGS_KP): # all keypoints without the legs
-                if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
-                    body_kp_high_conf_counter+=1
-
-            # print("body_kp_high_conf_counter = ", body_kp_high_conf_counter)
-
-
-            # changed this condition from:
-            # 0 < new_person.position_relative.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
-            # to:
-            # -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD < new_person.position_relative.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
-            # this way, this condition can be used for both checking if the person is right in front and checking if the person is following the robot
-
-            center_comm_position = False
-            if -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD < new_person.position_relative.x < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD and \
-             -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD < new_person.position_relative.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
-               center_comm_position = True
-
-
-            # checks whether the person confidence is above a defined level
-            if not boxes_id.conf >= MIN_PERSON_CONF_VALUE:
-                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                # print("- Misses minimum person confidence level")
-
-            # checks if flag to detect people whose legs are visible 
-            if not legs_ctr >= NUMBER_OF_LEG_KP_TO_BE_DETECTED and ONLY_DETECT_PERSON_LEGS_VISIBLE:
-                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                # print("- Misses legs visible flag")
-            
-            # checks whether the minimum number if body keypoints (excluding legs) has high confidence
-            if not body_kp_high_conf_counter >= MIN_KP_TO_DETECT_PERSON:
-                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                # print("- Misses minimum number of body keypoints")
-
-            # checks if flag to detect people right in front of the robot 
-            if not center_comm_position and ONLY_DETECT_PERSON_RIGHT_IN_FRONT:
-                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                # print(" - Misses not being right in front of the robot")
-            
-            # checks if flag to detect people with their arm raised or waving (requesting assistance)
-            if not is_hand_raised and ONLY_DETECT_PERSON_ARM_RAISED:
-                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                # print(" - Misses not being with their arm raised")
-
-            if ALL_CONDITIONS_MET:
-                # num_persons_filtered+=1
-
-                # characteristics will only be updated after we confirm that the person is inside the filteredpersons
-                # otherwise the large amount of time spent getting the characteristics from the models is applied to
-                # every detected person and not only the filtered 
-                is_cropped_face = False
-                if GET_CHARACTERISTICS:
-                    # in order to predict the ethnicity, age and gender, it is necessary to first cut out the face of the detected person
-                    is_cropped_face, cropped_face = self.crop_face(current_frame, current_frame_draw, new_person)
-
-                    if is_cropped_face:
-                        new_person.ethnicity, new_person.ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
-                        new_person.age_estimate, new_person.age_estimate_probability = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
-                        new_person.gender, new_person.gender_probability = self.get_gender_prediction(cropped_face) # says whether the person is male or female
-                        print(new_person.ethnicity, new_person.age_estimate, new_person.gender)        
-                # adds people to "person_pose_filtered" with selected filters
-                yolov8_pose_filtered.persons.append(new_person)
-              
-                if self.DEBUG_DRAW:
-                    
-                    red_yp = (56, 56, 255)
-                    lblue_yp = (255,128,0)
-                    green_yp = (0,255,0)
-                    orange_yp = (51,153,255)
-                    magenta_yp = (255, 51, 255)
-                    white_yp = (255, 255, 255)
-
-                    # /*** BOXES ***/
-
-                    # print(f"Person index BOXES: {person_idx}") # just the index of the person
-                    # print(boxes_id)
-                    # print(boxes_id.xyxy)
-                    # print(int(boxes_id.xyxy[0][1]))
-
-                    # creates the points for alternative TR visual representation 
-                    start_point = (int(boxes_id.xyxy[0][0]), int(boxes_id.xyxy[0][1]))
-                    end_point = (int(boxes_id.xyxy[0][2]), int(boxes_id.xyxy[0][3]))
-                    start_point_text_rect = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]))
-
-                    if int(boxes_id.xyxy[0][1]) < 30: # depending on the height of the box, so it is either inside or outside
-                        start_point_text = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]+25))
-                        # end_point_text_rect = (int(per.xyxy[0][0]+75), int(per.xyxy[0][1]+30)) # if '0.95'
-                        end_point_text_rect = (int(boxes_id.xyxy[0][0]+50), int(boxes_id.xyxy[0][1]+30)) # if '.95'
-                    else:
-                        start_point_text = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]-5))
-                        # end_point_text_rect = (int(per.xyxy[0][0]+75), int(per.xyxy[0][1]-30)) # if '0.95'
-                        end_point_text_rect = (int(boxes_id.xyxy[0][0]+50), int(boxes_id.xyxy[0][1]-30)) # if '.95'
-
-                    if DRAW_PERSON_BOX:
-                        # draws the bounding box around the person
-                        cv2.rectangle(current_frame_draw, start_point, end_point, red_yp , 4) 
-                    
-                    if DRAW_PERSON_CONF and not DRAW_PERSON_ID:
-                        # draws the background for the confidence of each person
-                        cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, red_yp , -1) 
-                        
-                        # draws the confidence next to each person, without the initial '0' for easier visualization
-                        current_frame_draw = cv2.putText(
-                            current_frame_draw,
-                            # f"{round(float(per.conf),2)}",
-                            f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
-                            (start_point_text[0], start_point_text[1]),
-                            cv2.FONT_HERSHEY_DUPLEX,
-                            1,
-                            (255, 255, 255),
-                            1,
-                            cv2.LINE_AA
-                        ) 
-                    
-                    elif not DRAW_PERSON_CONF and DRAW_PERSON_ID:
-                        if person_id != 0:
-
-                            # draws the background for the confidence of each person
-                            cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+10, end_point_text_rect[1]) , red_yp , -1) 
-                            
-                            current_frame_draw = cv2.putText(
-                                current_frame_draw,
-                                # f"{round(float(per.conf),2)}",
-                                f"{str(int(person_id))}",
-                                (start_point_text[0], start_point_text[1]),
-                                cv2.FONT_HERSHEY_DUPLEX,
-                                1,
-                                (0, 0, 0),
-                                1,
-                                cv2.LINE_AA
-                            ) 
-
-                    elif DRAW_PERSON_CONF and DRAW_PERSON_ID:
-
-                        if person_id != 0:
-
-                            # draws the background for the confidence of each person
-                            cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+70, end_point_text_rect[1]) , red_yp , -1) 
-                            
-                            current_frame_draw = cv2.putText(
-                                current_frame_draw,
-                                # f"{round(float(per.conf),2)}",
-                                f"{str(int(person_id))}",
-                                (start_point_text[0], start_point_text[1]),
-                                cv2.FONT_HERSHEY_DUPLEX,
-                                1,
-                                (0, 0, 0),
-                                1,
-                                cv2.LINE_AA
-                            ) 
-
-                            # draws the confidence next to each person, without the initial '0' for easier visualization
-                            current_frame_draw = cv2.putText(
-                                current_frame_draw,
-                                # f"{round(float(per.conf),2)}",
-                                f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
-                                (start_point_text[0]+70, start_point_text[1]),
-                                cv2.FONT_HERSHEY_DUPLEX,
-                                1,
-                                (255, 255, 255),
-                                1,
-                                cv2.LINE_AA
-                            ) 
-
-                        else:
-                            # draws the background for the confidence of each person
-                            cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, red_yp , -1) 
-                            
-                            # draws the confidence next to each person, without the initial '0' for easier visualization
-                            current_frame_draw = cv2.putText(
-                                current_frame_draw,
-                                # f"{round(float(per.conf),2)}",
-                                f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
-                                (start_point_text[0], start_point_text[1]),
-                                cv2.FONT_HERSHEY_DUPLEX,
-                                1,
-                                (255, 255, 255),
-                                1,
-                                cv2.LINE_AA
-                            ) 
-
-                    # /*** KEYPOINTS ***/
-
-                    # print(keypoints_id.xy)
-                    # print(keypoints_id.xy[0][0])
-                    # print(keypoints_id.conf)        
-                    
-                    if DRAW_PERSON_KP:
-
-
-                    
-                        self.line_between_two_keypoints(current_frame_draw, self.NOSE_KP, self.EYE_LEFT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.NOSE_KP, self.EYE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
-                        # self.line_between_two_keypoints(current_frame_draw, self.EYE_LEFT_KP, self.EYE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.EYE_LEFT_KP, self.EAR_LEFT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.EYE_RIGHT_KP, self.EAR_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.EAR_LEFT_KP, self.SHOULDER_LEFT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.EAR_RIGHT_KP, self.SHOULDER_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
-
-                        self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.SHOULDER_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.ELBOW_LEFT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_RIGHT_KP, self.ELBOW_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.ELBOW_LEFT_KP, self.WRIST_LEFT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.ELBOW_RIGHT_KP, self.WRIST_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
-
-
-                        self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_RIGHT_KP, self.HIP_LEFT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.HIP_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
-
-                        self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.HIP_LEFT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_RIGHT_KP, self.HIP_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.HIP_LEFT_KP, self.HIP_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
-
-                        self.line_between_two_keypoints(current_frame_draw, self.HIP_LEFT_KP, self.KNEE_LEFT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.HIP_RIGHT_KP, self.KNEE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.KNEE_LEFT_KP, self.ANKLE_LEFT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
-                        self.line_between_two_keypoints(current_frame_draw, self.KNEE_RIGHT_KP, self.ANKLE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
-
-                        for kp in range(self.N_KEYPOINTS):
-                            if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
-                                if kp >= 0 and kp < 5:
-                                    c = green_yp # green
-                                elif kp >= 5 and kp < 11:
-                                    c = lblue_yp # something blue 
-                                elif kp >= 11 and kp < 17:
-                                    c = orange_yp # orange
-                                center_p = (int(keypoints_id.xy[0][kp][0]), int(keypoints_id.xy[0][kp][1]))
-                                cv2.circle(current_frame_draw, center_p, 5, c, -1)
-                            else:
-                                if DRAW_LOW_CONF_KP:
-                                    c = (0,0,255)
-                                    center_p = (int(keypoints_id.xy[0][kp][0]), int(keypoints_id.xy[0][kp][1]))
-                                    cv2.circle(current_frame_draw, center_p, 5, c, -1)
-
-                        center_p_ = (int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2), (int(boxes_id.xyxy[0][1]+boxes_id.xyxy[0][3])//2)
-                        cv2.circle(current_frame_draw, center_p_, 5, (128, 128, 128), -1)
-                        cv2.circle(current_frame_draw, self.center_head_person_list[person_idx], 5, (255, 255, 255), -1)
-                        cv2.circle(current_frame_draw, self.center_torso_person_list[person_idx], 5, (255, 255, 255), -1)
-                       
-                    if DRAW_PERSON_LOCATION_COORDS:
-                        cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
-                                    ', '+str(round(new_person.position_relative.y,2))+
-                                    ', '+str(round(new_person.position_relative.z,2))+')',
-                                    self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
-                    
-                    if DRAW_PERSON_LOCATION_HOUSE_FURNITURE:
-                        cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
-                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                    
-                    if DRAW_PERSON_POINTING_INFO:
-                        if new_person.pointing_at != "None":
-                            cv2.putText(current_frame_draw, new_person.pointing_at+" "+new_person.pointing_with_arm,
-                                        (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-
-                    if DRAW_PERSON_HAND_RAISED:
-                        # if hand_raised != "None":
-                        cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
-                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                        
-                    if DRAW_PERSON_HEIGHT:
-                        cv2.putText(current_frame_draw, str(round(new_person.height,2)),
-                                    (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+120), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                        
-                    if DRAW_PERSON_CLOTHES_COLOR:
-                        cv2.putText(current_frame_draw, new_person.shirt_color + "(" + str(new_person.shirt_rgb.red) + ", " + str(new_person.shirt_rgb.green) + ", " + str(new_person.shirt_rgb.blue) + ")",
-                                    # (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.shirt_rgb.blue, new_person.shirt_rgb.green, new_person.shirt_rgb.red), 1, cv2.LINE_AA)
-                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                        
-                        cv2.putText(current_frame_draw, new_person.pants_color + "(" + str(new_person.pants_rgb.red) + ", " + str(new_person.pants_rgb.green) + ", " + str(new_person.pants_rgb.blue) + ")",
-                                    # (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
-                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                    
-                    if DRAW_CHARACTERISTICS and GET_CHARACTERISTICS and is_cropped_face:
-                        cv2.putText(current_frame_draw, str(round(new_person.height,2))+" / "+new_person.age_estimate+" / "+new_person.gender+" / "+new_person.ethnicity,
-                                    (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
-                        
-
-            # print("===")
-
-        # self.person_pose_publisher.publish(yolov8_pose) # test removed person_pose (non-filtered)
-        self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
-
-        # print("____END____")
-
-        self.new_frame_time = time.time()
-        self.fps = round(1/(self.new_frame_time-self.prev_frame_time), 2)
-        self.prev_frame_time = self.new_frame_time
-        self.fps = str(self.fps)
-        # print("fps = " + self.fps)
-
-        if self.DEBUG_DRAW:
-            # putting the FPS count on the frame
-            cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(current_frame_draw, 'np:' + str(len(yolov8_pose_filtered.persons)) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-            # cv2.imshow("Yolo Pose Detection", annotated_frame)
-            # cv2.imshow("Camera Image", current_frame)
-            cv2.waitKey(1)
-        
-        # print('tempo parcial = ', tf - ti)
-        # print('tempo total = ', time.perf_counter() - self.tempo_total)   # imprime o tempo de calculo em segundos
-        self.get_logger().info(f"Time Yolo_Pose: {round(time.perf_counter() - self.tempo_total,2)}")
-
-
-
-
-
-
-
-
 
     def crop_face(self, current_frame, current_frame_draw, new_person):
 
@@ -1704,22 +1108,48 @@ class YoloPoseMain():
                 keypoints = p_res[0].keypoints
 
                 for box, keypoint in zip(boxes, keypoints):
-                
+
+                    # print(keypoint)
+                    # print(keypoint.conf[0][self.node.NOSE_KP])
+
+                    person_center_x, person_center_y, head_center_x, head_center_y = self.get_person_and_head_pixel(keypoint=keypoint, box=box)
+                    hand_raised, is_hand_raised = self.check_arm_raised(keypoint=keypoint)
+                    legs_ctr, body_kp_high_conf_counter = self.keypoint_counter(keypoint=keypoint)
+
                     ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
                     # obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
-                    temp_coords = Point()
-                    temp_coords.x = 1.0
-                    temp_coords.y = 0.0
-                    temp_coords.z = 0.0
+                    obj_3d_cam_coords = Point()
+                    obj_3d_cam_coords.x = 1.0
+                    obj_3d_cam_coords.y = 0.0
+                    obj_3d_cam_coords.z = 0.0
                     
                     ALL_CONDITIONS_MET = 1
 
                     ########## MISSING HERE: CASE WHERE NO POINTS WERE AVALILABLE SO WE DONT KNOW HOW TO COMPUTE 3D ##########
+                    # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
+                    if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0:
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                        print ("REMOVED")
 
                     # checks whether the person confidence is above a selected level
                     if not box.conf >= MIN_CONF_NALUE:
                         ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                         # print("- Misses minimum confidence level")
+
+                    # checks if flag to detect people whose legs are visible 
+                    if not legs_ctr >= NUMBER_OF_LEG_KP_TO_BE_DETECTED and ONLY_DETECT_PERSON_LEGS_VISIBLE:
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                        # print("- Misses legs visible flag")
+
+                    # checks whether the minimum number if body keypoints (excluding legs) has high confidence
+                    if not body_kp_high_conf_counter >= MIN_KP_TO_DETECT_PERSON:
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                        # print("- Misses minimum number of body keypoints")
+                    
+                    # checks if flag to detect people with their arm raised or waving (requesting assistance)
+                    if not is_hand_raised and ONLY_DETECT_PERSON_ARM_RAISED:
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                        # print(" - Misses not being with their arm raised")
 
                     # if the person detection passes all selected conditions, the detected person is added to the publishing list
                     if ALL_CONDITIONS_MET:
@@ -1728,7 +1158,7 @@ class YoloPoseMain():
                         point_cam = PointStamped()
                         point_cam.header.stamp = self.node.get_clock().now().to_msg()
                         point_cam.header.frame_id = camera_link
-                        point_cam.point = temp_coords
+                        point_cam.point = obj_3d_cam_coords
 
                         transformed_point = PointStamped()
                         transformed_point_map = PointStamped()
@@ -1740,17 +1170,377 @@ class YoloPoseMain():
                                 transformed_point_map = do_transform_point(transformed_point, map_transform)
                                 self.node.get_logger().info(f"Person in map frame: {transformed_point_map.point}")
 
-                        new_person = DetectedPerson()
-                        # new_person = self.node.add_person_to_detectedperson_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
-                        #                                                         object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img)
-                        new_person = self.node.add_person_to_detectedperson_msg(boxes_id=box, keypoints_id=keypoint, object_coords_to_cam=point_cam.point, object_coords_to_base=transformed_point.point, \
-                                                                                object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img)
-                        yolov8_person_filtered.persons.append(new_person)
+                        center_comm_position = False
+                        if -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD < transformed_point.point.x < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD and \
+                            -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD < transformed_point.point.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
+                            center_comm_position = True
+                    
+                        # checks if flag to detect people right in front of the robot 
+                        if not center_comm_position and ONLY_DETECT_PERSON_RIGHT_IN_FRONT:
+                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                            # print(" - Misses not being right in front of the robot")
+
+
+                        if ALL_CONDITIONS_MET: # special case just for the center_comm_position
+                            # characteristics will only be updated after we confirm that the person is inside the filteredpersons
+                            # otherwise the large amount of time spent getting the characteristics from the models is applied to
+                            # every detected person and not only the filtered 
+                            """
+                            is_cropped_face = False
+                            if GET_CHARACTERISTICS:
+                                # in order to predict the ethnicity, age and gender, it is necessary to first cut out the face of the detected person
+                                is_cropped_face, cropped_face = self.node.crop_face(head_frame, head_frame, new_person)
+
+                                if is_cropped_face:
+                                    new_person.ethnicity, new_person.ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
+                                    new_person.age_estimate, new_person.age_estimate_probability = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
+                                    new_person.gender, new_person.gender_probability = self.get_gender_prediction(cropped_face) # says whether the person is male or female
+                                    print(new_person.ethnicity, new_person.age_estimate, new_person.gender)        
+                            """
+                            new_person = DetectedPerson()
+                            new_person = self.node.add_person_to_detectedperson_msg(boxes_id=box, keypoints_id=keypoint, arm_raised=hand_raised, \
+                                                                                    object_coords_to_cam=point_cam.point, object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
+                                                                                    center_torso_person=(person_center_x, person_center_y), center_head_person=(head_center_x, head_center_y), \
+                                                                                    torso_localisation=None, head_localisation=None, 
+                                                                                    camera=camera, current_img=rgb_img)
+                            yolov8_person_filtered.persons.append(new_person)
 
         # self.node.get_logger().info(f"People detected: {len(yolov8_person_filtered.persions)}/{num_people}")
         # self.node.get_logger().info(f"Time Yolo_People: {time.perf_counter() - tempo_total}")
 
         return yolov8_person_filtered, num_people
+
+    def check_arm_raised(self, keypoint):
+        # condition whether the person has their arm raised, or waiving
+        # at the current time, we are using the wrist coordinates and somparing with the nose coordinate
+        is_hand_raised = False
+        hand_raised = "None"
+        if int(keypoint.xy[0][self.node.NOSE_KP][1]) >= int(keypoint.xy[0][self.node.WRIST_RIGHT_KP][1]) and \
+            int(keypoint.xy[0][self.node.NOSE_KP][1]) >= int(keypoint.xy[0][self.node.WRIST_LEFT_KP][1]) and \
+            keypoint.conf[0][self.node.NOSE_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.WRIST_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.WRIST_LEFT_KP] > MIN_KP_CONF_VALUE:
+                
+            # print("Both Arms Up")
+            hand_raised = "Both"
+            is_hand_raised = True
+        else:
+            if int(keypoint.xy[0][self.node.NOSE_KP][1]) >= int(keypoint.xy[0][self.node.WRIST_RIGHT_KP][1]) and \
+                keypoint.conf[0][self.node.NOSE_KP] > MIN_KP_CONF_VALUE and \
+                keypoint.conf[0][self.node.WRIST_RIGHT_KP] > MIN_KP_CONF_VALUE:
+                # print("Right Arm Up")
+                hand_raised = "Right"
+                is_hand_raised = True
+            elif int(keypoint.xy[0][self.node.NOSE_KP][1]) >= int(keypoint.xy[0][self.node.WRIST_LEFT_KP][1]) and \
+                keypoint.conf[0][self.node.NOSE_KP] > MIN_KP_CONF_VALUE and \
+                keypoint.conf[0][self.node.WRIST_LEFT_KP] > MIN_KP_CONF_VALUE:
+                # print("Left Arm Up")
+                hand_raised = "Left"
+                is_hand_raised = True
+            else: 
+                # print("Both Arms Down")
+                hand_raised = "None"
+                is_hand_raised = False
+
+        # print("Hand Raised:", hand_raised, is_hand_raised)
+        return hand_raised, is_hand_raised
+        
+    def get_person_and_head_pixel(self, keypoint, box):
+
+        # gets the torso u,v location
+        # Conditions to safely select the pixel to calculate the person location 
+        if keypoint.conf[0][self.node.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.HIP_LEFT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.HIP_RIGHT_KP] > MIN_KP_CONF_VALUE:
+        
+            ### After the yolo update, i must check if the conf value of the keypoint
+            person_center_x = int((keypoint.xy[0][self.node.SHOULDER_LEFT_KP][0] + keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][0] + keypoint.xy[0][self.node.HIP_LEFT_KP][0] + keypoint.xy[0][self.node.HIP_RIGHT_KP][0]) / 4)
+            person_center_y = int((keypoint.xy[0][self.node.SHOULDER_LEFT_KP][1] + keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][1] + keypoint.xy[0][self.node.HIP_LEFT_KP][1] + keypoint.xy[0][self.node.HIP_RIGHT_KP][1]) / 4)
+
+        else:
+            person_center_x = int(box.xyxy[0][0]+box.xyxy[0][2])//2
+            person_center_y = int(box.xyxy[0][1]+box.xyxy[0][3])//2
+
+        # head center position 
+        head_ctr = 0
+        head_center_x = 0
+        head_center_y = 0
+        if keypoint.conf[0][self.node.NOSE_KP] > MIN_KP_CONF_VALUE:
+            head_center_x += int(keypoint.xy[0][self.node.NOSE_KP][0])
+            head_center_y += int(keypoint.xy[0][self.node.NOSE_KP][1])
+            head_ctr +=1
+        if keypoint.conf[0][self.node.EYE_LEFT_KP] > MIN_KP_CONF_VALUE:
+            head_center_x += int(keypoint.xy[0][self.node.EYE_LEFT_KP][0])
+            head_center_y += int(keypoint.xy[0][self.node.EYE_LEFT_KP][1])
+            head_ctr +=1
+        if keypoint.conf[0][self.node.EYE_RIGHT_KP] > MIN_KP_CONF_VALUE:
+            head_center_x += int(keypoint.xy[0][self.node.EYE_RIGHT_KP][0])
+            head_center_y += int(keypoint.xy[0][self.node.EYE_RIGHT_KP][1])
+            head_ctr +=1
+        if keypoint.conf[0][self.node.EAR_LEFT_KP] > MIN_KP_CONF_VALUE:
+            head_center_x += int(keypoint.xy[0][self.node.EAR_LEFT_KP][0])
+            head_center_y += int(keypoint.xy[0][self.node.EAR_LEFT_KP][1])
+            head_ctr +=1
+        if keypoint.conf[0][self.node.EAR_RIGHT_KP] > MIN_KP_CONF_VALUE:
+            head_center_x += int(keypoint.xy[0][self.node.EAR_RIGHT_KP][0])
+            head_center_y += int(keypoint.xy[0][self.node.EAR_RIGHT_KP][1])
+            head_ctr +=1
+
+        if head_ctr > 0:
+            head_center_x = int(head_center_x/head_ctr)
+            head_center_y = int(head_center_y/head_ctr)
+        else:
+            head_center_x = int(box.xyxy[0][0]+box.xyxy[0][2])//2
+            head_center_y = int(box.xyxy[0][1]*3+box.xyxy[0][3])//4
+
+        return person_center_x, person_center_y, head_center_x, head_center_y
+        
+    def keypoint_counter(self, keypoint):
+    
+        legs_ctr = 0
+        if keypoint.conf[0][self.node.KNEE_LEFT_KP] > MIN_KP_CONF_VALUE:
+            legs_ctr+=1
+        if keypoint.conf[0][self.node.KNEE_RIGHT_KP] > MIN_KP_CONF_VALUE:
+            legs_ctr+=1
+        if keypoint.conf[0][self.node.ANKLE_LEFT_KP] > MIN_KP_CONF_VALUE:
+            legs_ctr+=1
+        if keypoint.conf[0][self.node.ANKLE_RIGHT_KP] > MIN_KP_CONF_VALUE:
+            legs_ctr+=1
+
+        body_kp_high_conf_counter = 0
+        for kp in range(self.node.N_KEYPOINTS - self.node.NUMBER_OF_LEGS_KP): # all keypoints without the legs
+            if keypoint.conf[0][kp] > MIN_KP_CONF_VALUE:
+                body_kp_high_conf_counter+=1
+
+        return legs_ctr, body_kp_high_conf_counter
+
+    def draw_detected_people(self, yolov8_people, current_frame_draw):
+
+
+        if self.node.DEBUG_DRAW:
+            
+            red_yp = (56, 56, 255)
+            lblue_yp = (255,128,0)
+            green_yp = (0,255,0)
+            orange_yp = (51,153,255)
+            magenta_yp = (255, 51, 255)
+            white_yp = (255, 255, 255)
+
+            # /*** BOXES ***/
+
+            # print(f"Person index BOXES: {person_idx}") # just the index of the person
+            # print(boxes_id)
+            # print(boxes_id.xyxy)
+            # print(int(boxes_id.xyxy[0][1]))
+
+            # creates the points for alternative TR visual representation 
+            start_point = (int(boxes_id.xyxy[0][0]), int(boxes_id.xyxy[0][1]))
+            end_point = (int(boxes_id.xyxy[0][2]), int(boxes_id.xyxy[0][3]))
+            start_point_text_rect = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]))
+
+            if int(boxes_id.xyxy[0][1]) < 30: # depending on the height of the box, so it is either inside or outside
+                start_point_text = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]+25))
+                # end_point_text_rect = (int(per.xyxy[0][0]+75), int(per.xyxy[0][1]+30)) # if '0.95'
+                end_point_text_rect = (int(boxes_id.xyxy[0][0]+50), int(boxes_id.xyxy[0][1]+30)) # if '.95'
+            else:
+                start_point_text = (int(boxes_id.xyxy[0][0]-2), int(boxes_id.xyxy[0][1]-5))
+                # end_point_text_rect = (int(per.xyxy[0][0]+75), int(per.xyxy[0][1]-30)) # if '0.95'
+                end_point_text_rect = (int(boxes_id.xyxy[0][0]+50), int(boxes_id.xyxy[0][1]-30)) # if '.95'
+
+            if DRAW_PERSON_BOX:
+                # draws the bounding box around the person
+                cv2.rectangle(current_frame_draw, start_point, end_point, red_yp , 4) 
+            
+            if DRAW_PERSON_CONF and not DRAW_PERSON_ID:
+                # draws the background for the confidence of each person
+                cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, red_yp , -1) 
+                
+                # draws the confidence next to each person, without the initial '0' for easier visualization
+                current_frame_draw = cv2.putText(
+                    current_frame_draw,
+                    # f"{round(float(per.conf),2)}",
+                    f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
+                    (start_point_text[0], start_point_text[1]),
+                    cv2.FONT_HERSHEY_DUPLEX,
+                    1,
+                    (255, 255, 255),
+                    1,
+                    cv2.LINE_AA
+                ) 
+            
+            elif not DRAW_PERSON_CONF and DRAW_PERSON_ID:
+                if person_id != 0:
+
+                    # draws the background for the confidence of each person
+                    cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+10, end_point_text_rect[1]) , red_yp , -1) 
+                    
+                    current_frame_draw = cv2.putText(
+                        current_frame_draw,
+                        # f"{round(float(per.conf),2)}",
+                        f"{str(int(person_id))}",
+                        (start_point_text[0], start_point_text[1]),
+                        cv2.FONT_HERSHEY_DUPLEX,
+                        1,
+                        (0, 0, 0),
+                        1,
+                        cv2.LINE_AA
+                    ) 
+
+            elif DRAW_PERSON_CONF and DRAW_PERSON_ID:
+
+                if person_id != 0:
+
+                    # draws the background for the confidence of each person
+                    cv2.rectangle(current_frame_draw, start_point_text_rect, (end_point_text_rect[0]+70, end_point_text_rect[1]) , red_yp , -1) 
+                    
+                    current_frame_draw = cv2.putText(
+                        current_frame_draw,
+                        # f"{round(float(per.conf),2)}",
+                        f"{str(int(person_id))}",
+                        (start_point_text[0], start_point_text[1]),
+                        cv2.FONT_HERSHEY_DUPLEX,
+                        1,
+                        (0, 0, 0),
+                        1,
+                        cv2.LINE_AA
+                    ) 
+
+                    # draws the confidence next to each person, without the initial '0' for easier visualization
+                    current_frame_draw = cv2.putText(
+                        current_frame_draw,
+                        # f"{round(float(per.conf),2)}",
+                        f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
+                        (start_point_text[0]+70, start_point_text[1]),
+                        cv2.FONT_HERSHEY_DUPLEX,
+                        1,
+                        (255, 255, 255),
+                        1,
+                        cv2.LINE_AA
+                    ) 
+
+                else:
+                    # draws the background for the confidence of each person
+                    cv2.rectangle(current_frame_draw, start_point_text_rect, end_point_text_rect, red_yp , -1) 
+                    
+                    # draws the confidence next to each person, without the initial '0' for easier visualization
+                    current_frame_draw = cv2.putText(
+                        current_frame_draw,
+                        # f"{round(float(per.conf),2)}",
+                        f"{'.'+str(int((boxes_id.conf+0.005)*100))}",
+                        (start_point_text[0], start_point_text[1]),
+                        cv2.FONT_HERSHEY_DUPLEX,
+                        1,
+                        (255, 255, 255),
+                        1,
+                        cv2.LINE_AA
+                    ) 
+
+            # /*** KEYPOINTS ***/
+
+            # print(keypoints_id.xy)
+            # print(keypoints_id.xy[0][0])
+            # print(keypoints_id.conf)        
+            
+            if DRAW_PERSON_KP:
+
+
+            
+                self.line_between_two_keypoints(current_frame_draw, self.NOSE_KP, self.EYE_LEFT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.NOSE_KP, self.EYE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
+                # self.line_between_two_keypoints(current_frame_draw, self.EYE_LEFT_KP, self.EYE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.EYE_LEFT_KP, self.EAR_LEFT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.EYE_RIGHT_KP, self.EAR_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.EAR_LEFT_KP, self.SHOULDER_LEFT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.EAR_RIGHT_KP, self.SHOULDER_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, green_yp)
+
+                self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.SHOULDER_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.ELBOW_LEFT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_RIGHT_KP, self.ELBOW_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.ELBOW_LEFT_KP, self.WRIST_LEFT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.ELBOW_RIGHT_KP, self.WRIST_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, lblue_yp)
+
+
+                self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_RIGHT_KP, self.HIP_LEFT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.HIP_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
+
+                self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_LEFT_KP, self.HIP_LEFT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.SHOULDER_RIGHT_KP, self.HIP_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.HIP_LEFT_KP, self.HIP_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, magenta_yp)
+
+                self.line_between_two_keypoints(current_frame_draw, self.HIP_LEFT_KP, self.KNEE_LEFT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.HIP_RIGHT_KP, self.KNEE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.KNEE_LEFT_KP, self.ANKLE_LEFT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
+                self.line_between_two_keypoints(current_frame_draw, self.KNEE_RIGHT_KP, self.ANKLE_RIGHT_KP, keypoints_id.xy, keypoints_id.conf, orange_yp)
+
+                for kp in range(self.N_KEYPOINTS):
+                    if keypoints_id.conf[0][kp] > MIN_KP_CONF_VALUE:
+                        if kp >= 0 and kp < 5:
+                            c = green_yp # green
+                        elif kp >= 5 and kp < 11:
+                            c = lblue_yp # something blue 
+                        elif kp >= 11 and kp < 17:
+                            c = orange_yp # orange
+                        center_p = (int(keypoints_id.xy[0][kp][0]), int(keypoints_id.xy[0][kp][1]))
+                        cv2.circle(current_frame_draw, center_p, 5, c, -1)
+                    else:
+                        if DRAW_LOW_CONF_KP:
+                            c = (0,0,255)
+                            center_p = (int(keypoints_id.xy[0][kp][0]), int(keypoints_id.xy[0][kp][1]))
+                            cv2.circle(current_frame_draw, center_p, 5, c, -1)
+
+                center_p_ = (int(boxes_id.xyxy[0][0]+boxes_id.xyxy[0][2])//2), (int(boxes_id.xyxy[0][1]+boxes_id.xyxy[0][3])//2)
+                cv2.circle(current_frame_draw, center_p_, 5, (128, 128, 128), -1)
+                cv2.circle(current_frame_draw, self.center_head_person_list[person_idx], 5, (255, 255, 255), -1)
+                cv2.circle(current_frame_draw, self.center_torso_person_list[person_idx], 5, (255, 255, 255), -1)
+                
+            if DRAW_PERSON_LOCATION_COORDS:
+                cv2.putText(current_frame_draw, '('+str(round(new_person.position_relative.x,2))+
+                            ', '+str(round(new_person.position_relative.y,2))+
+                            ', '+str(round(new_person.position_relative.z,2))+')',
+                            self.center_torso_person_list[person_idx], cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)         
+            
+            if DRAW_PERSON_LOCATION_HOUSE_FURNITURE:
+                cv2.putText(current_frame_draw, new_person.room_location+" - "+new_person.furniture_location,
+                            (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            
+            if DRAW_PERSON_POINTING_INFO:
+                if new_person.pointing_at != "None":
+                    cv2.putText(current_frame_draw, new_person.pointing_at+" "+new_person.pointing_with_arm,
+                                (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+
+            if DRAW_PERSON_HAND_RAISED:
+                # if hand_raised != "None":
+                cv2.putText(current_frame_draw, "Hand Raised:"+hand_raised,
+                            (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+90), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                
+            if DRAW_PERSON_HEIGHT:
+                cv2.putText(current_frame_draw, str(round(new_person.height,2)),
+                            (self.center_torso_person_list[person_idx][0], self.center_torso_person_list[person_idx][1]+120), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                
+            if DRAW_PERSON_CLOTHES_COLOR:
+                cv2.putText(current_frame_draw, new_person.shirt_color + "(" + str(new_person.shirt_rgb.red) + ", " + str(new_person.shirt_rgb.green) + ", " + str(new_person.shirt_rgb.blue) + ")",
+                            # (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.shirt_rgb.blue, new_person.shirt_rgb.green, new_person.shirt_rgb.red), 1, cv2.LINE_AA)
+                            (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                
+                cv2.putText(current_frame_draw, new_person.pants_color + "(" + str(new_person.pants_rgb.red) + ", " + str(new_person.pants_rgb.green) + ", " + str(new_person.pants_rgb.blue) + ")",
+                            # (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (new_person.pants_rgb.blue, new_person.pants_rgb.green, new_person.pants_rgb.red), 1, cv2.LINE_AA)
+                            (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            
+            if DRAW_CHARACTERISTICS and GET_CHARACTERISTICS and is_cropped_face:
+                cv2.putText(current_frame_draw, str(round(new_person.height,2))+" / "+new_person.age_estimate+" / "+new_person.gender+" / "+new_person.ethnicity,
+                            (self.center_head_person_list[person_idx][0], self.center_head_person_list[person_idx][1]+60), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                
+
+        if self.DEBUG_DRAW:
+            # putting the FPS count on the frame
+            cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.putText(current_frame_draw, 'np:' + str(len(yolov8_pose_filtered.persons)) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
+            # cv2.imshow("Yolo Pose Detection", annotated_frame)
+            # cv2.imshow("Camera Image", current_frame)
+            cv2.waitKey(1)
+
 
     # main state-machine function
     def main(self):
@@ -1861,6 +1651,8 @@ class YoloPoseMain():
                 self.node.yolo_models_initialized = True
 
 
-
+### adicionar caracteristicas ao add_person_to_detected_msg
+### draw_detected_people
+### localizacao torso e cabeça
 ### verificar flags do gui
 ### rever todo o codigo antigo
