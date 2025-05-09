@@ -2,10 +2,10 @@
 from ultralytics import YOLO
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Pose2D, Point
+from geometry_msgs.msg import Pose2D, Point, PointStamped
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedPerson, BoundingBox, BoundingBoxAndPoints, RGB, ListOfDetectedPerson
-from charmie_interfaces.srv import GetPointCloudBB, ActivateYoloPose
+from charmie_interfaces.srv import ActivateYoloPose
 from realsense2_camera_msgs.msg import RGBD
 from cv_bridge import CvBridge, CvBridgeError
 import tf2_ros
@@ -160,25 +160,6 @@ class YoloPoseNode(Node):
         self.head_rgb_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH, 3), np.uint8)
         self.head_depth_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH), np.uint8)
 
-
-
-
-
-
-
-        ########## VARIABLES TO CHECK IF STILL NECESSARY ##########
-
-        ### Variables ###
-        # to calculate the FPS
-        self.prev_frame_time = 0 # used to record the time when we processed last frame
-        self.new_frame_time = 0 # used to record the time at which we processed current frame
-
-        self.results = []
-        self.waiting_for_pcloud = False
-        self.tempo_total = time.perf_counter()
-        self.center_torso_person_list = []
-        self.center_head_person_list = []
-
         self.N_KEYPOINTS = 17
         self.NUMBER_OF_LEGS_KP = 4
         self.NOSE_KP = 0
@@ -198,6 +179,23 @@ class YoloPoseNode(Node):
         self.KNEE_RIGHT_KP = 14
         self.ANKLE_LEFT_KP = 15
         self.ANKLE_RIGHT_KP = 16
+
+
+
+
+
+
+        ########## VARIABLES TO CHECK IF STILL NECESSARY ##########
+
+        ### Variables ###
+        # to calculate the FPS
+        self.prev_frame_time = 0 # used to record the time when we processed last frame
+        self.new_frame_time = 0 # used to record the time at which we processed current frame
+
+        self.results = []
+        self.center_torso_person_list = []
+        self.center_head_person_list = []
+
 
 
 
@@ -277,7 +275,8 @@ class YoloPoseNode(Node):
         self.new_head_depth = True
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
-    def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
+    # def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
+    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, object_coords_to_cam, object_coords_to_base, object_coords_to_map, camera, current_img):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -298,7 +297,7 @@ class YoloPoseNode(Node):
         new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
         new_person.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
 
-        new_person.arm_raised = arm_raised
+        # new_person.arm_raised = arm_raised
         new_person.body_posture = "None" # still missing... (says whether the person is standing up, sitting, laying down, ...)
 
         new_person.kp_nose_x = int(keypoints_id.xy[0][self.NOSE_KP][0])
@@ -369,11 +368,11 @@ class YoloPoseNode(Node):
         new_person.kp_ankle_right_y = int(keypoints_id.xy[0][self.ANKLE_RIGHT_KP][1])
         new_person.kp_ankle_right_conf = float(keypoints_id.conf[0][self.ANKLE_RIGHT_KP])
 
-        new_person.body_center_x = center_torso_person[0]
-        new_person.body_center_y = center_torso_person[1]
+        # new_person.body_center_x = center_torso_person[0]
+        # new_person.body_center_y = center_torso_person[1]
 
-        new_person.head_center_x = center_head_person[0]
-        new_person.head_center_y = center_head_person[1]
+        # new_person.head_center_x = center_head_person[0]
+        # new_person.head_center_y = center_head_person[1]
 
         """
         # changes the axis of point cloud coordinates to fit with robot axis
@@ -1636,133 +1635,34 @@ class YoloPoseMain():
         
         return transform, child_link
 
-    def detect_with_yolo_model(self, head_frame, hand_frame, base_frame, head_depth_frame, hand_depth_frame, base_depth_frame, head_image, hand_image, base_image):
+    def detect_with_yolo_model(self, head_frame, head_depth_frame, head_image):
 
-        yolov8_obj_filtered = ListOfDetectedObject()
-        objects_result_list = []
-        num_obj = 0
+        yolov8_person_filtered = ListOfDetectedPerson()
+        person_results_list = []
+        num_people = 0
 
         models_dict = {
-            "head_objects": -1,
-            "hand_objects": -1,
-            "base_objects": -1,
-            "head_furniture": -1,
-            "hand_furniture": -1,
-            "base_furniture": -1,
-            "head_shoes": -1,
-            "hand_shoes": -1,
-            "base_shoes": -1
+            "head_pose": -1,
+            "hand_pose": -1,
+            "base_pose": -1
             }
 
         # self.get_logger().info('Receiving color video frame head')
         tempo_total = time.perf_counter()
 
         map_transform, _ = self.get_transform() # base_footprint -> map
-
-        ### OBJECTS
         
-        if self.node.ACTIVATE_YOLO_OBJECTS:
-            object_results = self.node.object_model.track(head_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
-            objects_result_list.append(object_results)
-            models_dict["head_objects"] = len(objects_result_list) - 1
-            num_obj += len(object_results[0])
-            if num_obj > 0:
+        if self.node.ACTIVATE_YOLO_POSE:
+            people_results = self.node.model.track(head_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
+            person_results_list.append(people_results)
+            models_dict["head_pose"] = len(person_results_list) - 1
+            num_people += len(people_results[0])
+            if num_people > 0:
                 transform_head, head_link = self.get_transform("head")
 
             if self.node.DEBUG_DRAW:
-                cv2.imshow("HEAD OBJECTS DEBUG", object_results[0].plot())
-
-        if self.node.ACTIVATE_YOLO_OBJECTS_HAND:
-            object_results = self.node.object_model_hand.track(hand_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
-            objects_result_list.append(object_results)
-            models_dict["hand_objects"] = len(objects_result_list) - 1
-            num_obj += len(object_results[0])
-            if num_obj > 0:
-                transform_hand, hand_link = self.get_transform("hand")
-
-            if self.node.DEBUG_DRAW:
-                cv2.imshow("HAND OBJECTS DEBUG", object_results[0].plot())
-
-        if self.node.ACTIVATE_YOLO_OBJECTS_BASE:
-            object_results = self.node.object_model_base.track(base_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
-            objects_result_list.append(object_results)
-            models_dict["base_objects"] = len(objects_result_list) - 1
-            num_obj += len(object_results[0])
-            if num_obj > 0:
-                transform_base, base_link = self.get_transform("base")
-
-            if self.node.DEBUG_DRAW:
-                cv2.imshow("BASE OBJECTS DEBUG", object_results[0].plot())
-
-        ### FURNITURE
-
-        if self.node.ACTIVATE_YOLO_FURNITURE:
-            object_results = self.node.furniture_model.track(head_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
-            objects_result_list.append(object_results)
-            models_dict["head_furniture"] = len(objects_result_list) - 1
-            num_obj += len(object_results[0])
-            if num_obj > 0:
-                transform_head, head_link = self.get_transform("head")
-
-            if self.node.DEBUG_DRAW:
-                cv2.imshow("HEAD FURNITURE DEBUG", object_results[0].plot())
+                cv2.imshow("HEAD POSE DEBUG", people_results[0].plot())
             
-        if self.node.ACTIVATE_YOLO_FURNITURE_HAND:
-            object_results = self.node.furniture_model_hand.track(hand_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
-            objects_result_list.append(object_results)
-            models_dict["hand_furniture"] = len(objects_result_list) - 1
-            num_obj += len(object_results[0])
-            if num_obj > 0:
-                transform_hand, hand_link = self.get_transform("hand")
-
-            if self.node.DEBUG_DRAW:
-                cv2.imshow("HAND FURNITURE DEBUG", object_results[0].plot())
-            
-        if self.node.ACTIVATE_YOLO_FURNITURE_BASE:
-            object_results = self.node.furniture_model_base.track(base_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
-            objects_result_list.append(object_results)
-            models_dict["base_furniture"] = len(objects_result_list) - 1
-            num_obj += len(object_results[0])
-            if num_obj > 0:
-                transform_base, base_link = self.get_transform("base")
-
-            if self.node.DEBUG_DRAW:
-                cv2.imshow("BASE FURNITURE DEBUG", object_results[0].plot())
-            
-        ### SHOES (NOT USED BUT EVERYTHING IS READY IF NEEDED TO BE RESTORED)
-        # 
-        # if self.node.ACTIVATE_YOLO_SHOES:
-        #     object_results = self.node.shoes_model.track(head_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
-        #     objects_result_list.append(object_results)
-        #     models_dict["head_shoes"] = len(objects_result_list) - 1
-        #     num_obj += len(object_results[0])
-        #     if num_obj > 0:
-        #         transform_head, head_link = self.get_transform("head")
-        # 
-        #     if self.node.DEBUG_DRAW:
-        #         cv2.imshow("HEAD SHOES DEBUG", object_results[0].plot())
-        #    
-        # if self.node.ACTIVATE_YOLO_SHOES_HAND:
-        #     object_results = self.node.shoes_model_hand.track(hand_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
-        #     objects_result_list.append(object_results)
-        #     models_dict["hand_shoes"] = len(objects_result_list) - 1
-        #     num_obj += len(object_results[0])
-        #     if num_obj > 0:
-        #         transform_hand, hand_link = self.get_transform("hand")
-        # 
-        #     if self.node.DEBUG_DRAW:
-        #         cv2.imshow("HAND SHOES DEBUG", object_results[0].plot())
-        #     
-        # if self.node.ACTIVATE_YOLO_SHOES_BASE:
-        #     object_results = self.node.shoes_model_base.track(base_frame, persist=True, tracker="bytetrack.yaml", verbose=False)
-        #     objects_result_list.append(object_results)
-        #     models_dict["base_shoes"] = len(objects_result_list) - 1
-        #     num_obj += len(object_results[0])
-        #     if num_obj > 0:
-        #         transform_base, base_link = self.get_transform("base")
-        # 
-        #     if self.node.DEBUG_DRAW:
-        #         cv2.imshow("BASE SHOES DEBUG", object_results[0].plot())
         
         if self.node.DEBUG_DRAW:
             cv2.waitKey(1)
@@ -1771,10 +1671,10 @@ class YoloPoseMain():
 
         reverse_models_dict = {v: k for k, v in models_dict.items() if v != -1}
 
-        # print(num_obj)
-        for idx, obj_res in enumerate(objects_result_list):
+        # print(num_people)
+        for idx, p_res in enumerate(person_results_list):
 
-            if obj_res[0].boxes.id is not None:
+            if p_res[0].boxes.id is not None:
 
                 camera, model = reverse_models_dict[idx].split("_")
                 # print(idx, "->", camera, model)
@@ -1788,16 +1688,6 @@ class YoloPoseMain():
                         depth_frame = head_depth_frame
                         transform = transform_head
                         camera_link = head_link
-                    case "hand":
-                        rgb_img = hand_image
-                        depth_frame = hand_depth_frame
-                        transform = transform_hand
-                        camera_link = hand_link
-                    case "base":
-                        rgb_img = base_image
-                        depth_frame = base_depth_frame
-                        transform = transform_base
-                        camera_link = base_link
                 
                 if map_transform is None:
                     print("MAP TF: OFF!", end='')
@@ -1809,157 +1699,58 @@ class YoloPoseMain():
                     print("\tROBOT TF:  ON!")
 
                 # specific model settings
-                match model:
-                    case "objects":
-                        MIN_CONF_NALUE = MIN_OBJECT_CONF_VALUE
-                    case "furniture":
-                        MIN_CONF_NALUE = MIN_FURNITURE_CONF_VALUE
-                    case "shoes":
-                        MIN_CONF_NALUE = MIN_SHOES_CONF_VALUE
-                        
-                boxes = obj_res[0].boxes
-                masks = obj_res[0].masks
-                # track_ids = obj_res[0].boxes.id.int().cpu().tolist()
+                MIN_CONF_NALUE = MIN_PERSON_CONF_VALUE                        
+                boxes = p_res[0].boxes
+                keypoints = p_res[0].keypoints
 
-                if masks is not None: # if model has segmentation mask
+                for box, keypoint in zip(boxes, keypoints):
+                
+                    ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
+                    # obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
+                    temp_coords = Point()
+                    temp_coords.x = 1.0
+                    temp_coords.y = 0.0
+                    temp_coords.z = 0.0
                     
-                    for box, mask in zip(boxes, masks):
+                    ALL_CONDITIONS_MET = 1
 
-                        # print(mask.xy[0])
-                        # print(len(mask.xy[0]))
-                        # mask.xy[0] = np.array([], dtype=np.float32) # used to test the bug prevented on the next line
-                        if len(mask.xy[0]) >= 3: # this prevents a BUG where sometimes the mask had less than 3 points, which caused PC (if empty) and GUI (if less than 3 points) to crash
+                    ########## MISSING HERE: CASE WHERE NO POINTS WERE AVALILABLE SO WE DONT KNOW HOW TO COMPUTE 3D ##########
 
-                            if model == "objects":
-                                object_name = self.node.objects_class_names[int(box.cls[0])]
-                                object_class = self.node.objects_class_names_dict[object_name]
-                            elif model == "shoes":  
-                                object_name = self.node.shoes_class_names[int(box.cls[0])]
-                                object_class = "Footwear"
-                            elif model == "furniture":  
-                                object_name = self.node.furniture_class_names[int(box.cls[0])]
-                                object_class = "Furniture"
-                            
-                            # temp
-                            # box_top_left_x = int(box.xyxy[0][0])
-                            # box_top_left_y = int(box.xyxy[0][1])
-                            # box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
-                            # box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
-                            # box_center = []
-                            # box_center.append(box_top_left_y + box_height//2)
-                            # box_center.append(box_top_left_x + box_width//2)
-                            
-                            # obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=box_center)
-                         
-                            # aaa_ = time.time()
-                            obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
-                            # print("3D Coords Time", time.time() - aaa_)
-                            # print(object_name, "3D Coords", obj_3d_cam_coords)
+                    # checks whether the person confidence is above a selected level
+                    if not box.conf >= MIN_CONF_NALUE:
+                        ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                        # print("- Misses minimum confidence level")
 
-                            # bbb_ = time.time()
+                    # if the person detection passes all selected conditions, the detected person is added to the publishing list
+                    if ALL_CONDITIONS_MET:
 
-                            ALL_CONDITIONS_MET = 1
-                            
-                            # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
-                            if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0:
-                                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                                print ("REMOVED")
+                        ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
+                        point_cam = PointStamped()
+                        point_cam.header.stamp = self.node.get_clock().now().to_msg()
+                        point_cam.header.frame_id = camera_link
+                        point_cam.point = temp_coords
 
-                            # checks whether the object confidence is above a selected level
-                            if not box.conf >= MIN_CONF_NALUE:
-                                ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                                # print("- Misses minimum confidence level")
+                        transformed_point = PointStamped()
+                        transformed_point_map = PointStamped()
+                        if transform is not None:
+                            transformed_point = do_transform_point(point_cam, transform)
+                            self.node.get_logger().info(f"Person in base_footprint frame: {transformed_point.point}")
 
-                            # if the object detection passes all selected conditions, the detected object is added to the publishing list
-                            if ALL_CONDITIONS_MET:
+                            if map_transform is not None:
+                                transformed_point_map = do_transform_point(transformed_point, map_transform)
+                                self.node.get_logger().info(f"Person in map frame: {transformed_point_map.point}")
 
-                                point_cam = PointStamped()
-                                point_cam.header.stamp = self.node.get_clock().now().to_msg()
-                                point_cam.header.frame_id = camera_link
-                                point_cam.point = obj_3d_cam_coords
+                        new_person = DetectedPerson()
+                        # new_person = self.node.add_person_to_detectedperson_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
+                        #                                                         object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img)
+                        new_person = self.node.add_person_to_detectedperson_msg(boxes_id=box, keypoints_id=keypoint, object_coords_to_cam=point_cam.point, object_coords_to_base=transformed_point.point, \
+                                                                                object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img)
+                        yolov8_person_filtered.persons.append(new_person)
 
-                                transformed_point = PointStamped()
-                                transformed_point_map = PointStamped()
-                                if transform is not None:
-                                    transformed_point = do_transform_point(point_cam, transform)
-                                    self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
+        # self.node.get_logger().info(f"People detected: {len(yolov8_person_filtered.persions)}/{num_people}")
+        # self.node.get_logger().info(f"Time Yolo_People: {time.perf_counter() - tempo_total}")
 
-                                    if map_transform is not None:
-                                        transformed_point_map = do_transform_point(transformed_point, map_transform)
-                                        self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
-
-                                new_object = DetectedObject()
-                                new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
-                                                                                        object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img, mask=mask)
-                                # print(new_object.object_name, "ID:", new_object.index, str(round(new_object.confidence*100,0)) + "%", round(new_object.position_cam.x, 2), round(new_object.position_cam.y, 2), round(new_object.position_cam.z, 2) )
-                                
-                                conf = f"{new_object.confidence * 100:.0f}%"
-                                x_ = f"{new_object.position_cam.x:4.2f}"
-                                y_ = f"{new_object.position_cam.y:5.2f}"
-                                z_ = f"{new_object.position_cam.z:5.2f}"
-                                print(f"{new_object.object_name:<17} {'ID:'+str(new_object.index):<6} {conf:<3} ({x_}, {y_}, {z_})")
-
-                                yolov8_obj_filtered.objects.append(new_object)
-                                # print("Create obj time:", time.time() - bbb_)
-
-                else: # if for some reason, a used model does not have 'segmentation' masks
-
-                    for box in boxes:
-
-                        if model == "objects":
-                            object_name = self.node.objects_class_names[int(box.cls[0])]
-                            object_class = self.node.objects_class_names_dict[object_name]
-                        elif model == "shoes":  
-                            object_name = self.node.shoes_class_names[int(box.cls[0])]
-                            object_class = "Footwear"
-                        elif model == "furniture":  
-                            object_name = self.node.furniture_class_names[int(box.cls[0])]
-                            object_class = "Furniture"
-
-                        ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
-                        # obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
-                        temp_coords = Point()
-                        temp_coords.x = 1.0
-                        temp_coords.y = 0.0
-                        temp_coords.z = 0.0
-                        
-                        ALL_CONDITIONS_MET = 1
-
-                        ########## MISSING HERE: CASE WHERE NO POINTS WERE AVALILABLE SO WE DONT KNOW HOW TO COMPUTE 3D ##########
-
-                        # checks whether the object confidence is above a selected level
-                        if not box.conf >= MIN_CONF_NALUE:
-                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
-                            # print("- Misses minimum confidence level")
-
-                        # if the object detection passes all selected conditions, the detected object is added to the publishing list
-                        if ALL_CONDITIONS_MET:
-
-                            ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
-                            point_cam = PointStamped()
-                            point_cam.header.stamp = self.node.get_clock().now().to_msg()
-                            point_cam.header.frame_id = camera_link
-                            point_cam.point = temp_coords
-
-                            transformed_point = PointStamped()
-                            transformed_point_map = PointStamped()
-                            if transform is not None:
-                                transformed_point = do_transform_point(point_cam, transform)
-                                self.node.get_logger().info(f"Object in base_footprint frame: {transformed_point.point}")
-
-                                if map_transform is not None:
-                                    transformed_point_map = do_transform_point(transformed_point, map_transform)
-                                    self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
-
-                            new_object = DetectedObject()
-                            new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
-                                                                                    object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img)
-                            yolov8_obj_filtered.objects.append(new_object)
-
-        # self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
-        # self.node.get_logger().info(f"Time Yolo_Objects: {time.perf_counter() - tempo_total}")
-
-        return yolov8_obj_filtered, num_obj
+        return yolov8_person_filtered, num_people
 
     # main state-machine function
     def main(self):
@@ -2051,16 +1842,16 @@ class YoloPoseMain():
 
                     ### temp:
                     list_detected_people = ListOfDetectedPerson()
-                    # list_detected_people, total_obj = self.detect_with_yolo_model(head_frame=head_image_frame, hand_frame=hand_image_frame, base_frame=base_image_frame, head_depth_frame=head_depth_frame, hand_depth_frame=hand_depth_frame, base_depth_frame=base_depth_frame, head_image=head_image, hand_image=hand_image, base_image=base_image)
+                    list_detected_people, total_people = self.detect_with_yolo_model(head_frame=head_image_frame, head_depth_frame=head_depth_frame, head_image=head_image)
                     if self.node.yolo_models_initialized:
                         self.node.person_pose_filtered_publisher.publish(list_detected_people)
 
-                    print("TR Time Yolo_Objects: ", time.time() - time_till_done)
+                    print("TR Time Yolo_Pose: ", time.time() - time_till_done)
 
                     # if self.node.DEBUG_DRAW:
                     #     cv2.putText(current_frame_draw, 'fps:' + self.hand_fps, (0, self.node.CAM_IMAGE_HEIGHT-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-                    #     cv2.putText(current_frame_draw, 'np:' + str(len(list_detected_objects.objects)) + '/' + str(total_obj), (180, self.node.CAM_IMAGE_HEIGHT-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-                    #     cv2.imshow("Yolo Objects TR Detection HAND", current_frame_draw)
+                    #     cv2.putText(current_frame_draw, 'np:' + str(len(list_detected_people.persons)) + '/' + str(total_people), (180, self.node.CAM_IMAGE_HEIGHT-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+                    #     cv2.imshow("Yolo Pose TR Detection HAND", current_frame_draw)
                     #     cv2.waitKey(1)
 
             if not self.node.yolo_models_initialized:
@@ -2068,3 +1859,8 @@ class YoloPoseMain():
                 self.node.new_head_rgb = False
                 self.node.ACTIVATE_YOLO_POSE = False
                 self.node.yolo_models_initialized = True
+
+
+
+### verificar flags do gui
+### rever todo o codigo antigo
