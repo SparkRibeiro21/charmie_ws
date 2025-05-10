@@ -188,17 +188,9 @@ class YoloPoseNode(Node):
         ########## VARIABLES TO CHECK IF STILL NECESSARY ##########
 
         ### Variables ###
-        # to calculate the FPS
-        self.prev_frame_time = 0 # used to record the time when we processed last frame
-        self.new_frame_time = 0 # used to record the time at which we processed current frame
-
         self.results = []
         self.center_torso_person_list = []
         self.center_head_person_list = []
-
-
-
-
 
 
 
@@ -276,7 +268,8 @@ class YoloPoseNode(Node):
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     # def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
-    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, arm_raised, object_coords_to_cam, object_coords_to_base, object_coords_to_map, center_torso_person, center_head_person, torso_localisation, head_localisation, camera, current_img):
+    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, arm_raised, object_coords_to_cam, object_coords_to_base, object_coords_to_map, center_torso_person, center_head_person, torso_localisation, head_localisation, \
+                                         ethnicity, ethnicity_probability, age_estimate, age_estimate_probability, gender, gender_probability, camera, current_img):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -439,140 +432,20 @@ class YoloPoseNode(Node):
         new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
         """
 
-        # characteristics will only be updated after we confirm that the person is inside the filteredpersons
-        # otherwise the large amount of time spent getting the characteristics from the models is applied to
-        # every detected person and not only the filtered 
-
         # new_person.pointing_at = "None"
         # new_person.pointing_with_arm = "None"
         # new_person.shirt_color = "None"
         # new_person.pants_color = "None"
-        new_person.ethnicity = "None"
-        new_person.ethnicity_probability = 0.0
-        new_person.age_estimate = "None"
-        new_person.age_estimate_probability = 0.0
-        new_person.gender = "None"
-        new_person.gender_probability = 0.0
+        new_person.ethnicity = ethnicity 
+        new_person.ethnicity_probability = ethnicity_probability
+        new_person.age_estimate = age_estimate
+        new_person.age_estimate_probability = age_estimate_probability
+        new_person.gender = gender
+        new_person.gender_probability = gender_probability
         
 
         return new_person
 
-    def crop_face(self, current_frame, current_frame_draw, new_person):
-
-        global DRAW_FACE_RECOGNITION
-
-        # y1 = top of bounding box y
-        # y2 = y of lowest height shoulder
-        # x1 = keypoint more to the left
-        # x2 = keypoint more to the right
-        
-        # using all face and shoulders keypoints to make sure face is correctly detected
-        if new_person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE and \
-            new_person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and \
-            new_person.kp_eye_right_conf > MIN_KP_CONF_VALUE and \
-            new_person.kp_eye_left_conf > MIN_KP_CONF_VALUE and \
-            new_person.kp_nose_conf > MIN_KP_CONF_VALUE:
-            # new_person.kp_ear_right_conf > MIN_KP_CONF_VALUE and \
-            # new_person.kp_ear_left_conf > MIN_KP_CONF_VALUE and \
-            
-            y1 = new_person.box_top_left_y
-            y2 = max(new_person.kp_shoulder_right_y, new_person.kp_shoulder_left_y)
-
-            x1 = min(new_person.kp_shoulder_right_x, new_person.kp_shoulder_left_x, new_person.kp_nose_x, new_person.kp_eye_right_x, new_person.kp_eye_left_x)
-            x2 = max(new_person.kp_shoulder_right_x, new_person.kp_shoulder_left_x, new_person.kp_nose_x, new_person.kp_eye_right_x, new_person.kp_eye_left_x)
-
-            if DRAW_FACE_RECOGNITION:
-                cv2.rectangle(current_frame_draw, (x1, y1), (x2, y2), (0, 255, 255) , 4) 
-                
-            # cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
-            
-            return True, current_frame[y1:y2, x1:x2]
-
-        else:
-            return False, current_frame
-        
-    def get_age_prediction(self, cropped_face):
-        
-        blob = cv2.dnn.blobFromImage(cropped_face, 1.0, (227, 227), (78.4263377603, 87.7689143744, 114.895847746), swapRB=False)
-        self.ageNet.setInput(blob)
-        agePreds = self.ageNet.forward()
-
-        age_index = agePreds[0].argmax()
-        # age_ranges = ["(0-2)", "(4-6)", "(8-12)", "(15-20)", "(25-32)", "(38-43)", "(48-53)", "(60-100)"]
-        age_ranges = ["Under 20", "Under 20", "Under 20", "Under 20", "Between 18 and 32", "Between 28 and 42", "Between 40 and 60", "Over 60"]
-        age = age_ranges[age_index]
-
-        # Filters for the people that are more likely to show up to the robot
-        # if age_index < 2:
-        #     age = "(15 and 22)"
-        # elif age_index >= 4:
-        #     age = "(23 and 32)"
-        
-        # Verificar se a previsão está disponível
-        if age is not None:
-            age = age
-            age_prob = float(round(max(agePreds[0]),2))
-        else:
-            age = "None"
-            age_prob = 0.0
-
-        # print("age predictions:", age, age_prob, agePreds[0])
-
-        return age, age_prob
-
-    def get_gender_prediction(self, cropped_face):
-
-        color_img = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(color_img, (224, 224))
-        normalized_img = img / 255.0
-        expanded_img = np.expand_dims(normalized_img, axis=0)
-
-        # Realizar a previsão usando o modelo carregado
-        predictions = self.gender_model.predict(expanded_img)
-
-        # Obter a previsão do gênero
-        gender_predominante_index = np.argmax(predictions, axis=1)
-        gender_predominante = ['Female', 'Male'][gender_predominante_index[0]]
-
-        # Verificar se a previsão está disponível
-        if gender_predominante is not None:
-            gender = gender_predominante
-            gender_prob = float(round(max(predictions[0]),2))
-        else:
-            gender = "None"
-            gender_prob = 0.0
-        
-        # print("gender predictions:", gender, gender_prob, predictions[0])
-
-        return gender, gender_prob
-
-    def get_ethnicity_prediction(self, cropped_face):
-
-        color_img = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(color_img, (224, 224))
-        normalized_img = img / 255.0
-        expanded_img = np.expand_dims(normalized_img, axis=0)
-
-        # Realizar a previsão usando o modelo carregado
-        predictions = self.race_model.predict(expanded_img)
-
-        # Obter a previsão da raça
-        race_labels = ['Asian', 'Indian', 'Black', 'Caucasian', 'Middle Eastern', 'Hispanic']
-        race_predominante_index = np.argmax(predictions, axis=1)
-        race_predominante = race_labels[race_predominante_index[0]]
-
-        # Verificar se a previsão está disponível
-        if race_predominante is not None:
-            race = race_predominante
-            race_prob = float(round(max(predictions[0]),2))
-        else:
-            race = "None"
-            race_prob = 0.0
-        
-        # print("ethnicity predictions:", race, race_prob, predictions[0])
-
-        return race, race_prob
-    
     def line_between_two_keypoints(self, current_frame_draw, KP_ONE, KP_TWO, xy, conf, colour):
 
         if conf[0][KP_ONE] > MIN_KP_CONF_VALUE and conf[0][KP_TWO] > MIN_KP_CONF_VALUE:    
@@ -1185,23 +1058,30 @@ class YoloPoseMain():
                             # characteristics will only be updated after we confirm that the person is inside the filteredpersons
                             # otherwise the large amount of time spent getting the characteristics from the models is applied to
                             # every detected person and not only the filtered 
-                            """
+                            
                             is_cropped_face = False
+                            ethnicity = "None"
+                            ethnicity_probability = 0.0
+                            age_estimate = "None"
+                            age_estimate_probability = 0.0
+                            gender = "None"
+                            gender_probability = 0.0 
                             if GET_CHARACTERISTICS:
                                 # in order to predict the ethnicity, age and gender, it is necessary to first cut out the face of the detected person
-                                is_cropped_face, cropped_face = self.node.crop_face(head_frame, head_frame, new_person)
+                                is_cropped_face, cropped_face = self.crop_face(head_frame, head_frame, keypoint=keypoint, box=box)
 
                                 if is_cropped_face:
-                                    new_person.ethnicity, new_person.ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
-                                    new_person.age_estimate, new_person.age_estimate_probability = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
-                                    new_person.gender, new_person.gender_probability = self.get_gender_prediction(cropped_face) # says whether the person is male or female
-                                    print(new_person.ethnicity, new_person.age_estimate, new_person.gender)        
-                            """
+                                    ethnicity, ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
+                                    age_estimate, age_estimate_probability = self.get_age_prediction(cropped_face) # says an approximate age gap like 25-35 ...
+                                    gender, gender_probability = self.get_gender_prediction(cropped_face) # says whether the person is male or female
+                                    print(ethnicity, age_estimate, gender)        
+                            
                             new_person = DetectedPerson()
                             new_person = self.node.add_person_to_detectedperson_msg(boxes_id=box, keypoints_id=keypoint, arm_raised=hand_raised, \
                                                                                     object_coords_to_cam=point_cam.point, object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
                                                                                     center_torso_person=(person_center_x, person_center_y), center_head_person=(head_center_x, head_center_y), \
-                                                                                    torso_localisation=None, head_localisation=None, 
+                                                                                    torso_localisation=None, head_localisation=None, \
+                                                                                    ethnicity=ethnicity, ethnicity_probability=ethnicity_probability, age_estimate=age_estimate, age_estimate_probability=age_estimate_probability, gender=gender, gender_probability=gender_probability, \
                                                                                     camera=camera, current_img=rgb_img)
                             yolov8_person_filtered.persons.append(new_person)
 
@@ -1541,6 +1421,122 @@ class YoloPoseMain():
             # cv2.imshow("Camera Image", current_frame)
             cv2.waitKey(1)
 
+    def crop_face(self, current_frame, current_frame_draw, keypoint, box):
+
+        global DRAW_FACE_RECOGNITION
+
+        # y1 = top of bounding box y
+        # y2 = y of lowest height shoulder
+        # x1 = keypoint more to the left
+        # x2 = keypoint more to the right
+        
+        # using all face and shoulders keypoints to make sure face is correctly detected
+        if keypoint.conf[0][self.node.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.EYE_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.EYE_LEFT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.NOSE_KP] > MIN_KP_CONF_VALUE:
+            # keypoint.conf[0][self.node.EAR_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+            # keypoint.conf[0][self.node.EAR_LEFT_KP] > MIN_KP_CONF_VALUE and \
+            
+            y1 = int(box.xyxy[0][1])
+            y2 = max(int(keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][1]), int(keypoint.xy[0][self.node.SHOULDER_LEFT_KP][1]))
+
+            x1 = min(int(keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][0]), int(keypoint.xy[0][self.node.SHOULDER_LEFT_KP][0]), int(keypoint.xy[0][self.node.NOSE_KP][0]), int(keypoint.xy[0][self.node.EYE_RIGHT_KP][0]), int(keypoint.xy[0][self.node.EYE_LEFT_KP][0]))
+            x2 = max(int(keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][0]), int(keypoint.xy[0][self.node.SHOULDER_LEFT_KP][0]), int(keypoint.xy[0][self.node.NOSE_KP][0]), int(keypoint.xy[0][self.node.EYE_RIGHT_KP][0]), int(keypoint.xy[0][self.node.EYE_LEFT_KP][0]))
+
+            if DRAW_FACE_RECOGNITION:
+                cv2.rectangle(current_frame_draw, (x1, y1), (x2, y2), (0, 255, 255) , 4) 
+                
+            # cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
+            
+            return True, current_frame[y1:y2, x1:x2]
+
+        else:
+            return False, current_frame
+        
+    def get_age_prediction(self, cropped_face):
+        
+        blob = cv2.dnn.blobFromImage(cropped_face, 1.0, (227, 227), (78.4263377603, 87.7689143744, 114.895847746), swapRB=False)
+        self.node.ageNet.setInput(blob)
+        agePreds = self.node.ageNet.forward()
+
+        age_index = agePreds[0].argmax()
+        # age_ranges = ["(0-2)", "(4-6)", "(8-12)", "(15-20)", "(25-32)", "(38-43)", "(48-53)", "(60-100)"]
+        age_ranges = ["Under 20", "Under 20", "Under 20", "Under 20", "Between 18 and 32", "Between 28 and 42", "Between 40 and 60", "Over 60"]
+        age = age_ranges[age_index]
+
+        # Filters for the people that are more likely to show up to the robot
+        # if age_index < 2:
+        #     age = "(15 and 22)"
+        # elif age_index >= 4:
+        #     age = "(23 and 32)"
+        
+        # Verificar se a previsão está disponível
+        if age is not None:
+            age = age
+            age_prob = float(round(max(agePreds[0]),2))
+        else:
+            age = "None"
+            age_prob = 0.0
+
+        # print("age predictions:", age, age_prob, agePreds[0])
+
+        return age, age_prob
+
+    def get_gender_prediction(self, cropped_face):
+
+        color_img = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(color_img, (224, 224))
+        normalized_img = img / 255.0
+        expanded_img = np.expand_dims(normalized_img, axis=0)
+
+        # Realizar a previsão usando o modelo carregado
+        predictions = self.node.gender_model.predict(expanded_img)
+
+        # Obter a previsão do gênero
+        gender_predominante_index = np.argmax(predictions, axis=1)
+        gender_predominante = ['Female', 'Male'][gender_predominante_index[0]]
+
+        # Verificar se a previsão está disponível
+        if gender_predominante is not None:
+            gender = gender_predominante
+            gender_prob = float(round(max(predictions[0]),2))
+        else:
+            gender = "None"
+            gender_prob = 0.0
+        
+        # print("gender predictions:", gender, gender_prob, predictions[0])
+
+        return gender, gender_prob
+
+    def get_ethnicity_prediction(self, cropped_face):
+
+        color_img = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(color_img, (224, 224))
+        normalized_img = img / 255.0
+        expanded_img = np.expand_dims(normalized_img, axis=0)
+
+        # Realizar a previsão usando o modelo carregado
+        predictions = self.node.race_model.predict(expanded_img)
+
+        # Obter a previsão da raça
+        race_labels = ['Asian', 'Indian', 'Black', 'Caucasian', 'Middle Eastern', 'Hispanic']
+        race_predominante_index = np.argmax(predictions, axis=1)
+        race_predominante = race_labels[race_predominante_index[0]]
+
+        # Verificar se a previsão está disponível
+        if race_predominante is not None:
+            race = race_predominante
+            race_prob = float(round(max(predictions[0]),2))
+        else:
+            race = "None"
+            race_prob = 0.0
+        
+        # print("ethnicity predictions:", race, race_prob, predictions[0])
+
+        return race, race_prob
+    
     # main state-machine function
     def main(self):
         
@@ -1652,12 +1648,6 @@ class YoloPoseMain():
 ### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
     
     ### adicionar caracteristicas ao add_person_to_detected_msg
-    # ethnicity: None
-    # ethnicity_probability: 0.0
-    # age_estimate: None
-    # age_estimate_probability: 0.0
-    # gender: None
-    # gender_probability: 0.0
     # shirt_color: ''
     # shirt_rgb:
     #   red: 0
@@ -1686,6 +1676,6 @@ class YoloPoseMain():
     # height
 
 
-    
+### adicionar as imagens da cropped face mensagem de DetectedPerson
 ### draw_detected_people
 ### verificar flags do gui (waving e legs visible seem OK)
