@@ -269,7 +269,7 @@ class YoloPoseNode(Node):
 
     # def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
     def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, arm_raised, object_coords_to_cam, object_coords_to_base, object_coords_to_map, center_torso_person, center_head_person, torso_localisation, head_localisation, \
-                                        ethnicity, ethnicity_probability, age_estimate, age_estimate_probability, gender, gender_probability, shirt_color, shirt_rgb, pants_color, pants_rgb, \
+                                        ethnicity, ethnicity_probability, age_estimate, age_estimate_probability, gender, gender_probability, shirt_color, shirt_rgb, pants_color, pants_rgb, pointing_at, pointing_with_arm, \
                                         camera, current_img):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
@@ -423,29 +423,27 @@ class YoloPoseNode(Node):
         new_person.position_absolute_head = head_abs_pos
         
 
+
+
+
         new_person.height = head_localisation.z/1000 + 0.08 # average person middle of face to top of head distance
-
         new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
-
-        new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
         """
-        
+
+        new_person.pointing_at = pointing_at
+        new_person.pointing_with_arm = pointing_with_arm
+
         new_person.shirt_color = shirt_color
         new_person.shirt_rgb = shirt_rgb 
         new_person.pants_color = pants_color
         new_person.pants_rgb = pants_rgb
 
-        # new_person.pointing_at = "None"
-        # new_person.pointing_with_arm = "None"
-        # new_person.shirt_color = "None"
-        # new_person.pants_color = "None"
         new_person.ethnicity = ethnicity 
         new_person.ethnicity_probability = ethnicity_probability
         new_person.age_estimate = age_estimate
         new_person.age_estimate_probability = age_estimate_probability
         new_person.gender = gender
         new_person.gender_probability = gender_probability
-        
 
         return new_person
 
@@ -485,76 +483,6 @@ class YoloPoseNode(Node):
 
         return room_location, furniture_location
 
-    def arm_pointing_at(self, person):
-
-        MIN_ANGLE_POINTING = 25
-
-        right_shoulder = (person.kp_shoulder_right_x, person.kp_shoulder_right_y)
-        right_wrist = (person.kp_wrist_right_x, person.kp_wrist_right_y)
-        right_hip = (person.kp_hip_right_x, person.kp_hip_right_y)
-
-        left_shoulder = (person.kp_shoulder_left_x, person.kp_shoulder_left_y)
-        left_wrist = (person.kp_wrist_left_x, person.kp_wrist_left_y)
-        left_hip = (person.kp_hip_left_x, person.kp_hip_left_y)
-
-        # The sides are relative to the person, so the right side is linked with the person right arm!
-        if person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE and \
-            person.kp_wrist_right_conf > MIN_KP_CONF_VALUE and \
-            person.kp_hip_right_conf > MIN_KP_CONF_VALUE:
-            theta_right = self.calculate_3angle(right_shoulder, right_wrist, right_hip)
-        else:
-            theta_right = 0.0
-
-        # The sides are relative to the person, so the right side is linked with the person right arm!
-        if person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and \
-            person.kp_wrist_left_conf > MIN_KP_CONF_VALUE and \
-            person.kp_hip_left_conf > MIN_KP_CONF_VALUE:
-            theta_left = self.calculate_3angle(left_shoulder, left_wrist, left_hip)
-        else:
-            theta_left = 0.0
-        
-        side_pointed = "None"
-        arm_pointed_with = "None"
-
-        # print("Sides0:", left_wrist[0], left_hip[0], right_wrist[0], right_hip[0])    
-        # print("Sides1:", left_wrist[1], left_hip[1], right_wrist[1], right_hip[1])      
-
-        if theta_left > MIN_ANGLE_POINTING:
-            if left_wrist[0] < left_hip[0]:
-                arm_pointed_with = "Left Arm"
-                side_pointed = "Right"
-            else:
-                arm_pointed_with = "Left Arm"
-                side_pointed = "Left"
-        
-        elif theta_right > MIN_ANGLE_POINTING:
-            if right_wrist[0] < right_hip[0]:
-                arm_pointed_with = "Right Arm"
-                side_pointed = "Right"
-            else:
-                arm_pointed_with = "Right Arm"
-                side_pointed = "Left"
-        
-        return side_pointed, arm_pointed_with
-
-    def calculate_3angle(self, p1, p2, p3):
-        vector_1 = (p2[0] - p1[0], p2[1] - p1[1])
-        vector_2 = (p3[0] - p1[0], p3[1] - p1[1])
-
-        dot_product = vector_1[0] * vector_2[0] + vector_1[1] * vector_2[1]
-        
-        try:
-            magnitude_1 = math.sqrt(vector_1[0]**2 + vector_1[1]**2)
-            magnitude_2 = math.sqrt(vector_2[0]**2 + vector_2[1]**2)
-
-            # try catch is here in case any of the magnitudes is = 0, in that case an anle of 0 is returned for safety
-            theta = math.acos(dot_product / (magnitude_1 * magnitude_2))
-            theta_degrees = math.degrees(theta)
-            return theta_degrees
-        
-        except:
-            return 0
-        
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
@@ -763,12 +691,12 @@ class YoloPoseMain():
                             # These two characteristics are outside the characteristics if clause, because there are almost instantaneous and don't need a model to calculate.
                             # Therefore it was decided that this parameter is always calculated for every detected person
                             shirt_color, shirt_rgb = self.get_shirt_color(keypoint, head_frame, head_frame) 
-                            pants_color, pants_rgb = self.get_pants_color(keypoint, head_frame, head_frame) 
+                            pants_color, pants_rgb = self.get_pants_color(keypoint, head_frame, head_frame)
+                            pointing_at, pointing_with_arm = self.arm_pointing_at(keypoint)
 
                             # characteristics will only be updated after we confirm that the person is inside the filteredpersons
                             # otherwise the large amount of time spent getting the characteristics from the models is applied to
                             # every detected person and not only the filtered 
-                            
                             is_cropped_face = False
                             ethnicity = "None"
                             ethnicity_probability = 0.0
@@ -792,7 +720,7 @@ class YoloPoseMain():
                                                                                     center_torso_person=(person_center_x, person_center_y), center_head_person=(head_center_x, head_center_y), \
                                                                                     torso_localisation=None, head_localisation=None, \
                                                                                     ethnicity=ethnicity, ethnicity_probability=ethnicity_probability, age_estimate=age_estimate, age_estimate_probability=age_estimate_probability, gender=gender, gender_probability=gender_probability, \
-                                                                                    shirt_color=shirt_color, shirt_rgb=shirt_rgb, pants_color=pants_color, pants_rgb=pants_rgb, \
+                                                                                    shirt_color=shirt_color, shirt_rgb=shirt_rgb, pants_color=pants_color, pants_rgb=pants_rgb, pointing_at=pointing_at, pointing_with_arm=pointing_with_arm, \
                                                                                     camera=camera, current_img=rgb_img)
                             yolov8_person_filtered.persons.append(new_person)
 
@@ -835,6 +763,76 @@ class YoloPoseMain():
 
         # print("Hand Raised:", hand_raised, is_hand_raised)
         return hand_raised, is_hand_raised
+        
+    def arm_pointing_at(self, keypoint):
+
+        MIN_ANGLE_POINTING = 25
+
+        right_shoulder = (int(keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][0]), int(keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][1]))
+        right_wrist =    (int(keypoint.xy[0][self.node.WRIST_RIGHT_KP][0]),    int(keypoint.xy[0][self.node.WRIST_RIGHT_KP][1]))
+        right_hip =      (int(keypoint.xy[0][self.node.HIP_RIGHT_KP][0]),      int(keypoint.xy[0][self.node.HIP_RIGHT_KP][1]))
+
+        left_shoulder =  (int(keypoint.xy[0][self.node.SHOULDER_LEFT_KP][0]),  int(keypoint.xy[0][self.node.SHOULDER_LEFT_KP][1]))
+        left_wrist =     (int(keypoint.xy[0][self.node.WRIST_LEFT_KP][0]),     int(keypoint.xy[0][self.node.WRIST_LEFT_KP][1]))
+        left_hip =       (int(keypoint.xy[0][self.node.HIP_LEFT_KP][0]),       int(keypoint.xy[0][self.node.HIP_LEFT_KP][1]))
+
+        # The sides are relative to the person, so the right side is linked with the person right arm!
+        if keypoint.conf[0][self.node.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.WRIST_RIGHT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.HIP_RIGHT_KP] > MIN_KP_CONF_VALUE:
+            theta_right = self.calculate_3angle(right_shoulder, right_wrist, right_hip)
+        else:
+            theta_right = 0.0
+
+        # The sides are relative to the person, so the right side is linked with the person right arm!
+        if keypoint.conf[0][self.node.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.WRIST_LEFT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.HIP_LEFT_KP] > MIN_KP_CONF_VALUE:
+            theta_left = self.calculate_3angle(left_shoulder, left_wrist, left_hip)
+        else:
+            theta_left = 0.0
+        
+        side_pointed = "None"
+        arm_pointed_with = "None"
+
+        # print("Sides0:", left_wrist[0], left_hip[0], right_wrist[0], right_hip[0])    
+        # print("Sides1:", left_wrist[1], left_hip[1], right_wrist[1], right_hip[1])      
+
+        if theta_left > MIN_ANGLE_POINTING and theta_left>=theta_right: # added condition: now left side does not always get priority, now priority is for pointing side wither bigger angle
+            if left_wrist[0] < left_hip[0]:
+                arm_pointed_with = "Left Arm"
+                side_pointed = "Right"
+            else:
+                arm_pointed_with = "Left Arm"
+                side_pointed = "Left"
+        
+        elif theta_right > MIN_ANGLE_POINTING:
+            if right_wrist[0] < right_hip[0]:
+                arm_pointed_with = "Right Arm"
+                side_pointed = "Right"
+            else:
+                arm_pointed_with = "Right Arm"
+                side_pointed = "Left"
+        
+        return side_pointed, arm_pointed_with
+
+    def calculate_3angle(self, p1, p2, p3):
+        vector_1 = (p2[0] - p1[0], p2[1] - p1[1])
+        vector_2 = (p3[0] - p1[0], p3[1] - p1[1])
+
+        dot_product = vector_1[0] * vector_2[0] + vector_1[1] * vector_2[1]
+        
+        try:
+            magnitude_1 = math.sqrt(vector_1[0]**2 + vector_1[1]**2)
+            magnitude_2 = math.sqrt(vector_2[0]**2 + vector_2[1]**2)
+
+            # try catch is here in case any of the magnitudes is = 0, in that case an anle of 0 is returned for safety
+            theta = math.acos(dot_product / (magnitude_1 * magnitude_2))
+            theta_degrees = math.degrees(theta)
+            return theta_degrees
+        
+        except:
+            return 0
         
     def get_person_and_head_pixel(self, keypoint, box):
 
@@ -1657,11 +1655,6 @@ class YoloPoseMain():
 
 ### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
     
-    ### adicionar caracteristicas ao add_person_to_detected_msg
-    
-    # pointing at
-    # pointing with arm
-
     # testar image (c/ search for person)
 
     ### localizacao torso e cabeça
