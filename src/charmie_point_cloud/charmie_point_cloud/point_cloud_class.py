@@ -156,43 +156,177 @@ class PointCloud():
     ### Receives a bounding box and a depth image of the corresponding camera, returns the (x,y,z) of the average of the filtered bounding box points according to the camera TF
     # def converter_2D_3D(self, u, v, height, width):
     def convert_bbox_to_3d_point(self, depth_img, camera, bbox):
+
+        # aaa = time.time()
+
+        match camera:
+            case "head":
+                camera_used = self.head_camera
+            case "hand":
+                camera_used = self.hand_camera
+            case "base":
+                camera_used = self.base_camera
+
+        # confidence = float(bbox.conf)
+        # box_top_left_x = int(bbox.xyxy[0][0])
+        # box_top_left_y = int(bbox.xyxy[0][1])
+        # box_width = int(bbox.xyxy[0][2]) - int(bbox.xyxy[0][0])
+        # box_height = int(bbox.xyxy[0][3]) - int(bbox.xyxy[0][1])
+
+        # print("POINT CLOUD CLASS")
+        # print(bbox)
+
+
+
+
+
+
+
         ### UPDATED FUNCTION ALGORITHM (AFTER PointCloudNodeToClass update)
 
-        # Receive bounding box
-        # Receive depth_image
-        # Get Correct Camera
+            # Receive bounding box
+            # Receive depth_image
+            # Get Correct Camera
 
-        # PRE PROCESSING (MADE IN OLD PC MAIN):
-        # None
+            # PRE PROCESSING (MADE IN OLD PC MAIN):
+            # None
  
         # Calculate the filtered version of bounding box (same code as before)
         # Clean all reference axis changes (now all values returned from PC are in reference to the camera)
 
         # POST PROCESSING (MADE IN OLD PC MAIN):
         # Coords must be in meters
-        """
-        # le os dados da BouundingBox
-        # u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]
-        u_inicial, v_inicial, bb_height, bb_width = bbox[0]
 
-        # print("CENTER")
-        # calcula o ponto do centro
-        # this is still a change in progess. Rather than returning the x,y,z of the center point of the bounding box, 
-        # we are trying to compute the mean of the points that interest us, since the center point of the bounding box may
-        # be in the object/person we are tryng to get the position
-        # old version - using the center of the bounding box:
-        # resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
-        # new version:
+        u_inicial = int(bbox.xyxy[0][1])
+        v_inicial = int(bbox.xyxy[0][0])
+        bb_height = int(bbox.xyxy[0][3]) - int(bbox.xyxy[0][1])
+        bb_width = int(bbox.xyxy[0][2]) - int(bbox.xyxy[0][0])
 
-        resp_todos = []
-        resp_todos = self.pcloud_head.converter_2D_3D(u_inicial, v_inicial, bb_height, bb_width)
-        uteis = [row for row in resp_todos if (row[0]!=0 or row[1]!=0 or row[2]!=0)] # limpa os elementos [0, 0, 0]
+        uteis = []
+        ESCALA = 16
+
+        x_coord = []
+        y_coord = []
+        z_coord = []
+
+        # calcula toda a bounding box        
+        for u1 in range(u_inicial, u_inicial+bb_height, ESCALA):
+            for v1 in range(v_inicial, v_inicial+bb_width, ESCALA):
+                depth = depth_img[u1][v1]
+                p3d = Point()
+                if depth != 0:
+                    p3d.x = float(depth/1000)
+                    p3d.y = -float(((v1 - camera_used.cx) * depth / camera_used.fx)/1000)
+                    p3d.z = -float(((u1 - camera_used.cy) * depth / camera_used.fy)/1000)
+                
+                    if p3d.x!=0 or p3d.y!=0 or p3d.z!=0:
+                        uteis.append(p3d)
+
+                        x_coord.append(p3d.x)
+                        y_coord.append(p3d.y)
+                        z_coord.append(p3d.z)
+
+        x_coord = np.array(x_coord)
+        y_coord = np.array(y_coord)
+        z_coord = np.array(z_coord)
+    
+        # uteis = [row for row in resp_todos if (row[0]!=0 or row[1]!=0 or row[2]!=0)] # limpa os elementos [0, 0, 0]
+        # uteis = [p for p in resp_todos if (p.x!=0 or p.y!=0 or p.z!=0)] # limpa os elementos [0, 0, 0]
         # print(uteis, len(uteis))
+        # print(len(uteis))
+        point3d = Point()
+
+        if len(uteis) != 0:
+            pass
+            #     resp_centro = self.convert_pixel_to_3dpoint()
+            #     resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
+            
+            # x_coord = np.array(uteis)[:, 0]  # Extrai a coordenadax_coord X
+            # y_coord = np.array(uteis)[:, 1]  # Extrai a coordenada X
+            # z_coord = np.array(uteis)[:, 2]  # Extrai a coordenada X
+            x_min, x_max, _, _ = cv2.minMaxLoc(x_coord)
+            y_min, y_max, _, _ = cv2.minMaxLoc(y_coord)
+            z_min, z_max, _, _ = cv2.minMaxLoc(z_coord)
+            # x_min = x_min + (x_max-x_min)*0.05
+            # x_max = x_max - (x_max-x_min)*0.05
+            y_min = y_min + (y_max-y_min)*0.05
+            y_max = y_max - (y_max-y_min)*0.05
+            z_min = z_min + (z_max-z_min)*0.05
+            z_max = z_max - (z_max-z_min)*0.05
+
+            # print(x_min, x_max, y_min, y_max, z_min, z_max)
+
+            uteis_ = [p for p in uteis if ((p.y>y_min and p.y<y_max) and (p.z>z_min and p.z<z_max))] # limpa os valores dos extremas dos 3 eixos
+            # print("LEN2:", len(uteis_))
+    
+            # uteis = [row for row in uteis if ((row[1]>y_min and row[1]<y_max) and (row[2]>z_min and row[2]<z_max))] # limpa os valores dos extremas dos 3 eixos
+            if len(uteis_) == 0:
+                pass
+                # resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
+            else:
+                bin_edges = np.arange(min(x_coord), max(x_coord) + 100, 100)    # Cria a lista de limites para o histograma
+                hist, bin_edges = np.histogram(x_coord, bins=bin_edges)     # Usa np.histogram para contar as ocorrencias
+                _, maior, _, posicao = cv2.minMaxLoc(hist)                  # calcula o máximo
+                if posicao[1]>0:
+                    Xmin = bin_edges[posicao[1] - 1]  # calcula a coordenada X ao objeto
+                else:
+                    Xmin = bin_edges[posicao[1]    ]  # calcula a coordenada X ao objeto
+                # print('len posicao', len(bin_edges))
+                if posicao[1]<len(bin_edges)-2:
+                    Xmax = bin_edges[posicao[1] + 2]
+                else:
+                    Xmax = bin_edges[posicao[1] + 1]
+                uteis_uteis = [p for p in uteis if (p.x>=Xmin and p.x<=Xmax)] # filtro apenas os elementos no pico do histograma
+                coords = np.array([[p.x, p.y, p.z] for p in uteis_uteis])
+                avg_x, avg_y, avg_z = np.mean(coords, axis=0)
+
+                # for i in uteis_uteis:
+                    # print(i[0], '\t', i[1], '\t', i[2])
+                # centroid = np.mean(uteis_uteis, axis=0)
+
+                if np.isnan(coords).any():
+                    pass
+                    # resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
+                else:
+                    # resp_centro = centroid
+
+                    point3d.x = avg_x
+                    point3d.y = avg_y
+                    point3d.z = avg_z
+                    
+                            
+                # print("centroid:", centroid)
+                # self.get_logger().info(f"Centroid: {centroid}")
+            
+
+        else:
+            pass
+
+
+
+        """
+            # le os dados da BouundingBox
+            # u_inicial, v_inicial, HEIGHT, WIDTH = bbox[0]
+            u_inicial, v_inicial, bb_height, bb_width = bbox[0]
+
+            # print("CENTER")
+            # calcula o ponto do centro
+            # this is still a change in progess. Rather than returning the x,y,z of the center point of the bounding box, 
+            # we are trying to compute the mean of the points that interest us, since the center point of the bounding box may
+            # be in the object/person we are tryng to get the position
+            # old version - using the center of the bounding box:
+            # resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + HEIGHT//2, v_inicial + WIDTH//2)
+            # new version:
+
+            resp_todos = []
+            resp_todos = self.pcloud_head.converter_2D_3D(u_inicial, v_inicial, bb_height, bb_width)
+            uteis = [row for row in resp_todos if (row[0]!=0 or row[1]!=0 or row[2]!=0)] # limpa os elementos [0, 0, 0]
+            # print(uteis, len(uteis))
         
         if len(uteis) == 0:
             resp_centro = self.pcloud_head.converter_2D_3D_unico(u_inicial + bb_height//2, v_inicial + bb_width//2) 
         else:
-            x_coord = np.array(uteis)[:, 0]                             # Extrai a coordenada X
+            x_coord = np.array(uteis)[:, 0]  # Extrai a coordenada X
             y_coord = np.array(uteis)[:, 1]  # Extrai a coordenada X
             z_coord = np.array(uteis)[:, 2]  # Extrai a coordenada X
             x_min, x_max, _, _ = cv2.minMaxLoc(x_coord)
@@ -235,7 +369,7 @@ class PointCloud():
         # return (x,y,z) Point (in reference to camera)
 
         
-        
+        """
         points = []
         ESCALA = 16
 
@@ -264,18 +398,24 @@ class PointCloud():
 
                 points.append(result)
 
+        return points
+    
+        """
 
 
 
 
         ########## FALTA ADICIONAR AQUI O FILTRO QUE FIZEMOS (TR + FR)
 
+        # point3d.x = 2.0
+        # point3d.y = 0.0
+        # point3d.z = 1.8
 
-
-
-
-        return points
+        return point3d
     
+
+
+
 """
 class PointCloudNode(Node):
 

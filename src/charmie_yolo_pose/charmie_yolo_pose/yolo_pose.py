@@ -354,6 +354,17 @@ class YoloPoseNode(Node):
 
         new_person.head_center_x = center_head_person[0]
         new_person.head_center_y = center_head_person[1]
+        
+        # print(object_coords_to_cam)
+        new_person.position_cam = object_coords_to_cam
+        # print(object_coords_to_base)
+        # new_person.position_relative = object_coords_to_base
+        new_person.position_relative = object_coords_to_cam
+        # print(object_coords_to_map)
+        # new_person.position_absolute = object_coords_to_map
+        new_person.position_absolute = object_coords_to_cam
+
+        
 
         """
         # changes the axis of point cloud coordinates to fit with robot axis
@@ -498,7 +509,7 @@ class YoloPoseMain():
 
         match camera:
             case "head":
-                child_link = 'D455_head_color_frame'
+                child_link = 'D455_head_link'
                 parent_link = 'base_footprint'
             case "hand":
                 child_link = 'D405_hand_color_frame'
@@ -609,11 +620,12 @@ class YoloPoseMain():
                     legs_ctr, body_kp_high_conf_counter = self.keypoint_counter(keypoint=keypoint)
 
                     ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
-                    # obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
-                    obj_3d_cam_coords = Point()
-                    obj_3d_cam_coords.x = 1.0
-                    obj_3d_cam_coords.y = 0.0
-                    obj_3d_cam_coords.z = 0.0
+                    obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
+                    print("3D Coords", obj_3d_cam_coords.x, obj_3d_cam_coords.y, obj_3d_cam_coords.z)
+                    # obj_3d_cam_coords = Point()
+                    # obj_3d_cam_coords.x = 1.0
+                    # obj_3d_cam_coords.y = 0.0
+                    # obj_3d_cam_coords.z = 0.0
                     
                     ALL_CONDITIONS_MET = 1
 
