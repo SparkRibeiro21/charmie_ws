@@ -23,11 +23,11 @@ ros2_modules = {
     "charmie_low_level":        False,
     "charmie_navigation":       False,
     "charmie_nav2":             False,
-    "charmie_neck":             False,
+    "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         False,
-    "charmie_tracking":         True,
+    "charmie_speakers":         True,
+    "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        True,
 }
@@ -60,7 +60,7 @@ class TaskMain():
         Final_State = 4
 
         # VARS ...
-        self.state = Continuous_tracking
+        self.state = Search_for_person
 
         print("IN NEW MAIN")
 
@@ -76,7 +76,7 @@ class TaskMain():
                 time.sleep(2.0)
 
                 tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                people_found = self.robot.search_for_person(tetas=tetas, delta_t=3.0)
+                people_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0)
 
                 print("FOUND:", len(people_found)) 
                 for p in people_found:

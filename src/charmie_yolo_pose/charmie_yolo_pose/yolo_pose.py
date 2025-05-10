@@ -121,7 +121,6 @@ class YoloPoseNode(Node):
         while not yolo_models_sucessful_imported:
             
             try: 
-
                 self.model = YOLO(full_yolo_model)
                 self.get_logger().info("Successfully imported YOLO pose model.")
                 yolo_models_sucessful_imported = True
@@ -179,24 +178,6 @@ class YoloPoseNode(Node):
         self.KNEE_RIGHT_KP = 14
         self.ANKLE_LEFT_KP = 15
         self.ANKLE_RIGHT_KP = 16
-
-
-
-
-
-
-        ########## VARIABLES TO CHECK IF STILL NECESSARY ##########
-
-        ### Variables ###
-        self.results = []
-        self.center_torso_person_list = []
-        self.center_head_person_list = []
-
-
-
-
-
-
 
         # this code forces the ROS2 component to wait for the models initialization with an empty frame, so that when turned ON does spend time with initializations and sends detections imediatly 
         # Allocates the memory necessary for each model, this takes some seconds, by doing this in the first frame, everytime one of the models is called instantly responde instead of loading the model
@@ -904,6 +885,7 @@ class YoloPoseMain():
 
         return legs_ctr, body_kp_high_conf_counter
 
+    # THE DRAW FUCNTION WAS NOT UPDATED WITH YOLO_POSE April 2025 UPDATE, SINCE NOW ALL DRAWINGS ARE DONE IN GUI. IN THE FUTURE SHOULD BE DELETED.
     def draw_detected_people(self, yolov8_people, current_frame_draw):
 
 
@@ -1157,7 +1139,7 @@ class YoloPoseMain():
             if DRAW_FACE_RECOGNITION:
                 cv2.rectangle(current_frame_draw, (x1, y1), (x2, y2), (0, 255, 255) , 4) 
                 
-            cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
+            # cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
             
             return True, current_frame[y1:y2, x1:x2]
 
@@ -1655,7 +1637,7 @@ class YoloPoseMain():
 
 ### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
     
-    # testar image (c/ search for person)
+    ### adicionar as imagens da cropped face mensagem de DetectedPerson (ou fazer como faço com o a bounding box do corpo, que so mando a bounding box e do outro lado já não têm que fazer calculos, só ir buscar a parte da imagem)
 
     ### localizacao torso e cabeça
     # coordenadas point cloud cabeça
@@ -1666,7 +1648,4 @@ class YoloPoseMain():
     # furniture_location
     # height
 
-
-### adicionar as imagens da cropped face mensagem de DetectedPerson
-### draw_detected_people
-### verificar flags do gui (waving e legs visible seem OK)
+### verificar flags do gui (missing Front_Close)
