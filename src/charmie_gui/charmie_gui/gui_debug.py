@@ -1649,6 +1649,10 @@ class DebugVisualMain():
                 PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio), int(p.box_width*self.camera_resize_ratio), int(p.box_height*self.camera_resize_ratio))
                 pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=self.BB_WIDTH)
 
+                if p.is_box_head:
+                    HEAD_BB = pygame.Rect(int(self.cams_initial_width+(p.box_head_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_head_top_left_y)*self.camera_resize_ratio), int(p.box_head_width*self.camera_resize_ratio), int(p.box_head_height*self.camera_resize_ratio))
+                    pygame.draw.rect(self.WIN, self.RED, HEAD_BB, width=self.BB_WIDTH)
+
                 if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
                     self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio), int(p.box_width*self.camera_resize_ratio), 30/2, self.RED, 85)
                     self.draw_text("id:"+str(p.index)+" "+str(int(round(p.confidence,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio))

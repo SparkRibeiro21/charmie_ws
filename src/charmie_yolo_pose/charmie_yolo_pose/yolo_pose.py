@@ -249,7 +249,7 @@ class YoloPoseNode(Node):
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     # def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
-    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, arm_raised, object_coords_to_cam, object_coords_to_base, object_coords_to_map, center_torso_person, center_head_person, torso_localisation, head_localisation, \
+    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, face_bounding_box, is_face_bounding_box, arm_raised, object_coords_to_cam, object_coords_to_base, object_coords_to_map, center_torso_person, center_head_person, torso_localisation, head_localisation, \
                                         ethnicity, ethnicity_probability, age_estimate, age_estimate_probability, gender, gender_probability, shirt_color, shirt_rgb, pants_color, pants_rgb, pointing_at, pointing_with_arm, \
                                         camera, current_img):
         # receives the box and keypoints of a specidic person and returns the detected person 
@@ -271,6 +271,12 @@ class YoloPoseNode(Node):
         new_person.box_top_left_y = int(boxes_id.xyxy[0][1])
         new_person.box_width = int(boxes_id.xyxy[0][2]) - int(boxes_id.xyxy[0][0])
         new_person.box_height = int(boxes_id.xyxy[0][3]) - int(boxes_id.xyxy[0][1])
+
+        new_person.is_box_head = is_face_bounding_box
+        new_person.box_head_top_left_x = int(face_bounding_box[0])
+        new_person.box_head_top_left_y = int(face_bounding_box[1])
+        new_person.box_head_width = int(face_bounding_box[2]) - int(face_bounding_box[0])
+        new_person.box_head_height = int(face_bounding_box[3]) - int(face_bounding_box[1])
 
         new_person.arm_raised = arm_raised
         new_person.body_posture = "None" # still missing... (says whether the person is standing up, sitting, laying down, ...)
@@ -666,7 +672,6 @@ class YoloPoseMain():
                             ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
                             # print(" - Misses not being right in front of the robot")
 
-
                         if ALL_CONDITIONS_MET: # special case just for the center_comm_position
 
                             # These two characteristics are outside the characteristics if clause, because there are almost instantaneous and don't need a model to calculate.
@@ -674,11 +679,11 @@ class YoloPoseMain():
                             shirt_color, shirt_rgb = self.get_shirt_color(keypoint, head_frame, head_frame) 
                             pants_color, pants_rgb = self.get_pants_color(keypoint, head_frame, head_frame)
                             pointing_at, pointing_with_arm = self.arm_pointing_at(keypoint)
+                            is_cropped_face, cropped_face, face_bounding_box = self.crop_face(head_frame, head_frame, keypoint=keypoint, box=box)
 
                             # characteristics will only be updated after we confirm that the person is inside the filteredpersons
                             # otherwise the large amount of time spent getting the characteristics from the models is applied to
                             # every detected person and not only the filtered 
-                            is_cropped_face = False
                             ethnicity = "None"
                             ethnicity_probability = 0.0
                             age_estimate = "None"
@@ -687,7 +692,6 @@ class YoloPoseMain():
                             gender_probability = 0.0 
                             if GET_CHARACTERISTICS:
                                 # in order to predict the ethnicity, age and gender, it is necessary to first cut out the face of the detected person
-                                is_cropped_face, cropped_face = self.crop_face(head_frame, head_frame, keypoint=keypoint, box=box)
 
                                 if is_cropped_face:
                                     ethnicity, ethnicity_probability = self.get_ethnicity_prediction(cropped_face) # says whether the person white, asian, african descendent, middle eastern, ...
@@ -696,7 +700,7 @@ class YoloPoseMain():
                                     print(ethnicity, age_estimate, gender)        
                             
                             new_person = DetectedPerson()
-                            new_person = self.node.add_person_to_detectedperson_msg(boxes_id=box, keypoints_id=keypoint, arm_raised=hand_raised, \
+                            new_person = self.node.add_person_to_detectedperson_msg(boxes_id=box, keypoints_id=keypoint, face_bounding_box=face_bounding_box, is_face_bounding_box=is_cropped_face, arm_raised=hand_raised, \
                                                                                     object_coords_to_cam=point_cam.point, object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
                                                                                     center_torso_person=(person_center_x, person_center_y), center_head_person=(head_center_x, head_center_y), \
                                                                                     torso_localisation=None, head_localisation=None, \
@@ -1141,10 +1145,10 @@ class YoloPoseMain():
                 
             # cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
             
-            return True, current_frame[y1:y2, x1:x2]
+            return True, current_frame[y1:y2, x1:x2], [x1, y1, x2, y2]
 
         else:
-            return False, current_frame
+            return False, current_frame, [0, 0, 0, 0]
         
     def get_age_prediction(self, cropped_face):
         
@@ -1637,8 +1641,6 @@ class YoloPoseMain():
 
 ### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
     
-    ### adicionar as imagens da cropped face mensagem de DetectedPerson (ou fazer como faço com o a bounding box do corpo, que so mando a bounding box e do outro lado já não têm que fazer calculos, só ir buscar a parte da imagem)
-
     ### localizacao torso e cabeça
     # coordenadas point cloud cabeça
     # coordenadas point cloud torso
