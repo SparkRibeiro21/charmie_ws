@@ -20,6 +20,11 @@ int32 box_top_left_y
 int32 box_width
 int32 box_height
 
+int32 box_head_top_left_x
+int32 box_head_top_left_y
+int32 box_head_width
+int32 box_head_height
+
 MaskDetection mask      # not implemented yet for detected people (only for objects)
 MaskDetection mask_norm # not implemented yet for detected people (only for objects)
 
