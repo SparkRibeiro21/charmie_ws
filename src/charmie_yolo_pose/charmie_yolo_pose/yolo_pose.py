@@ -48,7 +48,7 @@ DRAW_PERSON_HAND_RAISED = False
 DRAW_PERSON_HEIGHT = True
 DRAW_PERSON_CLOTHES_COLOR = True
 DRAW_CHARACTERISTICS = True
-DRAW_FACE_RECOGNITION = True
+DRAW_FACE_RECOGNITION = False
 
 data_lock = threading.Lock()
 
@@ -269,7 +269,8 @@ class YoloPoseNode(Node):
 
     # def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
     def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, arm_raised, object_coords_to_cam, object_coords_to_base, object_coords_to_map, center_torso_person, center_head_person, torso_localisation, head_localisation, \
-                                         ethnicity, ethnicity_probability, age_estimate, age_estimate_probability, gender, gender_probability, camera, current_img):
+                                        ethnicity, ethnicity_probability, age_estimate, age_estimate_probability, gender, gender_probability, shirt_color, shirt_rgb, pants_color, pants_rgb, \
+                                        camera, current_img):
         # receives the box and keypoints of a specidic person and returns the detected person 
         # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
 
@@ -427,10 +428,12 @@ class YoloPoseNode(Node):
         new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
 
         new_person.pointing_at, new_person.pointing_with_arm = self.arm_pointing_at(new_person)
-        
-        new_person.shirt_color, new_person.shirt_rgb = self.get_shirt_color(new_person, current_frame, current_frame_draw) 
-        new_person.pants_color, new_person.pants_rgb = self.get_pants_color(new_person, current_frame, current_frame_draw) 
         """
+        
+        new_person.shirt_color = shirt_color
+        new_person.shirt_rgb = shirt_rgb 
+        new_person.pants_color = pants_color
+        new_person.pants_rgb = pants_rgb
 
         # new_person.pointing_at = "None"
         # new_person.pointing_with_arm = "None"
@@ -552,305 +555,6 @@ class YoloPoseNode(Node):
         except:
             return 0
         
-    def get_shirt_color(self, new_person, current_frame, current_frame_draw):
-        color_name = "None"
-        color_rgb = RGB()
-
-        if new_person.kp_shoulder_left_conf > MIN_KP_CONF_VALUE and new_person.kp_shoulder_right_conf > MIN_KP_CONF_VALUE:
-            color_name, color_value_rgb, n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_shoulder_left_x, new_person.kp_shoulder_left_y), (new_person.kp_shoulder_right_x, new_person.kp_shoulder_right_y))
-    
-            color_rgb.red = int(color_value_rgb[0])
-            color_rgb.green = int(color_value_rgb[1])
-            color_rgb.blue = int(color_value_rgb[2])
-
-        return color_name, color_rgb
-
-    def get_pants_color(self, new_person, current_frame, current_frame_draw):
-        left_leg_color_name = "None"
-        left_leg_color_rgb = RGB()
-        left_leg_n_points = 0
-        right_leg_color_name = "None"
-        right_leg_color_rgb = RGB()
-        right_leg_n_points = 0
-        color_name = "None"
-        color_rgb = RGB()
-
-        if new_person.kp_hip_left_conf > MIN_KP_CONF_VALUE and new_person.kp_knee_left_conf > MIN_KP_CONF_VALUE:
-            left_leg_color_name, left_leg_color_rgb, left_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_hip_left_x, new_person.kp_hip_left_y), (new_person.kp_knee_left_x, new_person.kp_knee_left_y))
-
-        if new_person.kp_hip_right_conf > MIN_KP_CONF_VALUE and new_person.kp_knee_right_conf > MIN_KP_CONF_VALUE:
-            right_leg_color_name, right_leg_color_rgb, right_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (new_person.kp_hip_right_x, new_person.kp_hip_right_y), (new_person.kp_knee_right_x, new_person.kp_knee_right_y))
-
-        if left_leg_n_points >= right_leg_n_points and left_leg_n_points > 0:
-            color_name = left_leg_color_name
-            color_rgb.red = int(left_leg_color_rgb[0])
-            color_rgb.green = int(left_leg_color_rgb[1])
-            color_rgb.blue = int(left_leg_color_rgb[2])
-
-        elif left_leg_n_points < right_leg_n_points and right_leg_n_points > 0:
-            color_name = right_leg_color_name
-            color_rgb.red = int(right_leg_color_rgb[0])
-            color_rgb.green = int(right_leg_color_rgb[1])
-            color_rgb.blue = int(right_leg_color_rgb[2])
-        
-        return color_name, color_rgb
-    
-    def rgb_to_string_tr(self, color_value_rgb):
-
-        # Convert the RGB to BGR
-        color_value_bgr = (color_value_rgb[2], color_value_rgb[1], color_value_rgb[0])
-
-        # Define the RGB pixel value
-        bgr_pixel = np.array([[color_value_bgr]], dtype=np.uint8)
-
-        # Convert the BGR pixel to HSV
-        hsv_pixel = cv2.cvtColor(bgr_pixel, cv2.COLOR_BGR2HSV)
-
-        # Extract the HSV values
-        h, s, vv = hsv_pixel[0][0]
-        hsv_info = (h, s, vv)
-        # print("HSV values:", h, s, vv)
-
-        ### Step 1: Define Color using HSV: Hue
-
-        # Boundaries between colors
-        red_orange_border     = 9
-        orange_yellow_border  = 20
-        yellow_green_border   = 31
-        green_cyan_border     = 78
-        cyan_blue_border      = 100
-        blue_purple_border    = 131
-        purple_magenta_border = 150
-        magenta_red_border    = 172
-
-        # Averages and Standard Deviations for White, Grey and Black colors
-        MIN_AVG_FOR_BLACK = 30 
-        MIN_AVG_FOR_WHITE = 130 # was 220 
-        MIN_STD_DEV_FOR_GREY = 8.0 
-        MIN_STD_DEV_FOR_BW = 15.0 
-
-        color_ranges = {
-            "Red":     (0,                      red_orange_border),
-            "Orange":  (red_orange_border,      orange_yellow_border),
-            "Yellow":  (orange_yellow_border,   yellow_green_border),
-            "Green":   (yellow_green_border,    green_cyan_border),
-            "Cyan":    (green_cyan_border,      cyan_blue_border),
-            "Blue":    (cyan_blue_border,       blue_purple_border),
-            "Purple":  (blue_purple_border,     purple_magenta_border),
-            "Magenta": (purple_magenta_border,  magenta_red_border),
-            "Red2":    (magenta_red_border,     180),
-        }
-
-        # color thresholds to choose whether it is a light color, a normal color or a dark color
-        color_thresholds = {
-            "Red":     (30,  138),
-            "Orange":  (100, 170),
-            "Yellow":  (120, 210),
-            "Green":   (30,  138),
-            "Cyan":    (120, 210),
-            "Blue":    (30,  138),
-            "Purple":  (100, 170),
-            "Magenta": (120, 210),
-            "Red2":    (30,  138),
-        }
-
-        # Function to get color name from HSV values
-        color_name = "None"
-        hsv_ = (h, s, vv) 
-        hue = hsv_[0]
-        for color, (lower, upper) in color_ranges.items():
-            if lower <= hue < upper:
-                color_name = color
-        
-        ### Step 2: Calculate RGB mean and std_dev to calaulate grey, white and black
-
-        avg_rgb_values = sum(color_value_rgb)/len(color_value_rgb)
-        std_dev = math.sqrt(sum((x - avg_rgb_values) ** 2 for x in color_value_rgb) / len(color_value_rgb))
-        # print("Avg:", round(avg_rgb_values, 2), "Std_dev:", round(std_dev, 2))
-
-        if avg_rgb_values >= MIN_AVG_FOR_WHITE and std_dev < MIN_STD_DEV_FOR_BW:
-            color_name = "White" 
-        elif avg_rgb_values <= MIN_AVG_FOR_BLACK and std_dev < MIN_STD_DEV_FOR_BW:
-            color_name = "Black"
-        elif std_dev< MIN_STD_DEV_FOR_GREY:
-            color_name = "Grey"
-        else:
-
-        ### Step 3 - transform a colour in light, normal and dark (ie. Light Red, Red, Dark Red)
-            
-            if color_name != "None":
-                if avg_rgb_values < color_thresholds[color_name][0]:
-                    color_name = "Dark "+color_name
-                elif avg_rgb_values > color_thresholds[color_name][1]:
-                    color_name = "Light "+color_name
-                    
-        # removes the 2 from Red2 color, basically it is red but is on the other side of the spectrum
-        color_name = color_name.replace("2", "")
-
-        ### Step 4 - rename some colors for a better day-to-day name (i.e. Dark Orange -> Brown)
-
-        if color_name == "Light Red":
-            color_name = "Pink"
-        elif color_name == "Dark Yellow":
-            color_name = "Olive"
-        elif color_name == "Light Yellow":
-            color_name = "Beige"
-        elif color_name == "Light Magenta":
-            color_name = "Pink"
-        elif color_name == "Dark Cyan":
-            color_name = "Blue"
-        elif color_name == "Dark Orange":
-            color_name = "Brown"
-
-        return color_name, hsv_info
-
-    def get_color_of_line_between_two_points(self, image, image_draw, p1, p2):
-
-        DEBUG_DRAW_COLOR = False
-
-        image_h, image_w, image_c = image.shape
-        # print(image.shape)
-
-        color_name = "None"
-        color_value_rgb = (0, 0, 0)
-        color_value_bgr = (0, 0, 0)
-        color_value_hsv = (0, 0, 0) 
-        n_points = 0
-
-        if 0 <= p1[0] < image_w and 0 <= p2[0] < image_w and 0 <= p1[1] < image_h and 0 <= p2[1] < image_h:
-
-            # if DEBUG_DRAW_COLOR:
-                # cv2.line(image_draw, p1, p2, (255, 255, 255), 1)
-
-            if p2[0] != p1[0]:
-
-                m = (p2[1] - p1[1])/(p2[0] - p1[0])
-                b = p2[1] - m* p2[0]
-                # print("m:", m)
-
-                if -1.0 <= m <= 1.0 :
-
-                    # print("CASE 1")
-
-                    t__ = [0,0,0] 
-                    ctr = 0
-                    for x in range(abs(p1[0]-p2[0])+1):
-                        n_points = abs(p1[0]-p2[0])+1
-                        y = m*(min(p2[0],p1[0])+x) + b
-                        ctr+=1
-                        t__ += image[int(y+0.5), min(p2[0],p1[0])+x] 
-                        # print(ctr, image[int(y+0.5), min(p2[0],p1[0])+x])
-                        if DEBUG_DRAW_COLOR:
-                            image_draw[int(y+0.5), min(p2[0],p1[0])+x] = (0, 255, 0)
-
-                    if ctr > 0:
-
-                        final_avg_color_bgr = (t__/ctr)+0.5
-                        final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
-                        # print(final_avg_color_bgr)
-                        # print(final_avg_color_int_bgr)
-
-                        # convert from BGR to RGB
-                        final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
-
-                        # calls the rgb_to_string function
-                        color_name, color_value_hsv = self.rgb_to_string_tr(final_avg_color_int_rgb)
-                        color_value_rgb = final_avg_color_int_rgb
-                        color_value_bgr = final_avg_color_int_bgr
-
-                    else:
-                        color_name = "None"
-                        color_value_rgb = (0, 0, 0)
-                        color_value_bgr = (0, 0, 0)
-
-                else: # by turning the axis system, what happens is that i can have more than one point in each yy coordinates od the line
-
-                    m = (p2[0] - p1[0])/(p2[1] - p1[1])
-                    b = p2[0] - m* p2[1]
-
-                    # print("CASE 2")
-
-                    t__ = [0,0,0] 
-                    ctr = 0
-
-                    for x in range(abs(p1[1]-p2[1])+1):
-                        n_points = abs(p1[1]-p2[1])+1
-                        y = m*(min(p2[1], p1[1])+x) + b
-                        ctr+=1
-                        t__ += image[min(p2[1], p1[1])+x, int(y)] 
-                        # print(ctr, image[min(p2[1], p1[1])+x, int(y)])
-                        if DEBUG_DRAW_COLOR:
-                            image_draw[min(p2[1],p1[1])+x, int(y)] = (0, 255, 0)
-
-                    if ctr > 0:
-
-                        final_avg_color_bgr = (t__/ctr)+0.5
-                        final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
-                        # print(final_avg_color_bgr)
-                        # print(final_avg_color_int_bgr)
-
-                        # convert from BGR to RGB
-                        final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
-
-                        # calls the rgb_to_string function
-                        color_name, color_value_hsv = self.rgb_to_string_tr(final_avg_color_int_rgb)
-                        color_value_rgb = final_avg_color_int_rgb
-                        color_value_bgr = final_avg_color_int_bgr
-
-
-                    else:
-                        color_name = "None"
-                        color_value_rgb = (0, 0, 0)
-                        color_value_bgr = (0, 0, 0)
-
-            elif p2[1] != p1[1]: # division by zero error when calculating m 
-                
-                m = (p2[0] - p1[0])/(p2[1] - p1[1])
-                b = p2[0] - m* p2[1]
-
-                # print("CASE 3")
-                
-                t__ = [0,0,0] 
-                ctr = 0
-
-                for x in range(abs(p1[1]-p2[1])+1):
-                    n_points = abs(p1[1]-p2[1])+1
-                    y = m*(min(p2[1], p1[1])+x) + b
-                    ctr+=1
-                    t__ += image[min(p2[1],p1[1])+x, int(y+0.5)] 
-                    # print(ctr, image[min(p2[1], p1[1])+x, int(y+0.5)])
-                    if DEBUG_DRAW_COLOR:
-                        image_draw[min(p2[1],p1[1])+x, int(y+0.5)] = (0, 255, 0)
-
-                if ctr > 0:
-
-                    final_avg_color_bgr = (t__/ctr)+0.5
-                    final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
-                    # print(final_avg_color_bgr)
-                    # print(final_avg_color_int_bgr)
-
-                    # convert from BGR to RGB
-                    final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
-
-                    # calls the rgb_to_string function
-                    color_name, color_value_hsv = self.rgb_to_string_tr(final_avg_color_int_rgb)
-                    color_value_rgb = final_avg_color_int_rgb
-                    color_value_bgr = final_avg_color_int_bgr
-
-                else:
-                    color_name = "None"
-                    color_value_rgb = (0, 0, 0)
-                    color_value_bgr = (0, 0, 0)
-
-            if DEBUG_DRAW_COLOR:
-                image_draw[p2[1], p2[0]] = (0, 0, 255)
-                image_draw[p1[1], p1[0]] = (0, 0, 255)
-
-        # print("Color:", color_name, "[ RGB:", color_value_rgb, "HSV:", color_value_hsv,"N_P:", n_points, "]")
-
-        # return color_name, color_value_rgb, color_value_bgr, color_value_hsv, n_points
-        return color_name, color_value_rgb, n_points
-
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
@@ -1055,6 +759,12 @@ class YoloPoseMain():
 
 
                         if ALL_CONDITIONS_MET: # special case just for the center_comm_position
+
+                            # These two characteristics are outside the characteristics if clause, because there are almost instantaneous and don't need a model to calculate.
+                            # Therefore it was decided that this parameter is always calculated for every detected person
+                            shirt_color, shirt_rgb = self.get_shirt_color(keypoint, head_frame, head_frame) 
+                            pants_color, pants_rgb = self.get_pants_color(keypoint, head_frame, head_frame) 
+
                             # characteristics will only be updated after we confirm that the person is inside the filteredpersons
                             # otherwise the large amount of time spent getting the characteristics from the models is applied to
                             # every detected person and not only the filtered 
@@ -1082,6 +792,7 @@ class YoloPoseMain():
                                                                                     center_torso_person=(person_center_x, person_center_y), center_head_person=(head_center_x, head_center_y), \
                                                                                     torso_localisation=None, head_localisation=None, \
                                                                                     ethnicity=ethnicity, ethnicity_probability=ethnicity_probability, age_estimate=age_estimate, age_estimate_probability=age_estimate_probability, gender=gender, gender_probability=gender_probability, \
+                                                                                    shirt_color=shirt_color, shirt_rgb=shirt_rgb, pants_color=pants_color, pants_rgb=pants_rgb, \
                                                                                     camera=camera, current_img=rgb_img)
                             yolov8_person_filtered.persons.append(new_person)
 
@@ -1448,7 +1159,7 @@ class YoloPoseMain():
             if DRAW_FACE_RECOGNITION:
                 cv2.rectangle(current_frame_draw, (x1, y1), (x2, y2), (0, 255, 255) , 4) 
                 
-            # cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
+            cv2.imwrite("cropped_face_test.jpg", current_frame[y1:y2, x1:x2])
             
             return True, current_frame[y1:y2, x1:x2]
 
@@ -1537,6 +1248,305 @@ class YoloPoseMain():
 
         return race, race_prob
     
+    def get_shirt_color(self, keypoint, current_frame, current_frame_draw):
+        color_name = "None"
+        color_rgb = RGB()
+
+        if keypoint.conf[0][self.node.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and keypoint.conf[0][self.node.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE:
+            color_name, color_value_rgb, n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (int(keypoint.xy[0][self.node.SHOULDER_LEFT_KP][0]), int(keypoint.xy[0][self.node.SHOULDER_LEFT_KP][1])), (int(keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][0]), int(keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][1])))
+    
+            color_rgb.red = int(color_value_rgb[0])
+            color_rgb.green = int(color_value_rgb[1])
+            color_rgb.blue = int(color_value_rgb[2])
+
+        return color_name, color_rgb
+
+    def get_pants_color(self, keypoint, current_frame, current_frame_draw):
+        left_leg_color_name = "None"
+        left_leg_color_rgb = RGB()
+        left_leg_n_points = 0
+        right_leg_color_name = "None"
+        right_leg_color_rgb = RGB()
+        right_leg_n_points = 0
+        color_name = "None"
+        color_rgb = RGB()
+
+        if keypoint.conf[0][self.node.HIP_LEFT_KP] > MIN_KP_CONF_VALUE and keypoint.conf[0][self.node.KNEE_LEFT_KP] > MIN_KP_CONF_VALUE:
+            left_leg_color_name, left_leg_color_rgb, left_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (int(keypoint.xy[0][self.node.HIP_LEFT_KP][0]), int(keypoint.xy[0][self.node.HIP_LEFT_KP][1])), (int(keypoint.xy[0][self.node.KNEE_LEFT_KP][0]), int(keypoint.xy[0][self.node.KNEE_LEFT_KP][1])))
+
+        if keypoint.conf[0][self.node.HIP_RIGHT_KP] > MIN_KP_CONF_VALUE and keypoint.conf[0][self.node.KNEE_RIGHT_KP] > MIN_KP_CONF_VALUE:
+            right_leg_color_name, right_leg_color_rgb, right_leg_n_points = self.get_color_of_line_between_two_points(current_frame, current_frame_draw, (int(keypoint.xy[0][self.node.HIP_RIGHT_KP][0]), int(keypoint.xy[0][self.node.HIP_RIGHT_KP][1])), (int(keypoint.xy[0][self.node.KNEE_RIGHT_KP][0]), int(keypoint.xy[0][self.node.KNEE_RIGHT_KP][1])))
+
+        if left_leg_n_points >= right_leg_n_points and left_leg_n_points > 0:
+            color_name = left_leg_color_name
+            color_rgb.red = int(left_leg_color_rgb[0])
+            color_rgb.green = int(left_leg_color_rgb[1])
+            color_rgb.blue = int(left_leg_color_rgb[2])
+
+        elif left_leg_n_points < right_leg_n_points and right_leg_n_points > 0:
+            color_name = right_leg_color_name
+            color_rgb.red = int(right_leg_color_rgb[0])
+            color_rgb.green = int(right_leg_color_rgb[1])
+            color_rgb.blue = int(right_leg_color_rgb[2])
+        
+        return color_name, color_rgb
+    
+    def rgb_to_string_tr(self, color_value_rgb):
+
+        # Convert the RGB to BGR
+        color_value_bgr = (color_value_rgb[2], color_value_rgb[1], color_value_rgb[0])
+
+        # Define the RGB pixel value
+        bgr_pixel = np.array([[color_value_bgr]], dtype=np.uint8)
+
+        # Convert the BGR pixel to HSV
+        hsv_pixel = cv2.cvtColor(bgr_pixel, cv2.COLOR_BGR2HSV)
+
+        # Extract the HSV values
+        h, s, vv = hsv_pixel[0][0]
+        hsv_info = (h, s, vv)
+        # print("HSV values:", h, s, vv)
+
+        ### Step 1: Define Color using HSV: Hue
+
+        # Boundaries between colors
+        red_orange_border     = 9
+        orange_yellow_border  = 20
+        yellow_green_border   = 31
+        green_cyan_border     = 78
+        cyan_blue_border      = 100
+        blue_purple_border    = 131
+        purple_magenta_border = 150
+        magenta_red_border    = 172
+
+        # Averages and Standard Deviations for White, Grey and Black colors
+        MIN_AVG_FOR_BLACK = 30 
+        MIN_AVG_FOR_WHITE = 130 # was 220 
+        MIN_STD_DEV_FOR_GREY = 8.0 
+        MIN_STD_DEV_FOR_BW = 15.0 
+
+        color_ranges = {
+            "Red":     (0,                      red_orange_border),
+            "Orange":  (red_orange_border,      orange_yellow_border),
+            "Yellow":  (orange_yellow_border,   yellow_green_border),
+            "Green":   (yellow_green_border,    green_cyan_border),
+            "Cyan":    (green_cyan_border,      cyan_blue_border),
+            "Blue":    (cyan_blue_border,       blue_purple_border),
+            "Purple":  (blue_purple_border,     purple_magenta_border),
+            "Magenta": (purple_magenta_border,  magenta_red_border),
+            "Red2":    (magenta_red_border,     180),
+        }
+
+        # color thresholds to choose whether it is a light color, a normal color or a dark color
+        color_thresholds = {
+            "Red":     (30,  138),
+            "Orange":  (100, 170),
+            "Yellow":  (120, 210),
+            "Green":   (30,  138),
+            "Cyan":    (120, 210),
+            "Blue":    (30,  138),
+            "Purple":  (100, 170),
+            "Magenta": (120, 210),
+            "Red2":    (30,  138),
+        }
+
+        # Function to get color name from HSV values
+        color_name = "None"
+        hsv_ = (h, s, vv) 
+        hue = hsv_[0]
+        for color, (lower, upper) in color_ranges.items():
+            if lower <= hue < upper:
+                color_name = color
+        
+        ### Step 2: Calculate RGB mean and std_dev to calaulate grey, white and black
+
+        avg_rgb_values = sum(color_value_rgb)/len(color_value_rgb)
+        std_dev = math.sqrt(sum((x - avg_rgb_values) ** 2 for x in color_value_rgb) / len(color_value_rgb))
+        # print("Avg:", round(avg_rgb_values, 2), "Std_dev:", round(std_dev, 2))
+
+        if avg_rgb_values >= MIN_AVG_FOR_WHITE and std_dev < MIN_STD_DEV_FOR_BW:
+            color_name = "White" 
+        elif avg_rgb_values <= MIN_AVG_FOR_BLACK and std_dev < MIN_STD_DEV_FOR_BW:
+            color_name = "Black"
+        elif std_dev< MIN_STD_DEV_FOR_GREY:
+            color_name = "Grey"
+        else:
+
+        ### Step 3 - transform a colour in light, normal and dark (ie. Light Red, Red, Dark Red)
+            
+            if color_name != "None":
+                if avg_rgb_values < color_thresholds[color_name][0]:
+                    color_name = "Dark "+color_name
+                elif avg_rgb_values > color_thresholds[color_name][1]:
+                    color_name = "Light "+color_name
+                    
+        # removes the 2 from Red2 color, basically it is red but is on the other side of the spectrum
+        color_name = color_name.replace("2", "")
+
+        ### Step 4 - rename some colors for a better day-to-day name (i.e. Dark Orange -> Brown)
+
+        if color_name == "Light Red":
+            color_name = "Pink"
+        elif color_name == "Dark Yellow":
+            color_name = "Olive"
+        elif color_name == "Light Yellow":
+            color_name = "Beige"
+        elif color_name == "Light Magenta":
+            color_name = "Pink"
+        elif color_name == "Dark Cyan":
+            color_name = "Blue"
+        elif color_name == "Dark Orange":
+            color_name = "Brown"
+
+        return color_name, hsv_info
+
+    def get_color_of_line_between_two_points(self, image, image_draw, p1, p2):
+
+        DEBUG_DRAW_COLOR = False
+
+        image_h, image_w, image_c = image.shape
+        # print(image.shape)
+
+        color_name = "None"
+        color_value_rgb = (0, 0, 0)
+        color_value_bgr = (0, 0, 0)
+        color_value_hsv = (0, 0, 0) 
+        n_points = 0
+
+        if 0 <= p1[0] < image_w and 0 <= p2[0] < image_w and 0 <= p1[1] < image_h and 0 <= p2[1] < image_h:
+
+            # if DEBUG_DRAW_COLOR:
+                # cv2.line(image_draw, p1, p2, (255, 255, 255), 1)
+
+            if p2[0] != p1[0]:
+
+                m = (p2[1] - p1[1])/(p2[0] - p1[0])
+                b = p2[1] - m* p2[0]
+                # print("m:", m)
+
+                if -1.0 <= m <= 1.0 :
+
+                    # print("CASE 1")
+
+                    t__ = [0,0,0] 
+                    ctr = 0
+                    for x in range(abs(p1[0]-p2[0])+1):
+                        n_points = abs(p1[0]-p2[0])+1
+                        y = m*(min(p2[0],p1[0])+x) + b
+                        ctr+=1
+                        t__ += image[int(y+0.5), min(p2[0],p1[0])+x] 
+                        # print(ctr, image[int(y+0.5), min(p2[0],p1[0])+x])
+                        if DEBUG_DRAW_COLOR:
+                            image_draw[int(y+0.5), min(p2[0],p1[0])+x] = (0, 255, 0)
+
+                    if ctr > 0:
+
+                        final_avg_color_bgr = (t__/ctr)+0.5
+                        final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
+                        # print(final_avg_color_bgr)
+                        # print(final_avg_color_int_bgr)
+
+                        # convert from BGR to RGB
+                        final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
+
+                        # calls the rgb_to_string function
+                        color_name, color_value_hsv = self.rgb_to_string_tr(final_avg_color_int_rgb)
+                        color_value_rgb = final_avg_color_int_rgb
+                        color_value_bgr = final_avg_color_int_bgr
+
+                    else:
+                        color_name = "None"
+                        color_value_rgb = (0, 0, 0)
+                        color_value_bgr = (0, 0, 0)
+
+                else: # by turning the axis system, what happens is that i can have more than one point in each yy coordinates od the line
+
+                    m = (p2[0] - p1[0])/(p2[1] - p1[1])
+                    b = p2[0] - m* p2[1]
+
+                    # print("CASE 2")
+
+                    t__ = [0,0,0] 
+                    ctr = 0
+
+                    for x in range(abs(p1[1]-p2[1])+1):
+                        n_points = abs(p1[1]-p2[1])+1
+                        y = m*(min(p2[1], p1[1])+x) + b
+                        ctr+=1
+                        t__ += image[min(p2[1], p1[1])+x, int(y)] 
+                        # print(ctr, image[min(p2[1], p1[1])+x, int(y)])
+                        if DEBUG_DRAW_COLOR:
+                            image_draw[min(p2[1],p1[1])+x, int(y)] = (0, 255, 0)
+
+                    if ctr > 0:
+
+                        final_avg_color_bgr = (t__/ctr)+0.5
+                        final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
+                        # print(final_avg_color_bgr)
+                        # print(final_avg_color_int_bgr)
+
+                        # convert from BGR to RGB
+                        final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
+
+                        # calls the rgb_to_string function
+                        color_name, color_value_hsv = self.rgb_to_string_tr(final_avg_color_int_rgb)
+                        color_value_rgb = final_avg_color_int_rgb
+                        color_value_bgr = final_avg_color_int_bgr
+
+
+                    else:
+                        color_name = "None"
+                        color_value_rgb = (0, 0, 0)
+                        color_value_bgr = (0, 0, 0)
+
+            elif p2[1] != p1[1]: # division by zero error when calculating m 
+                
+                m = (p2[0] - p1[0])/(p2[1] - p1[1])
+                b = p2[0] - m* p2[1]
+
+                # print("CASE 3")
+                
+                t__ = [0,0,0] 
+                ctr = 0
+
+                for x in range(abs(p1[1]-p2[1])+1):
+                    n_points = abs(p1[1]-p2[1])+1
+                    y = m*(min(p2[1], p1[1])+x) + b
+                    ctr+=1
+                    t__ += image[min(p2[1],p1[1])+x, int(y+0.5)] 
+                    # print(ctr, image[min(p2[1], p1[1])+x, int(y+0.5)])
+                    if DEBUG_DRAW_COLOR:
+                        image_draw[min(p2[1],p1[1])+x, int(y+0.5)] = (0, 255, 0)
+
+                if ctr > 0:
+
+                    final_avg_color_bgr = (t__/ctr)+0.5
+                    final_avg_color_int_bgr = final_avg_color_bgr.astype(int)
+                    # print(final_avg_color_bgr)
+                    # print(final_avg_color_int_bgr)
+
+                    # convert from BGR to RGB
+                    final_avg_color_int_rgb = (final_avg_color_int_bgr[2], final_avg_color_int_bgr[1], final_avg_color_int_bgr[0])
+
+                    # calls the rgb_to_string function
+                    color_name, color_value_hsv = self.rgb_to_string_tr(final_avg_color_int_rgb)
+                    color_value_rgb = final_avg_color_int_rgb
+                    color_value_bgr = final_avg_color_int_bgr
+
+                else:
+                    color_name = "None"
+                    color_value_rgb = (0, 0, 0)
+                    color_value_bgr = (0, 0, 0)
+
+            if DEBUG_DRAW_COLOR:
+                image_draw[p2[1], p2[0]] = (0, 0, 255)
+                image_draw[p1[1], p1[0]] = (0, 0, 255)
+
+        # print("Color:", color_name, "[ RGB:", color_value_rgb, "HSV:", color_value_hsv,"N_P:", n_points, "]")
+
+        # return color_name, color_value_rgb, color_value_bgr, color_value_hsv, n_points
+        return color_name, color_value_rgb, n_points
+
     # main state-machine function
     def main(self):
         
@@ -1648,19 +1658,7 @@ class YoloPoseMain():
 ### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
     
     ### adicionar caracteristicas ao add_person_to_detected_msg
-    # shirt_color: ''
-    # shirt_rgb:
-    #   red: 0
-    #   green: 0
-    #   blue: 0
-    # pants_color: ''
-    # pants_rgb:
-    #   red: 0
-    #   green: 0
-    #   blue: 0
-
-    # testar arm_raised
-
+    
     # pointing at
     # pointing with arm
 
