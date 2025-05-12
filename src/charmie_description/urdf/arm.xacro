@@ -12,6 +12,8 @@
 
   <!-- Include xArm6 macro definition -->
   <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6_robot_macro.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6.transmission.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6.ros2_control.xacro" />
   <xacro:include filename="$(find xarm_description)/urdf/common/common.link.xacro" />
   <xacro:include filename="$(find xarm_description)/urdf/common/common.material.xacro" />
 
@@ -40,6 +42,20 @@
     kinematics_params_filename="${kinematics_params_file}"
     inertial_params_filename=""
     hard_interface="PositionJointInterface" />
+
+  <xacro:xarm6_transmission prefix="xarm_" />
+
+  <xacro:xarm6_ros2_control
+    prefix="xarm_"
+    hw_ns="xarm"
+    velocity_control="false"
+    add_gripper="true"
+    add_bio_gripper="false"
+    ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware"
+    robot_ip=""
+    report_type="normal"
+    baud_checkset="true"
+    default_gripper_baud="2000000" />
 
   <!-- Mount the xArm6 on CHARMIE -->
   <joint name="xarm_mount_joint" type="fixed">
