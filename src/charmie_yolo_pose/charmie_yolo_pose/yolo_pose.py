@@ -620,8 +620,20 @@ class YoloPoseMain():
                     legs_ctr, body_kp_high_conf_counter = self.keypoint_counter(keypoint=keypoint)
 
                     ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
-                    obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
+                    # obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
+                    # print("3D Coords", obj_3d_cam_coords.x, obj_3d_cam_coords.y, obj_3d_cam_coords.z)
+                    
+                    torso_center = []
+                    torso_center.append(person_center_y)
+                    torso_center.append(person_center_x)
+                    head_center = []
+                    head_center.append(head_center_y)
+                    head_center.append(head_center_x)
+                    
+                    # obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=torso_center)
+                    obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=head_center)
                     print("3D Coords", obj_3d_cam_coords.x, obj_3d_cam_coords.y, obj_3d_cam_coords.z)
+                    
                     # obj_3d_cam_coords = Point()
                     # obj_3d_cam_coords.x = 1.0
                     # obj_3d_cam_coords.y = 0.0
