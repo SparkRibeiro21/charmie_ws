@@ -153,9 +153,66 @@ class PointCloud():
 
         return point3d
     
+    def convert_bbox_to_3d_point(self, depth_img, camera, bbox):
+
+        u_inicial = int(bbox.xyxy[0][1])
+        v_inicial = int(bbox.xyxy[0][0])
+        bb_height = int(bbox.xyxy[0][3]) - int(bbox.xyxy[0][1])
+        bb_width = int(bbox.xyxy[0][2]) - int(bbox.xyxy[0][0])
+
+        mask = np.array([
+            [v_inicial, u_inicial],
+            [v_inicial+bb_width, u_inicial],
+            [v_inicial+bb_width, u_inicial+bb_height],
+            [v_inicial, u_inicial+bb_height],
+            [v_inicial, u_inicial]
+        ])
+
+        # converts the bounding box into a mask and does the same calculations for a segmentation mask
+        # The goal is to have everything working with segmentation masks and not bounding boxes.
+        # But we leave this here in case it is necessary
+        point3d = self.convert_mask_to_3dpoint(depth_img, camera, mask)
+
+        return point3d
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     ### Receives a bounding box and a depth image of the corresponding camera, returns the (x,y,z) of the average of the filtered bounding box points according to the camera TF
     # def converter_2D_3D(self, u, v, height, width):
-    def convert_bbox_to_3d_point(self, depth_img, camera, bbox):
+    def old_convert_bbox_to_3d_point(self, depth_img, camera, bbox):
 
         # aaa = time.time()
 
