@@ -175,7 +175,13 @@ class PointCloud():
 
         return point3d
     
-    
+    def convert_pose_keypoints_to_3d_point(self, depth_img, camera, keypoints):
+        pass
+
+        # options:
+        # - use the lines between keypoints that have confidence above threshold and use pixels from those lines
+        # - create a mask of the torso positions, and does the same process as convert_to_bbox
+
     
     
     

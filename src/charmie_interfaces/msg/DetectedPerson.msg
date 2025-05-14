@@ -124,4 +124,8 @@ int32 body_center_y
 int32 head_center_x
 int32 head_center_y
 
+string camera
+
+float32 orientation # not implemented yet (should be 6D pose)
+
 sensor_msgs/Image image_rgb_frame

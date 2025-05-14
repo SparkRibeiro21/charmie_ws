@@ -249,21 +249,16 @@ class YoloPoseNode(Node):
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     # def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
-    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, face_bounding_box, is_face_bounding_box, arm_raised, object_coords_to_cam, object_coords_to_base, object_coords_to_map, center_torso_person, center_head_person, torso_localisation, head_localisation, \
+    def add_person_to_detectedperson_msg(self, boxes_id, keypoints_id, face_bounding_box, is_face_bounding_box, arm_raised, object_coords_to_cam, object_coords_to_base, object_coords_to_map, \
+                                        center_head_person, head_coords_to_cam, head_coords_to_base, head_coords_to_map, center_torso_person, torso_coords_to_cam, torso_coords_to_base, torso_coords_to_map, \
                                         ethnicity, ethnicity_probability, age_estimate, age_estimate_probability, gender, gender_probability, shirt_color, shirt_rgb, pants_color, pants_rgb, pointing_at, pointing_with_arm, \
                                         camera, current_img):
-        # receives the box and keypoints of a specidic person and returns the detected person 
-        # it can be done in a way that is only made once per person and both 'person_pose' and 'person_pose_filtered'
-
-        global GET_CHARACTERISTICS
-
+        
         person_id = boxes_id.id
         if boxes_id.id == None:
             person_id = 0 
 
         new_person = DetectedPerson()
-
-        new_person.image_rgb_frame = self.head_rgb
 
         new_person.index = int(person_id)
         new_person.confidence = float(boxes_id.conf)
@@ -355,6 +350,7 @@ class YoloPoseNode(Node):
         new_person.head_center_x = center_head_person[0]
         new_person.head_center_y = center_head_person[1]
         
+        # Person Coordinates
         # print(object_coords_to_cam)
         new_person.position_cam = object_coords_to_cam
         # print(object_coords_to_base)
@@ -364,66 +360,19 @@ class YoloPoseNode(Node):
         # new_person.position_absolute = object_coords_to_map
         new_person.position_absolute = object_coords_to_cam
 
-        
+        # Head Coordinates
+        new_person.position_cam_head = head_coords_to_cam
+        new_person.position_relative_head = head_coords_to_cam  # head_coords_to_base
+        new_person.position_absolute_head = head_coords_to_cam  # head_coords_to_map
 
+        # Torso Coordinates
+        new_person.position_cam_torso = torso_coords_to_cam
+        new_person.position_relative_torso = torso_coords_to_cam  # torso_coords_to_base
+        new_person.position_absolute_torso = torso_coords_to_cam  # torso_coords_to_map
+
+
+        
         """
-        # changes the axis of point cloud coordinates to fit with robot axis
-        person_rel_pos = Point()
-        person_rel_pos.x =  center_person_filtered.x/1000
-        person_rel_pos.y =  center_person_filtered.y/1000
-        person_rel_pos.z =  center_person_filtered.z/1000
-        
-        new_person.position_relative = person_rel_pos
-        
-        # calculate the absolute position according to the robot localisation
-        angle_person = math.atan2(person_rel_pos.x, person_rel_pos.y)
-        dist_person = math.sqrt(person_rel_pos.x**2 + person_rel_pos.y**2)
-
-        theta_aux = math.pi/2 - (angle_person - self.robot_pose.theta)
-
-        target_x = dist_person * math.cos(theta_aux) + self.robot_pose.x
-        target_y = dist_person * math.sin(theta_aux) + self.robot_pose.y
-
-        a_ref = (target_x, target_y)
-        # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
-
-        person_abs_pos = Point()
-        person_abs_pos.x = target_x
-        person_abs_pos.y = target_y
-        person_abs_pos.z = center_person_filtered.z/1000
-        
-        new_person.position_absolute = person_abs_pos
-
-        # changes the axis of point cloud coordinates to fit with robot axis
-        head_rel_pos = Point()
-        head_rel_pos.x =  head_localisation.x/1000
-        head_rel_pos.y =  head_localisation.y/1000
-        head_rel_pos.z =  head_localisation.z/1000
-        new_person.position_relative_head = head_rel_pos
-        
-        # calculate the absolute head position according to the robot localisation
-        angle_head = math.atan2(head_rel_pos.x, head_rel_pos.y)
-        dist_head = math.sqrt(head_rel_pos.x**2 + head_rel_pos.y**2)
-
-        theta_aux = math.pi/2 - (angle_head - self.robot_pose.theta)
-
-        target_x = dist_head * math.cos(theta_aux) + self.robot_pose.x
-        target_y = dist_head * math.sin(theta_aux) + self.robot_pose.y
-
-        a_ref = (target_x, target_y)
-        # print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)
-
-        head_abs_pos = Point()
-        head_abs_pos.x = target_x
-        head_abs_pos.y = target_y
-        head_abs_pos.z = head_localisation.z/1000
-        
-        new_person.position_absolute_head = head_abs_pos
-        
-
-
-
-
         new_person.height = head_localisation.z/1000 + 0.08 # average person middle of face to top of head distance
         new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
         """
@@ -443,6 +392,10 @@ class YoloPoseNode(Node):
         new_person.gender = gender
         new_person.gender_probability = gender_probability
 
+        new_person.camera = camera
+        new_person.orientation = 0.0 # still missing... (person 6D pose)
+        new_person.image_rgb_frame = current_img
+            
         return new_person
 
     def line_between_two_keypoints(self, current_frame_draw, KP_ONE, KP_TWO, xy, conf, colour):
@@ -619,7 +572,7 @@ class YoloPoseMain():
                     hand_raised, is_hand_raised = self.check_arm_raised(keypoint=keypoint)
                     legs_ctr, body_kp_high_conf_counter = self.keypoint_counter(keypoint=keypoint)
 
-                    ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
+                    # Person 3D Coords
                     obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
                     print("3D Coords", obj_3d_cam_coords.x, obj_3d_cam_coords.y, obj_3d_cam_coords.z)
                     
@@ -630,11 +583,12 @@ class YoloPoseMain():
                     head_center.append(head_center_y)
                     head_center.append(head_center_x)
                     
-                    # obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=torso_center)
-                    # obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=head_center)
-                    # print("3D Coords", obj_3d_cam_coords.x, obj_3d_cam_coords.y, obj_3d_cam_coords.z)
-                    # obj_3d_cam_coords.x += 0.25
-                    
+                    # Person 3D Coords
+                    obj_3d_cam_head_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=head_center)
+                    # Person 3D Coords
+                    obj_3d_cam_torso_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=torso_center)
+                    # obj_3d_cam_torso_coords.x += 0.2 # this makes the torso a the center of the person body and not at the front of the person body, just an approximation
+                    print("3D Coords", obj_3d_cam_coords.x, obj_3d_cam_coords.y, obj_3d_cam_coords.z)
                     
                     # obj_3d_cam_coords = Point()
                     # obj_3d_cam_coords.x = 1.0
@@ -678,15 +632,34 @@ class YoloPoseMain():
                         point_cam.header.frame_id = camera_link
                         point_cam.point = obj_3d_cam_coords
 
+                        point_cam_head = PointStamped()
+                        point_cam_head.header.stamp = self.node.get_clock().now().to_msg()
+                        point_cam_head.header.frame_id = camera_link
+                        point_cam_head.point = obj_3d_cam_head_coords
+
+                        point_cam_torso = PointStamped()
+                        point_cam_torso.header.stamp = self.node.get_clock().now().to_msg()
+                        point_cam_torso.header.frame_id = camera_link
+                        point_cam_torso.point = obj_3d_cam_torso_coords
+
                         transformed_point = PointStamped()
+                        transformed_head_point = PointStamped()
+                        transformed_torso_point = PointStamped()
                         transformed_point_map = PointStamped()
+                        transformed_head_point_map = PointStamped()
+                        transformed_torso_point_map = PointStamped()
+
                         if transform is not None:
                             transformed_point = do_transform_point(point_cam, transform)
                             self.node.get_logger().info(f"Person in base_footprint frame: {transformed_point.point}")
+                            transformed_head_point = do_transform_point(point_cam_head, transform)
+                            transformed_torso_point = do_transform_point(point_cam_torso, transform)
 
                             if map_transform is not None:
                                 transformed_point_map = do_transform_point(transformed_point, map_transform)
                                 self.node.get_logger().info(f"Person in map frame: {transformed_point_map.point}")
+                                transformed_head_point_map = do_transform_point(transformed_head_point, transform)
+                                transformed_torso_point_map = do_transform_point(transformed_torso_point, transform)
 
                         center_comm_position = False
                         if -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD < transformed_point.point.x < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD and \
@@ -728,8 +701,8 @@ class YoloPoseMain():
                             new_person = DetectedPerson()
                             new_person = self.node.add_person_to_detectedperson_msg(boxes_id=box, keypoints_id=keypoint, face_bounding_box=face_bounding_box, is_face_bounding_box=is_cropped_face, arm_raised=hand_raised, \
                                                                                     object_coords_to_cam=point_cam.point, object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
-                                                                                    center_torso_person=(person_center_x, person_center_y), center_head_person=(head_center_x, head_center_y), \
-                                                                                    torso_localisation=None, head_localisation=None, \
+                                                                                    center_head_person=(head_center_x, head_center_y), head_coords_to_cam=point_cam_head.point, head_coords_to_base=transformed_head_point.point, head_coords_to_map=transformed_head_point_map.point, \
+                                                                                    center_torso_person=(person_center_x, person_center_y), torso_coords_to_cam=point_cam_torso.point, torso_coords_to_base=transformed_torso_point.point, torso_coords_to_map=transformed_torso_point_map.point, \
                                                                                     ethnicity=ethnicity, ethnicity_probability=ethnicity_probability, age_estimate=age_estimate, age_estimate_probability=age_estimate_probability, gender=gender, gender_probability=gender_probability, \
                                                                                     shirt_color=shirt_color, shirt_rgb=shirt_rgb, pants_color=pants_color, pants_rgb=pants_rgb, pointing_at=pointing_at, pointing_with_arm=pointing_with_arm, \
                                                                                     camera=camera, current_img=rgb_img)
@@ -1712,10 +1685,7 @@ class YoloPoseMain():
 
 ### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
     
-    ### localizacao torso e cabeça
-    # coordenadas point cloud cabeça
-    # coordenadas point cloud torso
-    # coordenadas point cloud pessoad
+    # coordenadas point cloud pessoas (keypoints)
 
     # room_location
     # furniture_location
