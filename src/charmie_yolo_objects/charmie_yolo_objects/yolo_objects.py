@@ -744,15 +744,14 @@ class YoloObjectsMain():
                             object_class = "Furniture"
 
                         ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
-                        # obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
-                        temp_coords = Point()
-                        temp_coords.x = 1.0
-                        temp_coords.y = 0.0
-                        temp_coords.z = 0.0
+                        obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
                         
                         ALL_CONDITIONS_MET = 1
 
-                        ########## MISSING HERE: CASE WHERE NO POINTS WERE AVALILABLE SO WE DONT KNOW HOW TO COMPUTE 3D ##########
+                        # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
+                        if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0:
+                            ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
+                            print ("REMOVED")
 
                         # checks whether the object confidence is above a selected level
                         if not box.conf >= MIN_CONF_NALUE:
@@ -766,7 +765,7 @@ class YoloObjectsMain():
                             point_cam = PointStamped()
                             point_cam.header.stamp = self.node.get_clock().now().to_msg()
                             point_cam.header.frame_id = camera_link
-                            point_cam.point = temp_coords
+                            point_cam.point = obj_3d_cam_coords
 
                             transformed_point = PointStamped()
                             transformed_point_map = PointStamped()

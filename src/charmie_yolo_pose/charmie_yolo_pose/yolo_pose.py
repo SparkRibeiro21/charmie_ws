@@ -1692,4 +1692,6 @@ class YoloPoseMain():
     # testar furniture_location
     # testar height
 
+    # testar yolo_objects bbox
+
 ### verificar flags do gui (missing Front_Close)
