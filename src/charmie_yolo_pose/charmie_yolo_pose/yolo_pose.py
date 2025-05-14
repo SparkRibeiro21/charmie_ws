@@ -370,13 +370,13 @@ class YoloPoseNode(Node):
         new_person.position_relative_torso = torso_coords_to_cam  # torso_coords_to_base
         new_person.position_absolute_torso = torso_coords_to_cam  # torso_coords_to_map
 
-
+        if new_person.position_relative_head.z != 0.0: # there is a correct transform for the head 3D coords
+            new_person.height = new_person.position_relative_head.z + 0.08 # average person middle of face to top of head distance
+        else:
+            new_person.height = 1.75 # should not happen, but this way the default value is an average height of a human being and not 0.0
         
-        """
-        new_person.height = head_localisation.z/1000 + 0.08 # average person middle of face to top of head distance
-        new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(person_abs_pos)
-        """
-
+        new_person.room_location, new_person.furniture_location = self.position_to_house_rooms_and_furniture(new_person.position_absolute)
+        
         new_person.pointing_at = pointing_at
         new_person.pointing_with_arm = pointing_with_arm
 
@@ -1687,8 +1687,9 @@ class YoloPoseMain():
     
     # coordenadas point cloud pessoas (keypoints)
 
-    # room_location
-    # furniture_location
-    # height
+    # testar as coords de pessoa, head e torso
+    # testar room_location
+    # testar furniture_location
+    # testar height
 
 ### verificar flags do gui (missing Front_Close)
