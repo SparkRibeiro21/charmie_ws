@@ -630,9 +630,11 @@ class YoloPoseMain():
                     head_center.append(head_center_y)
                     head_center.append(head_center_x)
                     
-                    # obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=torso_center)
-                    obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=head_center)
+                    obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=torso_center)
+                    # obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=head_center)
                     print("3D Coords", obj_3d_cam_coords.x, obj_3d_cam_coords.y, obj_3d_cam_coords.z)
+                    obj_3d_cam_coords.x += 0.25
+                    
                     
                     # obj_3d_cam_coords = Point()
                     # obj_3d_cam_coords.x = 1.0
@@ -845,6 +847,7 @@ class YoloPoseMain():
         
     def get_person_and_head_pixel(self, keypoint, box):
 
+        """
         # gets the torso u,v location
         # Conditions to safely select the pixel to calculate the person location 
         if keypoint.conf[0][self.node.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and \
@@ -856,9 +859,24 @@ class YoloPoseMain():
             person_center_x = int((keypoint.xy[0][self.node.SHOULDER_LEFT_KP][0] + keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][0] + keypoint.xy[0][self.node.HIP_LEFT_KP][0] + keypoint.xy[0][self.node.HIP_RIGHT_KP][0]) / 4)
             person_center_y = int((keypoint.xy[0][self.node.SHOULDER_LEFT_KP][1] + keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][1] + keypoint.xy[0][self.node.HIP_LEFT_KP][1] + keypoint.xy[0][self.node.HIP_RIGHT_KP][1]) / 4)
 
+        elif keypoint.conf[0][self.node.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE:
+
+            ### After the yolo update, i must check if the conf value of the keypoint
+            person_center_x = int((keypoint.xy[0][self.node.SHOULDER_LEFT_KP][0] + keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][0]) / 2)
+            person_center_y = int((keypoint.xy[0][self.node.SHOULDER_LEFT_KP][1] + keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][1]) / 2)
+
+        elif keypoint.conf[0][self.node.HIP_LEFT_KP] > MIN_KP_CONF_VALUE and \
+            keypoint.conf[0][self.node.HIP_RIGHT_KP] > MIN_KP_CONF_VALUE:
+
+            ### After the yolo update, i must check if the conf value of the keypoint
+            person_center_x = int((keypoint.xy[0][self.node.HIP_LEFT_KP][0] + keypoint.xy[0][self.node.HIP_RIGHT_KP][0]) / 2)
+            person_center_y = int((keypoint.xy[0][self.node.HIP_LEFT_KP][1] + keypoint.xy[0][self.node.HIP_RIGHT_KP][1]) / 2)
+
         else:
             person_center_x = int(box.xyxy[0][0]+box.xyxy[0][2])//2
             person_center_y = int(box.xyxy[0][1]+box.xyxy[0][3])//2
+        """
 
         # head center position 
         head_ctr = 0
@@ -892,7 +910,36 @@ class YoloPoseMain():
             head_center_x = int(box.xyxy[0][0]+box.xyxy[0][2])//2
             head_center_y = int(box.xyxy[0][1]*3+box.xyxy[0][3])//4
 
-        return person_center_x, person_center_y, head_center_x, head_center_y
+        # torso center position 
+        torso_ctr = 0
+        torso_center_x = 0
+        torso_center_y = 0
+        if keypoint.conf[0][self.node.SHOULDER_LEFT_KP] > MIN_KP_CONF_VALUE:
+            torso_center_x += int(keypoint.xy[0][self.node.SHOULDER_LEFT_KP][0])
+            torso_center_y += int(keypoint.xy[0][self.node.SHOULDER_LEFT_KP][1])
+            torso_ctr +=1
+        if keypoint.conf[0][self.node.SHOULDER_RIGHT_KP] > MIN_KP_CONF_VALUE:
+            torso_center_x += int(keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][0])
+            torso_center_y += int(keypoint.xy[0][self.node.SHOULDER_RIGHT_KP][1])
+            torso_ctr +=1
+        if keypoint.conf[0][self.node.HIP_LEFT_KP] > MIN_KP_CONF_VALUE:
+            torso_center_x += int(keypoint.xy[0][self.node.HIP_LEFT_KP][0])
+            torso_center_y += int(keypoint.xy[0][self.node.HIP_LEFT_KP][1])
+            torso_ctr +=1
+        if keypoint.conf[0][self.node.HIP_RIGHT_KP] > MIN_KP_CONF_VALUE:
+            torso_center_x += int(keypoint.xy[0][self.node.HIP_RIGHT_KP][0])
+            torso_center_y += int(keypoint.xy[0][self.node.HIP_RIGHT_KP][1])
+            torso_ctr +=1
+
+        if torso_ctr > 0:
+            torso_center_x = int(torso_center_x/torso_ctr)
+            torso_center_y = int(torso_center_y/torso_ctr)
+        else:
+            # this way there is an attemp of always having a keypoint as the torso, much more stable than center of bounding box
+            torso_center_x = head_center_x
+            torso_center_y = head_center_y
+
+        return torso_center_x, torso_center_y, head_center_x, head_center_y
         
     def keypoint_counter(self, keypoint):
     
