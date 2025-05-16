@@ -1,5 +1,6 @@
 # Select charmie arm ufactory mode movement and control variables 
 
-string command # the name of the command
-float32 adjust_position # one axis position adjustement
-float32[] pose # list of 6 variables (either the angle for each joint or x,y,z,ax,ay,az)
+string command                  # the name of the command
+float32[] linear_motion_pose    # list of 6 variables ( x, y, z, roll, pitch, yaw) for linear motion adjustement
+float32[] move_tool_line_pose   # list of 6 variables ( x, y, z, roll, pitch, yaw) for move tool line adjustement
+float32[] joint_motion_values   # list of 6 variables, angle of each joint
