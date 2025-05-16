@@ -666,7 +666,7 @@ class ArmUfactory(Node):
 			case 6:
 				self.finish_arm_movement_()
 
-	def initial_pose_to_ask_for_objects(self):
+	def initial_position_to_ask_for_objects(self):
 		match self.estado_tr:
 			case 0:
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
@@ -680,7 +680,7 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
-	def initial_pose_to_search_for_objects(self):
+	def initial_position_to_search_for_objects(self):
 		match self.estado_tr:
 			case 0:
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
@@ -2028,12 +2028,12 @@ class ArmUfactory(Node):
 			case  "hello":
 				self.hello()
 
-			case "initial_pose_to_ask_for_objects":
-				self.initial_pose_to_ask_for_objects()
+			case "initial_position_to_ask_for_objects":
+				self.initial_position_to_ask_for_objects()
 			case "ask_for_objects_to_initial_position":
 				self.ask_for_objects_to_initial_position()
-			case "initial_pose_to_search_for_objects":
-				self.initial_pose_to_search_for_objects()
+			case "initial_position_to_search_for_objects":
+				self.initial_position_to_search_for_objects()
 			case "search_for_objects_to_ask_for_objects":
 				self.search_for_objects_to_ask_for_objects()
 

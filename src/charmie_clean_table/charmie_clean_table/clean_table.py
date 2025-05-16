@@ -382,7 +382,7 @@ class TaskMain():
                 # self.robot.set_arm(command="open_dishwasher_rack", wait_for_end_of=True)
 
                 # JUST FOR DEBUG
-                # self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=False)
+                # self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=False)
                 # self.SELECTED_CUTLERY = ["Fork", "Knife"]
 
                 self.state = self.Place_cup

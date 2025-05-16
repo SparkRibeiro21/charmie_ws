@@ -802,7 +802,7 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=False)
 
-                self.set_arm(command="initial_pose_to_search_for_objects", wait_for_end_of=True)
+                self.set_arm(command="initial_position_to_search_for_objects", wait_for_end_of=True)
 
                 self.search_for_serve_breakfast_objects()
 
