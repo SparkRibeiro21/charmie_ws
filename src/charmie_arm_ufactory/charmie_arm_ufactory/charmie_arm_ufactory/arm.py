@@ -26,6 +26,7 @@ class ArmUfactory(Node):
 
 		# ARM SERVICES
 		self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
+		self.set_tool_position_client = self.create_client(MoveCartesian, '/xarm/set_tool_position')
 		self.set_joint_client = self.create_client(MoveJoint, '/xarm/set_servo_angle')
 		self.motion_enable_client = self.create_client(SetInt16ById, '/xarm/motion_enable')
 		self.set_mode_client = self.create_client(SetInt16, '/xarm/set_mode')
@@ -42,6 +43,9 @@ class ArmUfactory(Node):
 
 
 		while not self.set_position_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Set Position...")
+
+		while not self.set_tool_position_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Position...")
 
 		while not self.set_joint_client.wait_for_service(1.0):
@@ -231,8 +235,10 @@ class ArmUfactory(Node):
 		self.post_pick_cereals_tray_cornflakes_alternative = 		[-221.5, 277.3, 159.6, math.radians(-179.0), math.radians(-0.1), math.radians(-89.4)]							
 		self.placing_cereal_at_table_cornflakes_alternative = 		[-579.5, 150.0+height_adjust, 812.9, math.radians(40.6), math.radians(4.5), math.radians(-90.1)]
 		self.pos_placing_cereal_at_table_cornflakes_alternative = 	[-579.5,   0.0+height_adjust, 812.9, math.radians(40.6), math.radians(4.5), math.radians(-90.1)]
-  
 
+		### Test SET_TOOL_POSITION positions
+		self.set_tool_position_1 = [  100.0 , 0.0,  0.0, math.radians( 0.0), math.radians( 0.0), math.radians( 0.0)]
+		self.set_tool_position_2 = [ -100.0,  0.0,  0.0, math.radians( 0.0), math.radians( 0.0), math.radians( 0.0)]
 
 		# pour positions
 		self.new_cornflakes_pre_pick_tray_position = [-204.9, -51.0, -31.9, -30.2, 70.9, 253.9]
@@ -472,6 +478,20 @@ class ArmUfactory(Node):
 		self.future = self.set_position_client.call_async(position_values)
 		self.future.add_done_callback(partial(self.callback_service_tr))  
 
+	def set_tool_position_values_(self, pose=None, speed=200.0, acc=1000.0, wait=True, timeout=4.0):
+		
+		if pose is None:
+			pose = self.get_lower_order_position_linear
+
+		position_values = MoveCartesian.Request()
+		position_values.pose = pose
+		position_values.speed = float(speed)
+		position_values.acc = float(acc)
+		position_values.wait = wait
+		position_values.timeout = float(timeout)
+		self.future = self.set_tool_position_client.call_async(position_values)
+		self.future.add_done_callback(partial(self.callback_service_tr))  
+
 	def set_joint_values_(self, angles=None, speed=60.0, wait=True, radius=0.0):
 
 		if angles is None:
@@ -578,6 +598,28 @@ class ArmUfactory(Node):
 				self.set_joint_values_(angles=self.secondary_initial_position_debug, speed=20, wait=True)
 			case 3:
 				self.set_joint_values_(angles=self.initial_position, speed=20, wait=True)
+			case 4:
+				self.set_gripper_position_(pos=0.0, wait=False)
+			case 5:
+				self.get_gripper_position_()
+			case 6:
+				self.finish_arm_movement_()
+
+	def start_debug_move_tool_line_test(self):
+		
+		self.get_logger().info("INSIDE DEBUG")
+
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=2000)
+			case 1:
+				self.set_gripper_position_(pos=900.0, wait=True)
+			case 2:
+				self.set_tool_position_values_(pose=self.set_tool_position_1, speed=100, wait=True)
+				# self.set_joint_values_(angles=self.secondary_initial_position_debug, speed=20, wait=True)
+			case 3:
+				self.set_tool_position_values_(pose=self.set_tool_position_2, speed=100, wait=True)
+				# self.set_joint_values_(angles=self.initial_position, speed=20, wait=True)
 			case 4:
 				self.set_gripper_position_(pos=0.0, wait=False)
 			case 5:
@@ -1921,7 +1963,9 @@ class ArmUfactory(Node):
 			
 			# GENERIC
 			case "start_debug":
-				self.start_debug()
+				# self.start_debug()
+				self.start_debug_move_tool_line_test()
+
 			case  "hello":
 				self.hello()
 
