@@ -10,11 +10,11 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
+    "charmie_arm":              True,
     "charmie_audio":            False,
     "charmie_face":             False,
     "charmie_head_camera":      True,
-    "charmie_hand_camera":      False,
+    "charmie_hand_camera":      True,
     "charmie_base_camera":      False,
     "charmie_lidar":            False,
     "charmie_lidar_bottom":     False,
@@ -23,13 +23,13 @@ ros2_modules = {
     "charmie_low_level":        False,
     "charmie_navigation":       False,
     "charmie_nav2":             False,
-    "charmie_neck":             False,
+    "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         False,
-    "charmie_tracking":         True,
+    "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
-    "charmie_yolo_pose":        True,
+    "charmie_yolo_pose":        False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -60,7 +60,7 @@ class TaskMain():
         Final_State = 4
 
         # VARS ...
-        self.state = Continuous_tracking
+        self.state = Search_for_objects
 
         print("IN NEW MAIN")
 
@@ -113,16 +113,52 @@ class TaskMain():
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-30, -45], [0, -45], [30, -45]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_objects_hand=True, detect_objects_base=True)
+                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk"], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
                     conf = f"{o.confidence * 100:.0f}%"
-                    x_ = f"{o.position_absolute.x:4.2f}"
+                    '''x_ = f"{o.position_absolute.x:4.2f}"
                     y_ = f"{o.position_absolute.y:5.2f}"
-                    z_ = f"{o.position_absolute.z:5.2f}"
-                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({x_}, {y_}, {z_})")
-                    
+                    z_ = f"{o.position_absolute.z:5.2f}"'''
+                    cam_x_ = f"{o.position_cam.x:5.2f}"
+                    cam_y_ = f"{o.position_cam.y:5.2f}"
+                    cam_z_ = f"{o.position_cam.z:5.2f}"
+
+                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({cam_x_},{cam_y_},{cam_z_})")
+                    # ({x_}, {y_}, {z_})
+                    if o.object_name == "Milk":
+                        self.robot.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+                        self.robot.set_speech(filename="objects_names/milk", wait_for_end_of=True)
+                        self.robot.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
+                        print(f"Initial pose to search for objects")
+
+                        table_objects = self.robot.search_for_objects(tetas=[], delta_t=3.0, list_of_objects=["Milk"], use_arm=True, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+                        for t_o in table_objects:
+                            conf = f"{o.confidence * 100:.0f}%"
+                            #SAVE NEW X,Y,Z
+                            hand_x_ = f"{o.position_cam.x:5.2f}"
+                            hand_y_ = f"{o.position_cam.y:5.2f}"
+                            hand_z_ = f"{o.position_cam.z:5.2f}"
+
+                            print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({hand_x_},{hand_y_},{hand_z_})")
+                            if t_o.object_name=="Milk":
+                                #OPEN GRIPPER
+                                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                                #MOVE ARM IN THAT DIRECTION
+
+                                #CLOSE GRIPPER
+                                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                                #MOVE ARM TO INITIAL POSITION
+                                self.robot.set_arm(command="search_table_front_to_initial_pose", wait_for_end_of=True)
+                                print(f"Bring object to initial pose")
+                            else:
+                                self.robot.set_arm(command="search_table_front_to_initial_pose", wait_for_end_of=True)
+                                print(f"Could not bring object to initial pose")
+                    else:
+                        self.robot.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+
+
                 self.robot.set_rgb(CYAN+HALF_ROTATE)
                 time.sleep(0.5)
 
