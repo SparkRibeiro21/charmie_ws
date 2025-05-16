@@ -189,8 +189,8 @@ class ArmUfactory(Node):
 		### SEARCH FOR OBJECT ON TABLE FRONTAL JOINT VARIABLES###
 		self.initial_position_joints_Pedro =			[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
 		self.search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
-		### SEARCH FOR OBJECT ON TABLE FRONTAL JOINT VARIABLES###
-		self.search_table_front_joints =				[-164.2, 41.7, -123.3, -94, 105.7, 280.4]
+		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
+		self.search_table_top_joints =					[-164.2, 41.7, -123.3, -94, 105.7, 280.4]
 
 		### SERVE THE BREAKFAST VARIABLES: ###
 		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
@@ -674,12 +674,13 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_gripper_speed_(speed=5000)
-				self.set_gripper_position_(pos=0, wait=True)
 			case 1:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=50, wait=True)
+				self.set_gripper_position_(pos=0, wait=True)
 			case 2:
-				self.set_joint_values_(angles=self.search_table_front_joints, speed=10, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=50, wait=True)
 			case 3:
+				self.set_joint_values_(angles=self.search_table_front_joints, speed=10, wait=True)
+			case 4:
 				self.finish_arm_movement_()
 
 	def search_table_to_initial_pose(self):
@@ -698,10 +699,8 @@ class ArmUfactory(Node):
 			case 1:
 				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=50, wait=True)
 			case 2:
-				self.set_joint_values_(angles=self.search_table_front_joints, speed=10, wait=True)
+				self.set_joint_values_(angles=self.search_table_top_joints, speed=10, wait=True)
 			case 3:
-				self.set_gripper_position_(pos=800, wait=True)
-			case 4:
 				self.finish_arm_movement_()
 
 
@@ -2028,8 +2027,12 @@ class ArmUfactory(Node):
 			# SEARCH FOR OBJECT ON TABLE FRONTAL
 			case "initial_pose_to_search_table_front":
 				self.initial_pose_to_search_table_front()
-			case "search_table_front_to_initial_pose":
-				self.search_table_front_to_initial_pose()
+			case "search_table_to_initial_pose":
+				self.search_table_to_initial_pose()
+
+			# SEARCH FOR OBJECT ON TABLE TOP
+			case "initial_pose_to_search_table_top":
+				self.initial_pose_to_search_table_top()
 			
 			# if there is an error regarding a movement
 			case _:

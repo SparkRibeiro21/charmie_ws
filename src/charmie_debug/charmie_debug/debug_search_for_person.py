@@ -128,33 +128,14 @@ class TaskMain():
                     print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({cam_x_},{cam_y_},{cam_z_})")
                     # ({x_}, {y_}, {z_})
                     if o.object_name == "Milk":
+                        #self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=True)
                         self.robot.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
                         self.robot.set_speech(filename="objects_names/milk", wait_for_end_of=True)
                         self.robot.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
                         print(f"Initial pose to search for objects")
 
-                        table_objects = self.robot.search_for_objects(tetas=[], delta_t=3.0, list_of_objects=["Milk"], use_arm=True, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
-                        for t_o in table_objects:
-                            conf = f"{o.confidence * 100:.0f}%"
-                            #SAVE NEW X,Y,Z
-                            hand_x_ = f"{o.position_cam.x:5.2f}"
-                            hand_y_ = f"{o.position_cam.y:5.2f}"
-                            hand_z_ = f"{o.position_cam.z:5.2f}"
-
-                            print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({hand_x_},{hand_y_},{hand_z_})")
-                            if t_o.object_name=="Milk":
-                                #OPEN GRIPPER
-                                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
-                                #MOVE ARM IN THAT DIRECTION
-
-                                #CLOSE GRIPPER
-                                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
-                                #MOVE ARM TO INITIAL POSITION
-                                self.robot.set_arm(command="search_table_front_to_initial_pose", wait_for_end_of=True)
-                                print(f"Bring object to initial pose")
-                            else:
-                                self.robot.set_arm(command="search_table_front_to_initial_pose", wait_for_end_of=True)
-                                print(f"Could not bring object to initial pose")
+                        self.search_table_objects_hand()
+                        self.robot.set_speech(filename="objects_names/milk", wait_for_end_of=True)
                     else:
                         self.robot.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
 
@@ -189,3 +170,30 @@ class TaskMain():
 
             else:
                 pass
+
+    def search_table_objects_hand(self):
+        table_objects = self.robot.search_for_objects(tetas=[[0, 0]], delta_t=2.0, list_of_objects=["Milk"], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+        # print("LIST OF DETECTED OBJECTS:")
+        # print(len(table_objects))
+        for o in table_objects:
+            conf = f"{o.confidence * 100:.0f}%"
+            #SAVE NEW X,Y,Z
+            hand_x_ = f"{o.position_cam.x:5.2f}"
+            hand_y_ = f"{o.position_cam.y:5.2f}"
+            hand_z_ = f"{o.position_cam.z:5.2f}"
+
+            print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({hand_x_},{hand_y_},{hand_z_})")
+            if o.object_name == "Milk":
+                #OPEN GRIPPER
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                #MOVE ARM IN THAT DIRECTION
+
+                #CLOSE GRIPPER
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                #MOVE ARM TO INITIAL POSITION
+                self.robot.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                print(f"Bring object to initial pose")
+            else:
+                # self.robot.set_arm(command="search_table_front_to_initial_pose", wait_for_end_of=True)
+                print(f"Could not bring object to initial pose")
+
