@@ -1649,6 +1649,10 @@ class DebugVisualMain():
                 PERSON_BB = pygame.Rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio), int(p.box_width*self.camera_resize_ratio), int(p.box_height*self.camera_resize_ratio))
                 pygame.draw.rect(self.WIN, self.RED, PERSON_BB, width=self.BB_WIDTH)
 
+                if p.is_box_head:
+                    HEAD_BB = pygame.Rect(int(self.cams_initial_width+(p.box_head_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_head_top_left_y)*self.camera_resize_ratio), int(p.box_head_width*self.camera_resize_ratio), int(p.box_head_height*self.camera_resize_ratio))
+                    pygame.draw.rect(self.WIN, self.RED, HEAD_BB, width=self.BB_WIDTH)
+
                 if int(p.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
                     self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio), int(p.box_width*self.camera_resize_ratio), 30/2, self.RED, 85)
                     self.draw_text("id:"+str(p.index)+" "+str(int(round(p.confidence,2)*100))+"%", self.text_font_t, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio))
@@ -1700,6 +1704,12 @@ class DebugVisualMain():
                 self.draw_circle_keypoint(p.kp_ankle_left_conf,     p.kp_ankle_left_x,      p.kp_ankle_left_y,      self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS, camera_height)
                 self.draw_circle_keypoint(p.kp_ankle_right_conf,    p.kp_ankle_right_x,     p.kp_ankle_right_y,     self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS, camera_height)
                 
+                # add special keypoints for torso and head filtered pixel
+                self.draw_circle_keypoint(1.0, p.body_center_x, p.body_center_y, self.BLACK, 0.0, 9, camera_height)
+                self.draw_circle_keypoint(1.0, p.body_center_x, p.body_center_y, self.RED, 0.0, 5, camera_height)
+                self.draw_circle_keypoint(1.0, p.head_center_x, p.head_center_y, self.BLACK, 0.0, 9, camera_height)
+                self.draw_circle_keypoint(1.0, p.head_center_x, p.head_center_y, self.RED, 0.0, 5, camera_height)
+
                 self.check_face_for_characteristics(p, MIN_DRAW_CONF, camera_height)
 
     def draw_circle_keypoint(self, conf, x, y, color, min_draw_conf, circle_radius, camera_height):

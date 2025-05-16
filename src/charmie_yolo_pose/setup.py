@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+		"yolo_pose_pre_update_04_2025 = charmie_yolo_pose.yolo_pose_pre_update_04_2025:main",
 		"yolo_pose = charmie_yolo_pose.yolo_pose:main"
         ],
     },
