@@ -75,11 +75,6 @@ class ArmUfactory(Node):
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
 		
-
-		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
-		
-		print("Bool TR Service is ready")
-
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()
 		self.joint_values_req = MoveJoint.Request()
@@ -99,13 +94,33 @@ class ArmUfactory(Node):
 
 		# initial debug movement 
 		self.next_arm_movement = "start_debug"
-		self.joint_motion_values = []
-		self.move_tool_line_pose = []
-		self.linear_motion_pose  = []
+		self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 		self.setup()
 		print('---------')
 		self.movement_selection()
+
+		# this code forces the ROS2 component to wait for the models initialization with an empty frame, so that when turned ON does spend time with initializations and sends detections imediatly 
+		# Allocates the memory necessary for each model, this takes some seconds, by doing this in the first frame, everytime one of the models is called instantly responde instead of loading the model
+		self.finished_setup_movement = False
+        
+		self.timer = self.create_timer(0.1, self.timer_callback)
+
+	# This type of structure was done to make sure the arm finishes the debug movement and only after the service was created, 
+	# Because other nodes use this service to make sure arm is ready to work, and there were some conflicts with receiving commands
+	# while initializing the models, this ways we have a timer that checks when the yolo models finished initializing and 
+	# only then creates the service. Not common but works.
+	def timer_callback(self):
+		if self.finished_setup_movement:
+			self.temp_activate_service()
+			self.get_logger().info('Condition met, destroying timer.')
+			self.timer.cancel()  # Cancel the timer
+
+	def temp_activate_service(self):
+		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
+		print("Bool TR Service is ready")
 
 
 	def arm_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
@@ -130,7 +145,7 @@ class ArmUfactory(Node):
 		self.movement_selection()
 		# this is used when a wrong command is received
 		if self.wrong_movement_received:
-			self.get_logger().error(f"NO AERM MOVEMENT NAMED: {move}")
+			self.get_logger().error(f"NO ARM MOVEMENT NAMED: {move}")
 			self.wrong_movement_received = False
 			temp = Bool()
 			temp.data = False
@@ -529,6 +544,10 @@ class ArmUfactory(Node):
 		temp.data = True
 		self.flag_arm_finish_publisher.publish(temp)
 		self.estado_tr = 0
+		self.finished_setup_movement = True
+		self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		self.get_logger().info("FINISHED MOVEMENT")	
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
@@ -709,6 +728,7 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_position_values_(pose=self.linear_motion_pose, speed=50, wait=True)
+				self.get_logger().info(f"T1: {self.linear_motion_pose}")
 			case 1:
 				self.finish_arm_movement_()
 
@@ -716,6 +736,8 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_tool_position_values_(pose=self.move_tool_line_pose, speed=50, wait=True)
+				# self.move_tool_line_pose.clear()
+				self.get_logger().info(f"T2: {self.move_tool_line_pose}")
 			case 1:
 				self.finish_arm_movement_()
 
@@ -723,6 +745,8 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_joint_values_(angles=self.joint_motion_values, speed=25, wait=True)
+				# self.joint_motion_values.clear()
+				self.get_logger().info(f"T3: {self.joint_motion_values}")
 			case 1:
 				self.finish_arm_movement_()
 
