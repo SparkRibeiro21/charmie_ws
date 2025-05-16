@@ -141,15 +141,34 @@ class ArmUfactory(Node):
 		self.joint_motion_values = move.joint_motion_values
 		self.move_tool_line_pose = move.move_tool_line_pose
 		self.linear_motion_pose  = move.linear_motion_pose
-
-		self.movement_selection()
-		# this is used when a wrong command is received
-		if self.wrong_movement_received:
-			self.get_logger().error(f"NO ARM MOVEMENT NAMED: {move}")
+		
+		# special case where it checks if an adjust movement has a cleared list received.
+		if self.next_arm_movement == "adjust_joint_motion" and all(x == 0 for x in self.joint_motion_values) or \
+			self.next_arm_movement == "adjust_move_tool_line" and all(x == 0 for x in self.move_tool_line_pose) or \
+			self.next_arm_movement == "adjust_linear_motion" and all(x == 0 for x in self.linear_motion_pose):
+			
+			self.get_logger().error(f"INCORRECT ADJUST MOVEMENT RECEIVED: {move}")
 			self.wrong_movement_received = False
 			temp = Bool()
 			temp.data = False
 			self.flag_arm_finish_publisher.publish(temp)
+			self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		
+		else:
+
+			self.movement_selection()
+			# this is used when a wrong command is received
+			if self.wrong_movement_received:
+				self.get_logger().error(f"NO ARM MOVEMENT NAMED: {move}")
+				self.wrong_movement_received = False
+				temp = Bool()
+				temp.data = False
+				self.flag_arm_finish_publisher.publish(temp)
+				self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+				self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+				self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 
 	def setup(self):
@@ -728,7 +747,6 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_position_values_(pose=self.linear_motion_pose, speed=50, wait=True)
-				self.get_logger().info(f"T1: {self.linear_motion_pose}")
 			case 1:
 				self.finish_arm_movement_()
 
@@ -736,8 +754,6 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_tool_position_values_(pose=self.move_tool_line_pose, speed=50, wait=True)
-				# self.move_tool_line_pose.clear()
-				self.get_logger().info(f"T2: {self.move_tool_line_pose}")
 			case 1:
 				self.finish_arm_movement_()
 
@@ -745,8 +761,6 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_joint_values_(angles=self.joint_motion_values, speed=25, wait=True)
-				# self.joint_motion_values.clear()
-				self.get_logger().info(f"T3: {self.joint_motion_values}")
 			case 1:
 				self.finish_arm_movement_()
 
