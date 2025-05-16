@@ -99,7 +99,9 @@ class ArmUfactory(Node):
 
 		# initial debug movement 
 		self.next_arm_movement = "start_debug"
-		self.adjust_position = 0.0
+		self.joint_motion_values = []
+		self.move_tool_line_pose = []
+		self.linear_motion_pose  = []
 
 		self.setup()
 		print('---------')
@@ -121,7 +123,9 @@ class ArmUfactory(Node):
 	def arm_command_callback(self, move: ArmController):
 		self.get_logger().info(f"Received movement selection: {move}")
 		self.next_arm_movement = move.command
-		self.adjust_position = move.adjust_position
+		self.joint_motion_values = move.joint_motion_values
+		self.move_tool_line_pose = move.move_tool_line_pose
+		self.linear_motion_pose  = move.linear_motion_pose
 
 		self.movement_selection()
 		# this is used when a wrong command is received
@@ -606,9 +610,6 @@ class ArmUfactory(Node):
 				self.finish_arm_movement_()
 
 	def start_debug_move_tool_line_test(self):
-		
-		self.get_logger().info("INSIDE DEBUG")
-
 		match self.estado_tr:
 			case 0:
 				self.set_gripper_speed_(speed=2000)
@@ -704,6 +705,26 @@ class ArmUfactory(Node):
 			case 2:
 				self.finish_arm_movement_()
 
+	def adjust_linear_motion(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.linear_motion_pose, speed=50, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def adjust_move_tool_line(self):
+		match self.estado_tr:
+			case 0:
+				self.set_tool_position_values_(pose=self.move_tool_line_pose, speed=50, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def adjust_joint_motion(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.joint_motion_values, speed=25, wait=True)
+			case 1:
+				self.finish_arm_movement_()
 
 	### SERVE THE BREAKFAST ARM MOVEMENTS ###
 
@@ -1963,8 +1984,8 @@ class ArmUfactory(Node):
 			
 			# GENERIC
 			case "start_debug":
-				# self.start_debug()
-				self.start_debug_move_tool_line_test()
+				self.start_debug()
+				# self.start_debug_move_tool_line_test()
 
 			case  "hello":
 				self.hello()
@@ -1989,7 +2010,14 @@ class ArmUfactory(Node):
 			case "open_gripper":
 				self.open_gripper()
 
-			
+			# ADJUSTS MOVEMENTS FROM ARMCONTROLLER
+			case "adjust_linear_motion":
+				self.adjust_linear_motion()
+			case "adjust_move_tool_line":
+				self.adjust_move_tool_line()
+			case "adjust_joint_motion":
+				self.adjust_joint_motion()
+
 			# SERVE BREAKFAST	
 			case "place_bowl_table":
 				self.place_bowl_table()

@@ -29,7 +29,7 @@ ros2_modules = {
     "charmie_neck":             False,
     "charmie_obstacles":        False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -85,6 +85,30 @@ class TaskMain():
 
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
+
+
+                pose1 = [ 200.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                pose2 = [-200.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                pose3 = [-183.0, 83.4, -65.0, -0.5, -14.7, 270.0]
+                pose4 = [-508.7, 19.0, -365.0, -176.8, 0.5, -92.5]
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=pose1, wait_for_end_of=True)
+                print("DONE")
+                time.sleep(3.0)
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=pose2, wait_for_end_of=True)
+                print("DONE")
+                time.sleep(3.0)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values=pose3, wait_for_end_of=True)
+                print("DONE")
+                time.sleep(3.0)
+                self.robot.set_arm(command="adjust_linear_motion", linear_motion_pose=pose4, wait_for_end_of=True)
+                print("DONE")
+                time.sleep(3.0)
+                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                
+
+                while True:
+                    pass
                 
 
                 # INITIAL STATE
