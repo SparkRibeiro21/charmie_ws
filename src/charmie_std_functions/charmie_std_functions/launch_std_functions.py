@@ -250,12 +250,6 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
-        self.point_cloud = Node(package='charmie_point_cloud',
-                            executable='point_cloud',
-                            name='point_cloud',
-                            emulate_tty=True
-                            )
-        
         self.lidar = Node(package='charmie_lidar_hokuyo',
                             executable='lidar_hokuyo',
                             name='lidar_hokuyo',
