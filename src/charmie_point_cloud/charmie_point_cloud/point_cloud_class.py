@@ -233,8 +233,8 @@ class PointCloud():
             
         depth_frame_res_mask = depth_img.copy()
         depth_frame_res_mask[b_mask == 0] = [0]
-        cv2.imwrite('output_image.png', depth_frame_res_mask)
-        cv2.imwrite('output_image1.png', b_mask)
+        # v2.imwrite('output_image.png', depth_frame_res_mask)
+        # cv2.imwrite('output_image1.png', b_mask)
 
         ### OVERALL THE SAME PROCESS IS USED AS IN MASK, HOWEVER HERE WE HAVE A SPECIAL CASE:
         ### IS NOT NOT SENT A MASK BUT A LIST OF MASKS OF ALL THE CONNECTIONS BETWEEN KP

@@ -26,8 +26,8 @@ ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects peop
 MIN_PERSON_CONF_VALUE = 0.3                          # defines the minimum confidence value to be considered a person
 MIN_KP_TO_DETECT_PERSON = 4                          # this parameter does not consider the four legs keypoints 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False            # only detects person right in front of the robot both on the x and y axis 
-ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 0.6
-ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 1.8
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 1.8
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 0.6
 ONLY_DETECT_PERSON_ARM_RAISED = False                # if True only detects people with their arm raised or waving 
 GET_CHARACTERISTICS = False
 
@@ -462,7 +462,7 @@ class YoloPoseMain():
 
         match camera:
             case "head":
-                child_link = 'D455_head_link'
+                child_link = 'D455_head_color_frame'
                 parent_link = 'base_footprint'
             case "hand":
                 child_link = 'D405_hand_color_frame'
@@ -661,6 +661,7 @@ class YoloPoseMain():
                                 transformed_head_point_map = do_transform_point(transformed_head_point, transform)
                                 transformed_torso_point_map = do_transform_point(transformed_torso_point, transform)
 
+                        # the x axis has the negative component to allow the use of this flag when charmie is checking if it is being followed 
                         center_comm_position = False
                         if -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD < transformed_point.point.x < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD and \
                             -ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD < transformed_point.point.y < ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD:
@@ -1683,15 +1684,14 @@ class YoloPoseMain():
                 self.node.ACTIVATE_YOLO_POSE = False
                 self.node.yolo_models_initialized = True
 
-### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
-    
 # testar as coords de pessoa, head e torso
 # testar room_location
 # testar furniture_location
 # testar height
 
 # testar yolo_objects bbox
+# testar coordenadas point cloud pessoas (keypoints)
 
-### verificar flags do gui (missing Front_Close)
+# percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
 
-# coordenadas point cloud pessoas (keypoints)
+# testar flags do gui (missing Front_Close)
