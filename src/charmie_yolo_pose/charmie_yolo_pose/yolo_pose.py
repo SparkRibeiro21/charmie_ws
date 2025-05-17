@@ -573,7 +573,7 @@ class YoloPoseMain():
                     legs_ctr, body_kp_high_conf_counter = self.keypoint_counter(keypoint=keypoint)
 
                     # Person 3D Coords
-                    obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
+                    obj_3d_cam_coords = self.node.point_cloud.convert_pose_keypoints_to_3d_point(depth_img=depth_frame, camera=camera, keypoints=keypoint, min_kp_conf_value=MIN_KP_CONF_VALUE)
                     print("3D Coords", obj_3d_cam_coords.x, obj_3d_cam_coords.y, obj_3d_cam_coords.z)
                     
                     torso_center = []
@@ -1685,13 +1685,13 @@ class YoloPoseMain():
 
 ### percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
     
-    # coordenadas point cloud pessoas (keypoints)
+# testar as coords de pessoa, head e torso
+# testar room_location
+# testar furniture_location
+# testar height
 
-    # testar as coords de pessoa, head e torso
-    # testar room_location
-    # testar furniture_location
-    # testar height
-
-    # testar yolo_objects bbox
+# testar yolo_objects bbox
 
 ### verificar flags do gui (missing Front_Close)
+
+# coordenadas point cloud pessoas (keypoints)

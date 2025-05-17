@@ -170,28 +170,126 @@ class PointCloud():
 
         # converts the bounding box into a mask and does the same calculations for a segmentation mask
         # The goal is to have everything working with segmentation masks and not bounding boxes.
-        # But we leave this here in case it is necessary
         point3d = self.convert_mask_to_3dpoint(depth_img, camera, mask)
 
         return point3d
     
-    def convert_pose_keypoints_to_3d_point(self, depth_img, camera, keypoints):
-        pass
+    def convert_pose_keypoints_to_3d_point(self, depth_img, camera, keypoints, min_kp_conf_value):
 
-        # options:
-        # - use the lines between keypoints that have confidence above threshold and use pixels from those lines
-        # - create a mask of the torso positions, and does the same process as convert_to_bbox
+        # aaa = time.time()
 
+        match camera:
+            case "head":
+                camera_used = self.head_camera
+            case "hand":
+                camera_used = self.hand_camera
+            case "base":
+                camera_used = self.base_camera
+
+        NOSE_KP = 0
+        EYE_LEFT_KP = 1                        
+        EYE_RIGHT_KP = 2
+        EAR_LEFT_KP = 3
+        EAR_RIGHT_KP = 4
+        SHOULDER_LEFT_KP = 5
+        SHOULDER_RIGHT_KP = 6
+        ELBOW_LEFT_KP = 7
+        ELBOW_RIGHT_KP = 8
+        WRIST_LEFT_KP = 9
+        WRIST_RIGHT_KP = 10
+        HIP_LEFT_KP = 11
+        HIP_RIGHT_KP = 12
+        KNEE_LEFT_KP = 13
+        KNEE_RIGHT_KP = 14
+        ANKLE_LEFT_KP = 15
+        ANKLE_RIGHT_KP = 16
+
+        masks = []
+
+        masks.append(self.convert_keypopints_to_mask(keypoints, [NOSE_KP, EYE_LEFT_KP, EYE_RIGHT_KP], min_kp_conf_value))
+        masks.append(self.convert_keypopints_to_mask(keypoints, [NOSE_KP, EYE_LEFT_KP, EAR_LEFT_KP], min_kp_conf_value))
+        masks.append(self.convert_keypopints_to_mask(keypoints, [NOSE_KP, EYE_RIGHT_KP, EAR_RIGHT_KP], min_kp_conf_value))
+
+        masks.append(self.convert_keypopints_to_mask(keypoints, [SHOULDER_LEFT_KP, SHOULDER_RIGHT_KP, HIP_RIGHT_KP, HIP_LEFT_KP], min_kp_conf_value))
+
+        masks.append(self.convert_keypopints_to_mask(keypoints, [SHOULDER_LEFT_KP, ELBOW_LEFT_KP], min_kp_conf_value))
+        masks.append(self.convert_keypopints_to_mask(keypoints, [ELBOW_LEFT_KP, WRIST_LEFT_KP], min_kp_conf_value))
+        masks.append(self.convert_keypopints_to_mask(keypoints, [SHOULDER_RIGHT_KP, ELBOW_RIGHT_KP], min_kp_conf_value))
+        masks.append(self.convert_keypopints_to_mask(keypoints, [ELBOW_RIGHT_KP, WRIST_RIGHT_KP], min_kp_conf_value))
+
+        masks.append(self.convert_keypopints_to_mask(keypoints, [HIP_LEFT_KP, KNEE_LEFT_KP], min_kp_conf_value))
+        masks.append(self.convert_keypopints_to_mask(keypoints, [KNEE_LEFT_KP, ANKLE_LEFT_KP], min_kp_conf_value))
+        masks.append(self.convert_keypopints_to_mask(keypoints, [HIP_RIGHT_KP, KNEE_RIGHT_KP], min_kp_conf_value))
+        masks.append(self.convert_keypopints_to_mask(keypoints, [KNEE_RIGHT_KP, ANKLE_RIGHT_KP], min_kp_conf_value))
+        
+        b_mask = np.zeros(depth_img.shape[:2], np.uint8) # creates new empty window
+        
+        for m in masks:
+            if m.size > 0:
+                contour = m
+                contour = contour.astype(np.int32)
+                contour = contour.reshape(-1, 1, 2)
+                cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED) # creates mask window with just the inside pixesl of the detected objects
+            
+        depth_frame_res_mask = depth_img.copy()
+        depth_frame_res_mask[b_mask == 0] = [0]
+        cv2.imwrite('output_image.png', depth_frame_res_mask)
+        cv2.imwrite('output_image1.png', b_mask)
+
+        ### OVERALL THE SAME PROCESS IS USED AS IN MASK, HOWEVER HERE WE HAVE A SPECIAL CASE:
+        ### IS NOT NOT SENT A MASK BUT A LIST OF MASKS OF ALL THE CONNECTIONS BETWEEN KP
+        non_zero_indices = np.nonzero(depth_frame_res_mask)
+        non_zero_values = depth_frame_res_mask[non_zero_indices] 
+        point3d = Point()
+
+        if non_zero_values.size:
+
+            # depth_average = np.mean(non_zero_values)
+            depth_median = np.median(non_zero_values)
+            depth = depth_median
+            u = np.mean(non_zero_indices[0])
+            v = np.mean(non_zero_indices[1])
+            # print("avg np:", depth, u, v)
+
+            point3d.x = float(depth/1000)
+            point3d.y = -float(((v - camera_used.cx) * depth / camera_used.fx)/1000)
+            point3d.z = -float(((u - camera_used.cy) * depth / camera_used.fy)/1000)
+
+        # else: # sends the point as x:0, y:0, z:0 
+            # there are no elements on the non_zero_indices from the mask
+
+        # print("PC TIME:", time.time() - aaa)
+
+        return point3d
     
     
-    
-    
-    
-    
-    
-    
-    
-    
+    def convert_keypopints_to_mask(self, keypoints, list_of_kp_for_mask, min_kp_conf_value):
+        
+        filtered_list_of_kp_for_mask = []
+        mask_list = []
+
+        for kp in list_of_kp_for_mask:
+            if keypoints.conf[0][kp] > min_kp_conf_value:
+                filtered_list_of_kp_for_mask.append(kp)
+
+        if len(filtered_list_of_kp_for_mask) >= 2:
+
+            # goes through all elements
+            for kp in filtered_list_of_kp_for_mask:
+                x = int(keypoints.xy[0][kp][0])
+                y = int(keypoints.xy[0][kp][1])
+                mask_list.append([x, y])
+
+            # adds the first element again
+            x = int(keypoints.xy[0][filtered_list_of_kp_for_mask[0]][0])
+            y = int(keypoints.xy[0][filtered_list_of_kp_for_mask[0]][1])
+            mask_list.append([x, y])
+        # otherwise returns an empty mask which is removed whn checking .size > 0
+
+        mask = np.array(mask_list)
+        return mask
+
+
     
     
     
