@@ -26,7 +26,7 @@ ONLY_DETECT_PERSON_LEGS_VISIBLE = False              # if True only detects peop
 MIN_PERSON_CONF_VALUE = 0.3                          # defines the minimum confidence value to be considered a person
 MIN_KP_TO_DETECT_PERSON = 4                          # this parameter does not consider the four legs keypoints 
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT = False            # only detects person right in front of the robot both on the x and y axis 
-ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 1.8
+ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD = 1.5
 ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD = 0.6
 ONLY_DETECT_PERSON_ARM_RAISED = False                # if True only detects people with their arm raised or waving 
 GET_CHARACTERISTICS = False
@@ -353,25 +353,21 @@ class YoloPoseNode(Node):
         # Person Coordinates
         # print(object_coords_to_cam)
         new_person.position_cam = object_coords_to_cam
-        # print(object_coords_to_base)
-        # new_person.position_relative = object_coords_to_base
-        new_person.position_relative = object_coords_to_cam
-        # print(object_coords_to_map)
-        # new_person.position_absolute = object_coords_to_map
-        new_person.position_absolute = object_coords_to_cam
+        new_person.position_relative = object_coords_to_base
+        new_person.position_absolute = object_coords_to_map
 
         # Head Coordinates
         new_person.position_cam_head = head_coords_to_cam
-        new_person.position_relative_head = head_coords_to_cam  # head_coords_to_base
-        new_person.position_absolute_head = head_coords_to_cam  # head_coords_to_map
+        new_person.position_relative_head = head_coords_to_base
+        new_person.position_absolute_head = head_coords_to_map
 
         # Torso Coordinates
         new_person.position_cam_torso = torso_coords_to_cam
-        new_person.position_relative_torso = torso_coords_to_cam  # torso_coords_to_base
-        new_person.position_absolute_torso = torso_coords_to_cam  # torso_coords_to_map
+        new_person.position_relative_torso = torso_coords_to_base
+        new_person.position_absolute_torso = torso_coords_to_map
 
         if new_person.position_relative_head.z != 0.0: # there is a correct transform for the head 3D coords
-            new_person.height = new_person.position_relative_head.z + 0.08 # average person middle of face to top of head distance
+            new_person.height = new_person.position_relative_head.z + 0.15 # average person middle of face to top of head distance
         else:
             new_person.height = 1.75 # should not happen, but this way the default value is an average height of a human being and not 0.0
         
@@ -658,8 +654,8 @@ class YoloPoseMain():
                             if map_transform is not None:
                                 transformed_point_map = do_transform_point(transformed_point, map_transform)
                                 self.node.get_logger().info(f"Person in map frame: {transformed_point_map.point}")
-                                transformed_head_point_map = do_transform_point(transformed_head_point, transform)
-                                transformed_torso_point_map = do_transform_point(transformed_torso_point, transform)
+                                transformed_head_point_map = do_transform_point(transformed_head_point, map_transform)
+                                transformed_torso_point_map = do_transform_point(transformed_torso_point, map_transform)
 
                         # the x axis has the negative component to allow the use of this flag when charmie is checking if it is being followed 
                         center_comm_position = False
@@ -1683,15 +1679,3 @@ class YoloPoseMain():
                 self.node.new_head_rgb = False
                 self.node.ACTIVATE_YOLO_POSE = False
                 self.node.yolo_models_initialized = True
-
-# testar as coords de pessoa, head e torso
-# testar room_location
-# testar furniture_location
-# testar height
-
-# testar yolo_objects bbox
-# testar coordenadas point cloud pessoas (keypoints)
-
-# percorrer todas as variaveis do DetectedPErson e confirmar que está tudo ok.
-
-# testar flags do gui (missing Front_Close)

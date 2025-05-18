@@ -1735,14 +1735,18 @@ class DebugVisualMain():
                 x2 = max(p.kp_shoulder_right_x, p.kp_shoulder_left_x, p.kp_nose_x, p.kp_eye_right_x, p.kp_eye_left_x)
                 x_width = x2-x1
             
-                self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+30/2), int(p.box_width/2*self.camera_resize_ratio), 6*(30/2), self.RED, 85)
-                self.draw_text(str(p.gender), self.text_font, self.BLACK,          int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+1*(30/2)))
-                self.draw_text(str(p.ethnicity), self.text_font, self.BLACK,       int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+2*(30/2)))
-                self.draw_text(str(p.age_estimate), self.text_font, self.BLACK,    int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+3*(30/2)))
-                self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+4*(30/2)))
-                self.draw_text(str(p.shirt_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+5*(30/2)))
-                self.draw_text(str(p.pants_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+6*(30/2)))
+                self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+30/2), int(p.box_width/2*self.camera_resize_ratio), 9*(30/2), self.RED, 85)
+                self.draw_text(str(p.gender), self.text_font, self.BLACK,                               int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+1*(30/2)))
+                self.draw_text(str(p.ethnicity), self.text_font, self.BLACK,                            int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+2*(30/2)))
+                self.draw_text(str(p.age_estimate), self.text_font, self.BLACK,                         int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+3*(30/2)))
+                self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK,                      int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+4*(30/2)))
+                self.draw_text(str(p.shirt_color), self.text_font, self.BLACK,                          int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+5*(30/2)))
+                self.draw_text(str(p.pants_color), self.text_font, self.BLACK,                          int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+6*(30/2)))
+                self.draw_text(str(p.room_location), self.text_font, self.BLACK,                        int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+7*(30/2)))
+                self.draw_text(str(p.furniture_location), self.text_font, self.BLACK,                   int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+8*(30/2)))
+                self.draw_text(str(p.pointing_at+" "+p.pointing_with_arm), self.text_font, self.BLACK,  int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+9*(30/2)))
             
+
     def draw_object_detections(self, camera_select, camera_id):
 
         if camera_select == "top":
