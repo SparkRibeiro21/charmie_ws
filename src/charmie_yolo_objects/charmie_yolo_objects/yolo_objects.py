@@ -736,8 +736,8 @@ class YoloObjectsMain():
                             object_name = self.node.furniture_class_names[int(box.cls[0])]
                             object_class = "Furniture"
 
-                        ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
                         obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
+                        object_2d_orientation = 0.0 # in bounding box mode, there is no 2D orientation calculation
                         
                         ALL_CONDITIONS_MET = 1
 
@@ -754,7 +754,6 @@ class YoloObjectsMain():
                         # if the object detection passes all selected conditions, the detected object is added to the publishing list
                         if ALL_CONDITIONS_MET:
 
-                            ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
                             point_cam = PointStamped()
                             point_cam.header.stamp = self.node.get_clock().now().to_msg()
                             point_cam.header.frame_id = camera_link
@@ -772,7 +771,8 @@ class YoloObjectsMain():
 
                             new_object = DetectedObject()
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
-                                                                                    object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img)
+                                                                                    object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
+                                                                                    object_2d_orientation=object_2d_orientation, camera=camera, current_img=rgb_img)
                             yolov8_obj_filtered.objects.append(new_object)
 
         # self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")

@@ -593,7 +593,6 @@ class YoloPoseMain():
                     
                     ALL_CONDITIONS_MET = 1
 
-                    ########## MISSING HERE: CASE WHERE NO POINTS WERE AVALILABLE SO WE DONT KNOW HOW TO COMPUTE 3D ##########
                     # no mask depth points were available, so it was not possible to calculate x,y,z coordiantes
                     if obj_3d_cam_coords.x == 0 and obj_3d_cam_coords.y == 0 and obj_3d_cam_coords.z == 0:
                         ALL_CONDITIONS_MET = ALL_CONDITIONS_MET*0
@@ -622,7 +621,6 @@ class YoloPoseMain():
                     # if the person detection passes all selected conditions, the detected person is added to the publishing list
                     if ALL_CONDITIONS_MET:
 
-                        ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
                         point_cam = PointStamped()
                         point_cam.header.stamp = self.node.get_clock().now().to_msg()
                         point_cam.header.frame_id = camera_link
