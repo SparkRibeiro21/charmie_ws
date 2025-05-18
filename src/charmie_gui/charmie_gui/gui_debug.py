@@ -1821,6 +1821,29 @@ class DebugVisualMain():
                 pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
                 self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
 
+            ### draw object 2D orientation
+            if o.orientation is not None:
+                # Convert orientation to radians
+                theta_rad = math.radians(o.orientation)
+
+                # Compute center position (already given)
+                if camera_id == "base":
+                    center_x = int(self.cams_initial_width + (self.LEFT_PAD + o.box_center_x) * self.camera_resize_ratio)
+                else:
+                    center_x = int(self.cams_initial_width + o.box_center_x * self.camera_resize_ratio)
+
+                center_y = int(camera_height + o.box_center_y * self.camera_resize_ratio)
+
+                line_length = 30*self.camera_resize_ratio
+
+                x_beg = int(center_x - line_length * math.cos(theta_rad))
+                y_beg = int(center_y - line_length * math.sin(theta_rad))
+                x_end = int(center_x + line_length * math.cos(theta_rad))
+                y_end = int(center_y + line_length * math.sin(theta_rad))
+
+                # Draw the orientation line (red color, width 2)
+                pygame.draw.line(self.WIN, (255, 255, 255), (x_beg, y_beg), (x_end, y_end), 4)
+
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
 
