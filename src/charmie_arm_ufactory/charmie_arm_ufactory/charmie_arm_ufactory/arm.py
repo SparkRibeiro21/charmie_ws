@@ -26,6 +26,7 @@ class ArmUfactory(Node):
 
 		# ARM SERVICES
 		self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
+		self.set_tool_position_client = self.create_client(MoveCartesian, '/xarm/set_tool_position')
 		self.set_joint_client = self.create_client(MoveJoint, '/xarm/set_servo_angle')
 		self.motion_enable_client = self.create_client(SetInt16ById, '/xarm/motion_enable')
 		self.set_mode_client = self.create_client(SetInt16, '/xarm/set_mode')
@@ -42,6 +43,9 @@ class ArmUfactory(Node):
 
 
 		while not self.set_position_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Set Position...")
+
+		while not self.set_tool_position_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Position...")
 
 		while not self.set_joint_client.wait_for_service(1.0):
@@ -71,11 +75,6 @@ class ArmUfactory(Node):
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
 		
-
-		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
-		
-		print("Bool TR Service is ready")
-
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()
 		self.joint_values_req = MoveJoint.Request()
@@ -95,11 +94,33 @@ class ArmUfactory(Node):
 
 		# initial debug movement 
 		self.next_arm_movement = "start_debug"
-		self.adjust_position = 0.0
+		self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 		self.setup()
 		print('---------')
 		self.movement_selection()
+
+		# this code forces the ROS2 component to wait for the models initialization with an empty frame, so that when turned ON does spend time with initializations and sends detections imediatly 
+		# Allocates the memory necessary for each model, this takes some seconds, by doing this in the first frame, everytime one of the models is called instantly responde instead of loading the model
+		self.finished_setup_movement = False
+        
+		self.timer = self.create_timer(0.1, self.timer_callback)
+
+	# This type of structure was done to make sure the arm finishes the debug movement and only after the service was created, 
+	# Because other nodes use this service to make sure arm is ready to work, and there were some conflicts with receiving commands
+	# while initializing the models, this ways we have a timer that checks when the yolo models finished initializing and 
+	# only then creates the service. Not common but works.
+	def timer_callback(self):
+		if self.finished_setup_movement:
+			self.temp_activate_service()
+			self.get_logger().info('Condition met, destroying timer.')
+			self.timer.cancel()  # Cancel the timer
+
+	def temp_activate_service(self):
+		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
+		print("Bool TR Service is ready")
 
 
 	def arm_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
@@ -117,16 +138,37 @@ class ArmUfactory(Node):
 	def arm_command_callback(self, move: ArmController):
 		self.get_logger().info(f"Received movement selection: {move}")
 		self.next_arm_movement = move.command
-		self.adjust_position = move.adjust_position
-
-		self.movement_selection()
-		# this is used when a wrong command is received
-		if self.wrong_movement_received:
-			self.get_logger().error(f"NO AERM MOVEMENT NAMED: {move}")
+		self.joint_motion_values = move.joint_motion_values
+		self.move_tool_line_pose = move.move_tool_line_pose
+		self.linear_motion_pose  = move.linear_motion_pose
+		
+		# special case where it checks if an adjust movement has a cleared list received.
+		if self.next_arm_movement == "adjust_joint_motion" and all(x == 0 for x in self.joint_motion_values) or \
+			self.next_arm_movement == "adjust_move_tool_line" and all(x == 0 for x in self.move_tool_line_pose) or \
+			self.next_arm_movement == "adjust_linear_motion" and all(x == 0 for x in self.linear_motion_pose):
+			
+			self.get_logger().error(f"INCORRECT ADJUST MOVEMENT RECEIVED: {move}")
 			self.wrong_movement_received = False
 			temp = Bool()
 			temp.data = False
 			self.flag_arm_finish_publisher.publish(temp)
+			self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		
+		else:
+
+			self.movement_selection()
+			# this is used when a wrong command is received
+			if self.wrong_movement_received:
+				self.get_logger().error(f"NO ARM MOVEMENT NAMED: {move}")
+				self.wrong_movement_received = False
+				temp = Bool()
+				temp.data = False
+				self.flag_arm_finish_publisher.publish(temp)
+				self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+				self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+				self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 
 	def setup(self):
@@ -237,8 +279,10 @@ class ArmUfactory(Node):
 		self.post_pick_cereals_tray_cornflakes_alternative = 		[-221.5, 277.3, 159.6, math.radians(-179.0), math.radians(-0.1), math.radians(-89.4)]							
 		self.placing_cereal_at_table_cornflakes_alternative = 		[-579.5, 150.0+height_adjust, 812.9, math.radians(40.6), math.radians(4.5), math.radians(-90.1)]
 		self.pos_placing_cereal_at_table_cornflakes_alternative = 	[-579.5,   0.0+height_adjust, 812.9, math.radians(40.6), math.radians(4.5), math.radians(-90.1)]
-  
 
+		### Test SET_TOOL_POSITION positions
+		self.set_tool_position_1 = [  100.0 , 0.0,  0.0, math.radians( 0.0), math.radians( 0.0), math.radians( 0.0)]
+		self.set_tool_position_2 = [ -100.0,  0.0,  0.0, math.radians( 0.0), math.radians( 0.0), math.radians( 0.0)]
 
 		# pour positions
 		self.new_cornflakes_pre_pick_tray_position = [-204.9, -51.0, -31.9, -30.2, 70.9, 253.9]
@@ -478,6 +522,20 @@ class ArmUfactory(Node):
 		self.future = self.set_position_client.call_async(position_values)
 		self.future.add_done_callback(partial(self.callback_service_tr))  
 
+	def set_tool_position_values_(self, pose=None, speed=200.0, acc=1000.0, wait=True, timeout=4.0):
+		
+		if pose is None:
+			pose = self.get_lower_order_position_linear
+
+		position_values = MoveCartesian.Request()
+		position_values.pose = pose
+		position_values.speed = float(speed)
+		position_values.acc = float(acc)
+		position_values.wait = wait
+		position_values.timeout = float(timeout)
+		self.future = self.set_tool_position_client.call_async(position_values)
+		self.future.add_done_callback(partial(self.callback_service_tr))  
+
 	def set_joint_values_(self, angles=None, speed=60.0, wait=True, radius=0.0):
 
 		if angles is None:
@@ -511,6 +569,10 @@ class ArmUfactory(Node):
 		temp.data = True
 		self.flag_arm_finish_publisher.publish(temp)
 		self.estado_tr = 0
+		self.finished_setup_movement = True
+		self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		self.get_logger().info("FINISHED MOVEMENT")	
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
@@ -591,7 +653,26 @@ class ArmUfactory(Node):
 			case 6:
 				self.finish_arm_movement_()
 
-	def initial_pose_to_ask_for_objects(self):
+	def start_debug_move_tool_line_test(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=2000)
+			case 1:
+				self.set_gripper_position_(pos=900.0, wait=True)
+			case 2:
+				self.set_tool_position_values_(pose=self.set_tool_position_1, speed=100, wait=True)
+				# self.set_joint_values_(angles=self.secondary_initial_position_debug, speed=20, wait=True)
+			case 3:
+				self.set_tool_position_values_(pose=self.set_tool_position_2, speed=100, wait=True)
+				# self.set_joint_values_(angles=self.initial_position, speed=20, wait=True)
+			case 4:
+				self.set_gripper_position_(pos=0.0, wait=False)
+			case 5:
+				self.get_gripper_position_()
+			case 6:
+				self.finish_arm_movement_()
+
+	def initial_position_to_ask_for_objects(self):
 		match self.estado_tr:
 			case 0:
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
@@ -605,7 +686,7 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
-	def initial_pose_to_search_for_objects(self):
+	def initial_position_to_search_for_objects(self):
 		match self.estado_tr:
 			case 0:
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
@@ -667,6 +748,29 @@ class ArmUfactory(Node):
 				self.set_gripper_position_(pos=900, wait=True)
 			case 2:
 				self.finish_arm_movement_()
+
+	def adjust_linear_motion(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.linear_motion_pose, speed=50, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def adjust_move_tool_line(self):
+		match self.estado_tr:
+			case 0:
+				self.set_tool_position_values_(pose=self.move_tool_line_pose, speed=50, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def adjust_joint_motion(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.joint_motion_values, speed=25, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+
 
 	### APRIL 1 TEST ###
 
@@ -1977,15 +2081,17 @@ class ArmUfactory(Node):
 			# GENERIC
 			case "start_debug":
 				self.start_debug()
+				# self.start_debug_move_tool_line_test()
+
 			case  "hello":
 				self.hello()
 
-			case "initial_pose_to_ask_for_objects":
-				self.initial_pose_to_ask_for_objects()
+			case "initial_position_to_ask_for_objects":
+				self.initial_position_to_ask_for_objects()
 			case "ask_for_objects_to_initial_position":
 				self.ask_for_objects_to_initial_position()
-			case "initial_pose_to_search_for_objects":
-				self.initial_pose_to_search_for_objects()
+			case "initial_position_to_search_for_objects":
+				self.initial_position_to_search_for_objects()
 			case "search_for_objects_to_ask_for_objects":
 				self.search_for_objects_to_ask_for_objects()
 
@@ -2000,7 +2106,14 @@ class ArmUfactory(Node):
 			case "open_gripper":
 				self.open_gripper()
 
-			
+			# ADJUSTS MOVEMENTS FROM ARMCONTROLLER
+			case "adjust_linear_motion":
+				self.adjust_linear_motion()
+			case "adjust_move_tool_line":
+				self.adjust_move_tool_line()
+			case "adjust_joint_motion":
+				self.adjust_joint_motion()
+
 			# SERVE BREAKFAST	
 			case "place_bowl_table":
 				self.place_bowl_table()

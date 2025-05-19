@@ -1694,7 +1694,7 @@ class ServeBreakfastMain():
                         
                         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
 
-                        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+                        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
                         time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
 
@@ -1792,7 +1792,7 @@ class ServeBreakfastMain():
                         
                         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
 
-                        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+                        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
                         time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
                         
@@ -1882,7 +1882,7 @@ class ServeBreakfastMain():
                         
                         self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
 
-                        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+                        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
                         time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
                         
@@ -1929,7 +1929,7 @@ class ServeBreakfastMain():
 
                     time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
 
-                    self.set_face(command="spoon_inside_traycup")
+                    self.set_face(command="place_spoon_in_tray")
 
                     self.set_speech(filename="serve_breakfast/place_object_in_funilocopo", wait_for_end_of=True)
 

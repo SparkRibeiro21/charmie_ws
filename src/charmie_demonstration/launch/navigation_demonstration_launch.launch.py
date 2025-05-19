@@ -15,7 +15,6 @@ def generate_launch_description():
         std_lf.low_level,
         # std_lf.face,
         # std_lf.neck,
-        # std_lf.point_cloud,
         std_lf.ps4_controller,
         # std_lf.yolo_objects,
         # std_lf.yolo_pose,

@@ -3,7 +3,10 @@ import rclpy
 from rclpy.node import Node
 
 from charmie_interfaces.srv import SetFace, SetTextFace
+from sensor_msgs.msg import Image as Image_ ### ADD TO CHANGE IMAGE TO IMAGE_ because of: from PIL import Image
+from realsense2_camera_msgs.msg import RGBD
 
+from cv_bridge import CvBridge, CvBridgeError
 import subprocess
 import time
 import os
@@ -12,6 +15,11 @@ import pygame
 import threading
 from screeninfo import get_monitors
 from PIL import Image
+import cv2
+import numpy as np
+
+
+DEBUG_WITHOUT_DISPLAY = True
 
 # ROS2 Face Node
 class FaceNode(Node):
@@ -23,11 +31,20 @@ class FaceNode(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
         self.declare_parameter("initial_face", "charmie_face") 
+        # self.declare_parameter("initial_face", "place_bowl_in_tray") 
+        # self.declare_parameter("initial_face", "charmie_face_old_tablet") 
         
         self.home = str(Path.home())
         midpath_faces = "/charmie_ws/src/charmie_face/charmie_face/"
         self.media_faces_path = self.home + midpath_faces + "list_of_media_faces/"
         self.temp_faces_path = self.home + midpath_faces + "list_of_temp_faces/"
+
+        # Intel Cameras (Head and Hand/Gripper)
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+        self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
+        # Orbbec Camera (Base)
+        self.color_image_base_subscriber = self.create_subscription(Image_, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
+        self.aligned_depth_image_base_subscriber = self.create_subscription(Image_, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
         
         ### Services (Server) ###   
         self.server_face_command = self.create_service(SetFace, "face_command", self.callback_face_command) 
@@ -42,7 +59,7 @@ class FaceNode(Node):
         self.get_logger().info("Initial Face Received is: %s" %self.INITIAL_FACE)
 
         # the time after every speaked sentence, that the face remains the speech after finished the speakers (float) 
-        self.AFTER_SPEECH_TIMER_SHORT = 0.2
+        self.AFTER_SPEECH_TIMER_SHORT = 0.25
         self.AFTER_SPEECH_TIMER_LONG = 1.0
 
         self.new_face_received = False
@@ -51,6 +68,26 @@ class FaceNode(Node):
         self.new_text_received = False
         self.new_text_received_name = ""
         self.new_text_received_delay = self.AFTER_SPEECH_TIMER_SHORT
+
+        self.cams_flag = True
+
+        self.HEAD_CAM_WIDTH = 848
+        self.BASE_CAM_WIDTH = 640
+        self.HEAD_CAM_HEIGHT = 480
+        self.head_rgb =   np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
+        self.hand_rgb =   np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
+        self.base_rgb =   np.zeros((self.HEAD_CAM_HEIGHT, self.BASE_CAM_WIDTH, 3), np.uint8)
+        self.head_depth = np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
+        self.hand_depth = np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
+        self.base_depth = np.zeros((self.HEAD_CAM_HEIGHT, self.BASE_CAM_WIDTH, 3), np.uint8)
+        self.new_head_rgb = False
+        self.new_hand_rgb = False
+        self.new_base_rgb = False
+        self.new_head_depth = False
+        self.new_hand_depth = False
+        self.new_base_depth = False
+
+        self.br = CvBridge()
         
         # sends initial face
         self.image_to_face(self.INITIAL_FACE)
@@ -62,19 +99,20 @@ class FaceNode(Node):
         print("Received request", request.command)
  
         # Type of service received: 
-        # string command # type of face that is commonly used and is always the same, already in face (tablet) SD card (i.e. hearing face and standard blinking eyes face)
-        # string custom # type of face that is custom, not previously in face (tablet) SD card (i.e. show detected person or object in the moment)
-        # ---
-        # bool success   # indicate successful run of triggered service
-        # string message # informational, e.g. for error messages.
+        # string command          # type of face that is commonly used and is always the same, already in face (i.e. hearing face and standard blinking eyes face)
+        # string custom           # type of face that is custom, not previously in face (i.e. show detected person or object in the moment)
+        # string camera           # select which camera must be shown in face (can be rgb or depth)
+        # bool show_detections    # select if in addition to show the camera on the face, shows the detections being used with that camera
 
         if request.command != "":
             response.success, response.message = self.image_to_face(command=request.command)
-        # elif request.custom != "":
-        #     response.success, response.message = self.custom_image_to_face(command=request.custom)
+        elif request.custom != "":
+            response.success, response.message = self.custom_image_to_face(command=request.custom)
         else:
             response.success = False
             response.message = "No standard or custom face received."
+
+        print("CAMS:", request.camera, request.show_detections)
 
         return response
 
@@ -133,32 +171,53 @@ class FaceNode(Node):
         else:
             self.get_logger().error("FACE received (standard) does not exist! - %s" %command)
             return False, "FACE received (standard) does not exist."
-    
-    """
+        
     # Receive custom image name to send to tablet and show in face
     def custom_image_to_face(self, command):
 
         # checks whether file exists, maybe there was some typo 
-        file_exists = os.path.exists(self.face.complete_path + command + ".jpg")
+        file_exists = os.path.exists(self.temp_faces_path + command + ".jpg")
         
         if file_exists:
-            self.get_logger().info("FACE received (custom) - %s" %command)
-            
-            # checks the filename of custom faces being sent and changes the name so there is no conflict in files with similar names
-            new_filename = self.face.get_filename(command, ".jpg")
-            
-            # the name afther complete path is received from the topic 
-            self.face.copy_file(self.face.complete_path + command + ".jpg", new_filename + ".jpg")
-            
-            # checks if file exist on the tablet SD card and writes in file so it will appear on face
-            self.face.save_text_file("temp/" + new_filename)
-            # print("File copied successfully.")
-            return True, "Face received (custom) sucessfully displayed"
+            self.get_logger().info("FACE received (standard) - %s" %command)
+            # self.face.save_text_file("media/" + command)
+            self.new_face_received = True
+            self.new_face_received_name = self.temp_faces_path + command + ".jpg"
+            return True, "Face received (standard) sucessfully displayed"
 
         else:
             self.get_logger().error("FACE received (custom) does not exist! - %s" %command)
             return False, "FACE received (custom) does not exist."
-    """
+    
+    # CAMERAS 
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        # self.head_rgb = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+        # self.head_rgb = cv2.cvtColor(self.head_rgb, cv2.COLOR_BGR2RGB)
+        self.head_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
+        
+        self.head_depth = rgbd.depth
+        self.new_head_rgb = True
+        self.new_head_depth = True
+
+
+
+
+        # print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_rgbd_hand_callback(self, rgbd: RGBD):
+        self.hand_rgb = rgbd.rgb
+        self.hand_depth = rgbd.depth
+        self.new_hand_rgb = True
+        self.new_hand_depth = True
+        # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_color_image_base_callback(self, img: Image):
+        self.base_rgb = img
+        self.new_base_rgb = True
+
+    def get_depth_base_image_callback(self, img: Image):
+        self.base_depth = img
+        self.new_base_depth = True
 
 def main(args=None):
     rclpy.init(args=args)
@@ -178,12 +237,17 @@ class FaceMain():
     def __init__(self, node: FaceNode):
         # create a ROS2 node instance
         self.node = node
-        self.device_id = self.get_touchscreen_id("Waveshare")  # Or any keyword matching the device
-        self.display_name = "DP-1-2"
-        self.map_touchscreen_to_correct_display(device_id=self.device_id, display_name=self.display_name)
-        self.resolution = self.get_display_resolution()
-        self.SCREEN = self.initiliase_pygame_screen()
 
+        if not DEBUG_WITHOUT_DISPLAY:
+            self.device_id = self.get_touchscreen_id("Waveshare")  # Or any keyword matching the device
+            self.display_name = "DP-1-2"
+            self.map_touchscreen_to_correct_display(device_id=self.device_id, display_name=self.display_name)
+            self.resolution = self.get_display_resolution()
+            self.SCREEN = self.initiliase_pygame_screen(screen=1)
+        else:
+            self.resolution = [1280, 800]
+            self.SCREEN = self.initiliase_pygame_screen(screen=1)
+            
         self.running = True
         self.gif_flag = False
         self.gif_frames = []
@@ -194,6 +258,9 @@ class FaceMain():
         self.font = pygame.font.SysFont("Comic Sans MS", 150)  # (font name, font size) – you can change!
         self.font_color = (0, 0, 0)  # White color for the text
         
+        self.xx_shift = 0.0
+        self.yy_shift = 0.0
+
     def get_touchscreen_id(self, name_contains="touch"):
 
         # xinput list
@@ -232,11 +299,11 @@ class FaceMain():
         
         return resolution
     
-    def initiliase_pygame_screen(self):
+    def initiliase_pygame_screen(self, screen=0):
 
         pygame.init()
         flags = pygame.DOUBLEBUF | pygame.NOFRAME
-        SCREEN = pygame.display.set_mode(tuple(self.resolution), flags, 8, display=1, vsync=1)
+        SCREEN = pygame.display.set_mode(tuple(self.resolution), flags, 8, display=screen, vsync=1)
         # Aui o display = 0, é que define para por no ecra principal, se puseres 1 mete no secundario e assim sucessivamente
         # As flags de DOUBLEBUF e NOFRAME é so para correr um bocadinho mais rapido em fullscreen, nao faz grande diferença mas prontos
         pygame.display.set_caption("Main Window")
@@ -248,6 +315,37 @@ class FaceMain():
 
         return SCREEN
     
+    def dynamic_image_resize(self, image):
+    
+        # get image and screen size
+        image_width, image_height = image.get_size()
+        screen_width, screen_height = self.SCREEN.get_size()
+
+        # rates from screen size to image size
+        x_rate = image_width/screen_width
+        y_rate = image_height/screen_height
+
+        # adjust width and height depending on rates
+        if x_rate < y_rate:
+            width  = int(image_width/y_rate)
+            height = int(image_height/y_rate)
+        else:
+            width  = int(image_width/x_rate)
+            height = int(image_height/x_rate)
+
+       # Compute top-left position to center the image
+        self.xx_shift = (screen_width  - width)  // 2
+        self.yy_shift = (screen_height - height) // 2
+
+        # print("-")
+        # print(image_width, image_height)
+        # print(screen_width, screen_height)
+        # print(x_rate, y_rate) 
+        # print(self.xx_shift, self.yy_shift)
+        # print(width, height)
+
+        return (width, height)
+
     def update_received_face(self):
                 
         self.node.new_face_received = False
@@ -258,9 +356,11 @@ class FaceMain():
         file_name, file_extension = os.path.splitext(self.node.new_face_received_name)
 
         print(file_extension)
-        if file_extension == ".jpg":
+        if file_extension == ".jpg" or file_extension == ".jpeg" or file_extension == ".png":
             self.gif_flag = False
             self.image = pygame.image.load(self.node.new_face_received_name)
+            self.image = pygame.transform.scale(self.image, self.dynamic_image_resize(self.image))
+        
         elif file_extension == ".gif":
             self.gif_flag = True
             gif = Image.open(self.node.new_face_received_name)
@@ -275,6 +375,7 @@ class FaceMain():
             for frame in range(gif.n_frames):
                 gif.seek(frame)
                 frame = pygame.image.fromstring(gif.tobytes(), gif.size, gif.mode)
+                frame = pygame.transform.scale(frame, self.dynamic_image_resize(frame))
                 self.gif_frames.append(frame)
         else:
             pass
@@ -346,6 +447,18 @@ class FaceMain():
                     self.node.new_text_received = False
                     while time.time() - start_time < self.node.new_text_received_delay:
                         pass # stales the display thread, so that new faces may be received, however the text has higher priority
+            
+            elif self.node.cams_flag:
+                
+                
+                surface = pygame.surfarray.make_surface(np.transpose(self.node.head_rgb, (1, 0, 2)))  # Pygame expects (width, height, channels)
+    
+                aaa = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
+                # self.SCREEN.blit(self.image, (0, 0))
+                # pygame.display.update()
+
+                self.SCREEN.blit(aaa, (self.xx_shift, self.yy_shift))
+                pygame.display.update()
 
             else:
                 if self.node.new_face_received:
@@ -353,7 +466,9 @@ class FaceMain():
                     self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
 
                 if self.gif_flag:
-                    self.SCREEN.blit(self.gif_frames[self.frame_index], (0, 0))
+                    if self.frame_index >= len(self.gif_frames): # safety for gifs with a higher amount of frames stop and a new one with less frames wants to be used 
+                        self.frame_index = 1
+                    self.SCREEN.blit(self.gif_frames[self.frame_index], (self.xx_shift, self.yy_shift))
                     pygame.display.update()
                     self.frame_index = (self.frame_index + 1) % len(self.gif_frames)
                     if self.frame_index == 0: # needs this line to avoid a blank frame everytime the gif resets
@@ -361,7 +476,8 @@ class FaceMain():
                     # print(self.frame_index)
                     self.clock.tick(30)
                 elif self.previous_image_extension != "": # use self.previous_image_extension for initial case
-                    self.SCREEN.blit(self.image, (0, 0))
+                    # self.SCREEN.blit(self.image, (0, 0))
+                    self.SCREEN.blit(self.image, (self.xx_shift, self.yy_shift))
                     pygame.display.update()
 
         pygame.quit()

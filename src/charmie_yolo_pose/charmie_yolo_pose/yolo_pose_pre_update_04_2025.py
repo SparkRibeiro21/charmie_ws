@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D, Point
 from sensor_msgs.msg import Image
-from charmie_interfaces.msg import DetectedPerson, Yolov8Pose, BoundingBox, BoundingBoxAndPoints, RGB
+from charmie_interfaces.msg import DetectedPerson, BoundingBox, BoundingBoxAndPoints, RGB, ListOfDetectedPerson
 from charmie_interfaces.srv import GetPointCloudBB, ActivateYoloPose
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
@@ -50,7 +50,7 @@ DRAW_FACE_RECOGNITION = True
 class YoloPoseNode(Node):
     def __init__(self):
         super().__init__("YoloPose")
-        self.get_logger().info("Initialised YoloPose Node")
+        self.get_logger().info("Initialised YoloPose Node OLD")
 
         ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
@@ -111,8 +111,7 @@ class YoloPoseNode(Node):
         self.model = YOLO(full_yolo_model)
 
         # Publisher (Pose of People Detected Filtered and Non Filtered)
-        # self.person_pose_publisher = self.create_publisher(Yolov8Pose, "person_pose", 10) # test removed person_pose (non-filtered)
-        self.person_pose_filtered_publisher = self.create_publisher(Yolov8Pose, "person_pose_filtered", 10)
+        self.person_pose_filtered_publisher = self.create_publisher(ListOfDetectedPerson, "person_pose_filtered", 10)
 
         # Subscriber (Yolov8_Pose TR Parameters)
         # self.only_detect_person_legs_visible_subscriber = self.create_subscription(Bool, "only_det_per_legs_vis", self.get_only_detect_person_legs_visible_callback, 10)
@@ -152,9 +151,7 @@ class YoloPoseNode(Node):
         self.center_torso_person_list = []
         self.center_head_person_list = []
 
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.robot_t = 0.0 # math.pi/2
+        self.robot_pose = Pose2D()
 
         self.N_KEYPOINTS = 17
         self.NUMBER_OF_LEGS_KP = 4
@@ -290,7 +287,7 @@ class YoloPoseNode(Node):
     """
 
     def get_color_image_head_callback(self, img: Image):
-        print("Received rgb cam")
+        # print("Received rgb cam")
 
         # only when activated via service, the model computes the person detection
         if self.ACTIVATE_YOLO_POSE:
@@ -476,9 +473,9 @@ class YoloPoseNode(Node):
                 self.waiting_for_pcloud = True
                 self.call_point_cloud_server(req2)
         
-        else:
-            yolov8_pose_filtered = Yolov8Pose()
-            self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
+        # else:
+        #     yolov8_pose_filtered = ListOfDetectedPerson()
+        #     self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
         
 
@@ -499,9 +496,9 @@ class YoloPoseNode(Node):
         if not self.results[0].keypoints.has_visible:
             num_persons = 0
 
-        # yolov8_pose = Yolov8Pose()  # test removed person_pose (non-filtered)
-        yolov8_pose_filtered = Yolov8Pose()
-        num_persons_filtered = 0
+        # yolov8_pose = ListOfDetectedPerson()  # test removed person_pose (non-filtered)
+        yolov8_pose_filtered = ListOfDetectedPerson()
+        # num_persons_filtered = 0
 
         for person_idx in range(num_persons):
             keypoints_id = self.results[0].keypoints[person_idx]
@@ -614,7 +611,7 @@ class YoloPoseNode(Node):
                 # print(" - Misses not being with their arm raised")
 
             if ALL_CONDITIONS_MET:
-                num_persons_filtered+=1
+                # num_persons_filtered+=1
 
                 # characteristics will only be updated after we confirm that the person is inside the filteredpersons
                 # otherwise the large amount of time spent getting the characteristics from the models is applied to
@@ -631,7 +628,7 @@ class YoloPoseNode(Node):
                         print(new_person.ethnicity, new_person.age_estimate, new_person.gender)        
                 # adds people to "person_pose_filtered" with selected filters
                 yolov8_pose_filtered.persons.append(new_person)
-
+              
                 if self.DEBUG_DRAW:
                     
                     red_yp = (56, 56, 255)
@@ -848,12 +845,7 @@ class YoloPoseNode(Node):
 
             # print("===")
 
-        # yolov8_pose.image_rgb = self.rgb_img  # test removed person_pose (non-filtered)
-        # yolov8_pose.num_person = num_persons  # test removed person_pose (non-filtered)
         # self.person_pose_publisher.publish(yolov8_pose) # test removed person_pose (non-filtered)
-
-        yolov8_pose_filtered.image_rgb = self.rgb_img
-        yolov8_pose_filtered.num_person = num_persons_filtered
         self.person_pose_filtered_publisher.publish(yolov8_pose_filtered)
 
         # print("____END____")
@@ -867,7 +859,7 @@ class YoloPoseNode(Node):
         if self.DEBUG_DRAW:
             # putting the FPS count on the frame
             cv2.putText(current_frame_draw, 'fps:' + self.fps, (0, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(current_frame_draw, 'np:' + str(num_persons_filtered) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.putText(current_frame_draw, 'np:' + str(len(yolov8_pose_filtered.persons)) + '/' + str(num_persons), (180, self.img_height-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
             cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
             # cv2.imshow("Yolo Pose Detection", annotated_frame)
             # cv2.imshow("Camera Image", current_frame)
@@ -879,9 +871,7 @@ class YoloPoseNode(Node):
 
 
     def robot_localisation_callback(self, pose: Pose2D):
-        self.robot_x = pose.x
-        self.robot_y = pose.y
-        self.robot_t = pose.theta
+        self.robot_pose = pose
 
 
     def add_person_to_detectedperson_msg(self, current_frame, current_frame_draw, boxes_id, keypoints_id, center_person_filtered, center_torso_person, center_head_person, torso_localisation, head_localisation, arm_raised):
@@ -984,10 +974,8 @@ class YoloPoseNode(Node):
 
         # changes the axis of point cloud coordinates to fit with robot axis
         person_rel_pos = Point()
-        # person_rel_pos.x = -torso_localisation.y/1000
-        # person_rel_pos.y =  torso_localisation.x/1000
-        person_rel_pos.x =  -center_person_filtered.y/1000
-        person_rel_pos.y =  center_person_filtered.x/1000
+        person_rel_pos.x =  center_person_filtered.x/1000
+        person_rel_pos.y =  center_person_filtered.y/1000
         person_rel_pos.z =  center_person_filtered.z/1000
         
         new_person.position_relative = person_rel_pos
@@ -996,10 +984,10 @@ class YoloPoseNode(Node):
         angle_person = math.atan2(person_rel_pos.x, person_rel_pos.y)
         dist_person = math.sqrt(person_rel_pos.x**2 + person_rel_pos.y**2)
 
-        theta_aux = math.pi/2 - (angle_person - self.robot_t)
+        theta_aux = math.pi/2 - (angle_person - self.robot_pose.theta)
 
-        target_x = dist_person * math.cos(theta_aux) + self.robot_x
-        target_y = dist_person * math.sin(theta_aux) + self.robot_y
+        target_x = dist_person * math.cos(theta_aux) + self.robot_pose.x
+        target_y = dist_person * math.sin(theta_aux) + self.robot_pose.y
 
         a_ref = (target_x, target_y)
         # print("Rel:", (person_rel_pos.x, person_rel_pos.y), "Abs:", a_ref)
@@ -1013,22 +1001,19 @@ class YoloPoseNode(Node):
 
         # changes the axis of point cloud coordinates to fit with robot axis
         head_rel_pos = Point()
-        # head_rel_pos.x = -head_localisation.y/1000
-        # head_rel_pos.y =  head_localisation.x/1000
-        head_rel_pos.x =  -head_localisation.y/1000
-        head_rel_pos.y =  head_localisation.x/1000
+        head_rel_pos.x =  head_localisation.x/1000
+        head_rel_pos.y =  head_localisation.y/1000
         head_rel_pos.z =  head_localisation.z/1000
-
         new_person.position_relative_head = head_rel_pos
         
         # calculate the absolute head position according to the robot localisation
         angle_head = math.atan2(head_rel_pos.x, head_rel_pos.y)
         dist_head = math.sqrt(head_rel_pos.x**2 + head_rel_pos.y**2)
 
-        theta_aux = math.pi/2 - (angle_head - self.robot_t)
+        theta_aux = math.pi/2 - (angle_head - self.robot_pose.theta)
 
-        target_x = dist_head * math.cos(theta_aux) + self.robot_x
-        target_y = dist_head * math.sin(theta_aux) + self.robot_y
+        target_x = dist_head * math.cos(theta_aux) + self.robot_pose.x
+        target_y = dist_head * math.sin(theta_aux) + self.robot_pose.y
 
         a_ref = (target_x, target_y)
         # print("Rel:", (head_rel_pos.x, head_rel_pos.y), "Abs:", a_ref)
@@ -1200,8 +1185,8 @@ class YoloPoseNode(Node):
         
         room_location = "Outside"
         for room in self.house_rooms:
-            min_x = room['top_left_coords'][0]
-            max_x = room['bot_right_coords'][0]
+            min_x = room['bot_right_coords'][0]
+            max_x = room['top_left_coords'][0]
             min_y = room['bot_right_coords'][1]
             max_y = room['top_left_coords'][1]
             # print(min_x, max_x, min_y, max_y)
@@ -1210,8 +1195,8 @@ class YoloPoseNode(Node):
 
         furniture_location = "None"
         for furniture in self.house_furniture:
-            min_x = furniture['top_left_coords'][0]
-            max_x = furniture['bot_right_coords'][0]
+            min_x = furniture['bot_right_coords'][0]
+            max_x = furniture['top_left_coords'][0]
             min_y = furniture['bot_right_coords'][1]
             max_y = furniture['top_left_coords'][1]
             # print(min_x, max_x, min_y, max_y)

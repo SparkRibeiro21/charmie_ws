@@ -70,6 +70,23 @@ def generate_launch_description():
         #         'torso_link'  # child frame
         #    ]
         # ),
+        
+        # # Static transform for torso to torso link
+        # Node(
+        #     package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     name='static_transform_base_footprint_map',
+        #     arguments=[
+        #         '0',  # x
+        #         '0',  # y
+        #         '0',  # z
+        #         '0',  # roll
+        #         '0',  # pitch
+        #         '0',  # yaw
+        #         'map',  # parent frame
+        #         'base_footprint'  # child frame
+        #    ]
+        # ),
 
         # Static transform for the head camera
         Node(

@@ -802,7 +802,7 @@ class ServeBreakfastMain():
 
                 self.set_speech(filename="generic/place_stay_clear", wait_for_end_of=False)
 
-                self.set_arm(command="initial_pose_to_search_for_objects", wait_for_end_of=True)
+                self.set_arm(command="initial_position_to_search_for_objects", wait_for_end_of=True)
 
                 self.search_for_serve_breakfast_objects()
 
@@ -823,7 +823,7 @@ class ServeBreakfastMain():
                 self.set_face(custom=self.custom_face_filename + "knife")
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 time.sleep(3)
-                self.set_face(command="spoon_inside_traycup")
+                self.set_face(command="place_spoon_in_tray")
                 self.set_speech(filename="clean_the_table/place_object_in_funilocopo", wait_for_end_of=True)  
                 time.sleep(3)
                 
@@ -832,7 +832,7 @@ class ServeBreakfastMain():
                 self.set_face(custom=self.custom_face_filename + "fork")
                 self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)  
                 time.sleep(3)
-                self.set_face(command="spoon_inside_traycup")
+                self.set_face(command="place_spoon_in_tray")
                 self.set_speech(filename="clean_the_table/place_object_in_funilocopo", wait_for_end_of=True)  
                 time.sleep(3)
                 

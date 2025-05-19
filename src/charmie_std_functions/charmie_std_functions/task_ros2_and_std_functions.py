@@ -1342,11 +1342,13 @@ class RobotStdFunctions():
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
-    def set_face(self, command="", custom="", wait_for_end_of=False):
+    def set_face(self, command="", custom="", camera="", show_detections=False, wait_for_end_of=False):
         
         request = SetFace.Request()
         request.command = command
         request.custom = custom
+        request.camera = camera
+        request.show_detections = show_detections
         
         self.node.call_face_command_server(request=request, wait_for_end_of=wait_for_end_of)
         
@@ -1499,15 +1501,29 @@ class RobotStdFunctions():
 
         return self.node.track_object_success, self.node.track_object_message   
 
-    def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
-        
+    def set_arm(self, command="", linear_motion_pose=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], move_tool_line_pose=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], joint_motion_values=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True):        
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.node.waited_for_end_of_arm = False
-        
+
+        ### convert the lists to floats (prevents ROS2 errors)
+        linear_motion_pose = [float(x) for x in linear_motion_pose]
+        move_tool_line_pose = [float(x) for x in move_tool_line_pose]
+        joint_motion_values = [float(x) for x in joint_motion_values]
+
+        # converts values that should be radians but we are using blockly standard so we expect values as degrees, which are then internally converted to radians 
+        linear_motion_pose[3] = math.radians(linear_motion_pose[3])
+        linear_motion_pose[4] = math.radians(linear_motion_pose[4])
+        linear_motion_pose[5] = math.radians(linear_motion_pose[5])
+       
+        move_tool_line_pose[3] = math.radians(linear_motion_pose[3])
+        move_tool_line_pose[4] = math.radians(linear_motion_pose[4])
+        move_tool_line_pose[5] = math.radians(linear_motion_pose[5])
+    
         temp = ArmController()
         temp.command = command
-        temp.adjust_position = float(adjust_position)
-        temp.pose = pose
+        temp.linear_motion_pose  = linear_motion_pose
+        temp.move_tool_line_pose = move_tool_line_pose
+        temp.joint_motion_values = joint_motion_values
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:
@@ -2577,7 +2593,7 @@ class RobotStdFunctions():
             
             self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
 
-        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
         if show_detection:
             # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
