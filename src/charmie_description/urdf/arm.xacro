@@ -14,11 +14,15 @@
   <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6_robot_macro.xacro" />
   <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6.transmission.xacro" />
   <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6.ros2_control.xacro" />
+  
+  <!-- Include xArm material definition -->
   <xacro:include filename="$(find xarm_description)/urdf/common/common.link.xacro" />
   <xacro:include filename="$(find xarm_description)/urdf/common/common.material.xacro" />
 
   <!-- Include Gripper macro definition -->
   <xacro:include filename="$(find xarm_description)/urdf/gripper/xarm_gripper_macro.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/gripper/xarm_gripper.transmission.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/gripper/xarm_gripper.ros2_control.xacro" />
 
 
   <!-- Instantiate the common materials with xarm prefix -->
@@ -56,6 +60,12 @@
     report_type="normal"
     baud_checkset="true"
     default_gripper_baud="2000000" />
+
+  <xacro:xarm_gripper_transmission prefix="xarm_gripper_" hard_interface="PositionJointInterface" />
+  
+  <xacro:xarm_gripper_ros2_control 
+    prefix="xarm_gripper_" 
+    ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware" />
 
   <!-- Mount the xArm6 on CHARMIE -->
   <joint name="xarm_mount_joint" type="fixed">

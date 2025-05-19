@@ -193,6 +193,7 @@ class LaunchStdFunctions():
             executable='spawner',
             arguments=[
                 'xarm6_traj_controller',
+                # 'xarm_gripper_traj_controller',
                 '--controller-manager', '/controller_manager'
             ],
         )
@@ -218,6 +219,7 @@ class LaunchStdFunctions():
         self.joint_state_publisher_gui = Node(package='joint_state_publisher_gui',
                        executable='joint_state_publisher_gui',
                        parameters=[{
+                            'source_list': ['xarm/joint_states'],
                             'zeros': {
                                 'xarm_gripper_drive_joint': 0.850,
                                 'xarm_joint1': -3.926,
