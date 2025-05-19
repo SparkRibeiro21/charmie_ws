@@ -26,11 +26,7 @@ ros2_modules = {
     "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_ps4_controller":   False,
-<<<<<<< HEAD
     "charmie_speakers":         False,
-=======
-    "charmie_speakers":         True,
->>>>>>> main
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -64,11 +60,8 @@ class TaskMain():
         Final_State = 4
 
         # VARS ...
-<<<<<<< HEAD
+
         self.state = Search_for_objects
-=======
-        self.state = Search_for_person
->>>>>>> main
 
         print("IN NEW MAIN")
 
