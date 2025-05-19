@@ -740,16 +740,16 @@ class ArmUfactory(Node):
 			case 1:
 				self.set_gripper_position_(pos=0, wait=True)
 			case 2:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=50, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
 			case 3:
-				self.set_joint_values_(angles=self.search_table_front_joints, speed=10, wait=True)
+				self.set_joint_values_(angles=self.search_table_front_joints, speed=30, wait=True)
 			case 4:
 				self.finish_arm_movement_()
 
 	def search_table_to_initial_pose(self):
 		match self.estado_tr:
 			case 0:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=10, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
 			case 1:
 				self.finish_arm_movement_()
 
