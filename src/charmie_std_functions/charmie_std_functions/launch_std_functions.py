@@ -70,6 +70,15 @@ class LaunchStdFunctions():
             arguments=['-d', rviz_nav2_config_path]
         )
 
+        rviz_calib_map_furniture_navigations_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'rviz', 'nav2_calibrate_maps_furniture_navigations.rviz')
+        
+        self.rviz2_calib_map_furniture_navigations_node = Node(
+            package="rviz2",
+            executable="rviz2",
+            arguments=['-d', rviz_calib_map_furniture_navigations_config_path]
+        )
+
         ### GAZEBO
         gazebo_ros_path = get_package_share_path('gazebo_ros')
 
