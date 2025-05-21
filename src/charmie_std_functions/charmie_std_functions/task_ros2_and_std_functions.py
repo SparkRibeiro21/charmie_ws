@@ -1678,6 +1678,8 @@ class RobotStdFunctions():
         goal_msg.pose.pose.orientation.y = q_y
         goal_msg.pose.pose.orientation.z = q_z
         goal_msg.pose.pose.orientation.w = q_w
+        
+        self.set_rgb(BLUE+BACK_AND_FORTH_8)
 
         while not nav2_goal_completed:
                 
@@ -1704,6 +1706,8 @@ class RobotStdFunctions():
                 timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
                 start_time = time.time()
 
+                self.set_rgb(CYAN+BACK_AND_FORTH_8)
+
                 while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
                     
                     if print_feedback:
@@ -1726,12 +1730,15 @@ class RobotStdFunctions():
 
                 
                 if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
+                    self.set_rgb(GREEN+BACK_AND_FORTH_8)
                     print("FINISHED TR SUCCEEDED")
                     nav2_goal_completed = True                
                 elif self.node.nav2_status == GoalStatus.STATUS_ABORTED:
+                    self.set_rgb(RED+BACK_AND_FORTH_8)
                     print("FINISHED TR ABORTED")
                     print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
                 elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
+                    self.set_rgb(RED+BACK_AND_FORTH_8)
                     print("FINISHED TR CANCELED")
                     print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
 
@@ -1760,6 +1767,8 @@ class RobotStdFunctions():
                 pose.pose.orientation.w = q_w
                 
                 goal_msg.poses.append(pose)
+
+            self.set_rgb(BLUE+BACK_AND_FORTH_8)
                     
             while not nav2_goal_completed:
                     
@@ -1786,6 +1795,8 @@ class RobotStdFunctions():
                     timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
                     start_time = time.time()
 
+                    self.set_rgb(CYAN+BACK_AND_FORTH_8)
+
                     while self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
                         
                         if print_feedback:
@@ -1803,14 +1814,21 @@ class RobotStdFunctions():
 
                     
                     if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+                        self.set_rgb(GREEN+BACK_AND_FORTH_8)
                         print("FINISHED TR SUCCEEDED")
                         nav2_goal_completed = True                
                     elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_ABORTED:
+                        self.set_rgb(RED+BACK_AND_FORTH_8)
                         print("FINISHED TR ABORTED")
                         print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
                     elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
+                        self.set_rgb(RED+BACK_AND_FORTH_8)
                         print("FINISHED TR CANCELED")
                         print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+
+    def add_rotation_to_pick_position(self, move_coords):
+        move_coords[2]+=45.0
+        return move_coords
 
     def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
