@@ -9,6 +9,7 @@ def generate_launch_description():
         # std_lf.robot_state_publisher_real_node,
         # std_lf.static_transforms_launch,
         std_lf.rviz2_calib_map_furniture_navigations_node,
+        std_lf.marker_arrays_debug,
         
         # std_lf.odometry_lidar,
         # std_lf.gui,

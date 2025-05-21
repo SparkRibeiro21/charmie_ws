@@ -200,6 +200,12 @@ class LaunchStdFunctions():
                 executable='gui_debug',
                 name='gui_debug',
                 )
+
+        self.marker_arrays_debug = Node(package='charmie_gui',
+                executable='test_marker_rviz',
+                name='test_marker_rviz',
+                )
+        
         
         self.audio = Node(package='charmie_audio',
                       executable='audio',
