@@ -75,11 +75,6 @@ class ArmUfactory(Node):
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
 		
-
-		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
-		
-		print("Bool TR Service is ready")
-
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()
 		self.joint_values_req = MoveJoint.Request()
@@ -99,13 +94,33 @@ class ArmUfactory(Node):
 
 		# initial debug movement 
 		self.next_arm_movement = "start_debug"
-		self.joint_motion_values = []
-		self.move_tool_line_pose = []
-		self.linear_motion_pose  = []
+		self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 		self.setup()
 		print('---------')
 		self.movement_selection()
+
+		# this code forces the ROS2 component to wait for the models initialization with an empty frame, so that when turned ON does spend time with initializations and sends detections imediatly 
+		# Allocates the memory necessary for each model, this takes some seconds, by doing this in the first frame, everytime one of the models is called instantly responde instead of loading the model
+		self.finished_setup_movement = False
+        
+		self.timer = self.create_timer(0.1, self.timer_callback)
+
+	# This type of structure was done to make sure the arm finishes the debug movement and only after the service was created, 
+	# Because other nodes use this service to make sure arm is ready to work, and there were some conflicts with receiving commands
+	# while initializing the models, this ways we have a timer that checks when the yolo models finished initializing and 
+	# only then creates the service. Not common but works.
+	def timer_callback(self):
+		if self.finished_setup_movement:
+			self.temp_activate_service()
+			self.get_logger().info('Condition met, destroying timer.')
+			self.timer.cancel()  # Cancel the timer
+
+	def temp_activate_service(self):
+		self.create_service(Trigger, 'arm_trigger', self.arm_trigger_callback)
+		print("Bool TR Service is ready")
 
 
 	def arm_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
@@ -126,15 +141,34 @@ class ArmUfactory(Node):
 		self.joint_motion_values = move.joint_motion_values
 		self.move_tool_line_pose = move.move_tool_line_pose
 		self.linear_motion_pose  = move.linear_motion_pose
-
-		self.movement_selection()
-		# this is used when a wrong command is received
-		if self.wrong_movement_received:
-			self.get_logger().error(f"NO AERM MOVEMENT NAMED: {move}")
+		
+		# special case where it checks if an adjust movement has a cleared list received.
+		if self.next_arm_movement == "adjust_joint_motion" and all(x == 0 for x in self.joint_motion_values) or \
+			self.next_arm_movement == "adjust_move_tool_line" and all(x == 0 for x in self.move_tool_line_pose) or \
+			self.next_arm_movement == "adjust_linear_motion" and all(x == 0 for x in self.linear_motion_pose):
+			
+			self.get_logger().error(f"INCORRECT ADJUST MOVEMENT RECEIVED: {move}")
 			self.wrong_movement_received = False
 			temp = Bool()
 			temp.data = False
 			self.flag_arm_finish_publisher.publish(temp)
+			self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		
+		else:
+
+			self.movement_selection()
+			# this is used when a wrong command is received
+			if self.wrong_movement_received:
+				self.get_logger().error(f"NO ARM MOVEMENT NAMED: {move}")
+				self.wrong_movement_received = False
+				temp = Bool()
+				temp.data = False
+				self.flag_arm_finish_publisher.publish(temp)
+				self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+				self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+				self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 
 	def setup(self):
@@ -534,6 +568,10 @@ class ArmUfactory(Node):
 		temp.data = True
 		self.flag_arm_finish_publisher.publish(temp)
 		self.estado_tr = 0
+		self.finished_setup_movement = True
+		self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		self.get_logger().info("FINISHED MOVEMENT")	
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
@@ -633,7 +671,7 @@ class ArmUfactory(Node):
 			case 6:
 				self.finish_arm_movement_()
 
-	def initial_pose_to_ask_for_objects(self):
+	def initial_position_to_ask_for_objects(self):
 		match self.estado_tr:
 			case 0:
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
@@ -647,7 +685,7 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
-	def initial_pose_to_search_for_objects(self):
+	def initial_position_to_search_for_objects(self):
 		match self.estado_tr:
 			case 0:
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
@@ -2032,12 +2070,12 @@ class ArmUfactory(Node):
 			case  "hello":
 				self.hello()
 
-			case "initial_pose_to_ask_for_objects":
-				self.initial_pose_to_ask_for_objects()
+			case "initial_position_to_ask_for_objects":
+				self.initial_position_to_ask_for_objects()
 			case "ask_for_objects_to_initial_position":
 				self.ask_for_objects_to_initial_position()
-			case "initial_pose_to_search_for_objects":
-				self.initial_pose_to_search_for_objects()
+			case "initial_position_to_search_for_objects":
+				self.initial_position_to_search_for_objects()
 			case "search_for_objects_to_ask_for_objects":
 				self.search_for_objects_to_ask_for_objects()
 

@@ -55,131 +55,27 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /robot_description
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        back_caster_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        base_camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        face_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        front_caster_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hand_camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        head_camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        left_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        legs_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        lidar_bottom_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        lidar_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        neck_base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        neck_pan_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        neck_tilt_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        right_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        top_torso_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        torso_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
-      Value: true
+      Value: false
       Visual Enabled: true
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        D405_hand_color_frame:
-          Value: true
-        D405_hand_color_optical_frame:
-          Value: true
-        D405_hand_depth_frame:
-          Value: true
-        D405_hand_depth_optical_frame:
-          Value: true
         D405_hand_link:
-          Value: true
-        D455_head_color_frame:
-          Value: true
-        D455_head_color_optical_frame:
-          Value: true
-        D455_head_depth_frame:
-          Value: true
-        D455_head_depth_optical_frame:
           Value: true
         D455_head_link:
           Value: true
@@ -190,14 +86,6 @@ Visualization Manager:
         base_footprint:
           Value: true
         base_link:
-          Value: true
-        camera_color_frame:
-          Value: true
-        camera_color_optical_frame:
-          Value: true
-        camera_depth_frame:
-          Value: true
-        camera_depth_optical_frame:
           Value: true
         camera_link:
           Value: true
@@ -222,8 +110,6 @@ Visualization Manager:
         neck_pan_link:
           Value: true
         neck_tilt_link:
-          Value: true
-        odom:
           Value: true
         right_wheel_link:
           Value: true
@@ -252,7 +138,7 @@ Visualization Manager:
       Color: 255; 0; 0
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 0
@@ -273,7 +159,7 @@ Visualization Manager:
         Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -286,7 +172,7 @@ Visualization Manager:
       Color: 255; 153; 28
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -307,7 +193,7 @@ Visualization Manager:
         Value: /scan_bottom
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -320,7 +206,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: ""
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -341,7 +227,7 @@ Visualization Manager:
         Value: /mobile_base/sensors/bumper_pointcloud
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz_default_plugins/Map
       Color Scheme: map
@@ -366,7 +252,7 @@ Visualization Manager:
     - Alpha: 1
       Class: nav2_rviz_plugins/ParticleCloud
       Color: 0; 180; 0
-      Enabled: true
+      Enabled: false
       Max Arrow Length: 0.30000001192092896
       Min Arrow Length: 0.019999999552965164
       Name: Amcl Particle Swarm
@@ -378,7 +264,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Best Effort
         Value: /particle_cloud
-      Value: true
+      Value: false
     - Class: rviz_common/Group
       Displays:
         - Alpha: 0.30000001192092896
@@ -498,7 +384,7 @@ Visualization Manager:
             Reliability Policy: Reliable
             Value: /global_costmap/published_footprint
           Value: false
-      Enabled: true
+      Enabled: false
       Name: Global Planner
     - Class: rviz_common/Group
       Displays:
@@ -610,7 +496,7 @@ Visualization Manager:
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Controller
     - Class: rviz_common/Group
       Displays:
@@ -677,77 +563,203 @@ Visualization Manager:
         Value: /waypoints
       Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        Bedroom: true
+        Hallway: true
+        Kitchen: true
+        Living Room: true
+        Office: true
+        Workshop: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visualization_marker_array_rooms
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        Bedroom Name: true
+        Hallway Name: true
+        Kitchen Name: true
+        Living Room Name: true
+        Office Name: true
+        Workshop Name: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visualization_marker_array_rooms_names
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        Bed: true
+        Bedroom Trashcan: true
+        Bench: true
+        Coffee Table: true
+        Couch: true
+        Desk: true
+        Dinner Table: true
+        Dishwasher: true
+        Drill Press: true
+        Entrance: true
+        Exit: true
+        Fridge: true
+        Kitchen Cabinet: true
+        Kitchen Counter: true
+        Kitchen Trashcan: true
+        Left Lounge Chair: true
+        Living Room Trashcan: true
+        Night Stand: true
+        Office Counter: true
+        Pantry: true
+        Reading Chair: true
+        Right Lounge Chair: true
+        Shelf: true
+        TV Table: true
+        Tool Cabinet: true
+        Workbench: true
+        Workshop Desk: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visualization_marker_array_furniture
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        Bed Name: true
+        Bedroom Trashcan Name: true
+        Bench Name: true
+        Coffee Table Name: true
+        Couch Name: true
+        Desk Name: true
+        Dinner Table Name: true
+        Dishwasher Name: true
+        Drill Press Name: true
+        Entrance Name: true
+        Exit Name: true
+        Fridge Name: true
+        Kitchen Cabinet Name: true
+        Kitchen Counter Name: true
+        Kitchen Trashcan Name: true
+        Left Lounge Chair Name: true
+        Living Room Trashcan Name: true
+        Night Stand Name: true
+        Office Counter Name: true
+        Pantry Name: true
+        Reading Chair Name: true
+        Right Lounge Chair Name: true
+        Shelf Name: true
+        TV Table Name: true
+        Tool Cabinet Name: true
+        Workbench Name: true
+        Workshop Desk Name: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visualization_marker_array_furniture_names
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        Bed_nav: true
+        Bedroom Trashcan_nav: true
+        Bedroom_nav: true
+        Bench_nav: true
+        Coffee Table_nav: true
+        Couch_nav: true
+        Desk_nav: true
+        Dinner Table_nav: true
+        Dishwasher_nav: true
+        Drill Press_nav: true
+        Entrance_nav: true
+        Exit_nav: true
+        Fridge_nav: true
+        Hallway_nav: true
+        Kitchen Cabinet_nav: true
+        Kitchen Counter_nav: true
+        Kitchen Trashcan_nav: true
+        Kitchen_nav: true
+        Left Lounge Chair_nav: true
+        Living Room Trashcan_nav: true
+        Living Room_nav: true
+        Night Stand_nav: true
+        Office Counter_nav: true
+        Office_nav: true
+        Pantry_nav: true
+        Reading Chair_nav: true
+        Right Lounge Chair_nav: true
+        Shelf_nav: true
+        TV Table_nav: true
+        Tool Cabinet_nav: true
+        Workbench_nav: true
+        Workshop Desk_nav: true
+        Workshop_nav: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visualization_marker_array_navigations
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        Bed_nav Name: true
+        Bedroom Trashcan_nav Name: true
+        Bedroom_nav Name: true
+        Bench_nav Name: true
+        Coffee Table_nav Name: true
+        Couch_nav Name: true
+        Desk_nav Name: true
+        Dinner Table_nav Name: true
+        Dishwasher_nav Name: true
+        Drill Press_nav Name: true
+        Entrance_nav Name: true
+        Exit_nav Name: true
+        Fridge_nav Name: true
+        Hallway_nav Name: true
+        Kitchen Cabinet_nav Name: true
+        Kitchen Counter_nav Name: true
+        Kitchen Trashcan_nav Name: true
+        Kitchen_nav Name: true
+        Left Lounge Chair_nav Name: true
+        Living Room Trashcan_nav Name: true
+        Living Room_nav Name: true
+        Night Stand_nav Name: true
+        Office Counter_nav Name: true
+        Office_nav Name: true
+        Pantry_nav Name: true
+        Reading Chair_nav Name: true
+        Right Lounge Chair_nav Name: true
+        Shelf_nav Name: true
+        TV Table_nav Name: true
+        Tool Cabinet_nav Name: true
+        Workbench_nav Name: true
+        Workshop Desk_nav Name: true
+        Workshop_nav Name: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visualization_marker_array_navigations_names
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: MarkerArray
@@ -975,11 +987,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 89.47210693359375
+      Scale: 112.23381805419922
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz_default_plugins)
-      X: 2.2697222232818604
-      Y: -0.6144726276397705
+      X: 2.49245023727417
+      Y: -0.4095221161842346
     Saved: ~
 Window Geometry:
   Displays:
@@ -991,7 +1003,7 @@ Window Geometry:
     collapsed: false
   Navigation 2:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000040000000000000216000005a6fc020000000dfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000355000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb00000018004e0061007600690067006100740069006f006e0020003201000003980000024b0000013900fffffffb0000001e005200650061006c00730065006e0073006500430061006d00650072006100000002c6000000c10000002800fffffffb0000000a0049006d0061006700650000000351000000db0000002800fffffffb0000000a0049006d00610067006500000003e2000001060000002800fffffffb0000000a0049006d00610067006500000004b60000012d0000002800ffffff000000010000010f000005a6fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d000005a6000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d0065010000000000000450000000000000000000000689000005a600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000017e000005a6fc020000000dfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000355000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb00000018004e0061007600690067006100740069006f006e0020003201000003980000024b0000013900fffffffb0000001e005200650061006c00730065006e0073006500430061006d00650072006100000002c6000000c10000002800fffffffb0000000a0049006d00610067006500000003d8000001010000002800fffffffb0000000a0049006d00610067006500000004a50000013e0000002800fffffffb0000000a0049006d0061006700650000000515000000ce0000002800ffffff000000010000010f000005a6fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d000005a6000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d0065010000000000000450000000000000000000000721000005a600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   RealsenseCamera:
     collapsed: false
   Selection:

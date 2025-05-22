@@ -16,6 +16,7 @@ import tf2_ros
 from tf2_geometry_msgs import do_transform_point
 from pathlib import Path
 import time
+import math
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
@@ -316,7 +317,7 @@ class Yolo_obj(Node):
             self.base_depth_cv2_frame = self.br.imgmsg_to_cv2(img, "passthrough")
         self.new_base_depth = True
 
-    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, object_coords_to_cam, object_coords_to_base, object_coords_to_map, camera, current_img, mask=None):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, object_coords_to_cam, object_coords_to_base, object_coords_to_map, object_2d_orientation, camera, current_img, mask=None):
 
         object_id = boxes_id.id
         if boxes_id.id == None:
@@ -370,7 +371,7 @@ class Yolo_obj(Node):
         new_object.box_center_y = new_object.box_top_left_y + new_object.box_height//2
 
         new_object.camera = camera
-        new_object.orientation = 0.0 # still missing... (says the object angle so the gripper can adjust to correctly pick up the object)
+        new_object.orientation = object_2d_orientation # object 2D angle so gripper can adjust to correctly pick up the object
         new_object.image_rgb_frame = current_img
             
         return new_object
@@ -667,19 +668,10 @@ class YoloObjectsMain():
                                 object_name = self.node.furniture_class_names[int(box.cls[0])]
                                 object_class = "Furniture"
                             
-                            # temp
-                            # box_top_left_x = int(box.xyxy[0][0])
-                            # box_top_left_y = int(box.xyxy[0][1])
-                            # box_width = int(box.xyxy[0][2]) - int(box.xyxy[0][0])
-                            # box_height = int(box.xyxy[0][3]) - int(box.xyxy[0][1])
-                            # box_center = []
-                            # box_center.append(box_top_left_y + box_height//2)
-                            # box_center.append(box_top_left_x + box_width//2)
-                            
-                            # obj_3d_cam_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_img=depth_frame, camera=camera, pixel=box_center)
-                         
                             # aaa_ = time.time()
                             obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
+                            object_2d_orientation = self.get_object_2D_orientation(depth_img=depth_frame, mask=mask.xy[0])
+                            
                             # print("3D Coords Time", time.time() - aaa_)
                             # print(object_name, "3D Coords", obj_3d_cam_coords)
 
@@ -717,7 +709,8 @@ class YoloObjectsMain():
 
                                 new_object = DetectedObject()
                                 new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
-                                                                                        object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img, mask=mask)
+                                                                                        object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
+                                                                                        object_2d_orientation=object_2d_orientation, camera=camera, current_img=rgb_img, mask=mask)
                                 # print(new_object.object_name, "ID:", new_object.index, str(round(new_object.confidence*100,0)) + "%", round(new_object.position_cam.x, 2), round(new_object.position_cam.y, 2), round(new_object.position_cam.z, 2) )
                                 
                                 conf = f"{new_object.confidence * 100:.0f}%"
@@ -743,8 +736,8 @@ class YoloObjectsMain():
                             object_name = self.node.furniture_class_names[int(box.cls[0])]
                             object_class = "Furniture"
 
-                        ########### MISSING HERE: POINT CLOUD CALCULATIONS ##########
                         obj_3d_cam_coords = self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_frame, camera=camera, bbox=box)
+                        object_2d_orientation = 0.0 # in bounding box mode, there is no 2D orientation calculation
                         
                         ALL_CONDITIONS_MET = 1
 
@@ -761,7 +754,6 @@ class YoloObjectsMain():
                         # if the object detection passes all selected conditions, the detected object is added to the publishing list
                         if ALL_CONDITIONS_MET:
 
-                            ########### MISSING HERE: APPLY LOCAL AND GLOBAL TRANSFORMS ########### Suppose each detection has x, y, z coordinates in the camera frame
                             point_cam = PointStamped()
                             point_cam.header.stamp = self.node.get_clock().now().to_msg()
                             point_cam.header.frame_id = camera_link
@@ -779,13 +771,54 @@ class YoloObjectsMain():
 
                             new_object = DetectedObject()
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
-                                                                                    object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, camera=camera, current_img=rgb_img)
+                                                                                    object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
+                                                                                    object_2d_orientation=object_2d_orientation, camera=camera, current_img=rgb_img)
                             yolov8_obj_filtered.objects.append(new_object)
 
         # self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
         # self.node.get_logger().info(f"Time Yolo_Objects: {time.perf_counter() - tempo_total}")
 
         return yolov8_obj_filtered, num_obj
+
+    def get_object_2D_orientation(self, depth_img, mask):
+
+        # aaa = time.time()
+        
+        b_mask = np.zeros(depth_img.shape[:2], np.uint8) # creates new empty window
+        contour = mask
+        contour = contour.astype(np.int32)
+        contour = contour.reshape(-1, 1, 2)
+        cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED) # creates mask window with just the inside pixesl of the detected objects
+        
+        # Find non-zero points in the mask image
+        points = cv2.findNonZero(b_mask)  # returns (N,1,2) array or None
+
+        # Check if there are valid points to fit the line
+        if points is None or len(points) < 2:
+            return  0.0 # or handle it gracefully
+        
+        [vx,vy,x,y] = cv2.fitLine(points, cv2.DIST_L2,0,0.01,0.01)
+        theta = math.degrees(math.atan2(vy,vx))
+
+        # Drawings for debug
+
+        # Define length of the line to draw
+        # line_length = 1000  # Increase this if the line is too short
+        # Compute two points along the line (in both directions from the center point)
+        # x1 = int(x - vx * line_length)
+        # y1 = int(y - vy * line_length)
+        # x2 = int(x + vx * line_length)
+        # y2 = int(y + vy * line_length)
+        # b_mask_aux = b_mask.copy()
+        # Draw the line on the image
+        # cv2.line(b_mask_aux, (x1, y1), (x2, y2), (128), 2)  # grayscale image → color is a single value (0-255)
+        # cv2.imwrite('output_image_orientation.jpg', b_mask_aux)
+        
+        # print(theta)
+        # print("Orientation_time:", time.time() - aaa)
+
+        return theta
+
 
     def draw_detected_objects(self, yolov8_objects, current_frame_draw):
         

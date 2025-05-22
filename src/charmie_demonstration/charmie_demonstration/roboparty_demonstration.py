@@ -506,7 +506,7 @@ class TaskMain():
                 # self.robot.set_speech(filename="demonstration/need_tools_roboparty", wait_for_end_of=True)
                 self.robot.set_speech(filename="demonstration/need_tools_education_summit", wait_for_end_of=True)
 
-                self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
                 # self.robot.set_speech(filename="demonstration/give_tools_roboparty", wait_for_end_of=True)
                 self.robot.set_speech(filename="demonstration/give_tools_education_summit", wait_for_end_of=True)

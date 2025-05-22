@@ -1501,10 +1501,24 @@ class RobotStdFunctions():
 
         return self.node.track_object_success, self.node.track_object_message   
 
-    def set_arm(self, command="", linear_motion_pose=[], move_tool_line_pose=[], joint_motion_values=[], wait_for_end_of=True):        
+    def set_arm(self, command="", linear_motion_pose=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], move_tool_line_pose=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], joint_motion_values=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True):        
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.node.waited_for_end_of_arm = False
-        
+
+        ### convert the lists to floats (prevents ROS2 errors)
+        linear_motion_pose = [float(x) for x in linear_motion_pose]
+        move_tool_line_pose = [float(x) for x in move_tool_line_pose]
+        joint_motion_values = [float(x) for x in joint_motion_values]
+
+        # converts values that should be radians but we are using blockly standard so we expect values as degrees, which are then internally converted to radians 
+        linear_motion_pose[3] = math.radians(linear_motion_pose[3])
+        linear_motion_pose[4] = math.radians(linear_motion_pose[4])
+        linear_motion_pose[5] = math.radians(linear_motion_pose[5])
+       
+        move_tool_line_pose[3] = math.radians(linear_motion_pose[3])
+        move_tool_line_pose[4] = math.radians(linear_motion_pose[4])
+        move_tool_line_pose[5] = math.radians(linear_motion_pose[5])
+    
         temp = ArmController()
         temp.command = command
         temp.linear_motion_pose  = linear_motion_pose
@@ -1664,6 +1678,8 @@ class RobotStdFunctions():
         goal_msg.pose.pose.orientation.y = q_y
         goal_msg.pose.pose.orientation.z = q_z
         goal_msg.pose.pose.orientation.w = q_w
+        
+        self.set_rgb(BLUE+BACK_AND_FORTH_8)
 
         while not nav2_goal_completed:
                 
@@ -1690,6 +1706,8 @@ class RobotStdFunctions():
                 timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
                 start_time = time.time()
 
+                self.set_rgb(CYAN+BACK_AND_FORTH_8)
+
                 while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
                     
                     if print_feedback:
@@ -1712,12 +1730,15 @@ class RobotStdFunctions():
 
                 
                 if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
+                    self.set_rgb(GREEN+BACK_AND_FORTH_8)
                     print("FINISHED TR SUCCEEDED")
                     nav2_goal_completed = True                
                 elif self.node.nav2_status == GoalStatus.STATUS_ABORTED:
+                    self.set_rgb(RED+BACK_AND_FORTH_8)
                     print("FINISHED TR ABORTED")
                     print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
                 elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
+                    self.set_rgb(RED+BACK_AND_FORTH_8)
                     print("FINISHED TR CANCELED")
                     print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
 
@@ -1746,6 +1767,8 @@ class RobotStdFunctions():
                 pose.pose.orientation.w = q_w
                 
                 goal_msg.poses.append(pose)
+
+            self.set_rgb(BLUE+BACK_AND_FORTH_8)
                     
             while not nav2_goal_completed:
                     
@@ -1772,6 +1795,8 @@ class RobotStdFunctions():
                     timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
                     start_time = time.time()
 
+                    self.set_rgb(CYAN+BACK_AND_FORTH_8)
+
                     while self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
                         
                         if print_feedback:
@@ -1789,14 +1814,21 @@ class RobotStdFunctions():
 
                     
                     if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+                        self.set_rgb(GREEN+BACK_AND_FORTH_8)
                         print("FINISHED TR SUCCEEDED")
                         nav2_goal_completed = True                
                     elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_ABORTED:
+                        self.set_rgb(RED+BACK_AND_FORTH_8)
                         print("FINISHED TR ABORTED")
                         print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
                     elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
+                        self.set_rgb(RED+BACK_AND_FORTH_8)
                         print("FINISHED TR CANCELED")
                         print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+
+    def add_rotation_to_pick_position(self, move_coords):
+        move_coords[2]+=45.0
+        return move_coords
 
     def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
@@ -2579,7 +2611,7 @@ class RobotStdFunctions():
             
             self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
 
-        self.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
         if show_detection:
             # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
