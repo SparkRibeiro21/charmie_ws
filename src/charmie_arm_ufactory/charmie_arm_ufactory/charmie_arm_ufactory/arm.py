@@ -198,8 +198,7 @@ class ArmUfactory(Node):
 		self.initial_position_joints_Pedro =			[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
 		self.search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
-		self.search_table_top_joints =					[-164.2, 41.7, -123.3, -94, 105.7, 280.4]
-
+		self.search_table_top_joints =					[-160.1, 57.5, -123.8, -87.3, 109.1, 69.5]
 		### SERVE THE BREAKFAST VARIABLES: ###
 		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
 		print("height_adjust:", height_adjust)
@@ -758,12 +757,13 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_gripper_speed_(speed=5000)
-				self.set_gripper_position_(pos=0, wait=True)
 			case 1:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=50, wait=True)
+				self.set_gripper_position_(pos=0, wait=True)
 			case 2:
-				self.set_joint_values_(angles=self.search_table_top_joints, speed=10, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=20, wait=True)
 			case 3:
+				self.set_joint_values_(angles=self.search_table_top_joints, speed=20, wait=True)
+			case 4:
 				self.finish_arm_movement_()
 
 
