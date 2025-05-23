@@ -12,6 +12,8 @@ RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
+
+
 ros2_modules = {
     "charmie_arm":              True,
     "charmie_audio":            False,
@@ -34,6 +36,9 @@ ros2_modules = {
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
+# teste
+
+
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
@@ -132,6 +137,12 @@ class TaskMain():
                 while True:
                     pass
                 
+                # APRIL 1 TEST
+
+                self.robot.set_arm(command="teste1", wait_for_end_of=True)
+
+                while True:
+                    pass
 
                 # INITIAL STATE
 

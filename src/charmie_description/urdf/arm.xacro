@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Set required flags used by xarm_description flags -->
+  <xacro:property name="is_ros2" value="true"/>
+  <xacro:property name="use_xacro_load_yaml" value="true"/>
+  <xacro:property name="mesh_path" value="package://xarm_description/meshes"/>
+  <xacro:property name="mesh_suffix" value="stl"/>
+  <!--<xacro:property name="torso_initial_angle_rads" value="0.15708" />-->
+  <xacro:property name="torso_initial_angle_rads" value="0"/>
+
+  <xacro:property name="kinematics_params_file" value="$(find xarm_description)/config/kinematics/default/xarm6_default_kinematics.yaml"/>
+
+  <!-- Include xArm6 macro definition -->
+  <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6_robot_macro.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6.transmission.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6.ros2_control.xacro" />
+  
+  <!-- Include xArm material definition -->
+  <xacro:include filename="$(find xarm_description)/urdf/common/common.link.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/common/common.material.xacro" />
+
+  <!-- Include Gripper macro definition -->
+  <xacro:include filename="$(find xarm_description)/urdf/gripper/xarm_gripper_macro.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/gripper/xarm_gripper.transmission.xacro" />
+  <xacro:include filename="$(find xarm_description)/urdf/gripper/xarm_gripper.ros2_control.xacro" />
+
+
+  <!-- Instantiate the common materials with xarm prefix -->
+  <xacro:common_material prefix="xarm_" />
+  <xacro:common_material prefix="xarm_gripper_" />
+
+  <!-- Instantiate the xArm6 robot with xarm prefix -->
+  <xacro:xarm6_robot
+    prefix="xarm_"
+    hw_ns="xarm"
+    limited="false"
+    velocity_control="false"
+    add_gripper="true"
+    add_bio_gripper="false"
+    ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware"
+    robot_ip=""
+    report_type="normal"
+    baud_checkset="true"
+    default_gripper_baud="2000000"
+    model1300="false"
+    kinematics_params_filename="${kinematics_params_file}"
+    inertial_params_filename=""
+    hard_interface="PositionJointInterface" />
+
+  <xacro:xarm6_transmission prefix="xarm_" />
+
+  <xacro:xarm6_ros2_control
+    prefix="xarm_"
+    hw_ns="xarm"
+    velocity_control="false"
+    add_gripper="true"
+    add_bio_gripper="false"
+    ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware"
+    robot_ip=""
+    report_type="normal"
+    baud_checkset="true"
+    default_gripper_baud="2000000" />
+
+  <xacro:xarm_gripper_transmission prefix="xarm_gripper_" hard_interface="PositionJointInterface" />
+  
+  <xacro:xarm_gripper_ros2_control 
+    prefix="xarm_gripper_" 
+    ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware" />
+
+  <!-- Mount the xArm6 on CHARMIE -->
+  <joint name="xarm_mount_joint" type="fixed">
+    <parent link="top_torso_link"/>
+    <child link="xarm_link_base"/>
+    <!-- Adjust this origin if needed for proper placement -->
+    <origin xyz="-0.11 0.0585 -0.0623" rpy="${pi/2} ${pi+torso_initial_angle_rads} 0"/>
+  </joint>
+</robot>

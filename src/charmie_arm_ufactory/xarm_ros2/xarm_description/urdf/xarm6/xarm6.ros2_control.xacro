@@ -34,7 +34,7 @@
         <!-- <plugin>gazebo_ros2_control/GazeboSystem</plugin> -->
 
         <!-- real xarm -->
-        <!-- <plugin>uf_robot_hardware/UFRobotSystemHardware</plugin> -->
+        <plugin>uf_robot_hardware/UFRobotSystemHardware</plugin>
       </hardware>
       <joint name="${prefix}joint1">
         <command_interface name="position">
