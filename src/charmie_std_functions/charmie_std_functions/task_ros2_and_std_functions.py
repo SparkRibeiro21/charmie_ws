@@ -1515,9 +1515,9 @@ class RobotStdFunctions():
         linear_motion_pose[4] = math.radians(linear_motion_pose[4])
         linear_motion_pose[5] = math.radians(linear_motion_pose[5])
        
-        move_tool_line_pose[3] = math.radians(linear_motion_pose[3])
-        move_tool_line_pose[4] = math.radians(linear_motion_pose[4])
-        move_tool_line_pose[5] = math.radians(linear_motion_pose[5])
+        move_tool_line_pose[3] = math.radians(move_tool_line_pose[3])
+        move_tool_line_pose[4] = math.radians(move_tool_line_pose[4])
+        move_tool_line_pose[5] = math.radians(move_tool_line_pose[5])
     
         temp = ArmController()
         temp.command = command
