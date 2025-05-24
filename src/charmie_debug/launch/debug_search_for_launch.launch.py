@@ -12,7 +12,7 @@ def generate_launch_description():
         std_lf.arm,
         std_lf.speakers,
         std_lf.charmie_multi_camera_launch_description,
-        std_lf.charmie_orbbec_base_camera_launch_description,
+       #std_lf.charmie_orbbec_base_camera_launch_description,
         std_lf.low_level,
         # std_lf.face,
         std_lf.neck,

@@ -3,6 +3,7 @@ import rclpy
 import threading
 import time
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
+import math
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -51,14 +52,12 @@ class TaskMain():
     def __init__(self, robot: RobotStdFunctions):
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
-        self.SELECTED_OBJECT = "Tropical Juice"
+        self.SELECTED_OBJECT = "Pringles"
 
     def main(self):
         
-        Search_for_person = 1
-        Search_for_objects = 2
-        Continuous_tracking = 3
-        Final_State = 4
+        Search_for_objects = 1
+        Final_State = 2
 
         # VARS ...
 
@@ -67,43 +66,8 @@ class TaskMain():
         print("IN NEW MAIN")
 
         while True:
-
-            if self.state == Search_for_person:
-
-                ### SEARCH FOR PERSON EXAMPLE ###
-                
-                # self.set_face(command="charmie_face")
-                self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
-
-                time.sleep(2.0)
-
-                tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                people_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0)
-
-                print("FOUND:", len(people_found)) 
-                for p in people_found:
-                    print("ID:", p.index)
-                time.sleep(0.5)
-
-                # for p in people_found:
-                #     path = self.robot.detected_person_to_face_path(person=p, send_to_face=True)
-                #     time.sleep(4)
-
-                self.robot.set_rgb(CYAN+HALF_ROTATE)
-                time.sleep(0.5)
-
-                for p in people_found:
-                    print(p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z)
-                    path = self.robot.detected_person_to_face_path(person=p, send_to_face=True)
-                    # self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                    self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z], wait_for_end_of=True)
-                    time.sleep(4)
-                                
-                # next state
-                self.state = Final_State
-
             
-            elif self.state == Search_for_objects:
+            if self.state == Search_for_objects:
                 
                 ### SEARCH FOR OBJECTS EXAMPLE ###
                 
@@ -150,19 +114,7 @@ class TaskMain():
                     time.sleep(4)
                                 
                 # next state
-                self.state = Final_State
-
-            
-            elif self.state == Continuous_tracking:
-                
-                ### CONTINUOUS TRACKING EXAMPLE ###
-                
-                # self.robot.set_continuous_tracking_with_coordinates()
-                self.robot.set_follow_person()
-
-                # next state
-                self.state = Final_State
-            
+                self.state = Final_State  
 
             elif self.state == Final_State:
                 print("Finished task")
@@ -188,15 +140,19 @@ class TaskMain():
             tf_y = 0.0
             tf_z = -0.075
 
-            print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({hand_x_},{hand_y_},{hand_z_})")
+            print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} {o.orientation} ({hand_x_},{hand_y_},{hand_z_})")
 
             correct_x = ((o.position_cam.x + 0.08 - tf_x)*1000) - 100
             correct_y = (o.position_cam.y - tf_y)*1000
             correct_z = (o.position_cam.z - tf_z)*1000
+            if o.orientation < 0.0:
+                correct_rotation = o.orientation +90.0
+            else:
+                correct_rotation = o.orientation -90.0
 
-            object_position = [correct_z, -correct_y, correct_x, 0.0, 0.0, 0.0]
+            object_position = [correct_z, -correct_y, correct_x, 0.0, 0.0, correct_rotation]
             final_position = [0.0, 0.0, 100.0, 0.0, 0.0, 0.0]
-            security_position = [100.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+            security_position = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), 0.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
             search_table_front_joints =	[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 
 
