@@ -3,8 +3,8 @@ import rclpy
 from rclpy.node import Node
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, SetTextFace
 
-# from TTS.utils.manage import ModelManager
-# from TTS.utils.synthesizer import Synthesizer
+from TTS.utils.manage import ModelManager
+from TTS.utils.synthesizer import Synthesizer
 
 import time
 import pygame
@@ -47,13 +47,13 @@ class RobotSpeak():
             subprocess.run("pactl set-sink-mute @DEFAULT_SINK@ false; pactl set-sink-volume @DEFAULT_SINK@ 100%", shell = True, executable="/bin/bash")
             print("Over-amplification toggle is unknown! Volume set to 100%!")
         
+        
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.home = str(Path.home())
         self.midpath = "charmie_ws/src/charmie_speakers/charmie_speakers/list_of_sentences"
         self.complete_path = self.home+'/'+self.midpath+'/'
 
-        """
         # TTS synthetiser models path 
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
         self.voice_models_path = self.home+"/.local/lib/python3.10/site-packages/TTS/.models.json"
@@ -77,9 +77,8 @@ class RobotSpeak():
             vocoder_checkpoint= voc_path,
             vocoder_config= voc_config_path
         )
-        """
-
-
+        
+        
     # function for pre recorded commands 
     def play_command(self, filename, show_in_face=False, long_pause=False, breakable_play=False, break_play=False):
                 
