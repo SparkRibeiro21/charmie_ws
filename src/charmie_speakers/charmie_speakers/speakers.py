@@ -79,7 +79,6 @@ class RobotSpeak():
         )
         """
 
-
     # function for pre recorded commands 
     def play_command(self, filename, show_in_face=False, long_pause=False, breakable_play=False, break_play=False):
                 
@@ -224,8 +223,8 @@ class SpeakerNode(Node):
 
 
     # Test Function for some quick tests if necessary
-    def test(self):
-        self.charmie_speech.load_and_play_command(command="What is your friend name and favourite drink?", quick_voice=False, show_in_face=False, play_command=True)
+    # def test(self):
+    #     self.charmie_speech.load_and_play_command(command="What is your friend name and favourite drink?", quick_voice=False, show_in_face=False, play_command=True)
 
 
     # Main Function regarding received commands
@@ -244,32 +243,18 @@ class SpeakerNode(Node):
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
 
-        # if filename comes empty it is automatically assumed that it is intended to use the load and play mode
-        
-        if request.filename == "":
-            # speakers mode where received string must be synthesized and played now
-            
-            if request.command == "":
-                self.get_logger().error("Empty filename and command")
-                success = False
-                message = "Empty filename and command..."
-            else:
-                self.get_logger().info("SPEAKERS received (custom) - %s" %request.command)
-                self.charmie_speech.load_and_play_command(command=request.command, quick_voice=request.quick_voice, \
-                                                        show_in_face=request.show_in_face, long_pause=request.long_pause_show_in_face, \
-                                                        play_command=True)
-                success = True
-                message = ""
-        
+        # speakers mode where received filename must be played
+        success, message = self.charmie_speech.play_command(filename=request.filename, show_in_face=request.show_in_face, \
+                                                            long_pause=request.long_pause_show_in_face, \
+                                                            breakable_play=request.breakable_play, break_play=request.break_play)
+        if success == False:
+            self.get_logger().error("SPEAKERS received (file) does not exist! - %s" %request.filename)
+
+            if request.command != "": # case where wrongfully task is using speakers and not speakers_with_save
+                self.get_logger().error("Command is not valid. Using the wrong ROS2 speakers node. Pleace check if using -speakers- or -speakers_with_save- node.")
+                message = "Command is not valid. Using the wrong ROS2 speakers node. Pleace check if using -speakers- or -speakers_with_save- node."
         else:
-            # speakers mode where received filename must be played
-            success, message = self.charmie_speech.play_command(filename=request.filename, show_in_face=request.show_in_face, \
-                                                                long_pause=request.long_pause_show_in_face, \
-                                                                breakable_play=request.breakable_play, break_play=request.break_play)
-            if success == False:
-                self.get_logger().error("SPEAKERS received (file) does not exist! - %s" %request.filename)
-            else:
-                self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
+            self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
 
         # returns whether the message was played and some informations regarding status
         response.success = success
@@ -291,6 +276,7 @@ class SpeakerNode(Node):
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
 
+        """
         any_empty_command = False
         commands = {}
         for i in range(len(request.filename)):
@@ -319,7 +305,11 @@ class SpeakerNode(Node):
             success = False
             message = "Empty command."
 
-
+        """
+        success = False
+        message = "Command is not valid. Using the wrong ROS2 speakers node. Pleace check if using -speakers- or -speakers_with_save- node."
+        self.get_logger().error("Command is not valid. Using the wrong ROS2 speakers node. Pleace check if using -speakers- or -speakers_with_save- node.")
+                
         response.success = success
         response.message = message
         return response
