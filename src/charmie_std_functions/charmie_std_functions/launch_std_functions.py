@@ -218,6 +218,12 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
+        self.speakers_with_save = Node(package='charmie_speakers',
+                            executable='speakers_with_save',
+                            name='speakers_with_save',
+                            emulate_tty=True
+                            )
+        
         self.neck = Node(package='charmie_neck_dynamixel',
                     executable='neck_dynamixel',
                     name='neck_dynamixel',
