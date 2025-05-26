@@ -68,7 +68,7 @@ class TaskMain():
             "Placing_spoon":                11,
             "Final_State":                  12,
         }
-        self.robot.set_task_name_and_states(task_name="Serve Breakfast", task_states=self.task_states) 
+        self.robot.set_task_name_and_states(task_name="Serve Breakfast", task_states=self.task_states) # Necessary to visualize states and task info in GUI
         
     def main(self):
         
@@ -105,7 +105,7 @@ class TaskMain():
         print("IN SERVE THE BREAKFAST MAIN")
 
         while True:
-            self.robot.set_current_task_state(current_state=self.state)
+            self.robot.set_current_task_state(current_state=self.state) # Necessary to visualize current task state in GUI
 
             if self.state == self.task_states["Waiting_for_task_start"]:
 

@@ -48,6 +48,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/PS4Controller.msg"
   "msg/RGB.msg"
   "msg/TarNavSDNL.msg"
+  "msg/TaskStatesInfo.msg"
   "msg/TorsoPosition.msg"
   "msg/TrackingMask.msg"
   "msg/VCCsLowLevel.msg"
