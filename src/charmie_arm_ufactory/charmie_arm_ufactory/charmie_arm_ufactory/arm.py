@@ -229,8 +229,10 @@ class ArmUfactory(Node):
 
 
 		### SEARCH FOR OBJECT ON TABLE FRONTAL JOINT VARIABLES###
-		self.initial_position_joints_Pedro =			[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
-		self.search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
+		self.initial_position_joints_Pedro =								[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
+		self.initial_position_to_search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
+		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
+
 		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
 		self.search_table_top_joints =					[-160.1, 57.5, -123.8, -87.3, 109.1, 69.5]
 		### SERVE THE BREAKFAST VARIABLES: ###
@@ -779,15 +781,19 @@ class ArmUfactory(Node):
 			case 2:
 				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
 			case 3:
-				self.set_joint_values_(angles=self.search_table_front_joints, speed=30, wait=True)
+				self.set_joint_values_(angles=self.initial_position_to_search_table_front_joints, speed=30, wait=True)
 			case 4:
+				self.set_joint_values_(angles=self.search_table_front_joints, speed=30, wait=True)
+			case 5:
 				self.finish_arm_movement_()
 
 	def search_table_to_initial_pose(self):
 		match self.estado_tr:
 			case 0:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
+				self.set_joint_values_(angles=self.initial_position_to_search_table_front_joints, speed=30, wait=True)
 			case 1:
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
+			case 2:
 				self.finish_arm_movement_()
 
 	### SEARCH FOR OBJECT ON TABLE TOP###
