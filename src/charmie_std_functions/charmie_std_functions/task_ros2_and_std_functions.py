@@ -256,8 +256,10 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         
         # Task Variables:
-        self.task_states = {}
         self.task_name = ""
+        self.task_states = {}
+        self.swapped_task_states = {}
+        self.current_task_state = 0
 
         # Variables 
         self.waited_for_end_of_audio = False
@@ -1104,14 +1106,30 @@ class RobotStdFunctions():
         self.node = node
 
     def set_task_name_and_states(self, task_name="", task_states={}):
+        
+        if task_name == "" or task_states == {}:
+            self.node.get_logger().error("Task name or task states cannot be empty... Please set task name and states.")
+            while True:
+                pass
+        
         self.node.task_name = task_name
         self.node.task_states = task_states
+        self.node.swapped_task_states = {value: key for key, value in self.node.task_states.items()}
 
         print("\nTask Name: " + self.node.task_name)
         print("Task States:")
         for key, value in self.node.task_states.items():
             print(key)
         print()
+
+    def set_current_task_state(self, current_state=None):
+        
+        if current_state == None:
+            self.node.get_logger().error("Current task state cannot be empty... Please set current task state.")
+            while True:
+                pass
+        self.node.current_task_state = current_state
+        print("\n>>> Current Task State: " + str(self.node.swapped_task_states[self.node.current_task_state]) + " <<<\n")
 
     def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause_show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 

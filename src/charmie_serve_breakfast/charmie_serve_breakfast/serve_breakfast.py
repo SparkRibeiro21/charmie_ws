@@ -105,6 +105,7 @@ class TaskMain():
         print("IN SERVE THE BREAKFAST MAIN")
 
         while True:
+            self.robot.set_current_task_state(current_state=self.state)
 
             if self.state == self.task_states["Waiting_for_task_start"]:
 
