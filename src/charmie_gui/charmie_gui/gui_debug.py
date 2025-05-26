@@ -739,9 +739,9 @@ class DebugVisualMain():
         self.cams_initial_width = int(205 + 0.5 + self.button_size*self.camera_resize_ratio)
 
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
-        self.map_init_height = 260
+        self.map_init_height = 260 + 50 # increaswed 50 so that the map is appears lower on the window
 
-        self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
+        self.MAP_SIDE = int(self.HEIGHT - 260 - 12) - 100  # decreased 100 so that the map is shorter for the task states
         self.MAP_SCALE = 1.40
         self.MAP_ADJUST_X = 0.8
         self.MAP_ADJUST_Y = -3.0
@@ -2097,7 +2097,7 @@ class DebugVisualMain():
 
     def draw_map(self):
         
-        self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
+        self.MAP_SIDE = int(self.HEIGHT - 260 - 12) - 100 # decreased 100 so that the map is shorter for the task states
         # print(self.HEIGHT, self.MAP_SIDE)
 
         self.xc = self.MAP_SIDE
@@ -2108,8 +2108,8 @@ class DebugVisualMain():
         self.yc_adj = self.yc - self.yy_shift
 
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
-        self.map_init_height = 260
-
+        self.map_init_height = 260 + 50 # increaswed 50 so that the map is appears lower on the window
+ 
         # visual configs:
         neck_visual_lines_length = 1.0
         detected_person_radius = 0.2
@@ -2277,7 +2277,8 @@ class DebugVisualMain():
             self.node.new_search_for_object = False    
 
         ### TRACKING
-        pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(self.node.tracking_mask.position_absolute.x, self.node.tracking_mask.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
+        if self.node.is_tracking_comm:
+            pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(self.node.tracking_mask.position_absolute.x, self.node.tracking_mask.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
 
         ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
