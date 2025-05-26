@@ -11,25 +11,25 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              True,
+    "charmie_arm":              False,
     "charmie_audio":            False,
     "charmie_face":             False,
-    "charmie_head_camera":      True,
-    "charmie_hand_camera":      True,
-    "charmie_base_camera":      True,
-    "charmie_lidar":            True,
-    "charmie_lidar_bottom":     True,
+    "charmie_head_camera":      False,
+    "charmie_hand_camera":      False,
+    "charmie_base_camera":      False,
+    "charmie_lidar":            False,
+    "charmie_lidar_bottom":     False,
     "charmie_llm":              False,
-    "charmie_localisation":     True,
-    "charmie_low_level":        True,
+    "charmie_localisation":     False,
+    "charmie_low_level":        False,
     "charmie_navigation":       False,
-    "charmie_nav2":             True,
-    "charmie_neck":             True,
+    "charmie_nav2":             False,
+    "charmie_neck":             False,
     "charmie_obstacles":        False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_tracking":         False,
-    "charmie_yolo_objects":     True,
+    "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
 }
 
@@ -53,23 +53,25 @@ class TaskMain():
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
 
+        self.task_states ={
+            "Waiting_for_task_start":       0,
+            "Approach_milk_location":       1,
+            "Detect_and_pick_milk":         2,
+            "Approach_cornflakes_location": 3,
+            "Detect_and_pick_cornflakes":   4,
+            "Approach_dishes_location":     5,
+            "Detect_and_pick_dishes":       6,
+            "Approach_kitchen_table":       7,
+            "Placing_bowl":                 8,
+            "Placing_cornflakes":           9,
+            "Placing_milk":                 10,
+            "Placing_spoon":                11,
+            "Final_State":                  12,
+        }
+        self.robot.set_task_name_and_states(task_name="Serve Breakfast", task_states=self.task_states) 
+        
     def main(self):
         
-        # Task Related Variables
-        self.Waiting_for_task_start = 0
-        self.Approach_milk_location = 1
-        self.Detect_and_pick_milk = 2
-        self.Approach_cornflakes_location = 3
-        self.Detect_and_pick_cornflakes = 4
-        self.Approach_dishes_location = 5
-        self.Detect_and_pick_dishes = 6
-        self.Approach_kitchen_table = 7
-        self.Placing_bowl = 8
-        self.Placing_milk = 9
-        self.Placing_cornflakes = 10
-        self.Placing_spoon = 11
-        self.Final_State = 12
-    
         # Configurables
         self.GET_MILK = True
         self.GET_CORNFLAKES = True
@@ -98,13 +100,13 @@ class TaskMain():
         print(self.initial_position)
         self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         
-        self.state = self.Waiting_for_task_start
+        self.state = self.task_states["Waiting_for_task_start"]
 
         print("IN SERVE THE BREAKFAST MAIN")
 
         while True:
 
-            if self.state == self.Waiting_for_task_start:
+            if self.state == self.task_states["Waiting_for_task_start"]:
 
                 self.robot.set_initial_position(self.initial_position)
                 
@@ -125,10 +127,10 @@ class TaskMain():
 
                 ### self.robot.initial_move_past_entrance_door() # to do ...
 
-                self.state = self.Approach_milk_location
-                # self.state = self.Detect_and_pick_milk # debug without NAV
+                self.state = self.task_states["Approach_milk_location"]
 
-            elif self.state == self.Approach_milk_location:
+
+            elif self.state == self.task_states["Approach_milk_location"]:
                                         
                 if self.GET_MILK:
 
@@ -141,11 +143,10 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=False)
                 
-                # self.state = self.Approach_cornflakes_location 
-                self.state = self.Detect_and_pick_milk
+                self.state = self.task_states["Detect_and_pick_milk"]
 
 
-            elif self.state == self.Detect_and_pick_milk:
+            elif self.state == self.task_states["Detect_and_pick_milk"]:
 
                 if self.GET_MILK:
 
@@ -159,11 +160,10 @@ class TaskMain():
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
-                self.state = self.Approach_cornflakes_location
-                # self.state = self.Detect_and_pick_cornflakes # debug without NAV
+                self.state = self.task_states["Approach_cornflakes_location"]
 
 
-            elif self.state == self.Approach_cornflakes_location:
+            elif self.state == self.task_states["Approach_cornflakes_location"]:
 
                 if self.GET_CORNFLAKES:
                     
@@ -181,11 +181,10 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
                                     
-                # self.state = self.Approach_dishes_location # 
-                self.state = self.Detect_and_pick_cornflakes
+                self.state = self.task_states["Detect_and_pick_cornflakes"]
 
 
-            elif self.state == self.Detect_and_pick_cornflakes:
+            elif self.state == self.task_states["Detect_and_pick_cornflakes"]:
 
                 if self.GET_CORNFLAKES:
 
@@ -204,11 +203,10 @@ class TaskMain():
                     self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
-                self.state = self.Approach_dishes_location
-                # self.state = self.Detect_and_pick_dishes # debug without NAV
+                self.state = self.task_states["Approach_dishes_location"]
 
 
-            elif self.state == self.Approach_dishes_location:
+            elif self.state == self.task_states["Approach_dishes_location"]:
 
                 if self.GET_DISHES:
 
@@ -226,12 +224,10 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=False)
                 
-                
-                # self.state = self.Approach_kitchen_table 
-                self.state = self.Detect_and_pick_dishes
+                self.state = self.task_states["Detect_and_pick_dishes"]
 
 
-            elif self.state == self.Detect_and_pick_dishes:
+            elif self.state == self.task_states["Detect_and_pick_dishes"]:
 
                 if self.GET_DISHES:
                     object_in_gripper = False
@@ -262,11 +258,10 @@ class TaskMain():
                     # SPOON
                     self.robot.ask_help_pick_object_tray(object_d=correct_object_spoon, look_judge=self.look_judge, first_help_request=False, bb_color=(0, 255, 0), audio_confirmation=False)
 
-                self.state = self.Approach_kitchen_table
-                # self.state = self.Placing_bowl # debug without NAV
+                self.state = self.task_states["Approach_kitchen_table"]
 
 
-            elif self.state == self.Approach_kitchen_table:
+            elif self.state == self.task_states["Approach_kitchen_table"]:
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
@@ -286,19 +281,19 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_table_objects, wait_for_end_of=False)
                 
-                self.state = self.Placing_bowl
+                self.state = self.task_states["Placing_bowl"]
 
 
-            elif self.state == self.Placing_bowl:
+            elif self.state == self.task_states["Placing_bowl"]:
 
                 if self.GET_DISHES:
                     
                     self.robot.place_object(arm_command="place_bowl_table", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     
-                self.state = self.Placing_cornflakes 
+                self.state = self.task_states["Placing_cornflakes"] 
             
 
-            elif self.state == self.Placing_cornflakes:
+            elif self.state == self.task_states["Placing_cornflakes"]:
 
                 if self.GET_CORNFLAKES:
                     ##### ARM POUR IN BOWL
@@ -307,10 +302,10 @@ class TaskMain():
                     ##### ARM PLACE OBJECT
                     self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name="cornflakes", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     
-                self.state = self.Placing_milk
+                self.state = self.task_states["Placing_milk"]
 
            
-            elif self.state == self.Placing_milk:
+            elif self.state == self.task_states["Placing_milk"]:
 
                 if self.GET_MILK:
                     ##### ARM POUR IN BOWL
@@ -319,18 +314,18 @@ class TaskMain():
                     ##### ARM PLACE OBJECT
                     self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name="milk", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     
-                self.state = self.Placing_spoon
+                self.state = self.task_states["Placing_spoon"]
 
 
-            elif self.state == self.Placing_spoon:
+            elif self.state == self.task_states["Placing_spoon"]:
 
                 if self.GET_DISHES:
                     self.robot.place_object(arm_command="place_spoon_table_funilocopo_v2", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                 
-                self.state = self.Final_State 
+                self.state = self.task_states["Final_State"]
 
 
-            elif self.state == self.Final_State:
+            elif self.state == self.task_states["Final_State"]:
                 
                 self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)

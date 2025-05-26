@@ -255,7 +255,10 @@ class ROS2TaskNode(Node):
             while not self.activate_yolo_pose_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         
-        
+        # Task Variables:
+        self.task_states = {}
+        self.task_name = ""
+
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -1099,6 +1102,16 @@ class RobotStdFunctions():
     def __init__(self, node: ROS2TaskNode):
         # create a node instance so all variables ros related can be acessed
         self.node = node
+
+    def set_task_name_and_states(self, task_name="", task_states={}):
+        self.node.task_name = task_name
+        self.node.task_states = task_states
+
+        print("\nTask Name: " + self.node.task_name)
+        print("Task States:")
+        for key, value in self.node.task_states.items():
+            print(key)
+        print()
 
     def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause_show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 
