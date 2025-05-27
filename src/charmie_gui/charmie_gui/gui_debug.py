@@ -201,6 +201,7 @@ class DebugVisualNode(Node):
         self.is_tracking_comm = False
         self.task_states_info = TaskStatesInfo()
         self.task_state_selectable = 0
+        self.received_first_task_state_selectable = False
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
@@ -516,6 +517,7 @@ class DebugVisualNode(Node):
         # print("Received Task State Selectable")
         # print(msg.data)
         self.task_state_selectable = msg.data
+        self.received_first_task_state_selectable = True
 
 
 class CheckNodesMain():
@@ -2330,7 +2332,7 @@ class DebugVisualMain():
                 else:
                     colour = self.WHITE
                 
-                if state_id == self.node.task_state_selectable:
+                if state_id == self.node.task_state_selectable and self.node.received_first_task_state_selectable:
                     # option 1 change colour
                     # colour = self.YELLOW
                 

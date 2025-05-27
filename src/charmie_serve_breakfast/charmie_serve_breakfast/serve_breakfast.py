@@ -104,9 +104,11 @@ class TaskMain():
 
         print("IN SERVE THE BREAKFAST MAIN")
 
+        print("DEMO OPTION:", self.robot.get_demo_option())
+
         while True:
             self.robot.set_current_task_state_id(current_state=self.state) # Necessary to visualize current task state in GUI
-
+            
             if self.state == self.task_states["Waiting_for_task_start"]:
 
                 self.robot.set_initial_position(self.initial_position)

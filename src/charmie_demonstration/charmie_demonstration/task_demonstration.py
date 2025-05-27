@@ -127,6 +127,8 @@ class TaskMain():
                         self.motors_active = False
                         self.robot.activate_motors(activate=self.motors_active)
 
+                self.robot.set_task_state_selection(0)
+
                 self.state = self.Demo_actuators_with_tasks
 
 

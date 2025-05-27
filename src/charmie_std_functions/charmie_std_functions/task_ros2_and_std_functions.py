@@ -40,6 +40,11 @@ class ROS2TaskNode(Node):
         super().__init__("ROS2TaskCHARMIE")
         self.get_logger().info("Initialised CHARMIE ROS2Task Node")
 
+        ### ROS2 Parameters ###
+        # DEMO mode for task_demonstrations allows operator to control the robot task selection with the controller  
+        self.declare_parameter("DEMO", False) 
+        self.DEMO_OPTION = self.get_parameter("DEMO").value
+        
         self.ros2_modules = ros2_modules
 
         # path to save detected people in search for person
@@ -1049,6 +1054,9 @@ class RobotStdFunctions():
     def __init__(self, node: ROS2TaskNode):
         # create a node instance so all variables ros related can be acessed
         self.node = node
+
+    def get_demo_option(self):
+        return self.node.DEMO_OPTION
 
     def set_task_name_and_states(self, task_name="", task_states={}):
         
