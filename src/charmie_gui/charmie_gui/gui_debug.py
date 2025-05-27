@@ -9,7 +9,7 @@ from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject, \
-    TrackingMask, VCCsLowLevel
+    TrackingMask, VCCsLowLevel, TaskStatesInfo
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, GetLLMDemo, ActivateTracking, SetRGB
 from cv_bridge import CvBridge, CvBridgeError
@@ -77,6 +77,8 @@ class DebugVisualNode(Node):
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
+        # Task States Info
+        self.task_states_info_subscriber = self.create_subscription(TaskStatesInfo, "task_states_info", self.task_states_info_callback, 10)
         
         ### Services (Clients) ###
 		# Arm (Ufactory)
@@ -196,6 +198,7 @@ class DebugVisualNode(Node):
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
         self.is_tracking_comm = False
+        self.task_states_info = TaskStatesInfo()
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
@@ -501,6 +504,11 @@ class DebugVisualNode(Node):
     def search_for_object_detections_callback(self, points: ListOfDetectedObject):
         self.search_for_object = points
         self.new_search_for_object = True
+
+    def task_states_info_callback(self, tsi: TaskStatesInfo):
+        # print("Received Task States Info")
+        # print(tsi)
+        self.task_states_info = tsi
 
 
 class CheckNodesMain():
@@ -2295,6 +2303,37 @@ class DebugVisualMain():
         
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
+
+    def draw_task_states_info(self):
+        
+
+        
+        if self.node.task_states_info.task_name != "":
+
+            height_space_between_tasks = 25
+            xc = self.map_init_width + self.MAP_SIDE + 10
+            yc = self.map_init_height - 20
+
+            # self.draw_text("Task Info: ", self.text_font_t, self.WHITE, xc, yc)
+            # self.draw_text("> "+self.node.task_states_info.task_name+" <", self.text_font, self.RED, xc, yc+30)
+            self.draw_text("  "+self.node.task_states_info.task_name+":", self.text_font_t, self.RED, xc, yc + height_space_between_tasks - 5)
+
+            for state, state_id in zip(self.node.task_states_info.list_of_states, self.node.task_states_info.list_of_states_ids):
+                if state_id == self.node.task_states_info.current_task_state_id:
+                    colour = self.GREEN
+                else:
+                    colour = self.WHITE
+                self.draw_text(state.replace("_", " "), self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
+                # self.draw_text(str(state_id)+state.replace("_", " "), self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
+                
+            # self.draw_text("State: "+self.node.task_states_info.state_name, self.text_font_t, self.WHITE, xc, yc+30)
+            # self.draw_text("Progress: "+str(self.node.task_states_info.progress)+"%", self.text_font_t, self.WHITE, xc, yc+50)
+            # self.draw_text("Time left: "+str(self.node.task_states_info.time_left)+"s", self.text_font_t, self.WHITE, xc, yc+70)
+            # self.draw_text("No image available ...", self.text_font_t, self.WHITE, xc, yc+60)
+
+
+
+        
     def draw_battery(self):
 
         battery_colour = self.WHITE
@@ -2374,6 +2413,7 @@ class DebugVisualMain():
 
             self.WIN.fill((0, 0, 0))
             self.draw_map()
+            self.draw_task_states_info()
             self.adjust_window_size()  
             self.draw_nodes_check()
             self.draw_battery()

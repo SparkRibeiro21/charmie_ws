@@ -261,7 +261,7 @@ class ROS2TaskNode(Node):
         self.task_name = ""
         self.task_states = {}
         self.swapped_task_states = {}
-        self.current_task_state = 0
+        self.current_task_state_id = 0
 
         # Variables 
         self.waited_for_end_of_audio = False
@@ -379,7 +379,7 @@ class ROS2TaskNode(Node):
         if self.task_name != "":
             tsi = TaskStatesInfo()
             tsi.task_name = self.task_name
-            tsi.current_task_state = self.current_task_state
+            tsi.current_task_state_id = self.current_task_state_id
             tsi.list_of_states = list(self.task_states.keys())
             tsi.list_of_states_ids = list(self.task_states.values())
             self.task_states_info_publisher.publish(tsi)
@@ -1062,14 +1062,14 @@ class RobotStdFunctions():
             print(key)
         print()
 
-    def set_current_task_state(self, current_state=None):
+    def set_current_task_state_id(self, current_state=None):
         
         if current_state == None:
             self.node.get_logger().error("Current task state cannot be empty... Please set current task state.")
             while True:
                 pass
-        self.node.current_task_state = current_state
-        print("\n>>> Current Task State: " + str(self.node.swapped_task_states[self.node.current_task_state]) + " <<<\n")
+        self.node.current_task_state_id = current_state
+        print("\n>>> Current Task State: " + str(self.node.swapped_task_states[self.node.current_task_state_id]) + " <<<\n")
 
     def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause_show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 

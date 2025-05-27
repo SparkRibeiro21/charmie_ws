@@ -55,13 +55,13 @@ class TaskMain():
 
         self.task_states ={
             "Waiting_for_task_start":       0,
-            "Approach_milk_location":       1,
+            "Move_milk_location":           1,
             "Detect_and_pick_milk":         2,
-            "Approach_cornflakes_location": 3,
+            "Move_cornflakes_location":     3,
             "Detect_and_pick_cornflakes":   4,
-            "Approach_dishes_location":     5,
+            "Move_dishes_location":         5,
             "Detect_and_pick_dishes":       6,
-            "Approach_kitchen_table":       7,
+            "Move_kitchen_table":           7,
             "Placing_bowl":                 8,
             "Placing_cornflakes":           9,
             "Placing_milk":                 10,
@@ -105,7 +105,7 @@ class TaskMain():
         print("IN SERVE THE BREAKFAST MAIN")
 
         while True:
-            self.robot.set_current_task_state(current_state=self.state) # Necessary to visualize current task state in GUI
+            self.robot.set_current_task_state_id(current_state=self.state) # Necessary to visualize current task state in GUI
 
             if self.state == self.task_states["Waiting_for_task_start"]:
 
@@ -128,10 +128,10 @@ class TaskMain():
 
                 ### self.robot.initial_move_past_entrance_door() # to do ...
 
-                self.state = self.task_states["Approach_milk_location"]
+                self.state = self.task_states["Move_milk_location"]
 
 
-            elif self.state == self.task_states["Approach_milk_location"]:
+            elif self.state == self.task_states["Move_milk_location"]:
                                         
                 if self.GET_MILK:
 
@@ -161,10 +161,10 @@ class TaskMain():
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
-                self.state = self.task_states["Approach_cornflakes_location"]
+                self.state = self.task_states["Move_cornflakes_location"]
 
 
-            elif self.state == self.task_states["Approach_cornflakes_location"]:
+            elif self.state == self.task_states["Move_cornflakes_location"]:
 
                 if self.GET_CORNFLAKES:
                     
@@ -204,10 +204,10 @@ class TaskMain():
                     self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
-                self.state = self.task_states["Approach_dishes_location"]
+                self.state = self.task_states["Move_dishes_location"]
 
 
-            elif self.state == self.task_states["Approach_dishes_location"]:
+            elif self.state == self.task_states["Move_dishes_location"]:
 
                 if self.GET_DISHES:
 
@@ -259,10 +259,10 @@ class TaskMain():
                     # SPOON
                     self.robot.ask_help_pick_object_tray(object_d=correct_object_spoon, look_judge=self.look_judge, first_help_request=False, bb_color=(0, 255, 0), audio_confirmation=False)
 
-                self.state = self.task_states["Approach_kitchen_table"]
+                self.state = self.task_states["Move_kitchen_table"]
 
 
-            elif self.state == self.task_states["Approach_kitchen_table"]:
+            elif self.state == self.task_states["Move_kitchen_table"]:
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
