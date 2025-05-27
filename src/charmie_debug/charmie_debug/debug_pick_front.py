@@ -52,7 +52,7 @@ class TaskMain():
     def __init__(self, robot: RobotStdFunctions):
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
-        self.SELECTED_OBJECT = "Pringles"
+        self.SELECTED_OBJECT = "Water"
 
     def main(self):
         
