@@ -3,6 +3,7 @@ import rclpy
 import threading
 import time
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
+import math
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -51,7 +52,7 @@ class TaskMain():
     def __init__(self, robot: RobotStdFunctions):
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
-        self.SELECTED_OBJECT = "Spoon"
+        self.SELECTED_OBJECT = "Red Wine"
 
     def main(self):
         
@@ -190,18 +191,34 @@ class TaskMain():
 
             print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({hand_x_},{hand_y_},{hand_z_})")
 
-            if pick_center = True: 
-                correct_x = ((o.position_cam.x - tf_x)*1000) - 100 + ( largura / 2 ) # em mm
-            else
-                correct_x = ((o.position_cam.x - tf_x)*1000) - 100 + ( largura ) # em mm
-            # Função para substituir o if considerando pick_center é bool, fica mais dificil de ler: correct_x = ((o.position_cam.x - tf_x)*1000) - 100 + ( largura / (1 + pick_center) ) # em mm
-            correct_y = (o.position_cam.y - tf_y)*1000
-            correct_z = ((o.position_cam.z - tf_z)*1000) - 10
+            # if pick_center = True: 
+            #     correct_x = ((o.position_cam.x - tf_x)*1000) - 100 + ( largura / 2 ) # em mm
+            # else
+            #     correct_x = ((o.position_cam.x - tf_x)*1000) - 100 + ( largura ) # em mm
+                #CALIBRATE GRIPPER BEFORE GRABBING
+                # table_objects = self.robot.search_for_objects(tetas=[[0, 0]], delta_t=2.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+                # for o in table_objects:
+                #     conf = f"{o.confidence * 100:.0f}%"
+                #     hand_y_grab = f"{o.position_cam.y:5.2f}"
+                #     correct_y_grab = (o.position_cam.y - tf_y)*1000
+                #     print(f"{'BEFORE GRIP ID AND ADJUST:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({hand_y_})")
+                # object_position_grab = [0.0, -correct_y_grab, 0.0, 0.0, 0.0, 0.0]
+                #APPLY ADJUSTEMENT BEFORE GRABBING
+                # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
 
-            object_position = [correct_z, -correct_y, correct_x, 0.0, 0.0, 0.0]
+            correct_x = ((o.position_cam.x + 0.02475 - tf_x)*1000) - 100
+            correct_y = (o.position_cam.y - tf_y)*1000
+            correct_z = (o.position_cam.z - tf_z)*1000
+            if o.orientation < 0.0:
+                correct_rotation = o.orientation +90.0
+            else:
+                correct_rotation = o.orientation -90.0
+
+            object_position = [correct_z, -correct_y, correct_x, 0.0, 0.0, correct_rotation]
+            object_reajust = [0.0, 0.0, 0.0, 0.0, 0.0, -correct_rotation]
             final_position = [0.0, 0.0, 100.0, 0.0, 0.0, 0.0]
-            security_position = [0.0, 0.0, -100.0, 0.0, 0.0, 0.0]
-            search_table_top_joints =	[-160.1, 57.5, -123.8, -87.3, 109.1, 69.5] # search_table_front_joints =	[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
+            security_position = [0.00, 0.0, -100.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+            search_table_top_joints =	[-160.1, 57.5, -123.8, -87.3, 109.1, 69.5]
 
 
             if o.object_name == self.SELECTED_OBJECT:
@@ -209,26 +226,18 @@ class TaskMain():
                 self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
                 #MOVE ARM IN THAT DIRECTION
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
-                #CALIBRATE GRIPPER BEFORE GRABBING
-                table_objects = self.robot.search_for_objects(tetas=[[0, 0]], delta_t=2.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
-                for o in table_objects:
-                    conf = f"{o.confidence * 100:.0f}%"
-                    hand_y_grab = f"{o.position_cam.y:5.2f}"
-                    correct_y_grab = (o.position_cam.y - tf_y)*1000
-                    print(f"{'BEFORE GRIP ID AND ADJUST:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({hand_y_})")
-                object_position_grab = [0.0, -correct_y_grab, 0.0, 0.0, 0.0, 0.0]
-                #APPLY ADJUSTEMENT BEFORE GRABBING
-                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
                 #MOVE ARM TO FINAL POSITION
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = final_position, wait_for_end_of=True)
                 #CLOSE GRIPPER
                 self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
                 #MOVE TO SAFE POSITION
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position, wait_for_end_of=True)
+                #ROTATE OBJECT TO SAFE POSITION
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
                 #MOVE TO SEARCH TABLE
-                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True) # self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_front_joints, wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
                 #MOVE ARM TO INITIAL POSITION
-                self.robot.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                self.robot.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=True)
                 print(f"Bring object to initial pose")
             else:
                 # self.robot.set_arm(command="search_table_front_to_initial_pose", wait_for_end_of=True)

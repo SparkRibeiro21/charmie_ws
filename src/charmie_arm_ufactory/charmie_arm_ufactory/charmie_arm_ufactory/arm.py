@@ -234,7 +234,8 @@ class ArmUfactory(Node):
 		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
 
 		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
-		self.search_table_top_joints =					[-160.1, 57.5, -123.8, -87.3, 109.1, 69.5]
+		self.search_table_top_joints =					[-152.2, 59.4, -129.4, -85.2, 116.7, 66.7]
+		self.search_table_top_safe_position =					[-194.9, 69.4, -106.4, 23.2, 71.5, 264.8]
 		### SERVE THE BREAKFAST VARIABLES: ###
 		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
 		print("height_adjust:", height_adjust)
@@ -804,10 +805,19 @@ class ArmUfactory(Node):
 			case 1:
 				self.set_gripper_position_(pos=0, wait=True)
 			case 2:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=20, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=25, wait=True)
 			case 3:
-				self.set_joint_values_(angles=self.search_table_top_joints, speed=20, wait=True)
+				self.set_joint_values_(angles=self.search_table_top_joints, speed=25, wait=True)
 			case 4:
+				self.finish_arm_movement_()
+
+	def search_table_to_initial_pose_Tiago(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_table_top_safe_position, speed=25, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=25, wait=True)
+			case 2:
 				self.finish_arm_movement_()
 
 
@@ -2149,6 +2159,8 @@ class ArmUfactory(Node):
 			# SEARCH FOR OBJECT ON TABLE TOP
 			case "initial_pose_to_search_table_top":
 				self.initial_pose_to_search_table_top()
+			case "search_table_to_initial_pose_Tiago":
+				self.search_table_to_initial_pose_Tiago()
 			
 			# if there is an error regarding a movement
 			case _:
