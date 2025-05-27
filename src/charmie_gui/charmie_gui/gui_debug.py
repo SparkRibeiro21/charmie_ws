@@ -731,7 +731,7 @@ class DebugVisualMain():
         self.PURPLE  = (132, 56,255)
         self.CYAN    = (  0,255,255)
 
-        self.WIDTH, self.HEIGHT = 1450, 752
+        self.WIDTH, self.HEIGHT = 1470, 752
 
         self.BB_WIDTH = 3
 
@@ -977,6 +977,16 @@ class DebugVisualMain():
 
         # robot info
         self.robot_radius = self.node.robot_radius
+
+
+
+
+        self.temp_menu_task_choice = 0
+
+        
+
+
+
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
@@ -2306,8 +2316,6 @@ class DebugVisualMain():
 
     def draw_task_states_info(self):
         
-
-        
         if self.node.task_states_info.task_name != "":
 
             height_space_between_tasks = 25
@@ -2323,15 +2331,22 @@ class DebugVisualMain():
                     colour = self.GREEN
                 else:
                     colour = self.WHITE
-                self.draw_text(state.replace("_", " "), self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
-                # self.draw_text(str(state_id)+state.replace("_", " "), self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
                 
-            # self.draw_text("State: "+self.node.task_states_info.state_name, self.text_font_t, self.WHITE, xc, yc+30)
-            # self.draw_text("Progress: "+str(self.node.task_states_info.progress)+"%", self.text_font_t, self.WHITE, xc, yc+50)
-            # self.draw_text("Time left: "+str(self.node.task_states_info.time_left)+"s", self.text_font_t, self.WHITE, xc, yc+70)
-            # self.draw_text("No image available ...", self.text_font_t, self.WHITE, xc, yc+60)
-
-
+                if state_id == self.temp_menu_task_choice:
+                    # option 1 change colour
+                    # colour = self.YELLOW
+                
+                    # option 2 change background
+                    pygame.draw.rect(self.WIN, self.WHITE, pygame.Rect(xc-5, yc+height_space_between_tasks*(state_id+2)-5, 220, 22), width=0)
+                    colour = self.BLACK
+                
+                    #option 3 add "> text <"
+                    # pass
+                #     self.draw_text("> " + state.replace("_", " ")+" <", self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
+                # else:
+                # self.draw_text("   "+state.replace("_", " ")+"   ", self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
+                
+                self.draw_text(state.replace("_", " "), self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
 
         
     def draw_battery(self):
