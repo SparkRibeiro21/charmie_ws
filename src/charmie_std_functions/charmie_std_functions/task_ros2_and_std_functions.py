@@ -10,7 +10,8 @@ from sensor_msgs.msg import Image
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
-    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
+    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
+    TaskStatesInfo
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
@@ -31,7 +32,7 @@ import json
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
-    
+
 
 class ROS2TaskNode(Node):
 
@@ -109,6 +110,8 @@ class ROS2TaskNode(Node):
         self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
         # Tracking
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
+        # Task States Info
+        self.task_states_info_publisher = self.create_publisher(TaskStatesInfo, "task_states_info", 10)
         
 
         ### Services (Clients) ###
@@ -139,11 +142,7 @@ class ROS2TaskNode(Node):
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Low level
-        # self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
-        # self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
-        # self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
-        # self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
         self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
@@ -256,6 +255,8 @@ class ROS2TaskNode(Node):
             while not self.activate_yolo_pose_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         
+        self.create_timer(0.5, self.task_states_info_publisher_timer)
+
         # Task Variables:
         self.task_name = ""
         self.task_states = {}
@@ -276,9 +277,6 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
-        # self.waited_for_end_of_get_vccs = False
-        # self.waited_for_end_of_get_low_level_buttons = False
-        # self.waited_for_end_of_get_torso_position = False
         self.waited_for_end_of_set_torso_position = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
@@ -364,14 +362,6 @@ class ROS2TaskNode(Node):
         self.vccs = VCCsLowLevel()
         self.buttons_low_level = ButtonsLowLevel()
         self.orientation_yaw = 0.0
-        # self.legs_position = 0.0
-        # self.torso_position = 0.0
-        # self.battery_voltage = 0.0
-        # self.emergency_stop = False
-        # self.start_button  = False
-        # self.debug_button1 = False
-        # self.debug_button2 = False
-        # self.debug_button3 = False
         self.new_controller_msg = False
         self.llm_demonstration_response = ""
         self.llm_confirm_command_response = ""
@@ -383,6 +373,16 @@ class ROS2TaskNode(Node):
         self.nav2_follow_waypoints_goal_accepted = False
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+
+    def task_states_info_publisher_timer(self):
+
+        if self.task_name != "":
+            tsi = TaskStatesInfo()
+            tsi.task_name = self.task_name
+            tsi.current_task_state = self.current_task_state
+            tsi.list_of_states = list(self.task_states.keys())
+            tsi.list_of_states_ids = list(self.task_states.values())
+            self.task_states_info_publisher.publish(tsi)
 
 
     def send_node_used_to_gui(self):
@@ -830,67 +830,7 @@ class ROS2TaskNode(Node):
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
-    """
-    def call_vccs_command_server(self, request=GetVCCs.Request()):
-    
-        future = self.get_vccs_client.call_async(request)
-        future.add_done_callback(self.callback_call_vccs_command)
-        
-    def callback_call_vccs_command(self, future): 
 
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            self.get_logger().info("Battery_Voltage: "+str(response.battery_voltage) + ", Emergency_Button: " + str(response.emergency_stop))
-            self.battery_voltage = response.battery_voltage
-            self.emergency_stop = response.emergency_stop
-            self.waited_for_end_of_get_vccs = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))  
-
-    def call_low_level_buttons_command_server(self, request=GetLowLevelButtons.Request()):
-    
-        future = self.get_low_level_buttons_client.call_async(request)
-        future.add_done_callback(self.callback_call_low_level_buttons_command)
-        
-    def callback_call_low_level_buttons_command(self, future): 
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            # self.get_logger().info("Start_Button: "+str(response.start_button) + ", Debug_Button1: " + str(response.debug_button1) + \
-            #                        ", Debug_Button2: " + str(response.debug_button2) + ", Debug_Button3: " + str(response.debug_button3))
-            self.start_button = response.start_button
-            self.debug_button1 = response.debug_button1
-            self.debug_button2 = response.debug_button2
-            self.debug_button3 = response.debug_button3
-            self.waited_for_end_of_get_low_level_buttons = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))  
-
-    def call_get_torso_position_server(self, request=GetTorso.Request()):
-    
-        future = self.get_torso_position_client.call_async(request)
-        future.add_done_callback(self.callback_call_get_torso_position)
-        
-    def callback_call_get_torso_position(self, future): 
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            # self.get_logger().info("Torso: "+str(response.legs) + ", Legs: " + str(response.torso))
-            self.legs_position = response.legs
-            self.torso_position = response.torso
-            self.waited_for_end_of_get_torso_position = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))  
-    """
     def call_set_torso_position_server(self, request=SetTorso.Request()):
     
         future = self.set_torso_position_client.call_async(request)
@@ -1043,7 +983,6 @@ class ROS2TaskNode(Node):
 
 
     # Navigate through poses
-
     def nav2_follow_waypoints_client_goal_response_callback(self, future):
         self.goal_follow_waypoints_handle_:ClientGoalHandle = future.result()
         if self.goal_follow_waypoints_handle_.accepted:
