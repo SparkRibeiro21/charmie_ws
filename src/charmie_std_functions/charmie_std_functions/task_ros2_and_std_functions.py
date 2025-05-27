@@ -4,7 +4,7 @@ from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle, GoalStatus
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
-from example_interfaces.msg import Bool, Float32
+from example_interfaces.msg import Bool, Float32, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped
 from sensor_msgs.msg import Image
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
@@ -112,6 +112,8 @@ class ROS2TaskNode(Node):
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         # Task States Info
         self.task_states_info_publisher = self.create_publisher(TaskStatesInfo, "task_states_info", 10)
+        self.task_states_info_subscriber = self.create_subscription(TaskStatesInfo, "task_states_info", self.demo_task_states_info_callback, 10)
+        self.task_state_selectable_publisher = self.create_publisher(Int16, "task_state_selectable", 10)
         
 
         ### Services (Clients) ###
@@ -366,6 +368,7 @@ class ROS2TaskNode(Node):
         self.llm_demonstration_response = ""
         self.llm_confirm_command_response = ""
         self.llm_gpsr_response = ListOfStrings()
+        self.received_demo_tsi = TaskStatesInfo()
 
         self.nav2_goal_accepted = False
         self.nav2_feedback = NavigateToPose.Feedback()
@@ -383,7 +386,9 @@ class ROS2TaskNode(Node):
             tsi.list_of_states = list(self.task_states.keys())
             tsi.list_of_states_ids = list(self.task_states.values())
             self.task_states_info_publisher.publish(tsi)
-
+    
+    def demo_task_states_info_callback(self, task_states_info: TaskStatesInfo):
+        self.received_demo_tsi = task_states_info
 
     def send_node_used_to_gui(self):
 
@@ -1070,6 +1075,11 @@ class RobotStdFunctions():
                 pass
         self.node.current_task_state_id = current_state
         print("\n>>> Current Task State: " + str(self.node.swapped_task_states[self.node.current_task_state_id]) + " <<<\n")
+
+    def set_task_state_selection(self, task_state_selection):
+        data = Int16()
+        data.data = task_state_selection
+        self.node.task_state_selectable_publisher.publish(data)
 
     def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause_show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 

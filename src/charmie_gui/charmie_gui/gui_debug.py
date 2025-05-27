@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 
-from example_interfaces.msg import Bool, String, Float32
+from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
@@ -79,6 +79,7 @@ class DebugVisualNode(Node):
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         # Task States Info
         self.task_states_info_subscriber = self.create_subscription(TaskStatesInfo, "task_states_info", self.task_states_info_callback, 10)
+        self.task_state_selectable_subscriber = self.create_subscription(Int16, "task_state_selectable", self.task_state_selectable_callback, 10)
         
         ### Services (Clients) ###
 		# Arm (Ufactory)
@@ -199,6 +200,7 @@ class DebugVisualNode(Node):
         self.new_tracking_mask_msg = False
         self.is_tracking_comm = False
         self.task_states_info = TaskStatesInfo()
+        self.task_state_selectable = 0
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
@@ -509,6 +511,11 @@ class DebugVisualNode(Node):
         # print("Received Task States Info")
         # print(tsi)
         self.task_states_info = tsi
+
+    def task_state_selectable_callback(self, msg: Int16):
+        # print("Received Task State Selectable")
+        # print(msg.data)
+        self.task_state_selectable = msg.data
 
 
 class CheckNodesMain():
@@ -977,15 +984,6 @@ class DebugVisualMain():
 
         # robot info
         self.robot_radius = self.node.robot_radius
-
-
-
-
-        self.temp_menu_task_choice = 0
-
-        
-
-
 
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
@@ -2332,7 +2330,7 @@ class DebugVisualMain():
                 else:
                     colour = self.WHITE
                 
-                if state_id == self.temp_menu_task_choice:
+                if state_id == self.node.task_state_selectable:
                     # option 1 change colour
                     # colour = self.YELLOW
                 
