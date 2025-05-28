@@ -11,25 +11,25 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
+    "charmie_arm":              True,
     "charmie_audio":            False,
     "charmie_face":             False,
-    "charmie_head_camera":      False,
-    "charmie_hand_camera":      False,
-    "charmie_base_camera":      False,
-    "charmie_lidar":            False,
-    "charmie_lidar_bottom":     False,
+    "charmie_head_camera":      True,
+    "charmie_hand_camera":      True,
+    "charmie_base_camera":      True,
+    "charmie_lidar":            True,
+    "charmie_lidar_bottom":     True,
     "charmie_llm":              False,
-    "charmie_localisation":     False,
-    "charmie_low_level":        False,
+    "charmie_localisation":     True,
+    "charmie_low_level":        True,
     "charmie_navigation":       False,
-    "charmie_nav2":             False,
-    "charmie_neck":             False,
+    "charmie_nav2":             True,
+    "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_ps4_controller":   False,
-    "charmie_speakers":         False,
+    "charmie_speakers":         True,
     "charmie_tracking":         False,
-    "charmie_yolo_objects":     False,
+    "charmie_yolo_objects":     True,
     "charmie_yolo_pose":        False,
 }
 
@@ -68,7 +68,10 @@ class TaskMain():
             "Placing_spoon":                11,
             "Final_State":                  12,
         }
-        self.robot.set_task_name_and_states(task_name="Serve Breakfast", task_states=self.task_states) # Necessary to visualize states and task info in GUI
+        self.TASK_NAME = "Serve Breakfast"
+        self.robot.set_task_name_and_states(task_name=self.TASK_NAME, task_states=self.task_states) # Necessary to visualize states and task info in GUI
+        self.DEMO_MODE = self.robot.get_demo_mode()
+        self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
         
     def main(self):
         
@@ -102,9 +105,9 @@ class TaskMain():
         
         self.state = self.task_states["Waiting_for_task_start"]
 
-        print("IN SERVE THE BREAKFAST MAIN")
-
-        print("DEMO OPTION:", self.robot.get_demo_option())
+        print("IN " + self.TASK_NAME.upper() + " MAIN")
+        if self.DEMO_MODE:
+            print("DEMO MODE:", self.DEMO_MODE)
 
         while True:
             self.robot.set_current_task_state_id(current_state=self.state) # Necessary to visualize current task state in GUI
@@ -339,3 +342,15 @@ class TaskMain():
 
             else:
                 pass
+
+            # This part is essential for the task_demo to work properly
+            if self.state == self.DEMO_STATE: # Essential for task_demo to work
+                self.robot.set_speech(filename="generic/done", wait_for_end_of=False)
+                while not self.robot.get_received_new_demo_task_state():
+                    time.sleep(1.0)
+                    print(".")
+                self.state = self.robot.get_new_demo_task_state()
+                print("OUT:", self.state)
+            
+            elif self.DEMO_MODE:
+                self.state = self.DEMO_STATE # set state to -1 to wait for new state to be set by task_demo

@@ -73,6 +73,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SaveSpeechCommand.srv"
   "srv/SetAcceleration.srv"
   "srv/SetFace.srv"
+  "srv/SetInt.srv"
   "srv/SetNeckCoordinates.srv"
   "srv/SetNeckPosition.srv"
   "srv/SetPoseWithCovarianceStamped.srv"

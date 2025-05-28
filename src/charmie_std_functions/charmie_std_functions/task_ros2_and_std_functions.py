@@ -15,7 +15,7 @@ from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, B
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
-    ActivateTracking, SetPoseWithCovarianceStamped
+    ActivateTracking, SetPoseWithCovarianceStamped, SetInt
 from charmie_point_cloud.point_cloud_class import PointCloud
 
 import cv2 
@@ -161,6 +161,10 @@ class ROS2TaskNode(Node):
         self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
         # Tracking (SAM2)
         self.activate_tracking_client = self.create_client(ActivateTracking, "activate_tracking")
+        # Task State Demo 
+        self.set_task_state_demo_client = self.create_client(SetInt, "task_state_demo")
+        self.get_task_state_demo_server = self.create_service(SetInt, "task_state_demo", self.callback_get_task_state_demo) 
+
 
         ### Actions (Clients) ###
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
@@ -264,11 +268,15 @@ class ROS2TaskNode(Node):
         
         self.create_timer(0.5, self.task_states_info_publisher_timer)
 
-        # Task Variables:
+        # Task Variables
         self.task_name = ""
         self.task_states = {}
         self.swapped_task_states = {}
         self.current_task_state_id = 0
+
+        #Task Demo Setting
+        self.received_new_demo_task_state = False
+        self.new_demo_task_state = 0
 
         # Variables 
         self.waited_for_end_of_audio = False
@@ -944,6 +952,31 @@ class ROS2TaskNode(Node):
         self.amcl_pose = msg
         self.new_amcl_pose_msg = True
 
+    def call_set_task_state_demo_server(self, request=SetInt.Request()):
+        self.set_task_state_demo_client.call_async(request)
+        print("Sent Demo Task State Request")
+
+    def callback_get_task_state_demo(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # int32 data   # generic int value sent  
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        print("Received Demo Task State Request")
+
+        self.received_new_demo_task_state = True
+        self.new_demo_task_state = request.data
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Set task state: " + str(self.received_demo_tsi.list_of_states[self.new_demo_task_state])
+        print(response.message)
+
+        return response
+
     ### Nav2 Action Client ###
     # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
 
@@ -1055,7 +1088,7 @@ class RobotStdFunctions():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
-    def get_demo_option(self):
+    def get_demo_mode(self):
         return self.node.DEMO_OPTION
 
     def set_task_name_and_states(self, task_name="", task_states={}):
@@ -1081,13 +1114,31 @@ class RobotStdFunctions():
             self.node.get_logger().error("Current task state cannot be empty... Please set current task state.")
             while True:
                 pass
-        self.node.current_task_state_id = current_state
-        print("\n>>> Current Task State: " + str(self.node.swapped_task_states[self.node.current_task_state_id]) + " <<<\n")
+
+        if current_state == -1: # for demo mode
+            print("\n>>> Current Task State: DEMO MODE  <<<\n")
+        else:
+            self.node.current_task_state_id = current_state # only updates current task if it is not DEMO_MODE
+            print("\n>>> Current Task State: " + str(self.node.swapped_task_states[self.node.current_task_state_id]) + " <<<\n")
 
     def set_task_state_selection(self, task_state_selection):
         data = Int16()
         data.data = task_state_selection
         self.node.task_state_selectable_publisher.publish(data)
+
+    def get_received_new_demo_task_state(self):
+        temp = self.node.received_new_demo_task_state
+        if self.node.received_new_demo_task_state: # clears variable if true, and sends the value pre clearing
+            self.node.received_new_demo_task_state = False
+        return temp
+
+    def get_new_demo_task_state(self):
+        return self.node.new_demo_task_state
+
+    def set_task_state_demo(self, new_demo_state=0):
+        request = SetInt.Request()
+        request.data = int(new_demo_state)
+        self.node.call_set_task_state_demo_server(request=request)
 
     def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause_show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 

@@ -246,7 +246,8 @@ class TaskMain():
                         if ps4_controller.l3 == self.RISING:
                             self.state = self.LLM_demonstration
     
-                    if ros2_modules["charmie_ps4_controller"]: # Tasks
+                    # Task State Selection
+                    if ros2_modules["charmie_ps4_controller"]:
                         
                         if len(self.robot.node.received_demo_tsi.list_of_states) != 0:
                             to_send = False
@@ -257,9 +258,16 @@ class TaskMain():
                                 self.task_state_selection += 1
                                 to_send = True
 
+                            temp_state_selection = self.task_state_selection % len(self.robot.node.received_demo_tsi.list_of_states)
+
                             if to_send:
-                                temp_state_selection = self.task_state_selection % len(self.robot.node.received_demo_tsi.list_of_states)
                                 self.robot.set_task_state_selection(temp_state_selection)
+
+                            if ps4_controller.arrow_right == self.RISING:
+                                self.robot.set_task_state_demo(new_demo_state=temp_state_selection)
+                            
+                            if ps4_controller.arrow_left == self.RISING:
+                                self.robot.set_task_state_demo(new_demo_state=self.robot.node.received_demo_tsi.current_task_state_id+1)
 
 
                 time.sleep(self.iteration_time)

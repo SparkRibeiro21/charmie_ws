@@ -2327,10 +2327,8 @@ class DebugVisualMain():
             self.draw_text("  "+self.node.task_states_info.task_name+":", self.text_font_t, self.RED, xc, yc + height_space_between_tasks - 5)
 
             for state, state_id in zip(self.node.task_states_info.list_of_states, self.node.task_states_info.list_of_states_ids):
-                if state_id == self.node.task_states_info.current_task_state_id:
-                    colour = self.GREEN
-                else:
-                    colour = self.WHITE
+                
+                colour = self.WHITE # colour by default is white
                 
                 if state_id == self.node.task_state_selectable and self.node.received_first_task_state_selectable:
                     # option 1 change colour
@@ -2339,13 +2337,16 @@ class DebugVisualMain():
                     # option 2 change background
                     pygame.draw.rect(self.WIN, self.WHITE, pygame.Rect(xc-5, yc+height_space_between_tasks*(state_id+2)-5, 220, 22), width=0)
                     colour = self.BLACK
-                
+
                     #option 3 add "> text <"
                     # pass
                 #     self.draw_text("> " + state.replace("_", " ")+" <", self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
                 # else:
                 # self.draw_text("   "+state.replace("_", " ")+"   ", self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
                 
+                if state_id == self.node.task_states_info.current_task_state_id:
+                    colour = self.BLUE
+
                 self.draw_text(state.replace("_", " "), self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
 
         
