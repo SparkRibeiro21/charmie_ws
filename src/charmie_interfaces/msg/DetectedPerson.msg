@@ -3,15 +3,28 @@
 int32 index
 float32 confidence
 
-geometry_msgs/Point position_relative # position relative to the robot frame
+geometry_msgs/Point position_cam      # position relative to the camera frame
+geometry_msgs/Point position_relative # position relative to the base_footprint frame
 geometry_msgs/Point position_absolute # position relative to the map frame
-geometry_msgs/Point position_relative_head # head position relative to the robot frame
-geometry_msgs/Point position_absolute_head # head position relative to the map frame
+
+geometry_msgs/Point position_cam_head      # position relative to the camera frame
+geometry_msgs/Point position_relative_head # position relative to the base_footprint frame
+geometry_msgs/Point position_absolute_head # position relative to the map frame
+
+geometry_msgs/Point position_cam_torso      # position relative to the camera frame
+geometry_msgs/Point position_relative_torso # position relative to the base_footprint frame
+geometry_msgs/Point position_absolute_torso # position relative to the map frame
 
 int32 box_top_left_x
 int32 box_top_left_y
 int32 box_width
 int32 box_height
+
+bool is_box_head
+int32 box_head_top_left_x
+int32 box_head_top_left_y
+int32 box_head_width
+int32 box_head_height
 
 MaskDetection mask      # not implemented yet for detected people (only for objects)
 MaskDetection mask_norm # not implemented yet for detected people (only for objects)
@@ -110,5 +123,9 @@ int32 body_center_y
 
 int32 head_center_x
 int32 head_center_y
+
+string camera
+
+float32 orientation # not implemented yet (should be 6D pose)
 
 sensor_msgs/Image image_rgb_frame

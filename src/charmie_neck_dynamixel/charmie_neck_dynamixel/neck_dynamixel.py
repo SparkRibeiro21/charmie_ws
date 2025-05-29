@@ -540,75 +540,80 @@ class NeckNode(Node):
         self.tf_broadcaster.sendTransform(neck_tilt_transform)
         # print(pose.tilt)
         # self.get_logger().info('Published TF from neck_pan_link to neck_tilt_link')
-
-
-
+        
 
     def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
 
-        ### PAN MOVEMENT (LEFT - RIGHT)
+        print(target_x, target_y, target_z)
 
-        # 6.5 cm adjustement from bottom servo to robot center, this helps in cases where angle to coordinates are near 90 and 270 degrees
-        # where there was an error of 4/5 degrees because the axis were not alligned 
-        bottom_servo_to_robot_center = 0.065  
-        ang = math.atan2(self.robot_pose.y - target_y, -(self.robot_pose.x + bottom_servo_to_robot_center - target_x))
-        # print("ang_rad:", ang)
-        ang = math.degrees(ang)
-        # print("ang_deg:", ang)
-    
-        # print(math.degrees(self.robot_pose.theta))     
-        pan_neck_to_coords = - math.degrees(self.robot_pose.theta) - ang
-        if pan_neck_to_coords < -math.degrees(math.pi):
-            pan_neck_to_coords += math.degrees(2*math.pi)
-        if pan_neck_to_coords > math.degrees(math.pi):
-            pan_neck_to_coords -= math.degrees(2*math.pi)
-    
-        print(pan_neck_to_coords)
-        # if the robot wants to look back, it uses the correct side to do so without damaging itself
-        # this was left here but on practice is not used (decided to comment but left in case it makes sense in the future)
-        # if pan_neck_to_coords == -180:
-        #     pan_neck_to_coords = 180
+        if target_x == 0 and target_y == 0 and target_z == 0: # if something is wrong with coordinates, does not stop, continues but looks forward
+            self.move_neck(180, 180.0, tracking_mode=tracking_mode)
+            self.get_logger().error("TARGET COORDINATES ARE: (0, 0, 0). THERE IS A PROBLEM WITH THE COORDINATES.")
 
-        # print("neck_to_coords:", pan_neck_to_coords, ang)
+        else:
+            ### PAN MOVEMENT (LEFT - RIGHT)
 
-        ### TILT MOVEMENT (UP - DOWN)
-        dist = math.sqrt((self.robot_pose.y - target_y)**2 + (self.robot_pose.x - target_x)**2)
+            # 6.5 cm adjustement from bottom servo to robot center, this helps in cases where angle to coordinates are near 90 and 270 degrees
+            # where there was an error of 4/5 degrees because the axis were not alligned 
+            bottom_servo_to_robot_center = 0.065  
+            ang = math.atan2(self.robot_pose.y - target_y, -(self.robot_pose.x + bottom_servo_to_robot_center - target_x))
+            # print("ang_rad:", ang)
+            ang = math.degrees(ang)
+            # print("ang_deg:", ang)
+        
+            # print(math.degrees(self.robot_pose.theta))     
+            pan_neck_to_coords = - math.degrees(self.robot_pose.theta) - ang
+            if pan_neck_to_coords < -math.degrees(math.pi):
+                pan_neck_to_coords += math.degrees(2*math.pi)
+            if pan_neck_to_coords > math.degrees(math.pi):
+                pan_neck_to_coords -= math.degrees(2*math.pi)
+        
+            print(pan_neck_to_coords)
+            # if the robot wants to look back, it uses the correct side to do so without damaging itself
+            # this was left here but on practice is not used (decided to comment but left in case it makes sense in the future)
+            # if pan_neck_to_coords == -180:
+            #     pan_neck_to_coords = 180
 
-        # Constants
-        h = 1.30 # height of rotation axis of up/down servo from the ground (should be automatic). Does not consider changes in torso.
-        c = 0.06 # distance from center rotation axis of up/down servo to face (horizontal when looking forward)
-        d = 0.09 # distance from c to center of face. This way the center of the face is looking at the person and not the camera or servo.
-        e = math.sqrt(c**2 + d**2)
-        a = target_z
-        b = dist
-            
-        # Define the function based on the equation
-        def equation(alpha):
-            return alpha - math.atan(c / d) - math.atan((h + e * math.cos(alpha) - a) / (b - e * math.sin(alpha)))
-            # return alpha - np.arctan(c / d) - np.arctan((h + e * np.sin(alpha) - a) / (b - e * np.cos(alpha)))
+            # print("neck_to_coords:", pan_neck_to_coords, ang)
 
-        # Initial guess for alpha
-        initial_guess = 0
+            ### TILT MOVEMENT (UP - DOWN)
+            dist = math.sqrt((self.robot_pose.y - target_y)**2 + (self.robot_pose.x - target_x)**2)
 
-        # initial_time = time.time() 
-        # Solve the equation
-        alpha_solution = fsolve(equation, initial_guess)
-        # elapsed_time = time.time() - initial_time
+            # Constants
+            h = 1.30 # height of rotation axis of up/down servo from the ground (should be automatic). Does not consider changes in torso.
+            c = 0.06 # distance from center rotation axis of up/down servo to face (horizontal when looking forward)
+            d = 0.09 # distance from c to center of face. This way the center of the face is looking at the person and not the camera or servo.
+            e = math.sqrt(c**2 + d**2)
+            a = target_z
+            b = dist
+                
+            # Define the function based on the equation
+            def equation(alpha):
+                return alpha - math.atan(c / d) - math.atan((h + e * math.cos(alpha) - a) / (b - e * math.sin(alpha)))
+                # return alpha - np.arctan(c / d) - np.arctan((h + e * np.sin(alpha) - a) / (b - e * np.cos(alpha)))
 
-        phi = math.atan(d / c)
+            # Initial guess for alpha
+            initial_guess = 0
 
-        final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90)
+            # initial_time = time.time() 
+            # Solve the equation
+            alpha_solution = fsolve(equation, initial_guess)
+            # elapsed_time = time.time() - initial_time
 
-        # Debug prints of calculations of up/down movement:
-        # print("Alpha:", math.degrees(alpha_solution[0]))
-        # print("Phi:", math.degrees(phi))
-        # print("Alpha+Phi:", round(final_x, 2))
-        # print("Time:", elapsed_time)
+            phi = math.atan(d / c)
 
-        if final_x > 0.0: # solves rounding errors when variable is positive
-            final_x += 0.5
+            final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90)
 
-        self.move_neck(180 + pan_neck_to_coords, final_x+180.0, tracking_mode=tracking_mode)
+            # Debug prints of calculations of up/down movement:
+            # print("Alpha:", math.degrees(alpha_solution[0]))
+            # print("Phi:", math.degrees(phi))
+            # print("Alpha+Phi:", round(final_x, 2))
+            # print("Time:", elapsed_time)
+
+            if final_x > 0.0: # solves rounding errors when variable is positive
+                final_x += 0.5
+
+            self.move_neck(180 + pan_neck_to_coords, final_x+180.0, tracking_mode=tracking_mode)
 
         
     def move_neck_with_target_pixel(self, target_x, target_y, tracking_mode=False):

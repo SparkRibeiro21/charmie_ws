@@ -1501,15 +1501,15 @@ class RobotStdFunctions():
 
         return self.node.track_object_success, self.node.track_object_message   
 
-    def set_arm(self, command="", pose=[], adjust_position=0.0, wait_for_end_of=True):
-        
+    def set_arm(self, command="", linear_motion_pose=[], move_tool_line_pose=[], joint_motion_values=[], wait_for_end_of=True):        
         # this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
         self.node.waited_for_end_of_arm = False
         
         temp = ArmController()
         temp.command = command
-        temp.adjust_position = float(adjust_position)
-        temp.pose = pose
+        temp.linear_motion_pose  = linear_motion_pose
+        temp.move_tool_line_pose = move_tool_line_pose
+        temp.joint_motion_values = joint_motion_values
         self.node.arm_command_publisher.publish(temp)
 
         if wait_for_end_of:
