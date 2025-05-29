@@ -7,6 +7,7 @@ def generate_launch_description():
     
     return LaunchDescription([
         std_lf.gui,
+        std_lf.rviz2_basic_node,
         # std_lf.audio,
         LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
         std_lf.arm,
@@ -27,6 +28,6 @@ def generate_launch_description():
         ### std_lf.obstacles,
         ### std_lf.navigation
         
-        # std_lf.node_robot_state_publisher,
-        # std_lf.joint_state,
+        std_lf.robot_state_publisher_real_node,
+        std_lf.static_transforms_launch
     ])

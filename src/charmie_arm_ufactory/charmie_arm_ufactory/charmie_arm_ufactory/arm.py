@@ -232,6 +232,11 @@ class ArmUfactory(Node):
 		self.initial_position_joints_Pedro =								[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
 		self.initial_position_to_search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
+		# self.search_front_max_z_joints =									[-108.1, -50.4, -16.4, -109.1, 80.1, 22.9]
+		self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
+
+
+
 
 		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
 		self.search_table_top_joints =					[-152.2, 59.4, -129.4, -85.2, 116.7, 66.7]
@@ -784,8 +789,8 @@ class ArmUfactory(Node):
 			case 3:
 				self.set_joint_values_(angles=self.initial_position_to_search_table_front_joints, speed=30, wait=True)
 			case 4:
-				self.set_joint_values_(angles=self.search_table_front_joints, speed=30, wait=True)
-			case 5:
+				# self.set_joint_values_(angles=self.search_table_front_joints, speed=30, wait=True)
+			# case 5:
 				self.finish_arm_movement_()
 
 	def search_table_to_initial_pose(self):
@@ -796,6 +801,21 @@ class ArmUfactory(Node):
 				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
 			case 2:
 				self.finish_arm_movement_()
+
+	def search_front_min_z(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_table_front_joints, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def search_front_max_z(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_front_max_z_joints, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
 
 	### SEARCH FOR OBJECT ON TABLE TOP###
 	def initial_pose_to_search_table_top(self):
@@ -2155,6 +2175,10 @@ class ArmUfactory(Node):
 				self.initial_pose_to_search_table_front()
 			case "search_table_to_initial_pose":
 				self.search_table_to_initial_pose()
+			case "search_front_min_z":
+				self.search_front_min_z()
+			case "search_front_max_z":
+				self.search_front_max_z()
 
 			# SEARCH FOR OBJECT ON TABLE TOP
 			case "initial_pose_to_search_table_top":

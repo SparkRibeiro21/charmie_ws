@@ -52,7 +52,7 @@ class TaskMain():
     def __init__(self, robot: RobotStdFunctions):
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
-        self.SELECTED_OBJECT = "Water"
+        self.SELECTED_OBJECT = "Pringles"
 
     def main(self):
         
@@ -77,22 +77,21 @@ class TaskMain():
                 time.sleep(2.0)
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[-30, -45], [0, -45], [30, -45]]
+                #tetas = [[-30, -45], [0, -45], [30, -45]]
+                tetas = [[0, 20], [0, 0], [0, -35]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=2.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
                     conf = f"{o.confidence * 100:.0f}%"
-                    '''x_ = f"{o.position_absolute.x:4.2f}"
-                    y_ = f"{o.position_absolute.y:5.2f}"
-                    z_ = f"{o.position_absolute.z:5.2f}"'''
-                    cam_x_ = f"{o.position_cam.x:5.2f}"
-                    cam_y_ = f"{o.position_cam.y:5.2f}"
-                    cam_z_ = f"{o.position_cam.z:5.2f}"
+
+                    cam_x_ = f"{o.position_relative.x:5.2f}"
+                    cam_y_ = f"{o.position_relative.y:5.2f}"
+                    cam_z_ = f"{o.position_relative.z:5.2f}"
 
                     print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({cam_x_},{cam_y_},{cam_z_})")
-                    # ({x_}, {y_}, {z_})
+
                     if o.object_name == self.SELECTED_OBJECT:
                         #self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=True)
                         self.robot.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
@@ -100,8 +99,27 @@ class TaskMain():
                         self.robot.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
                         print(f"Initial pose to search for objects")
 
-                        self.search_table_objects_hand()
-                        self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                        high_z = o.position_relative.z - 1.28
+                        rise_z = [0.0, 0.0, high_z, 0.0, 0.0, 0.0]
+                        low_z = o.position_relative.z - 0.73
+                        descend_z = [0.0, 0.0, low_z, 0.0, 0.0, 0.0]
+
+                        if 0.6 <= o.position_relative.z <= 1.0:
+                            self.robot.set_arm(command="search_front_min_z", wait_for_end_of=True)
+                            self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = descend_z, wait_for_end_of=True)
+                            self.search_table_objects_hand()
+                            self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+                        elif 1.0 < o.position_relative.z <=1.6:
+                            self.robot.set_arm(command="search_front_max_z", wait_for_end_of=True)
+                            self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = rise_z, wait_for_end_of=True)
+                            self.search_table_objects_hand()
+                            self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+                        elif 0.6 > o.position_relative.z or o.position_relative.z > 1.6:
+                            self.robot.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                            self.robot.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=True)
+                                                
                     else:
                         self.robot.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
 
@@ -137,12 +155,12 @@ class TaskMain():
             hand_z_ = f"{o.position_cam.z:5.2f}"
 
             tf_x = 0.13
-            tf_y = 0.0
+            tf_y = -0.006
             tf_z = -0.075
 
             print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} {o.orientation} ({hand_x_},{hand_y_},{hand_z_})")
 
-            correct_x = ((o.position_cam.x + 0.08 - tf_x)*1000) - 100
+            correct_x = ((o.position_cam.x + 0.04 - tf_x)*1000) - 150
             correct_y = (o.position_cam.y - tf_y)*1000
             correct_z = (o.position_cam.z - tf_z)*1000
             if o.orientation < 0.0:
@@ -151,16 +169,49 @@ class TaskMain():
                 correct_rotation = o.orientation -90.0
 
             object_position = [correct_z, -correct_y, correct_x, 0.0, 0.0, correct_rotation]
-            final_position = [0.0, 0.0, 100.0, 0.0, 0.0, 0.0]
-            security_position = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), 0.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+            final_position = [0.0, 0.0, 150.0, 0.0, 0.0, 0.0]
+            security_position = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -250.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+            
             search_table_front_joints =	[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 
+            # search_frontal_min_z = [-266.8, -3.2, -67.9, 91.9, 84.5, 158.9]       z=0.6             
+            # search_frontal_mid_z = [-108.1, -50.4, -16.4, -109.1, 80.1, 22.9]     z=1.28
+            # search_frontal_mid_min_z = [-236.4, -77.2, -14.9, 87.7, 52.9, 179.6]  z=0.93   
+            # search_frontal_mid_max_z = [-180.3, -81.5, -4.6, -112.4, 4.8, 18.7]   z=1.13
+            # search_frontal_max = [-99.9, -11.6, -42.4, -105.7, 90.3, 33.4]        z=1.43
 
+            # table_z = 0.73
+
+            # shelf_bottom_z = 0.175
+            # shelf_mid_z = 0.685
+            # shelf_top_z = 1.20
+
+            # cabinet_bottom_z = 0.55
+            # cabinet_mid_z = 0.965
+            # cabinet_top_z = 1.39
+            
             if o.object_name == self.SELECTED_OBJECT:
                 #OPEN GRIPPER
                 self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
                 #MOVE ARM IN THAT DIRECTION
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
+
+                print("IN_")
+
+                time.sleep(10.0)
+                #CALIBRATE GRIPPER BEFORE GRABBING
+                final_objects = self.robot.search_for_objects(tetas=[[0, 0]], delta_t=2.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+                for obj in final_objects:
+                    conf = f"{obj.confidence * 100:.0f}%"
+                    hand_y_grab = f"{obj.position_cam.y:5.2f}"
+                    hand_z_grab = f"{obj.position_cam.z:5.2f}"
+                    correct_y_grab = (obj.position_cam.y - tf_y)*1000
+                    correct_z_grab = (obj.position_cam.z - tf_z)*1000
+                    print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab})")
+                    object_position_grab = [correct_z_grab, -correct_y_grab, 0.0, 0.0, 0.0, 0.0]
+
+                #APPLY ADJUSTEMENT BEFORE GRABBING
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
                 #MOVE ARM TO FINAL POSITION
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = final_position, wait_for_end_of=True)
                 #CLOSE GRIPPER
@@ -173,6 +224,6 @@ class TaskMain():
                 self.robot.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Bring object to initial pose")
             else:
-                # self.robot.set_arm(command="search_table_front_to_initial_pose", wait_for_end_of=True)
+                self.robot.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Could not bring object to initial pose")
 
