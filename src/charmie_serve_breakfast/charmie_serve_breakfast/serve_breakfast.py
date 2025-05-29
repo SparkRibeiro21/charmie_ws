@@ -168,7 +168,7 @@ class TaskMain():
 
                     object_in_gripper = False
                     while not object_in_gripper:
-                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_furniture=False)
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, time_in_each_frame=2.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], use_arm=False, detect_objects=True, detect_furniture=False)
                         object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                         if not object_in_gripper:
                             self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
@@ -206,7 +206,7 @@ class TaskMain():
 
                     object_in_gripper = False
                     while not object_in_gripper:
-                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, time_in_each_frame=2.0, list_of_objects=["Cornflakes"], list_of_objects_detected_as=[["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
                         
                         if self.IS_CORNFLAKES_BIG:
                             object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, alternative_help_pick_face="help_pick_cornflakes1", bb_color=(0, 255, 0))
@@ -251,8 +251,8 @@ class TaskMain():
                     correct_object_spoon = DetectedObject()
                     while not object_in_gripper:
 
-                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_furniture=False)
-                        # objects_found = self.search_for_objects(tetas=self.search_tetas, delta_t=2.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_furniture=False)
+                        objects_found = self.robot.search_for_objects(tetas=self.search_tetas, time_in_each_frame=2.0, list_of_objects=["Spoon", "Bowl"], use_arm=False, detect_objects=True, detect_furniture=False)
+                        # objects_found = self.search_for_objects(tetas=self.search_tetas, time_in_each_frame=2.0, list_of_objects=["Spoon", "Bowl"], list_of_objects_detected_as=[["Fork", "Knife"],["Plate"]], use_arm=False, detect_objects=True, detect_furniture=False)
                     
                         for of in objects_found:
                             print(of.object_name.lower(), of.index)

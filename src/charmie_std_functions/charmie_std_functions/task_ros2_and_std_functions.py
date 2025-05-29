@@ -1870,12 +1870,11 @@ class RobotStdFunctions():
         move_coords[2]+=45.0
         return move_coords
 
-    def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
+    def search_for_person(self, tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
         self.set_speech(filename="generic/search_people", wait_for_end_of=False)
         # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-        # time.sleep(0.5)
         
         total_person_detected = []
         person_detected = []
@@ -1886,12 +1885,12 @@ class RobotStdFunctions():
         for t in tetas:
             self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(0.5)
+            time.sleep(time_wait_neck_move_pre_each_frame)
             self.node.detected_people.persons = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
             self.set_rgb(WHITE+SET_COLOUR)
 
             start_time = time.time()
-            while (time.time() - start_time) < delta_t:        
+            while (time.time() - start_time) < time_in_each_frame:        
                 local_detected_people = self.node.detected_people
                 for temp_people in local_detected_people.persons:
                     
@@ -2032,7 +2031,7 @@ class RobotStdFunctions():
         
         return face_path
 
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
+    def search_for_objects(self, tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -2068,19 +2067,18 @@ class RobotStdFunctions():
                                        minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-            # time.sleep(0.5)
-
+            
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
             for t in tetas:
                 rgb_found_list_of_objects = False
                 self.set_rgb(RED+SET_COLOUR)
                 self.set_neck(position=t, wait_for_end_of=True)
-                time.sleep(0.5)
+                time.sleep(time_wait_neck_move_pre_each_frame)
                 self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
                 self.set_rgb(WHITE+SET_COLOUR)
 
                 start_time = time.time()
-                while (time.time() - start_time) < delta_t:      
+                while (time.time() - start_time) < time_in_each_frame:      
 
                     # if detect_objects: 
                     local_detected_objects = self.node.detected_objects
@@ -2147,7 +2145,7 @@ class RobotStdFunctions():
                                             is_in_mandatory_list = True
                                             # print(m_object, final_obj.object_name, final_obj.index, is_in_mandatory_list)
 
-                            # checks for current teta (added to stop doing the full delta_t if all objects have already been detected)
+                            # checks for current teta (added to stop doing the full time_in_each_frame if all objects have already been detected)
                             for curr_teta_obj in objects_detected:
 
                                 if curr_teta_obj.object_name.replace(" ","_").lower() in m_object:
@@ -2967,7 +2965,6 @@ class RobotStdFunctions():
 
 
         self.activate_tracking(activate=True, points=points, bbox=bb)
-        # time.sleep(60.0)
         # self.activate_tracking(activate=False)
 
     def get_quaternion_from_euler(self, roll, pitch, yaw):
