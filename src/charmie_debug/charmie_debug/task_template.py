@@ -4,46 +4,94 @@ HOW THE CODE OF A TASK SHOULD BE MADE:
 ->  ->  ->  ->  ->  HOW TO CREATE A TASK?
 
 1) COPY THE TASK TEMPLATE TO YOUR TASK PKG. ALL STD FUNCTIONS ARE INCLUDED FROM CHARMIE_STD_FUNCTIONS (if any doubt ask Tiago Ribeiro)
-2) PLAN THE STATES AND SET THE STATES FOR YOUR TASK:
+2) PLAN THE STATES AND SET THE STATES FOR YOUR TASK AND SET THE TASK NAME:
 
-        self.Waiting_for_task_start = 0
-        self.Approach_kitchen_counter = 1
-        self.Picking_up_spoon = 2
-        self.Picking_up_milk = 3
-        self.Picking_up_cereal = 4
-        self.Picking_up_bowl = 5
-        self.Approach_kitchen_table = 6
-        self.Placing_bowl = 7
-        self.Placing_cereal = 8
-        self.Placing_milk = 9
-        self.Placing_spoon = 10
-        self.Final_State = 11
+        # Task Name
+        self.TASK_NAME = "Serve Breakfast"
 
-# 3) CREATE THE STATE STRUCTURE:
+        # Task States
+        self.task_states ={
+            "Waiting_for_task_start":       0,
+            "Move_milk_location":           1,
+            "Detect_and_pick_milk":         2,
+            "Move_cornflakes_location":     3,
+            "Detect_and_pick_cornflakes":   4,
+            "Move_dishes_location":         5,
+            "Detect_and_pick_dishes":       6,
+            "Move_kitchen_table":           7,
+            "Placing_bowl":                 8,
+            "Placing_cornflakes":           9,
+            "Placing_milk":                 10,
+            "Placing_spoon":                11,
+            "Final_State":                  12,
+        }
+
+# 3) ADAPT THE MODULES BEING USED ALLONG THE TESTING ONE BY ONE:
+
+    ros2_modules = {
+        "charmie_arm":              True,
+        "charmie_audio":            False,
+        "charmie_face":             False,
+        "charmie_head_camera":      True,
+        "charmie_hand_camera":      True,
+        "charmie_base_camera":      True,
+        "charmie_lidar":            True,
+        "charmie_lidar_bottom":     True,
+        "charmie_llm":              False,
+        "charmie_localisation":     True,
+        "charmie_low_level":        True,
+        "charmie_navigation":       False,
+        "charmie_nav2":             True,
+        "charmie_neck":             True,
+        "charmie_obstacles":        False,
+        "charmie_ps4_controller":   False,
+        "charmie_speakers":         True,
+        "charmie_tracking":         False,
+        "charmie_yolo_objects":     True,
+        "charmie_yolo_pose":        False,
+    }
+
+# 4) CREATE THE STATE STRUCTURE:
         
-        if self.state == self.Waiting_for_task_start:
-                # your code here ...
-                                
-                # next state
-                self.state = self.Approach_kitchen_counter
+        if self.state == self.task_states["Waiting_for_task_start"]:
+            # your code here ...
+                            
+            # next state
+            self.state = self.task_states["Move_milk_location"]
 
-            elif self.state == self.Approach_kitchen_counter:
-                # your code here ...
-                                
-                # next state
-                self.state = self.Picking_up_spoon
+        elif self.state == self.task_states["Move_milk_location"]:
+            # your code here ...
+                            
+            # next state
+            self.state = self.task_states["Detect_and_pick_milk"]
 
-            elif self.state == self.Picking_up_spoon:
-                # your code here ...
-                                
-                # next state
-                self.state = self.Picking_up_milk
+        elif self.state == self.task_states["Detect_and_pick_milk"]:
+            # your code here ...
+                            
+            # next state
+            self.state = self.task_states["Move_cornflakes_location"]
 
             (...)
 
-# 4) CREATE THE PSEUDOCODE OF EACH STATE:
+# 5) CREATE THE CONFIGURABES FOR THE TASK: (PARAMETERS THAT HAVE TO BE CHANGED DEPENDING ON THE ARENA)
+
+    def configurables(self): # Variables that may change depending on the arena the robot does the task 
+
+        # Which objects should be acquired
+        self.GET_MILK = True
+        self.GET_CORNFLAKES = True
+        self.GET_DISHES = True
+        self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
+
+        # Name of the table where breakfast is served
+        self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
+
+        # Initial Position
+        self.initial_position = self.robot.get_navigation_coords_from_furniture("Entrance")
+
+# 6) CREATE THE PSEUDOCODE OF EACH STATE:
             
-            elif self.state == self.Picking_up_spoon:
+            self.state = self.task_states["Detect_and_pick_dishes"]
                 
                 ##### NECK LOOKS AT TABLE
 
@@ -91,41 +139,41 @@ HOW THE CODE OF A TASK SHOULD BE MADE:
 
                 self.state = self.Picking_up_milk
 
-# 5) REPLACE ALL THE SPEAKS IN PSEUDOCODE WITH self.robot.set_speech(...), CREATE FILES IN ros2 run charmie_speakers save_audio
+# 7) REPLACE ALL THE SPEAKS IN PSEUDOCODE WITH self.robot.set_speech(...), CREATE FILES IN ros2 run charmie_speakers save_audio
 
-# 6) TEST ALL SENTENCES ALONE TO SEE IF EVERYTHING IS OK
+# 8) TEST ALL SENTENCES ALONE TO SEE IF EVERYTHING IS OK
 
-# 5) REPLACE ALL THE FACE IN PSEUDOCODE WITH self.robot.set_face(...)
+# 9) REPLACE ALL THE FACE IN PSEUDOCODE WITH self.robot.set_face(...)
 
-# 6) TEST ALL FACES WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+# 10) TEST ALL FACES WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# 7) REPLACE ALL THE START_BUTTON AND RGB IN PSEUDOCODE WITH self.robot.set_rgb(...) and self.robot.wait_for_start_button()
+# 11) REPLACE ALL THE START_BUTTON AND RGB IN PSEUDOCODE WITH self.robot.set_rgb(...) and self.robot.wait_for_start_button()
 
-# 8) TEST ALL START_BUTTON AND RGB WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+# 12) TEST ALL START_BUTTON AND RGB WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# 9) REPLACE ALL THE AUDIO IN PSEUDOCODE WITH self.robot.get_audio(...)
+# 13) REPLACE ALL THE AUDIO IN PSEUDOCODE WITH self.robot.get_audio(...)
 
-# 10) TEST ALL AUDIO WITH THE PREVIOUS GETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+# 14) TEST ALL AUDIO WITH THE PREVIOUS GETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# 11) REPLACE ALL THE NECK IN PSEUDOCODE WITH self.robot.set_neck(...) OR ANY OF ALL THE OTHER FORMS TO SET THE NECK
+# 15) REPLACE ALL THE NECK IN PSEUDOCODE WITH self.robot.set_neck(...) OR ANY OF ALL THE OTHER FORMS TO SET THE NECK
 
-# 12) TEST ALL NECK WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+# 16) TEST ALL NECK WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# 13) REPLACE ALL THE YOLO DETECTIONS IN PSEUDOCODE WITH self.robot.search_for_person(...) and self.robot.search_for_objects
+# 17) REPLACE ALL THE YOLO DETECTIONS IN PSEUDOCODE WITH self.robot.search_for_person(...) and self.robot.search_for_objects
 
-# 14) TEST ALL YOLOS WITH THE PREVIOUS SEARCHES_FOR ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+# 18) TEST ALL YOLOS WITH THE PREVIOUS SEARCHES_FOR ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# 15) REPLACE ALL THE ARM MOVE WITH self.robot.set_arm(...)
+# 19) REPLACE ALL THE ARM MOVE WITH self.robot.set_arm(...)
 
-# 16) TEST ALL ARM MOVE WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+# 20) TEST ALL ARM MOVE WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# 17) REPLACE THE SET INITIAL POSITION MOVE WITH self.robot.set_initial_position(...)
+# 21) REPLACE THE SET INITIAL POSITION MOVE WITH self.robot.set_initial_position(...)
 
-# 18) TEST ALL SET INITIAL POSITION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+# 22) TEST ALL SET INITIAL POSITION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
-# 19) REPLACE THE NAVIGATION MOVE, ROTATE AND ORIENTATE WITH self.robot.set_navigation(...)
+# 23) REPLACE THE NAVIGATION MOVE, ROTATE AND ORIENTATE WITH self.robot.move_to_position(...)
 
-# 20) TEST ALL SET NAVIGATION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
+# 24) TEST ALL SET NAVIGATION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
 
 """
 
@@ -184,45 +232,77 @@ class TaskMain():
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
 
+        # Task Name
+        self.TASK_NAME = "Serve Breakfast"
+
+        # Task States
+        self.task_states ={
+            "Waiting_for_task_start":       0,
+            "Move_milk_location":           1,
+            "Detect_and_pick_milk":         2,
+            "Move_cornflakes_location":     3,
+            "Detect_and_pick_cornflakes":   4,
+            "Move_dishes_location":         5,
+            "Detect_and_pick_dishes":       6,
+            "Move_kitchen_table":           7,
+            "Placing_bowl":                 8,
+            "Placing_cornflakes":           9,
+            "Placing_milk":                 10,
+            "Placing_spoon":                11,
+            "Final_State":                  12,
+        }
+
+    def configurables(self): # Variables that may change depending on the arena the robot does the task 
+
+        # Which objects should be acquired
+        self.GET_MILK = True
+        self.GET_CORNFLAKES = True
+        self.GET_DISHES = True
+        self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
+
+        # Name of the table where breakfast is served
+        self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
+
+        # Initial Position
+        self.initial_position = self.robot.get_navigation_coords_from_furniture("Entrance")
+        print(self.initial_position)
+        self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
+
     # main state-machine function
     def main(self):
+
+        self.configurables() # set all the configuration variables
         
-        # Task States
-        self.Waiting_for_task_start = 0
-        self.Approach_kitchen_counter = 1
-        self.Picking_up_spoon = 2
-        self.Picking_up_milk = 3
-        self.Picking_up_cereal = 4
-        self.Picking_up_bowl = 5
-        self.Approach_kitchen_table = 6
-        self.Placing_bowl = 7
-        self.Placing_cereal = 8
-        self.Placing_milk = 9
-        self.Placing_spoon = 10
-        self.Final_State = 11
+        self.robot.set_task_name_and_states(task_name=self.TASK_NAME, task_states=self.task_states) # Necessary to visualize states and task info in GUI
+        self.DEMO_MODE = self.robot.get_demo_mode()
+        self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
+
+        self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED.lower().replace(" ", "_")
+        # Checks if there is any error in the furniture variables:
+        if self.robot.get_room_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED) == None:
+            print("ERROR!!! - FURNITURE:", self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, "DOES NOT EXIST IN furniture.json")
+            while True:
+                pass
+        self.SB_TABLE_HEIGHT = self.robot.get_height_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+        print("Table Height =", self.SB_TABLE_HEIGHT)
         
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
-        self.look_tray = [0, -60]
-        
-        # Start localisation position
-        self.initial_position = [-1.0, 1.5, -90.0]
+        self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
-        # navigation positions
-        self.front_of_sofa = [-2.5, 1.5]
-        self.sofa = [-2.5, 3.0]
-        
-        # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Waiting_for_task_start
+        self.state = self.task_states["Waiting_for_task_start"]
+
+        print("IN " + self.TASK_NAME.upper() + " MAIN")
+        if self.DEMO_MODE:
+            print("DEMO MODE:", self.DEMO_MODE)
 
         while True:
-
-            if self.state == self.Waiting_for_task_start:
-                print("State:", self.state, "- Waiting_for_task_start")
-
+            self.robot.set_current_task_state_id(current_state=self.state) # Necessary to visualize current task state in GUI
+            
+            if self.state == self.task_states["Waiting_for_task_start"]:
                 # your code here ...
                 
                 # moves the neck to look down for navigation
@@ -253,28 +333,7 @@ class TaskMain():
                 """
                 self.robot.set_initial_position(self.initial_position)
 
-                time.sleep(3)
                 
-                # this gives an error because "orient" is a non-existing movement type and does not send anything to navigation 
-                self.robot.set_navigation(movement="orient", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-
-                print("2 move")
-
-                self.robot.set_navigation(movement="orientate", absolute_angle=90.0, flag_not_obs=True, wait_for_end_of=True)
-
-                print("3 move")
-
-                self.robot.set_navigation(movement="move", target=self.front_of_sofa, flag_not_obs=True, wait_for_end_of=True)
-
-                print("4 move")
-
-                self.robot.set_navigation(movement="rotate", target=self.sofa, flag_not_obs=True, wait_for_end_of=True)
-
-                print("5 move")
-
-                while True:
-                    pass
-
                 ### RECEPTIONIST AUDIO EXAMPLE
                 # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
                 # print("Finished:", command)
@@ -289,48 +348,47 @@ class TaskMain():
                 # moves the neck to look forward
                 # self.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                """
-                ### EXAMPLES TO ACTIVATE/DEACTIVATE AND CONFIGURE YOLO POSE AND TOLO OBJECTS 
-                self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
-                print("activated yolo pose")
-                time.sleep(5)
-                # self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
-                # time.sleep(0.5)
-                while self.node.detected_people.num_person == 0:
-                    pass
-                self.track_person(self.node.detected_people.persons[0], body_part="Head", wait_for_end_of=True)
-                time.sleep(3)
-                self.activate_yolo_pose(activate=False)
-                self.activate_yolo_objects(activate_objects=True)
-                time.sleep(5)
-                while self.node.detected_objects.num_objects == 0:
-                    pass
-                self.track_object(self.node.detected_objects.objects[0], wait_for_end_of=True)
-                time.sleep(3)
-                # self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.3)
-                # print("deactivated yolo pose - 0.8")
-                # time.sleep(5)
-                # self.activate_yolo_pose(activate=True, minimum_keypoints_to_detect_person=10)
-                # self.activate_yolo_objects(activate_objects=True, minimum_objects_confidence=0.8)
-                # print("deactivated yolo pose - right in front")
-                # time.sleep(5)
-                """
-
                 # example of arm function to say hello
                 # self.set_arm(command="hello", wait_for_end_of=False)
 
                 # next state
-                # self.state = self.Approach_kitchen_counter
+                self.state = self.task_states["Move_milk_location"]
 
-            elif self.state == self.Approach_kitchen_counter:
-                print("State:", self.state, "- Approach_kitchen_counter")
+            elif self.state == self.task_states["Move_milk_location"]:
                 # your code here ...
                                 
                 # next state
-                self.state = self.Picking_up_spoon
+                self.state = self.task_states["Detect_and_pick_milk"]
 
-            elif self.state == self.Picking_up_spoon:
-                print("State:", self.state, "- Picking_up_spoon")
+
+            elif self.state == self.task_states["Detect_and_pick_milk"]:
+                # your code here ...
+                                
+                # next state
+                self.state = self.task_states["Move_cornflakes_location"]
+
+            elif self.state == self.task_states["Move_cornflakes_location"]:
+                # your code here ...
+                                
+                # next state
+                self.state = self.task_states["Detect_and_pick_cornflakes"]
+
+
+            elif self.state == self.task_states["Detect_and_pick_cornflakes"]:
+                # your code here ...
+                                
+                # next state
+                self.state = self.task_states["Move_dishes_location"]
+
+
+            elif self.state == self.task_states["Move_dishes_location"]:
+                # your code here ...
+                                
+                # next state
+                self.state = self.task_states["Detect_and_pick_dishes"]
+
+
+            elif self.state == self.task_states["Detect_and_pick_dishes"]:
 
                 ##### NECK LOOKS AT TABLE
                 # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
@@ -391,71 +449,64 @@ class TaskMain():
                         
                 ##### ARM PLACE OBJECT IN TRAY
 
-                self.state = self.Picking_up_milk
+                self.state = self.task_states["Move_kitchen_table"]
 
-            elif self.state == self.Picking_up_milk:
-                print("State:", self.state, "- Picking_up_milk")
+
+            elif self.state == self.task_states["Move_kitchen_table"]:
                 # your code here ...
-                                                
+                                
                 # next state
-                self.state = self.Picking_up_cereal
+                self.state = self.task_states["Placing_bowl"]
+
+
+            elif self.state == self.task_states["Placing_bowl"]:
+                # your code here ...
+                                
+                # next state
+                self.state = self.task_states["Placing_cornflakes"] 
+            
+
+            elif self.state == self.task_states["Placing_cornflakes"]:
+                # your code here ...
+                                
+                # next state
+                self.state = self.task_states["Placing_milk"]
+
            
-            elif self.state == self.Picking_up_cereal:
-                print("State:", self.state, "- Picking_up_cereal")
+            elif self.state == self.task_states["Placing_milk"]:
                 # your code here ...
                                 
                 # next state
-                self.state = self.Picking_up_bowl
+                self.state = self.task_states["Placing_spoon"]
 
-            elif self.state == self.Picking_up_bowl:
-                print("State:", self.state, "- Picking_up_bowl")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Approach_kitchen_table
 
-            elif self.state == self.Approach_kitchen_table:
-                print("State:", self.state, "- Approach_kitchen_table")
+            elif self.state == self.task_states["Placing_spoon"]:
                 # your code here ...
                                 
                 # next state
-                self.state = self.Placing_bowl
+                self.state = self.task_states["Final_State"]
 
-            elif self.state == self.Placing_bowl:
-                print("State:", self.state, "- Placing_bowl")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_cereal 
 
-            elif self.state == self.Placing_cereal:
-                print("State:", self.state, "- Placing_cereal")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_milk
-           
-            elif self.state == self.Placing_milk:
-                print("State:", self.state, "- Placing_milk")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Placing_spoon
-
-            elif self.state == self.Placing_spoon:
-                print("State:", self.state, "- Placing_spoon")
-                # your code here ...
-                                
-                # next state
-                self.state = self.Final_State 
+            elif self.state == self.task_states["Final_State"]:
                 
-            elif self.state == self.Final_State:
-                
-                self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=True)
+                # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+                # self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                # self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=False)
 
-                # Lock after finishing task
                 while True:
                     pass
 
             else:
                 pass
+
+            # This part is essential for the task_demo to work properly
+            if self.state == self.DEMO_STATE: # Essential for task_demo to work
+                self.robot.set_speech(filename="generic/done", wait_for_end_of=False)
+                while not self.robot.get_received_new_demo_task_state():
+                    time.sleep(1.0)
+                    print(".")
+                self.state = self.robot.get_new_demo_task_state()
+                print("OUT:", self.state)
+            
+            elif self.DEMO_MODE:
+                self.state = self.DEMO_STATE # set state to -1 to wait for new state to be set by task_demo
