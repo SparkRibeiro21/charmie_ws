@@ -53,6 +53,10 @@ class TaskMain():
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
 
+        # Task Name
+        self.TASK_NAME = "Serve Breakfast"
+
+        # Task States
         self.task_states ={
             "Waiting_for_task_start":       0,
             "Move_milk_location":           1,
@@ -68,20 +72,31 @@ class TaskMain():
             "Placing_spoon":                11,
             "Final_State":                  12,
         }
-        self.TASK_NAME = "Serve Breakfast"
-        self.robot.set_task_name_and_states(task_name=self.TASK_NAME, task_states=self.task_states) # Necessary to visualize states and task info in GUI
-        self.DEMO_MODE = self.robot.get_demo_mode()
-        self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
-        
-    def main(self):
-        
-        # Configurables
+
+    def configurables(self): # Variables that may change depending on the arena the robot does the task 
+
+        # Which objects should be acquired
         self.GET_MILK = True
         self.GET_CORNFLAKES = True
         self.GET_DISHES = True
         self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
 
+        # Name of the table where breakfast is served
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
+
+        # Initial Position
+        self.initial_position = self.robot.get_navigation_coords_from_furniture("Entrance")
+        print(self.initial_position)
+        self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
+        
+    def main(self):
+
+        self.configurables() # set all the configuration variables
+        
+        self.robot.set_task_name_and_states(task_name=self.TASK_NAME, task_states=self.task_states) # Necessary to visualize states and task info in GUI
+        self.DEMO_MODE = self.robot.get_demo_mode()
+        self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
+
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED.lower().replace(" ", "_")
         # Checks if there is any error in the furniture variables:
         if self.robot.get_room_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED) == None:
@@ -98,11 +113,6 @@ class TaskMain():
         self.look_table_objects = [-45, -45]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
-        # Initial Position
-        self.initial_position = self.robot.get_navigation_coords_from_furniture("Entrance")
-        print(self.initial_position)
-        self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        
         self.state = self.task_states["Waiting_for_task_start"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
