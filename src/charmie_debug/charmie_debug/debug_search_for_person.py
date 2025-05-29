@@ -133,7 +133,7 @@ class TaskMain():
                         self.robot.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
                         print(f"Initial pose to search for objects")
 
-                        table_objects = self.robot.search_for_objects(tetas=[], delta_t=3.0, list_of_objects=["Milk"], use_arm=True, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+                        table_objects = self.robot.search_for_objects(tetas=[], delta_t=3.0, list_of_objects=["Milk"], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
                         for t_o in table_objects:
                             conf = f"{o.confidence * 100:.0f}%"
                             #SAVE NEW X,Y,Z
@@ -142,7 +142,7 @@ class TaskMain():
                             hand_z_ = f"{o.position_cam.z:5.2f}"
 
                             print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({hand_x_},{hand_y_},{hand_z_})")
-                            if t_o.object_name=="Milk":
+                            if o.object_name=="Milk":
                                 #OPEN GRIPPER
                                 self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
                                 #MOVE ARM IN THAT DIRECTION
