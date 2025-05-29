@@ -70,6 +70,15 @@ class LaunchStdFunctions():
             arguments=['-d', rviz_nav2_config_path]
         )
 
+        rviz_calib_map_furniture_navigations_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'rviz', 'nav2_calibrate_maps_furniture_navigations.rviz')
+        
+        self.rviz2_calib_map_furniture_navigations_node = Node(
+            package="rviz2",
+            executable="rviz2",
+            arguments=['-d', rviz_calib_map_furniture_navigations_config_path]
+        )
+
         ### GAZEBO
         gazebo_ros_path = get_package_share_path('gazebo_ros')
 
@@ -191,6 +200,12 @@ class LaunchStdFunctions():
                 executable='gui_debug',
                 name='gui_debug',
                 )
+
+        self.marker_arrays_debug = Node(package='charmie_gui',
+                executable='test_marker_rviz',
+                name='test_marker_rviz',
+                )
+        
         
         self.audio = Node(package='charmie_audio',
                       executable='audio',
@@ -247,12 +262,6 @@ class LaunchStdFunctions():
         self.yolo_pose = Node(package='charmie_yolo_pose',
                             executable='yolo_pose',
                             name='yolo_pose',
-                            emulate_tty=True
-                            )
-        
-        self.point_cloud = Node(package='charmie_point_cloud',
-                            executable='point_cloud',
-                            name='point_cloud',
                             emulate_tty=True
                             )
         

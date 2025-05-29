@@ -86,12 +86,31 @@ class TaskMain():
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
 
+                pose_adjust_pre = [100, 150, 200, 0, 0, 0]
+                pose_adjust_pos = [-100, -150, -200, 0, 0, 0]
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                print("DONE")
+                time.sleep(3.0)
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=pose_adjust_pre, wait_for_end_of=True)
+                print("DONE")
+                time.sleep(3.0)
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=pose_adjust_pos, wait_for_end_of=True)
+                print("DONE")
+                time.sleep(3.0)
+                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
+
+                while True:
+                    pass
 
                 pose1 = [ 200.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                 pose2 = [-200.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                 pose3 = [-183.0, 83.4, -65.0, -0.5, -14.7, 270.0]
                 pose4 = [-508.7, 19.0, -365.0, -176.8, 0.5, -92.5]
 
+                # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=pose1, wait_for_end_of=True)
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=pose1, wait_for_end_of=True)
                 print("DONE")
                 time.sleep(3.0)
@@ -105,6 +124,9 @@ class TaskMain():
                 print("DONE")
                 time.sleep(3.0)
                 self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
+
+                
                 
 
                 while True:
@@ -117,7 +139,7 @@ class TaskMain():
                 
                 self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)  
 
-                self.robot.set_arm(command="initial_pose_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
                 time.sleep(self.SHOW_OBJECT_DETECTED_WAIT_TIME)
                 

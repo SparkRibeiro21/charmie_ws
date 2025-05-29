@@ -569,7 +569,7 @@ class ArmUfactory(Node):
 
 	### ACTUAL SERVE THE BREAKFAST ARM MOVEMENTS ###
 
-	def initial_pose_to_ask_for_objects(self):
+	def initial_position_to_ask_for_objects(self):
 
 		if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
@@ -2238,14 +2238,14 @@ class ArmUfactory(Node):
 			self.arm_go_rest()
 
 		# new serve breakfast functions
-		elif self.next_arm_movement == "initial_pose_to_search_for_objects":
+		elif self.next_arm_movement == "initial_position_to_search_for_objects":
 			self.search_for_objects()
 		elif self.next_arm_movement == "search_for_objects_to_ask_for_objects":
 			self.search_for_objects_to_ask_for_objects()
 		
 		# new
-		elif self.next_arm_movement == "initial_pose_to_ask_for_objects":
-			self.initial_pose_to_ask_for_objects()
+		elif self.next_arm_movement == "initial_position_to_ask_for_objects":
+			self.initial_position_to_ask_for_objects()
 		# elif self.next_arm_movement == "collect_milk_to_tray2":
 		# 	self.collect_milk_to_tray2()
 

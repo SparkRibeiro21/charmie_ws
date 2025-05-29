@@ -1735,14 +1735,18 @@ class DebugVisualMain():
                 x2 = max(p.kp_shoulder_right_x, p.kp_shoulder_left_x, p.kp_nose_x, p.kp_eye_right_x, p.kp_eye_left_x)
                 x_width = x2-x1
             
-                self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+30/2), int(p.box_width/2*self.camera_resize_ratio), 6*(30/2), self.RED, 85)
-                self.draw_text(str(p.gender), self.text_font, self.BLACK,          int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+1*(30/2)))
-                self.draw_text(str(p.ethnicity), self.text_font, self.BLACK,       int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+2*(30/2)))
-                self.draw_text(str(p.age_estimate), self.text_font, self.BLACK,    int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+3*(30/2)))
-                self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK, int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+4*(30/2)))
-                self.draw_text(str(p.shirt_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+5*(30/2)))
-                self.draw_text(str(p.pants_color), self.text_font, self.BLACK,     int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+6*(30/2)))
+                self.draw_transparent_rect(int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+30/2), int(p.box_width/2*self.camera_resize_ratio), 9*(30/2), self.RED, 85)
+                self.draw_text(str(p.gender), self.text_font, self.BLACK,                               int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+1*(30/2)))
+                self.draw_text(str(p.ethnicity), self.text_font, self.BLACK,                            int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+2*(30/2)))
+                self.draw_text(str(p.age_estimate), self.text_font, self.BLACK,                         int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+3*(30/2)))
+                self.draw_text(str(round(p.height,2)), self.text_font, self.BLACK,                      int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+4*(30/2)))
+                self.draw_text(str(p.shirt_color), self.text_font, self.BLACK,                          int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+5*(30/2)))
+                self.draw_text(str(p.pants_color), self.text_font, self.BLACK,                          int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+6*(30/2)))
+                self.draw_text(str(p.room_location), self.text_font, self.BLACK,                        int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+7*(30/2)))
+                self.draw_text(str(p.furniture_location), self.text_font, self.BLACK,                   int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+8*(30/2)))
+                self.draw_text(str(p.pointing_at+" "+p.pointing_with_arm), self.text_font, self.BLACK,  int(self.cams_initial_width+(p.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(p.box_top_left_y)*self.camera_resize_ratio+9*(30/2)))
             
+
     def draw_object_detections(self, camera_select, camera_id):
 
         if camera_select == "top":
@@ -1820,6 +1824,29 @@ class DebugVisualMain():
                 bb_color = self.object_class_to_bb_color(o.object_class)
                 pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
                 self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
+
+            ### draw object 2D orientation
+            if o.orientation is not None:
+                # Convert orientation to radians
+                theta_rad = math.radians(o.orientation)
+
+                # Compute center position (already given)
+                if camera_id == "base":
+                    center_x = int(self.cams_initial_width + (self.LEFT_PAD + o.box_center_x) * self.camera_resize_ratio)
+                else:
+                    center_x = int(self.cams_initial_width + o.box_center_x * self.camera_resize_ratio)
+
+                center_y = int(camera_height + o.box_center_y * self.camera_resize_ratio)
+
+                line_length = 30*self.camera_resize_ratio
+
+                x_beg = int(center_x - line_length * math.cos(theta_rad))
+                y_beg = int(center_y - line_length * math.sin(theta_rad))
+                x_end = int(center_x + line_length * math.cos(theta_rad))
+                y_end = int(center_y + line_length * math.sin(theta_rad))
+
+                # Draw the orientation line (red color, width 2)
+                pygame.draw.line(self.WIN, (255, 255, 255), (x_beg, y_beg), (x_end, y_end), 4)
 
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
