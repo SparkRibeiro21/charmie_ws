@@ -52,7 +52,7 @@ class TaskMain():
     def __init__(self, robot: RobotStdFunctions):
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
-        self.SELECTED_OBJECT = "Pringles"
+        self.SELECTED_OBJECT = "Mustard"
 
     def main(self):
         
@@ -99,10 +99,10 @@ class TaskMain():
                         self.robot.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
                         print(f"Initial pose to search for objects")
 
-                        high_z = o.position_relative.z - 1.28
-                        rise_z = [0.0, 0.0, high_z, 0.0, 0.0, 0.0]
-                        low_z = o.position_relative.z - 0.73
-                        descend_z = [0.0, 0.0, low_z, 0.0, 0.0, 0.0]
+                        high_z = (o.position_relative.z - 1.28)*100
+                        rise_z = [high_z, 0.0, 0.0, 0.0, 0.0, 0.0]
+                        low_z = (o.position_relative.z - 0.73)*100
+                        descend_z = [low_z, 0.0, 0.0, 0.0, 0.0, 0.0]
 
                         if 0.6 <= o.position_relative.z <= 1.0:
                             self.robot.set_arm(command="search_front_min_z", wait_for_end_of=True)
@@ -160,7 +160,7 @@ class TaskMain():
 
             print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} {o.orientation} ({hand_x_},{hand_y_},{hand_z_})")
 
-            correct_x = ((o.position_cam.x + 0.04 - tf_x)*1000) - 150
+            correct_x = ((o.position_cam.x + 0.05 - tf_x)*1000) - 150
             correct_y = (o.position_cam.y - tf_y)*1000
             correct_z = (o.position_cam.z - tf_z)*1000
             if o.orientation < 0.0:
