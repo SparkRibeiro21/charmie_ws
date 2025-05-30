@@ -2,9 +2,9 @@
 # if you need to modify, please modify xarm_user_params.yaml
 ufactory_driver:
   ros__parameters:
-    joint_names: ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6', 'joint7']
+    joint_names: ['xarm_joint1', 'xarm_joint2', 'xarm_joint3', 'xarm_joint4', 'xarm_joint5', 'xarm_joint6', 'xarm_joint7']
     xarm_gripper:
-      joint_names: ['drive_joint', 'left_finger_joint', 'left_inner_knuckle_joint', 'right_outer_knuckle_joint', 'right_finger_joint', 'right_inner_knuckle_joint']
+      joint_names: ['xarm_gripper_drive_joint', 'xarm_gripper_left_finger_joint', 'xarm_gripper_left_inner_knuckle_joint', 'xarm_gripper_right_outer_knuckle_joint', 'xarm_gripper_right_finger_joint', 'xarm_gripper_right_inner_knuckle_joint']
       speed: 2000
       max_pos: 850
       frequency: 10

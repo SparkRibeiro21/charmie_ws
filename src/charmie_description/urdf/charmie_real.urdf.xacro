@@ -30,6 +30,8 @@
     
     <xacro:include filename="base_camera.xacro"/>
     
-    <xacro:include filename="hand_camera.xacro"/>
+    <xacro:include filename="real_hand_camera.xacro"/>
+
+    <xacro:include filename="arm.xacro"/>
 
 </robot>

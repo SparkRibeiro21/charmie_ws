@@ -173,14 +173,78 @@ class LaunchStdFunctions():
             }.items(),
         )
 
+        # added by Pedro
+        # ros2 control launch
+        # xarm_controller/launch/_ros2_control.launch.py
+        self.xarm_ros2_control = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(home + '/charmie_ws/src/charmie_arm_ufactory/xarm_ros2/xarm_controller/launch/_ros2_control.launch.py'),
+            launch_arguments={
+                'robot_ip': robot_ip,
+                'report_type': report_type,
+                'prefix': '',
+                'hw_ns': hw_ns,
+                'limited': 'false',
+                'effort_control': 'false',
+                'velocity_control': 'false',
+                'add_gripper': add_gripper,
+                'add_vacuum_gripper': 'false',
+                'add_bio_gripper': 'false',
+                'dof': '6',
+                'robot_type': 'xarm',
+                'ros2_control_plugin': 'uf_robot_hardware/UFRobotSystemHardware',
+                'baud_checkset': 'true',
+                'default_gripper_baud': '2000000',
+                'use_sim_time': 'false'
+            }.items()
+        )
+
+        # added by Pedro
+        self.xarm_controller_spawner = Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=[
+                'xarm6_traj_controller',
+                # 'xarm_gripper_traj_controller',
+                '--controller-manager', '/controller_manager'
+            ],
+        )
+
+        #parameters added by Pedro
         #Publishes the joint_states of the robot
         self.joint_state_publisher = Node(package='joint_state_publisher',
                        executable='joint_state_publisher',
-                       name='joint_state_publisher')
+                       name='joint_state_publisher',
+                       parameters=[{
+                            'source_list': ['xarm/joint_states'],
+                            'zeros': {
+                                'xarm_gripper_drive_joint': 0.850,
+                                'xarm_joint1': -3.926,
+                                'xarm_joint2': 1.449,
+                                'xarm_joint3': -1.134,
+                                'xarm_joint4': -0.017,
+                                'xarm_joint5': 1.309,
+                                'xarm_joint6': 4.712
+                            }
+                        }]
+        )
 
+        #parameters added by Pedro
         self.joint_state_publisher_gui = Node(package='joint_state_publisher_gui',
-                       executable='joint_state_publisher_gui')
-        
+                       executable='joint_state_publisher_gui',
+                       parameters=[{
+                            'source_list': ['xarm/joint_states'],
+                            'zeros': {
+                                'xarm_gripper_drive_joint': 0.850,
+                                'xarm_joint1': -3.926,
+                                'xarm_joint2': 1.449,
+                                'xarm_joint3': -1.134,
+                                'xarm_joint4': -0.017,
+                                'xarm_joint5': 1.309,
+                                'xarm_joint6': 4.712
+                            }
+                        }]
+        )
+
         # Use IncludeLaunchDescription to include the launch file
         self.charmie_multi_camera_launch_description = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('realsense2_camera'), 'launch', 'charmie_multi_camera_launch.py')])

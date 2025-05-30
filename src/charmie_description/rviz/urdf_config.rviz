@@ -208,6 +208,36 @@ Visualization Manager:
           Value: true
         torso_link:
           Value: true
+        xarm_gripper_left_finger:
+          Value: true
+        xarm_gripper_left_inner_knuckle:
+          Value: true
+        xarm_gripper_left_outer_knuckle:
+          Value: true
+        xarm_gripper_link_tcp:
+          Value: true
+        xarm_gripper_right_finger:
+          Value: true
+        xarm_gripper_right_inner_knuckle:
+          Value: true
+        xarm_gripper_right_outer_knuckle:
+          Value: true
+        xarm_gripper_xarm_gripper_base_link:
+          Value: true
+        xarm_link1:
+          Value: true
+        xarm_link2:
+          Value: true
+        xarm_link3:
+          Value: true
+        xarm_link4:
+          Value: true
+        xarm_link5:
+          Value: true
+        xarm_link6:
+          Value: true
+        xarm_link_base:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true

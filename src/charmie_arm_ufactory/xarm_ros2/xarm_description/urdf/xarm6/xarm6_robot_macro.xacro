@@ -5,7 +5,7 @@
     hw_ns:='xarm'
     limited:=false
     velocity_control:=false
-    add_gripper:=false
+    add_gripper:=true
     add_bio_gripper:=false
     ros2_control_plugin:='uf_robot_hardware/UFRobotSystemHardware' 
     robot_ip:=''
@@ -25,6 +25,19 @@
     <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6.urdf.xacro" />
     <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6.transmission.xacro" />
     <xacro:include filename="$(find xarm_description)/urdf/xarm6/xarm6.gazebo.xacro" />
+
+    <xacro:if value="${add_gripper}">
+      <xacro:include filename="$(find xarm_description)/urdf/gripper/xarm_gripper_macro.xacro" />
+      <xacro:property name="mesh_path" value="package://xarm_description/meshes"/>
+      <xacro:property name="mesh_suffix" value="stl"/>
+      <xacro:xarm_gripper_macro 
+        prefix="${prefix}gripper_" 
+        attach_to="${prefix}link6" 
+        ns="${hw_ns}" 
+        dof="6"
+        ros2_control_plugin="${ros2_control_plugin}"
+        hard_interface="${hard_interface}" />
+    </xacro:if>
 
     <xacro:if value="${limited}">
       <xacro:if value="${is_ros2}">
