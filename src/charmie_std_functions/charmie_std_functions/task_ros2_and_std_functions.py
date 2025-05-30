@@ -2780,6 +2780,60 @@ class RobotStdFunctions():
             if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
                 return str(obj["class"]).replace(" ","_").lower()  # Return the class
         return None  # Return None if the object is not found
+    
+    def get_object_width_from_object(self, object_name):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
+                return float(obj["width"])  # Return the value
+        return None  # Return None if the object is not found
+    
+    def get_object_length_from_object(self, object_name):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
+                return float(obj["length"])  # Return the value
+        return None  # Return None if the object is not found
+    
+    def get_object_height_from_object(self, object_name):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
+                return float(obj["height"])  # Return the value
+        return None  # Return None if the object is not found
+    
+    def get_object_shape_from_object(self, object_name):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
+                return str(obj["shape"]).replace(" ","_").lower()  # Return the shape
+        return None  # Return None if the object is not found
+    
+    def get_how_object_can_be_picked_from_object(self, object_name):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
+                return str(obj["can_pick"]).replace(" ","_").lower()  # Return the can_pick
+        return None  # Return None if the object is not found
+    
+    def get_standard_pick_from_object(self, object_name):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
+                return str(obj["std_pick"]).replace(" ","_").lower()  # Return the std_pick
+        return None  # Return None if the object is not found
 
     def get_furniture_from_object_class(self, object_class):
 
