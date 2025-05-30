@@ -42,7 +42,7 @@
 {"name": "Cornflakes", 		"class": "Snacks",		"width": "0.090", "length": "0.030", "height": "0.123", "shape": "cuboid", "can_pick": "both", "std_pick": "front"},
 {"name": "Cheezit", 		"class": "Snacks",		"width": "0.245", "length": "0.065", "height": "0.126", "shape": "cuboid", "can_pick": "both", "std_pick": "front"},
 
-{"name": "Spoon", 		"class": "Dishes",		"height": "0.02"},
+{"name": "Spoon", 		"class": "Dishes",		"width": "0.081", "length": "0.081", "height": "0.078", "shape": "special", "can_pick": "both", "std_pick": "top"},
 {"name": "Plate", 		"class": "Dishes",		"width": "0.257", "length": "0.257", "height": "0.028", "shape": "cilinder", "can_pick": "front", "std_pick": "front"},
 {"name": "Cup", 		"class": "Dishes",		"width": "0.081", "length": "0.081", "height": "0.078", "shape": "special", "can_pick": "both", "std_pick": "top"},
 {"name": "Fork", 		"class": "Dishes",		"width": "0.018", "length": "0.195", "height": "0.013", "shape": "cilinder", "can_pick": "top", "std_pick": "top"},
