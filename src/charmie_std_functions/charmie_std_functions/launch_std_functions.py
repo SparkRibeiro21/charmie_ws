@@ -164,6 +164,7 @@ class LaunchStdFunctions():
             }.items(),
         )
 
+        # added by Pedro
         # ros2 control launch
         # xarm_controller/launch/_ros2_control.launch.py
         self.xarm_ros2_control = IncludeLaunchDescription(
@@ -188,6 +189,7 @@ class LaunchStdFunctions():
             }.items()
         )
 
+        # added by Pedro
         self.xarm_controller_spawner = Node(
             package='controller_manager',
             executable='spawner',
@@ -198,6 +200,7 @@ class LaunchStdFunctions():
             ],
         )
 
+        #parameters added by Pedro
         #Publishes the joint_states of the robot
         self.joint_state_publisher = Node(package='joint_state_publisher',
                        executable='joint_state_publisher',
@@ -216,6 +219,7 @@ class LaunchStdFunctions():
                         }]
         )
 
+        #parameters added by Pedro
         self.joint_state_publisher_gui = Node(package='joint_state_publisher_gui',
                        executable='joint_state_publisher_gui',
                        parameters=[{
@@ -231,16 +235,6 @@ class LaunchStdFunctions():
                             }
                         }]
         )
-        
-        #Test joint values
-        #                        'xarm_gripper_drive_joint': 0.850,
-        #                        'xarm_joint1': -2.988,
-        #                        'xarm_joint2': 0.776672,
-        #                        'xarm_joint3': -1.05767,
-        #                        'xarm_joint4': 0.150098,
-        #                        'xarm_joint5': 1.88496,
-        #                        'xarm_joint6': 4.75951
-
 
         # Use IncludeLaunchDescription to include the launch file
         self.charmie_multi_camera_launch_description = IncludeLaunchDescription(
