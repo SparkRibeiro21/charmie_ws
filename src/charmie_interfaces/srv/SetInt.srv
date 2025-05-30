@@ -1,0 +1,6 @@
+# Generic Service to send an Int value 
+
+int32 data   # generic int value sent 
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.

@@ -76,7 +76,7 @@ class TaskMain():
                 time.sleep(2.0)
 
                 tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                people_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0)
+                people_found = self.robot.search_for_person(tetas=tetas, time_in_each_frame=2.0)
 
                 print("FOUND:", len(people_found)) 
                 for p in people_found:
@@ -112,8 +112,8 @@ class TaskMain():
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-30, -45], [0, -45], [30, -45]]
-                # objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, delta_t=3.0, use_arm=False, detect_objects=True, detect_objects_hand=True, detect_objects_base=True)
+                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, use_arm=False, detect_objects=True, detect_objects_hand=True, detect_objects_base=True)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:

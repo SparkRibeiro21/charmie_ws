@@ -227,6 +227,12 @@ class ArmUfactory(Node):
 		# self.middle_cuttlery_cup = 				[ -135.0,  345.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		# self.pos_cuttlery_cup = 					[ -198.8,  344.9, -106.2, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 
+		### APRIL 1 TEST: ###
+
+		self.first_motion_joints =						[-225.0,   83.0,   -65.0,   -1.0,   75.0,   270.0]
+		self.second_motion_joints =						[-207.1,   86.5,   -72.5,   48.2,   79.4,   267.2]
+		self.third_motion_linear =						[-614.9,   125.0,  158.2,   math.radians(110.6), math.radians(1.7), math.radians(-92.2)]
+		self.fourth_motion_joints =						[-213.8,   53.0,   -75.0,   40.6,   110.6,  286.9]
 
 		### SEARCH FOR OBJECT ON TABLE FRONTAL JOINT VARIABLES###
 		self.initial_position_joints_Pedro =								[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
@@ -839,8 +845,6 @@ class ArmUfactory(Node):
 				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=25, wait=True)
 			case 2:
 				self.finish_arm_movement_()
-
-
 
 	### SERVE THE BREAKFAST ARM MOVEMENTS ###
 

@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
 		"speakers = charmie_speakers.speakers:main",
+		"speakers_with_save = charmie_speakers.speakers_with_save:main",
 		"save_speaker_files = charmie_speakers.save_speaker_files:main"
         ],
     },

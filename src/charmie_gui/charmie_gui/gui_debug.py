@@ -3,13 +3,13 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 
-from example_interfaces.msg import Bool, String, Float32
+from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
 from sensor_msgs.msg import Image, LaserScan
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, PS4Controller, DetectedPerson, DetectedObject, \
-    TrackingMask, VCCsLowLevel
+    TrackingMask, VCCsLowLevel, TaskStatesInfo
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, GetLLMDemo, ActivateTracking, SetRGB
 from cv_bridge import CvBridge, CvBridgeError
@@ -77,6 +77,9 @@ class DebugVisualNode(Node):
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
+        # Task States Info
+        self.task_states_info_subscriber = self.create_subscription(TaskStatesInfo, "task_states_info", self.task_states_info_callback, 10)
+        self.task_state_selectable_subscriber = self.create_subscription(Int16, "task_state_selectable", self.task_state_selectable_callback, 10)
         
         ### Services (Clients) ###
 		# Arm (Ufactory)
@@ -196,6 +199,9 @@ class DebugVisualNode(Node):
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
         self.is_tracking_comm = False
+        self.task_states_info = TaskStatesInfo()
+        self.task_state_selectable = 0
+        self.received_first_task_state_selectable = False
 
         self.neck_pan = 0.0
         self.neck_tilt = 0.0
@@ -502,6 +508,17 @@ class DebugVisualNode(Node):
         self.search_for_object = points
         self.new_search_for_object = True
 
+    def task_states_info_callback(self, tsi: TaskStatesInfo):
+        # print("Received Task States Info")
+        # print(tsi)
+        self.task_states_info = tsi
+
+    def task_state_selectable_callback(self, msg: Int16):
+        # print("Received Task State Selectable")
+        # print(msg.data)
+        self.task_state_selectable = msg.data
+        self.received_first_task_state_selectable = True
+
 
 class CheckNodesMain():
 
@@ -723,7 +740,7 @@ class DebugVisualMain():
         self.PURPLE  = (132, 56,255)
         self.CYAN    = (  0,255,255)
 
-        self.WIDTH, self.HEIGHT = 1450, 752
+        self.WIDTH, self.HEIGHT = 1470, 752
 
         self.BB_WIDTH = 3
 
@@ -739,9 +756,9 @@ class DebugVisualMain():
         self.cams_initial_width = int(205 + 0.5 + self.button_size*self.camera_resize_ratio)
 
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
-        self.map_init_height = 260
+        self.map_init_height = 260 + 50 # increaswed 50 so that the map is appears lower on the window
 
-        self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
+        self.MAP_SIDE = int(self.HEIGHT - 260 - 12) - 100  # decreased 100 so that the map is shorter for the task states
         self.MAP_SCALE = 1.40
         self.MAP_ADJUST_X = 0.8
         self.MAP_ADJUST_Y = -3.0
@@ -969,6 +986,7 @@ class DebugVisualMain():
 
         # robot info
         self.robot_radius = self.node.robot_radius
+
 
     def activate_yolo_pose(self, activate=True, only_detect_person_legs_visible=False, minimum_person_confidence=0.5, minimum_keypoints_to_detect_person=7, only_detect_person_right_in_front=False, only_detect_person_arm_raised=False, characteristics=False, wait_for_end_of=True):
         
@@ -2097,7 +2115,7 @@ class DebugVisualMain():
 
     def draw_map(self):
         
-        self.MAP_SIDE = int(self.HEIGHT - 260 - 12)
+        self.MAP_SIDE = int(self.HEIGHT - 260 - 12) - 100 # decreased 100 so that the map is shorter for the task states
         # print(self.HEIGHT, self.MAP_SIDE)
 
         self.xc = self.MAP_SIDE
@@ -2108,8 +2126,8 @@ class DebugVisualMain():
         self.yc_adj = self.yc - self.yy_shift
 
         self.map_init_width = int(self.cams_initial_width+self.cam_width_+self.cams_initial_height)
-        self.map_init_height = 260
-
+        self.map_init_height = 260 + 50 # increaswed 50 so that the map is appears lower on the window
+ 
         # visual configs:
         neck_visual_lines_length = 1.0
         detected_person_radius = 0.2
@@ -2277,7 +2295,8 @@ class DebugVisualMain():
             self.node.new_search_for_object = False    
 
         ### TRACKING
-        pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(self.node.tracking_mask.position_absolute.x, self.node.tracking_mask.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
+        if self.node.is_tracking_comm:
+            pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(self.node.tracking_mask.position_absolute.x, self.node.tracking_mask.position_absolute.y), radius=self.size_to_map(detected_person_radius), width=0)
 
         ### FINAL DRAWINGS (for clearing remaining of image without checking every drawing (just draw and then clear everything outside the the map slot))
         self.WIDTH, self.HEIGHT = self.WIN.get_size()
@@ -2294,6 +2313,43 @@ class DebugVisualMain():
         
         pygame.draw.rect(self.WIN, self.WHITE, MAP_BB, width=self.BB_WIDTH)
 
+
+    def draw_task_states_info(self):
+        
+        if self.node.task_states_info.task_name != "":
+
+            height_space_between_tasks = 25
+            xc = self.map_init_width + self.MAP_SIDE + 10
+            yc = self.map_init_height - 20
+
+            # self.draw_text("Task Info: ", self.text_font_t, self.WHITE, xc, yc)
+            # self.draw_text("> "+self.node.task_states_info.task_name+" <", self.text_font, self.RED, xc, yc+30)
+            self.draw_text("  "+self.node.task_states_info.task_name+":", self.text_font_t, self.RED, xc, yc + height_space_between_tasks - 5)
+
+            for state, state_id in zip(self.node.task_states_info.list_of_states, self.node.task_states_info.list_of_states_ids):
+                
+                colour = self.WHITE # colour by default is white
+                
+                if state_id == self.node.task_state_selectable and self.node.received_first_task_state_selectable:
+                    # option 1 change colour
+                    # colour = self.YELLOW
+                
+                    # option 2 change background
+                    pygame.draw.rect(self.WIN, self.WHITE, pygame.Rect(xc-5, yc+height_space_between_tasks*(state_id+2)-5, 220, 22), width=0)
+                    colour = self.BLACK
+
+                    #option 3 add "> text <"
+                    # pass
+                #     self.draw_text("> " + state.replace("_", " ")+" <", self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
+                # else:
+                # self.draw_text("   "+state.replace("_", " ")+"   ", self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
+                
+                if state_id == self.node.task_states_info.current_task_state_id:
+                    colour = self.BLUE
+
+                self.draw_text(state.replace("_", " "), self.text_font, colour, xc, yc+height_space_between_tasks*(state_id+2))
+
+        
     def draw_battery(self):
 
         battery_colour = self.WHITE
@@ -2373,6 +2429,7 @@ class DebugVisualMain():
 
             self.WIN.fill((0, 0, 0))
             self.draw_map()
+            self.draw_task_states_info()
             self.adjust_window_size()  
             self.draw_nodes_check()
             self.draw_battery()

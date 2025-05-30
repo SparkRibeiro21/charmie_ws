@@ -4,19 +4,21 @@ from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle, GoalStatus
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
-from example_interfaces.msg import Bool, String, Int16, Float32
+from example_interfaces.msg import Bool, Float32, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped
 from sensor_msgs.msg import Image
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from realsense2_camera_msgs.msg import RGBD
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, BoundingBoxAndPoints, ListOfDetectedPerson, ListOfDetectedObject, \
-    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition
-from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
-    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, SetAcceleration, NodesUsed, ContinuousGetAudio, SetRGB, GetVCCs, \
-    GetLowLevelButtons, GetTorso, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, ActivateTracking, SetPoseWithCovarianceStamped
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
+    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
+    TaskStatesInfo
+from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
+    SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
+    NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
+    ActivateTracking, SetPoseWithCovarianceStamped, SetInt
 from charmie_point_cloud.point_cloud_class import PointCloud
+
 import cv2 
-# import threading
 import time
 from cv_bridge import CvBridge
 import math
@@ -30,7 +32,7 @@ import json
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
-    
+
 
 class ROS2TaskNode(Node):
 
@@ -38,6 +40,11 @@ class ROS2TaskNode(Node):
         super().__init__("ROS2TaskCHARMIE")
         self.get_logger().info("Initialised CHARMIE ROS2Task Node")
 
+        ### ROS2 Parameters ###
+        # DEMO mode for task_demonstrations allows operator to control the robot task selection with the controller  
+        self.declare_parameter("DEMO", False) 
+        self.DEMO_OPTION = self.get_parameter("DEMO").value
+        
         self.ros2_modules = ros2_modules
 
         # path to save detected people in search for person
@@ -108,6 +115,10 @@ class ROS2TaskNode(Node):
         self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
         # Tracking
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
+        # Task States Info
+        self.task_states_info_publisher = self.create_publisher(TaskStatesInfo, "task_states_info", 10)
+        self.task_states_info_subscriber = self.create_subscription(TaskStatesInfo, "task_states_info", self.demo_task_states_info_callback, 10)
+        self.task_state_selectable_publisher = self.create_publisher(Int16, "task_state_selectable", 10)
         
 
         ### Services (Clients) ###
@@ -138,11 +149,7 @@ class ROS2TaskNode(Node):
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Low level
-        # self.set_acceleration_ramp_client = self.create_client(SetAcceleration, "set_acceleration_ramp")
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
-        # self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
-        # self.get_low_level_buttons_client = self.create_client(GetLowLevelButtons, "get_start_button")
-        # self.get_torso_position_client = self.create_client(GetTorso, "get_torso_position")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
         self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
@@ -154,6 +161,10 @@ class ROS2TaskNode(Node):
         self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
         # Tracking (SAM2)
         self.activate_tracking_client = self.create_client(ActivateTracking, "activate_tracking")
+        # Task State Demo 
+        self.set_task_state_demo_client = self.create_client(SetInt, "task_state_demo")
+        self.get_task_state_demo_server = self.create_service(SetInt, "task_state_demo", self.callback_get_task_state_demo) 
+
 
         ### Actions (Clients) ###
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
@@ -255,7 +266,18 @@ class ROS2TaskNode(Node):
             while not self.activate_yolo_pose_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
         
-        
+        self.create_timer(0.5, self.task_states_info_publisher_timer)
+
+        # Task Variables
+        self.task_name = ""
+        self.task_states = {}
+        self.swapped_task_states = {}
+        self.current_task_state_id = 0
+
+        #Task Demo Setting
+        self.received_new_demo_task_state = False
+        self.new_demo_task_state = 0
+
         # Variables 
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
@@ -270,9 +292,6 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
-        # self.waited_for_end_of_get_vccs = False
-        # self.waited_for_end_of_get_low_level_buttons = False
-        # self.waited_for_end_of_get_torso_position = False
         self.waited_for_end_of_set_torso_position = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
@@ -358,18 +377,11 @@ class ROS2TaskNode(Node):
         self.vccs = VCCsLowLevel()
         self.buttons_low_level = ButtonsLowLevel()
         self.orientation_yaw = 0.0
-        # self.legs_position = 0.0
-        # self.torso_position = 0.0
-        # self.battery_voltage = 0.0
-        # self.emergency_stop = False
-        # self.start_button  = False
-        # self.debug_button1 = False
-        # self.debug_button2 = False
-        # self.debug_button3 = False
         self.new_controller_msg = False
         self.llm_demonstration_response = ""
         self.llm_confirm_command_response = ""
         self.llm_gpsr_response = ListOfStrings()
+        self.received_demo_tsi = TaskStatesInfo()
 
         self.nav2_goal_accepted = False
         self.nav2_feedback = NavigateToPose.Feedback()
@@ -378,6 +390,18 @@ class ROS2TaskNode(Node):
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
+    def task_states_info_publisher_timer(self):
+
+        if self.task_name != "":
+            tsi = TaskStatesInfo()
+            tsi.task_name = self.task_name
+            tsi.current_task_state_id = self.current_task_state_id
+            tsi.list_of_states = list(self.task_states.keys())
+            tsi.list_of_states_ids = list(self.task_states.values())
+            self.task_states_info_publisher.publish(tsi)
+    
+    def demo_task_states_info_callback(self, task_states_info: TaskStatesInfo):
+        self.received_demo_tsi = task_states_info
 
     def send_node_used_to_gui(self):
 
@@ -824,67 +848,7 @@ class ROS2TaskNode(Node):
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
-    """
-    def call_vccs_command_server(self, request=GetVCCs.Request()):
-    
-        future = self.get_vccs_client.call_async(request)
-        future.add_done_callback(self.callback_call_vccs_command)
-        
-    def callback_call_vccs_command(self, future): 
 
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            self.get_logger().info("Battery_Voltage: "+str(response.battery_voltage) + ", Emergency_Button: " + str(response.emergency_stop))
-            self.battery_voltage = response.battery_voltage
-            self.emergency_stop = response.emergency_stop
-            self.waited_for_end_of_get_vccs = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))  
-
-    def call_low_level_buttons_command_server(self, request=GetLowLevelButtons.Request()):
-    
-        future = self.get_low_level_buttons_client.call_async(request)
-        future.add_done_callback(self.callback_call_low_level_buttons_command)
-        
-    def callback_call_low_level_buttons_command(self, future): 
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            # self.get_logger().info("Start_Button: "+str(response.start_button) + ", Debug_Button1: " + str(response.debug_button1) + \
-            #                        ", Debug_Button2: " + str(response.debug_button2) + ", Debug_Button3: " + str(response.debug_button3))
-            self.start_button = response.start_button
-            self.debug_button1 = response.debug_button1
-            self.debug_button2 = response.debug_button2
-            self.debug_button3 = response.debug_button3
-            self.waited_for_end_of_get_low_level_buttons = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))  
-
-    def call_get_torso_position_server(self, request=GetTorso.Request()):
-    
-        future = self.get_torso_position_client.call_async(request)
-        future.add_done_callback(self.callback_call_get_torso_position)
-        
-    def callback_call_get_torso_position(self, future): 
-
-        try:
-            # in this function the order of the line of codes matter
-            # it seems that when using future variables, it creates some type of threading system
-            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
-            response = future.result()
-            # self.get_logger().info("Torso: "+str(response.legs) + ", Legs: " + str(response.torso))
-            self.legs_position = response.legs
-            self.torso_position = response.torso
-            self.waited_for_end_of_get_torso_position = True
-        except Exception as e:
-            self.get_logger().error("Service call failed %r" % (e,))  
-    """
     def call_set_torso_position_server(self, request=SetTorso.Request()):
     
         future = self.set_torso_position_client.call_async(request)
@@ -988,6 +952,31 @@ class ROS2TaskNode(Node):
         self.amcl_pose = msg
         self.new_amcl_pose_msg = True
 
+    def call_set_task_state_demo_server(self, request=SetInt.Request()):
+        self.set_task_state_demo_client.call_async(request)
+        print("Sent Demo Task State Request")
+
+    def callback_get_task_state_demo(self, request, response):
+        # print(request)
+
+        # Type of service received:
+        # int32 data   # generic int value sent  
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+
+        print("Received Demo Task State Request")
+
+        self.received_new_demo_task_state = True
+        self.new_demo_task_state = request.data
+
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Set task state: " + str(self.received_demo_tsi.list_of_states[self.new_demo_task_state])
+        print(response.message)
+
+        return response
+
     ### Nav2 Action Client ###
     # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
 
@@ -1037,7 +1026,6 @@ class ROS2TaskNode(Node):
 
 
     # Navigate through poses
-
     def nav2_follow_waypoints_client_goal_response_callback(self, future):
         self.goal_follow_waypoints_handle_:ClientGoalHandle = future.result()
         if self.goal_follow_waypoints_handle_.accepted:
@@ -1099,6 +1087,58 @@ class RobotStdFunctions():
     def __init__(self, node: ROS2TaskNode):
         # create a node instance so all variables ros related can be acessed
         self.node = node
+
+    def get_demo_mode(self):
+        return self.node.DEMO_OPTION
+
+    def set_task_name_and_states(self, task_name="", task_states={}):
+        
+        if task_name == "" or task_states == {}:
+            self.node.get_logger().error("Task name or task states cannot be empty... Please set task name and states.")
+            while True:
+                pass
+        
+        self.node.task_name = task_name
+        self.node.task_states = task_states
+        self.node.swapped_task_states = {value: key for key, value in self.node.task_states.items()}
+
+        print("\nTask Name: " + self.node.task_name)
+        print("Task States:")
+        for key, value in self.node.task_states.items():
+            print(key)
+        print()
+
+    def set_current_task_state_id(self, current_state=None):
+        
+        if current_state == None:
+            self.node.get_logger().error("Current task state cannot be empty... Please set current task state.")
+            while True:
+                pass
+
+        if current_state == -1: # for demo mode
+            print("\n>>> Current Task State: DEMO MODE  <<<\n")
+        else:
+            self.node.current_task_state_id = current_state # only updates current task if it is not DEMO_MODE
+            print("\n>>> Current Task State: " + str(self.node.swapped_task_states[self.node.current_task_state_id]) + " <<<\n")
+
+    def set_task_state_selection(self, task_state_selection):
+        data = Int16()
+        data.data = task_state_selection
+        self.node.task_state_selectable_publisher.publish(data)
+
+    def get_received_new_demo_task_state(self):
+        temp = self.node.received_new_demo_task_state
+        if self.node.received_new_demo_task_state: # clears variable if true, and sends the value pre clearing
+            self.node.received_new_demo_task_state = False
+        return temp
+
+    def get_new_demo_task_state(self):
+        return self.node.new_demo_task_state
+
+    def set_task_state_demo(self, new_demo_state=0):
+        request = SetInt.Request()
+        request.data = int(new_demo_state)
+        self.node.call_set_task_state_demo_server(request=request)
 
     def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause_show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 
@@ -1830,12 +1870,11 @@ class RobotStdFunctions():
         move_coords[2]+=45.0
         return move_coords
 
-    def search_for_person(self, tetas, delta_t=3.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
+    def search_for_person(self, tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
         self.set_speech(filename="generic/search_people", wait_for_end_of=False)
         # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-        # time.sleep(0.5)
         
         total_person_detected = []
         person_detected = []
@@ -1846,12 +1885,12 @@ class RobotStdFunctions():
         for t in tetas:
             self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=t, wait_for_end_of=True)
-            time.sleep(0.5)
+            time.sleep(time_wait_neck_move_pre_each_frame)
             self.node.detected_people.persons = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
             self.set_rgb(WHITE+SET_COLOUR)
 
             start_time = time.time()
-            while (time.time() - start_time) < delta_t:        
+            while (time.time() - start_time) < time_in_each_frame:        
                 local_detected_people = self.node.detected_people
                 for temp_people in local_detected_people.persons:
                     
@@ -1992,7 +2031,7 @@ class RobotStdFunctions():
         
         return face_path
 
-    def search_for_objects(self, tetas, delta_t=3.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
+    def search_for_objects(self, tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -2028,19 +2067,18 @@ class RobotStdFunctions():
                                        minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-            # time.sleep(0.5)
-
+            
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
             for t in tetas:
                 rgb_found_list_of_objects = False
                 self.set_rgb(RED+SET_COLOUR)
                 self.set_neck(position=t, wait_for_end_of=True)
-                time.sleep(0.5)
+                time.sleep(time_wait_neck_move_pre_each_frame)
                 self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
                 self.set_rgb(WHITE+SET_COLOUR)
 
                 start_time = time.time()
-                while (time.time() - start_time) < delta_t:      
+                while (time.time() - start_time) < time_in_each_frame:      
 
                     # if detect_objects: 
                     local_detected_objects = self.node.detected_objects
@@ -2107,7 +2145,7 @@ class RobotStdFunctions():
                                             is_in_mandatory_list = True
                                             # print(m_object, final_obj.object_name, final_obj.index, is_in_mandatory_list)
 
-                            # checks for current teta (added to stop doing the full delta_t if all objects have already been detected)
+                            # checks for current teta (added to stop doing the full time_in_each_frame if all objects have already been detected)
                             for curr_teta_obj in objects_detected:
 
                                 if curr_teta_obj.object_name.replace(" ","_").lower() in m_object:
@@ -2927,7 +2965,6 @@ class RobotStdFunctions():
 
 
         self.activate_tracking(activate=True, points=points, bbox=bb)
-        # time.sleep(60.0)
         # self.activate_tracking(activate=False)
 
     def get_quaternion_from_euler(self, roll, pitch, yaw):

@@ -27,6 +27,7 @@ setup(
 		"opening_doors_demonstration = charmie_demonstration.opening_doors_demonstration:main",
 		"pick_place_demonstration = charmie_demonstration.pick_place_demonstration:main",
 		"roboparty_demonstration = charmie_demonstration.roboparty_demonstration:main",
+		"task_demonstration = charmie_demonstration.task_demonstration:main",
 		"welcome_demonstration = charmie_demonstration.welcome_demonstration:main"
         ],
     },
