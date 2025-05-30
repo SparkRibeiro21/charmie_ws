@@ -5,6 +5,11 @@ import time
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 import math
 
+import cv2
+import numpy as np
+import time
+from skimage.metrics import structural_similarity as ssim
+
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -198,7 +203,7 @@ class TaskMain():
 
                 print("IN_")
 
-                time.sleep(10.0)
+                wait_until_stable(self)
                 #CALIBRATE GRIPPER BEFORE GRABBING
                 final_objects = self.robot.search_for_objects(tetas=[[0, 0]], delta_t=2.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
                 for obj in final_objects:
@@ -227,3 +232,33 @@ class TaskMain():
                 self.robot.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Could not bring object to initial pose")
 
+def is_stable(prev_frame, curr_frame):
+    threshold = 0.85
+    prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+    curr_gray = cv2.cvtColor(curr_frame, cv2.COLOR_BGR2GRAY)
+
+    score, _ = ssim(prev_gray, curr_gray, full=True)
+    print("Score", score)
+
+    return score >= threshold
+
+def wait_until_stable(self):
+
+    check_interval = 0.1
+    stable_duration = 0.3
+    image_time_out = 0.0
+    stable_image = 0.0
+
+    while (stable_image <= stable_duration) and (image_time_out < 9.9):
+        _, prev_frame = self.robot.get_hand_rgb_image()
+
+        print("Waiting for camera to stabilize...", image_time_out, stable_image)
+        time.sleep(check_interval)
+        _, curr_frame = self.robot.get_hand_rgb_image()
+
+        if is_stable(prev_frame, curr_frame):
+            stable_image += 0.1
+        else:
+            stable_image = 0.0
+        image_time_out += 0.1
+                
