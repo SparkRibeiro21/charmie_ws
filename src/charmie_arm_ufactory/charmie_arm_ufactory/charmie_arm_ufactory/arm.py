@@ -234,6 +234,19 @@ class ArmUfactory(Node):
 		self.third_motion_linear =						[-614.9,   125.0,  158.2,   math.radians(110.6), math.radians(1.7), math.radians(-92.2)]
 		self.fourth_motion_joints =						[-213.8,   53.0,   -75.0,   40.6,   110.6,  286.9]
 
+		### SEARCH FOR OBJECT ON TABLE FRONTAL JOINT VARIABLES###
+		self.initial_position_joints_Pedro =								[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
+		self.initial_position_to_search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
+		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
+		# self.search_front_max_z_joints =									[-108.1, -50.4, -16.4, -109.1, 80.1, 22.9]
+		self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
+
+
+
+
+		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
+		self.search_table_top_joints =					[-152.2, 59.4, -129.4, -85.2, 116.7, 66.7]
+		self.search_table_top_safe_position =					[-194.9, 69.4, -106.4, 23.2, 71.5, 264.8]
 		### SERVE THE BREAKFAST VARIABLES: ###
 		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
 		print("height_adjust:", height_adjust)
@@ -770,56 +783,67 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
-
-
-	### APRIL 1 TEST ###
-
-	def obj_teste1(self):
-		self.get_logger().error("CONSEGUI RECEBER")
+	### SEARCH FOR OBJECT ON TABLE FRONTAL###
+	def initial_pose_to_search_table_front(self):
 		match self.estado_tr:
 			case 0:
-				self.set_gripper_speed_(speed=1000)
-				self.set_gripper_position_(pos=0, wait=True)
+				self.set_gripper_speed_(speed=5000)
 			case 1:
-				self.set_joint_values_(angles=self.first_motion_joints, speed=20, wait=True)
-				self.get_logger().info("First Movement Done")
-	
+				self.set_gripper_position_(pos=0, wait=True)
 			case 2:
-				self.set_joint_values_(angles=self.second_motion_joints, speed=20, wait=True)
-				self.get_logger().info("Second Movement Done")
-
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
 			case 3:
-				self.set_position_values_(pose=self.third_motion_linear, speed=100, wait=True)
-				self.get_logger().info("Third Movement Done")
-
+				self.set_joint_values_(angles=self.initial_position_to_search_table_front_joints, speed=30, wait=True)
 			case 4:
-				self.set_gripper_position_(pos=452, wait=True)
-				self.get_logger().info("Open gripper")
+				# self.set_joint_values_(angles=self.search_table_front_joints, speed=30, wait=True)
+			# case 5:
+				self.finish_arm_movement_()
 
-			case 5:
+	def search_table_to_initial_pose(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.initial_position_to_search_table_front_joints, speed=30, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
+	def search_front_min_z(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_table_front_joints, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def search_front_max_z(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_front_max_z_joints, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+
+	### SEARCH FOR OBJECT ON TABLE TOP###
+	def initial_pose_to_search_table_top(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=5000)
+			case 1:
 				self.set_gripper_position_(pos=0, wait=True)
-				self.get_logger().info("Close gripper")
-	
-			case 6:
-				self.set_joint_values_(angles=self.fourth_motion_joints, speed=20, wait=True)
-				self.get_logger().info("Fourth Movement Done")
+			case 2:
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=25, wait=True)
+			case 3:
+				self.set_joint_values_(angles=self.search_table_top_joints, speed=25, wait=True)
+			case 4:
+				self.finish_arm_movement_()
 
-			case 7:
-				self.set_position_values_(pose=self.third_motion_linear, speed=100, wait=True)
-				self.get_logger().info("Fifth Movement Done")
-
-			case 8:
-				self.set_gripper_position_(pos=452, wait=True)
-				self.get_logger().info("Open gripper x2")
-
-			case 9:
-				self.set_gripper_position_(pos=0, wait=True)
-				self.get_logger().info("CLose gripper x2")
-
-			case 10:
-				self.set_joint_values_(angles=self.first_motion_joints, speed=20, wait=True)
-				self.get_logger().info("Sixth Movement Done")
-			case 11:
+	def search_table_to_initial_pose_Tiago(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_table_top_safe_position, speed=25, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=25, wait=True)
+			case 2:
 				self.finish_arm_movement_()
 
 	### SERVE THE BREAKFAST ARM MOVEMENTS ###
@@ -2150,9 +2174,21 @@ class ArmUfactory(Node):
 			case "ask_for_objects_to_initial_position_alternative_robocup_cornflakes":
 				self.ask_for_objects_to_initial_position_alternative_robocup_cornflakes()
 
-			# MARCH TESTS
-			case "teste1":
-				self.obj_teste1()
+			# SEARCH FOR OBJECT ON TABLE FRONTAL
+			case "initial_pose_to_search_table_front":
+				self.initial_pose_to_search_table_front()
+			case "search_table_to_initial_pose":
+				self.search_table_to_initial_pose()
+			case "search_front_min_z":
+				self.search_front_min_z()
+			case "search_front_max_z":
+				self.search_front_max_z()
+
+			# SEARCH FOR OBJECT ON TABLE TOP
+			case "initial_pose_to_search_table_top":
+				self.initial_pose_to_search_table_top()
+			case "search_table_to_initial_pose_Tiago":
+				self.search_table_to_initial_pose_Tiago()
 			
 			# if there is an error regarding a movement
 			case _:
