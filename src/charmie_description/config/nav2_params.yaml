@@ -231,14 +231,14 @@ local_costmap:
         # base_camera_points:
         #   topic: /camera/depth/points
         #   max_obstacle_height: 1.8
-        #   min_obstacle_height: 0.1  # to ignore floor noise
+        #   min_obstacle_height: 0.2  # to ignore floor noise
         #   clearing: True
         #   marking: True
         #   data_type: "PointCloud2"
         #   expected_update_rate: 0.2
-        #   raytrace_max_range: 6.0
+        #   raytrace_max_range: 3.0
         #   raytrace_min_range: 0.4
-        #   obstacle_max_range: 6.0
+        #   obstacle_max_range: 3.0
         #   obstacle_min_range: 0.4
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
@@ -284,14 +284,14 @@ global_costmap:
         # base_camera_points:
         #   topic: /camera/depth/points
         #   max_obstacle_height: 1.8
-        #   min_obstacle_height: 0.2
+        #   min_obstacle_height: 0.2  # to ignore floor noise
         #   clearing: True
         #   marking: True
         #   data_type: "PointCloud2"
         #   expected_update_rate: 0.2
-        #   raytrace_max_range: 6.0
+        #   raytrace_max_range: 3.0
         #   raytrace_min_range: 0.4
-        #   obstacle_max_range: 6.0
+        #   obstacle_max_range: 3.0
         #   obstacle_min_range: 0.4
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
