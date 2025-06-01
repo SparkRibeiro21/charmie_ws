@@ -1,5 +1,6 @@
 radar_node:
   robot_base_frame: base_footprint
+  update_frequency: 10.0
   observation_sources: scan scan_bottom
   scan:
     topic: /scan

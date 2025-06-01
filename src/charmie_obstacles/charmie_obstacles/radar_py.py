@@ -3,6 +3,8 @@ from rclpy.node import Node
 import yaml
 from ament_index_python.packages import get_package_share_directory
 import os
+import math
+import time
 
 from sensor_msgs.msg import LaserScan
 
@@ -35,11 +37,16 @@ class RadarNode(Node):
             return
 
         self.robot_base_frame = radar.get('robot_base_frame', 'N/A')
+        self.update_frequency = radar.get('update_frequency', 10.0)
         sources_str = radar.get('observation_sources', '')
         self.sources = sources_str.split()
+
+        self.latest_scans = {}  # Dictionary to store latest messages
+        self.latest_scans_new_msg = {}
         self.subscribers = []
 
         self.get_logger().info(f"Robot Base Frame: {self.robot_base_frame}")
+        self.get_logger().info(f"Update Frequency: {self.update_frequency}")
         self.get_logger().info(f"Observation sources: {sources_str}")
 
         for sensor_name in self.sources:
@@ -68,13 +75,47 @@ class RadarNode(Node):
             else:
                 self.get_logger().info(f"Unsupported data_type '{data_type}' for sensor '{sensor_name}'")
 
+        for sensor_name in self.sources:
+            self.latest_scans_new_msg[sensor_name] = False
+
+        # Create timer to print stored scans
+        timer_period = 1.0 / self.update_frequency
+        self.timer = self.create_timer(timer_period, self.timer_callback)
+
         self.get_logger().info("RadarNode setup complete.")
 
    
     def laserscan_callback(self, msg, sensor_name):
+        self.latest_scans[sensor_name] = msg
+        self.latest_scans_new_msg[sensor_name] = True
         self.get_logger().info(f"[{sensor_name}] Received LaserScan with {len(msg.ranges)} ranges")
 
 
+    def timer_callback(self):
+        # self.get_logger().info("Timer triggered. Current scans:")
+        if not self.latest_scans:
+            self.get_logger().info("  No scan data received yet.")
+        
+        for sensor_name, msg in self.latest_scans.items():
+            
+            if self.latest_scans_new_msg[sensor_name]:
+                start_time = time.time()
+                valid_ranges = [r for r in msg.ranges if math.isfinite(r)]
+                total = sum(valid_ranges)
+                count = len(valid_ranges)
+
+                if count > 0:
+                    avg = total / count
+            
+                end_time = time.time()
+                elapsed_ms = (end_time - start_time) * 1000.0  # milliseconds
+
+
+                self.get_logger().info(f"  {sensor_name} - valid ranges: {count}, sum: {total}, avg: {avg}, time: {elapsed_ms}")
+
+                self.latest_scans_new_msg[sensor_name] = False
+
+            
 def main(args=None):
     rclpy.init(args=args)
     node = RadarNode()
