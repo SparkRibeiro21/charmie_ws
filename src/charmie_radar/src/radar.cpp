@@ -1,11 +1,14 @@
 #include "rclcpp/rclcpp.hpp"
+#include "ament_index_cpp/get_package_share_directory.hpp"
 #include <yaml-cpp/yaml.h>
 
 class RadarNode : public rclcpp::Node {
 public:
     RadarNode() : Node("radar_node") {
-        std::string yaml_path = this->declare_parameter<std::string>("radar_config", "radar_params.yaml");
-
+        
+        std::string full_path = ament_index_cpp::get_package_share_directory("charmie_description") + "/config/radar_params.yaml";
+        std::string yaml_path = this->declare_parameter<std::string>("radar_config", full_path);
+        
         try {
             YAML::Node config = YAML::LoadFile(yaml_path);
             YAML::Node radar = config["radar_node"];
@@ -13,11 +16,16 @@ public:
                 RCLCPP_ERROR(this->get_logger(), "Missing 'radar_node' key in YAML file.");
                 return;
             }
+            
+            RCLCPP_INFO(this->get_logger(), "Loading config from: %s", yaml_path.c_str());
+
+            std::string robot_base_frame = radar["robot_base_frame"] ? radar["robot_base_frame"].as<std::string>() : "N/A";
 
             // Get observation_sources string and split it
             std::string sources_str = radar["observation_sources"].as<std::string>();
             std::vector<std::string> sources = split_string(sources_str, ' ');
 
+            RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame.c_str());
             RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
 
             for (const auto& sensor_name : sources) {
@@ -48,7 +56,7 @@ public:
 
         RCLCPP_INFO(this->get_logger(), "RadarNode setup complete.");
     }
-    
+
 private:
     std::vector<std::string> split_string(const std::string &input, char delimiter) {
         std::stringstream ss(input);

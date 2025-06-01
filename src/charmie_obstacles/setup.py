@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             "obstacles_lidar = charmie_obstacles.obstacles_lidar:main",
-            "obstacles_fusion = charmie_obstacles.obstacles_fusion:main"
+            "obstacles_fusion = charmie_obstacles.obstacles_fusion:main",
+            "radar_py = charmie_obstacles.radar_py:main"
         ],
     },
 )
