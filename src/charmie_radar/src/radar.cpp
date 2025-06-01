@@ -1,6 +1,14 @@
 #include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/laser_scan.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
+
+#include "sensor_msgs/msg/laser_scan.hpp"
+#include "geometry_msgs/msg/point.hpp"
+#include "charmie_interfaces/msg/list_of_points.hpp"
+
+#include "tf2_ros/transform_listener.h"
+#include "tf2_ros/buffer.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+
 #include <yaml-cpp/yaml.h>
 #include <chrono>
 
@@ -21,14 +29,14 @@ public:
             
             RCLCPP_INFO(this->get_logger(), "Loading config from: %s", yaml_path.c_str());
 
-            std::string robot_base_frame = radar["robot_base_frame"] ? radar["robot_base_frame"].as<std::string>() : "N/A";
+            robot_base_frame_ = radar["robot_base_frame"] ? radar["robot_base_frame"].as<std::string>() : "N/A";
             double update_frequency = radar["update_frequency"] ? radar["update_frequency"].as<double>() : 10.0;
 
             // Get observation_sources string and split it
             std::string sources_str = radar["observation_sources"].as<std::string>();
             std::vector<std::string> sources = split_string(sources_str, ' ');
 
-            RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame.c_str());
+            RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
             RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
             RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
 
@@ -67,6 +75,12 @@ public:
                 }
 
             }
+            // TF2 setup
+            tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+            tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
+            // Publisher setup
+            points_publisher_ = this->create_publisher<charmie_interfaces::msg::ListOfPoints>("radar_points", 10);
 
             timer_ = this->create_wall_timer(
                 std::chrono::duration<double>(1.0 / update_frequency),
@@ -85,6 +99,10 @@ private:
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr> laser_subscribers_;
     std::unordered_map<std::string, sensor_msgs::msg::LaserScan::SharedPtr> latest_scans_;
     std::unordered_map<std::string, bool> latest_scans_new_msg_;
+    rclcpp::Publisher<charmie_interfaces::msg::ListOfPoints>::SharedPtr points_publisher_;
+    std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+    std::string robot_base_frame_;
     rclcpp::TimerBase::SharedPtr timer_;
 
     std::vector<std::string> split_string(const std::string &input, char delimiter) {
@@ -110,41 +128,56 @@ private:
             RCLCPP_INFO(this->get_logger(), "No scan data received yet.");
             return;
         }
+        
+        std::vector<geometry_msgs::msg::Point> all_points;
+        auto start = std::chrono::high_resolution_clock::now();
 
         for (const auto& [sensor_name, msg] : latest_scans_) {
             if (latest_scans_new_msg_[sensor_name]) {
             
-                auto start = std::chrono::high_resolution_clock::now();
 
-                //RCLCPP_INFO(this->get_logger(), "  %s - timestamp: %u.%u, range count: %lu",
-                //            sensor_name.c_str(),
-                //            msg->header.stamp.sec,
-                //            msg->header.stamp.nanosec,
-                //            msg->ranges.size());
+                float angle = msg->angle_min;
+                float increment = msg->angle_increment;
+                std::string frame_id = msg->header.frame_id;
 
-                float sum = 0.0f;
-                int count = 0;
-                float avg = 0.0f;
+                geometry_msgs::msg::PointStamped pt_in, pt_out;
+                pt_in.header = msg->header;
 
                 for (float r : msg->ranges) {
-                    if (std::isfinite(r)) {
-                        sum += r;
-                        count++;
+                    if (!std::isfinite(r)) {
+                        angle += increment;
+                        continue;
+                    }
+
+                    pt_in.point.x = r * std::cos(angle);
+                    pt_in.point.y = r * std::sin(angle);
+                    pt_in.point.z = 0.0;
+                    angle += increment;
+
+                    try {
+                        auto tf = tf_buffer_->lookupTransform(robot_base_frame_, frame_id, tf2::TimePointZero);
+                        tf2::doTransform(pt_in, pt_out, tf);
+                        all_points.push_back(pt_out.point);
+                    } catch (const tf2::TransformException &ex) {
+                        RCLCPP_WARN(this->get_logger(), "TF error for %s -> %s: %s",
+                                    frame_id.c_str(), robot_base_frame_.c_str(), ex.what());
+                        continue;
                     }
                 }
 
-                if (count > 0) {
-                    avg = sum / count;
-                }
-
-                auto end = std::chrono::high_resolution_clock::now();
-                auto duration_ms = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;            
-
-                RCLCPP_INFO(this->get_logger(), "  %s - valid ranges: %d, sum: %.2f, avg: %.2f, time: %.4f",
-                    sensor_name.c_str(), count, sum, avg, duration_ms);
-
                 latest_scans_new_msg_[sensor_name] = false;
             }
+        }
+        
+        if (!all_points.empty()) {
+            auto end = std::chrono::high_resolution_clock::now();
+            double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
+
+            charmie_interfaces::msg::ListOfPoints msg;
+            msg.coords = all_points;
+            points_publisher_->publish(msg);
+
+            RCLCPP_INFO(this->get_logger(), "Published %lu points in %.2f ms", all_points.size(), elapsed_ms);
         }
     }
 

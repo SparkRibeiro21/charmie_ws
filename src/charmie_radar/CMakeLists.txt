@@ -11,6 +11,10 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(charmie_interfaces REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 # Build executable
 # for new executables duplicate the following two lines and added the executable name to install()
@@ -19,6 +23,10 @@ ament_target_dependencies(radar
   rclcpp
   ament_index_cpp
   sensor_msgs
+  charmie_interfaces
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 # Manually link yaml-cpp
