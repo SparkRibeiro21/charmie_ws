@@ -9,14 +9,17 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(example_interfaces REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 # Build executable
 # for new executables duplicate the following two lines and added the executable name to install()
 add_executable(radar src/radar.cpp)
-ament_target_dependencies(radar rclcpp)
-ament_target_dependencies(radar ament_index_cpp)
+ament_target_dependencies(radar 
+  rclcpp
+  ament_index_cpp
+  sensor_msgs
+)
 
 # Manually link yaml-cpp
 target_link_libraries(radar yaml-cpp)

@@ -4,6 +4,8 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 import os
 
+from sensor_msgs.msg import LaserScan
+
 class RadarNode(Node):
     def __init__(self):
         super().__init__('radar_node')
@@ -32,14 +34,15 @@ class RadarNode(Node):
             self.get_logger().error("Missing 'radar_node' key in YAML file.")
             return
 
-        robot_base_frame = radar.get('robot_base_frame', 'N/A')
+        self.robot_base_frame = radar.get('robot_base_frame', 'N/A')
         sources_str = radar.get('observation_sources', '')
-        sources = sources_str.split()
+        self.sources = sources_str.split()
+        self.subscribers = []
 
-        self.get_logger().info(f"Robot Base Frame: {robot_base_frame}")
+        self.get_logger().info(f"Robot Base Frame: {self.robot_base_frame}")
         self.get_logger().info(f"Observation sources: {sources_str}")
 
-        for sensor_name in sources:
+        for sensor_name in self.sources:
             sensor = radar.get(sensor_name)
             if not sensor:
                 self.get_logger().warn(f"Sensor config block '{sensor_name}' not found.")
@@ -58,7 +61,18 @@ class RadarNode(Node):
             self.get_logger().info(f"Obstacle height: {min_obstacle_height:.2f} to {max_obstacle_height:.2f}")
             self.get_logger().info(f"Obstacle range: {obstacle_min_range:.2f} to {obstacle_max_range:.2f}")
 
+            if data_type == "LaserScan":
+                sub = self.create_subscription(LaserScan, topic, lambda msg, s=sensor_name:self.laserscan_callback(msg, s), 10)
+                self.subscribers.append(sub)
+                self.get_logger().info(f"Subscribed to sensor '{sensor_name}' of message type '{data_type}'")
+            else:
+                self.get_logger().info(f"Unsupported data_type '{data_type}' for sensor '{sensor_name}'")
+
         self.get_logger().info("RadarNode setup complete.")
+
+   
+    def laserscan_callback(self, msg, sensor_name):
+        self.get_logger().info(f"[{sensor_name}] Received LaserScan with {len(msg.ranges)} ranges")
 
 
 def main(args=None):

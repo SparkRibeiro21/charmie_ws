@@ -1,4 +1,5 @@
 #include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 #include <yaml-cpp/yaml.h>
 
@@ -35,9 +36,9 @@ public:
                 }
 
                 YAML::Node sensor = radar[sensor_name];
-
                 std::string topic = sensor["topic"] ? sensor["topic"].as<std::string>() : "N/A";
                 std::string data_type = sensor["data_type"] ? sensor["data_type"].as<std::string>() : "N/A";
+                
                 double max_obstacle_height = sensor["max_obstacle_height"] ? sensor["max_obstacle_height"].as<double>() : -1.0;
                 double min_obstacle_height = sensor["min_obstacle_height"] ? sensor["min_obstacle_height"].as<double>() : -1.0;
                 double obstacle_max_range = sensor["obstacle_max_range"] ? sensor["obstacle_max_range"].as<double>() : -1.0;
@@ -48,6 +49,18 @@ public:
                 RCLCPP_INFO(this->get_logger(), "Data type: %s", data_type.c_str());
                 RCLCPP_INFO(this->get_logger(), "Obstacle height: %.2f to %.2f", min_obstacle_height, max_obstacle_height);
                 RCLCPP_INFO(this->get_logger(), "Obstacle range: %.2f to %.2f", obstacle_min_range, obstacle_max_range);
+
+                if (data_type == "LaserScan") {
+                    auto sub = this->create_subscription<sensor_msgs::msg::LaserScan>(topic, 10, 
+                        [this, sensor_name](const sensor_msgs::msg::LaserScan::SharedPtr msg) {
+                            this->laser_callback(msg, sensor_name);
+                        });
+                    laser_subscribers_[sensor_name] = sub;
+                    RCLCPP_INFO(this->get_logger(), "Subscribed to sensor '%s' of message type '%s'", sensor_name.c_str(), data_type.c_str());
+                } else {
+                    RCLCPP_WARN(this->get_logger(), "Unsupported data type '%s' for sensor '%s'", data_type.c_str(), sensor_name.c_str());
+                }
+
             }
 
         } catch (const YAML::Exception& e) {
@@ -58,6 +71,9 @@ public:
     }
 
 private:
+
+    std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr> laser_subscribers_;
+
     std::vector<std::string> split_string(const std::string &input, char delimiter) {
         std::stringstream ss(input);
         std::string item;
@@ -68,6 +84,11 @@ private:
             }
         }
         return tokens;
+    }
+
+    void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg, const std::string &source_name) {
+        RCLCPP_INFO(this->get_logger(), "[%s] Received LaserScan with %lu ranges", source_name.c_str(), msg->ranges.size());
+    }
 
     //void timerCallback()
     //{
@@ -76,7 +97,6 @@ private:
     //}
     //rclcpp::TimerBase::SharedPtr timer_;
     //int counter_;
-    }
 };
 
 int main(int argc, char **argv)

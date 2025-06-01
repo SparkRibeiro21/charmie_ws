@@ -11,6 +11,7 @@
 
   <depend>rclcpp</depend>
   <depend>example_interfaces</depend>
+  <depend>sensor_msgs</depend>
   <depend>yaml-cpp</depend>
 
   <test_depend>ament_lint_auto</test_depend>
