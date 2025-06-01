@@ -9,7 +9,8 @@ import time
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 from geometry_msgs.msg import PointStamped
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, PointCloud2
+import sensor_msgs_py.point_cloud2 as pc2
 from geometry_msgs.msg import Point
 from charmie_interfaces.msg import ListOfPoints
 
@@ -81,6 +82,10 @@ class RadarNode(Node):
                 sub = self.create_subscription(LaserScan, topic, lambda msg, s=sensor_name:self.laserscan_callback(msg, s), 10)
                 self.subscribers.append(sub)
                 self.get_logger().info(f"Subscribed to sensor '{sensor_name}' of message type '{data_type}'")
+            elif data_type == "PointCloud2":
+                sub = self.create_subscription(PointCloud2, topic, lambda msg, s=sensor_name:self.pointcloud_callback(msg, s), 10)
+                self.subscribers.append(sub)
+                self.get_logger().info(f"Subscribed to sensor '{sensor_name}' of message type '{data_type}'")
             else:
                 self.get_logger().info(f"Unsupported data_type '{data_type}' for sensor '{sensor_name}'")
 
@@ -95,12 +100,15 @@ class RadarNode(Node):
 
         self.get_logger().info("RadarNode setup complete.")
 
-   
     def laserscan_callback(self, msg, sensor_name):
         self.latest_scans[sensor_name] = msg
         self.latest_scans_new_msg[sensor_name] = True
         self.get_logger().info(f"[{sensor_name}] Received LaserScan with {len(msg.ranges)} ranges")
 
+    def pointcloud_callback(self, msg, sensor_name):
+        self.latest_scans[sensor_name] = msg
+        self.latest_scans_new_msg[sensor_name] = True
+        self.get_logger().info(f"[{sensor_name}] Received PointCloud2 with height {msg.height}, width {msg.width}")
 
     def timer_callback(self):
         # self.get_logger().info("Timer triggered. Current scans:")
@@ -115,25 +123,49 @@ class RadarNode(Node):
             
             if self.latest_scans_new_msg[sensor_name]:
 
-                angle = msg.angle_min
-                angle_increment = msg.angle_increment
-                frame_id = msg.header.frame_id  # original frame of the LaserScan
+                msg_type = type(msg)
+                if msg_type == LaserScan:
 
-                for r in msg.ranges:
-                    if math.isfinite(r):
-                        x = r * math.cos(angle)
-                        y = r * math.sin(angle)
-                        point_stamped = PointStamped()
-                        point_stamped.header.stamp = msg.header.stamp
-                        point_stamped.header.frame_id = frame_id
-                        point_stamped.point.x = x
-                        point_stamped.point.y = y
-                        point_stamped.point.z = 0.0
+                    angle = msg.angle_min
+                    angle_increment = msg.angle_increment
+                    frame_id = msg.header.frame_id  # original frame of the LaserScan
 
+                    for r in msg.ranges:
+                        if math.isfinite(r):
+                            x = r * math.cos(angle)
+                            y = r * math.sin(angle)
+                            point_stamped = PointStamped()
+                            point_stamped.header.stamp = msg.header.stamp
+                            point_stamped.header.frame_id = frame_id
+                            point_stamped.point.x = x
+                            point_stamped.point.y = y
+                            point_stamped.point.z = 0.0
+
+                            try:
+                                transformed_point = self.tf_buffer.transform(
+                                    point_stamped,
+                                    self.robot_base_frame,
+                                    timeout=rclpy.duration.Duration(seconds=0.1)
+                                )
+                                all_points.append(transformed_point.point)
+                            except Exception as e:
+                                self.get_logger().warn(
+                                    f"TF transform failed for {sensor_name}: {e}"
+                                )
+                        angle += angle_increment
+                
+                elif msg_type == PointCloud2:
+                    for p in pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True):
+                        ps = PointStamped()
+                        ps.header = msg.header
+                        ps.point.x = p[0]
+                        ps.point.y = p[1]
+                        ps.point.z = p[2]
+                        
                         try:
                             transformed_point = self.tf_buffer.transform(
-                                point_stamped,
-                                self.robot_base_frame,
+                                ps, 
+                                self.robot_base_frame, 
                                 timeout=rclpy.duration.Duration(seconds=0.1)
                             )
                             all_points.append(transformed_point.point)
@@ -142,8 +174,6 @@ class RadarNode(Node):
                                 f"TF transform failed for {sensor_name}: {e}"
                             )
 
-                    angle += angle_increment
-                
                 self.latest_scans_new_msg[sensor_name] = False
     
         if all_points:
