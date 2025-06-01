@@ -6,7 +6,13 @@ import os
 import math
 import time
 
+from tf2_ros import Buffer, TransformListener
+import tf2_geometry_msgs
+from geometry_msgs.msg import PointStamped
 from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Point
+from charmie_interfaces.msg import ListOfPoints
+
 
 class RadarNode(Node):
     def __init__(self):
@@ -16,6 +22,9 @@ class RadarNode(Node):
         # Declare and read parameter
         self.declare_parameter('radar_config', default_yaml)
         yaml_path = self.get_parameter('radar_config').get_parameter_value().string_value
+
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
 
         self.get_logger().info(f"Loading config from: {yaml_path}")
 
@@ -78,6 +87,8 @@ class RadarNode(Node):
         for sensor_name in self.sources:
             self.latest_scans_new_msg[sensor_name] = False
 
+        self.points_publisher = self.create_publisher(ListOfPoints, 'radar_points', 10)
+
         # Create timer to print stored scans
         timer_period = 1.0 / self.update_frequency
         self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -95,25 +106,52 @@ class RadarNode(Node):
         # self.get_logger().info("Timer triggered. Current scans:")
         if not self.latest_scans:
             self.get_logger().info("  No scan data received yet.")
-        
+            return
+
+        all_points = []
+        start_time = time.time()
+
         for sensor_name, msg in self.latest_scans.items():
             
             if self.latest_scans_new_msg[sensor_name]:
-                start_time = time.time()
-                valid_ranges = [r for r in msg.ranges if math.isfinite(r)]
-                total = sum(valid_ranges)
-                count = len(valid_ranges)
 
-                if count > 0:
-                    avg = total / count
-            
-                end_time = time.time()
-                elapsed_ms = (end_time - start_time) * 1000.0  # milliseconds
+                angle = msg.angle_min
+                angle_increment = msg.angle_increment
+                frame_id = msg.header.frame_id  # original frame of the LaserScan
 
+                for r in msg.ranges:
+                    if math.isfinite(r):
+                        x = r * math.cos(angle)
+                        y = r * math.sin(angle)
+                        point_stamped = PointStamped()
+                        point_stamped.header.stamp = msg.header.stamp
+                        point_stamped.header.frame_id = frame_id
+                        point_stamped.point.x = x
+                        point_stamped.point.y = y
+                        point_stamped.point.z = 0.0
 
-                self.get_logger().info(f"  {sensor_name} - valid ranges: {count}, sum: {total}, avg: {avg}, time: {elapsed_ms}")
+                        try:
+                            transformed_point = self.tf_buffer.transform(
+                                point_stamped,
+                                self.robot_base_frame,
+                                timeout=rclpy.duration.Duration(seconds=0.1)
+                            )
+                            all_points.append(transformed_point.point)
+                        except Exception as e:
+                            self.get_logger().warn(
+                                f"TF transform failed for {sensor_name}: {e}"
+                            )
 
+                    angle += angle_increment
+                
                 self.latest_scans_new_msg[sensor_name] = False
+    
+        if all_points:
+            elapsed_ms = (time.time() - start_time) * 1000.0  # milliseconds
+            self.get_logger().info(f"Converted {len(all_points)} points in {elapsed_ms:.2f} ms")
+            msg = ListOfPoints()
+            msg.coords = all_points
+            self.points_publisher.publish(msg)
 
             
 def main(args=None):

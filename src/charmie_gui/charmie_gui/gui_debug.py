@@ -69,6 +69,8 @@ class DebugVisualNode(Node):
         self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
         # Obstacles
         self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
+        # Radar
+        self.radar_subscriber = self.create_subscription(ListOfPoints, "radar_points", self.get_radar_callback, 10)
         # PS4 Controller
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_callback, 10)
         # Yolo Pose
@@ -210,6 +212,7 @@ class DebugVisualNode(Node):
         self.lidar_bottom_obstacle_points = []
         self.camera_obstacle_points = []
         self.final_obstacle_points = []
+        self.radar_points = []
 
         self.robot_radius = 0.560/2 # meters
         self.lidar_radius = 0.050/2 # meters
@@ -405,6 +408,11 @@ class DebugVisualNode(Node):
         self.final_obstacle_points = points.coords
         # print("Received Points")
         # print(self.final_obstacle_points)
+
+    def get_radar_callback(self, points: ListOfPoints):
+        self.radar_points = points.coords
+        # print("Received Radar Points")
+        # print(self.radar_points)
 
     def lidar_callback(self, scan: LaserScan):
         self.scan = scan
@@ -2230,8 +2238,12 @@ class DebugVisualMain():
             # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_pose.x+points.x, self.node.robot_pose.y+points.y), radius=1, width=0)
             pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(points.x, points.y), radius=1, width=0)
 
-        for points in self.node.camera_obstacle_points:
+        # for points in self.node.camera_obstacle_points:
+        #     pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
+
+        for points in self.node.radar_points:
             pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
+
 
         for points in self.node.final_obstacle_points:
 
