@@ -3,6 +3,8 @@
 
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "geometry_msgs/msg/point.hpp"
+#include "sensor_msgs/msg/point_cloud2.hpp"
+#include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "charmie_interfaces/msg/list_of_points.hpp"
 
 #include "tf2_ros/transform_listener.h"
@@ -70,6 +72,14 @@ public:
                         });
                     laser_subscribers_[sensor_name] = sub;
                     RCLCPP_INFO(this->get_logger(), "Subscribed to sensor '%s' of message type '%s'", sensor_name.c_str(), data_type.c_str());
+                } else if (data_type == "PointCloud2") {
+                    auto sub = this->create_subscription<sensor_msgs::msg::PointCloud2>(topic, 10,
+                        [this, sensor_name](const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
+                            this->cloud_callback(msg, sensor_name);
+                        });
+                    cloud_subscribers_[sensor_name] = sub;
+                    RCLCPP_INFO(this->get_logger(), "Subscribed to sensor '%s' of message type 'PointCloud2'", sensor_name.c_str());
+
                 } else {
                     RCLCPP_WARN(this->get_logger(), "Unsupported data type '%s' for sensor '%s'", data_type.c_str(), sensor_name.c_str());
                 }
@@ -97,8 +107,11 @@ public:
 private:
 
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr> laser_subscribers_;
+    std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> cloud_subscribers_;
     std::unordered_map<std::string, sensor_msgs::msg::LaserScan::SharedPtr> latest_scans_;
+    std::unordered_map<std::string, sensor_msgs::msg::PointCloud2::SharedPtr> latest_clouds_;
     std::unordered_map<std::string, bool> latest_scans_new_msg_;
+    std::unordered_map<std::string, bool> latest_clouds_new_msg_;
     rclcpp::Publisher<charmie_interfaces::msg::ListOfPoints>::SharedPtr points_publisher_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -121,6 +134,12 @@ private:
         latest_scans_[source_name] = msg;
         latest_scans_new_msg_[source_name] = true;
         RCLCPP_INFO(this->get_logger(), "[%s] Received LaserScan with %lu ranges", source_name.c_str(), msg->ranges.size());
+    }
+
+    void cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg, const std::string &source_name) {
+        latest_clouds_[source_name] = msg;
+        latest_clouds_new_msg_[source_name] = true;
+        RCLCPP_INFO(this->get_logger(), "[%s] Received PointCloud2 with width %u, height %u", source_name.c_str(), msg->width, msg->height);
     }
 
     void timer_callback() {
@@ -166,6 +185,37 @@ private:
                 }
 
                 latest_scans_new_msg_[sensor_name] = false;
+            }
+        }
+
+        for (const auto& [sensor_name, msg] : latest_clouds_) {
+            if (latest_clouds_new_msg_[sensor_name]) {
+
+                std::string frame_id = msg->header.frame_id;
+                geometry_msgs::msg::PointStamped pt_in, pt_out;
+                pt_in.header = msg->header;
+
+                sensor_msgs::PointCloud2ConstIterator<float> iter_x(*msg, "x");
+                sensor_msgs::PointCloud2ConstIterator<float> iter_y(*msg, "y");
+                sensor_msgs::PointCloud2ConstIterator<float> iter_z(*msg, "z");
+
+                for (; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z) {
+                    pt_in.point.x = *iter_x;
+                    pt_in.point.y = *iter_y;
+                    pt_in.point.z = *iter_z;
+
+                    try {
+                        auto tf = tf_buffer_->lookupTransform(robot_base_frame_, frame_id, tf2::TimePointZero);
+                        tf2::doTransform(pt_in, pt_out, tf);
+                        all_points.push_back(pt_out.point);
+                    } catch (const tf2::TransformException &ex) {
+                        RCLCPP_WARN(this->get_logger(), "TF error for cloud %s -> %s: %s",
+                                    frame_id.c_str(), robot_base_frame_.c_str(), ex.what());
+                        continue;
+                    }
+                }
+
+                latest_clouds_new_msg_[sensor_name] = false;
             }
         }
         
