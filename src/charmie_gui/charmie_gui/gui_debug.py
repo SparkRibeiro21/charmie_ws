@@ -69,6 +69,8 @@ class DebugVisualNode(Node):
         self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
         # Obstacles
         self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
+        # Radar
+        self.radar_subscriber = self.create_subscription(ListOfPoints, "radar_points", self.get_radar_callback, 10)
         # PS4 Controller
         self.controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_callback, 10)
         # Yolo Pose
@@ -210,6 +212,7 @@ class DebugVisualNode(Node):
         self.lidar_bottom_obstacle_points = []
         self.camera_obstacle_points = []
         self.final_obstacle_points = []
+        self.radar_points = []
 
         self.robot_radius = 0.560/2 # meters
         self.lidar_radius = 0.050/2 # meters
@@ -406,6 +409,11 @@ class DebugVisualNode(Node):
         # print("Received Points")
         # print(self.final_obstacle_points)
 
+    def get_radar_callback(self, points: ListOfPoints):
+        self.radar_points = points.coords
+        # print("Received Radar Points")
+        # print(self.radar_points)
+
     def lidar_callback(self, scan: LaserScan):
         self.scan = scan
         # print(scan)
@@ -427,15 +435,28 @@ class DebugVisualNode(Node):
             
             if value > self.min_dist_error: # and value < self.max_dist_error:
 
-                obs_y = -value * math.cos(key + self.robot_pose.theta + math.pi/2)
-                obs_x = value * math.sin(key + self.robot_pose.theta + math.pi/2)
+                # Offset of the LiDAR in the robot's frame
+                lidar_offset_x = self.robot_radius - self.lidar_radius
+                lidar_offset_y = 0  # Assuming it's centered on Y
 
-                adj_x = (self.robot_radius - self.lidar_radius + 0.035)*math.cos(self.robot_pose.theta + math.pi/2)
-                adj_y = (self.robot_radius - self.lidar_radius + 0.035)*math.sin(self.robot_pose.theta + math.pi/2)
+                # Angle of the laser ray in world frame
+                angle_world = key + self.robot_pose.theta + math.pi/2
 
+                # Obstacle position in LiDAR frame
+                obs_lidar_x = value * math.sin(angle_world)
+                obs_lidar_y = -value * math.cos(angle_world)
+
+                # Rotate the LiDAR offset into world frame
+                lidar_offset_world_x = lidar_offset_x * math.cos(self.robot_pose.theta) - lidar_offset_y * math.sin(self.robot_pose.theta)
+                lidar_offset_world_y = lidar_offset_x * math.sin(self.robot_pose.theta) + lidar_offset_y * math.cos(self.robot_pose.theta)
+
+                # Final position in world frame (relative to robot center)
+                obs_x = obs_lidar_x + lidar_offset_world_x
+                obs_y = obs_lidar_y + lidar_offset_world_y
+                
                 target = Point()
-                target.x = self.robot_pose.x + obs_x + adj_x
-                target.y = self.robot_pose.y + obs_y + adj_y
+                target.x = self.robot_pose.x + obs_x
+                target.y = self.robot_pose.y + obs_y
                 target.z = 0.35 # lidar height on the robot
 
                 self.lidar_obstacle_points.append(target)
@@ -461,16 +482,29 @@ class DebugVisualNode(Node):
             
             if value > self.min_dist_error: # and value < self.max_dist_error:
 
-                obs_y = -value * math.cos(key + self.robot_pose.theta + math.pi/2)
-                obs_x = value * math.sin(key + self.robot_pose.theta + math.pi/2)
+                # Offset of the LiDAR in the robot's frame
+                lidar_offset_x = self.robot_radius - self.lidar_radius
+                lidar_offset_y = 0  # Assuming it's centered on Y
 
-                adj_x = (self.robot_radius - self.lidar_radius - 0.015)*math.cos(self.robot_pose.theta + math.pi/2)
-                adj_y = (self.robot_radius - self.lidar_radius - 0.015)*math.sin(self.robot_pose.theta + math.pi/2)
+                # Angle of the laser ray in world frame
+                angle_world = key + self.robot_pose.theta + math.pi/2
 
+                # Obstacle position in LiDAR frame
+                obs_lidar_x = value * math.sin(angle_world)
+                obs_lidar_y = -value * math.cos(angle_world)
+
+                # Rotate the LiDAR offset into world frame
+                lidar_offset_world_x = lidar_offset_x * math.cos(self.robot_pose.theta) - lidar_offset_y * math.sin(self.robot_pose.theta)
+                lidar_offset_world_y = lidar_offset_x * math.sin(self.robot_pose.theta) + lidar_offset_y * math.cos(self.robot_pose.theta)
+
+                # Final position in world frame (relative to robot center)
+                obs_x = obs_lidar_x + lidar_offset_world_x
+                obs_y = obs_lidar_y + lidar_offset_world_y
+                
                 target = Point()
-                target.x = self.robot_pose.x + obs_x + adj_x
-                target.y = self.robot_pose.y + obs_y + adj_y
-                target.z = 0.35 # lidar height on the robot
+                target.x = self.robot_pose.x + obs_x
+                target.y = self.robot_pose.y + obs_y
+                target.z = 0.08 # lidar height on the robot
 
                 self.lidar_bottom_obstacle_points.append(target)
 
@@ -2230,8 +2264,24 @@ class DebugVisualMain():
             # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_pose.x+points.x, self.node.robot_pose.y+points.y), radius=1, width=0)
             pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(points.x, points.y), radius=1, width=0)
 
-        for points in self.node.camera_obstacle_points:
-            pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
+        # for points in self.node.camera_obstacle_points:
+        #     pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
+        
+        ### RADAR
+        for points in self.node.radar_points:
+            # calculate the absolute position according to the robot localisation
+            dist_obj = math.sqrt(points.x**2 + points.y**2)
+
+            angle_obj = math.atan2(points.x, points.y)
+            theta_aux = math.pi/2 - (angle_obj - self.node.robot_pose.theta)
+
+            target = Point()
+            target.x = dist_obj * math.cos(theta_aux) + self.node.robot_pose.x
+            target.y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
+            target.z = points.z
+            # pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
+            pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(target.x, target.y), radius=2, width=0)
+            
 
         for points in self.node.final_obstacle_points:
 

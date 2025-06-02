@@ -1,8 +1,8 @@
 [
-{"name": "Sponge",   		"class": "Cleaning Supplies",	"width": "0.075", "length": "0.11", "height": "0.025", "shape": "cuboid", "can_pick": "both", "std_pick": "top"},
-{"name": "Cleanser", 		"class": "Cleaning Supplies",	"width": "0.084", "length": "0.040", "height": "0.215", "shape": "cuboid", "can_pick": "both", "std_pick": "front"},
-{"name": "Dishwasher Tab",	"class": "Cleaning Supplies",	"width": "0.023", "length": "0.033", "height": "0.012", "shape": "cuboid", "can_pick": "both", "std_pick": "top"},
-{"name": "Bag", 		"class": "Cleaning Supplies",	"width": "0.450", "length": "0.215", "height": "0.377", "shape": "special", "can_pick": "both", "std_pick": "top"},
+{"name": "Sponge",   		"class": "Cleaning Supplies",	"width": 0.075, "length": 0.110, "height": 0.025, "shape": "cuboid",   "can_pick": "top",   "std_pick": "top"},
+{"name": "Cleanser", 		"class": "Cleaning Supplies",	"width": 0.084, "length": 0.040, "height": 0.215, "shape": "cuboid",   "can_pick": "both",  "std_pick": "front"},
+{"name": "Dishwasher Tab",	"class": "Cleaning Supplies",	"width": 0.023, "length": 0.033, "height": 0.012, "shape": "cuboid",   "can_pick": "top",   "std_pick": "top"},
+{"name": "Bag", 		"class": "Cleaning Supplies",	"width": 0.450, "length": 0.215, "height": 0.377, "shape": "special",  "can_pick": "top",   "std_pick": "top"},
 
 {"name": "Red Wine", 		"class": "Drinks", 		"width": "0.072", "length": "0.072", "height": "0.318", "shape": "cilinder", "can_pick": "front", "std_pick": "front"},
 {"name": "Juice Pack", 		"class": "Drinks", 		"width": "0.062", "length": "0.057", "height": "0.140", "shape": "sphere", "can_pick": "both", "std_pick": "front"},
@@ -32,11 +32,11 @@
 {"name": "Banana", 		"class": "Fruits",		"width": "0.030", "length": "0.185", "height": "0.090", "shape": "cilinder", "can_pick": "both", "std_pick": "top"},
 {"name": "Apple", 		"class": "Fruits",		"width": "0.080", "length": "0.080", "height": "0.070", "shape": "sphere", "can_pick": "both", "std_pick": "front"},
 
-{"name": "Tennis Ball", 	"class": "Toys",		"width": "0.058", "length": "0.058", "height": "0.058", "shape": "sphere", "can_pick": "both", "std_pick": "top"},
-{"name": "Soccer Ball", 	"class": "Toys",		"width": "0.058", "length": "0.058", "height": "0.058", "shape": "sphere", "can_pick": "both", "std_pick": "top"},
-{"name": "Rubiks Cube", 	"class": "Toys",		"width": "0.056", "length": "0.056", "height": "0.056", "shape": "cuboid", "can_pick": "both", "std_pick": "top"},
-{"name": "Dice", 		"class": "Toys",		"width": "0.016", "length": "0.016", "height": "0.016", "shape": "cuboid", "can_pick": "both", "std_pick": "top"},
-{"name": "Baseball", 		"class": "Toys",		"width": "0.058", "length": "0.058", "height": "0.058", "shape": "sphere", "can_pick": "both", "std_pick": "top"},
+{"name": "Tennis Ball", 	"class": "Toys",		"width": 0.058, "length": 0.058, "height": 0.058, "shape": "sphere",   "can_pick": "both",  "std_pick": "top"},
+{"name": "Soccer Ball", 	"class": "Toys",		"width": 0.058, "length": 0.058, "height": 0.058, "shape": "sphere",   "can_pick": "both",  "std_pick": "top"},
+{"name": "Rubiks Cube", 	"class": "Toys",		"width": 0.056, "length": 0.056, "height": 0.056, "shape": "cuboid",   "can_pick": "both",  "std_pick": "top"},
+{"name": "Dice", 		"class": "Toys",		"width": 0.016, "length": 0.016, "height": 0.016, "shape": "cuboid",   "can_pick": "top",   "std_pick": "top"},
+{"name": "Baseball", 		"class": "Toys",		"width": 0.058, "length": 0.058, "height": 0.058, "shape": "sphere",   "can_pick": "both",  "std_pick": "top"},
 
 {"name": "Pringles", 		"class": "Snacks",		"width": "0.080", "length": "0.080", "height": "0.235", "shape": "cilinder", "can_pick": "both", "std_pick": "front"},
 {"name": "Cornflakes", 		"class": "Snacks",		"width": "0.090", "length": "0.030", "height": "0.123", "shape": "cuboid", "can_pick": "both", "std_pick": "front"},

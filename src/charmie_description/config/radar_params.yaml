@@ -1,0 +1,26 @@
+radar_node:
+  robot_base_frame: base_footprint
+  update_frequency: 10.0
+  observation_sources: scan scan_bottom base_camera
+  scan:
+    topic: /scan
+    max_obstacle_height: 1.8
+    min_obstacle_height: 0.0
+    data_type: "LaserScan"
+    obstacle_max_range: 5.5
+    obstacle_min_range: 0.05
+  scan_bottom:
+    topic: /scan_bottom
+    max_obstacle_height: 1.8
+    min_obstacle_height: 0.0
+    data_type: "LaserScan"
+    obstacle_max_range: 5.5
+    obstacle_min_range: 0.05
+  base_camera:
+    topic: /camera/depth/points
+    max_obstacle_height: 1.8
+    min_obstacle_height: 0.2  # to ignore floor noise
+    data_type: "PointCloud2"
+    expected_update_rate: 0.2
+    obstacle_max_range: 3.0
+    obstacle_min_range: 0.4

@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              False,
     "charmie_audio":            False,
-    "charmie_face":             True,
+    "charmie_face":             False,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
     "charmie_base_camera":      False,
@@ -81,7 +81,7 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
-                o = "juice pack"
+                o = "knife"
                 c = self.robot.get_object_class_from_object(o)
                 f = self.robot.get_furniture_from_object_class(c)
                 r = self.robot.get_room_from_furniture(f)
@@ -89,6 +89,17 @@ class TaskMain():
                 flc = self.robot.get_location_coords_from_furniture(f)
                 rnc = self.robot.get_navigation_coords_from_room(r)
                 print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
+
+                ow = self.robot.get_object_width_from_object(o)
+                ol = self.robot.get_object_length_from_object(o)
+                oh = self.robot.get_object_height_from_object(o)
+                os = self.robot.get_object_shape_from_object(o)
+                ocp = self.robot.get_how_object_can_be_picked_from_object(o)
+                osp = self.robot.get_standard_pick_from_object(o)
+                print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
+
+                while True:
+                    pass
 
                 while True:
                     self.robot.set_face(custom="2024-07-16_18-34-13_Big Coke", camera="head depth", show_detections=True)
