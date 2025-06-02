@@ -158,9 +158,9 @@ class RadarNode(Node):
                     for p in pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True):
                         ps = PointStamped()
                         ps.header = msg.header
-                        ps.point.x = p[0]
-                        ps.point.y = p[1]
-                        ps.point.z = p[2]
+                        ps.point.x = float(p[0])
+                        ps.point.y = float(p[1])
+                        ps.point.z = float(p[2])
                         
                         try:
                             transformed_point = self.tf_buffer.transform(
