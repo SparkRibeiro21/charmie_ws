@@ -65,12 +65,11 @@ class TaskMain():
 
         #DEFINE PICK MODE AND OBJECT
         self.mode = "pick_front"
-        self.SELECTED_OBJECT = "Mustard"
+        self.SELECTED_OBJECT = "Red Wine"
         
         #DEFINE NECK ANGLES AND TIMER
-        self.tetas = [[0, 20], [0, 0], [0, -35]]
-        # tetas = [[-30, -45], [0, -45], [30, -45]] -> SEARCH TABLE REMINDER ANGLES
-        self.delta = 2.0
+        #self.tetas = [[0, 20], [0, 0], [0, -35]] #-> SEARCH CABINET ANGLES
+        self.tetas = [[-30, -45], [0, -45], [30, -45]] #-> SEARCH TABLE ANGLES
 
         #CAMERA CALIBRATION VARIABLES
         self.threshold = 0.85
@@ -79,7 +78,7 @@ class TaskMain():
         self.stable_duration = 0.3
         
         #EXTRA
-        self.speech = True
+        self.speech = False
 
     def main(self):
         
@@ -107,8 +106,7 @@ class TaskMain():
                 time.sleep(2.0)
                 
                 #BEGIN SEARCH FOR OBJECT
-                #CHANGE---------------------------------------------------------------------------------------delta_t
-                objects_found = self.robot.search_for_objects(tetas=self.tetas, delta_t=self.delta, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                objects_found = self.robot.search_for_objects(tetas=self.tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
@@ -143,7 +141,7 @@ class TaskMain():
                             descend_z = [low_z, 0.0, 0.0, 0.0, 0.0, 0.0]
 
                             #CHANGE ARM HEIGHT DEPENDING ON FOUND OBJECT HEIGHT
-                            if 0.6 <= o.position_relative.z <= 1.0:
+                            if 0.55 <= o.position_relative.z <= 1.0:
                                 self.robot.set_arm(command="search_front_min_z", wait_for_end_of=True)
                                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = descend_z, wait_for_end_of=True)
                                 self.search_table_objects_hand()
@@ -157,7 +155,7 @@ class TaskMain():
                                 if self.speech:
                                     self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
 
-                            elif 0.6 > o.position_relative.z or o.position_relative.z > 1.6:
+                            elif 0.55 > o.position_relative.z or o.position_relative.z > 1.6:
                                 self.robot.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                                 self.robot.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=True)
 
@@ -192,11 +190,11 @@ class TaskMain():
                 pass
 
     def search_table_objects_hand(self):
-        table_objects = self.robot.search_for_objects(tetas=[[0, 0]], delta_t=self.delta, list_of_objects=[self.SELECTED_OBJECT], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+        table_objects = self.robot.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.SELECTED_OBJECT], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
         # print("LIST OF DETECTED OBJECTS:")
         # print(len(table_objects))
         for o in table_objects:
-
+            ow = self.robot.get_object_length_from_object(o.object_name)
             conf = f"{o.confidence * 100:.0f}%"
 
             #SAVE NEW X,Y,Z
@@ -211,7 +209,7 @@ class TaskMain():
             print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} {o.orientation} ({hand_x_},{hand_y_},{hand_z_})")
 
             #CHANGE------------------------------------------------------------------------------------------------------------------------------------------------- correct_x doesnt have method yet
-            correct_x = ((o.position_cam.x + 0.05 - tf_x)*1000) - 150
+            correct_x = ((o.position_cam.x + ow - tf_x)*1000) - 150
             correct_y = (o.position_cam.y - tf_y)*1000
             correct_z = (o.position_cam.z - tf_z)*1000
 
@@ -242,7 +240,7 @@ class TaskMain():
                 self.wait_until_stable()
 
                 #CALIBRATE GRIPPER BEFORE GRABBING
-                final_objects = self.robot.search_for_objects(tetas=[[0, 0]], delta_t=2.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+                final_objects = self.robot.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.SELECTED_OBJECT], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
                 for obj in final_objects:
                     conf = f"{obj.confidence * 100:.0f}%"
                     hand_y_grab = f"{obj.position_cam.y:5.2f}"
