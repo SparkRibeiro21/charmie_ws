@@ -1,7 +1,7 @@
 radar_node:
   robot_base_frame: base_footprint
   update_frequency: 10.0
-  observation_sources: scan scan_bottom base_camera
+  observation_sources: base_camera # scan scan_bottom base_camera
   scan:
     topic: /scan
     max_obstacle_height: 1.8
