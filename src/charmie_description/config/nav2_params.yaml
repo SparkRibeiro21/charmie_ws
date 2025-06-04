@@ -139,7 +139,16 @@ controller_server:
       yaw_goal_tolerance: 0.25
     # DWB parameters
     FollowPath:
-      plugin: "dwb_core::DWBLocalPlanner"
+      plugin: "nav2_rotation_shim_controller::RotationShimController"
+      primary_controller: "dwb_core::DWBLocalPlanner" # TEB # Regulated Pure Pursuit
+      angular_dist_threshold: 1.5708
+      angular_disengage_threshold: 0.3925
+      forward_sampling_distance: 0.5
+      rotate_to_heading_angular_vel: 0.7
+      max_angular_accel: 10.0
+      simulate_ahead_time: 1.0
+      rotate_to_heading_once: true # does not work
+
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
