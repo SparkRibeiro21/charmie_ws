@@ -187,11 +187,6 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
 
-                    # just rotate by yourself to be facing the direction of next movement
-                    move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk"))))
-                    move_coords[2] = -45.0
-                    self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
-
                     self.robot.move_to_position(move_coords=self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")))), wait_for_end_of=True)
 
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
@@ -230,11 +225,6 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=False)
                     
-                    # just rotate by yourself to be facing the direction of next movement
-                    move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes"))))
-                    move_coords[2] = 180.0
-                    self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
-
                     self.robot.move_to_position(move_coords=self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")))), wait_for_end_of=True)
 
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
@@ -283,11 +273,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
 
-                # just rotate by yourself to be facing the direction of next movement
-                move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl"))))
-                move_coords[2] = 0.0
-                self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
-
+                # must be removed after the update to minimize as much as possivle the final orientation error 
                 move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))                
                 move_coords[2] -= 10.0 # decrease rotation by 10 degrees
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)

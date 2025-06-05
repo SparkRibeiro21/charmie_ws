@@ -108,6 +108,22 @@ class TaskMain():
                 self.robot.set_navigation(movement="rotate", target=[-0.5, 1.5], wait_for_end_of=True)
                 self.robot.set_navigation(movement="move", target=[-0.5, 1.5], max_speed=15, reached_radius=0.5, flag_not_obs=False, wait_for_end_of=False)
 
+                # after new nav2 update:
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
+
+                # create a rotation to a specicific direction (no longer needed to do, after the mandatory initial rotation to path planning orientation update)
+                # just rotate by yourself to be facing the direction of next movement
+                move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk"))))
+                move_coords[2] = -45.0
+                self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
+
+                # move to target position, adding the +45 degree orientation for somepicking options
+                self.robot.move_to_position(move_coords=self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")))), wait_for_end_of=True)
+
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
+                                    
                 """
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=0.0, wait_for_end_of=True)
                 self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
