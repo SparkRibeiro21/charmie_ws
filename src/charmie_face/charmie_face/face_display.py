@@ -69,7 +69,7 @@ class FaceNode(Node):
         self.new_text_received_name = ""
         self.new_text_received_delay = self.AFTER_SPEECH_TIMER_SHORT
 
-        self.cams_flag = True
+        self.cams_flag = False
 
         self.HEAD_CAM_WIDTH = 848
         self.BASE_CAM_WIDTH = 640
@@ -104,13 +104,20 @@ class FaceNode(Node):
         # string camera           # select which camera must be shown in face (can be rgb or depth)
         # bool show_detections    # select if in addition to show the camera on the face, shows the detections being used with that camera
 
+        self.cams_flag = False
         if request.command != "":
             response.success, response.message = self.image_to_face(command=request.command)
         elif request.custom != "":
             response.success, response.message = self.custom_image_to_face(command=request.custom)
+        elif request.camera != "":
+            self.cams_flag = True
+            pass
         else:
             response.success = False
             response.message = "No standard or custom face received."
+
+
+        
 
         print("CAMS:", request.camera, request.show_detections)
 
@@ -456,6 +463,8 @@ class FaceMain():
                 aaa = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
                 # self.SCREEN.blit(self.image, (0, 0))
                 # pygame.display.update()
+
+                self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
 
                 self.SCREEN.blit(aaa, (self.xx_shift, self.yy_shift))
                 pygame.display.update()
