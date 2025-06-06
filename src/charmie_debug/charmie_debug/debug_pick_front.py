@@ -65,7 +65,7 @@ class TaskMain():
 
         #DEFINE PICK MODE AND OBJECT
         self.mode = "pick_front"
-        self.SELECTED_OBJECT = "Red Wine"
+        self.SELECTED_OBJECT = "Milk"
         
         #DEFINE NECK ANGLES AND TIMER
         #self.tetas = [[0, 20], [0, 0], [0, -35]] #-> SEARCH CABINET ANGLES
@@ -78,7 +78,7 @@ class TaskMain():
         self.stable_duration = 0.3
         
         #EXTRA
-        self.speech = False
+        self.speech = True
 
     def main(self):
         
@@ -98,6 +98,9 @@ class TaskMain():
             
             if self.state == Search_for_objects:
                 
+                ### PICK OBJECT STANDARD FUNCTION ###
+                #self.robot.pick_obj(selected_object=self.SELECTED_OBJECT, mode=self.mode, first_tetas = self.tetas)
+
                 ### SEARCH FOR OBJECTS EXAMPLE ###
                 
                 # self.set_face(command="charmie_face")
@@ -318,4 +321,3 @@ class TaskMain():
             else:
                 stable_image = 0.0
             image_time_out += 0.1
-                    

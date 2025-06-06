@@ -3051,3 +3051,155 @@ class RobotStdFunctions():
     # Missing Functions:
     # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
+
+    def pick_obj(self, selected_object="", mode="", first_tetas=[]):
+
+        # Implement the logic for picking an object here
+        self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+        time.sleep(2.0)
+
+        objects_found = self.search_for_objects(tetas = first_tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+        print("LIST OF DETECTED OBJECTS:")
+
+        for o in objects_found:
+            conf = f"{o.confidence * 100:.0f}%"
+
+            cam_x_ = f"{o.position_relative.x:5.2f}"
+            cam_y_ = f"{o.position_relative.y:5.2f}"
+            cam_z_ = f"{o.position_relative.z:5.2f}"
+
+            print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({cam_x_},{cam_y_},{cam_z_})")
+
+            if o.object_name == selected_object:
+                self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+                self.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                print(f"Initial pose to search for objects")
+
+                if mode == "pick_front":
+                    self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
+
+                    #HEIGHT CALCULATIONS
+                    high_z = (o.position_relative.z - 1.28)*100
+                    rise_z = [high_z, 0.0, 0.0, 0.0, 0.0, 0.0]
+                    low_z = (o.position_relative.z - 0.73)*100
+                    descend_z = [low_z, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+                    #CHANGE ARM HEIGHT DEPENDING ON FOUND OBJECT HEIGHT
+                    if 0.55 <= o.position_relative.z <= 1.0:
+                        self.set_arm(command="search_front_min_z", wait_for_end_of=True)
+                        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = descend_z, wait_for_end_of=True)
+                        return self.hand_search(selected_object, mode)
+                        self.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+                    elif 1.0 < o.position_relative.z <=1.6:
+                        self.set_arm(command="search_front_max_z", wait_for_end_of=True)
+                        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = rise_z, wait_for_end_of=True)
+                        return self.hand_search(selected_object, mode)
+                        self.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+                    elif 0.55 > o.position_relative.z or o.position_relative.z > 1.6:
+                        self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                        self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=True)
+
+                #BEGIN PICK TOP IF SELECTED
+                elif self.mode == "pick_top":
+                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
+                    return self.hand_search(selected_object, mode)
+
+            else:
+                self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+
+            self.set_rgb(CYAN+HALF_ROTATE)
+            time.sleep(0.5)
+            for o in objects_found:
+                path = self.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
+                time.sleep(4.0)
+    
+    def hand_search(self, selected_object, mode):
+        table_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+        # print("LIST OF DETECTED OBJECTS:")
+        # print(len(table_    '''objects))
+        for o in table_objects:
+            ow = self.get_object_length_from_object(o.object_name)
+            conf = f"{o.confidence * 100:.0f}%"
+
+            #SAVE NEW X,Y,Z
+            hand_x_ = f"{o.position_cam.x:5.2f}"
+            hand_y_ = f"{o.position_cam.y:5.2f}"
+            hand_z_ = f"{o.position_cam.z:5.2f}"
+
+            tf_x = 0.13
+            tf_y = -0.006
+            tf_z = -0.075
+
+            print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} {o.orientation} ({hand_x_},{hand_y_},{hand_z_})")
+
+            correct_x = ((o.position_cam.x + ow - tf_x)*1000) - 150
+            correct_y = (o.position_cam.y - tf_y)*1000
+            correct_z = (o.position_cam.z - tf_z)*1000
+
+            #CORRECT ROTATION CALCULATIONS
+            if o.orientation < 0.0:
+                correct_rotation = o.orientation +90.0
+            else:
+                correct_rotation = o.orientation -90.0
+
+            #DEFINE AND CALCULATE KEY ARM POSITIONS
+            object_position = [correct_z, -correct_y, correct_x, 0.0, 0.0, correct_rotation]
+            final_position = [0.0, 0.0, 150.0, 0.0, 0.0, 0.0]
+            security_position_front = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -250.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+            security_position_top = [0.00, 0.0, -150.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+            object_reajust = [0.0, 0.0, 0.0, 0.0, 0.0, -correct_rotation]
+            
+            search_table_top_joints =  [-160.1, 57.5, -123.8, -87.3, 109.1, 69.5]
+            search_table_front_joints =  [-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
+            
+            #IF OBJECT FOUND
+            if o.object_name == selected_object:
+
+                #OPEN GRIPPER
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                #MOVE ARM IN THAT DIRECTION
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
+
+                #CALIBRATE GRIPPER BEFORE GRABBING
+                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+                for obj in final_objects:
+                    conf = f"{obj.confidence * 100:.0f}%"
+                    hand_y_grab = f"{obj.position_cam.y:5.2f}"
+                    hand_z_grab = f"{obj.position_cam.z:5.2f}"
+                    correct_y_grab = (obj.position_cam.y - tf_y)*1000
+                    correct_z_grab = (obj.position_cam.z - tf_z)*1000
+                    print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab})")
+                    object_position_grab = [correct_z_grab, -correct_y_grab, 0.0, 0.0, 0.0, 0.0]
+
+                #APPLY ADJUSTEMENT BEFORE GRABBING
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+
+                #MOVE ARM TO FINAL POSITION
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = final_position, wait_for_end_of=True)
+
+                #CLOSE GRIPPER
+                self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                #MOVE TO SAFE POSITION DEPENDING ON MODE SELECTED
+
+                if mode == "pick_front":
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
+                    #MOVE TO SEARCH TABLE
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_front_joints, wait_for_end_of=True)
+
+                elif mode == "pick_top":
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
+
+                #MOVE ARM TO INITIAL POSITION
+                self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                print(f"Bring object to initial pose")
+
+            #IF AN OBJECT WAS NOT FOUND
+            else:
+                self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                print(f"Could not bring object to initial pose")
