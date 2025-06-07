@@ -70,6 +70,7 @@ class FaceNode(Node):
         self.new_text_received_delay = self.AFTER_SPEECH_TIMER_SHORT
 
         self.cams_flag = False
+        self.selected_camera_stream = "head"
 
         self.HEAD_CAM_WIDTH = 848
         self.BASE_CAM_WIDTH = 640
@@ -111,7 +112,7 @@ class FaceNode(Node):
             response.success, response.message = self.custom_image_to_face(command=request.custom)
         elif request.camera != "":
             self.cams_flag = True
-            pass
+            self.selected_camera_stream = request.camera.lower()
         else:
             response.success = False
             response.message = "No standard or custom face received."
@@ -198,28 +199,22 @@ class FaceNode(Node):
     
     # CAMERAS 
     def get_rgbd_head_callback(self, rgbd: RGBD):
-        # self.head_rgb = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
-        # self.head_rgb = cv2.cvtColor(self.head_rgb, cv2.COLOR_BGR2RGB)
         self.head_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
-        
         self.head_depth = rgbd.depth
         self.new_head_rgb = True
         self.new_head_depth = True
 
-
-
-
         # print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_rgbd_hand_callback(self, rgbd: RGBD):
-        self.hand_rgb = rgbd.rgb
+        self.hand_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
         self.hand_depth = rgbd.depth
         self.new_hand_rgb = True
         self.new_hand_depth = True
         # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_color_image_base_callback(self, img: Image):
-        self.base_rgb = img
+        self.base_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(img, "bgr8"), cv2.COLOR_BGR2RGB)
         self.new_base_rgb = True
 
     def get_depth_base_image_callback(self, img: Image):
@@ -456,9 +451,16 @@ class FaceMain():
                         pass # stales the display thread, so that new faces may be received, however the text has higher priority
             
             elif self.node.cams_flag:
+
+                # camera stream selection
+                if self.node.selected_camera_stream == "head":
+                    selected_video_stream = self.node.head_rgb
+                elif self.node.selected_camera_stream == "hand":
+                    selected_video_stream = self.node.hand_rgb
+                elif self.node.selected_camera_stream == "base":
+                    selected_video_stream = self.node.base_rgb
                 
-                
-                surface = pygame.surfarray.make_surface(np.transpose(self.node.head_rgb, (1, 0, 2)))  # Pygame expects (width, height, channels)
+                surface = pygame.surfarray.make_surface(np.transpose(selected_video_stream, (1, 0, 2)))  # Pygame expects (width, height, channels)
     
                 aaa = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
                 # self.SCREEN.blit(self.image, (0, 0))
