@@ -97,8 +97,7 @@ class FaceNode(Node):
     
     # Callback for all face commands received
     def callback_face_command(self, request, response):
-        print("Received request", request.command)
- 
+        
         # Type of service received: 
         # string command          # type of face that is commonly used and is always the same, already in face (i.e. hearing face and standard blinking eyes face)
         # string custom           # type of face that is custom, not previously in face (i.e. show detected person or object in the moment)
@@ -117,10 +116,7 @@ class FaceNode(Node):
             response.success = False
             response.message = "No standard or custom face received."
 
-
-        
-
-        print("CAMS:", request.camera, request.show_detections)
+        print("Face Request:", request.command, request.custom, request.camera, request.show_detections)
 
         return response
 
@@ -200,15 +196,14 @@ class FaceNode(Node):
     # CAMERAS 
     def get_rgbd_head_callback(self, rgbd: RGBD):
         self.head_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
-        self.head_depth = rgbd.depth
+        self.head_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "head")
         self.new_head_rgb = True
         self.new_head_depth = True
-
         # print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_rgbd_hand_callback(self, rgbd: RGBD):
         self.hand_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
-        self.hand_depth = rgbd.depth
+        self.hand_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "hand")
         self.new_hand_rgb = True
         self.new_hand_depth = True
         # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
@@ -218,8 +213,32 @@ class FaceNode(Node):
         self.new_base_rgb = True
 
     def get_depth_base_image_callback(self, img: Image):
-        self.base_depth = img
+        self.base_depth = self.get_cv2_cvtColor_from_depth_image(img, "base")
         self.new_base_depth = True
+
+    def get_cv2_cvtColor_from_depth_image(self, cam, name):
+
+        opencv_depth_image = self.br.imgmsg_to_cv2(cam, "passthrough")
+
+        min_val = 0
+        if name == "head":
+            max_val = 6000
+        elif name == "hand":
+            max_val = 1000
+        elif name == "base":
+            max_val = 6000
+        
+        depth_normalized = (opencv_depth_image - min_val) / (max_val - min_val)
+        depth_normalized = np.clip(depth_normalized, 0, 1)
+        
+        # Convert the normalized depth image to an 8-bit image (0-255)
+        depth_8bit = (depth_normalized * 255).astype(np.uint8)
+
+        # Apply a colormap to the 8-bit depth image
+        opencv_depth_image = cv2.applyColorMap(depth_8bit, cv2.COLORMAP_JET)
+        
+        # Convert the image to RGB (OpenCV loads as BGR by default)
+        return cv2.cvtColor(opencv_depth_image, cv2.COLOR_BGR2RGB)
 
 def main(args=None):
     rclpy.init(args=args)
@@ -459,17 +478,24 @@ class FaceMain():
                     selected_video_stream = self.node.hand_rgb
                 elif self.node.selected_camera_stream == "base":
                     selected_video_stream = self.node.base_rgb
-                
-                surface = pygame.surfarray.make_surface(np.transpose(selected_video_stream, (1, 0, 2)))  # Pygame expects (width, height, channels)
-    
-                aaa = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
-                # self.SCREEN.blit(self.image, (0, 0))
-                # pygame.display.update()
+                elif self.node.selected_camera_stream == "head depth":
+                    selected_video_stream = self.node.head_depth
+                elif self.node.selected_camera_stream == "hand depth":
+                    selected_video_stream = self.node.hand_depth
+                elif self.node.selected_camera_stream == "base depth":
+                    selected_video_stream = self.node.base_depth
+                else:
+                    self.node.cams_flag = False
+                    self.node.image_to_face(self.node.INITIAL_FACE) # sets default face
 
-                self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
+                if self.node.cams_flag: # this way it skips showing camera stream if no valid camera was received, and changes to default face 
 
-                self.SCREEN.blit(aaa, (self.xx_shift, self.yy_shift))
-                pygame.display.update()
+                    surface = pygame.surfarray.make_surface(np.transpose(selected_video_stream, (1, 0, 2)))  # Pygame expects (width, height, channels)
+                    scaled_surface = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
+                    self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
+                    self.SCREEN.blit(scaled_surface, (self.xx_shift, self.yy_shift))
+                    pygame.display.update()
+                    time.sleep(0.05)
 
             else:
                 if self.node.new_face_received:

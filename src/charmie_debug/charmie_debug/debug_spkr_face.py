@@ -106,11 +106,22 @@ class TaskMain():
                     print("Stream head camera")
                     time.sleep(3.0)
 
+
+                    self.robot.set_face(camera="head depth", show_detections=True)
+                    print("Stream head camera")
+                    time.sleep(3.0)
+
+
                     # self.robot.set_face(custom="2024-07-19 18-20-45 15", camera="hand", show_detections=False)
                     # print("help_pick_cornflakes")
                     # time.sleep(3.0)
 
                     self.robot.set_face(camera="hand")
+                    print("Stream hand camera")
+                    time.sleep(3.0)
+
+
+                    self.robot.set_face(camera="hand depth", show_detections=True)
                     print("Stream hand camera")
                     time.sleep(3.0)
 
@@ -121,10 +132,14 @@ class TaskMain():
                     self.robot.set_face(camera="base")
                     print("Stream base camera")
                     time.sleep(3.0)
-
                     # self.robot.set_face("help_pick_red_wine")
                     # print("help_pick_red_wine")
                     # time.sleep(3.0)
+
+
+                    self.robot.set_face(camera="base depth", show_detections=True)
+                    print("Stream base camera")
+                    time.sleep(3.0)
 
 
 
