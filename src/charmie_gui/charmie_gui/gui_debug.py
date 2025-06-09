@@ -125,7 +125,7 @@ class DebugVisualNode(Node):
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
         self.is_yolo_pose_comm = False
-        self.is_yolo_obj_camm = False
+        self.is_yolo_obj_comm = False
 
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
@@ -233,9 +233,9 @@ class DebugVisualNode(Node):
 
         if self.new_detected_objects:
             self.new_detected_objects = False
-            self.is_yolo_obj_camm = True
+            self.is_yolo_obj_comm = True
         else:
-            self.is_yolo_obj_camm = False
+            self.is_yolo_obj_comm = False
     
     def check_tracking_timer(self):
 
@@ -1830,7 +1830,7 @@ class DebugVisualMain():
         # Check number of detections of each camera
         # print(len(temp_objects_head.objects), len(temp_objects_hand.objects), len(temp_objects_base.objects))
 
-        if self.node.is_yolo_obj_camm:
+        if self.node.is_yolo_obj_comm:
             if camera_id == "head":
                 self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id)
             if camera_id == "gripper":

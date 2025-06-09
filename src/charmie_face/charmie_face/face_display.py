@@ -3,7 +3,8 @@ import rclpy
 from rclpy.node import Node
 
 from charmie_interfaces.srv import SetFace, SetTextFace
-from sensor_msgs.msg import Image as Image_ ### ADD TO CHANGE IMAGE TO IMAGE_ because of: from PIL import Image
+from charmie_interfaces.msg import ListOfDetectedPerson, ListOfDetectedObject, TrackingMask
+from sensor_msgs.msg import Image as Image_ ### HAD TO CHANGE IMAGE TO IMAGE_ because of: from PIL import Image
 from realsense2_camera_msgs.msg import RGBD
 
 from cv_bridge import CvBridge, CvBridgeError
@@ -45,6 +46,12 @@ class FaceNode(Node):
         # Orbbec Camera (Base)
         self.color_image_base_subscriber = self.create_subscription(Image_, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
         self.aligned_depth_image_base_subscriber = self.create_subscription(Image_, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
+        # Yolo Pose
+        self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
+        # Yolo Objects
+        self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        # Tracking (SAM2)
+        self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         
         ### Services (Server) ###   
         self.server_face_command = self.create_service(SetFace, "face_command", self.callback_face_command) 
@@ -71,6 +78,7 @@ class FaceNode(Node):
 
         self.cams_flag = False
         self.selected_camera_stream = "head"
+        self.show_camera_detections = False
 
         self.HEAD_CAM_WIDTH = 848
         self.BASE_CAM_WIDTH = 640
@@ -88,12 +96,28 @@ class FaceNode(Node):
         self.new_hand_depth = False
         self.new_base_depth = False
 
+        self.detected_people = ListOfDetectedPerson()
+        self.new_detected_people = False
+        self.detected_objects = ListOfDetectedObject()
+        self.new_detected_objects = False
+        self.tracking_mask = TrackingMask()
+        self.new_tracking_mask_msg = False
+        self.is_tracking_comm = False
+
+        self.is_yolo_pose_comm = False
+        self.is_yolo_obj_camm = False
+        self.is_tracking_comm = False
+
         self.br = CvBridge()
-        
+
+        self.create_timer(1.0, self.check_yolos_timer)
+        self.create_timer(0.4, self.check_tracking_timer)
+
         # sends initial face
         self.image_to_face(self.INITIAL_FACE)
         # easier debug when testing custom faces 
         # self.image_to_face("charmie_face_green")
+        
     
     # Callback for all face commands received
     def callback_face_command(self, request, response):
@@ -105,13 +129,16 @@ class FaceNode(Node):
         # bool show_detections    # select if in addition to show the camera on the face, shows the detections being used with that camera
 
         self.cams_flag = False
+        self.show_camera_detections = False
         if request.command != "":
             response.success, response.message = self.image_to_face(command=request.command)
         elif request.custom != "":
             response.success, response.message = self.custom_image_to_face(command=request.custom)
         elif request.camera != "":
             self.cams_flag = True
-            self.selected_camera_stream = request.camera.lower()
+            self.selected_camera_stream = request.camera.replace("_"," ").lower()
+            print(self.selected_camera_stream)
+            self.show_camera_detections = request.show_detections
         else:
             response.success = False
             response.message = "No standard or custom face received."
@@ -151,6 +178,73 @@ class FaceNode(Node):
 
         return response
                     
+    # CAMERAS 
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        self.head_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
+        self.head_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "head")
+        self.new_head_rgb = True
+        self.new_head_depth = True
+        # print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_rgbd_hand_callback(self, rgbd: RGBD):
+        self.hand_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
+        self.hand_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "hand")
+        self.new_hand_rgb = True
+        self.new_hand_depth = True
+        # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def get_color_image_base_callback(self, img: Image):
+        self.base_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(img, "bgr8"), cv2.COLOR_BGR2RGB)
+        self.new_base_rgb = True
+
+    def get_depth_base_image_callback(self, img: Image):
+        self.base_depth = self.get_cv2_cvtColor_from_depth_image(img, "base")
+        self.new_base_depth = True
+
+    def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
+        self.detected_people = det_people
+        self.new_detected_people = True
+        # self.head_yp_time = time.time()
+        # self.head_yp_fps_ctr += 1
+        
+    def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
+        self.detected_objects = det_object
+        self.new_detected_objects = True
+        # self.head_yo_time = time.time()
+        # self.yolo_objects_fps_ctr += 1
+        # for obj in self.detected_objects.objects:
+        #     print(obj.object_name, "(", obj.position_cam.x, obj.position_cam.y, obj.position_cam.z, ") (", obj.position_relative.x, obj.position_relative.y, obj.position_relative.z, ") (", obj.position_absolute.x, obj.position_absolute.y, obj.position_absolute.z, ")" )
+
+    def tracking_mask_callback(self, mask: TrackingMask):
+        self.tracking_mask = mask
+        self.new_tracking_mask_msg = True
+        # self.track_time = time.time()
+        self.track_fps_ctr += 1
+
+
+    def check_yolos_timer(self):
+        
+        if self.new_detected_people:
+            self.new_detected_people = False
+            self.is_yolo_pose_comm = True
+        else:
+            self.is_yolo_pose_comm = False
+
+        if self.new_detected_objects:
+            self.new_detected_objects = False
+            self.is_yolo_obj_camm = True
+        else:
+            self.is_yolo_obj_camm = False
+    
+    def check_tracking_timer(self):
+
+        if self.new_tracking_mask_msg:
+            self.new_tracking_mask_msg = False
+            self.is_tracking_comm = True
+        else:
+            self.is_tracking_comm = False
+
+
     # Receive image or video files name to show in face
     def image_to_face(self, command):
         # self.get_logger().info("init image to face")
@@ -193,29 +287,6 @@ class FaceNode(Node):
             self.get_logger().error("FACE received (custom) does not exist! - %s" %command)
             return False, "FACE received (custom) does not exist."
     
-    # CAMERAS 
-    def get_rgbd_head_callback(self, rgbd: RGBD):
-        self.head_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
-        self.head_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "head")
-        self.new_head_rgb = True
-        self.new_head_depth = True
-        # print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
-
-    def get_rgbd_hand_callback(self, rgbd: RGBD):
-        self.hand_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
-        self.hand_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "hand")
-        self.new_hand_rgb = True
-        self.new_hand_depth = True
-        # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
-
-    def get_color_image_base_callback(self, img: Image):
-        self.base_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(img, "bgr8"), cv2.COLOR_BGR2RGB)
-        self.new_base_rgb = True
-
-    def get_depth_base_image_callback(self, img: Image):
-        self.base_depth = self.get_cv2_cvtColor_from_depth_image(img, "base")
-        self.new_base_depth = True
-
     def get_cv2_cvtColor_from_depth_image(self, cam, name):
 
         opencv_depth_image = self.br.imgmsg_to_cv2(cam, "passthrough")
@@ -239,6 +310,7 @@ class FaceNode(Node):
         
         # Convert the image to RGB (OpenCV loads as BGR by default)
         return cv2.cvtColor(opencv_depth_image, cv2.COLOR_BGR2RGB)
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -491,6 +563,24 @@ class FaceMain():
                 if self.node.cams_flag: # this way it skips showing camera stream if no valid camera was received, and changes to default face 
 
                     surface = pygame.surfarray.make_surface(np.transpose(selected_video_stream, (1, 0, 2)))  # Pygame expects (width, height, channels)
+                    
+                    if self.node.show_camera_detections:
+
+                        if self.node.is_yolo_pose_comm:
+
+                            for p in self.node.detected_people.persons:
+                        
+                                if p.camera == self.node.selected_camera_stream.split(' ')[0]: # ignores the " depth" when is using depth images
+                                    
+                                    PERSON_BB = pygame.Rect(int(p.box_top_left_x), int(p.box_top_left_y), int(p.box_width), int(p.box_height))
+                                    pygame.draw.rect(surface, (255,0,0), PERSON_BB, width=3)
+
+
+                        # if self.node.selected_camera_stream == "head" or self.node.selected_camera_stream == "head depth":
+                        #     # show detection for yolo_pose
+
+
+
                     scaled_surface = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
                     self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
                     self.SCREEN.blit(scaled_surface, (self.xx_shift, self.yy_shift))

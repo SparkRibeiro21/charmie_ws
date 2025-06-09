@@ -116,7 +116,7 @@ class TaskMain():
                     # print("help_pick_cornflakes")
                     # time.sleep(3.0)
 
-                    self.robot.set_face(camera="hand")
+                    self.robot.set_face(camera="hand", show_detections=True)
                     print("Stream hand camera")
                     time.sleep(3.0)
 
@@ -129,7 +129,7 @@ class TaskMain():
                     # print("help_pick_orange")
                     # time.sleep(3.0)
 
-                    self.robot.set_face(camera="base")
+                    self.robot.set_face(camera="base", show_detections=True)
                     print("Stream base camera")
                     time.sleep(3.0)
                     # self.robot.set_face("help_pick_red_wine")
