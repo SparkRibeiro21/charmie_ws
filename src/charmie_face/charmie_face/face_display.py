@@ -354,6 +354,19 @@ class FaceMain():
         self.xx_shift = 0.0
         self.yy_shift = 0.0
 
+        self.RED     = (255,  0,  0)
+        self.GREEN   = (  0,255,  0)
+        self.BLUE    = ( 50, 50,255)
+        self.BLUE_L  = (  0,128,255)
+        self.WHITE   = (255,255,255)
+        self.GREY    = (128,128,128)
+        self.BLACK   = (  0,  0,  0)
+        self.ORANGE  = (255,153, 51)
+        self.MAGENTA = (255, 51,255)
+        self.YELLOW  = (255,255,  0)
+        self.PURPLE  = (132, 56,255)
+        self.CYAN    = (  0,255,255)
+
     def get_touchscreen_id(self, name_contains="touch"):
 
         # xinput list
@@ -521,7 +534,84 @@ class FaceMain():
             rect.top = current_y
             self.SCREEN.blit(surface, rect)
             current_y += rect.height
+
+    def draw_circle_keypoint(self, surface, conf, x, y, color, min_draw_conf, circle_radius):
+        if conf > min_draw_conf:
+            pygame.draw.circle(surface, color, (x, y), radius=circle_radius, width=0)
                 
+    def draw_line_between_two_keypoints(self, surface, conf1, x1, y1, conf2, x2, y2, color, min_draw_conf, min_kp_line_width):
+        if conf1 > min_draw_conf and conf2 > min_draw_conf:  
+            pygame.draw.line(surface, color, (x1, y1), (x2, y2), min_kp_line_width)
+    
+    def show_yolo_pose_detections(self, surface, camera):
+
+        if self.node.is_yolo_pose_comm:
+
+            BB_WIDTH = 3
+            MIN_DRAW_CONF = 0.5
+            CIRCLE_RADIUS = 4
+            MIN_KP_LINE_WIDTH = 3
+
+            for p in self.node.detected_people.persons:
+        
+                if p.camera == camera: # checks if camera stream shown is the same as the camera that detected the detection 
+                    
+                    ### BOUNDING BOX
+                    # PERSON_BB = pygame.Rect(int(p.box_top_left_x), int(p.box_top_left_y), int(p.box_width), int(p.box_height))
+                    # pygame.draw.rect(surface, self.RED, PERSON_BB, width=BB_WIDTH)
+
+                    ### LINES BETWEEN KEYPOINTS
+                    self.draw_line_between_two_keypoints(surface, p.kp_nose_conf,           p.kp_nose_x,            p.kp_nose_y,            p.kp_eye_left_conf,         p.kp_eye_left_x,        p.kp_eye_left_y,        self.GREEN,   MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_nose_conf,           p.kp_nose_x,            p.kp_nose_y,            p.kp_eye_right_conf,        p.kp_eye_right_x,       p.kp_eye_right_y,       self.GREEN,   MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_eye_left_conf,       p.kp_eye_left_x,        p.kp_eye_left_y,        p.kp_ear_left_conf,         p.kp_ear_left_x,        p.kp_ear_left_y,        self.GREEN,   MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_eye_right_conf,      p.kp_eye_right_x,       p.kp_eye_right_y,       p.kp_ear_right_conf,        p.kp_ear_right_x,       p.kp_ear_right_y,       self.GREEN,   MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_ear_left_conf,       p.kp_ear_left_x,        p.kp_ear_left_y,        p.kp_shoulder_left_conf,    p.kp_shoulder_left_x,   p.kp_shoulder_left_y,   self.GREEN,   MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_ear_right_conf,      p.kp_ear_right_x,       p.kp_ear_right_y,       p.kp_shoulder_right_conf,   p.kp_shoulder_right_x,  p.kp_shoulder_right_y,  self.GREEN,   MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    
+                    self.draw_line_between_two_keypoints(surface, p.kp_shoulder_left_conf,  p.kp_shoulder_left_x,   p.kp_shoulder_left_y,   p.kp_shoulder_right_conf,   p.kp_shoulder_right_x,  p.kp_shoulder_right_y,  self.BLUE_L,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_shoulder_left_conf,  p.kp_shoulder_left_x,   p.kp_shoulder_left_y,   p.kp_elbow_left_conf,       p.kp_elbow_left_x,      p.kp_elbow_left_y,      self.BLUE_L,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_shoulder_right_conf, p.kp_shoulder_right_x,  p.kp_shoulder_right_y,  p.kp_elbow_right_conf,      p.kp_elbow_right_x,     p.kp_elbow_right_y,     self.BLUE_L,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_elbow_left_conf,     p.kp_elbow_left_x,      p.kp_elbow_left_y,      p.kp_wrist_left_conf,       p.kp_wrist_left_x,      p.kp_wrist_left_y,      self.BLUE_L,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_elbow_right_conf,    p.kp_elbow_right_x,     p.kp_elbow_right_y,     p.kp_wrist_right_conf,      p.kp_wrist_right_x,     p.kp_wrist_right_y,     self.BLUE_L,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    
+                    self.draw_line_between_two_keypoints(surface, p.kp_shoulder_left_conf,  p.kp_shoulder_left_x,   p.kp_shoulder_left_y,   p.kp_hip_left_conf,         p.kp_hip_left_x,        p.kp_hip_left_y,        self.MAGENTA, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_shoulder_right_conf, p.kp_shoulder_right_x,  p.kp_shoulder_right_y,  p.kp_hip_right_conf,        p.kp_hip_right_x,       p.kp_hip_right_y,       self.MAGENTA, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    # self.draw_line_between_two_keypoints(surface, p.kp_shoulder_left_conf,  p.kp_shoulder_left_x,   p.kp_shoulder_left_y,   p.kp_hip_right_conf,        p.kp_hip_right_x,       p.kp_hip_right_y,       self.MAGENTA, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH, camera_height)
+                    # self.draw_line_between_two_keypoints(surface, p.kp_shoulder_right_conf, p.kp_shoulder_right_x,  p.kp_shoulder_right_y,  p.kp_hip_left_conf,         p.kp_hip_left_x,        p.kp_hip_left_y,        self.MAGENTA, MIN_DRAW_CONF, MIN_KP_LINE_WIDTH, camera_height)
+                    
+                    self.draw_line_between_two_keypoints(surface, p.kp_hip_left_conf,       p.kp_hip_left_x,        p.kp_hip_left_y,        p.kp_hip_right_conf,        p.kp_hip_right_x,       p.kp_hip_right_y,       self.ORANGE,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_hip_left_conf,       p.kp_hip_left_x,        p.kp_hip_left_y,        p.kp_knee_left_conf,        p.kp_knee_left_x,       p.kp_knee_left_y,       self.ORANGE,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_hip_right_conf,      p.kp_hip_right_x,       p.kp_hip_right_y,       p.kp_knee_right_conf,       p.kp_knee_right_x,      p.kp_knee_right_y,      self.ORANGE,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_knee_left_conf,      p.kp_knee_left_x,       p.kp_knee_left_y,       p.kp_ankle_left_conf,       p.kp_ankle_left_x,      p.kp_ankle_left_y,      self.ORANGE,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                    self.draw_line_between_two_keypoints(surface, p.kp_knee_right_conf,     p.kp_knee_right_x,      p.kp_knee_right_y,      p.kp_ankle_right_conf,      p.kp_ankle_right_x,     p.kp_ankle_right_y,     self.ORANGE,  MIN_DRAW_CONF, MIN_KP_LINE_WIDTH)
+                
+                    ### KEYPOINTS
+                    self.draw_circle_keypoint(surface, p.kp_nose_conf,           p.kp_nose_x,            p.kp_nose_y,            self.GREEN,  MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_eye_left_conf,       p.kp_eye_left_x,        p.kp_eye_left_y,        self.GREEN,  MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_eye_right_conf,      p.kp_eye_right_x,       p.kp_eye_right_y,       self.GREEN,  MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_ear_left_conf,       p.kp_ear_left_x,        p.kp_ear_left_y,        self.GREEN,  MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_ear_right_conf,      p.kp_ear_right_x,       p.kp_ear_right_y,       self.GREEN,  MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    
+                    self.draw_circle_keypoint(surface, p.kp_shoulder_left_conf,  p.kp_shoulder_left_x,   p.kp_shoulder_left_y,   self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_shoulder_right_conf, p.kp_shoulder_right_x,  p.kp_shoulder_right_y,  self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_elbow_left_conf,     p.kp_elbow_left_x,      p.kp_elbow_left_y,      self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_elbow_right_conf,    p.kp_elbow_right_x,     p.kp_elbow_right_y,     self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_wrist_left_conf,     p.kp_wrist_left_x,      p.kp_wrist_left_y,      self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_wrist_right_conf,    p.kp_wrist_right_x,     p.kp_wrist_right_y,     self.BLUE_L, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    
+                    self.draw_circle_keypoint(surface, p.kp_hip_left_conf,       p.kp_hip_left_x,        p.kp_hip_left_y,        self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_hip_right_conf,      p.kp_hip_right_x,       p.kp_hip_right_y,       self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_knee_left_conf,      p.kp_knee_left_x,       p.kp_knee_left_y,       self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_knee_right_conf,     p.kp_knee_right_x,      p.kp_knee_right_y,      self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_ankle_left_conf,     p.kp_ankle_left_x,      p.kp_ankle_left_y,      self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    self.draw_circle_keypoint(surface, p.kp_ankle_right_conf,    p.kp_ankle_right_x,     p.kp_ankle_right_y,     self.ORANGE, MIN_DRAW_CONF, CIRCLE_RADIUS)
+                    
+                    # add special keypoints for torso and head filtered pixel
+                    self.draw_circle_keypoint(surface, 1.0, p.body_center_x, p.body_center_y, self.BLACK, 0.0, 7)
+                    self.draw_circle_keypoint(surface, 1.0, p.body_center_x, p.body_center_y, self.RED,   0.0, 4)
+                    self.draw_circle_keypoint(surface, 1.0, p.head_center_x, p.head_center_y, self.BLACK, 0.0, 7)
+                    self.draw_circle_keypoint(surface, 1.0, p.head_center_x, p.head_center_y, self.RED,   0.0, 4)
+
     def main(self):
         
         while self.running:
@@ -565,27 +655,12 @@ class FaceMain():
                     surface = pygame.surfarray.make_surface(np.transpose(selected_video_stream, (1, 0, 2)))  # Pygame expects (width, height, channels)
                     
                     if self.node.show_camera_detections:
-
-                        if self.node.is_yolo_pose_comm:
-
-                            for p in self.node.detected_people.persons:
-                        
-                                if p.camera == self.node.selected_camera_stream.split(' ')[0]: # ignores the " depth" when is using depth images
-                                    
-                                    PERSON_BB = pygame.Rect(int(p.box_top_left_x), int(p.box_top_left_y), int(p.box_width), int(p.box_height))
-                                    pygame.draw.rect(surface, (255,0,0), PERSON_BB, width=3)
-
-
-                        # if self.node.selected_camera_stream == "head" or self.node.selected_camera_stream == "head depth":
-                        #     # show detection for yolo_pose
-
-
+                        self.show_yolo_pose_detections(surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
 
                     scaled_surface = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
                     self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
                     self.SCREEN.blit(scaled_surface, (self.xx_shift, self.yy_shift))
                     pygame.display.update()
-                    time.sleep(0.05)
 
             else:
                 if self.node.new_face_received:
