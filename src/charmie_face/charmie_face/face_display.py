@@ -102,8 +102,6 @@ class FaceNode(Node):
         self.new_detected_objects = False
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
-        self.is_tracking_comm = False
-
         self.is_yolo_pose_comm = False
         self.is_yolo_obj_camm = False
         self.is_tracking_comm = False
@@ -182,30 +180,23 @@ class FaceNode(Node):
     def get_rgbd_head_callback(self, rgbd: RGBD):
         self.head_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
         self.head_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "head")
-        self.new_head_rgb = True
-        self.new_head_depth = True
         # print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_rgbd_hand_callback(self, rgbd: RGBD):
         self.hand_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
         self.hand_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "hand")
-        self.new_hand_rgb = True
-        self.new_hand_depth = True
         # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_color_image_base_callback(self, img: Image):
         self.base_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(img, "bgr8"), cv2.COLOR_BGR2RGB)
-        self.new_base_rgb = True
-
+        
     def get_depth_base_image_callback(self, img: Image):
         self.base_depth = self.get_cv2_cvtColor_from_depth_image(img, "base")
-        self.new_base_depth = True
-
+    
+    # DETECTIONS
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
         self.new_detected_people = True
-        # self.head_yp_time = time.time()
-        # self.head_yp_fps_ctr += 1
         
     def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
@@ -218,10 +209,7 @@ class FaceNode(Node):
     def tracking_mask_callback(self, mask: TrackingMask):
         self.tracking_mask = mask
         self.new_tracking_mask_msg = True
-        # self.track_time = time.time()
-        self.track_fps_ctr += 1
-
-
+        
     def check_yolos_timer(self):
         
         if self.new_detected_people:
@@ -543,6 +531,14 @@ class FaceMain():
         if conf1 > min_draw_conf and conf2 > min_draw_conf:  
             pygame.draw.line(surface, color, (x1, y1), (x2, y2), min_kp_line_width)
     
+    def draw_polygon_alpha(self, surface, color, points):
+        lx, ly = zip(*points)
+        min_x, min_y, max_x, max_y = min(lx), min(ly), max(lx), max(ly)
+        target_rect = pygame.Rect(min_x, min_y, max_x-min_x, max_y-min_y)
+        shape_surf = pygame.Surface(target_rect.size, pygame.SRCALPHA)
+        pygame.draw.polygon(shape_surf, color, [(x-min_x, y-min_y) for x,y in points])
+        surface.blit(shape_surf, target_rect)
+
     def show_yolo_pose_detections(self, surface, camera):
 
         if self.node.is_yolo_pose_comm:
@@ -612,6 +608,34 @@ class FaceMain():
                     self.draw_circle_keypoint(surface, 1.0, p.head_center_x, p.head_center_y, self.BLACK, 0.0, 7)
                     self.draw_circle_keypoint(surface, 1.0, p.head_center_x, p.head_center_y, self.RED,   0.0, 4)
 
+    def show_tracking_detections(self, surface, camera):
+
+        if self.node.is_tracking_comm:
+           
+            BB_WIDTH = 3
+
+            for used_point in self.node.tracking_mask.mask.masks:
+
+                temp_mask = []
+                for p in used_point.point: # converts received mask into local coordinates and numpy array
+                    p_list = []
+                    p_list.append(int(p.x))
+                    p_list.append(int(p.y))
+                    temp_mask.append(p_list)
+                
+                np_mask = np.array(temp_mask)
+                # print(len(np_mask))
+
+                if len(np_mask) > 2:
+                    bb_color = self.WHITE
+                    pygame.draw.polygon(surface, bb_color, np_mask, BB_WIDTH) # outside line (darker)
+                    self.draw_polygon_alpha(surface, bb_color+(128,), np_mask) # inside fill with transparecny
+
+            self.draw_circle_keypoint(surface, 1.0, self.node.tracking_mask.centroid.x, self.node.tracking_mask.centroid.y, self.BLACK, 0.0, 7)
+            self.draw_circle_keypoint(surface, 1.0, self.node.tracking_mask.centroid.x, self.node.tracking_mask.centroid.y, self.WHITE, 0.0, 4)
+        
+
+
     def main(self):
         
         while self.running:
@@ -655,7 +679,9 @@ class FaceMain():
                     surface = pygame.surfarray.make_surface(np.transpose(selected_video_stream, (1, 0, 2)))  # Pygame expects (width, height, channels)
                     
                     if self.node.show_camera_detections:
-                        self.show_yolo_pose_detections(surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
+                        if self.node.selected_camera_stream.split(' ')[0] == "head": # just for head since yolo_pose and tracking are only considered for head, if this changes in the future must edit this
+                            self.show_yolo_pose_detections(surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
+                            self.show_tracking_detections( surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
 
                     scaled_surface = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
                     self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
