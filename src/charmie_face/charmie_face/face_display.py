@@ -103,7 +103,7 @@ class FaceNode(Node):
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
         self.is_yolo_pose_comm = False
-        self.is_yolo_obj_camm = False
+        self.is_yolo_obj_comm = False
         self.is_tracking_comm = False
 
         self.br = CvBridge()
@@ -220,9 +220,9 @@ class FaceNode(Node):
 
         if self.new_detected_objects:
             self.new_detected_objects = False
-            self.is_yolo_obj_camm = True
+            self.is_yolo_obj_comm = True
         else:
-            self.is_yolo_obj_camm = False
+            self.is_yolo_obj_comm = False
     
     def check_tracking_timer(self):
 
@@ -539,6 +539,80 @@ class FaceMain():
         pygame.draw.polygon(shape_surf, color, [(x-min_x, y-min_y) for x,y in points])
         surface.blit(shape_surf, target_rect)
 
+    def draw_text(self, surface, text, font, text_col, x, y):
+        img = font.render(text, True, text_col)
+        surface.blit(img, (x, y))
+
+    def draw_transparent_rect(self, surface, x, y, width, height, color, alpha):
+        temp_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        temp_surface.fill((*color, alpha))
+        surface.blit(temp_surface, (x, y))
+
+    def object_class_to_bb_color(self, object_class):
+
+        if object_class == "Cleaning Supplies":
+            bb_color = self.YELLOW
+        elif object_class == "Drinks":
+            bb_color = self.PURPLE
+        elif object_class == "Foods":
+            bb_color = self.BLUE_L
+        elif object_class == "Fruits":
+            bb_color = self.ORANGE
+        elif object_class == "Toys":
+            bb_color = self.BLUE
+        elif object_class == "Snacks":
+            bb_color = self.MAGENTA
+        elif object_class == "Dishes":
+            bb_color = self.GREY
+        elif object_class == "Footwear":
+            bb_color = self.RED
+        elif object_class == "Furniture":
+            bb_color = self.GREEN
+        else:
+            bb_color = self.BLACK
+
+        return bb_color
+
+    def show_yolo_object_detections(self, surface, camera):
+        
+        if self.node.is_yolo_obj_comm:
+
+            BB_WIDTH = 3
+            text_font_t = pygame.font.SysFont(None, 28)
+
+            for o in self.node.detected_objects.objects:
+                
+                if o.camera == camera: # checks if camera stream shown is the same as the camera that detected the detection 
+                    
+                    temp_mask = []
+                    for p in o.mask.point: # converts received mask into local coordinates and numpy array
+                        p_list = []
+                        p_list.append(int(p.x))
+                        p_list.append(int(p.y))
+                        temp_mask.append(p_list)
+
+                    np_mask = np.array(temp_mask)
+                    if len(np_mask) > 2:
+                        bb_color = self.object_class_to_bb_color(o.object_class)
+                        pygame.draw.polygon(surface, bb_color, np_mask, BB_WIDTH) # outside line (darker)
+                        self.draw_polygon_alpha(surface, bb_color+(128,), np_mask) # inside fill with transparecny
+
+
+            # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
+            for o in self.node.detected_objects.objects:
+                
+                if o.camera == camera: # checks if camera stream shown is the same as the camera that detected the detection 
+                    text = str(o.object_name) # +" ("+str(o.index)+")"
+                    text_width, text_height = text_font_t.size(text)
+                    bb_color = self.object_class_to_bb_color(o.object_class)
+
+                    if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
+                        self.draw_transparent_rect(surface, int(o.box_top_left_x), int(o.box_top_left_y), text_width, text_height, bb_color, 255)
+                        self.draw_text(surface, text, text_font_t, self.BLACK, int(o.box_top_left_x), int(o.box_top_left_y))
+                    else:
+                        self.draw_transparent_rect(surface, int(o.box_top_left_x), int(o.box_top_left_y-text_height+5), text_width, text_height, bb_color, 255)
+                        self.draw_text(surface, text, text_font_t, self.BLACK, int(o.box_top_left_x), int(o.box_top_left_y-text_height+5))
+
     def show_yolo_pose_detections(self, surface, camera):
 
         if self.node.is_yolo_pose_comm:
@@ -624,8 +698,6 @@ class FaceMain():
                     temp_mask.append(p_list)
                 
                 np_mask = np.array(temp_mask)
-                # print(len(np_mask))
-
                 if len(np_mask) > 2:
                     bb_color = self.WHITE
                     pygame.draw.polygon(surface, bb_color, np_mask, BB_WIDTH) # outside line (darker)
@@ -634,7 +706,6 @@ class FaceMain():
             self.draw_circle_keypoint(surface, 1.0, self.node.tracking_mask.centroid.x, self.node.tracking_mask.centroid.y, self.BLACK, 0.0, 7)
             self.draw_circle_keypoint(surface, 1.0, self.node.tracking_mask.centroid.x, self.node.tracking_mask.centroid.y, self.WHITE, 0.0, 4)
         
-
 
     def main(self):
         
@@ -682,6 +753,7 @@ class FaceMain():
                         if self.node.selected_camera_stream.split(' ')[0] == "head": # just for head since yolo_pose and tracking are only considered for head, if this changes in the future must edit this
                             self.show_yolo_pose_detections(surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
                             self.show_tracking_detections( surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
+                        self.show_yolo_object_detections(surface, self.node.selected_camera_stream.split(' ')[0])
 
                     scaled_surface = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
                     self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
