@@ -81,6 +81,10 @@ class FaceNode(Node):
         self.selected_camera_stream = "head"
         self.show_camera_detections = False
 
+        self.list_options_touchscreen_menu = []
+        self.touchscreen_menu_mode = False
+        self.selected_touchscreen_option = []
+
         self.HEAD_CAM_WIDTH = 848
         self.BASE_CAM_WIDTH = 640
         self.HEAD_CAM_HEIGHT = 480
@@ -148,7 +152,10 @@ class FaceNode(Node):
 
     def callback_face_touchscreen_menu(self, request, response):
 
+        self.list_options_touchscreen_menu = request.command
         print(request.command)
+        self.touchscreen_menu_mode = True
+        self.selected_touchscreen_option.clear()
 
         return response
 
@@ -362,6 +369,8 @@ class FaceMain():
         self.YELLOW  = (255,255,  0)
         self.PURPLE  = (132, 56,255)
         self.CYAN    = (  0,255,255)
+        self.GREY_LAR_LOGO = (128, 128, 128)
+        self.LIGHT_BLUE_CHARMIE_FACE = (216, 231, 240)
 
     def get_touchscreen_id(self, name_contains="touch"):
 
@@ -724,7 +733,7 @@ class FaceMain():
                     self.running = False
             
             if self.node.new_text_received:
-                self.SCREEN.fill((216, 231, 240))  # clear screen (black background)
+                self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # clear screen (black background)
                 if self.node.new_text_received_name != "":
                     self.add_text_to_face()
                     pygame.display.update()
@@ -734,6 +743,9 @@ class FaceMain():
                     while time.time() - start_time < self.node.new_text_received_delay:
                         pass # stales the display thread, so that new faces may be received, however the text has higher priority
             
+            elif self.node.touchscreen_menu_mode:
+                self.handle_touchscreen_menu()
+
             elif self.node.cams_flag:
 
                 # camera stream selection
@@ -789,3 +801,150 @@ class FaceMain():
                     pygame.display.update()
 
         pygame.quit()
+
+
+    """     
+    def handle_touchscreen_menu(self):
+        self.SCREEN.fill((216, 231, 240))  # light blue background
+
+        font = pygame.font.SysFont(None, 60)
+        margin = 20
+        button_height = 80
+        screen_width, screen_height = self.SCREEN.get_size()
+
+        num_options = len(self.node.list_options_touchscreen_menu)
+        total_height = num_options * (button_height + margin)
+        start_y = (screen_height - total_height) // 2
+
+        self.menu_buttons = []
+
+        for idx, name in enumerate(self.node.list_options_touchscreen_menu):
+            y = start_y + idx * (button_height + margin)
+            rect = pygame.Rect(margin, y, screen_width - 2 * margin, button_height)
+            pygame.draw.rect(self.SCREEN, self.BLUE, rect, border_radius=10)
+            text_surface = font.render(name, True, self.WHITE)
+            text_rect = text_surface.get_rect(center=rect.center)
+            self.SCREEN.blit(text_surface, text_rect)
+            self.menu_buttons.append((rect, name))
+
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                for rect, name in self.menu_buttons:
+                    if rect.collidepoint(pos):
+                        self.node.selected_touchscreen_option.append(name)
+                        self.node.touchscreen_menu_mode = False  # Exit menu
+                        print(f"User selected: {name}")
+    """
+    """ 
+    def handle_touchscreen_menu(self):
+        self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # Light blue background
+
+        font = pygame.font.SysFont(None, 50)
+        margin = 20
+        button_width = (self.resolution[0] - 4 * margin) // 3  # 3 columns, 4 margins
+        button_height = 80
+        num_columns = 3
+
+        num_options = len(self.node.list_options_touchscreen_menu)
+        num_rows = (num_options + num_columns - 1) // num_columns
+
+        total_height = num_rows * (button_height + margin)
+        start_y = (self.resolution[1] - total_height) // 2
+
+        self.menu_buttons = []
+
+        for i, name in enumerate(self.node.list_options_touchscreen_menu):
+            col = i % num_columns
+            row = i // num_columns
+
+            x = margin + col * (button_width + margin)
+            y = start_y + row * (button_height + margin)
+
+            rect = pygame.Rect(x, y, button_width, button_height)
+            pygame.draw.rect(self.SCREEN, self.GREY_LAR_LOGO, rect, border_radius=10)
+
+            text_surface = font.render(name, True, self.LIGHT_BLUE_CHARMIE_FACE)
+            text_rect = text_surface.get_rect(center=rect.center)
+            self.SCREEN.blit(text_surface, text_rect)
+
+            self.menu_buttons.append((rect, name))
+
+        pygame.display.update()
+
+        # Handle clicks
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                for rect, name in self.menu_buttons:
+                    if rect.collidepoint(pos):
+                        self.node.selected_touchscreen_option = name
+                        self.node.touchscreen_menu_mode = False
+                        print(f"User selected: {name}")
+    """
+
+    def handle_touchscreen_menu(self):
+        self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # Light blue background
+
+        font = pygame.font.SysFont(None, 50)
+        margin = 20
+        button_width = (self.resolution[0] - 4 * margin) // 3  # 3 columns, 4 margins
+        button_height = 80
+        num_columns = 3
+
+        num_options = len(self.node.list_options_touchscreen_menu)
+        num_rows = (num_options + num_columns - 1) // num_columns
+
+        total_height = num_rows * (button_height + margin)
+        start_y = (self.resolution[1] - total_height) // 2
+
+        self.menu_buttons = []
+        if not hasattr(self, "pressed_button_name"):
+            self.pressed_button_name = None
+
+        for i, name in enumerate(self.node.list_options_touchscreen_menu):
+            col = i % num_columns
+            row = i // num_columns
+
+            x = margin + col * (button_width + margin)
+            y = start_y + row * (button_height + margin)
+
+            rect = pygame.Rect(x, y, button_width, button_height)
+            self.menu_buttons.append((rect, name))
+
+            # Button color: darker if pressed
+            if name == self.pressed_button_name:
+                color = (
+                    max(self.GREY_LAR_LOGO[0] - 30, 0),
+                    max(self.GREY_LAR_LOGO[1] - 30, 0),
+                    max(self.GREY_LAR_LOGO[2] - 30, 0),
+                )
+            else:
+                color = self.GREY_LAR_LOGO
+
+            pygame.draw.rect(self.SCREEN, color, rect, border_radius=10)
+
+            text_surface = font.render(name, True, self.LIGHT_BLUE_CHARMIE_FACE)
+            text_rect = text_surface.get_rect(center=rect.center)
+            self.SCREEN.blit(text_surface, text_rect)
+
+        pygame.display.update()
+
+        # Handle press + release events
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                for rect, name in self.menu_buttons:
+                    if rect.collidepoint(pos):
+                        self.pressed_button_name = name
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+                for rect, name in self.menu_buttons:
+                    if rect.collidepoint(pos) and name == self.pressed_button_name:
+                        self.node.selected_touchscreen_option.append(name)
+                        self.node.touchscreen_menu_mode = False
+                        print(f"User selected: {name}")
+                self.pressed_button_name = None  # Reset after release
