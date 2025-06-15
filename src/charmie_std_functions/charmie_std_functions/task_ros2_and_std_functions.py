@@ -3028,28 +3028,68 @@ class RobotStdFunctions():
         self.activate_tracking(activate=True, points=points, bbox=bb)
         # self.activate_tracking(activate=False)
 
-    def set_face_touchscreen_menu(self, choice_category=[]):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[]):
 
         options = []
-
         for c in choice_category:
-
+            c = c.replace("_"," ").lower()
             match c:
+                case "cleaning supplies":
+                    for obj in self.node.objects_file:
+                        if obj["class"].lower() == c:
+                            options.append(obj["name"])
                 case "drinks":
-                    pass
+                    for obj in self.node.objects_file:
+                        if obj["class"].lower() == c:
+                            options.append(obj["name"])
                 case "foods":
-                    pass
+                    for obj in self.node.objects_file:
+                        if obj["class"].lower() == c:
+                            options.append(obj["name"])
+                case "fruits":
+                    for obj in self.node.objects_file:
+                        if obj["class"].lower() == c:
+                            options.append(obj["name"])
+                case "toys":
+                    for obj in self.node.objects_file:
+                        if obj["class"].lower() == c:
+                            options.append(obj["name"])
+                case "snacks":
+                    for obj in self.node.objects_file:
+                        if obj["class"].lower() == c:
+                            options.append(obj["name"])
+                case "dishes":
+                    for obj in self.node.objects_file:
+                        if obj["class"].lower() == c:
+                            options.append(obj["name"])
                 case "names":
                     for names in self.node.names:
                         options.append(names["name"])
+                case "furniture":
+                    for obj in self.node.furniture:
+                        options.append(obj["name"])
+                case "rooms":
+                    for obj in self.node.rooms:
+                        options.append(obj["name"])
+                case "object classes":
+                    for obj in self.node.objects_classes_file:
+                        options.append(obj["name"])
+                case "custom":
+                    for opt in custom_options:
+                        options.append(opt)
+                case _:
+                    print("WRONG FACE TOUCHSCREEN MENU OPTION! DOES NOT EXIST!")
+                    pass
 
         print(options)
         
-        request = SetFaceTouchscreenMenu.Request()
-        request.command = options
-        
-        self.node.call_face_touchscreen_menu_server(request=request)
-
+        if options:
+            request = SetFaceTouchscreenMenu.Request()
+            request.command = options
+            
+            self.node.call_face_touchscreen_menu_server(request=request)
+        else:
+            print("FACE TOUCHSCREEN MENU SKIPPED! NO VALID OPTIONS!")
 
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
