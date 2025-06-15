@@ -102,7 +102,13 @@ class TaskMain():
                 # self.robot.set_face_touchscreen_menu(["custom"], custom_options=["ines", "tiago", "charmie", "etc"])
                 # self.robot.set_face_touchscreen_menu(["poker"])
                 
-                self.robot.set_face_touchscreen_menu(["foods", "fruits", "snacks"], timeout=10)
+                print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "fruits", "snacks"], timeout=10))
+                time.sleep(3.0)
+                print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "fruits", "snacks"], timeout=10))
+                time.sleep(3.0)
+                print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "fruits", "snacks"], timeout=10))
+                time.sleep(3.0)
+                
                 
                 # self.robot.set_face("qr_code")
                 # time.sleep(3.0)

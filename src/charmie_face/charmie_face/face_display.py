@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-from charmie_interfaces.srv import SetFace, SetTextFace, SetFaceTouchscreenMenu
+from charmie_interfaces.srv import SetFace, SetTextFace, SetFaceTouchscreenMenu, GetFaceTouchscreenMenu
 from charmie_interfaces.msg import ListOfDetectedPerson, ListOfDetectedObject, TrackingMask
 from sensor_msgs.msg import Image as Image_ ### HAD TO CHANGE IMAGE TO IMAGE_ because of: from PIL import Image
 from realsense2_camera_msgs.msg import RGBD
@@ -55,7 +55,8 @@ class FaceNode(Node):
         
         ### Services (Server) ###   
         self.server_face_command = self.create_service(SetFace, "face_command", self.callback_face_command) 
-        self.server_face_touchscreen_menu = self.create_service(SetFaceTouchscreenMenu, "face_touchscreen_menu", self.callback_face_touchscreen_menu) 
+        self.server_face_set_touchscreen_menu = self.create_service(SetFaceTouchscreenMenu, "set_face_touchscreen_menu", self.callback_face_set_touchscreen_menu) 
+        self.face_get_touchscreen_menu_client = self.create_client(GetFaceTouchscreenMenu, "get_face_touchscreen_menu")
         self.speech_to_face_command = self.create_service(SetTextFace, "display_speech_face", self.callback_speech_to_face)
         self.get_logger().info("Face Servers have been started")
 
@@ -153,7 +154,10 @@ class FaceNode(Node):
 
         return response
 
-    def callback_face_touchscreen_menu(self, request, response):
+    def call_face_get_touchscreen_menu_server(self, request=GetFaceTouchscreenMenu.Request()):
+        self.face_get_touchscreen_menu_client.call_async(request)
+
+    def callback_face_set_touchscreen_menu(self, request, response):
 
         # Type of service received: 
         # string[] command # options for the face touchscreen menu
@@ -778,6 +782,11 @@ class FaceMain():
                     self.node.is_touchscreen_menu = False
                     self.node.touchscreen_menu_start_time = None
 
+                    # Create and send the service request indicating timeout
+                    request = GetFaceTouchscreenMenu.Request()
+                    request.command = ["TIMEOUT"]
+                    self.node.call_face_get_touchscreen_menu_server(request=request)
+
                     # Clear all confirmation-related state
                     self.confirming_selection = False
                     self.pressed_button_name = None
@@ -854,8 +863,69 @@ class FaceMain():
         if not hasattr(self, "selected_candidate_name"):
             self.selected_candidate_name = ""
 
-        # --- 1. Show Confirmation Screen ---
-        if self.confirming_selection:
+        ### 1) Show Selection Grid ###
+        if not self.confirming_selection:
+            self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # Light blue background
+
+            margin = 20
+            button_width = (self.resolution[0] - 4 * margin) // 3  # 3 columns, 4 margins
+            button_height = 80
+            num_columns = 3
+
+            num_options = len(self.node.list_options_touchscreen_menu)
+            num_rows = (num_options + num_columns - 1) // num_columns
+            total_height = num_rows * (button_height + margin)
+            start_y = (self.resolution[1] - total_height) // 2
+
+            self.menu_buttons = []
+
+            for i, name in enumerate(self.node.list_options_touchscreen_menu):
+                col = i % num_columns
+                row = i // num_columns
+
+                x = margin + col * (button_width + margin)
+                y = start_y + row * (button_height + margin)
+
+                rect = pygame.Rect(x, y, button_width, button_height)
+                self.menu_buttons.append((rect, name))
+
+                # Visual feedback if being pressed
+                if name == self.pressed_button_name:
+                    color = (
+                        max(self.GREY_LAR_LOGO[0] - 30, 0),
+                        max(self.GREY_LAR_LOGO[1] - 30, 0),
+                        max(self.GREY_LAR_LOGO[2] - 30, 0),
+                    )
+                else:
+                    color = self.GREY_LAR_LOGO
+
+                pygame.draw.rect(self.SCREEN, color, rect, border_radius=10)
+
+                text_surface = font.render(name, True, self.LIGHT_BLUE_CHARMIE_FACE)
+                text_rect = text_surface.get_rect(center=rect.center)
+                self.SCREEN.blit(text_surface, text_rect)
+
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+                    for rect, name in self.menu_buttons:
+                        if rect.collidepoint(pos):
+                            self.pressed_button_name = name
+
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    pos = pygame.mouse.get_pos()
+                    for rect, name in self.menu_buttons:
+                        if rect.collidepoint(pos) and name == self.pressed_button_name:
+                            self.selected_candidate_name = name
+                            self.confirming_selection = True
+                            self.node.touchscreen_menu_start_time = None
+                            print(f"User tapped: {name}")
+                    self.pressed_button_name = None
+
+        ### 2) Show Confirmation Screen ###
+        else: # if self.confirming_selection:
             self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)
 
             # Display selected name
@@ -920,6 +990,12 @@ class FaceMain():
                         self.confirming_selection = False
                         self.node.touchscreen_menu_start_time = None
                         print(f"User accepted: {self.selected_candidate_name}")
+            
+                        # send selected items through service
+                        request = GetFaceTouchscreenMenu.Request()
+                        request.command = self.node.selected_touchscreen_option
+                        self.node.call_face_get_touchscreen_menu_server(request=request)
+
                     elif self.decline_button.collidepoint(pos) and self.pressed_confirm_button == "decline":
                         self.confirming_selection = False
                         self.pressed_button_name = None
@@ -929,62 +1005,3 @@ class FaceMain():
 
                     self.pressed_confirm_button = None  # Always reset
             return
-
-        # --- 2. Show Selection Grid ---
-        self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # Light blue background
-
-        margin = 20
-        button_width = (self.resolution[0] - 4 * margin) // 3  # 3 columns, 4 margins
-        button_height = 80
-        num_columns = 3
-
-        num_options = len(self.node.list_options_touchscreen_menu)
-        num_rows = (num_options + num_columns - 1) // num_columns
-        total_height = num_rows * (button_height + margin)
-        start_y = (self.resolution[1] - total_height) // 2
-
-        self.menu_buttons = []
-
-        for i, name in enumerate(self.node.list_options_touchscreen_menu):
-            col = i % num_columns
-            row = i // num_columns
-
-            x = margin + col * (button_width + margin)
-            y = start_y + row * (button_height + margin)
-
-            rect = pygame.Rect(x, y, button_width, button_height)
-            self.menu_buttons.append((rect, name))
-
-            # Visual feedback if being pressed
-            if name == self.pressed_button_name:
-                color = (
-                    max(self.GREY_LAR_LOGO[0] - 30, 0),
-                    max(self.GREY_LAR_LOGO[1] - 30, 0),
-                    max(self.GREY_LAR_LOGO[2] - 30, 0),
-                )
-            else:
-                color = self.GREY_LAR_LOGO
-
-            pygame.draw.rect(self.SCREEN, color, rect, border_radius=10)
-
-            text_surface = font.render(name, True, self.LIGHT_BLUE_CHARMIE_FACE)
-            text_rect = text_surface.get_rect(center=rect.center)
-            self.SCREEN.blit(text_surface, text_rect)
-
-        pygame.display.update()
-
-        for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                for rect, name in self.menu_buttons:
-                    if rect.collidepoint(pos):
-                        self.pressed_button_name = name
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                pos = pygame.mouse.get_pos()
-                for rect, name in self.menu_buttons:
-                    if rect.collidepoint(pos) and name == self.pressed_button_name:
-                        self.selected_candidate_name = name
-                        self.confirming_selection = True
-                        print(f"User tapped: {name}")
-                self.pressed_button_name = None

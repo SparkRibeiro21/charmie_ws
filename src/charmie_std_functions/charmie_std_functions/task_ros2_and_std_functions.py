@@ -134,7 +134,8 @@ class ROS2TaskNode(Node):
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
         # Face
         self.face_command_client = self.create_client(SetFace, "face_command")
-        self.face_touchscreen_menu_client = self.create_client(SetFaceTouchscreenMenu, "face_touchscreen_menu")
+        self.face_set_touchscreen_menu_client = self.create_client(SetFaceTouchscreenMenu, "set_face_touchscreen_menu")
+        self.server_face_get_touchscreen_menu = self.create_service(GetFaceTouchscreenMenu, "get_face_touchscreen_menu", self.callback_face_get_touchscreen_menu) 
         # Neck
         self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
         self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
@@ -296,6 +297,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
+        self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
@@ -326,6 +328,7 @@ class ROS2TaskNode(Node):
         self.new_tracking_mask_msg = False
         self.amcl_pose = PoseWithCovarianceStamped()
         self.new_amcl_pose_msg = False
+        self.selected_list_options_touchscreen_menu = []
 
         # robot localization
         self.robot_pose = Pose2D()
@@ -568,10 +571,15 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
-    def call_face_touchscreen_menu_server(self, request=SetFaceTouchscreenMenu.Request()):
+    def call_face_set_touchscreen_menu_server(self, request=SetFaceTouchscreenMenu.Request()):
+        self.face_set_touchscreen_menu_client.call_async(request)
 
-        self.face_touchscreen_menu_client.call_async(request)
-
+    def callback_face_get_touchscreen_menu(self, request, response):
+        self.selected_list_options_touchscreen_menu  = request.command
+        self.waited_for_end_of_face_touchscreen_menu = True
+        # print(self.selected_list_options_touchscreen_menu)
+        return response
+    
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, request=SpeechCommand.Request(), wait_for_end_of=True):
     
@@ -3028,7 +3036,7 @@ class RobotStdFunctions():
         self.activate_tracking(activate=True, points=points, bbox=bb)
         # self.activate_tracking(activate=False)
 
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, wait_for_end_of=True):
 
         options = []
         for c in choice_category:
@@ -3083,7 +3091,7 @@ class RobotStdFunctions():
 
         if alphabetical_order:
             options = sorted(options)
-        print("OPTIONS: ", options)
+        # print("OPTIONS: ", options)
         
         if options:
             request = SetFaceTouchscreenMenu.Request()
@@ -3091,9 +3099,18 @@ class RobotStdFunctions():
             request.timeout = float(timeout)
             request.mode    = str(mode)
             
-            self.node.call_face_touchscreen_menu_server(request=request)
+            self.node.call_face_set_touchscreen_menu_server(request=request)
+
+            if wait_for_end_of:
+                while not self.node.waited_for_end_of_face_touchscreen_menu:
+                    pass
+            self.node.waited_for_end_of_face_touchscreen_menu = False
+
+            return self.node.selected_list_options_touchscreen_menu
+        
         else:
             print("FACE TOUCHSCREEN MENU SKIPPED! NO VALID OPTIONS!")
+            return ["ERROR"]
 
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
