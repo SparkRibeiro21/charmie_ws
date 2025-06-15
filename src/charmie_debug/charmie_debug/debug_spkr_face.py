@@ -108,9 +108,32 @@ class TaskMain():
                 # time.sleep(3.0)
                 
                 # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["drinks", "foods", "fruits", "snacks"], timeout=10, mode="single"))
-                print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["drinks"], timeout=10, mode="single"))
-                time.sleep(3.0)
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks"], timeout=10, mode="multi"))
+                # time.sleep(3.0)
                 
+
+                #print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["drinks"], timeout=10, mode="single"))
+                # time.sleep(3.0)
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["drinks"], timeout=10, mode="single"))
+                # time.sleep(3.0)
+                #print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods"], timeout=10, mode="single"))
+                # time.sleep(3.0)
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks"], timeout=10, mode="single"))
+                # time.sleep(3.0)
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["custom"], custom_options=["ines", "tiago", "charmie", "etc"]))
+                # time.sleep(3.0)
+                #print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks"], timeout=10, mode="multi"))
+                # time.sleep(3.0)
+                print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks", "snacks", "fruits"], timeout=10, mode="multi"))
+                # time.sleep(3.0)
+                
+                
+                
+
+
+
+
+
                 
                 # self.robot.set_face("qr_code")
                 # time.sleep(3.0)

@@ -403,7 +403,7 @@ class FaceMain():
         self.confirming_multi_selection = False
         self.pressed_plus_minus = None
         self.pressed_confirm_button = None
-        self.option_counts = {name: 0 for name in self.node.list_options_touchscreen_menu}
+        self.option_counts = {}
 
 
     def get_touchscreen_id(self, name_contains="touch"):
@@ -1119,7 +1119,7 @@ class FaceMain():
                         self.confirming_multi_selection = False
                         self.pressed_plus_minus = None
                         self.confirming_multi_button = None
-                        self.option_counts = {name: 0 for name in self.node.list_options_touchscreen_menu}
+                        self.option_counts = {}
                         self.node.touchscreen_menu_start_time = None
 
                     self.confirming_multi_button = None
@@ -1171,7 +1171,7 @@ class FaceMain():
                     self.confirming_multi_selection = False
                     self.pressed_plus_minus = None
                     self.pressed_confirm_button = None
-                    self.option_counts = {name: 0 for name in self.node.list_options_touchscreen_menu}
+                    self.option_counts = {}
                 else:
 
                     if self.node.touchscreen_menu_mode == "single":
