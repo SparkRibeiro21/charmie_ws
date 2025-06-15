@@ -3028,7 +3028,7 @@ class RobotStdFunctions():
         self.activate_tracking(activate=True, points=points, bbox=bb)
         # self.activate_tracking(activate=False)
 
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[]):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True):
 
         options = []
         for c in choice_category:
@@ -3081,11 +3081,15 @@ class RobotStdFunctions():
                     print("WRONG FACE TOUCHSCREEN MENU OPTION! DOES NOT EXIST!")
                     pass
 
-        print(options)
+        if alphabetical_order:
+            options = sorted(options)
+        print("OPTIONS: ", options)
         
         if options:
             request = SetFaceTouchscreenMenu.Request()
             request.command = options
+            request.timeout = float(timeout)
+            request.mode    = str(mode)
             
             self.node.call_face_touchscreen_menu_server(request=request)
         else:

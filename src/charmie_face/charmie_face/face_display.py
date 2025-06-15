@@ -82,8 +82,11 @@ class FaceNode(Node):
         self.show_camera_detections = False
 
         self.list_options_touchscreen_menu = []
-        self.touchscreen_menu_mode = False
+        self.is_touchscreen_menu = False
         self.selected_touchscreen_option = []
+        self.touchscreen_menu_timeout = 0.0
+        self.touchscreen_menu_mode = "single"
+        self.touchscreen_menu_start_time = None
 
         self.HEAD_CAM_WIDTH = 848
         self.BASE_CAM_WIDTH = 640
@@ -152,10 +155,22 @@ class FaceNode(Node):
 
     def callback_face_touchscreen_menu(self, request, response):
 
-        self.list_options_touchscreen_menu = request.command
-        print(request.command)
-        self.touchscreen_menu_mode = True
+        # Type of service received: 
+        # string[] command # options for the face touchscreen menu
+        # float64 timeout  # maximum wait time for a menu selection
+        # string mode      # select whether we need a single selection or a list of selected items
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+        
+        self.list_options_touchscreen_menu  = request.command
+        self.touchscreen_menu_timeout       = request.timeout
+        self.touchscreen_menu_mode          = request.mode
+        
+        self.is_touchscreen_menu = True
         self.selected_touchscreen_option.clear()
+
+        print(request.command)
 
         return response
 
@@ -373,6 +388,13 @@ class FaceMain():
         self.LIGHT_BLUE_CHARMIE_FACE = (216, 231, 240)
         self.GREEN_PASTEL = (119, 221, 119)
         self.RED_PASTEL = (255, 116, 108)
+
+        # Clear all confirmation-related state
+        self.confirming_selection = False
+        self.pressed_button_name = None
+        self.pressed_confirm_button = None
+        self.selected_candidate_name = ""
+
 
     def get_touchscreen_id(self, name_contains="touch"):
 
@@ -745,8 +767,24 @@ class FaceMain():
                     while time.time() - start_time < self.node.new_text_received_delay:
                         pass # stales the display thread, so that new faces may be received, however the text has higher priority
             
-            elif self.node.touchscreen_menu_mode:
-                self.handle_touchscreen_menu()
+            elif self.node.is_touchscreen_menu:
+
+                if self.node.touchscreen_menu_start_time is None:
+                    self.node.touchscreen_menu_start_time = time.time()
+
+                # Check for timeout
+                if time.time() - self.node.touchscreen_menu_start_time > self.node.touchscreen_menu_timeout:
+                    print("Touchscreen menu timed out. Returning to previous face.")
+                    self.node.is_touchscreen_menu = False
+                    self.node.touchscreen_menu_start_time = None
+
+                    # Clear all confirmation-related state
+                    self.confirming_selection = False
+                    self.pressed_button_name = None
+                    self.pressed_confirm_button = None
+                    self.selected_candidate_name = ""
+                else:
+                    self.handle_touchscreen_menu()
 
             elif self.node.cams_flag:
 
@@ -803,72 +841,6 @@ class FaceMain():
                     pygame.display.update()
 
         pygame.quit()
-
-    """
-    def handle_touchscreen_menu(self):
-        self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # Light blue background
-
-        font = pygame.font.SysFont(None, 50)
-        margin = 20
-        button_width = (self.resolution[0] - 4 * margin) // 3  # 3 columns, 4 margins
-        button_height = 80
-        num_columns = 3
-
-        num_options = len(self.node.list_options_touchscreen_menu)
-        num_rows = (num_options + num_columns - 1) // num_columns
-
-        total_height = num_rows * (button_height + margin)
-        start_y = (self.resolution[1] - total_height) // 2
-
-        self.menu_buttons = []
-        if not hasattr(self, "pressed_button_name"):
-            self.pressed_button_name = None
-
-        for i, name in enumerate(self.node.list_options_touchscreen_menu):
-            col = i % num_columns
-            row = i // num_columns
-
-            x = margin + col * (button_width + margin)
-            y = start_y + row * (button_height + margin)
-
-            rect = pygame.Rect(x, y, button_width, button_height)
-            self.menu_buttons.append((rect, name))
-
-            # Button color: darker if pressed
-            if name == self.pressed_button_name:
-                color = (
-                    max(self.GREY_LAR_LOGO[0] - 30, 0),
-                    max(self.GREY_LAR_LOGO[1] - 30, 0),
-                    max(self.GREY_LAR_LOGO[2] - 30, 0),
-                )
-            else:
-                color = self.GREY_LAR_LOGO
-
-            pygame.draw.rect(self.SCREEN, color, rect, border_radius=10)
-
-            text_surface = font.render(name, True, self.LIGHT_BLUE_CHARMIE_FACE)
-            text_rect = text_surface.get_rect(center=rect.center)
-            self.SCREEN.blit(text_surface, text_rect)
-
-        pygame.display.update()
-
-        # Handle press + release events
-        for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                for rect, name in self.menu_buttons:
-                    if rect.collidepoint(pos):
-                        self.pressed_button_name = name
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                pos = pygame.mouse.get_pos()
-                for rect, name in self.menu_buttons:
-                    if rect.collidepoint(pos) and name == self.pressed_button_name:
-                        self.node.selected_touchscreen_option.append(name)
-                        self.node.touchscreen_menu_mode = False
-                        print(f"User selected: {name}")
-                self.pressed_button_name = None  # Reset after release
-    """
 
     def handle_touchscreen_menu(self):
         font = pygame.font.SysFont(None, 50)
@@ -944,13 +916,15 @@ class FaceMain():
                     pos = pygame.mouse.get_pos()
                     if self.accept_button.collidepoint(pos) and self.pressed_confirm_button == "accept":
                         self.node.selected_touchscreen_option.append(self.selected_candidate_name) 
-                        self.node.touchscreen_menu_mode = False
+                        self.node.is_touchscreen_menu = False
                         self.confirming_selection = False
+                        self.node.touchscreen_menu_start_time = None
                         print(f"User accepted: {self.selected_candidate_name}")
                     elif self.decline_button.collidepoint(pos) and self.pressed_confirm_button == "decline":
                         self.confirming_selection = False
                         self.pressed_button_name = None
                         self.selected_candidate_name = ""
+                        self.node.touchscreen_menu_start_time = None
                         print("User declined selection")
 
                     self.pressed_confirm_button = None  # Always reset
