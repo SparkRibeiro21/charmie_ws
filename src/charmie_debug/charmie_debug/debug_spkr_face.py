@@ -98,8 +98,12 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
-                self.robot.set_face("qr_code")
-                time.sleep(3.0)
+                self.robot.set_face_touchscreen_menu(["names"])
+
+
+
+                # self.robot.set_face("qr_code")
+                # time.sleep(3.0)
                 
                 while True:
                     pass

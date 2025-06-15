@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-from charmie_interfaces.srv import SetFace, SetTextFace
+from charmie_interfaces.srv import SetFace, SetTextFace, SetFaceTouchscreenMenu
 from charmie_interfaces.msg import ListOfDetectedPerson, ListOfDetectedObject, TrackingMask
 from sensor_msgs.msg import Image as Image_ ### HAD TO CHANGE IMAGE TO IMAGE_ because of: from PIL import Image
 from realsense2_camera_msgs.msg import RGBD
@@ -55,6 +55,7 @@ class FaceNode(Node):
         
         ### Services (Server) ###   
         self.server_face_command = self.create_service(SetFace, "face_command", self.callback_face_command) 
+        self.server_face_touchscreen_menu = self.create_service(SetFaceTouchscreenMenu, "face_touchscreen_menu", self.callback_face_touchscreen_menu) 
         self.speech_to_face_command = self.create_service(SetTextFace, "display_speech_face", self.callback_speech_to_face)
         self.get_logger().info("Face Servers have been started")
 
@@ -144,6 +145,13 @@ class FaceNode(Node):
         print("Face Request:", request.command, request.custom, request.camera, request.show_detections)
 
         return response
+
+    def callback_face_touchscreen_menu(self, request, response):
+
+        print(request.command)
+
+        return response
+
 
     # Receive speech strings to show in face
     def callback_speech_to_face(self, request, response):
