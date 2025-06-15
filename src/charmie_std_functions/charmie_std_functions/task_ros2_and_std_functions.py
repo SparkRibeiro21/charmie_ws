@@ -3038,6 +3038,8 @@ class RobotStdFunctions():
 
     def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, wait_for_end_of=True):
 
+        "SPEAK - Please press the correct option on my face and confirm"
+
         options = []
         for c in choice_category:
             c = c.replace("_"," ").lower()

@@ -399,6 +399,12 @@ class FaceMain():
         self.pressed_confirm_button = None
         self.selected_candidate_name = ""
 
+        # Reset multi-selection state if applicable
+        self.confirming_multi_selection = False
+        self.pressed_plus_minus = None
+        self.pressed_confirm_button = None
+        self.option_counts = {name: 0 for name in self.node.list_options_touchscreen_menu}
+
 
     def get_touchscreen_id(self, name_contains="touch"):
 
@@ -751,108 +757,7 @@ class FaceMain():
             self.draw_circle_keypoint(surface, 1.0, self.node.tracking_mask.centroid.x, self.node.tracking_mask.centroid.y, self.BLACK, 0.0, 7)
             self.draw_circle_keypoint(surface, 1.0, self.node.tracking_mask.centroid.x, self.node.tracking_mask.centroid.y, self.WHITE, 0.0, 4)
         
-
-    def main(self):
-        
-        while self.running:
-            
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-            
-            if self.node.new_text_received:
-                self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # clear screen (black background)
-                if self.node.new_text_received_name != "":
-                    self.add_text_to_face()
-                    pygame.display.update()
-                else: # == ""
-                    start_time = time.time()
-                    self.node.new_text_received = False
-                    while time.time() - start_time < self.node.new_text_received_delay:
-                        pass # stales the display thread, so that new faces may be received, however the text has higher priority
-            
-            elif self.node.is_touchscreen_menu:
-
-                if self.node.touchscreen_menu_start_time is None:
-                    self.node.touchscreen_menu_start_time = time.time()
-
-                # Check for timeout
-                if time.time() - self.node.touchscreen_menu_start_time > self.node.touchscreen_menu_timeout:
-                    print("Touchscreen menu timed out. Returning to previous face.")
-                    self.node.is_touchscreen_menu = False
-                    self.node.touchscreen_menu_start_time = None
-
-                    # Create and send the service request indicating timeout
-                    request = GetFaceTouchscreenMenu.Request()
-                    request.command = ["TIMEOUT"]
-                    self.node.call_face_get_touchscreen_menu_server(request=request)
-
-                    # Clear all confirmation-related state
-                    self.confirming_selection = False
-                    self.pressed_button_name = None
-                    self.pressed_confirm_button = None
-                    self.selected_candidate_name = ""
-                else:
-                    self.handle_touchscreen_menu()
-
-            elif self.node.cams_flag:
-
-                # camera stream selection
-                if self.node.selected_camera_stream == "head":
-                    selected_video_stream = self.node.head_rgb
-                elif self.node.selected_camera_stream == "hand":
-                    selected_video_stream = self.node.hand_rgb
-                elif self.node.selected_camera_stream == "base":
-                    selected_video_stream = self.node.base_rgb
-                elif self.node.selected_camera_stream == "head depth":
-                    selected_video_stream = self.node.head_depth
-                elif self.node.selected_camera_stream == "hand depth":
-                    selected_video_stream = self.node.hand_depth
-                elif self.node.selected_camera_stream == "base depth":
-                    selected_video_stream = self.node.base_depth
-                else:
-                    self.node.cams_flag = False
-                    self.node.image_to_face(self.node.INITIAL_FACE) # sets default face
-
-                if self.node.cams_flag: # this way it skips showing camera stream if no valid camera was received, and changes to default face 
-
-                    surface = pygame.surfarray.make_surface(np.transpose(selected_video_stream, (1, 0, 2)))  # Pygame expects (width, height, channels)
-                    
-                    if self.node.show_camera_detections:
-                        if self.node.selected_camera_stream.split(' ')[0] == "head": # just for head since yolo_pose and tracking are only considered for head, if this changes in the future must edit this
-                            self.show_yolo_pose_detections(surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
-                            self.show_tracking_detections( surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
-                        self.show_yolo_object_detections(surface, self.node.selected_camera_stream.split(' ')[0])
-
-                    scaled_surface = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
-                    self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
-                    self.SCREEN.blit(scaled_surface, (self.xx_shift, self.yy_shift))
-                    pygame.display.update()
-
-            else:
-                if self.node.new_face_received:
-                    self.update_received_face()
-                    self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
-
-                if self.gif_flag:
-                    if self.frame_index >= len(self.gif_frames): # safety for gifs with a higher amount of frames stop and a new one with less frames wants to be used 
-                        self.frame_index = 1
-                    self.SCREEN.blit(self.gif_frames[self.frame_index], (self.xx_shift, self.yy_shift))
-                    pygame.display.update()
-                    self.frame_index = (self.frame_index + 1) % len(self.gif_frames)
-                    if self.frame_index == 0: # needs this line to avoid a blank frame everytime the gif resets
-                        self.frame_index = 1
-                    # print(self.frame_index)
-                    self.clock.tick(30)
-                elif self.previous_image_extension != "": # use self.previous_image_extension for initial case
-                    # self.SCREEN.blit(self.image, (0, 0))
-                    self.SCREEN.blit(self.image, (self.xx_shift, self.yy_shift))
-                    pygame.display.update()
-
-        pygame.quit()
-
     def handle_touchscreen_menu(self):
-        font = pygame.font.SysFont(None, 50)
 
         if not hasattr(self, "pressed_button_name"):
             self.pressed_button_name = None
@@ -867,12 +772,15 @@ class FaceMain():
         if not self.confirming_selection:
             self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # Light blue background
 
-            margin = 20
-            button_width = (self.resolution[0] - 4 * margin) // 3  # 3 columns, 4 margins
-            button_height = 80
-            num_columns = 3
-
             num_options = len(self.node.list_options_touchscreen_menu)
+            margin = 20 if num_options <= 21 else 6
+            num_columns = 3
+            button_height = 80 if num_options <= 21 else 54  # Reduce height for 4 columns
+            button_width = (self.resolution[0] - (num_columns + 1) * margin) // num_columns
+
+            font_size = 50 if num_columns == 3 else 36
+            font = pygame.font.SysFont(None, font_size)
+
             num_rows = (num_options + num_columns - 1) // num_columns
             total_height = num_rows * (button_height + margin)
             start_y = (self.resolution[1] - total_height) // 2
@@ -928,18 +836,23 @@ class FaceMain():
         else: # if self.confirming_selection:
             self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)
 
+            font = pygame.font.SysFont(None, 50)
+
             # Display selected name
             big_font = pygame.font.SysFont(None, 80)
-            label = big_font.render(f"Selected: {self.selected_candidate_name}", True, self.GREY_LAR_LOGO)
-            label_rect = label.get_rect(center=(self.resolution[0] // 2, self.resolution[1] // 3))
-            self.SCREEN.blit(label, label_rect)
+            label1 = big_font.render("Selected:", True, self.GREY_LAR_LOGO)
+            label1_rect = label1.get_rect(center=(self.resolution[0] // 2, self.resolution[1] // 2.5 - 40))
+            self.SCREEN.blit(label1, label1_rect)
+            label2 = big_font.render(self.selected_candidate_name, True, self.GREY_LAR_LOGO)
+            label2_rect = label2.get_rect(center=(self.resolution[0] // 2, self.resolution[1] // 2.5 + 40))
+            self.SCREEN.blit(label2, label2_rect)
 
             # Accept and Decline buttons
             button_width = 300
             button_height = 80
             margin = 40
             center_x = self.resolution[0] // 2
-            y = self.resolution[1] // 2
+            y = int(self.resolution[1] * 0.60)
 
             self.accept_button = pygame.Rect(center_x - button_width - margin // 2, y, button_width, button_height)
             self.decline_button = pygame.Rect(center_x + margin // 2, y, button_width, button_height)
@@ -1005,3 +918,319 @@ class FaceMain():
 
                     self.pressed_confirm_button = None  # Always reset
             return
+                
+    def handle_touchscreen_menu_multiple_options(self):
+        
+        if not hasattr(self, "option_counts") or not self.option_counts:
+            self.option_counts = {name: 0 for name in self.node.list_options_touchscreen_menu}
+        if not hasattr(self, "pressed_plus_minus"):
+            self.pressed_plus_minus = None
+        if not hasattr(self, "confirming_multi_selection"):
+            self.confirming_multi_selection = False
+        if not hasattr(self, "pressed_confirm_button"):
+            self.pressed_confirm_button = None
+        if not hasattr(self, "confirming_multi_button"):
+            self.confirming_multi_button = None
+
+
+        ### 1) Show Selection Grid ###
+        if not self.confirming_multi_selection:
+
+            self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)
+
+            num_options = len(self.node.list_options_touchscreen_menu)
+            margin = 20 if num_options <= 21 else 6
+            num_columns = 3 # 4 if num_options > 21 else 3
+            button_height = 80 if num_options <= 21 else 54  # Reduce height for 4 columns
+            button_width = (self.resolution[0] - (num_columns + 1) * margin) // num_columns
+
+            font_size = 50 if num_columns == 3 else 36
+            font = pygame.font.SysFont(None, font_size)
+            
+            num_rows = (num_options + num_columns - 1) // num_columns
+            total_height = num_rows * (button_height + margin)
+            start_y = (self.resolution[1] - total_height) // 2
+
+            self.plus_buttons = []
+            self.minus_buttons = []
+
+            for i, name in enumerate(self.node.list_options_touchscreen_menu):
+                col = i % num_columns
+                row = i // num_columns
+
+                x = margin + col * (button_width + margin)
+                y = start_y + row * (button_height + margin)
+
+                main_rect = pygame.Rect(x, y, button_width, button_height)
+                pygame.draw.rect(self.SCREEN, self.GREY_LAR_LOGO, main_rect, border_radius=10)
+
+                name_font = pygame.font.SysFont(None, 40) if len(name) > 13 else font
+                
+                text_surface = name_font.render(name, True, self.LIGHT_BLUE_CHARMIE_FACE)
+                text_rect = text_surface.get_rect(midleft=(main_rect.left + 10, main_rect.centery))
+                self.SCREEN.blit(text_surface, text_rect)
+
+                spacing = 20
+                button_size = 40
+                button_center_y = y + button_height // 2
+
+                plus_rect = pygame.Rect(main_rect.right - button_size - 10, button_center_y - button_size // 2, button_size, button_size)
+                minus_rect = pygame.Rect(plus_rect.left - spacing - button_size - spacing, button_center_y - button_size // 2, button_size, button_size)
+
+                self.plus_buttons.append((plus_rect, name))
+                self.minus_buttons.append((minus_rect, name))
+
+                is_plus_pressed = self.pressed_plus_minus == ('+', name)
+                is_minus_pressed = self.pressed_plus_minus == ('-', name)
+
+                plus_color = tuple(max(c - 30, 0) for c in self.LIGHT_BLUE_CHARMIE_FACE) if is_plus_pressed else self.LIGHT_BLUE_CHARMIE_FACE
+                minus_color = tuple(max(c - 30, 0) for c in self.LIGHT_BLUE_CHARMIE_FACE) if is_minus_pressed else self.LIGHT_BLUE_CHARMIE_FACE
+
+                pygame.draw.rect(self.SCREEN, minus_color, minus_rect, border_radius=5)
+                pygame.draw.rect(self.SCREEN, plus_color, plus_rect, border_radius=5)
+
+                minus_text = font.render("-", True, self.GREY_LAR_LOGO)
+                plus_text = font.render("+", True, self.GREY_LAR_LOGO)
+
+                minus_text_rect = minus_text.get_rect(center=minus_rect.center)
+                plus_text_rect = plus_text.get_rect(center=plus_rect.center)
+                plus_text_rect.y -= 3
+                self.SCREEN.blit(minus_text, minus_text_rect)
+                self.SCREEN.blit(plus_text, plus_text_rect)
+
+                count = self.option_counts.get(name, 0)
+                count_surface = font.render(str(count), True, self.LIGHT_BLUE_CHARMIE_FACE)
+                count_rect = count_surface.get_rect()
+                count_center_x = (minus_rect.right + plus_rect.left) // 2
+                count_rect.center = (count_center_x, button_center_y)
+                self.SCREEN.blit(count_surface, count_rect)
+
+            confirm_rect = pygame.Rect(self.resolution[0] // 2 - 125, self.resolution[1] - 100, 250, 70)
+            is_confirm_pressed = self.pressed_plus_minus == ('confirm', '')
+            confirm_color = tuple(max(c - 30, 0) for c in self.GREEN_PASTEL) if is_confirm_pressed else self.GREEN_PASTEL
+
+            pygame.draw.rect(self.SCREEN, confirm_color, confirm_rect, border_radius=10)
+            self.SCREEN.blit(font.render("Confirm", True, self.GREY_LAR_LOGO), font.render("Confirm", True, self.GREY_LAR_LOGO).get_rect(center=confirm_rect.center))
+
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+                    for rect, name in self.plus_buttons:
+                        if rect.collidepoint(pos):
+                            self.pressed_plus_minus = ('+', name)
+                    for rect, name in self.minus_buttons:
+                        if rect.collidepoint(pos):
+                            self.pressed_plus_minus = ('-', name)
+                    if confirm_rect.collidepoint(pos):
+                        self.pressed_plus_minus = ('confirm', '')
+
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    pos = pygame.mouse.get_pos()
+                    if self.pressed_plus_minus:
+                        symbol, name = self.pressed_plus_minus
+                        if symbol == '+':
+                            for rect, rname in self.plus_buttons:
+                                if rname == name and rect.collidepoint(pos):
+                                    self.node.touchscreen_menu_start_time = None
+                                    if self.option_counts[name] < 9:
+                                        self.option_counts[name] += 1
+                        elif symbol == '-':
+                            for rect, rname in self.minus_buttons:
+                                if rname == name and rect.collidepoint(pos):
+                                    self.node.touchscreen_menu_start_time = None
+                                    if self.option_counts[name] > 0:
+                                        self.option_counts[name] -= 1
+                        elif symbol == 'confirm':
+                            if confirm_rect.collidepoint(pos):
+                                self.confirming_multi_selection = True
+                                self.node.touchscreen_menu_start_time = None
+                        self.pressed_plus_minus = None
+
+
+        ### 2) Show Confirmation Screen ###
+        else: # if self.confirming_multi_selection:
+            self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)
+
+            font = pygame.font.SysFont(None, 50)
+
+            big_font = pygame.font.SysFont(None, 80)
+            label = big_font.render("Confirm Selection", True, self.GREY_LAR_LOGO)
+            label_rect = label.get_rect(center=(self.resolution[0] // 2, 100))
+            self.SCREEN.blit(label, label_rect)
+
+            font_items = pygame.font.SysFont(None, 80)
+            selected = [(name, count) for name, count in self.option_counts.items() if count > 0]
+            for i, (name, count) in enumerate(selected):
+                line = f"{count}x {name}"
+                line_surface = font_items.render(line, True, self.GREY_LAR_LOGO)
+                self.SCREEN.blit(line_surface, (100, 160 + i * 50))
+
+            button_width = 300
+            button_height = 80
+            margin = 40
+            center_x = self.resolution[0] // 2
+            y = self.resolution[1] - 150
+
+            self.accept_button = pygame.Rect(center_x - button_width - margin // 2, y, button_width, button_height)
+            self.decline_button = pygame.Rect(center_x + margin // 2, y, button_width, button_height)
+
+            accept_color = tuple(max(c - 30, 0) for c in self.GREEN_PASTEL) if self.confirming_multi_button == "accept" else self.GREEN_PASTEL
+            decline_color = tuple(max(c - 30, 0) for c in self.RED_PASTEL) if self.confirming_multi_button == "decline" else self.RED_PASTEL
+
+            pygame.draw.rect(self.SCREEN, accept_color, self.accept_button, border_radius=10)
+            pygame.draw.rect(self.SCREEN, decline_color, self.decline_button, border_radius=10)
+
+            accept_text = font.render("Accept", True, self.GREY_LAR_LOGO)
+            decline_text = font.render("Decline", True, self.GREY_LAR_LOGO)
+
+            self.SCREEN.blit(accept_text, accept_text.get_rect(center=self.accept_button.center))
+            self.SCREEN.blit(decline_text, decline_text.get_rect(center=self.decline_button.center))
+
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+                    if self.accept_button.collidepoint(pos):
+                        self.confirming_multi_button = "accept"
+                    elif self.decline_button.collidepoint(pos):
+                        self.confirming_multi_button = "decline"
+
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    pos = pygame.mouse.get_pos()
+                    if self.accept_button.collidepoint(pos) and self.confirming_multi_button == "accept":
+                        result_list = []
+                        for name, count in self.option_counts.items():
+                            result_list.extend([name] * count)
+                        print("Confirmed selection:", result_list)
+
+                        request = GetFaceTouchscreenMenu.Request()
+                        request.command = result_list
+                        self.node.call_face_get_touchscreen_menu_server(request=request)
+
+                        self.node.is_touchscreen_menu = False
+                        self.node.touchscreen_menu_start_time = None
+                        self.option_counts = {}
+                        self.confirming_multi_selection = False
+
+                    elif self.decline_button.collidepoint(pos) and self.confirming_multi_button == "decline":
+                        self.confirming_multi_selection = False
+                        self.pressed_plus_minus = None
+                        self.confirming_multi_button = None
+                        self.option_counts = {name: 0 for name in self.node.list_options_touchscreen_menu}
+                        self.node.touchscreen_menu_start_time = None
+
+                    self.confirming_multi_button = None
+            return
+
+
+    def main(self):
+        
+        while self.running:
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+            
+            if self.node.new_text_received:
+                self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # clear screen (black background)
+                if self.node.new_text_received_name != "":
+                    self.add_text_to_face()
+                    pygame.display.update()
+                else: # == ""
+                    start_time = time.time()
+                    self.node.new_text_received = False
+                    while time.time() - start_time < self.node.new_text_received_delay:
+                        pass # stales the display thread, so that new faces may be received, however the text has higher priority
+            
+            elif self.node.is_touchscreen_menu:
+
+                if self.node.touchscreen_menu_start_time is None:
+                    self.node.touchscreen_menu_start_time = time.time()
+
+                # Check for timeout
+                if time.time() - self.node.touchscreen_menu_start_time > self.node.touchscreen_menu_timeout:
+                    print("Touchscreen menu timed out. Returning to previous face.")
+                    self.node.is_touchscreen_menu = False
+                    self.node.touchscreen_menu_start_time = None
+
+                    # Create and send the service request indicating timeout
+                    request = GetFaceTouchscreenMenu.Request()
+                    request.command = ["TIMEOUT"]
+                    self.node.call_face_get_touchscreen_menu_server(request=request)
+
+                    # Clear all confirmation-related state
+                    self.confirming_selection = False
+                    self.pressed_button_name = None
+                    self.pressed_confirm_button = None
+                    self.selected_candidate_name = ""
+
+                    # Reset multi-selection state if applicable
+                    self.confirming_multi_selection = False
+                    self.pressed_plus_minus = None
+                    self.pressed_confirm_button = None
+                    self.option_counts = {name: 0 for name in self.node.list_options_touchscreen_menu}
+                else:
+
+                    if self.node.touchscreen_menu_mode == "single":
+                        self.handle_touchscreen_menu()
+                    else: # "multi"
+                        self.handle_touchscreen_menu_multiple_options()
+
+            elif self.node.cams_flag:
+
+                # camera stream selection
+                if self.node.selected_camera_stream == "head":
+                    selected_video_stream = self.node.head_rgb
+                elif self.node.selected_camera_stream == "hand":
+                    selected_video_stream = self.node.hand_rgb
+                elif self.node.selected_camera_stream == "base":
+                    selected_video_stream = self.node.base_rgb
+                elif self.node.selected_camera_stream == "head depth":
+                    selected_video_stream = self.node.head_depth
+                elif self.node.selected_camera_stream == "hand depth":
+                    selected_video_stream = self.node.hand_depth
+                elif self.node.selected_camera_stream == "base depth":
+                    selected_video_stream = self.node.base_depth
+                else:
+                    self.node.cams_flag = False
+                    self.node.image_to_face(self.node.INITIAL_FACE) # sets default face
+
+                if self.node.cams_flag: # this way it skips showing camera stream if no valid camera was received, and changes to default face 
+
+                    surface = pygame.surfarray.make_surface(np.transpose(selected_video_stream, (1, 0, 2)))  # Pygame expects (width, height, channels)
+                    
+                    if self.node.show_camera_detections:
+                        if self.node.selected_camera_stream.split(' ')[0] == "head": # just for head since yolo_pose and tracking are only considered for head, if this changes in the future must edit this
+                            self.show_yolo_pose_detections(surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
+                            self.show_tracking_detections( surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
+                        self.show_yolo_object_detections(surface, self.node.selected_camera_stream.split(' ')[0])
+
+                    scaled_surface = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
+                    self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
+                    self.SCREEN.blit(scaled_surface, (self.xx_shift, self.yy_shift))
+                    pygame.display.update()
+
+            else:
+                if self.node.new_face_received:
+                    self.update_received_face()
+                    self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
+
+                if self.gif_flag:
+                    if self.frame_index >= len(self.gif_frames): # safety for gifs with a higher amount of frames stop and a new one with less frames wants to be used 
+                        self.frame_index = 1
+                    self.SCREEN.blit(self.gif_frames[self.frame_index], (self.xx_shift, self.yy_shift))
+                    pygame.display.update()
+                    self.frame_index = (self.frame_index + 1) % len(self.gif_frames)
+                    if self.frame_index == 0: # needs this line to avoid a blank frame everytime the gif resets
+                        self.frame_index = 1
+                    # print(self.frame_index)
+                    self.clock.tick(30)
+                elif self.previous_image_extension != "": # use self.previous_image_extension for initial case
+                    # self.SCREEN.blit(self.image, (0, 0))
+                    self.SCREEN.blit(self.image, (self.xx_shift, self.yy_shift))
+                    pygame.display.update()
+
+        pygame.quit()
