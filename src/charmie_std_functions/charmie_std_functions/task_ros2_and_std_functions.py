@@ -3036,52 +3036,45 @@ class RobotStdFunctions():
         self.activate_tracking(activate=True, points=points, bbox=bb)
         # self.activate_tracking(activate=False)
 
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, wait_for_end_of=True):
-
-        "SPEAK - Please press the correct option on my face and confirm"
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, speak_results=True, wait_for_end_of=True):
 
         options = []
+
+        files_for_speech = []
+        folder_for_speech = []
+
+        object_classes = [] # this was added to have an automatic way to get all objects classes for the match case
+        for obj_class in self.node.objects_classes_file:
+            object_classes.append(obj_class["name"].lower())
+
         for c in choice_category:
             c = c.replace("_"," ").lower()
             match c:
-                case "cleaning supplies":
-                    for obj in self.node.objects_file:
-                        if obj["class"].lower() == c:
-                            options.append(obj["name"])
-                case "drinks":
-                    for obj in self.node.objects_file:
-                        if obj["class"].lower() == c:
-                            options.append(obj["name"])
-                case "foods":
-                    for obj in self.node.objects_file:
-                        if obj["class"].lower() == c:
-                            options.append(obj["name"])
-                case "fruits":
-                    for obj in self.node.objects_file:
-                        if obj["class"].lower() == c:
-                            options.append(obj["name"])
-                case "toys":
-                    for obj in self.node.objects_file:
-                        if obj["class"].lower() == c:
-                            options.append(obj["name"])
-                case "snacks":
-                    for obj in self.node.objects_file:
-                        if obj["class"].lower() == c:
-                            options.append(obj["name"])
-                case "dishes":
+                ### AUTOMATIZAR ESTA LISTA DE CLASSES
+                case _ if c in object_classes: # this way by just changing the configuration_files about objects_classes new categories are added without having to remember to manually change this std_function
+                    files_for_speech.append(self.node.objects_file)
+                    folder_for_speech.append("objects_names")
                     for obj in self.node.objects_file:
                         if obj["class"].lower() == c:
                             options.append(obj["name"])
                 case "names":
+                    files_for_speech.append(self.node.names)
+                    folder_for_speech.append("person_names")
                     for names in self.node.names:
                         options.append(names["name"])
                 case "furniture":
+                    files_for_speech.append(self.node.furniture)
+                    folder_for_speech.append("furniture")
                     for obj in self.node.furniture:
                         options.append(obj["name"])
                 case "rooms":
+                    files_for_speech.append(self.node.rooms)
+                    folder_for_speech.append("rooms")
                     for obj in self.node.rooms:
                         options.append(obj["name"])
                 case "object classes":
+                    files_for_speech.append(self.node.objects_classes_file)
+                    folder_for_speech.append("objects_classes")
                     for obj in self.node.objects_classes_file:
                         options.append(obj["name"])
                 case "custom":
@@ -3096,6 +3089,9 @@ class RobotStdFunctions():
         # print("OPTIONS: ", options)
         
         if options:
+    
+            self.set_speech(filename="face_touchscreen_menu/init_touchscreen_menu", wait_for_end_of=True)
+    
             request = SetFaceTouchscreenMenu.Request()
             request.command = options
             request.timeout = float(timeout)
@@ -3108,10 +3104,36 @@ class RobotStdFunctions():
                     pass
             self.node.waited_for_end_of_face_touchscreen_menu = False
 
-            return self.node.selected_list_options_touchscreen_menu
+            if not self.node.selected_list_options_touchscreen_menu:
+                self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+                return ["ERROR"]
+            
+            elif self.node.selected_list_options_touchscreen_menu[0] == "TIMEOUT":
+                self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+                return self.node.selected_list_options_touchscreen_menu
+        
+            else:
+                if speak_results:
+                    self.set_speech(filename="face_touchscreen_menu/selected_touchscreen_menu", wait_for_end_of=True)
+
+                    # function just for automatically search for the speak file amongst the sppech folder
+                    said = False    
+                    for so in self.node.selected_list_options_touchscreen_menu:
+                        said = False
+                        for file, folder in zip(files_for_speech, folder_for_speech):
+                            # print(file)
+                            for obj in file:
+                                # print(so.lower(), "| " ,obj["name"].lower())
+                                if so.lower() == obj["name"].lower():
+                                    if not said:
+                                        self.set_speech(filename=folder+"/"+so.replace(" ","_").lower())
+                                        said = True
+
+                return self.node.selected_list_options_touchscreen_menu
         
         else:
             print("FACE TOUCHSCREEN MENU SKIPPED! NO VALID OPTIONS!")
+            self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
             return ["ERROR"]
 
     def get_quaternion_from_euler(self, roll, pitch, yaw):

@@ -124,7 +124,8 @@ class TaskMain():
                 # time.sleep(3.0)
                 #print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks"], timeout=10, mode="multi"))
                 # time.sleep(3.0)
-                print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks", "snacks", "fruits"], timeout=10, mode="multi"))
+                selected_option = self.robot.set_face_touchscreen_menu(["names", "drinks"], timeout=10, mode="single", speak_results=True)
+                print(selected_option[0])
                 # time.sleep(3.0)
                 
                 
