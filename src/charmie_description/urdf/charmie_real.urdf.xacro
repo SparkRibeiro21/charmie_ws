@@ -2,7 +2,7 @@
 <robot name="charmie" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <xacro:arg name="wheel_radius" default="0.1"/>
-    <xacro:arg name="head_version" default="2"/>
+    <xacro:arg name="head_version" default="3"/>
 
     <xacro:include filename="common_properties.xacro"/>
     <xacro:include filename="inertial_macros.xacro"/>

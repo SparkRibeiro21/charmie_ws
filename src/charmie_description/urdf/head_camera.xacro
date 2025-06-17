@@ -8,10 +8,15 @@
     <xacro:property name="head_camera_width" value="0.145" />
     <xacro:property name="head_camera_height" value="0.052" />
 
+    <!-- Temporary adjustements (compared to older face) for updated face 2025_06 -->
+    <xacro:property name="adjust_for_temp_face_x" value="0.0045" />
+    <xacro:property name="adjust_for_temp_face_y" value="0.0" />
+    <xacro:property name="adjust_for_temp_face_z" value="-0.075" />
+
     <joint name="head_camera_joint" type="fixed">
         <parent link="face_link"/>
         <child link="head_camera_link"/>
-        <origin xyz="${camera_dist_from_face_link} 0 ${camera_height_from_face_link}" rpy="0 0 0"/>
+        <origin xyz="${camera_dist_from_face_link+adjust_for_temp_face_x} 0 ${camera_height_from_face_link+adjust_for_temp_face_z}" rpy="0 0 0"/>
     </joint>
 
     <link name="head_camera_link">
