@@ -1,182 +1,3 @@
-"""
-HOW THE CODE OF A TASK SHOULD BE MADE:
-
-->  ->  ->  ->  ->  HOW TO CREATE A TASK?
-
-1) COPY THE TASK TEMPLATE TO YOUR TASK PKG. ALL STD FUNCTIONS ARE INCLUDED FROM CHARMIE_STD_FUNCTIONS (if any doubt ask Tiago Ribeiro)
-2) PLAN THE STATES AND SET THE STATES FOR YOUR TASK AND SET THE TASK NAME:
-
-        # Task Name
-        self.TASK_NAME = "Serve Breakfast"
-
-        # Task States
-        self.task_states ={
-            "Waiting_for_task_start":       0,
-            "Move_milk_location":           1,
-            "Detect_and_pick_milk":         2,
-            "Move_cornflakes_location":     3,
-            "Detect_and_pick_cornflakes":   4,
-            "Move_dishes_location":         5,
-            "Detect_and_pick_dishes":       6,
-            "Move_kitchen_table":           7,
-            "Placing_bowl":                 8,
-            "Placing_cornflakes":           9,
-            "Placing_milk":                 10,
-            "Placing_spoon":                11,
-            "Final_State":                  12,
-        }
-
-# 3) ADAPT THE MODULES BEING USED ALLONG THE TESTING ONE BY ONE:
-
-    ros2_modules = {
-        "charmie_arm":              True,
-        "charmie_audio":            False,
-        "charmie_face":             False,
-        "charmie_head_camera":      True,
-        "charmie_hand_camera":      True,
-        "charmie_base_camera":      True,
-        "charmie_lidar":            True,
-        "charmie_lidar_bottom":     True,
-        "charmie_llm":              False,
-        "charmie_localisation":     True,
-        "charmie_low_level":        True,
-        "charmie_navigation":       False,
-        "charmie_nav2":             True,
-        "charmie_neck":             True,
-        "charmie_obstacles":        False,
-        "charmie_ps4_controller":   False,
-        "charmie_speakers":         True,
-        "charmie_tracking":         False,
-        "charmie_yolo_objects":     True,
-        "charmie_yolo_pose":        False,
-    }
-
-# 4) CREATE THE STATE STRUCTURE:
-        
-        if self.state == self.task_states["Waiting_for_task_start"]:
-            # your code here ...
-                            
-            # next state
-            self.state = self.task_states["Move_milk_location"]
-
-        elif self.state == self.task_states["Move_milk_location"]:
-            # your code here ...
-                            
-            # next state
-            self.state = self.task_states["Detect_and_pick_milk"]
-
-        elif self.state == self.task_states["Detect_and_pick_milk"]:
-            # your code here ...
-                            
-            # next state
-            self.state = self.task_states["Move_cornflakes_location"]
-
-            (...)
-
-# 5) CREATE THE CONFIGURABES FOR THE TASK: (PARAMETERS THAT HAVE TO BE CHANGED DEPENDING ON THE ARENA)
-
-    def configurables(self): # Variables that may change depending on the arena the robot does the task 
-
-        # Which objects should be acquired
-        self.GET_MILK = True
-        self.GET_CORNFLAKES = True
-        self.GET_DISHES = True
-        self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
-
-        # Name of the table where breakfast is served
-        self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
-
-        # Initial Position
-        self.initial_position = self.robot.get_navigation_coords_from_furniture("Entrance")
-
-# 6) CREATE THE PSEUDOCODE OF EACH STATE:
-            
-            self.state = self.task_states["Detect_and_pick_dishes"]
-                
-                ##### NECK LOOKS AT TABLE
-
-                ##### MOVES ARM TO TOP OF TABLE POSITION
-
-                ##### SPEAK: Searching for objects
-
-                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
-                
-                ##### SPEAK: Found spoon
-                
-                ##### SPEAK: Check face to see object detected
-
-                ##### SHOW FACE DETECTED OBJECT
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                ##### IF AN ERROR IS DETECTED:
-
-                    ##### SPEAK: There is a problem picking up the object
-
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                    ##### NECK LOOK JUDGE
-
-                    ##### SPEAK: Need help, put object on my hand as it is on my face
-
-                    ##### SHOW FACE GRIPPER SPOON 
-
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-
-                        ##### SPEAK: Close gripper in 3 2 1 
-
-                        ##### ARM: CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED: 
-
-                            ##### SPEAK: There seems to be a problem, please retry.
-
-                            ##### ARM OPEN GRIPPER
-                        
-                ##### NECK LOOK TRAY
-                        
-                ##### ARM PLACE OBJECT IN TRAY
-
-                self.state = self.Picking_up_milk
-
-# 7) REPLACE ALL THE SPEAKS IN PSEUDOCODE WITH self.robot.set_speech(...), CREATE FILES IN ros2 run charmie_speakers save_audio
-
-# 8) TEST ALL SENTENCES ALONE TO SEE IF EVERYTHING IS OK
-
-# 9) REPLACE ALL THE FACE IN PSEUDOCODE WITH self.robot.set_face(...)
-
-# 10) TEST ALL FACES WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 11) REPLACE ALL THE START_BUTTON AND RGB IN PSEUDOCODE WITH self.robot.set_rgb(...) and self.robot.wait_for_start_button()
-
-# 12) TEST ALL START_BUTTON AND RGB WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 13) REPLACE ALL THE AUDIO IN PSEUDOCODE WITH self.robot.get_audio(...)
-
-# 14) TEST ALL AUDIO WITH THE PREVIOUS GETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 15) REPLACE ALL THE NECK IN PSEUDOCODE WITH self.robot.set_neck(...) OR ANY OF ALL THE OTHER FORMS TO SET THE NECK
-
-# 16) TEST ALL NECK WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 17) REPLACE ALL THE YOLO DETECTIONS IN PSEUDOCODE WITH self.robot.search_for_person(...) and self.robot.search_for_objects
-
-# 18) TEST ALL YOLOS WITH THE PREVIOUS SEARCHES_FOR ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 19) REPLACE ALL THE ARM MOVE WITH self.robot.set_arm(...)
-
-# 20) TEST ALL ARM MOVE WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 21) REPLACE THE SET INITIAL POSITION MOVE WITH self.robot.set_initial_position(...)
-
-# 22) TEST ALL SET INITIAL POSITION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-# 23) REPLACE THE NAVIGATION MOVE, ROTATE AND ORIENTATE WITH self.robot.move_to_position(...)
-
-# 24) TEST ALL SET NAVIGATION WITH THE PREVIOUS SETs ALREADY IMPLEMENTED TO SEE IF EVERYTHING IS OK
-
-"""
-
 #!/usr/bin/env python3
 import rclpy
 import threading
@@ -247,10 +68,10 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
         self.initial_neck_position = [0, 0] 
-        self.search_person_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]]
+        self.search_person_tetas = [0, 0]
         self.search_book_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]]
         self.release_timer = 0.5
-        self.gripper_release_timer = 0.5
+        self.gripper_release_timer = 2
 
         self.GRAB_BOOK = False
 
@@ -276,61 +97,24 @@ class TaskMain():
             
             if self.state == self.task_states["Locate_person"]:
 
-                """
-                # send speech command to speakers voice, intrucing the robot 
-                self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=True)
-                
-                # sends RGB value for debug
-                self.set_rgb(command=CYAN+HALF_ROTATE)
-
-                # change face, to face picking up cup
-                # self.set_face("help_pick_cup")
-                
-                # waiting for start button
-                self.wait_for_door_start()
-
-                self.set_rgb(command=MAGENTA+ALTERNATE_QUARTERS)
-
-                self.set_speech(filename="serve_breakfast/sb_moving_kitchen_counter", wait_for_end_of=True)
-
-                print("DONE2 - ", self.node.start_button_state)
-                # calibrate the background noise for better voice recognition
-                # self.calibrate_audio(wait_for_end_of=True)
-
-                # moves the neck to look to absolute cordinates in the map
-                # self.set_neck_coords(position=[1.0, 1.0], ang=30, wait_for_end_of=True)
-
-                
-                ### RECEPTIONIST AUDIO EXAMPLE
-                # command = self.get_audio(receptionist=True, question="receptionist/receptionist_question", wait_for_end_of=True)
-                # print("Finished:", command)
-                # keyword_list= command.split(" ")
-                # print(keyword_list[0], keyword_list[1])
-                # self.set_speech(filename="receptionist/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
-                # self.set_speech(filename="receptionist/recep_drink_"+keyword_list[1].lower(), wait_for_end_of=True)  
-
-                # change face, to standard face
-                # self.set_face("charmie_face")
-
-                # moves the neck to look forward
-                # self.set_neck(position=self.look_forward, wait_for_end_of=False)
-
-                # example of arm function to say hello
-                # self.set_arm(command="hello", wait_for_end_of=False)
-                """
-
                 self.robot.set_neck(position=self.initial_neck_position, wait_for_end_of=True)
                 self.robot.wait_for_start_button()
                 #LOCATE PERSON; ADD CASE IF NOT;ASK HOW MANY PEOPLE
+                #HOW TO KNOW IF EMPTY
                 people_found = self.robot.search_for_person(tetas=self.search_person_tetas, time_in_each_frame=2.0)
 
                 self.state = self.task_states["Greet_person"]
 
             elif self.state == self.task_states["Greet_person"]:
                 
+                closest = 9999999
+                prev_closest = 9999998
                 #ADD WAY TO FILTER LOWEST DISTANCE DETECTED; SAVE p FOR LATER USE
                 for p in people_found:
-                    self.robot.set_neck_coords(position=[p.position_relative.x, p.position_relative.y, p.position_absolute_head.z], wait_for_end_of=True)
+                    closest = p.position_relative.x + p.position_relative.y + p.position_relative.z
+                    if closest < prev_closest:
+                        saved_p = p
+                self.robot.set_neck_coords(position=[saved_p.position_relative.x, saved_p.position_relative.y, saved_p.position_relative.z], wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/JEF_hello", wait_for_end_of=True) #NEED TO GENERATE
 
                 self.state = self.task_states["Grab_book"]
@@ -343,16 +127,18 @@ class TaskMain():
                 if self.GRAB_BOOK:
                     self.robot.pick_obj(selected_object="Book",mode="front",first_tetas=self.search_book_tetas) #NEED TO ADD BOOK
                 else:
-                    pass # mudar isto
+                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                    self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                    self.robot.wait_for_start_button()
+                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 self.state = self.task_states["Offer_Book"]
 
             elif self.state == self.task_states["Offer_Book"]:
                 
                 #ROTATE 90, MOVE NECK TO LAST PERSON LOCATED
-                #ADD WAY TO FILTER LOWEST DISTANCE DETECTED
-                for p in people_found:
-                    self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z], wait_for_end_of=True)
+                self.robot.set_neck_coords(position=[saved_p.position_relative.x, saved_p.position_relative.y, saved_p.position_relative.z], wait_for_end_of=True)
 
                 self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/book_release_countdown", wait_for_end_of=True) #NEED TO GENERATE; BOOK RELESE AND EXPLANATION
@@ -365,74 +151,11 @@ class TaskMain():
 
             elif self.state == self.task_states["Final_state"]:
                 # your code here ...
+                self.robot.set_speech(filename="generic/JEF_book_introduction", wait_for_end_of=False) #NEED TO GENERATE
                 self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                 self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/JEF_book_introduction", wait_for_end_of=True) #NEED TO GENERATE
                 # next state
                 self.state = self.task_states["Locate_person"]
-
-                ##### NECK LOOKS AT TABLE
-                # self.set_neck(position=self.look_table_objects, wait_for_end_of=True)
-
-                ##### MOVES ARM TO TOP OF TABLE POSITION
-
-                ##### SPEAK: Searching for objects
-                # self.set_speech(filename="generic/search_objects", wait_for_end_of=True)
-
-                ##### YOLO OBJECTS SEARCH FOR SPOON, FOR BOTH CAMERAS
-                # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-                
-                ##### SPEAK: Found spoon
-                # self.set_speech(filename="serve_breakfast/sb_found_spoon", show_in_face=True, wait_for_end_of=True)
-                
-                ##### SPEAK: Check face to see object detected
-                # self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
-
-                ##### SHOW FACE DETECTED OBJECT (CUSTOM)
-
-                ##### MOVE ARM TO PICK UP OBJECT 
-
-                ##### IF AN ERROR IS DETECTED:
-
-                    ##### SPEAK: There is a problem picking up the object
-                    # self.set_speech(filename="generic/problem_pick_object", wait_for_end_of=True) # False
-
-                    ##### MOVE ARM TO ERROR POSITION 
-                
-                    ##### NECK LOOK JUDGE
-                    # self.set_neck(position=self.look_judge, wait_for_end_of=True)
-
-                    ##### SPEAK: Need help, put object on my hand as it is on my face
-                    # self.set_speech(filename="generic/check_face_put_object_hand", wait_for_end_of=True)
-
-                    ##### SHOW FACE GRIPPER SPOON 
-                    # self.set_face("help_pick_spoon") 
-
-                    ##### WHILE OBJECT IS NOT IN GRIPPER:
-
-                        ##### SPEAK: Close gripper in 3 2 1 
-                        # self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-                        ##### ARM: CLOSE GRIPPER
-
-                        ##### IF OBJECT NOT GRABBED: 
-
-                            ##### SPEAK: There seems to be a problem, please retry.
-                            # self.set_speech(filename="arm/arm_error_receive_object", wait_for_end_of=True)
-
-                            ##### ARM OPEN GRIPPER
-                
-                ##### SET FACE TO STANDARD FACE
-                # self.set_face("charmie_face")
-                        
-                ##### NECK LOOK TRAY
-                # self.set_neck(position=self.look_tray, wait_for_end_of=True)
-                        
-                ##### ARM PLACE OBJECT IN TRAY
-
-                # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
-                # self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                # self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=False)
 
                 while True:
                     pass
