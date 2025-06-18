@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              False,
     "charmie_audio":            False,
-    "charmie_face":             False,
+    "charmie_face":             True,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
     "charmie_base_camera":      False,
@@ -98,25 +98,98 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
+                # self.robot.set_face_touchscreen_menu(["dishes", "toys"])
+                # self.robot.set_face_touchscreen_menu(["custom"], custom_options=["ines", "tiago", "charmie", "etc"])
+                # self.robot.set_face_touchscreen_menu(["poker"])
+                
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "fruits", "snacks"], timeout=10))
+                # time.sleep(3.0)
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "fruits", "snacks"], timeout=10))
+                # time.sleep(3.0)
+                
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["drinks", "foods", "fruits", "snacks"], timeout=10, mode="single"))
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks"], timeout=10, mode="multi"))
+                # time.sleep(3.0)
+                
+
+                #print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["drinks"], timeout=10, mode="single"))
+                # time.sleep(3.0)
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["drinks"], timeout=10, mode="single"))
+                # time.sleep(3.0)
+                #print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods"], timeout=10, mode="single"))
+                # time.sleep(3.0)
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks"], timeout=10, mode="single"))
+                # time.sleep(3.0)
+                # print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["custom"], custom_options=["ines", "tiago", "charmie", "etc"]))
+                # time.sleep(3.0)
+                #print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks"], timeout=10, mode="multi"))
+                # time.sleep(3.0)
+                selected_option = self.robot.set_face_touchscreen_menu(["names", "drinks"], timeout=10, mode="single", speak_results=True)
+                print(selected_option[0])
+                # time.sleep(3.0)
+                
+                
+                
+
+
+
+
+
+                
+                # self.robot.set_face("qr_code")
+                # time.sleep(3.0)
+                
                 while True:
                     pass
 
                 while True:
-                    self.robot.set_face(custom="2024-07-16_18-34-13_Big Coke", camera="head depth", show_detections=True)
-                    print("help_pick_spoon")
+                    self.robot.set_face(camera="head", show_detections=True)
+                    print("Stream head camera")
                     time.sleep(3.0)
 
-                    self.robot.set_face(custom="2024-07-19 18-20-45 15", camera="hand", show_detections=False)
-                    print("help_pick_milk")
+
+                    self.robot.set_face(camera="head depth", show_detections=True)
+                    print("Stream head camera")
                     time.sleep(3.0)
 
-                    self.robot.set_face(custom="2024-07-20 09-22-11 38", camera="base depth", show_detections=True)
-                    print("help_pick_cornflakes")
+
+                    # self.robot.set_face(custom="2024-07-19 18-20-45 15", camera="hand", show_detections=False)
+                    # print("help_pick_cornflakes")
+                    # time.sleep(3.0)
+
+                    self.robot.set_face(camera="hand", show_detections=True)
+                    print("Stream hand camera")
                     time.sleep(3.0)
 
-                    self.robot.set_face("help_pick_bowl")
-                    print("help_pick_bowl")
+
+                    self.robot.set_face(camera="hand depth", show_detections=True)
+                    print("Stream hand camera")
                     time.sleep(3.0)
+
+                    # self.robot.set_face("help_pick_orange")
+                    # print("help_pick_orange")
+                    # time.sleep(3.0)
+
+                    self.robot.set_face(camera="base", show_detections=True)
+                    print("Stream base camera")
+                    time.sleep(3.0)
+                    # self.robot.set_face("help_pick_red_wine")
+                    # print("help_pick_red_wine")
+                    # time.sleep(3.0)
+
+
+                    self.robot.set_face(camera="base depth", show_detections=True)
+                    print("Stream base camera")
+                    time.sleep(3.0)
+
+
+
+                    # self.robot.set_face(custom="2024-07-19 18-20-45 15", camera="hand", show_detections=False)
+                    # print("help_pick_milk")
+                    # time.sleep(3.0)
+                    
+                    """ 
+
 
                     self.robot.set_face("help_pick_water")
                     print("help_pick_water")
@@ -132,7 +205,7 @@ class TaskMain():
 
                     self.robot.set_face("help_pick_mustard")
                     print("help_pick_mustard")
-                    time.sleep(3.0)
+                    time.sleep(3.0) """
                     
 
 

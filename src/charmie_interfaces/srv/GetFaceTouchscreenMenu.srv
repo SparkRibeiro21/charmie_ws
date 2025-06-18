@@ -1,0 +1,6 @@
+# Service to send the outcome of the face touchscreen menu 
+
+string[] command # outcome of the face touchscreen menu
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.

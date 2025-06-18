@@ -15,6 +15,15 @@ find_package(charmie_interfaces REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common filters io)
+find_package(pcl_conversions REQUIRED)
+
+include_directories(
+  ${PCL_INCLUDE_DIRS}
+  ${pcl_conversions_INCLUDE_DIRS}
+)
+
+add_definitions(${PCL_DEFINITIONS})
 
 # Build executable
 # for new executables duplicate the following two lines and added the executable name to install()
@@ -27,10 +36,14 @@ ament_target_dependencies(radar
   tf2
   tf2_ros
   tf2_geometry_msgs
+  pcl_conversions
 )
 
 # Manually link yaml-cpp
 target_link_libraries(radar yaml-cpp)
+target_link_libraries(radar
+  ${PCL_LIBRARIES}
+)
 
 # Install
 install(TARGETS

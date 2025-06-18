@@ -15,7 +15,7 @@ from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, B
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
-    ActivateTracking, SetPoseWithCovarianceStamped, SetInt
+    ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu
 from charmie_point_cloud.point_cloud_class import PointCloud
 
 import cv2 
@@ -67,6 +67,9 @@ class ROS2TaskNode(Node):
             with open(self.home + configuration_files_midpath + 'furniture.json', encoding='utf-8') as json_file:
                 self.furniture = json.load(json_file)
             # print(self.house_furniture)
+            with open(self.home + configuration_files_midpath + 'names.json', encoding='utf-8') as json_file:
+                self.names = json.load(json_file)
+            # print(self.names)
             self.get_logger().info("Successfully imported data from json configuration files.")
         except:
             self.get_logger().error("Could NOT import data from json configuration files.")
@@ -131,6 +134,8 @@ class ROS2TaskNode(Node):
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
         # Face
         self.face_command_client = self.create_client(SetFace, "face_command")
+        self.face_set_touchscreen_menu_client = self.create_client(SetFaceTouchscreenMenu, "set_face_touchscreen_menu")
+        self.server_face_get_touchscreen_menu = self.create_service(GetFaceTouchscreenMenu, "get_face_touchscreen_menu", self.callback_face_get_touchscreen_menu) 
         # Neck
         self.set_neck_position_client = self.create_client(SetNeckPosition, "neck_to_pos")
         self.get_neck_position_client = self.create_client(GetNeckPosition, "get_neck_pos")
@@ -292,6 +297,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
+        self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
@@ -322,6 +328,7 @@ class ROS2TaskNode(Node):
         self.new_tracking_mask_msg = False
         self.amcl_pose = PoseWithCovarianceStamped()
         self.new_amcl_pose_msg = False
+        self.selected_list_options_touchscreen_menu = []
 
         # robot localization
         self.robot_pose = Pose2D()
@@ -564,7 +571,15 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    def call_face_set_touchscreen_menu_server(self, request=SetFaceTouchscreenMenu.Request()):
+        self.face_set_touchscreen_menu_client.call_async(request)
 
+    def callback_face_get_touchscreen_menu(self, request, response):
+        self.selected_list_options_touchscreen_menu  = request.command
+        self.waited_for_end_of_face_touchscreen_menu = True
+        # print(self.selected_list_options_touchscreen_menu)
+        return response
+    
     #### SPEECH SERVER FUNCTIONS #####
     def call_speech_command_server(self, request=SpeechCommand.Request(), wait_for_end_of=True):
     
@@ -3020,6 +3035,106 @@ class RobotStdFunctions():
 
         self.activate_tracking(activate=True, points=points, bbox=bb)
         # self.activate_tracking(activate=False)
+
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, speak_results=True, wait_for_end_of=True):
+
+        options = []
+
+        files_for_speech = []
+        folder_for_speech = []
+
+        object_classes = [] # this was added to have an automatic way to get all objects classes for the match case
+        for obj_class in self.node.objects_classes_file:
+            object_classes.append(obj_class["name"].lower())
+
+        for c in choice_category:
+            c = c.replace("_"," ").lower()
+            match c:
+                ### AUTOMATIZAR ESTA LISTA DE CLASSES
+                case _ if c in object_classes: # this way by just changing the configuration_files about objects_classes new categories are added without having to remember to manually change this std_function
+                    files_for_speech.append(self.node.objects_file)
+                    folder_for_speech.append("objects_names")
+                    for obj in self.node.objects_file:
+                        if obj["class"].lower() == c:
+                            options.append(obj["name"])
+                case "names":
+                    files_for_speech.append(self.node.names)
+                    folder_for_speech.append("person_names")
+                    for names in self.node.names:
+                        options.append(names["name"])
+                case "furniture":
+                    files_for_speech.append(self.node.furniture)
+                    folder_for_speech.append("furniture")
+                    for obj in self.node.furniture:
+                        options.append(obj["name"])
+                case "rooms":
+                    files_for_speech.append(self.node.rooms)
+                    folder_for_speech.append("rooms")
+                    for obj in self.node.rooms:
+                        options.append(obj["name"])
+                case "object classes":
+                    files_for_speech.append(self.node.objects_classes_file)
+                    folder_for_speech.append("objects_classes")
+                    for obj in self.node.objects_classes_file:
+                        options.append(obj["name"])
+                case "custom":
+                    for opt in custom_options:
+                        options.append(opt)
+                case _:
+                    print("WRONG FACE TOUCHSCREEN MENU OPTION! DOES NOT EXIST!")
+                    pass
+
+        if alphabetical_order:
+            options = sorted(options)
+        # print("OPTIONS: ", options)
+        
+        if options:
+    
+            self.set_speech(filename="face_touchscreen_menu/init_touchscreen_menu", wait_for_end_of=True)
+    
+            request = SetFaceTouchscreenMenu.Request()
+            request.command = options
+            request.timeout = float(timeout)
+            request.mode    = str(mode)
+            
+            self.node.call_face_set_touchscreen_menu_server(request=request)
+
+            if wait_for_end_of:
+                while not self.node.waited_for_end_of_face_touchscreen_menu:
+                    pass
+            self.node.waited_for_end_of_face_touchscreen_menu = False
+
+            if not self.node.selected_list_options_touchscreen_menu:
+                self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+                return ["ERROR"]
+            
+            elif self.node.selected_list_options_touchscreen_menu[0] == "TIMEOUT":
+                self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+                return self.node.selected_list_options_touchscreen_menu
+        
+            else:
+                if speak_results:
+                    self.set_speech(filename="face_touchscreen_menu/selected_touchscreen_menu", wait_for_end_of=True)
+
+                    # function just for automatically search for the speak file amongst the sppech folder
+                    said = False    
+                    for so in self.node.selected_list_options_touchscreen_menu:
+                        said = False
+                        for file, folder in zip(files_for_speech, folder_for_speech):
+                            # print(file)
+                            for obj in file:
+                                # print(so.lower(), "| " ,obj["name"].lower())
+                                if so.lower() == obj["name"].lower():
+                                    if not said:
+                                        self.set_speech(filename=folder+"/"+so.replace(" ","_").lower())
+                                        said = True
+
+                return self.node.selected_list_options_touchscreen_menu
+        
+        else:
+            print("FACE TOUCHSCREEN MENU SKIPPED! NO VALID OPTIONS!")
+            self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+            return ["ERROR"]
 
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """

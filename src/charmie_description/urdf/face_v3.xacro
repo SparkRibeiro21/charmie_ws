@@ -15,21 +15,24 @@
 
     <link name="face_link">
 
+        <!-- Temporary adjustements (compared to older face) for updated face 2025_06 -->
+        <!-- /2 -> /2.5 -->
+        <!-- added -0.02 -->
         <visual>
-            <origin xyz="${face_length/2} 0 ${face_height_shift}" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${face_length/2.5} 0 ${face_height_shift-0.02}" rpy="0 ${pi/2} 0"/>
             <geometry>
-                <cylinder radius="${face_height/2}" length="${face_length}"/>
+                <cylinder radius="${face_height/2.5}" length="${face_length}"/>
             </geometry>
             <material name="grey"/>
         </visual>
         <collision>
-            <origin xyz="${face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+            <origin xyz="${face_length/2.5} 0 ${face_height_shift-0.02}" rpy="0 0 0"/>
             <geometry>
-                <cylinder radius="${face_height/2}" length="${face_length}"/>
+                <cylinder radius="${face_height/2.5}" length="${face_length}"/>
             </geometry>
         </collision>
-        <xacro:inertial_cylinder mass="0.5" length="${face_length}" radius="${face_height/2}" >
-            <origin xyz="${face_length/2} 0 ${face_height_shift}" rpy="0 0 0"/>
+        <xacro:inertial_cylinder mass="0.5" length="${face_length}" radius="${face_height/2.5}" >
+            <origin xyz="${face_length/2.5} 0 ${face_height_shift-0.02}" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
 
     </link>

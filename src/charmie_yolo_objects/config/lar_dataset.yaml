@@ -1,3 +1,4 @@
+# placeholder for yolo_objects lar_dataset config yaml  
 radar_node:
   robot_base_frame: base_footprint
   update_frequency: 10.0

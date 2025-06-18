@@ -1,0 +1,8 @@
+# Service to set the face touchscreen menu 
+
+string[] command # options for the face touchscreen menu
+float64 timeout  # maximum wait time for a menu selection
+string mode      # select whether we need a single selection or a list of selected items
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.
