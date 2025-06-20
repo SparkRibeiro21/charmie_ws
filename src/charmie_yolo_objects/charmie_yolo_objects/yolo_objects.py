@@ -852,11 +852,11 @@ class YoloObjectsMain():
             elif object.object_class == "Dishes":
                 bb_color = grey_yp
             elif object.object_class == "Footwear":
-                bb_color = red_yp
+                bb_color = black_yp
             elif object.object_class == "Furniture":
                 bb_color = green_yp
             else:
-                bb_color = black_yp
+                bb_color = red_yp
 
             # creates the points for alternative TR visual representation 
             start_point = (object.box_top_left_x, object.box_top_left_y)

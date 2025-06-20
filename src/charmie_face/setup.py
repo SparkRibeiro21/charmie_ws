@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
 		"face = charmie_face.face:main",
-		"face_display = charmie_face.face_display:main"
+		"face_old = charmie_face.face_old:main"
         ],
     },
 )
