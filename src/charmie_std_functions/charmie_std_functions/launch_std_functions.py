@@ -173,7 +173,7 @@ class LaunchStdFunctions():
             }.items(),
         )
 
-        # added by Pedro
+        # added by Pedro to initialize the ROS2 control system for the xArm
         # ros2 control launch
         # xarm_controller/launch/_ros2_control.launch.py
         self.xarm_ros2_control = IncludeLaunchDescription(
@@ -198,7 +198,7 @@ class LaunchStdFunctions():
             }.items()
         )
 
-        # added by Pedro
+        # added by Pedro to spawn and start the xArm controllers
         self.xarm_controller_spawner = Node(
             package='controller_manager',
             executable='spawner',
