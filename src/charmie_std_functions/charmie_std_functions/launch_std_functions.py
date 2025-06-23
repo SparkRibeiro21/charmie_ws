@@ -6,7 +6,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Time
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.parameter_descriptions import ParameterValue
 
-from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
+from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir, TextSubstitution
 
 from launch.substitutions import Command
 from launch_ros.actions import Node
@@ -449,4 +449,32 @@ class LaunchStdFunctions():
         cmd=['ros2', 'bag', 'record', '-a'],  # Command to start recording all topics
         name='rosbag_record_node',
         output='screen'
+        )
+
+        ### JOY & GAMEPAD CONTROLLER
+        # Compute config file path using LaunchConfiguration and TextSubstitution
+        self.config_filepath = LaunchConfiguration('config_filepath', default=[
+            TextSubstitution(text=os.path.join(
+                get_package_share_directory('charmie_gamepad'), 'config', 'ps4')),
+            TextSubstitution(text='.config.yaml')
+        ])
+
+        # joy_node
+        self.joy = Node(
+            package='joy',
+            executable='joy_node',
+            name='joy_node',
+            parameters=[{
+                'device_id': 0,
+                'deadzone': 0.3,
+                'autorepeat_rate': 20.0,
+            }]
+        )
+
+        # custom charmie_gamepad_node
+        self.gamepad = Node(
+            package='charmie_gamepad',
+            executable='charmie_gamepad_node',
+            name='charmie_gamepad_node',
+            parameters=[self.config_filepath],
         )
