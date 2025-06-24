@@ -78,6 +78,9 @@ struct CHARMIEGamepad::Impl
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_stamped_pub;
   rclcpp::Clock::SharedPtr clock;
 
+  rclcpp::TimerBase::SharedPtr safety_timer;
+  rclcpp::Time last_joy_msg_time;
+
   bool publish_stamped_twist;
   std::string frame_id;
 
@@ -179,6 +182,28 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
   std::string yaml_path = pimpl_->get_yaml_path_for_controller(controller_name);
   YAML::Node config = YAML::LoadFile(yaml_path);
 
+  using namespace std::chrono_literals;
+  pimpl_->safety_timer = this->create_wall_timer(
+    100ms,
+    [this]() {
+      rclcpp::Time now = pimpl_->clock->now();
+      if ((now - pimpl_->last_joy_msg_time).seconds() > 0.5) {
+        // Safety timeout reached, send zero velocity
+        if (!pimpl_->sent_disable_msg) {
+          if (pimpl_->publish_stamped_twist) {
+            auto msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
+            msg->header.stamp = now;
+            msg->header.frame_id = pimpl_->frame_id;
+            pimpl_->cmd_vel_stamped_pub->publish(std::move(msg));
+          } else {
+            auto msg = std::make_unique<geometry_msgs::msg::Twist>();
+            pimpl_->cmd_vel_pub->publish(std::move(msg));
+          }
+          pimpl_->sent_disable_msg = true;
+          RCLCPP_WARN(this->get_logger(), "No joystick msg for 0.5s, sent zero cmd_vel");
+        }
+      }
+    });
 
   // Declare button parameters
   pimpl_->a_button =                  get_param_from_yaml(config, "a_button", 0);
@@ -332,6 +357,8 @@ void CHARMIEGamepad::Impl::fillCmdVelMsg(
 
 void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr joy_msg)
 {
+  
+  last_joy_msg_time = clock->now();
   
   // Letter Buttons (Right Side)
   a_button_state = get_button(joy_msg, a_button);
