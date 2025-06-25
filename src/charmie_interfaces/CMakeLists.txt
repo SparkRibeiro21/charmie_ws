@@ -33,6 +33,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/DetectedPerson.msg"
   "msg/Encoders.msg"
   "msg/ErrorsMotorBoard.msg"
+  "msg/GamepadController.msg"
   "msg/ListOfDetectedObject.msg"
   "msg/ListOfDetectedPerson.msg"
   "msg/ListOfImages.msg"

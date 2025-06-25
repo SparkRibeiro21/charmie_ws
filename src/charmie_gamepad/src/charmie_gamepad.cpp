@@ -142,8 +142,8 @@ struct CHARMIEGamepad::Impl
   bool dpad_down_button_state = false;
   bool dpad_left_button_state = false;
   bool dpad_right_button_state = false;
-  float left_trigger_button_state = false;
-  float right_trigger_button_state = false;
+  bool left_trigger_button_state = false;
+  bool right_trigger_button_state = false;
 
   float left_thumbstick_x_axis_state = 0.0;
   float left_thumbstick_y_axis_state = 0.0;
