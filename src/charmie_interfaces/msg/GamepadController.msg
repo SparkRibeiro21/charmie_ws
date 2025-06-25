@@ -1,12 +1,10 @@
 #  Message to get the data from all the buttons and axis from a /joy gamepad controller to custom buttons and axes
 
-float32[8] axes  # thumbsticks, triggers, ...
+float32[10] axes  # thumbsticks, triggers, ...
 bool[18] buttons # a, b, x, y, bumpers, menu, ...
 bool timeout     # true if the controller is not responding
 
-
 # buttons[18]:
-
 # Index in List | Xbox Controller | PS4 Controller
 # [0]             A                 Cross
 # [1]             B                 Circle
@@ -28,7 +26,6 @@ bool timeout     # true if the controller is not responding
 # [17]            RT                R2
 
 # axes[14]:
-
 # Index in List | Xbox Controller | PS4 Controller
 # [0]             LTB_X             L3_X
 # [1]             LTB_Y             L3_Y
