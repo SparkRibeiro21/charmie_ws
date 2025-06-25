@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              True,
     "charmie_audio":            False,
-    "charmie_face":             False,
+    "charmie_face":             True,
     "charmie_head_camera":      True,
     "charmie_hand_camera":      True,
     "charmie_base_camera":      False,
@@ -21,15 +21,15 @@ ros2_modules = {
     "charmie_lidar_bottom":     False,
     "charmie_llm":              False,
     "charmie_localisation":     False,
-    "charmie_low_level":        False,
-    "charmie_navigation":       False, #TRUE
-    "charmie_nav2":             False, #ASK MOTOR WHICH SHOULD BE TRUE
+    "charmie_low_level":        True,
+    "charmie_navigation":       False,
+    "charmie_nav2":             False,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
     "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
-    "charmie_yolo_objects":     True,
+    "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        True,
 }
 
@@ -50,32 +50,56 @@ def ThreadMainTask(robot: RobotStdFunctions):
 class TaskMain():
 
     def __init__(self, robot: RobotStdFunctions):
+        
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
 
         # Task Name
-        self.TASK_NAME = "JEF_Demonstration"
+        self.TASK_NAME = "Offer_object"
 
         # Task States
         self.task_states ={
-            "Locate_person":          0,
-            "Greet_person":           1,
-            "Grab_book":              2,
+            "Grab_object":            0,
+            "Welcome_start":          1,
+            "Locate_person":          2,
             "Offer_book":             3,
             "Final_state":            4,
         }
 
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
+        # All neck positions
         self.initial_neck_position = [0, 0]
-        #CHANGE TETAS TO ACCOMODATE FOR REAL ENVIRONMENT 
         self.search_person_tetas = [[0, 0]]
-        self.search_book_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]]
-        self.release_timer = 0.3
-        self.gripper_release_timer = 2
-        self.time_look_person = 2
+        self.search_object_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]]
 
-        self.GRAB_BOOK = False
+        # Define what object to grab and how
+        self.object_name = "Book"
+        self.object_mode = "pick_top"
+
+        # What positions does the robot use to handout the object
+        self.initial_to_handout_position = "initial_position_to_ask_for_objects"
+        self.handout_to_initial_position = "ask_for_objects_to_initial_position"
+
+        # Should the robot grab object automatically or not
+        self.grab_object = False
+
+        # What speech files are used for the task
+        self.hello_mp4 = "JEF/WelcomeJEF"
+        self.why_object_is_being_handed_mp4 = "JEF/GiftJEF"
+        self.explain_countdown_mp4 = "JEF/ReleaseExplanationJEF"
+        self.countdown_mp4 = "JEF/CountdownJEF"
+        self.object_explanation_mp4 = "JEF/BookExplanationJEF"
+        self.goodbye_mp4 = "JEF/GoodbyeJEF"
+
+        # All task timers
+        self.sleep_after_countdown = 0.3
+        self.sleep_after_release = 2
+        self.time_search_person = 0.2
+
+        self.RESET_CLOSEST = 999999 #Ridiculous number to reset to a safe number
+
+        
 
     # main state-machine function
     def main(self):
@@ -86,10 +110,8 @@ class TaskMain():
         self.DEMO_MODE = self.robot.get_demo_mode()
         self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
 
-        self.robot.set_face(camera="head", show_detections=True) #PERGUNTAR SE VAI SER SEMPRE UMA
-        print("Stream face")
 
-        self.state = self.task_states["Locate_person"]
+        self.state = self.task_states["Grab_object"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -98,75 +120,112 @@ class TaskMain():
         while True:
             self.robot.set_current_task_state_id(current_state=self.state) # Necessary to visualize current task state in GUI
             
-            if self.state == self.task_states["Locate_person"]:
+            if self.state == self.task_states["Grab_object"]:
 
+                # The task begings by the face and neck being reset to default, awaiting the start button to be pressed to start
+                self.robot.set_face(custom="charmie_face")
                 self.robot.set_neck(position=self.initial_neck_position, wait_for_end_of=True)
-                self.robot.wait_for_start_button() #CHANGED SETSPEECH
-                people_found = self.robot.search_for_person(tetas=self.search_person_tetas, time_in_each_frame=self.time_look_person) #CHANGED SETSPEECH
+                print( " AUTOMATICALLY GRAB OBJECT // MANUALLY OPEN GRIPPER NEXT START" )
+                self.robot.wait_for_start_button()
+
+                # If flag grab_object is true, the robot will pick up the object automatically, assuming we are launching the correct dataset. If false, the robot will wait for the user to give him the book after pressing start button twice
+                if self.grab_object:
+
+                    # Show what robot is detecting,to make it more intresting
+                    self.robot.set_face(camera="hand", show_detections=True)
+                    self.robot.pick_obj(selected_object=self.object_name,mode=self.object_mode,first_tetas=self.search_object_tetas)
+                    self.robot.set_face(custom="charmie_face")
+                    
+                else:
+
+                    self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                    # Will wait for start button to close gripper, assuming someone is holding the object betweenthe gripper's fingers
+                    print( "CLOSE GRIPPER NEXT START" )
+                    self.robot.wait_for_start_button()
+                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
 
                     
-                self.state = self.task_states["Greet_person"]
+                self.state = self.task_states["Welcome_start"]
 
-            elif self.state == self.task_states["Greet_person"]:
+            elif self.state == self.task_states["Welcome_start"]:
+
+                # After the robot has grabbed the object, the next start button press will start the task, greeting the person  
+                print("START ROUTINE NEXT START")
+                self.robot.wait_for_start_button()
+
+                # Hello.mp4 to grab the attention of people audibly, hopefully making them look at the robot
+                self.robot.set_speech(filename=self.hello_mp4, wait_for_end_of=True)
+
+                # Search for closest person
+                people_found = self.robot.search_for_person(tetas=self.search_person_tetas, time_in_each_frame=self.time_search_person, only_detect_person_right_in_front=True) #CHANGED SETSPEECH
                 
+                self.state = self.task_states["Locate_person"]
+
+
+            elif self.state == self.task_states["Locate_person"]:
+
+                # Show what robot is detecting,tomake it more intresting
+                self.robot.set_face(camera="head", show_detections=True)
+
+                # Reset variables
                 found = False
-                closest = 9999999
-                prev_closest = 9999998
+                closest = self.RESET_CLOSEST
+                prev_closest = self.RESET_CLOSEST - 1
+
+                # Calculate who is closest
                 for p in people_found:
-                    closest = p.position_relative.x + p.position_relative.y
+                    closest = abs ( p.position_relative.x ) + abs( p.position_relative.y )
                     print ("C ", closest, " X ", p.position_relative.x, " Y ", p.position_relative.y, " Z ", p.position_relative_head.z)
                     if closest < prev_closest:
                         saved_p = p
                         prev_closest = closest
                         found = True
+
+                # If it found a person who is closest, set neck to look at them, otherwise neck will keep looking foward
                 if found:
-                    self.robot.set_neck_coords(position=[saved_p.position_relative.x, saved_p.position_relative.y, saved_p.position_relative_head.z], wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/WelcomeJEF", wait_for_end_of=True) #NEED TO GENERATE; JEF_hello
-                self.robot.set_speech(filename="generic/GiftJEF", wait_for_end_of=False)
-                self.robot.set_neck(position=self.initial_neck_position, wait_for_end_of=False)
+                    self.robot.set_neck_coords(position=[saved_p.position_relative_head.x, saved_p.position_relative_head.y, saved_p.position_relative_head.z], wait_for_end_of=True)
 
-                self.state = self.task_states["Grab_book"]
-
-
-            elif self.state == self.task_states["Grab_book"]:
-                
-                #ROTATE 90 BASE def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, avoid_people=False, wait_for_end_of=True):
-                if self.GRAB_BOOK:
-                    #ADD BOOK TO OBJECTS JSON
-                    self.robot.pick_obj(selected_object="Book",mode="front",first_tetas=self.search_book_tetas) #NEED TO ADD BOOK
-                else:
-                    # self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                    self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
-                    self.robot.wait_for_start_button()
-                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
-                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                # Talk about what the person is about to be handed
+                self.robot.set_speech(filename=self.why_object_is_being_handed_mp4, wait_for_end_of=True)
 
                 self.state = self.task_states["Offer_book"]
 
             elif self.state == self.task_states["Offer_book"]:
                 
-                #ROTATE 90, MOVE NECK TO LAST PERSON LOCATED
-                if found:
-                    self.robot.set_neck_coords(position=[saved_p.position_relative.x, saved_p.position_relative.y, saved_p.position_relative.z], wait_for_end_of=True)
-                    self.robot.set_speech(filename="generic/ReleaseExplanationJEF", wait_for_end_of=True) #NEED TO GENERATE; BOOKself.robot.set_speech(filename="generic/hello", wait_for_end_of=True) #NEED TO GENERATE; BOOK RELESE AND EXPLANATION; book_release_countdown RELESE AND EXPLANATION; book_release_countdown
+                self.robot.set_arm(command=self.initial_to_handout_position, wait_for_end_of=False)
 
-                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/CountdownJEF", wait_for_end_of=True) #NEED TO GENERATE; BOOK RELESE AND EXPLANATION; book_release_countdown
-                time.sleep(self.release_timer)
+                # Explain there will be a countdown
+                self.robot.set_speech(filename=self.explain_countdown_mp4, wait_for_end_of=True) 
+
+                # The actual countdown
+                self.robot.set_speech(filename=self.countdown_mp4, wait_for_end_of=True) 
+
+                # Slight delay just so the robot does not drop right as it says 1, or whatever number the countdown counts to
+                time.sleep(self.sleep_after_countdown)
+
                 self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
-                time.sleep(self.gripper_release_timer)
+
+                # Slight delay so the arm does not start immediately retracting upon letting go
+                time.sleep(self.sleep_after_release)
 
                 self.state = self.task_states["Final_state"]
 
 
             elif self.state == self.task_states["Final_state"]:
-                # your code here ...
-                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+
+                # Return arm to initial position
+                self.robot.set_arm(command=self.handout_to_initial_position, wait_for_end_of=False)
                 self.robot.set_arm(command="close_gripper", wait_for_end_of=False)
-                self.robot.set_speech(filename="generic/BookExplanationJEF", wait_for_end_of=True) #NEED TO GENERATE, JEF_book_introduction
-                self.robot.set_speech(filename="generic/GoodbyeJEF", wait_for_end_of=True) #NEED TO GENERATE, JEF_book_introduction
+
+                # Offer a more indepth explanation about the object or instructions on what to do with it if necessary, better to divide an explanation into 2 to keep the entire experience fluid
+                self.robot.set_speech(filename=self.object_explanation_mp4, wait_for_end_of=True)
+
+                # Say goodbye to person 
+                self.robot.set_speech(filename=self.goodbye_mp4, wait_for_end_of=True)
+
                 # next state
-                self.state = self.task_states["Locate_person"]
+                self.state = self.task_states["Grab_object"]
 
                 #while True:
                 #    pass

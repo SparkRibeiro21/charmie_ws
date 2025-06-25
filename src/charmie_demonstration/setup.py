@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
         "JEF_demonstration = charmie_demonstration.JEF_demonstration:main",
+        "JEF_demonstration_eng = charmie_demonstration.JEF_demonstration_eng:main",
 		"navigation_demonstration = charmie_demonstration.navigation_demonstration:main",
 		"opening_doors_demonstration = charmie_demonstration.opening_doors_demonstration:main",
 		"pick_place_demonstration = charmie_demonstration.pick_place_demonstration:main",
