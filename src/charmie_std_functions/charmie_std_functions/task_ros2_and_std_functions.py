@@ -2905,6 +2905,15 @@ class RobotStdFunctions():
                 return obj['height'] # Return the height
         return None  # Return None if the object is not found
 
+    def get_look_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['look'] # Return the look
+        return None  # Return None if the object is not found
+
     def set_continuous_tracking_with_coordinates(self):
 
         request = TrackContinuous.Request()

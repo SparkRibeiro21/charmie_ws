@@ -10,5 +10,7 @@ def generate_launch_description():
         #std_lf.joint_state_publisher,
         std_lf.joint_state_publisher_gui,
         std_lf.static_transforms_launch,
-        std_lf.rviz2_basic_node
+        std_lf.rviz2_basic_node,
+        std_lf.xarm_ros2_control,
+        std_lf.xarm_controller_spawner
     ])
