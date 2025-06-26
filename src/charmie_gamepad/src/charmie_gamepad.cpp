@@ -30,7 +30,6 @@ namespace charmie_gamepad
 
 template<typename T> T get_param_from_yaml(const YAML::Node & config, const std::string & key, const T & default_value);
 
-
 struct CHARMIEGamepad::Impl
 {
   void joyCallback(const sensor_msgs::msg::Joy::SharedPtr joy);
@@ -76,15 +75,9 @@ struct CHARMIEGamepad::Impl
   }
 
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub;
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_stamped_pub;
   rclcpp::Clock::SharedPtr clock;
-
   rclcpp::TimerBase::SharedPtr safety_timer;
   rclcpp::Time last_joy_msg_time;
-
-  bool publish_stamped_twist;
-  std::string frame_id;
 
   // In Impl struct
   // The follwing variables are used to map joystick buttons and axes to their respective indices.
@@ -120,13 +113,6 @@ struct CHARMIEGamepad::Impl
   bool triggers_axis;
   bool triggers_reversed;
 
-  double scale_linear_x_slow;
-  double scale_linear_x_normal;
-  double scale_linear_x_turbo;
-  double scale_angular_yaw_slow;
-  double scale_angular_yaw_normal;
-  double scale_angular_yaw_turbo;
-
   // Button pressed readings
   bool a_button_state = false;
   bool b_button_state = false;
@@ -154,7 +140,7 @@ struct CHARMIEGamepad::Impl
   float left_trigger_axis_state = 0.0;
   float right_trigger_axis_state = 0.0;
 
-  bool sent_disable_msg;
+  bool timeout = false;  // true if the controller is not responding
 };
 
 
@@ -165,15 +151,6 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
 
   pimpl_->clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
 
-  pimpl_->publish_stamped_twist = this->declare_parameter("publish_stamped_twist", false);
-  pimpl_->frame_id = this->declare_parameter("frame", "charmie_gamepad");
-
-  if (pimpl_->publish_stamped_twist) {
-    pimpl_->cmd_vel_stamped_pub = this->create_publisher<geometry_msgs::msg::TwistStamped>(
-      "cmd_vel", 10);
-  } else {
-    pimpl_->cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
-  }
   pimpl_->joy_sub = this->create_subscription<sensor_msgs::msg::Joy>(
     "joy", rclcpp::QoS(10),
     std::bind(&CHARMIEGamepad::Impl::joyCallback, this->pimpl_, std::placeholders::_1));
@@ -190,20 +167,14 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
     [this]() {
       rclcpp::Time now = pimpl_->clock->now();
       if ((now - pimpl_->last_joy_msg_time).seconds() > 0.5) {
-        // Safety timeout reached, send zero velocity
-        if (!pimpl_->sent_disable_msg) {
-          if (pimpl_->publish_stamped_twist) {
-            auto msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
-            msg->header.stamp = now;
-            msg->header.frame_id = pimpl_->frame_id;
-            pimpl_->cmd_vel_stamped_pub->publish(std::move(msg));
-          } else {
-            auto msg = std::make_unique<geometry_msgs::msg::Twist>();
-            pimpl_->cmd_vel_pub->publish(std::move(msg));
-          }
-          pimpl_->sent_disable_msg = true;
-          RCLCPP_WARN(this->get_logger(), "No joystick msg for 0.5s, sent zero cmd_vel");
-        }
+        pimpl_->timeout = true;
+        RCLCPP_WARN(this->get_logger(), "No joystick msg for 0.5s, TIMEOUT!");
+
+        // TODO: Publish a GamepadController message with timeout=true and all other values set to 0 or false
+
+      }
+      else {
+        pimpl_->timeout = false;
       }
     });
  
@@ -241,17 +212,6 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
   pimpl_->dpad_axis =                 get_param_from_yaml(config, "dpad_axis", true);
   pimpl_->triggers_axis =             get_param_from_yaml(config, "triggers_axis", true);
   pimpl_->triggers_reversed =         get_param_from_yaml(config, "triggers_reversed", false);
-
-  // Declare speed scaling parameters
-  pimpl_->scale_linear_x_slow =       get_param_from_yaml(config, "scale_linear_x_slow",      1.0);
-  pimpl_->scale_linear_x_normal =     get_param_from_yaml(config, "scale_linear_x_normal",    2.0);
-  pimpl_->scale_linear_x_turbo =      get_param_from_yaml(config, "scale_linear_x_turbo",     3.0);
-
-  pimpl_->scale_angular_yaw_slow =    get_param_from_yaml(config, "scale_angular_yaw_slow",   3.0);
-  pimpl_->scale_angular_yaw_normal =  get_param_from_yaml(config, "scale_angular_yaw_normal", 3.0);
-  pimpl_->scale_angular_yaw_turbo =   get_param_from_yaml(config, "scale_angular_yaw_turbo",  3.0);
-
-  pimpl_->sent_disable_msg = false;
 }
 
 CHARMIEGamepad::~CHARMIEGamepad()
@@ -279,7 +239,7 @@ std::string CHARMIEGamepad::Impl::get_yaml_path_for_controller(const std::string
   }
 }
 
-void CHARMIEGamepad::Impl::sendCmdVelMsg(const std::string & which_map)
+/* void CHARMIEGamepad::Impl::sendCmdVelMsg(const std::string & which_map)
 {
   if (publish_stamped_twist) {
     auto cmd_vel_stamped_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
@@ -294,32 +254,7 @@ void CHARMIEGamepad::Impl::sendCmdVelMsg(const std::string & which_map)
   }
 
   sent_disable_msg = false;
-}
-
-void CHARMIEGamepad::Impl::fillCmdVelMsg(const std::string & which_map, geometry_msgs::msg::Twist * cmd_vel_msg)
-{
-  double linear_scale = 0.0;
-  double angular_scale = 0.0;
-
-  if (which_map == "slow") {
-    linear_scale  = scale_linear_x_slow;
-    angular_scale = scale_angular_yaw_slow;
-  } else if (which_map == "normal") {
-    linear_scale  = scale_linear_x_normal;
-    angular_scale = scale_angular_yaw_normal;
-  } else if (which_map == "turbo") {
-    linear_scale  = scale_linear_x_turbo;
-    angular_scale = scale_angular_yaw_turbo;
-  }
-
-  cmd_vel_msg->linear.x  = linear_scale  * left_thumbstick_y_axis_state;
-  cmd_vel_msg->linear.y  = 0.0;
-  cmd_vel_msg->linear.z  = 0.0;
-  cmd_vel_msg->angular.z = angular_scale * right_thumbstick_x_axis_state;
-  cmd_vel_msg->angular.x = 0.0;
-  cmd_vel_msg->angular.y = 0.0;
-
-}
+} */
 
 /* 
 
@@ -517,17 +452,7 @@ void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr jo
               R3dist
   );
 
-  if (left_bumper_button_state && right_bumper_button_state) {
-    sendCmdVelMsg("turbo");
-  } else if (left_bumper_button_state) {
-    sendCmdVelMsg("normal");
-  } else {
-    sendCmdVelMsg("slow");
-  }
-
   charmie_interfaces::msg::GamepadController controller_msg;
-  //controller_msg.axes.resize(10);
-  //controller_msg.buttons.resize(18);
 
   controller_msg.axes[0] = left_thumbstick_x_axis_state;
   controller_msg.axes[1] = left_thumbstick_y_axis_state;
