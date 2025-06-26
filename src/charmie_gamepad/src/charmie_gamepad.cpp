@@ -4,6 +4,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <cmath>
 
 #include "rcutils/logging_macros.h"
 
@@ -162,8 +163,7 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
 {
   pimpl_ = new Impl;
 
-  impl_->clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
-
+  pimpl_->clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
 
   pimpl_->publish_stamped_twist = this->declare_parameter("publish_stamped_twist", false);
   pimpl_->frame_id = this->declare_parameter("frame", "charmie_gamepad");
@@ -430,12 +430,34 @@ void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr jo
   }
 
   // Axis Thumbsticks
-  left_thumbstick_x_axis_state = get_axis_position(joy_msg, left_thumbstick_x_axis);
+  left_thumbstick_x_axis_state = -get_axis_position(joy_msg, left_thumbstick_x_axis);
   left_thumbstick_y_axis_state = get_axis_position(joy_msg, left_thumbstick_y_axis);
-  right_thumbstick_x_axis_state = get_axis_position(joy_msg, right_thumbstick_x_axis);
+  right_thumbstick_x_axis_state = -get_axis_position(joy_msg, right_thumbstick_x_axis);
   right_thumbstick_y_axis_state = get_axis_position(joy_msg, right_thumbstick_y_axis);
 
-
+  // Angles and Distances from Thumbsticks
+  float L3ang = std::atan2(-left_thumbstick_x_axis_state, left_thumbstick_y_axis_state) / M_PI * 180.0f;
+  float L3dist = std::sqrt(
+    left_thumbstick_x_axis_state * left_thumbstick_x_axis_state +
+    left_thumbstick_y_axis_state * left_thumbstick_y_axis_state
+  );
+  float R3ang = std::atan2(-right_thumbstick_x_axis_state, right_thumbstick_y_axis_state) / M_PI * 180.0f;
+  float R3dist = std::sqrt(
+    right_thumbstick_x_axis_state * right_thumbstick_x_axis_state +
+    right_thumbstick_y_axis_state * right_thumbstick_y_axis_state
+  );
+  
+  L3dist*= 1.1f; // Scale the distance so that in the extremes is always 1.0
+  L3dist = std::clamp(L3dist, 0.0f, 1.0f); // Ensure distance is between 0 and 1
+  if (L3ang < 0.0) {
+    L3ang += 360.0f;
+  }
+  
+  R3dist*= 1.1f; // Scale the distance so that in the extremes is always 1.0
+  R3dist = std::clamp(R3dist, 0.0f, 1.0f); // Ensure distance is between 0 and 1
+  if (R3ang < 0.0) {
+    R3ang += 360.0f;
+  }
 
 
   RCLCPP_INFO(rclcpp::get_logger("CHARMIEGamepad"),
@@ -484,6 +506,15 @@ void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr jo
               left_thumbstick_y_axis_state,
               right_thumbstick_x_axis_state,
               right_thumbstick_y_axis_state
+  );
+
+
+  RCLCPP_INFO(rclcpp::get_logger("CHARMIEGamepad"),
+              "LTBAng=%.2f, LTBDist=%.2f, RTBAng=%.2f, RTBDist=%.2f",
+              L3ang,
+              L3dist,
+              R3ang,
+              R3dist
   );
 
   if (left_bumper_button_state && right_bumper_button_state) {
