@@ -27,6 +27,7 @@ from pathlib import Path
 from datetime import datetime
 import random
 import json
+from skimage.metrics import structural_similarity as ssim
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -3170,10 +3171,9 @@ class RobotStdFunctions():
     def pick_obj(self, selected_object="", mode="", first_tetas=[]):
 
         # Implement the logic for picking an object here
-        self.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
-        time.sleep(2.0)
-
         objects_found = self.search_for_objects(tetas = first_tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+        self.set_face(camera="hand", show_detections=True)
+        # self.set_neck(position=[45.0, 0.0], wait_for_end_of=True) #Head turned 45 deg
         print("LIST OF DETECTED OBJECTS:")
 
         for o in objects_found:
@@ -3217,7 +3217,7 @@ class RobotStdFunctions():
                         self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=True)
 
                 #BEGIN PICK TOP IF SELECTED
-                elif self.mode == "pick_top":
+                elif mode == "pick_top":
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
                     return self.hand_search(selected_object, mode)
 
@@ -3248,8 +3248,10 @@ class RobotStdFunctions():
             tf_z = -0.075
 
             print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} {o.orientation} ({hand_x_},{hand_y_},{hand_z_})")
-
-            correct_x = ((o.position_cam.x + ow - tf_x)*1000) - 150
+            if mode == "pick_front":
+                correct_x = ((o.position_cam.x + ow - tf_x)*1000) - 150
+            elif mode == "pick_top":
+                correct_x = ((o.position_cam.x + ow/3 - tf_x)*1000) - 150
             correct_y = (o.position_cam.y - tf_y)*1000
             correct_z = (o.position_cam.z - tf_z)*1000
 
@@ -3266,7 +3268,7 @@ class RobotStdFunctions():
             security_position_top = [0.00, 0.0, -150.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
             object_reajust = [0.0, 0.0, 0.0, 0.0, 0.0, -correct_rotation]
             
-            search_table_top_joints =  [-160.1, 57.5, -123.8, -87.3, 109.1, 69.5]
+            search_table_top_joints =  [-152.2, 59.4, -129.4, -85.2, 116.7, 66.7]
             search_table_front_joints =  [-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
             
             #IF OBJECT FOUND
@@ -3277,7 +3279,8 @@ class RobotStdFunctions():
 
                 #MOVE ARM IN THAT DIRECTION
                 self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
-
+                self.wait_until_stable() # Temporary measure, while wait_for_end_of is not working for adjust_move finish
+                
                 #CALIBRATE GRIPPER BEFORE GRABBING
                 final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
                 for obj in final_objects:
@@ -3287,7 +3290,10 @@ class RobotStdFunctions():
                     correct_y_grab = (obj.position_cam.y - tf_y)*1000
                     correct_z_grab = (obj.position_cam.z - tf_z)*1000
                     print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab})")
-                    object_position_grab = [correct_z_grab, -correct_y_grab, 0.0, 0.0, 0.0, 0.0]
+                    if mode == "pick_front":
+                        object_position_grab = [correct_z_grab, -correct_y_grab, 0.0, 0.0, 0.0, 0.0]
+                    if mode == "pick_top":
+                        object_position_grab = [0.0, -correct_y_grab, 0.0, 0.0, 0.0, 0.0]
 
                 #APPLY ADJUSTEMENT BEFORE GRABBING
                 self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
@@ -3304,17 +3310,60 @@ class RobotStdFunctions():
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
                     #MOVE TO SEARCH TABLE
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_front_joints, wait_for_end_of=True)
+                    #MOVE ARM TO INITIAL POSITION
+                    self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
 
                 elif mode == "pick_top":
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_top, wait_for_end_of=True)
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
-
-                #MOVE ARM TO INITIAL POSITION
-                self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                    #MOVE ARM TO INITIAL POSITION
+                    self.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=True)
+                
                 print(f"Bring object to initial pose")
+                self.set_face(camera="head", show_detections=True)
 
             #IF AN OBJECT WAS NOT FOUND
             else:
                 self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Could not bring object to initial pose")
+
+
+    def is_stable(self, threshold = 0.85):
+
+        #CONVERT IMG TO GRAYSCALE TO REDUCE LIGHT EFFECT
+        prev_gray = cv2.cvtColor(self.prev_frame, cv2.COLOR_BGR2GRAY)
+        curr_gray = cv2.cvtColor(self.curr_frame, cv2.COLOR_BGR2GRAY)
+
+        #CALCULATE DIFFERENCE SCORE FROM LAST TO CURRENT FRAME
+        score, _ = ssim(prev_gray, curr_gray, full=True)
+        print("Score", score)
+
+        #RETURN BOOLEAN ON IF SCORE IS ABOVE THRESHOLD
+        return score >= threshold
+
+    def wait_until_stable(self, timeout = 10, stable_duration = 0.3, check_interval= 0.1):
+
+        #INITIATE VARIABLES REPRESENTING TIMER
+        image_time_out = 0.0
+        stable_image = 0.0
+
+        #STAY IN WHILE LOOP UNTIL CALIBRATION
+        while (stable_image <= stable_duration) and (image_time_out < timeout):
+
+            #GET FIRST FRAME
+            _, self.prev_frame = self.get_hand_rgb_image()
+            print("Waiting for camera to stabilize...", image_time_out, stable_image)
+
+            #WAIT INTERVAL
+            time.sleep(check_interval)
+
+            #GET SECOND FRAME TO COMPARE
+            _, self.curr_frame = self.get_hand_rgb_image()
+
+            #IF IMAGES ARE CLOSE BASED ON THRESHOLD ADD TO STABLE TIMER, IF NOT RESET STABLE TIMER 
+            if (self.is_stable()) and (image_time_out >= 0.5) :
+                stable_image += 0.1
+            else:
+                stable_image = 0.0
+            image_time_out += 0.1
