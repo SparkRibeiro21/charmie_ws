@@ -12,6 +12,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <sensor_msgs/msg/joy.hpp>
+#include "charmie_interfaces/msg/gamepad_controller.hpp"
 
 #include "charmie_gamepad/charmie_gamepad.hpp"
 #include "charmie_gamepad/sdl_utils.hpp"
@@ -161,7 +162,8 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
 {
   pimpl_ = new Impl;
 
-  pimpl_->clock = this->get_clock();
+  impl_->clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
+
 
   pimpl_->publish_stamped_twist = this->declare_parameter("publish_stamped_twist", false);
   pimpl_->frame_id = this->declare_parameter("frame", "charmie_gamepad");
@@ -204,7 +206,7 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
         }
       }
     });
-
+ 
   // Declare button parameters
   pimpl_->a_button =                  get_param_from_yaml(config, "a_button", 0);
   pimpl_->b_button =                  get_param_from_yaml(config, "b_button", 1);
@@ -491,6 +493,16 @@ void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr jo
   } else {
     sendCmdVelMsg("slow");
   }
+
+  charmie_interfaces::msg::GamepadController controller_msg;
+  //controller_msg.axes.resize(10);
+  //controller_msg.buttons.resize(18);
+
+  controller_msg.axes[0] = left_thumbstick_x_axis_state;
+  controller_msg.axes[1] = left_thumbstick_y_axis_state;
+  
+  controller_msg.buttons[0] = a_button_state;
+  controller_msg.buttons[1] = b_button_state;
 
 }
 

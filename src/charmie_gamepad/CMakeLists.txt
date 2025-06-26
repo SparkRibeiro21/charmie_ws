@@ -16,6 +16,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(charmie_interfaces REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(ament_index_cpp REQUIRED)
@@ -36,6 +37,7 @@ ament_target_dependencies(charmie_gamepad_node
   rclcpp_components
   sensor_msgs
   geometry_msgs
+  charmie_interfaces
   ament_index_cpp
 )
 
