@@ -29,7 +29,7 @@ ros2_modules = {
     "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
-    "charmie_yolo_objects":     False,
+    "charmie_yolo_objects":     True,
     "charmie_yolo_pose":        True,
 }
 
@@ -69,12 +69,13 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
         # All neck positions
-        self.initial_neck_position = [0, 0]
-        self.search_person_tetas = [[0, 0]]
+        self.initial_neck_position = [20, 0]
+        self.search_person_tetas = [[20, 0]]
         self.search_object_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]]
+        self.only_detect_person_front = False
 
         # Define what object to grab and how
-        self.object_name = "Book"
+        self.object_name = "Pringles"
         self.object_mode = "pick_top"
 
         # What positions does the robot use to handout the object
@@ -95,7 +96,7 @@ class TaskMain():
         # All task timers
         self.sleep_after_countdown = 0.3
         self.sleep_after_release = 2
-        self.time_search_person = 0.2
+        self.time_search_person = 4
 
         self.RESET_CLOSEST = 999999 #Ridiculous number to reset to a safe number
 
@@ -156,10 +157,7 @@ class TaskMain():
 
                 # Hello.mp4 to grab the attention of people audibly, hopefully making them look at the robot
                 self.robot.set_speech(filename=self.hello_mp4, wait_for_end_of=True)
-
-                # Search for closest person
-                people_found = self.robot.search_for_person(tetas=self.search_person_tetas, time_in_each_frame=self.time_search_person, only_detect_person_right_in_front=True) #CHANGED SETSPEECH
-                
+    
                 self.state = self.task_states["Locate_person"]
 
 
@@ -168,6 +166,9 @@ class TaskMain():
                 # Show what robot is detecting,tomake it more intresting
                 self.robot.set_face(camera="head", show_detections=True)
 
+                # Search for closest person
+                people_found = self.robot.search_for_person(tetas=self.search_person_tetas, time_in_each_frame=self.time_search_person, only_detect_person_right_in_front=self.only_detect_person_front)
+
                 # Reset variables
                 found = False
                 closest = self.RESET_CLOSEST
@@ -175,8 +176,7 @@ class TaskMain():
 
                 # Calculate who is closest
                 for p in people_found:
-                    closest = abs ( p.position_relative.x ) + abs( p.position_relative.y )
-                    print ("C ", closest, " X ", p.position_relative.x, " Y ", p.position_relative.y, " Z ", p.position_relative_head.z)
+                    closest = abs( p.position_relative_head.x ) * abs( p.position_relative_head.x )  + abs( p.position_relative_head.y ) * abs( p.position_relative_head.y )
                     if closest < prev_closest:
                         saved_p = p
                         prev_closest = closest
@@ -185,6 +185,8 @@ class TaskMain():
                 # If it found a person who is closest, set neck to look at them, otherwise neck will keep looking foward
                 if found:
                     self.robot.set_neck_coords(position=[saved_p.position_relative_head.x, saved_p.position_relative_head.y, saved_p.position_relative_head.z], wait_for_end_of=True)
+                else:
+                    self.robot.set_neck(position=self.initial_neck_position, wait_for_end_of=True)
 
                 # Talk about what the person is about to be handed
                 self.robot.set_speech(filename=self.why_object_is_being_handed_mp4, wait_for_end_of=True)

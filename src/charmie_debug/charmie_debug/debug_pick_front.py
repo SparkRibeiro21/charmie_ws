@@ -65,11 +65,11 @@ class TaskMain():
 
         #DEFINE PICK MODE AND OBJECT
         self.mode = "pick_front"
-        self.SELECTED_OBJECT = "Milk"
+        self.SELECTED_OBJECT = "Pringles"
         
         #DEFINE NECK ANGLES AND TIMER
-        #self.tetas = [[0, 20], [0, 0], [0, -35]] #-> SEARCH CABINET ANGLES
-        self.tetas = [[-30, -45], [0, -45], [30, -45]] #-> SEARCH TABLE ANGLES
+        self.tetas = [[0, 20], [0, 0], [0, -35]] #-> SEARCH CABINET ANGLES
+        #self.tetas = [[-30, -45], [0, -45], [30, -45]] #-> SEARCH TABLE ANGLES
 
         #CAMERA CALIBRATION VARIABLES
         self.threshold = 0.85
@@ -316,7 +316,7 @@ class TaskMain():
             _, self.curr_frame = self.robot.get_hand_rgb_image()
 
             #IF IMAGES ARE CLOSE BASED ON THRESHOLD ADD TO STABLE TIMER, IF NOT RESET STABLE TIMER 
-            if self.is_stable():
+            if (self.is_stable()) and (image_time_out >= 0.5) :
                 stable_image += 0.1
             else:
                 stable_image = 0.0
