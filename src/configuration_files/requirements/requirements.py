@@ -144,7 +144,6 @@ def install_ros2():
 
 def install_requirements():
     subprocess.run(['pip', 'install', 'pyserial'])
-    subprocess.run(['pip', 'install', 'pyPS4Controller'])
     subprocess.run(['pip', 'install', 'dynamixel-sdk'])
     subprocess.run(['pip', 'install', 'keras'])
     subprocess.run(['pip', 'install', 'SpeechRecognition'])
