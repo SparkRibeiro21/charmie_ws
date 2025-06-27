@@ -25,15 +25,15 @@ bool timeout     # true if the controller is not responding
 # [3]             Y                 Triangle
 # [4]             LB                L1
 # [5]             RB                R1
-# [6]             View              Share
-# [7]             Menu              Options
-# [8]             Logo              PS Button
-# [9]             Share             -
-# [10]            LTB               L3
-# [11]            RTB               R3
-# [12]            DPad Up           Arrow Up
-# [13]            DPad Down         Arrow Down
-# [14]            DPad Left         Arrow Left
-# [15]            DPad Right        Arrow Right
-# [16]            LT                L2
-# [17]            RT                R2
+# [6]             LT                L2
+# [7]             RT                R2
+# [8]             LTB               L3
+# [9]             RTB               R3
+# [10]            DPad Up           Arrow Up
+# [11]            DPad Down         Arrow Down
+# [12]            DPad Left         Arrow Left
+# [13]            DPad Right        Arrow Right
+# [14]            View              Share
+# [15]            Menu              Options
+# [16]            Logo              PS Button
+# [17]            Share             -

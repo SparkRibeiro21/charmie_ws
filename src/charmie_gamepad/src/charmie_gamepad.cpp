@@ -247,59 +247,6 @@ std::string CHARMIEGamepad::Impl::get_yaml_path_for_controller(const std::string
   }
 }
 
-/* void CHARMIEGamepad::Impl::sendCmdVelMsg(const std::string & which_map)
-{
-  if (publish_stamped_twist) {
-    auto cmd_vel_stamped_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
-    cmd_vel_stamped_msg->header.stamp = clock->now();
-    cmd_vel_stamped_msg->header.frame_id = frame_id;
-    fillCmdVelMsg(which_map, &cmd_vel_stamped_msg->twist);
-    cmd_vel_stamped_pub->publish(std::move(cmd_vel_stamped_msg));
-  } else {
-    auto cmd_vel_msg = std::make_unique<geometry_msgs::msg::Twist>();
-    fillCmdVelMsg(which_map, cmd_vel_msg.get());
-    cmd_vel_pub->publish(std::move(cmd_vel_msg));
-  }
-
-  sent_disable_msg = false;
-} */
-
-/* 
-
-void CHARMIEGamepad::Impl::sendCmdVelMsg(
-  const sensor_msgs::msg::Joy::SharedPtr joy_msg,
-  const std::string & which_map)
-{
-  if (publish_stamped_twist) {
-    auto cmd_vel_stamped_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
-    cmd_vel_stamped_msg->header.stamp = clock->now();
-    cmd_vel_stamped_msg->header.frame_id = frame_id;
-    fillCmdVelMsg(joy_msg, which_map, &cmd_vel_stamped_msg->twist);
-    cmd_vel_stamped_pub->publish(std::move(cmd_vel_stamped_msg));
-  } else {
-    auto cmd_vel_msg = std::make_unique<geometry_msgs::msg::Twist>();
-    fillCmdVelMsg(joy_msg, which_map, cmd_vel_msg.get());
-    cmd_vel_pub->publish(std::move(cmd_vel_msg));
-  }
-  sent_disable_msg = false;
-}
-
-void CHARMIEGamepad::Impl::fillCmdVelMsg(
-  const sensor_msgs::msg::Joy::SharedPtr joy_msg,
-  const std::string & which_map,
-  geometry_msgs::msg::Twist * cmd_vel_msg)
-{
-  double lin_x = getVal(joy_msg, axis_linear_map, scale_linear_map[which_map], "x");
-  double ang_z = getVal(joy_msg, axis_angular_map, scale_angular_map[which_map], "yaw");
-
-  cmd_vel_msg->linear.x = lin_x;
-  cmd_vel_msg->linear.y = getVal(joy_msg, axis_linear_map, scale_linear_map[which_map], "y");
-  cmd_vel_msg->linear.z = getVal(joy_msg, axis_linear_map, scale_linear_map[which_map], "z");
-  cmd_vel_msg->angular.z = (lin_x < 0.0 && inverted_reverse) ? -ang_z : ang_z;
-  cmd_vel_msg->angular.y = getVal(joy_msg, axis_angular_map, scale_angular_map[which_map], "pitch");
-  cmd_vel_msg->angular.x = getVal(joy_msg, axis_angular_map, scale_angular_map[which_map], "roll");
-} */
-
 void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr joy_msg)
 {
   
@@ -379,30 +326,30 @@ void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr jo
   right_thumbstick_y_axis_state = get_axis_position(joy_msg, right_thumbstick_y_axis);
 
   // Angles and Distances from Thumbsticks
-  float L3ang = std::atan2(-left_thumbstick_x_axis_state, left_thumbstick_y_axis_state) / M_PI * 180.0f;
-  float L3dist = std::sqrt(
+  float left_thumbstick_angle = std::atan2(-left_thumbstick_x_axis_state, left_thumbstick_y_axis_state) / M_PI * 180.0f;
+  float left_thumbstick_distance = std::sqrt(
     left_thumbstick_x_axis_state * left_thumbstick_x_axis_state +
     left_thumbstick_y_axis_state * left_thumbstick_y_axis_state
   );
-  float R3ang = std::atan2(-right_thumbstick_x_axis_state, right_thumbstick_y_axis_state) / M_PI * 180.0f;
-  float R3dist = std::sqrt(
+  float right_thumbstick_angle = std::atan2(-right_thumbstick_x_axis_state, right_thumbstick_y_axis_state) / M_PI * 180.0f;
+  float right_thumbstick_distance = std::sqrt(
     right_thumbstick_x_axis_state * right_thumbstick_x_axis_state +
     right_thumbstick_y_axis_state * right_thumbstick_y_axis_state
   );
   
-  L3dist*= 1.1f; // Scale the distance so that in the extremes is always 1.0
-  L3dist = std::clamp(L3dist, 0.0f, 1.0f); // Ensure distance is between 0 and 1
-  if (L3ang < 0.0) {
-    L3ang += 360.0f;
+  left_thumbstick_distance*= 1.1f; // Scale the distance so that in the extremes is always 1.0
+  left_thumbstick_distance = std::clamp(left_thumbstick_distance, 0.0f, 1.0f); // Ensure distance is between 0 and 1
+  if (left_thumbstick_angle < 0.0) {
+    left_thumbstick_angle += 360.0f;
   }
   
-  R3dist*= 1.1f; // Scale the distance so that in the extremes is always 1.0
-  R3dist = std::clamp(R3dist, 0.0f, 1.0f); // Ensure distance is between 0 and 1
-  if (R3ang < 0.0) {
-    R3ang += 360.0f;
+  right_thumbstick_distance*= 1.1f; // Scale the distance so that in the extremes is always 1.0
+  right_thumbstick_distance = std::clamp(right_thumbstick_distance, 0.0f, 1.0f); // Ensure distance is between 0 and 1
+  if (right_thumbstick_angle < 0.0) {
+    right_thumbstick_angle += 360.0f;
   }
 
-
+  /* 
   RCLCPP_INFO(rclcpp::get_logger("CHARMIEGamepad"),
               "A=%s, B=%s, X=%s, Y=%s",
               a_button_state ? "1" : "0",
@@ -454,22 +401,23 @@ void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr jo
 
   RCLCPP_INFO(rclcpp::get_logger("CHARMIEGamepad"),
               "LTBAng=%.2f, LTBDist=%.2f, RTBAng=%.2f, RTBDist=%.2f",
-              L3ang,
-              L3dist,
-              R3ang,
-              R3dist
-  );
+              left_thumbstick_angle,
+              left_thumbstick_distance,
+              right_thumbstick_angle,
+              right_thumbstick_distance
+  ); 
+  */
 
   charmie_interfaces::msg::GamepadController controller_msg;
 
   controller_msg.axes[0] = left_thumbstick_x_axis_state;
   controller_msg.axes[1] = left_thumbstick_y_axis_state;
-  controller_msg.axes[2] = L3ang;
-  controller_msg.axes[3] = L3dist;
+  controller_msg.axes[2] = left_thumbstick_angle;
+  controller_msg.axes[3] = left_thumbstick_distance;
   controller_msg.axes[4] = right_thumbstick_x_axis_state;
   controller_msg.axes[5] = right_thumbstick_y_axis_state;
-  controller_msg.axes[6] = R3ang;
-  controller_msg.axes[7] = R3dist;
+  controller_msg.axes[6] = right_thumbstick_angle;
+  controller_msg.axes[7] = right_thumbstick_distance;
   controller_msg.axes[8] = left_trigger_axis_state;
   controller_msg.axes[9] = right_trigger_axis_state;
   
@@ -479,18 +427,18 @@ void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr jo
   controller_msg.buttons[3] = y_button_state;
   controller_msg.buttons[4] = left_bumper_button_state;
   controller_msg.buttons[5] = right_bumper_button_state;
-  controller_msg.buttons[6] = view_button_state;
-  controller_msg.buttons[7] = menu_button_state;
-  controller_msg.buttons[8] = logo_button_state;
-  controller_msg.buttons[9] = share_button_state;
-  controller_msg.buttons[10] = left_thumbstick_button_state;
-  controller_msg.buttons[11] = right_thumbstick_button_state;
-  controller_msg.buttons[12] = dpad_up_button_state;
-  controller_msg.buttons[13] = dpad_down_button_state;
-  controller_msg.buttons[14] = dpad_left_button_state;
-  controller_msg.buttons[15] = dpad_right_button_state;
-  controller_msg.buttons[16] = left_trigger_button_state;
-  controller_msg.buttons[17] = right_trigger_button_state;
+  controller_msg.buttons[6] = left_trigger_button_state;
+  controller_msg.buttons[7] = right_trigger_button_state;
+  controller_msg.buttons[8] = left_thumbstick_button_state;
+  controller_msg.buttons[9] = right_thumbstick_button_state;
+  controller_msg.buttons[10] = dpad_up_button_state;
+  controller_msg.buttons[11] = dpad_down_button_state;
+  controller_msg.buttons[12] = dpad_left_button_state;
+  controller_msg.buttons[13] = dpad_right_button_state;
+  controller_msg.buttons[14] = view_button_state;
+  controller_msg.buttons[15] = menu_button_state;
+  controller_msg.buttons[16] = logo_button_state;
+  controller_msg.buttons[17] = share_button_state;
 
   controller_msg.timeout = timeout;
 
