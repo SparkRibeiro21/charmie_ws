@@ -947,7 +947,7 @@ class LowLevelNode(Node):
             print("Omni move:", "Ang:", int(omni_move_angular_speed), "Lin:", int(omni_move_linear_speed), "Dir:", int(omni_move_direction))
             self.time_cmd_vel = time.time()
 
-    def torso_move_callback(self, data: Pose2D): # used by ps4 controller
+    def torso_move_callback(self, data: Pose2D): # used by gamepad controller
 
         # print("receiving torso position ")
         estado_legs = int(data.x)

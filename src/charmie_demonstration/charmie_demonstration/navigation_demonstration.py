@@ -24,7 +24,7 @@ ros2_modules = {
     "charmie_lidar_bottom":     False,
     "charmie_llm":              False,
     "charmie_localisation":     False,
-    "charmie_low_level":        True,
+    "charmie_low_level":        False, # True
     "charmie_navigation":       False,
     "charmie_nav2":             False,
     "charmie_neck":             False,
@@ -64,14 +64,6 @@ class TaskMain():
         self.Introduction_demonstration = 5
         self.LLM_demonstration = 8
         self.Final_State = 10
-        
-        self.OFF = 0     # LOW  -> LOW
-        self.FALLING = 1 # HIGH -> LOW
-        self.RISING = 2  # LOW  -> HIGH
-        self.ON = 3      # HIGH -> HIGH
-
-        self.ON_AND_RISING = 2   # used with <= 
-        self.OFF_AND_FALLING = 1 # used with >=
 
         # self.previous_message = False
         self.PREVIOUS_WATCHDOG_SAFETY_FLAG = True # just for RGB debug
@@ -98,9 +90,10 @@ class TaskMain():
                     self.robot.set_rgb(CLEAR)
                     self.motors_active = False
                     self.robot.activate_motors(activate=self.motors_active)
-
+                
+                """ 
                 if ros2_modules["charmie_low_level"]:
-                    self.robot.node.torso_movement_publisher.publish(self.torso_pos)
+                    self.robot.node.torso_movement_publisher.publish(self.torso_pos) """
 
                 time.sleep(0.5)
 
@@ -111,7 +104,7 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                     # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                # to initially set WATCHDOG TIMER FLAGS and RGB 
+                """ # to initially set WATCHDOG TIMER FLAGS and RGB 
                 ps4_controller, new_message = self.robot.get_controller_state()
                 self.controller_watchdog_timer(new_message)
 
@@ -123,7 +116,7 @@ class TaskMain():
                     elif self.WATCHDOG_SAFETY_FLAG:
                         self.robot.set_rgb(RED+HALF_ROTATE)
                         self.motors_active = False
-                        self.robot.activate_motors(activate=self.motors_active)
+                        self.robot.activate_motors(activate=self.motors_active) """
 
                 self.state = self.Demo_actuators_with_tasks
 
@@ -209,11 +202,11 @@ class TaskMain():
                         if self.motors_active:
                             self.robot.node.omni_move_publisher.publish(self.omni_move)
 
+                    """
                     if ros2_modules["charmie_low_level"]: # Torso
                         
                         pass
                         ### HAVE TO REVIEW BECAUSE THIS IS SENDING DATA EVERY LOOP!!!!
-                        """
                         if self.motors_active:
 
                             # Torso Movement
@@ -233,19 +226,20 @@ class TaskMain():
 
                             self.robot.node.torso_movement_publisher.publish(self.torso_pos)
                         """
-
+                    """ 
                     if ros2_modules["charmie_speakers"]: # Speak Introduction
                         if ps4_controller.r3 == self.RISING:
                             self.state = self.Introduction_demonstration
 
                     if ros2_modules["charmie_llm"] and ros2_modules["charmie_speakers"]: # LLM demo
                         if ps4_controller.l3 == self.RISING:
-                            self.state = self.LLM_demonstration
+                            self.state = self.LLM_demonstration 
+                    """
     
 
                 time.sleep(self.iteration_time)
 
-
+                """ 
             elif self.state == self.Introduction_demonstration:
                 
                 temp_active_motors = self.motors_active
@@ -289,7 +283,8 @@ class TaskMain():
                     elif self.WATCHDOG_SAFETY_FLAG:
                         self.robot.set_rgb(RED+HALF_ROTATE)
 
-                self.state = self.Demo_actuators_with_tasks
+                self.state = self.Demo_actuators_with_tasks 
+                """
 
 
                 """
@@ -314,7 +309,7 @@ class TaskMain():
                         self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators_with_tasks
-                """
+            """
             
             else:
                 pass
