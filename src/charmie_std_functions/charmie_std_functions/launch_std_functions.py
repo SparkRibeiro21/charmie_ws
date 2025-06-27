@@ -373,6 +373,13 @@ class LaunchStdFunctions():
                     emulate_tty=True
                     )
         
+        ### JOY & GAMEPAD CONTROLLER
+        # Compute config file path using LaunchConfiguration and TextSubstitution
+        self.config_filepath = LaunchConfiguration('config_filepath', default=[
+            TextSubstitution(text=os.path.join(
+                get_package_share_directory('charmie_gamepad'), 'config', 'ps4')),
+            TextSubstitution(text='.config.yaml')
+        ])
         # joy_node
         self.joy = Node(
             package='joy',
@@ -464,11 +471,3 @@ class LaunchStdFunctions():
         name='rosbag_record_node',
         output='screen'
         )
-
-        ### JOY & GAMEPAD CONTROLLER
-        # Compute config file path using LaunchConfiguration and TextSubstitution
-        self.config_filepath = LaunchConfiguration('config_filepath', default=[
-            TextSubstitution(text=os.path.join(
-                get_package_share_directory('charmie_gamepad'), 'config', 'ps4')),
-            TextSubstitution(text='.config.yaml')
-        ])

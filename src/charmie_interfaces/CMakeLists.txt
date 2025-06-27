@@ -46,7 +46,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"
   "msg/PointCloudCoordinates.msg"
-  "msg/PS4Controller.msg"
   "msg/RGB.msg"
   "msg/TarNavSDNL.msg"
   "msg/TaskStatesInfo.msg"
