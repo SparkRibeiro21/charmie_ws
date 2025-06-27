@@ -75,6 +75,8 @@ struct CHARMIEGamepad::Impl
   }
 
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub;
+  rclcpp::Publisher<charmie_interfaces::msg::GamepadController>::SharedPtr gamepad_controller_publisher;
+
   rclcpp::Clock::SharedPtr clock;
   rclcpp::TimerBase::SharedPtr safety_timer;
   rclcpp::Time last_joy_msg_time;
@@ -154,6 +156,9 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
   pimpl_->joy_sub = this->create_subscription<sensor_msgs::msg::Joy>(
     "joy", rclcpp::QoS(10),
     std::bind(&CHARMIEGamepad::Impl::joyCallback, this->pimpl_, std::placeholders::_1));
+  
+  pimpl_->gamepad_controller_publisher = this->create_publisher<charmie_interfaces::msg::GamepadController>(
+    "gamepad_controller", 10);
 
   std::string controller_name = sdl_utils::get_controller_name();
   RCLCPP_INFO(this->get_logger(), "Detected controller: %s", controller_name.c_str());
@@ -171,7 +176,10 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
         RCLCPP_WARN(this->get_logger(), "No joystick msg for 0.5s, TIMEOUT!");
 
         // TODO: Publish a GamepadController message with timeout=true and all other values set to 0 or false
-
+        charmie_interfaces::msg::GamepadController controller_msg;
+        controller_msg.timeout = pimpl_->timeout;
+        pimpl_->gamepad_controller_publisher->publish(controller_msg);
+        
       }
       else {
         pimpl_->timeout = false;
@@ -456,9 +464,37 @@ void CHARMIEGamepad::Impl::joyCallback(const sensor_msgs::msg::Joy::SharedPtr jo
 
   controller_msg.axes[0] = left_thumbstick_x_axis_state;
   controller_msg.axes[1] = left_thumbstick_y_axis_state;
+  controller_msg.axes[2] = L3ang;
+  controller_msg.axes[3] = L3dist;
+  controller_msg.axes[4] = right_thumbstick_x_axis_state;
+  controller_msg.axes[5] = right_thumbstick_y_axis_state;
+  controller_msg.axes[6] = R3ang;
+  controller_msg.axes[7] = R3dist;
+  controller_msg.axes[8] = left_trigger_axis_state;
+  controller_msg.axes[9] = right_trigger_axis_state;
   
   controller_msg.buttons[0] = a_button_state;
   controller_msg.buttons[1] = b_button_state;
+  controller_msg.buttons[2] = x_button_state;
+  controller_msg.buttons[3] = y_button_state;
+  controller_msg.buttons[4] = left_bumper_button_state;
+  controller_msg.buttons[5] = right_bumper_button_state;
+  controller_msg.buttons[6] = view_button_state;
+  controller_msg.buttons[7] = menu_button_state;
+  controller_msg.buttons[8] = logo_button_state;
+  controller_msg.buttons[9] = share_button_state;
+  controller_msg.buttons[10] = left_thumbstick_button_state;
+  controller_msg.buttons[11] = right_thumbstick_button_state;
+  controller_msg.buttons[12] = dpad_up_button_state;
+  controller_msg.buttons[13] = dpad_down_button_state;
+  controller_msg.buttons[14] = dpad_left_button_state;
+  controller_msg.buttons[15] = dpad_right_button_state;
+  controller_msg.buttons[16] = left_trigger_button_state;
+  controller_msg.buttons[17] = right_trigger_button_state;
+
+  controller_msg.timeout = timeout;
+
+  gamepad_controller_publisher->publish(controller_msg);
 
 }
 
