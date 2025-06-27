@@ -373,17 +373,31 @@ class LaunchStdFunctions():
                     emulate_tty=True
                     )
         
-        self.ps4_controller = Node(package='charmie_ps4_controller',
-                    executable='ps4_controller',
-                    name='ps4_controller',
-                    )
+        # joy_node
+        self.joy = Node(
+            package='joy',
+            executable='joy_node',
+            name='joy_node',
+            parameters=[{
+                'device_id': 0,
+                'deadzone': 0.3,
+                'autorepeat_rate': 20.0,
+            }]
+        )
+
+        # custom charmie_gamepad_node
+        self.gamepad = Node(
+            package='charmie_gamepad',
+            executable='charmie_gamepad_node',
+            name='charmie_gamepad_node',
+            parameters=[self.config_filepath],
+        )
         
-        self.navigation_with_ps4 = Node(package='charmie_demonstration',
+        self.navigation_with_gamepad = Node(package='charmie_demonstration',
                 executable='navigation_demonstration',
                 name='navigation_demonstration',
                 emulate_tty=True
                 )
-    
         
         self.llm = Node(package='charmie_llm',
                     executable='llm',
@@ -458,23 +472,3 @@ class LaunchStdFunctions():
                 get_package_share_directory('charmie_gamepad'), 'config', 'ps4')),
             TextSubstitution(text='.config.yaml')
         ])
-
-        # joy_node
-        self.joy = Node(
-            package='joy',
-            executable='joy_node',
-            name='joy_node',
-            parameters=[{
-                'device_id': 0,
-                'deadzone': 0.3,
-                'autorepeat_rate': 20.0,
-            }]
-        )
-
-        # custom charmie_gamepad_node
-        self.gamepad = Node(
-            package='charmie_gamepad',
-            executable='charmie_gamepad_node',
-            name='charmie_gamepad_node',
-            parameters=[self.config_filepath],
-        )
