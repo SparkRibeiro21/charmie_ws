@@ -406,6 +406,12 @@ class LaunchStdFunctions():
                 emulate_tty=True
                 )
         
+        self.task_with_gamepad = Node(package='charmie_demonstration',
+                executable='task_demonstration',
+                name='task_demonstration',
+                emulate_tty=True
+                )
+        
         self.llm = Node(package='charmie_llm',
                     executable='llm',
                     name='llm',

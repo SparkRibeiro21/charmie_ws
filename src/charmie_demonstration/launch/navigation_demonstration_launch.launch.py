@@ -26,4 +26,5 @@ def generate_launch_description():
         
         # std_lf.node_robot_state_publisher,
         # std_lf.joint_state,
+        std_lf.navigation_with_gamepad
     ])
