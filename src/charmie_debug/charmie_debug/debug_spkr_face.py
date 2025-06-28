@@ -27,7 +27,7 @@ ros2_modules = {
     "charmie_nav2":             False,
     "charmie_neck":             False,
     "charmie_obstacles":        False,
-    "charmie_speakers":         False,
+    "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,

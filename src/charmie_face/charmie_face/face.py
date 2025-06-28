@@ -355,9 +355,10 @@ class FaceMain():
 
         if not DEBUG_WITHOUT_DISPLAY:
             self.device_id = self.get_touchscreen_id("Waveshare")  # Or any keyword matching the device
-            self.display_name = "DP-1-2"
-            self.map_touchscreen_to_correct_display(device_id=self.device_id, display_name=self.display_name)
             self.resolution = self.get_display_resolution()
+            self.display_name = self.get_display_output_name_by_resolution(self.resolution[0], self.resolution[1])
+            print("Display Name:", self.display_name)
+            self.map_touchscreen_to_correct_display(device_id=self.device_id, display_name=self.display_name)
             self.SCREEN = self.initiliase_pygame_screen(screen=1)
         else:
             self.resolution = [1280, 800]
@@ -417,6 +418,24 @@ class FaceMain():
                 for part in parts:
                     if part.startswith("id="):
                         return part.split('=')[1]
+        return None
+    
+    def get_display_output_name_by_resolution(self, target_width, target_height):
+        result = subprocess.run(["xrandr"], capture_output=True, text=True)
+        for line in result.stdout.splitlines():
+            if " connected" in line:
+                parts = line.split()
+                output_name = parts[0]
+                for part in parts:
+                    if "x" in part and "+" in part:
+                        # print(part)
+                        try:
+                            res = part.split("+")[0]
+                            width, height = map(int, res.split("x"))
+                            if width == target_width and height == target_height:
+                                return output_name
+                        except ValueError:
+                            continue
         return None
 
     def map_touchscreen_to_correct_display(self, device_id, display_name):
