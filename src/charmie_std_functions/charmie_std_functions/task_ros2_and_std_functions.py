@@ -3338,7 +3338,7 @@ class RobotStdFunctions():
                 print(f"Could not bring object to initial pose")
 
 
-    def is_stable(self, threshold = 0.85):
+    def is_stable(self, threshold = 0.88):
 
         #CONVERT IMG TO GRAYSCALE TO REDUCE LIGHT EFFECT
         prev_gray = cv2.cvtColor(self.prev_frame, cv2.COLOR_BGR2GRAY)
@@ -3351,7 +3351,7 @@ class RobotStdFunctions():
         #RETURN BOOLEAN ON IF SCORE IS ABOVE THRESHOLD
         return score >= threshold
 
-    def wait_until_stable(self, timeout = 10, stable_duration = 0.3, check_interval= 0.1):
+    def wait_until_stable(self, timeout = 10, stable_duration = 0.5, check_interval= 0.1):
 
         #INITIATE VARIABLES REPRESENTING TIMER
         image_time_out = 0.0
