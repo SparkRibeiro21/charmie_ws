@@ -83,7 +83,7 @@ class TaskMain():
                     self.robot.set_rgb(RAINBOW_ROT)
 
                 if ros2_modules["charmie_speakers"]:
-                    self.robot.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/introduction_full", wait_for_end_of=False)
                     # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
                 # to initially set TIMEOUT FLAGS and RGB 
@@ -218,8 +218,13 @@ class TaskMain():
         
         if ros2_modules["charmie_low_level"]:
 
+            # had to do this way because of some commands to low_level being lost                    
             cmd_vel = Twist()
-            self.robot.node.cmd_vel_publisher.publish(cmd_vel)
+            self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
+            time.sleep(0.1)  # wait for the cmd_vel to be published
+            self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
+            time.sleep(0.1)  # wait for the cmd_vel to be published
+            self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
 
             self.MOTORS_ACTIVE_FLAG = False
             self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)

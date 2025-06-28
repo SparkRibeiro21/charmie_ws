@@ -4,8 +4,8 @@ import threading
 import time
 import random
 
-from geometry_msgs.msg import Twist
-from charmie_interfaces.msg import DetectedObject, DetectedPerson, GamepadController
+from geometry_msgs.msg import Vector3, Pose2D
+from charmie_interfaces.msg import DetectedObject, DetectedPerson, PS4Controller
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
@@ -71,12 +71,6 @@ class TaskMain():
         self.LLM_demonstration = 8
         self.Open_door = 9
         self.Final_State = 10
-
-        self.TIMEOUT_FLAG = True
-        self.MOTORS_ACTIVE_FLAG = True
-
-        self.MAX_LINEAR_SPEED = 0.40  # m/s
-        self.MAX_ANGULAR_SPEED = 0.5  # rad/s
         
         self.SB_Waiting_for_task_start = 0
         self.SB_Detect_and_receive_milk = 1
@@ -96,9 +90,34 @@ class TaskMain():
         self.look_table_objects = [-45, -35]
         # self.look_tray = [0, -60]
 
+        self.OFF = 0     # LOW  -> LOW
+        self.FALLING = 1 # HIGH -> LOW
+        self.RISING = 2  # LOW  -> HIGH
+        self.ON = 3      # HIGH -> HIGH
+
+        self.ON_AND_RISING = 2   # used with <= 
+        self.OFF_AND_FALLING = 1 # used with >=
+
         self.neck_pos_pan = self.look_forward[0]
         self.neck_pos_tilt = self.look_forward[1]
 
+        # self.previous_message = False
+        self.PREVIOUS_WATCHDOG_SAFETY_FLAG = True # just for RGB debug
+        self.WATCHDOG_SAFETY_FLAG = True
+        self.WATCHDOG_CUT_TIME = 1.5
+        self.iteration_time = 0.01
+        self.watchdog_timer_ctr = self.WATCHDOG_CUT_TIME/self.iteration_time
+
+        self.motors_active = False
+        self.omni_move = Vector3()
+        self.torso_pos = Pose2D()
+
+        # Start localisation position
+        # self.initial_position = [-1.0, 1.5, -90.0]
+
+        # navigation positions
+        # self.front_of_sofa = [-2.5, 1.5]
+        # self.sofa = [-2.5, 3.0]
         self.current_task = 0
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
@@ -111,11 +130,21 @@ class TaskMain():
             if self.state == self.Waiting_for_task_start:
                 # Initialization State
 
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.set_rgb(CLEAR)
+                    self.motors_active = False
+                    self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    self.robot.node.torso_movement_publisher.publish(self.torso_pos)
+
                 if ros2_modules["charmie_face"]:
                     self.robot.set_face("charmie_face")
 
                 if ros2_modules["charmie_neck"]:
                     self.robot.set_neck(self.look_forward, wait_for_end_of=True)
+
+                time.sleep(0.5)
 
                 if ros2_modules["charmie_low_level"]:
                     self.robot.set_rgb(RAINBOW_ROT)
@@ -124,40 +153,42 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/introduction_full", wait_for_end_of=True)
                     self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                # to initially set TIMEOUT FLAGS and RGB 
-                gamepad_controller, new_message = self.robot.update_gamepad_controller_state()
-                if self.robot.get_gamepad_timeout(self.robot.OFF):
-                    self.TIMEOUT_FLAG = False
-                    if ros2_modules["charmie_low_level"]:
+                # to initially set WATCHDOG TIMER FLAGS and RGB 
+                ps4_controller, new_message = self.robot.get_controller_state()
+                self.controller_watchdog_timer(new_message)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
                         self.robot.set_rgb(BLUE+HALF_ROTATE)
-                        self.MOTORS_ACTIVE_FLAG = True
-                        self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
-                else:
-                    self.TIMEOUT_FLAG = True
-                    if ros2_modules["charmie_low_level"]:
+                        self.motors_active = True
+                        self.robot.activate_motors(activate=self.motors_active)
+                    elif self.WATCHDOG_SAFETY_FLAG:
                         self.robot.set_rgb(RED+HALF_ROTATE)
-                        self.MOTORS_ACTIVE_FLAG = False
-                        self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                        self.motors_active = False
+                        self.robot.activate_motors(activate=self.motors_active)
 
                 self.state = self.Demo_actuators_with_tasks
 
 
             elif self.state == self.Demo_actuators_with_tasks:
 
-                gamepad_controller, new_message = self.robot.update_gamepad_controller_state()
+                ps4_controller, new_message = self.robot.get_controller_state()
+                self.controller_watchdog_timer(new_message)
+
+                if self.WATCHDOG_SAFETY_FLAG:
+                    ps4_controller = PS4Controller() # cleans ps4_controller -> sets everything to 0
+
+                # print(self.WATCHDOG_SAFETY_FLAG, self.PREVIOUS_WATCHDOG_SAFETY_FLAG)
                 
                 # WATCHDOG VERIFICATIONS
-                if self.robot.get_gamepad_timeout(self.robot.FALLING):
-                    self.TIMEOUT_FLAG = False
+                if not self.WATCHDOG_SAFETY_FLAG and self.PREVIOUS_WATCHDOG_SAFETY_FLAG:
                     if ros2_modules["charmie_low_level"]:
-                        self.robot.set_rgb(MAGENTA+HALF_ROTATE)
-                        # only allow reactivation of motors via LOGO button (SAFETY)
-                        # self.MOTORS_ACTIVE_FLAG = True
-                        # self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                        # only allow reactivation via PS button (safety)
+                        # self.motors_active = True
+                        # self.robot.activate_motors(activate=self.motors_active)
 
-                if self.robot.get_gamepad_timeout(self.robot.RISING):
-                    self.TIMEOUT_FLAG = True
-                    self.MOTORS_ACTIVE_FLAG = False
+                elif self.WATCHDOG_SAFETY_FLAG and not self.PREVIOUS_WATCHDOG_SAFETY_FLAG:
                     if ros2_modules["charmie_low_level"]:
                         self.robot.set_rgb(RED+HALF_ROTATE)
                     
@@ -167,46 +198,70 @@ class TaskMain():
                         self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
 
 
-                if new_message and not self.TIMEOUT_FLAG: # if we receive a new message and there is no timeout
+                if new_message:
+
+                    # Activate motors: only activates if ps4 controller messages are being received
+                    if ros2_modules["charmie_low_level"]:
+
+                        # Watchdog Verifications
+                        if ps4_controller.ps == self.RISING:
+                            if not self.WATCHDOG_SAFETY_FLAG:
+                                self.motors_active = not self.motors_active
+                                self.robot.activate_motors(activate=self.motors_active)
+
+                                self.torso_pos.x = 0.0
+                                self.torso_pos.y = 0.0
+                                self.robot.node.torso_movement_publisher.publish(self.torso_pos)
+
+                                if self.motors_active:
+                                    if ros2_modules["charmie_speakers"]:
+                                        self.robot.set_speech(filename="demonstration/motors_unlocked", wait_for_end_of=False)
+                                else:
+                                    if ros2_modules["charmie_speakers"]:
+                                        self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
+                        
                     
-                    # Activate motors: only activates if gamepad controller messages are being received
-                    if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_LOGO, self.robot.RISING):
+                    if ros2_modules["charmie_low_level"]:
+                        # Robot Omni Movement
+                        # left joy stick to control x and y movement (direction and linear speed) 
+                        if ps4_controller.l3_dist >= 0.1:
+                            self.omni_move.x = ps4_controller.l3_ang
+                            # self.omni_move.y = ps4_controller.l3_dist*100 # max is *100 is you use higher it will limit to *100
+                            self.omni_move.y = ps4_controller.l3_dist*50 # max is *100 is you use higher it will limit to *100
+                        else:
+                            self.omni_move.x = 0.0
+                            self.omni_move.y = 0.0
 
-                        if ros2_modules["charmie_low_level"]:
+                        # right joy stick to control angular speed
+                        if ps4_controller.r3_dist >= 0.1:
+                            # self.omni_move.z = 100 + ps4_controller.r3_xx*100 # max is *100 is you use higher it will limit to *100
+                            self.omni_move.z = 100 + ps4_controller.r3_xx*25
+                        else:
+                            self.omni_move.z = 100.0
+                        
+                        if self.motors_active:
+                            self.robot.node.omni_move_publisher.publish(self.omni_move)
 
-                            self.MOTORS_ACTIVE_FLAG = not self.MOTORS_ACTIVE_FLAG
-                            self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                    if ros2_modules["charmie_low_level"]:
 
-                            if self.MOTORS_ACTIVE_FLAG:
-                                self.robot.set_rgb(BLUE+HALF_ROTATE)
-                                if ros2_modules["charmie_speakers"]:
-                                    self.robot.set_speech(filename="demonstration/motors_unlocked", wait_for_end_of=False)
+                        if self.motors_active:
+
+                            # Torso Movement
+                            if ps4_controller.arrow_up >= 2:
+                                self.torso_pos.x = 1.0
+                            elif ps4_controller.arrow_down >= 2:
+                                self.torso_pos.x = -1.0
                             else:
-                                self.robot.set_rgb(MAGENTA+HALF_ROTATE)
-                                if ros2_modules["charmie_speakers"]:
-                                    self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
-                            
-                    if self.MOTORS_ACTIVE_FLAG: # robot is fully operational 
+                                self.torso_pos.x = 0.0
 
-                        if ros2_modules["charmie_low_level"]: # Motors
-
-                            cmd_vel = Twist()
-
-                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L1, self.robot.ON) and self.robot.get_gamepad_button_pressed(self.robot.BUTTON_R1, self.robot.ON):
-                                ang_speed_percentage = 100
-                                lin_speed_percentage = 100
-                            elif self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L1, self.robot.ON):
-                                ang_speed_percentage = 100
-                                lin_speed_percentage = 75
+                            if ps4_controller.arrow_right >= 2:
+                                self.torso_pos.y = 1.0
+                            elif ps4_controller.arrow_left >= 2:
+                                self.torso_pos.y = -1.0
                             else:
-                                ang_speed_percentage = 100
-                                lin_speed_percentage = 50
+                                self.torso_pos.y = 0.0
 
-                            cmd_vel.linear.x =  float(self.percentage_to_linear_speed(  self.robot.get_gamepad_axis(self.robot.AXIS_L3_YY), lin_speed_percentage))
-                            cmd_vel.linear.y =  float(self.percentage_to_linear_speed( -self.robot.get_gamepad_axis(self.robot.AXIS_L3_XX), lin_speed_percentage))
-                            cmd_vel.angular.z = float(self.percentage_to_angular_speed(-self.robot.get_gamepad_axis(self.robot.AXIS_R3_XX), ang_speed_percentage))
-                            
-                            self.robot.node.cmd_vel_publisher.publish(cmd_vel)
+                            self.robot.node.torso_movement_publisher.publish(self.torso_pos)
 
                     if ros2_modules["charmie_neck"]:
                         
@@ -214,26 +269,25 @@ class TaskMain():
                         # triangle and cross to move the neck up and down
                         neck_inc_hor = 2
                         neck_inc_ver = 1
-
-                        if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_CIRCLE, self.robot.ON):
+                        if ps4_controller.circle >= self.ON_AND_RISING:
                             self.neck_pos_pan -= neck_inc_hor
                             if self.neck_pos_pan < -180:
                                 self.neck_pos_pan = -180
                             self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
                             
-                        elif self.robot.get_gamepad_button_pressed(self.robot.BUTTON_SQUARE, self.robot.ON):
+                        elif ps4_controller.square >= self.ON_AND_RISING:
                             self.neck_pos_pan += neck_inc_hor
                             if self.neck_pos_pan > 180:
                                 self.neck_pos_pan = 180
                             self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
                         
-                        if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_CROSS, self.robot.ON):
+                        if ps4_controller.cross >= self.ON_AND_RISING:
                             self.neck_pos_tilt -= neck_inc_ver
                             if self.neck_pos_tilt < -60:
                                 self.neck_pos_tilt = -60
                             self.robot.set_neck([self.neck_pos_pan, self.neck_pos_tilt], wait_for_end_of=False)
                         
-                        elif self.robot.get_gamepad_button_pressed(self.robot.BUTTON_TRIANGLE, self.robot.ON):
+                        elif ps4_controller.triangle >= self.ON_AND_RISING:
                             self.neck_pos_tilt += neck_inc_ver
                             if self.neck_pos_tilt > 60:
                                 self.neck_pos_tilt = 60
@@ -242,47 +296,52 @@ class TaskMain():
 
                     if not self.current_task:
                         if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_objects"] and ros2_modules["charmie_head_camera"]:
-                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_SHARE, self.robot.RISING):
+                            if ps4_controller.share == self.RISING:
                                 self.state = self.Search_for_objects_demonstration
                         
                         if ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"]:
-                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_OPTIONS, self.robot.RISING):
+                            if ps4_controller.options == self.RISING:
                                 self.state = self.Search_for_people_demonstration
 
+                        if ros2_modules["charmie_audio"] and ros2_modules["charmie_neck"] and ros2_modules["charmie_yolo_pose"] and ros2_modules["charmie_head_camera"]:
+                            if ps4_controller.r1 == self.RISING:
+                                self.state = self.Audio_receptionist_and_restaurant_demonstration
+
                         if ros2_modules["charmie_speakers"]:
-                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_R3, self.robot.RISING):
+                            if ps4_controller.r3 == self.RISING:
                                 self.state = self.Introduction_demonstration
 
                         if ros2_modules["charmie_speakers"]:
-                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L3, self.robot.RISING):
+                            if ps4_controller.l3 == self.RISING:
                                 self.state = self.Serve_breakfast_demonstration
                                 self.current_task = self.Serve_breakfast_demonstration
                                 self.state_SB = self.SB_Waiting_for_task_start
 
                         if ros2_modules["charmie_llm"] and ros2_modules["charmie_speakers"]:
-                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_R2, self.robot.RISING):
+                            if ps4_controller.r2 > 0.8:
                                 self.state = self.LLM_demonstration
 
                         if ros2_modules["charmie_arm"] and ros2_modules["charmie_speakers"]:
-                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L2, self.robot.RISING):
-                                self.state = self.Audio_receptionist_and_restaurant_demonstration
+                            if ps4_controller.l2 > 0.8:
+                                # self.state = self.Open_door
+                                pass
                     else:
                         # Similar to wait_for_end_of_navigation, allows navigation between subparts of task
-                        if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L1, self.robot.ON) and self.robot.get_gamepad_button_pressed(self.robot.BUTTON_R1, self.robot.ON):
+                        if ps4_controller.l1 >= self.ON_AND_RISING and ps4_controller.r1 >= self.ON_AND_RISING:
                             self.state = self.current_task
 
                         # Allows to cancel a task midway (in navigation part)
-                        if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_SHARE, self.robot.ON) and self.robot.get_gamepad_button_pressed(self.robot.BUTTON_OPTIONS, self.robot.ON):
+                        if ps4_controller.share >= self.ON_AND_RISING and ps4_controller.options >= self.ON_AND_RISING:
                             self.robot.set_speech(filename="demonstration/stopped_task_demo", wait_for_end_of=False)
                             self.current_task = 0
     
 
-                time.sleep(0.05)
+                time.sleep(self.iteration_time)
 
 
             elif self.state == self.Search_for_objects_demonstration:
                 
-                temp_active_motors = self.MOTORS_ACTIVE_FLAG
+                temp_active_motors = self.motors_active
                 self.safety_stop_modules()
     
                 tetas = [[35, -35], [45, -15], [55, -35]]
@@ -318,15 +377,21 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators_with_tasks
 
 
             elif self.state == self.Search_for_people_demonstration:
                 
-                temp_active_motors = self.MOTORS_ACTIVE_FLAG
+                temp_active_motors = self.motors_active
                 self.safety_stop_modules()
 
                 tetas = [[-60, -10], [0, -10], [60, -10]]
@@ -361,15 +426,21 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators_with_tasks
 
 
             elif self.state == self.Introduction_demonstration:
                 
-                temp_active_motors = self.MOTORS_ACTIVE_FLAG
+                temp_active_motors = self.motors_active
                 self.safety_stop_modules()
 
                 if ros2_modules["charmie_low_level"]:
@@ -387,14 +458,20 @@ class TaskMain():
                 
                 self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators_with_tasks
 
             elif self.state == self.LLM_demonstration:
                 
-                temp_active_motors = self.MOTORS_ACTIVE_FLAG
+                temp_active_motors = self.motors_active
                 self.safety_stop_modules()
 
                 if ros2_modules["charmie_low_level"]:
@@ -403,14 +480,20 @@ class TaskMain():
                 if ros2_modules["charmie_llm"]:
                     self.robot.get_llm_demonstration(wait_for_end_of=True)
                     
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators_with_tasks
 
             elif self.state == self.Audio_receptionist_and_restaurant_demonstration:
                 
-                temp_active_motors = self.MOTORS_ACTIVE_FLAG
+                temp_active_motors = self.motors_active
                 self.safety_stop_modules()
 
                 if self.state_A == self.A_Receptionist:
@@ -495,14 +578,20 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators_with_tasks
 
             elif self.state == self.Serve_breakfast_demonstration:
                 
-                temp_active_motors = self.MOTORS_ACTIVE_FLAG
+                temp_active_motors = self.motors_active
                 self.safety_stop_modules()
 
                 if self.state_SB == self.SB_Waiting_for_task_start:
@@ -628,8 +717,14 @@ class TaskMain():
                     self.current_task = 0
 
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators_with_tasks
 
@@ -637,7 +732,7 @@ class TaskMain():
                 """
             elif self.state == self.Example_demonstration:
                 
-                temp_active_motors = self.MOTORS_ACTIVE_FLAG
+                temp_active_motors = self.motors_active
                 self.safety_stop_modules()
 
                 ### your code here
@@ -646,8 +741,14 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.motors_active = temp_active_motors
+                self.robot.activate_motors(activate=self.motors_active)
+
+                if ros2_modules["charmie_low_level"]:
+                    if not self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(BLUE+HALF_ROTATE)
+                    elif self.WATCHDOG_SAFETY_FLAG:
+                        self.robot.set_rgb(RED+HALF_ROTATE)
 
                 self.state = self.Demo_actuators_with_tasks
                 """
@@ -655,36 +756,33 @@ class TaskMain():
             else:
                 pass
 
+
+    def controller_watchdog_timer(self, new_message):
+
+        if new_message:
+            self.watchdog_timer_ctr = 0
+        else:
+            self.watchdog_timer_ctr += 1
+
+        self.PREVIOUS_WATCHDOG_SAFETY_FLAG = self.WATCHDOG_SAFETY_FLAG
+
+        if self.watchdog_timer_ctr > (self.WATCHDOG_CUT_TIME/self.iteration_time):
+            self.WATCHDOG_SAFETY_FLAG = True
+        else:
+            self.WATCHDOG_SAFETY_FLAG = False
+
     def safety_stop_modules(self):
-        # Add here, all safety restrictions for the safety stop
         
         if ros2_modules["charmie_low_level"]:
-
-            # had to do this way because of some commands to low_level being lost                    
-            cmd_vel = Twist()
-            self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
-            time.sleep(0.1)  # wait for the cmd_vel to be published
-            self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
-            time.sleep(0.1)  # wait for the cmd_vel to be published
-            self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
-
-            self.MOTORS_ACTIVE_FLAG = False
-            self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
             
-    def percentage_to_angular_speed(self, value, percentage):
-        # Convert percentage to angular speed
-        if percentage < 0:
-            percentage = 0
-        elif percentage > 100:
-            percentage = 100
+            self.omni_move.x = 0.0
+            self.omni_move.y = 0.0
+            self.omni_move.z = 100.0
+            self.robot.node.omni_move_publisher.publish(self.omni_move)
 
-        return value * percentage/100 * self.MAX_ANGULAR_SPEED
-    
-    def percentage_to_linear_speed(self, value, percentage):
-        # Convert percentage to angular speed
-        if percentage < 0:
-            percentage = 0
-        elif percentage > 100:
-            percentage = 100
+            self.motors_active = False
+            self.robot.activate_motors(activate=self.motors_active)
 
-        return value * percentage/100 * self.MAX_LINEAR_SPEED
+            self.torso_pos.x = 0.0
+            self.torso_pos.y = 0.0
+            self.robot.node.torso_movement_publisher.publish(self.torso_pos)

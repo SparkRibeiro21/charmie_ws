@@ -126,7 +126,7 @@ class TaskMain():
                     if ros2_modules["charmie_speakers"]:
                         self.robot.set_speech(filename="demonstration/motors_locked", wait_for_end_of=False)
 
-                
+
                 if new_message and not self.TIMEOUT_FLAG: # if we receive a new message and there is no timeout
                     
                     # Activate motors: only activates if gamepad controller messages are being received
@@ -178,8 +178,13 @@ class TaskMain():
         
         if ros2_modules["charmie_low_level"]:
 
+            # had to do this way because of some commands to low_level being lost                    
             cmd_vel = Twist()
-            self.robot.node.cmd_vel_publisher.publish(cmd_vel)
+            self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
+            time.sleep(0.1)  # wait for the cmd_vel to be published
+            self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
+            time.sleep(0.1)  # wait for the cmd_vel to be published
+            self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
 
             self.MOTORS_ACTIVE_FLAG = False
             self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
