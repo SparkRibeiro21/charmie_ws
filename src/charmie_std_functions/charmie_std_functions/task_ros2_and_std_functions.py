@@ -5,7 +5,7 @@ from rclpy.action.client import ClientGoalHandle, GoalStatus
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, Float32, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped, Twist
 from sensor_msgs.msg import Image
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from realsense2_camera_msgs.msg import RGBD
@@ -110,6 +110,7 @@ class ROS2TaskNode(Node):
         # Low level
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for gamepad controller
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for gamepad controller
+        self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
         self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", self.torso_low_level_callback, 10)
@@ -1105,40 +1106,40 @@ class RobotStdFunctions():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
-        self.L3_X = 0
-        self.L3_Y = 1
-        self.L3_ANGLE = 2
-        self.L3_DIST = 3
-        self.R3_X = 4
-        self.R3_Y = 5
-        self.R3_ANGLE = 6
-        self.R3_DIST = 7
-        self.L2 = 8
-        self.R2 = 9
+        self.AXIS_L3_XX = 0
+        self.AXIS_L3_YY = 1
+        self.AXIS_L3_ANGLE = 2
+        self.AXIS_L3_DIST = 3
+        self.AXIS_R3_XX = 4
+        self.AXIS_R3_YY = 5
+        self.AXIS_R3_ANGLE = 6
+        self.AXIS_R3_DIST = 7
+        self.AXIS_L2 = 8
+        self.AXIS_R2 = 9
 
-        self.CROSS = 0
-        self.CIRCLE = 1
-        self.SQUARE = 2
-        self.TRIANGLE = 3
-        self.L1 = 4
-        self.R1 = 5
-        self.L2 = 6
-        self.R2 = 7
-        self.L3 = 8
-        self.R3 = 9
-        self.DPAD_UP = 10
-        self.DPAD_DOWN = 11
-        self.DPAD_LEFT = 12
-        self.DPAD_RIGHT = 13
-        self.SHARE = 14
-        self.OPTIONS = 15
-        self.LOGO = 16
-        self.PAD = 17
+        self.BUTTON_CROSS = 0
+        self.BUTTON_CIRCLE = 1
+        self.BUTTON_SQUARE = 2
+        self.BUTTON_TRIANGLE = 3
+        self.BUTTON_L1 = 4
+        self.BUTTON_R1 = 5
+        self.BUTTON_L2 = 6
+        self.BUTTON_R2 = 7
+        self.BUTTON_L3 = 8
+        self.BUTTON_R3 = 9
+        self.BUTTON_DPAD_UP = 10
+        self.BUTTON_DPAD_DOWN = 11
+        self.BUTTON_DPAD_LEFT = 12
+        self.BUTTON_DPAD_RIGHT = 13
+        self.BUTTON_SHARE = 14
+        self.BUTTON_OPTIONS = 15
+        self.BUTTON_LOGO = 16
+        self.BUTTON_PAD = 17
 
-        self.BUTTON_ON = 0
-        self.BUTTON_RISING = 1
-        self.BUTTON_OFF = 2
-        self.BUTTON_FALLING = 3
+        self.ON = 0
+        self.RISING = 1
+        self.OFF = 2
+        self.FALLING = 3
 
     def get_demo_mode(self):
         return self.node.DEMO_OPTION
@@ -2509,7 +2510,7 @@ class RobotStdFunctions():
         
         return self.node.first_depth_base_image_received, current_frame_depth_base
 
-    def update_controller_state(self):
+    def update_gamepad_controller_state(self):
 
         self.node.previous_gamepad_controller_state = self.node.current_gamepad_controller_state
         self.node.current_gamepad_controller_state = self.node.gamepad_controller_state
@@ -2526,28 +2527,28 @@ class RobotStdFunctions():
     def get_gamepad_button_pressed(self, button_name, button_status):
 
         match button_status:
-            case self.BUTTON_ON:
+            case self.ON:
                 return self.node.current_gamepad_controller_state.buttons[button_name]
-            case self.BUTTON_RISING:
+            case self.RISING:
                 return self.node.current_gamepad_controller_state.buttons[button_name] \
                         and not self.node.previous_gamepad_controller_state.buttons[button_name]
-            case self.BUTTON_OFF:
+            case self.OFF:
                 return not self.node.current_gamepad_controller_state.buttons[button_name]
-            case self.BUTTON_FALLING:
+            case self.FALLING:
                 return not self.node.current_gamepad_controller_state.buttons[button_name] \
                         and self.node.previous_gamepad_controller_state.buttons[button_name]
             
     def get_gamepad_timeout(self, button_status):
 
         match button_status:
-            case self.BUTTON_ON:
+            case self.ON:
                 return self.node.current_gamepad_controller_state.timeout
-            case self.BUTTON_RISING:
+            case self.RISING:
                 return self.node.current_gamepad_controller_state.timeout \
                         and not self.node.previous_gamepad_controller_state.timeout
-            case self.BUTTON_OFF:
+            case self.OFF:
                 return not self.node.current_gamepad_controller_state.timeout
-            case self.BUTTON_FALLING:
+            case self.FALLING:
                 return not self.node.current_gamepad_controller_state.timeout \
                         and self.node.previous_gamepad_controller_state.timeout
 
