@@ -1920,8 +1920,9 @@ class RobotStdFunctions():
                         print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
 
     def add_rotation_to_pick_position(self, move_coords):
-        move_coords[2]+=45.0
-        return move_coords
+        move_coords_copy = move_coords.copy()
+        move_coords_copy[2]+=45.0
+        return move_coords_copy
 
     def search_for_person(self, tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
@@ -2941,24 +2942,27 @@ class RobotStdFunctions():
                 return str(obj["room"]).replace(" ","_").lower()  # Return the class
         return None  # Return None if the object is not found
 
+    # In python lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one
     def get_navigation_coords_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj["nav_coords"]  # Return the class
+                return obj["nav_coords"].copy()  # Return the class
         return None  # Return None if the object is not found
 
+    # In python lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one
     def get_navigation_coords_from_room(self, room):
 
         # Iterate through the list of dictionaries
         for obj in self.node.rooms:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(room).replace(" ","_").lower():  # Check if the name matches
-                return obj["nav_coords"]  # Return the class
+                return obj["nav_coords"].copy()  # Return the class
         return None  # Return None if the object is not found
     
+    # In python lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one (in this case is not necessary because I am creating a new list)
     def get_location_coords_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
