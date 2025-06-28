@@ -5,7 +5,7 @@ import time
 import random
 
 from geometry_msgs.msg import Vector3, Pose2D
-from charmie_interfaces.msg import DetectedObject, DetectedPerson, PS4Controller
+from charmie_interfaces.msg import DetectedObject, DetectedPerson, GamepadController
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding

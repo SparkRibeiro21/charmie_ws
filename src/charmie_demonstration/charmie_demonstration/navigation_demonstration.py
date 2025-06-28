@@ -67,7 +67,7 @@ class TaskMain():
         self.MOTORS_ACTIVE_FLAG = True
 
         self.MAX_LINEAR_SPEED = 0.40  # m/s
-        self.MAX_ANGULAR_SPEED = 0.60  # rad/s
+        self.MAX_ANGULAR_SPEED = 0.5  # rad/s
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
         self.state = self.Waiting_for_task_start
@@ -153,13 +153,13 @@ class TaskMain():
                             cmd_vel = Twist()
 
                             if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L1, self.robot.ON) and self.robot.get_gamepad_button_pressed(self.robot.BUTTON_R1, self.robot.ON):
-                                ang_speed_percentage = 50
+                                ang_speed_percentage = 100
                                 lin_speed_percentage = 100
                             elif self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L1, self.robot.ON):
-                                ang_speed_percentage = 50
+                                ang_speed_percentage = 100
                                 lin_speed_percentage = 75
                             else:
-                                ang_speed_percentage = 50
+                                ang_speed_percentage = 100
                                 lin_speed_percentage = 50
 
                             cmd_vel.linear.x =  float(self.percentage_to_linear_speed(  self.robot.get_gamepad_axis(self.robot.AXIS_L3_YY), lin_speed_percentage))
@@ -170,7 +170,6 @@ class TaskMain():
 
                 time.sleep(0.05)
             
-
             else:
                 pass
 

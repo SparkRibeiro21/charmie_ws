@@ -21,7 +21,7 @@ def generate_launch_description():
         
         std_lf.speakers,
         std_lf.neck,
-        ###std_lf.face,
+        std_lf.face,
         
         std_lf.odometry_lidar,
         std_lf.robot_localization,
