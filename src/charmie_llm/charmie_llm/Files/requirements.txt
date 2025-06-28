@@ -9,7 +9,6 @@ pip install pymupdf
 
 
 pip install pyserial
-pip install pyPS4Controller
 pip install dynamixel-sdk
 
 

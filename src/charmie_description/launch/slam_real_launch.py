@@ -20,8 +20,9 @@ def generate_launch_description():
         std_lf.robot_localization,
         std_lf.charmie_localisation,
 
-        std_lf.ps4_controller,
+        std_lf.joy,
+        std_lf.gamepad,
         std_lf.neck,
 
-        std_lf.navigation_with_ps4
+        std_lf.navigation_with_gamepad
     ])

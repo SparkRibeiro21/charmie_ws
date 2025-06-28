@@ -12,9 +12,6 @@ This folder contains a set of ROS packages developed for the CHARMIE robot, cove
 - **[charmie_audio](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_audio)**  
   Handles audio input and output, including speech recognition and sound playback.
 
-- **[charmie_bot](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_bot)**  
-  Core package for robot functions and high-level operations.
-
 - **[charmie_carry_luggage](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_carry_luggage)**  
   Designed to enable the robot to assist in carrying luggage and personal items.
 
@@ -27,8 +24,14 @@ This folder contains a set of ROS packages developed for the CHARMIE robot, cove
 - **[charmie_demonstration](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_demonstration)**  
   Provides routines and demos to showcase the robot's capabilities.
 
+- **[charmie_description](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_description)**  
+  Core package for robot urdf, xacro,overall description functions and high-level operations.
+
 - **[charmie_face](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_face)**  
   Handles the robot facial expression.
+
+- **[charmie_gamepad](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_gamepad)**  
+  Allows remote control of the robot using any configured gamepad controller.
 
 - **[charmie_gpsr](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_gpsr)**  
   For general-purpose service robot tasks, supporting multiple request types and activities, GPSR.
@@ -62,12 +65,6 @@ This folder contains a set of ROS packages developed for the CHARMIE robot, cove
 
 - **[charmie_obstacles](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_obstacles)**  
   Manages obstacle detection and response for safe navigation.
-
-- **[charmie_point_cloud](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_point_cloud)**  
-  Processes point cloud data from depth sensors for 3D mapping and perception.
-
-- **[charmie_ps4_controller](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_ps4_controller)**  
-  Allows remote control of the robot using a PS4 controller.
 
 - **[charmie_receptionist](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_receptionist)**  
   Task module to enable the robot to perform Receptionist.

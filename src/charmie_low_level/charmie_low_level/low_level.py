@@ -559,7 +559,7 @@ class LowLevelNode(Node):
             self.get_orientation_publisher.publish(orientation)
 
 
-    def torso_move_callback(self, data: Pose2D): # used by ps4 controller
+    def torso_move_callback(self, data: Pose2D): # used by gamepad controller
 
         # print("receiving torso position ")
         estado_legs = int(data.x)

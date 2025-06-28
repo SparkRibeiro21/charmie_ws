@@ -1,0 +1,37 @@
+charmie_gamepad_node:
+  ros__parameters:
+
+    dpad_axis: true         # Read D-Pad as axes (true) or as buttons (false)
+    triggers_axis: true     # Read triggers as axes (true) or buttons (false)
+    triggers_reversed: true # Reverse the trigger axes (true) or not (false)
+
+    # Axes
+    left_thumbstick_x_axis: 0   # Left stick horizontal
+    left_thumbstick_y_axis: 1   # Left stick vertical
+    right_thumbstick_x_axis: 3  # Right stick horizontal
+    right_thumbstick_y_axis: 4  # Right stick vertical
+    left_trigger_axis: 2        # LT
+    right_trigger_axis: 5       # RT
+    dpad_x_axis: 6
+    dpad_y_axis: 7
+
+    # Buttons
+    a_button: 0
+    b_button: 1
+    x_button: 3
+    y_button: 2
+    left_bumper_button: 4
+    right_bumper_button: 5
+    view_button: 8
+    menu_button: 9
+    logo_button: 10
+    share_button: -1
+    left_thumbstick_button: 11
+    right_thumbstick_button: 12
+    left_trigger_button: 6        # LT
+    right_trigger_button: 7       # RT
+    dpad_up_button: -1
+    dpad_down_button: -1
+    dpad_left_button: -1
+    dpad_right_button: -1
+

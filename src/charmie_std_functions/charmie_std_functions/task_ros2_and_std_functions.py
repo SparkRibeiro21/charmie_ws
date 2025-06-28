@@ -10,7 +10,7 @@ from sensor_msgs.msg import Image
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
-    Obstacles, ArmController, PS4Controller, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
+    Obstacles, ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
     TaskStatesInfo
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
@@ -96,7 +96,7 @@ class ROS2TaskNode(Node):
         self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
         self.target_pos_check_answer_subscriber = self.create_subscription(Bool, "target_pos_check_answer", self.target_pos_check_answer_callback, 10)
         self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
-        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) # used only for ps4 controller
+        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) # used only for gamepad controller
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
@@ -106,11 +106,11 @@ class ROS2TaskNode(Node):
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
         # Obstacles
         self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
-        # PS4 Controller
-        self.ps4_controller_subscriber = self.create_subscription(PS4Controller, "controller_state", self.ps4_controller_state_callback, 10)
+        # Gamepad Controller
+        self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
         # Low level
-        self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for ps4 controller
-        self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for ps4 controller
+        self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for gamepad controller
+        self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for gamepad controller
         self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", self.torso_low_level_callback, 10)
@@ -186,6 +186,7 @@ class ROS2TaskNode(Node):
         "charmie_head_camera":      True,
         "charmie_hand_camera":      True,
         "charmie_base_camera":      False,
+        "charmie_gamepad":          False,
         "charmie_lidar":            True,
         "charmie_lidar_bottom":     False,
             "charmie_llm":              False,
@@ -195,7 +196,6 @@ class ROS2TaskNode(Node):
             "charmie_nav2":             False,
             "charmie_neck":             True,
             "charmie_obstacles":        True,
-        "charmie_ps4_controller":   False,
             "charmie_speakers":         True,
             "charmie_tracking":        False,
             "charmie_yolo_objects":     True,
@@ -322,7 +322,9 @@ class ROS2TaskNode(Node):
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
         self.obstacles = Obstacles()
-        self.ps4_controller_state = PS4Controller()
+        self.gamepad_controller_state = GamepadController()
+        self.previous_gamepad_controller_state = GamepadController()
+        self.current_gamepad_controller_state = GamepadController()
         self.new_object_frame_for_tracking = False
         self.new_person_frame_for_tracking = False
         self.tracking_mask = TrackingMask()
@@ -385,7 +387,7 @@ class ROS2TaskNode(Node):
         self.vccs = VCCsLowLevel()
         self.buttons_low_level = ButtonsLowLevel()
         self.orientation_yaw = 0.0
-        self.new_controller_msg = False
+        self.new_gamepad_controller_msg = False
         self.llm_demonstration_response = ""
         self.llm_confirm_command_response = ""
         self.llm_gpsr_response = ListOfStrings()
@@ -415,26 +417,26 @@ class ROS2TaskNode(Node):
 
         nodes_used = NodesUsed.Request()
 
-        nodes_used.charmie_arm              = self.ros2_modules["charmie_arm"]
-        nodes_used.charmie_audio            = self.ros2_modules["charmie_audio"]
-        nodes_used.charmie_face             = self.ros2_modules["charmie_face"]
-        nodes_used.charmie_head_camera      = self.ros2_modules["charmie_head_camera"]
-        nodes_used.charmie_hand_camera      = self.ros2_modules["charmie_hand_camera"]
-        nodes_used.charmie_base_camera      = self.ros2_modules["charmie_base_camera"]
-        nodes_used.charmie_lidar            = self.ros2_modules["charmie_lidar"]
-        nodes_used.charmie_lidar_bottom     = self.ros2_modules["charmie_lidar_bottom"]
-        nodes_used.charmie_localisation     = self.ros2_modules["charmie_localisation"]
-        nodes_used.charmie_low_level        = self.ros2_modules["charmie_low_level"]
-        nodes_used.charmie_llm              = self.ros2_modules["charmie_llm"]
-        nodes_used.charmie_navigation       = self.ros2_modules["charmie_navigation"]
-        nodes_used.charmie_nav2             = self.ros2_modules["charmie_nav2"]
-        nodes_used.charmie_neck             = self.ros2_modules["charmie_neck"]
-        nodes_used.charmie_obstacles        = self.ros2_modules["charmie_obstacles"]
-        nodes_used.charmie_ps4_controller   = self.ros2_modules["charmie_ps4_controller"]
-        nodes_used.charmie_speakers         = self.ros2_modules["charmie_speakers"]
-        nodes_used.charmie_tracking         = self.ros2_modules["charmie_tracking"]
-        nodes_used.charmie_yolo_objects     = self.ros2_modules["charmie_yolo_objects"]
-        nodes_used.charmie_yolo_pose        = self.ros2_modules["charmie_yolo_pose"]
+        nodes_used.charmie_arm          = self.ros2_modules["charmie_arm"]
+        nodes_used.charmie_audio        = self.ros2_modules["charmie_audio"]
+        nodes_used.charmie_face         = self.ros2_modules["charmie_face"]
+        nodes_used.charmie_head_camera  = self.ros2_modules["charmie_head_camera"]
+        nodes_used.charmie_hand_camera  = self.ros2_modules["charmie_hand_camera"]
+        nodes_used.charmie_base_camera  = self.ros2_modules["charmie_base_camera"]
+        nodes_used.charmie_gamepad      = self.ros2_modules["charmie_gamepad"]
+        nodes_used.charmie_lidar        = self.ros2_modules["charmie_lidar"]
+        nodes_used.charmie_lidar_bottom = self.ros2_modules["charmie_lidar_bottom"]
+        nodes_used.charmie_localisation = self.ros2_modules["charmie_localisation"]
+        nodes_used.charmie_low_level    = self.ros2_modules["charmie_low_level"]
+        nodes_used.charmie_llm          = self.ros2_modules["charmie_llm"]
+        nodes_used.charmie_navigation   = self.ros2_modules["charmie_navigation"]
+        nodes_used.charmie_nav2         = self.ros2_modules["charmie_nav2"]
+        nodes_used.charmie_neck         = self.ros2_modules["charmie_neck"]
+        nodes_used.charmie_obstacles    = self.ros2_modules["charmie_obstacles"]
+        nodes_used.charmie_speakers     = self.ros2_modules["charmie_speakers"]
+        nodes_used.charmie_tracking     = self.ros2_modules["charmie_tracking"]
+        nodes_used.charmie_yolo_objects = self.ros2_modules["charmie_yolo_objects"]
+        nodes_used.charmie_yolo_pose    = self.ros2_modules["charmie_yolo_pose"]
 
         self.nodes_used_client.call_async(nodes_used)
 
@@ -499,10 +501,10 @@ class ROS2TaskNode(Node):
         self.flag_target_pos_check_answer = flag.data
         # print("RECEIVED NAVIGATION CONFIRMATION")
     
-    ### PS4 Controller ###
-    def ps4_controller_state_callback(self, controller: PS4Controller):
-        self.ps4_controller_state = controller
-        self.new_controller_msg = True
+    ### Gamepad Controller ###
+    def gamepad_controller_callback(self, controller: GamepadController):
+        self.gamepad_controller_state = controller
+        self.new_gamepad_controller_msg = True
 
     def tracking_mask_callback(self, mask: TrackingMask):
         self.tracking_mask = mask
@@ -1103,6 +1105,41 @@ class RobotStdFunctions():
     def __init__(self, node: ROS2TaskNode):
         # create a node instance so all variables ros related can be acessed
         self.node = node
+
+        self.L3_X = 0
+        self.L3_Y = 1
+        self.L3_ANGLE = 2
+        self.L3_DIST = 3
+        self.R3_X = 4
+        self.R3_Y = 5
+        self.R3_ANGLE = 6
+        self.R3_DIST = 7
+        self.L2 = 8
+        self.R2 = 9
+
+        self.CROSS = 0
+        self.CIRCLE = 1
+        self.SQUARE = 2
+        self.TRIANGLE = 3
+        self.L1 = 4
+        self.R1 = 5
+        self.L2 = 6
+        self.R2 = 7
+        self.L3 = 8
+        self.R3 = 9
+        self.DPAD_UP = 10
+        self.DPAD_DOWN = 11
+        self.DPAD_LEFT = 12
+        self.DPAD_RIGHT = 13
+        self.SHARE = 14
+        self.OPTIONS = 15
+        self.LOGO = 16
+        self.PAD = 17
+
+        self.BUTTON_ON = 0
+        self.BUTTON_RISING = 1
+        self.BUTTON_OFF = 2
+        self.BUTTON_FALLING = 3
 
     def get_demo_mode(self):
         return self.node.DEMO_OPTION
@@ -2473,13 +2510,48 @@ class RobotStdFunctions():
         
         return self.node.first_depth_base_image_received, current_frame_depth_base
 
-    def get_controller_state(self):
+    def update_controller_state(self):
 
-        temp_has_new_message = self.node.new_controller_msg
-        self.node.new_controller_msg = False
+        self.node.previous_gamepad_controller_state = self.node.current_gamepad_controller_state
+        self.node.current_gamepad_controller_state = self.node.gamepad_controller_state
 
-        return self.node.ps4_controller_state, temp_has_new_message
+        temp_has_new_message = self.node.new_gamepad_controller_msg
+        self.node.new_gamepad_controller_msg = False
+
+        return self.node.gamepad_controller_state, temp_has_new_message
     
+    def get_gamepad_axis(self, axis_name):
+
+        return self.node.current_gamepad_controller_state.axes[axis_name]
+
+    def get_gamepad_button_pressed(self, button_name, button_status):
+
+        match button_status:
+            case self.BUTTON_ON:
+                return self.node.current_gamepad_controller_state.buttons[button_name]
+            case self.BUTTON_RISING:
+                return self.node.current_gamepad_controller_state.buttons[button_name] \
+                        and not self.node.previous_gamepad_controller_state.buttons[button_name]
+            case self.BUTTON_OFF:
+                return not self.node.current_gamepad_controller_state.buttons[button_name]
+            case self.BUTTON_FALLING:
+                return not self.node.current_gamepad_controller_state.buttons[button_name] \
+                        and self.node.previous_gamepad_controller_state.buttons[button_name]
+            
+    def get_gamepad_timeout(self, button_status):
+
+        match button_status:
+            case self.BUTTON_ON:
+                return self.node.current_gamepad_controller_state.timeout
+            case self.BUTTON_RISING:
+                return self.node.current_gamepad_controller_state.timeout \
+                        and not self.node.previous_gamepad_controller_state.timeout
+            case self.BUTTON_OFF:
+                return not self.node.current_gamepad_controller_state.timeout
+            case self.BUTTON_FALLING:
+                return not self.node.current_gamepad_controller_state.timeout \
+                        and self.node.previous_gamepad_controller_state.timeout
+
     def get_llm_demonstration(self, wait_for_end_of=True):
 
         self.calibrate_audio(wait_for_end_of=True)
