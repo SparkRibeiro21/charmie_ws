@@ -275,7 +275,6 @@ class TaskMain():
 
                 # must be removed after the update to minimize as much as possivle the final orientation error 
                 move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))                
-                move_coords[2] -= 10.0 # decrease rotation by 10 degrees
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)

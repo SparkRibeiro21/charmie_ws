@@ -652,7 +652,7 @@ class TaskMain():
         
         if ros2_modules["charmie_low_level"]:
 
-            # had to do this way because of some commands to low_level being lost                    
+            # Dirty, but had to do this way because of some commands to low_level being lost                    
             cmd_vel = Twist()
             self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
             time.sleep(0.1)  # wait for the cmd_vel to be published

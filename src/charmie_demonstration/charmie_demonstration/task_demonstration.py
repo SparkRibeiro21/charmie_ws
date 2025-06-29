@@ -157,7 +157,7 @@ class TaskMain():
                             # Resulting in a conflict
                             if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L1, self.robot.FALLING):
                                 
-                                # had to do this way because of some commands to low_level being lost
+                                # Dirty, but had to do this way because of some commands to low_level being lost
                                 cmd_vel = Twist()
                                 self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
                                 time.sleep(0.1)  # wait for the cmd_vel to be published
@@ -184,6 +184,14 @@ class TaskMain():
                                 
                                 self.robot.node.cmd_vel_publisher.publish(cmd_vel)
                             
+                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_TRIANGLE, self.robot.RISING):
+                                self.robot.adjust_omnidirectional_position(dx= 0.2, dy= 0.0)
+                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_CROSS, self.robot.RISING):
+                                self.robot.adjust_omnidirectional_position(dx=-0.2, dy= 0.0)
+                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_SQUARE, self.robot.RISING):
+                                self.robot.adjust_omnidirectional_position(dx= 0.0, dy= 0.1)
+                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_CIRCLE, self.robot.RISING):
+                                self.robot.adjust_omnidirectional_position(dx= 0.0, dy=-0.1)
 
                         # Task State Selection
                         if ros2_modules["charmie_gamepad"]:
@@ -218,7 +226,7 @@ class TaskMain():
         
         if ros2_modules["charmie_low_level"]:
 
-            # had to do this way because of some commands to low_level being lost                    
+            # Dirty, but had to do this way because of some commands to low_level being lost                    
             cmd_vel = Twist()
             self.robot.node.cmd_vel_publisher.publish(cmd_vel)  
             time.sleep(0.1)  # wait for the cmd_vel to be published

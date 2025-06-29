@@ -7,6 +7,7 @@ from rclpy.action.client import ClientGoalHandle, GoalStatus
 from example_interfaces.msg import Bool, Float32, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped, Twist
 from sensor_msgs.msg import Image
+from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
@@ -123,6 +124,9 @@ class ROS2TaskNode(Node):
         self.task_states_info_publisher = self.create_publisher(TaskStatesInfo, "task_states_info", 10)
         self.task_states_info_subscriber = self.create_subscription(TaskStatesInfo, "task_states_info", self.demo_task_states_info_callback, 10)
         self.task_state_selectable_publisher = self.create_publisher(Int16, "task_state_selectable", 10)
+        # Odom
+        self.odom_subscriber = self.create_subscription(Odometry, "/odometry/filtered", self.odom_callback, 10)
+        self.odom_wheels_subscriber = self.create_subscription(Odometry, "/wheel_encoders", self.odom_wheels_callback, 10)
         
 
         ### Services (Clients) ###
@@ -400,6 +404,9 @@ class ROS2TaskNode(Node):
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
+        self.current_odom_pose = None
+        self.current_odom_wheels_pose = None
+
     def task_states_info_publisher_timer(self):
 
         if self.task_name != "":
@@ -500,6 +507,13 @@ class ROS2TaskNode(Node):
     def target_pos_check_answer_callback(self, flag: Bool):
         self.flag_target_pos_check_answer = flag.data
         # print("RECEIVED NAVIGATION CONFIRMATION")
+
+    ### ODOMETRY ###
+    def odom_callback(self, msg):
+        self.current_odom_pose = msg.pose
+
+    def odom_wheels_callback(self, msg):
+        self.current_odom_wheels_pose = msg.pose
     
     ### Gamepad Controller ###
     def gamepad_controller_callback(self, controller: GamepadController):
@@ -1923,6 +1937,78 @@ class RobotStdFunctions():
         move_coords_copy = move_coords.copy()
         move_coords_copy[2]+=45.0
         return move_coords_copy
+    
+    def adjust_omnidirectional_position(self, dx, dy, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+
+        ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
+        ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
+        ### ALL THE CODE IS READY. JUST REPLACE:
+        ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
+        ### THE FUNCTION PARAMETER use_wheel_odometry SHOULD BE USED
+        ### if use_wheel_odometry:
+        ###     USE: self.node.current_odom_wheels_pose
+        ### else:
+        ###     USE: self.node.current_odom_pose
+
+        # Wait until odom is received
+        while self.node.current_odom_pose is None:
+            time.sleep(0.01)
+
+        # Initial pose and orientation
+        pose = self.node.current_odom_pose.pose
+        start_x = pose.position.x
+        start_y = pose.position.y
+        q = pose.orientation
+        yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
+
+        # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
+        dx = dx + tolerance if dx > 0 else dx - tolerance
+        dy = dy + tolerance if dy > 0 else dy - tolerance
+
+        # Compute target in odom frame
+        target_x = start_x + math.cos(yaw) * dx - math.sin(yaw) * dy
+        target_y = start_y + math.sin(yaw) * dx + math.cos(yaw) * dy
+        # print("TARGETS", target_x, target_y)
+
+        rate_hz = 20  # Hz
+        rate = 1.0 / rate_hz
+
+        while True:
+            pose = self.node.current_odom_pose.pose
+            curr_x = pose.position.x
+            curr_y = pose.position.y
+
+            error_x = target_x - curr_x
+            error_y = target_y - curr_y
+            dist_error = math.sqrt(error_x**2 + error_y**2)
+            # print("ERRORS", error_x, error_y, dist_error)
+            # print("TOLERANCE", tolerance)
+
+            if dist_error < tolerance:
+                break
+
+            # Convert error from odom frame to base_footprint frame
+            vx = math.cos(-yaw) * error_x - math.sin(-yaw) * error_y
+            vy = math.sin(-yaw) * error_x + math.cos(-yaw) * error_y
+            # print("X Speed", max(-max_speed, min(max_speed, vx * kp)))
+            # print("Y Speed", max(-max_speed, min(max_speed, vy * kp)))
+
+            twist = Twist()
+            twist.linear.x = max(-max_speed, min(max_speed, vx * kp))
+            twist.linear.y = max(-max_speed, min(max_speed, vy * kp))
+            twist.angular.z = 0.0
+
+            self.node.cmd_vel_publisher.publish(twist)
+            time.sleep(rate)
+
+        # Stop the robot
+        # Dirty, but had to do this way because of some commands to low_level being lost
+        self.node.cmd_vel_publisher.publish(Twist())
+        time.sleep(0.1)  # wait for the cmd_vel to be published
+        self.node.cmd_vel_publisher.publish(Twist())
+        time.sleep(0.1)  # wait for the cmd_vel to be published
+        self.node.cmd_vel_publisher.publish(Twist())  
+        self.node.get_logger().info("Omnidirectional Adjustment Complete.")
 
     def search_for_person(self, tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
