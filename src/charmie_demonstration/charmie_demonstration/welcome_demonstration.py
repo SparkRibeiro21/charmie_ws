@@ -17,13 +17,13 @@ ros2_modules = {
     "charmie_arm":              True,
     "charmie_audio":            False,
     "charmie_face":             False,
-    "charmie_head_camera":      False,
-    "charmie_hand_camera":      False,
-    "charmie_base_camera":      False,
+    "charmie_head_camera":      True,
+    "charmie_hand_camera":      True,
+    "charmie_base_camera":      True,
     "charmie_gamepad":          True,
     "charmie_lidar":            False,
     "charmie_lidar_bottom":     False,
-    "charmie_llm":              False,
+    "charmie_llm":              True,
     "charmie_localisation":     False,
     "charmie_low_level":        True,
     "charmie_navigation":       False,
@@ -32,7 +32,7 @@ ros2_modules = {
     "charmie_obstacles":        False,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
-    "charmie_yolo_objects":     False,
+    "charmie_yolo_objects":     True,
     "charmie_yolo_pose":        True,
 }
 
@@ -318,8 +318,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.task_reactivate_after_safety_stop(temp_active_motors)
 
                 self.state = self.Demo_actuators_with_tasks
 
@@ -361,8 +360,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.task_reactivate_after_safety_stop(temp_active_motors)
 
                 self.state = self.Demo_actuators_with_tasks
 
@@ -387,8 +385,7 @@ class TaskMain():
                 
                 self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.task_reactivate_after_safety_stop(temp_active_motors)
 
                 self.state = self.Demo_actuators_with_tasks
 
@@ -403,8 +400,7 @@ class TaskMain():
                 if ros2_modules["charmie_llm"]:
                     self.robot.get_llm_demonstration(wait_for_end_of=True)
                     
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.task_reactivate_after_safety_stop(temp_active_motors)
 
                 self.state = self.Demo_actuators_with_tasks
 
@@ -495,8 +491,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.task_reactivate_after_safety_stop(temp_active_motors)
 
                 self.state = self.Demo_actuators_with_tasks
 
@@ -627,9 +622,7 @@ class TaskMain():
                     self.state_SB = self.SB_Waiting_for_task_start
                     self.current_task = 0
 
-
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.task_reactivate_after_safety_stop(temp_active_motors)
 
                 self.state = self.Demo_actuators_with_tasks
 
@@ -646,8 +639,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
 
-                self.MOTORS_ACTIVE_FLAG = temp_active_motors
-                self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+                self.task_reactivate_after_safety_stop(temp_active_motors)
 
                 self.state = self.Demo_actuators_with_tasks
                 """
@@ -670,7 +662,19 @@ class TaskMain():
 
             self.MOTORS_ACTIVE_FLAG = False
             self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
-            
+
+    def task_reactivate_after_safety_stop(self, temp_active_motors):
+
+        if ros2_modules["charmie_low_level"]:
+                
+            self.MOTORS_ACTIVE_FLAG = temp_active_motors
+            self.robot.activate_motors(activate=self.MOTORS_ACTIVE_FLAG)
+
+            if self.MOTORS_ACTIVE_FLAG:
+                self.robot.set_rgb(BLUE+HALF_ROTATE)
+            else:
+                self.robot.set_rgb(MAGENTA+HALF_ROTATE)
+
     def percentage_to_angular_speed(self, value, percentage):
         # Convert percentage to angular speed
         if percentage < 0:
