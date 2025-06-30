@@ -124,10 +124,28 @@ class TaskMain():
                 # time.sleep(3.0)
                 #print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks"], timeout=10, mode="multi"))
                 # time.sleep(3.0)
-                selected_option = self.robot.set_face_touchscreen_menu(["names", "drinks"], timeout=10, mode="single", speak_results=True)
+                # selected_option = self.robot.set_face_touchscreen_menu(["names", "drinks"], timeout=10, mode="single", speak_results=True)
+                selected_option = self.robot.set_face_touchscreen_menu(["toys", "drinks"], timeout=10, mode="single", speak_results=True)
                 print(selected_option[0])
                 # time.sleep(3.0)
+
+                o = selected_option[0]
                 
+                c = self.robot.get_object_class_from_object(o)
+                f = self.robot.get_furniture_from_object_class(c)
+                r = self.robot.get_room_from_furniture(f)
+                fnc = self.robot.get_navigation_coords_from_furniture(f)
+                flc = self.robot.get_location_coords_from_furniture(f)
+                rnc = self.robot.get_navigation_coords_from_room(r)
+                print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
+
+                ow = self.robot.get_object_width_from_object(o)
+                ol = self.robot.get_object_length_from_object(o)
+                oh = self.robot.get_object_height_from_object(o)
+                os = self.robot.get_object_shape_from_object(o)
+                ocp = self.robot.get_how_object_can_be_picked_from_object(o)
+                osp = self.robot.get_standard_pick_from_object(o)
+                print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
                 
                 
 
