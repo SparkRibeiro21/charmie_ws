@@ -25,6 +25,6 @@ def generate_launch_description():
         std_lf.nav2_navigation,
 
         # std_lf.charmie_multi_camera_launch_description,
-        std_lf.charmie_orbbec_base_camera_launch_description,
+        # std_lf.charmie_orbbec_base_camera_launch_description,
         
     ])

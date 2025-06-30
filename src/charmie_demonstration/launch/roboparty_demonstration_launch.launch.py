@@ -17,10 +17,10 @@ def generate_launch_description():
         std_lf.neck,
         std_lf.joy,
         std_lf.gamepad,
-        # std_lf.yolo_objects,
-        # std_lf.yolo_pose,
+        std_lf.yolo_objects,
+        std_lf.yolo_pose,
         # std_lf.lidar,
-        # std_lf.llm
+        std_lf.llm
         # std_lf.obstacles,
         # std_lf.navigation
         # std_lf.rosbag_record,

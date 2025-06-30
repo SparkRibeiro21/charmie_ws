@@ -173,9 +173,7 @@ CHARMIEGamepad::CHARMIEGamepad(const rclcpp::NodeOptions & options)
       rclcpp::Time now = pimpl_->clock->now();
       if ((now - pimpl_->last_joy_msg_time).seconds() > 0.5) {
         pimpl_->timeout = true;
-        RCLCPP_WARN(this->get_logger(), "No joystick msg for 0.5s, TIMEOUT!");
-
-        // TODO: Publish a GamepadController message with timeout=true and all other values set to 0 or false
+        // RCLCPP_WARN(this->get_logger(), "No joystick msg for 0.5s, TIMEOUT!");
         charmie_interfaces::msg::GamepadController controller_msg;
         controller_msg.timeout = pimpl_->timeout;
         pimpl_->gamepad_controller_publisher->publish(controller_msg);
@@ -243,7 +241,7 @@ std::string CHARMIEGamepad::Impl::get_yaml_path_for_controller(const std::string
     return (config_dir / "ps4.config.yaml").string();
   } else {
     RCLCPP_INFO(rclcpp::get_logger("CHARMIEGamepad"), "Default YAML config file selected");
-    return (config_dir / "xbox.config.yaml").string();  // Fallback
+    return (config_dir / "ps4.config.yaml").string();  // Fallback
   }
 }
 

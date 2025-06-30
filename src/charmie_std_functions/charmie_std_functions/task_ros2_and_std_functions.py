@@ -5,8 +5,9 @@ from rclpy.action.client import ClientGoalHandle, GoalStatus
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from example_interfaces.msg import Bool, Float32, Int16
-from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped, Twist
 from sensor_msgs.msg import Image
+from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
@@ -111,6 +112,7 @@ class ROS2TaskNode(Node):
         # Low level
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for gamepad controller
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for gamepad controller
+        self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
         self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", self.torso_low_level_callback, 10)
@@ -123,6 +125,9 @@ class ROS2TaskNode(Node):
         self.task_states_info_publisher = self.create_publisher(TaskStatesInfo, "task_states_info", 10)
         self.task_states_info_subscriber = self.create_subscription(TaskStatesInfo, "task_states_info", self.demo_task_states_info_callback, 10)
         self.task_state_selectable_publisher = self.create_publisher(Int16, "task_state_selectable", 10)
+        # Odom
+        self.odom_subscriber = self.create_subscription(Odometry, "/odometry/filtered", self.odom_callback, 10)
+        self.odom_wheels_subscriber = self.create_subscription(Odometry, "/wheel_encoders", self.odom_wheels_callback, 10)
         
 
         ### Services (Clients) ###
@@ -400,6 +405,9 @@ class ROS2TaskNode(Node):
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
+        self.current_odom_pose = None
+        self.current_odom_wheels_pose = None
+
     def task_states_info_publisher_timer(self):
 
         if self.task_name != "":
@@ -500,6 +508,13 @@ class ROS2TaskNode(Node):
     def target_pos_check_answer_callback(self, flag: Bool):
         self.flag_target_pos_check_answer = flag.data
         # print("RECEIVED NAVIGATION CONFIRMATION")
+
+    ### ODOMETRY ###
+    def odom_callback(self, msg):
+        self.current_odom_pose = msg.pose
+
+    def odom_wheels_callback(self, msg):
+        self.current_odom_wheels_pose = msg.pose
     
     ### Gamepad Controller ###
     def gamepad_controller_callback(self, controller: GamepadController):
@@ -1106,40 +1121,40 @@ class RobotStdFunctions():
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
-        self.L3_X = 0
-        self.L3_Y = 1
-        self.L3_ANGLE = 2
-        self.L3_DIST = 3
-        self.R3_X = 4
-        self.R3_Y = 5
-        self.R3_ANGLE = 6
-        self.R3_DIST = 7
-        self.L2 = 8
-        self.R2 = 9
+        self.AXIS_L3_XX = 0
+        self.AXIS_L3_YY = 1
+        self.AXIS_L3_ANGLE = 2
+        self.AXIS_L3_DIST = 3
+        self.AXIS_R3_XX = 4
+        self.AXIS_R3_YY = 5
+        self.AXIS_R3_ANGLE = 6
+        self.AXIS_R3_DIST = 7
+        self.AXIS_L2 = 8
+        self.AXIS_R2 = 9
 
-        self.CROSS = 0
-        self.CIRCLE = 1
-        self.SQUARE = 2
-        self.TRIANGLE = 3
-        self.L1 = 4
-        self.R1 = 5
-        self.L2 = 6
-        self.R2 = 7
-        self.L3 = 8
-        self.R3 = 9
-        self.DPAD_UP = 10
-        self.DPAD_DOWN = 11
-        self.DPAD_LEFT = 12
-        self.DPAD_RIGHT = 13
-        self.SHARE = 14
-        self.OPTIONS = 15
-        self.LOGO = 16
-        self.PAD = 17
+        self.BUTTON_CROSS = 0
+        self.BUTTON_CIRCLE = 1
+        self.BUTTON_SQUARE = 2
+        self.BUTTON_TRIANGLE = 3
+        self.BUTTON_L1 = 4
+        self.BUTTON_R1 = 5
+        self.BUTTON_L2 = 6
+        self.BUTTON_R2 = 7
+        self.BUTTON_L3 = 8
+        self.BUTTON_R3 = 9
+        self.BUTTON_DPAD_UP = 10
+        self.BUTTON_DPAD_DOWN = 11
+        self.BUTTON_DPAD_LEFT = 12
+        self.BUTTON_DPAD_RIGHT = 13
+        self.BUTTON_SHARE = 14
+        self.BUTTON_OPTIONS = 15
+        self.BUTTON_LOGO = 16
+        self.BUTTON_PAD = 17
 
-        self.BUTTON_ON = 0
-        self.BUTTON_RISING = 1
-        self.BUTTON_OFF = 2
-        self.BUTTON_FALLING = 3
+        self.ON = 0
+        self.RISING = 1
+        self.OFF = 2
+        self.FALLING = 3
 
     def get_demo_mode(self):
         return self.node.DEMO_OPTION
@@ -1920,8 +1935,81 @@ class RobotStdFunctions():
                         print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
 
     def add_rotation_to_pick_position(self, move_coords):
-        move_coords[2]+=45.0
-        return move_coords
+        move_coords_copy = move_coords.copy()
+        move_coords_copy[2]+=45.0
+        return move_coords_copy
+    
+    def adjust_omnidirectional_position(self, dx, dy, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+
+        ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
+        ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
+        ### ALL THE CODE IS READY. JUST REPLACE:
+        ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
+        ### THE FUNCTION PARAMETER use_wheel_odometry SHOULD BE USED
+        ### if use_wheel_odometry:
+        ###     USE: self.node.current_odom_wheels_pose
+        ### else:
+        ###     USE: self.node.current_odom_pose
+
+        # Wait until odom is received
+        while self.node.current_odom_pose is None:
+            time.sleep(0.01)
+
+        # Initial pose and orientation
+        pose = self.node.current_odom_pose.pose
+        start_x = pose.position.x
+        start_y = pose.position.y
+        q = pose.orientation
+        yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
+
+        # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
+        dx = dx + tolerance if dx > 0 else dx - tolerance
+        dy = dy + tolerance if dy > 0 else dy - tolerance
+
+        # Compute target in odom frame
+        target_x = start_x + math.cos(yaw) * dx - math.sin(yaw) * dy
+        target_y = start_y + math.sin(yaw) * dx + math.cos(yaw) * dy
+        # print("TARGETS", target_x, target_y)
+
+        rate_hz = 20  # Hz
+        rate = 1.0 / rate_hz
+
+        while True:
+            pose = self.node.current_odom_pose.pose
+            curr_x = pose.position.x
+            curr_y = pose.position.y
+
+            error_x = target_x - curr_x
+            error_y = target_y - curr_y
+            dist_error = math.sqrt(error_x**2 + error_y**2)
+            # print("ERRORS", error_x, error_y, dist_error)
+            # print("TOLERANCE", tolerance)
+
+            if dist_error < tolerance:
+                break
+
+            # Convert error from odom frame to base_footprint frame
+            vx = math.cos(-yaw) * error_x - math.sin(-yaw) * error_y
+            vy = math.sin(-yaw) * error_x + math.cos(-yaw) * error_y
+            # print("X Speed", max(-max_speed, min(max_speed, vx * kp)))
+            # print("Y Speed", max(-max_speed, min(max_speed, vy * kp)))
+
+            twist = Twist()
+            twist.linear.x = max(-max_speed, min(max_speed, vx * kp))
+            twist.linear.y = max(-max_speed, min(max_speed, vy * kp))
+            twist.angular.z = 0.0
+
+            self.node.cmd_vel_publisher.publish(twist)
+            time.sleep(rate)
+
+        # Stop the robot
+        # Dirty, but had to do this way because of some commands to low_level being lost
+        self.node.cmd_vel_publisher.publish(Twist())
+        time.sleep(0.1)  # wait for the cmd_vel to be published
+        self.node.cmd_vel_publisher.publish(Twist())
+        time.sleep(0.1)  # wait for the cmd_vel to be published
+        self.node.cmd_vel_publisher.publish(Twist())  
+        self.node.get_logger().info("Omnidirectional Adjustment Complete.")
 
     def search_for_person(self, tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
@@ -2510,7 +2598,7 @@ class RobotStdFunctions():
         
         return self.node.first_depth_base_image_received, current_frame_depth_base
 
-    def update_controller_state(self):
+    def update_gamepad_controller_state(self):
 
         self.node.previous_gamepad_controller_state = self.node.current_gamepad_controller_state
         self.node.current_gamepad_controller_state = self.node.gamepad_controller_state
@@ -2527,28 +2615,28 @@ class RobotStdFunctions():
     def get_gamepad_button_pressed(self, button_name, button_status):
 
         match button_status:
-            case self.BUTTON_ON:
+            case self.ON:
                 return self.node.current_gamepad_controller_state.buttons[button_name]
-            case self.BUTTON_RISING:
+            case self.RISING:
                 return self.node.current_gamepad_controller_state.buttons[button_name] \
                         and not self.node.previous_gamepad_controller_state.buttons[button_name]
-            case self.BUTTON_OFF:
+            case self.OFF:
                 return not self.node.current_gamepad_controller_state.buttons[button_name]
-            case self.BUTTON_FALLING:
+            case self.FALLING:
                 return not self.node.current_gamepad_controller_state.buttons[button_name] \
                         and self.node.previous_gamepad_controller_state.buttons[button_name]
             
     def get_gamepad_timeout(self, button_status):
 
         match button_status:
-            case self.BUTTON_ON:
+            case self.ON:
                 return self.node.current_gamepad_controller_state.timeout
-            case self.BUTTON_RISING:
+            case self.RISING:
                 return self.node.current_gamepad_controller_state.timeout \
                         and not self.node.previous_gamepad_controller_state.timeout
-            case self.BUTTON_OFF:
+            case self.OFF:
                 return not self.node.current_gamepad_controller_state.timeout
-            case self.BUTTON_FALLING:
+            case self.FALLING:
                 return not self.node.current_gamepad_controller_state.timeout \
                         and self.node.previous_gamepad_controller_state.timeout
 
@@ -2941,24 +3029,27 @@ class RobotStdFunctions():
                 return str(obj["room"]).replace(" ","_").lower()  # Return the class
         return None  # Return None if the object is not found
 
+    # In python lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one
     def get_navigation_coords_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj["nav_coords"]  # Return the class
+                return obj["nav_coords"].copy()  # Return the class
         return None  # Return None if the object is not found
 
+    # In python lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one
     def get_navigation_coords_from_room(self, room):
 
         # Iterate through the list of dictionaries
         for obj in self.node.rooms:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(room).replace(" ","_").lower():  # Check if the name matches
-                return obj["nav_coords"]  # Return the class
+                return obj["nav_coords"].copy()  # Return the class
         return None  # Return None if the object is not found
     
+    # In python lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one (in this case is not necessary because I am creating a new list)
     def get_location_coords_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
