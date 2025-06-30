@@ -1952,6 +1952,7 @@ class RobotStdFunctions():
 
         # Wait until odom is received
         while self.node.current_odom_pose is None:
+            self.node.get_logger().warning("Waiting for odom pose...") 
             time.sleep(0.01)
 
         # Initial pose and orientation
@@ -3028,7 +3029,7 @@ class RobotStdFunctions():
                 return str(obj["room"]).replace(" ","_").lower()  # Return the class
         return None  # Return None if the object is not found
 
-    # In python lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one
+    # In python, lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one
     def get_navigation_coords_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
@@ -3038,7 +3039,7 @@ class RobotStdFunctions():
                 return obj["nav_coords"].copy()  # Return the class
         return None  # Return None if the object is not found
 
-    # In python lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one
+    # In python, lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one
     def get_navigation_coords_from_room(self, room):
 
         # Iterate through the list of dictionaries
@@ -3048,7 +3049,7 @@ class RobotStdFunctions():
                 return obj["nav_coords"].copy()  # Return the class
         return None  # Return None if the object is not found
     
-    # In python lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one (in this case is not necessary because I am creating a new list)
+    # In python, lists are mutable, so we have to return a copy of the list to avoid any mistakes that modify the original one (in this case is not necessary because I am creating a new list)
     def get_location_coords_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
