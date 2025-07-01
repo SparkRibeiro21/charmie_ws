@@ -643,6 +643,7 @@ class LowLevelNode(Node):
         self.robot.set_omni_flags(self.robot.MOVEMENT, True)
         time.sleep(0.05)
         self.robot.set_omni_variables(self.robot.RGB, 100)
+        time.sleep(0.05)
 
         self.time_cmd_vel = time.time()
 
