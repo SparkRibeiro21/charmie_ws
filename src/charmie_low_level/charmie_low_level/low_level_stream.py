@@ -633,8 +633,13 @@ class LowLevelNode(Node):
         self.initialpose_to_north_orientation = 0.0
 
         self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
+        time.sleep(0.05)
         self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
+        time.sleep(0.05)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
+        time.sleep(0.05)
+        self.robot.set_omni_flags(self.robot.MOVEMENT, True)
+        time.sleep(0.05)
         self.robot.set_omni_variables(self.robot.RGB, 100)
 
         self.time_cmd_vel = time.time()
