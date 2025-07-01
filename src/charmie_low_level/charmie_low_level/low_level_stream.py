@@ -638,6 +638,8 @@ class LowLevelNode(Node):
         time.sleep(0.05)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
         time.sleep(0.05)
+        self.cmd_vel_callback(Twist())
+        time.sleep(0.05)
         self.robot.set_omni_flags(self.robot.MOVEMENT, True)
         time.sleep(0.05)
         self.robot.set_omni_variables(self.robot.RGB, 100)
