@@ -14,6 +14,7 @@ ros2_modules = {
     "charmie_arm":              True,
     "charmie_audio":            False,
     "charmie_face":             True,
+    "charmie_gamepad":          False,
     "charmie_head_camera":      True,
     "charmie_hand_camera":      True,
     "charmie_base_camera":      False,
@@ -26,7 +27,6 @@ ros2_modules = {
     "charmie_nav2":             True,
     "charmie_neck":             True,
     "charmie_obstacles":        False,
-    "charmie_ps4_controller":   False,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     True,
@@ -61,31 +61,29 @@ class TaskMain():
         self.task_states ={
             "Waiting_for_task_start": 0,  
             #"Hear_Object":           0,
-            "Move_to_Location":       1,
-            "Pick_Object":            2,
-            "Final_state":            3,
+            "Select_object_to_pick":  1,
+            "Move_to_Location":       2,
+            "Pick_Object":            3,
+            "Final_state":            4,
+            "Place_object":           5,
         }
 
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
         # Define what object to grab and how
-        self.object_name = "Pringles"
-        self.object_mode = "pick_front"
 
         self.home_position = "Office Table"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_position.replace(" ","_").lower())
         print(self.initial_position)
-        self.initial_position = [2.8, -4.80, 90.0] # temp (near Tiago desk for testing)
+        self.initial_position = [2.8, -4.80, 90.0] # temp (near CHARMIE desk for testing)
 
+        self.object_mode = "pick_front"
 
-        # All neck positions
-        if self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "horizontal":
-            self.tetas = [[-30, -45], [0, -45], [30, -45]]
-
-        elif self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
-            self.tetas = [[0, 15], [0, 0], [0, -35]]
-
-
+        #ARM DEMONSTRATION PLACE OBJECT
+        self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
+        self.arm_safe_first = [ -215, -70, -16, 80, 30, 182]
+        self.arm_safe_second = [ -181, 29, -103.4, 173.3, 13.9, 96.3]
+        self.arm_safe_final = [-201.1, 38, -112.2 , 120.9, 25.1, 146.1]
         
 
     # main state-machine function
@@ -121,10 +119,6 @@ class TaskMain():
             #     self.state = self.task_states["Move_to_Location"]
 
             if self.state == self.task_states["Waiting_for_task_start"]:
-
-                self.robot.set_initial_position(self.initial_position)
-                
-                print("SET INITIAL POSITION")
         
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
@@ -132,7 +126,27 @@ class TaskMain():
 
                 ### self.robot.wait_for_door_start()
 
-                ### self.robot.initial_move_past_entrance_door() # to do ...
+                self.robot.wait_for_start_button()
+                
+                self.robot.set_initial_position(self.initial_position)
+                
+                print("SET INITIAL POSITION")
+
+                self.state = self.task_states["Select_object_to_pick"]
+            
+            if self.state == self.task_states["Select_object_to_pick"]:
+
+                selected_option = self.robot.set_face_touchscreen_menu(["toys", "drinks", "fruits"], timeout=10, mode="single", speak_results=True)
+                print(selected_option[0])
+                self.object_name = selected_option[0]
+                #self.object_name = "Pringles"
+
+                # All neck positions
+                if self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "horizontal":
+                    self.tetas = [[-30, -45], [0, -45], [30, -45]]
+
+                elif self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
+                    self.tetas = [[0, 15], [0, 0], [0, -35]]
 
                 self.state = self.task_states["Move_to_Location"]
 
@@ -142,8 +156,8 @@ class TaskMain():
 
                 # After the robot has heard what is the object, the next start button press will start the task, enabling CHARMIE to move to location
                 print("START ROUTINE NEXT START")
-                self.robot.wait_for_start_button()
-                
+
+                self.robot.set_speech(filename="generic/careful", wait_for_end_of=True)                
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
                 self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
 
@@ -169,7 +183,28 @@ class TaskMain():
                 self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(self.home_position.replace(" ","_").lower()), wait_for_end_of=True)
 
                 # next state
-                self.state = self.task_states["Move_to_Location"]
+                self.state = self.task_states["Place_object"]
+
+                #while True:
+                #    pass
+
+            elif self.state == self.task_states["Place_object"]:
+
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_final, wait_for_end_of=True)
+                time.sleep(2)
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                time.sleep(2)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_final, wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                # next state
+                self.state = self.task_states["Select_object_to_pick"]
 
                 #while True:
                 #    pass
