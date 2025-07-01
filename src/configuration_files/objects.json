@@ -38,7 +38,7 @@
 {"name": "Dice", 		    "class": "Toys",		"width": 0.016, "length": 0.016, "height": 0.016, "shape": "cuboid",   "can_pick": "top",   "std_pick": "top"},
 {"name": "Baseball", 		"class": "Toys",		"width": 0.058, "length": 0.058, "height": 0.058, "shape": "sphere",   "can_pick": "both",  "std_pick": "top"},
 
-{"name": "Pringles", 		"class": "Fruits",		"width": 0.080, "length": 0.080, "height": 0.235, "shape": "cilinder", "can_pick": "both", "std_pick": "front"},
+{"name": "Pringles", 		"class": "Snacks",		"width": 0.080, "length": 0.080, "height": 0.235, "shape": "cilinder", "can_pick": "both", "std_pick": "front"},
 {"name": "Cornflakes", 		"class": "Snacks",		"width": 0.090, "length": 0.030, "height": 0.123, "shape": "cuboid", "can_pick": "both", "std_pick": "front"},
 {"name": "Cheezit", 		"class": "Snacks",		"width": 0.245, "length": 0.065, "height": 0.126, "shape": "cuboid", "can_pick": "both", "std_pick": "front"},
 

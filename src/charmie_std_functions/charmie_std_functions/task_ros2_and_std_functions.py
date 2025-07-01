@@ -3491,20 +3491,26 @@ class RobotStdFunctions():
                     #MOVE TO SEARCH TABLE
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_front_joints, wait_for_end_of=True)
                     #MOVE ARM TO INITIAL POSITION
-                    self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                    if self.navigation:
+                        self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=False)
+                        self.adjust_x_ = - self.adjust_x_
+                        self.adjust_y_ = - self.adjust_y_
+                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+                    else:
+                        self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
 
                 elif mode == "pick_top":
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_top, wait_for_end_of=True)
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
                     #MOVE ARM TO INITIAL POSITION
+                    if self.navigation:
+                        self.adjust_x_ = - self.adjust_x_
+                        self.adjust_y_ = - self.adjust_y_
+                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_) #TEST IN FUTURE
                     self.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=True)
                 
                 print(f"Bring object to initial pose")
-                if self.navigation:
-                    self.adjust_x_ = - self.adjust_x_
-                    self.adjust_y_ = - self.adjust_y_
-                    self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
                 self.set_face(camera="head", show_detections=True)
 
             #IF AN OBJECT WAS NOT FOUND

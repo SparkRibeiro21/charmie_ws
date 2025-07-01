@@ -762,6 +762,17 @@ class ArmUfactory(Node):
 			case 2:
 				self.finish_arm_movement_()
 
+
+	def slow_open_gripper(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=1000)
+			case 1:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
+
 	def adjust_linear_motion(self):
 		match self.estado_tr:
 			case 0:
@@ -2129,6 +2140,8 @@ class ArmUfactory(Node):
 				self.close_gripper_with_check_object(0)
 			case "open_gripper":
 				self.open_gripper()
+			case "slow_open_gripper":
+				self.slow_open_gripper()
 
 			# ADJUSTS MOVEMENTS FROM ARMCONTROLLER
 			case "adjust_linear_motion":
