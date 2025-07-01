@@ -3343,10 +3343,12 @@ class RobotStdFunctions():
     def pick_obj(self, selected_object="", mode="", first_tetas=[]):
 
         # Implement the logic for picking an object here
+        self.set_face(camera="head", show_detections=True)
         objects_found = self.search_for_objects(tetas = first_tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
         self.set_face(camera="hand", show_detections=True)
         # self.set_neck(position=[45.0, 0.0], wait_for_end_of=True) #Head turned 45 deg
         print("LIST OF DETECTED OBJECTS:")
+        self.navigation = True
 
         for o in objects_found:
             conf = f"{o.confidence * 100:.0f}%"
@@ -3361,6 +3363,11 @@ class RobotStdFunctions():
                 self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
                 self.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                 print(f"Initial pose to search for objects")
+
+                if self.navigation:
+                    self.adjust_x_ = o.position_relative.x - 0.7
+                    self.adjust_y_ = o.position_relative.y + 0.3
+                    self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
 
                 if mode == "pick_front":
                     self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
@@ -3493,6 +3500,10 @@ class RobotStdFunctions():
                     self.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=True)
                 
                 print(f"Bring object to initial pose")
+                if self.navigation:
+                    self.adjust_x_ = - self.adjust_x_
+                    self.adjust_y_ = - self.adjust_y_
+                    self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
                 self.set_face(camera="head", show_detections=True)
 
             #IF AN OBJECT WAS NOT FOUND
