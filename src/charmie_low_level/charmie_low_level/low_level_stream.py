@@ -589,6 +589,33 @@ class LowLevelNode(Node):
                 port_successfullly_opened = False
                 time.sleep(1.0)
         
+        # TF Broadcaster
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+
+        self.prev_cmd_vel = Twist()
+
+        self.robot = RobotControl(ser_port)
+        self.wheel_odometry = WheelOdometry()
+
+        self.current_orientation = 0.0
+        self.orientation_at_received_initialpose = 0.0
+        self.initialpose_to_north_orientation = 0.0
+
+        self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
+        time.sleep(0.05)
+        self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
+        time.sleep(0.05)
+        self.robot.set_omni_flags(self.robot.TIMEOUT, False)
+        time.sleep(0.05)
+        self.cmd_vel_callback(Twist())
+        time.sleep(0.05)
+        self.robot.set_omni_flags(self.robot.MOVEMENT, True)
+        time.sleep(0.05)
+        self.robot.set_omni_variables(self.robot.RGB, 100)
+        time.sleep(0.05)
+
+        # Topics and Services are now after the initial configuration to avoid any commands being received before the robot is ready
+
         ### TOPICS ### 
         # Torso
         self.torso_move_subscriber = self.create_subscription(Pose2D, "torso_move", self.torso_move_callback , 10)
@@ -619,31 +646,6 @@ class LowLevelNode(Node):
         self.internal_set_initial_position_define_north = self.create_service(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north", self.callback_set_initial_position_define_north)
         # Motors
         self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
-
-        # TF Broadcaster
-        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
-
-        self.prev_cmd_vel = Twist()
-
-        self.robot = RobotControl(ser_port)
-        self.wheel_odometry = WheelOdometry()
-
-        self.current_orientation = 0.0
-        self.orientation_at_received_initialpose = 0.0
-        self.initialpose_to_north_orientation = 0.0
-
-        self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
-        time.sleep(0.05)
-        self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
-        time.sleep(0.05)
-        self.robot.set_omni_flags(self.robot.TIMEOUT, False)
-        time.sleep(0.05)
-        self.cmd_vel_callback(Twist())
-        time.sleep(0.05)
-        self.robot.set_omni_flags(self.robot.MOVEMENT, True)
-        time.sleep(0.05)
-        self.robot.set_omni_variables(self.robot.RGB, 100)
-        time.sleep(0.05)
 
         self.time_cmd_vel = time.time()
 
