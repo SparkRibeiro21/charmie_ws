@@ -601,13 +601,19 @@ class LowLevelNode(Node):
         self.orientation_at_received_initialpose = 0.0
         self.initialpose_to_north_orientation = 0.0
 
+        self.time_cmd_vel = time.time()
+
         self.robot.set_omni_flags(self.robot.RESET_ENCODERS, True)
         time.sleep(0.05)
         self.robot.set_omni_variables(self.robot.ACCELERATION, 1)
         time.sleep(0.05)
         self.robot.set_omni_flags(self.robot.TIMEOUT, False)
         time.sleep(0.05)
-        self.cmd_vel_callback(Twist())
+        stop_motors = Vector3()
+        stop_motors.x = 0.0
+        stop_motors.y = 0.0
+        stop_motors.z = 100.0
+        self.omni_move_callback(stop_motors)  # reset omni move to avoid sending a command with no values
         time.sleep(0.05)
         self.robot.set_omni_flags(self.robot.MOVEMENT, True)
         time.sleep(0.05)
@@ -646,8 +652,6 @@ class LowLevelNode(Node):
         self.internal_set_initial_position_define_north = self.create_service(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north", self.callback_set_initial_position_define_north)
         # Motors
         self.activate_motors = self.create_service(ActivateBool, "activate_motors", self.callback_activate_motors)
-
-        self.time_cmd_vel = time.time()
 
         ### THERE IS NO WARNING THAT THE MOTOR BOARD IS NOT POWERED
         # test and reorganize
