@@ -648,7 +648,6 @@ class FaceMain():
         if self.node.is_yolo_obj_comm:
 
             BB_WIDTH = 3
-            text_font_t = pygame.font.SysFont(None, 28)
 
             for o in self.node.detected_objects.objects:
                 
@@ -668,7 +667,11 @@ class FaceMain():
                         self.draw_polygon_alpha(surface, bb_color+(128,), np_mask) # inside fill with transparecny
 
 
-            # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
+            # Removed text from object detection in face, because we had to mirror image, and the text was not readable anymore.
+            # In the future we can do the mirror right when we receive the image, so that the text is readable again.
+            # However we must mirror all dections as well.
+            """ # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
+            text_font_t = pygame.font.SysFont(None, 28)
             for o in self.node.detected_objects.objects:
                 
                 if o.camera == camera: # checks if camera stream shown is the same as the camera that detected the detection 
@@ -681,7 +684,7 @@ class FaceMain():
                         self.draw_text(surface, text, text_font_t, self.BLACK, int(o.box_top_left_x), int(o.box_top_left_y))
                     else:
                         self.draw_transparent_rect(surface, int(o.box_top_left_x), int(o.box_top_left_y-text_height+5), text_width, text_height, bb_color, 255)
-                        self.draw_text(surface, text, text_font_t, self.BLACK, int(o.box_top_left_x), int(o.box_top_left_y-text_height+5))
+                        self.draw_text(surface, text, text_font_t, self.BLACK, int(o.box_top_left_x), int(o.box_top_left_y-text_height+5)) """
 
     def show_yolo_pose_detections(self, surface, camera):
 
@@ -1228,6 +1231,11 @@ class FaceMain():
                         self.show_yolo_object_detections(surface, self.node.selected_camera_stream.split(' ')[0])
 
                     scaled_surface = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
+                    # The image used is a copy from GUI, where the prespective was seen from behind the robot,
+                    # However when people are looking to the robot face, should seen from front
+                    # Otherwise if you move left or right, the image will move in the opposite direction
+                    # Thus, we need to flip the image horizontally
+                    scaled_surface = pygame.transform.flip(scaled_surface, True, False) # flip the image horizontally
                     self.SCREEN.fill((0, 0, 0))  # cleans display to make sure if the new image does not use all pixels you can not see the pixels from last image on non-used pixels
                     self.SCREEN.blit(scaled_surface, (self.xx_shift, self.yy_shift))
                     pygame.display.update()

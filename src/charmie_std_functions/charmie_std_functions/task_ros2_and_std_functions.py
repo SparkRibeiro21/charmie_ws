@@ -3210,7 +3210,7 @@ class RobotStdFunctions():
         self.activate_tracking(activate=True, points=points, bbox=bb)
         # self.activate_tracking(activate=False)
 
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, speak_results=True, wait_for_end_of=True):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, speak_results=True, end_speak_file="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
         options = []
 
@@ -3221,16 +3221,25 @@ class RobotStdFunctions():
         for obj_class in self.node.objects_classes_file:
             object_classes.append(obj_class["name"].lower())
 
+        rooms = [] # this was added to have an automatic way to get all rooms for the match case
+        for rms in self.node.rooms:
+            rooms.append(rms["name"].lower())
+
         for c in choice_category:
             c = c.replace("_"," ").lower()
             match c:
-                ### AUTOMATIZAR ESTA LISTA DE CLASSES
                 case _ if c in object_classes: # this way by just changing the configuration_files about objects_classes new categories are added without having to remember to manually change this std_function
                     files_for_speech.append(self.node.objects_file)
                     folder_for_speech.append("objects_names")
                     for obj in self.node.objects_file:
                         if obj["class"].lower() == c:
                             options.append(obj["name"])
+                case _ if c in rooms: # this way by just changing the configuration_files about objects_classes new categories are added without having to remember to manually change this std_function
+                    files_for_speech.append(self.node.furniture)
+                    folder_for_speech.append("furniture")
+                    for furnit in self.node.furniture:
+                        if furnit["room"].lower() == c:
+                            options.append(furnit["name"])
                 case "names":
                     files_for_speech.append(self.node.names)
                     folder_for_speech.append("person_names")
@@ -3279,11 +3288,11 @@ class RobotStdFunctions():
             self.node.waited_for_end_of_face_touchscreen_menu = False
 
             if not self.node.selected_list_options_touchscreen_menu:
-                self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+                self.set_speech(filename=end_speak_file, wait_for_end_of=True)
                 return ["ERROR"]
             
             elif self.node.selected_list_options_touchscreen_menu[0] == "TIMEOUT":
-                self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+                self.set_speech(filename=end_speak_file, wait_for_end_of=True)
                 return self.node.selected_list_options_touchscreen_menu
         
             else:
@@ -3307,7 +3316,7 @@ class RobotStdFunctions():
         
         else:
             print("FACE TOUCHSCREEN MENU SKIPPED! NO VALID OPTIONS!")
-            self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+            self.set_speech(filename=end_speak_file, wait_for_end_of=True)
             return ["ERROR"]
 
     def get_quaternion_from_euler(self, roll, pitch, yaw):
