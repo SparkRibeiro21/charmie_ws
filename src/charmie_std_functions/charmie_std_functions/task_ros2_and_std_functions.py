@@ -3278,11 +3278,11 @@ class RobotStdFunctions():
             self.node.waited_for_end_of_face_touchscreen_menu = False
 
             if not self.node.selected_list_options_touchscreen_menu:
-                self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+                self.set_speech(filename=end_speak_file, wait_for_end_of=True)
                 return ["ERROR"]
             
             elif self.node.selected_list_options_touchscreen_menu[0] == "TIMEOUT":
-                self.set_speech(filename="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True)
+                self.set_speech(filename=end_speak_file, wait_for_end_of=True)
                 return self.node.selected_list_options_touchscreen_menu
         
             else:
