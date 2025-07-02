@@ -335,6 +335,12 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
+        self.tracking = Node(package='charmie_tracking_sam2',
+                            executable='tracking_sam2',
+                            name='tracking_sam2',
+                            emulate_tty=True
+                            )
+        
         self.lidar = Node(package='charmie_lidar_hokuyo',
                             executable='lidar_hokuyo',
                             name='lidar_hokuyo',
