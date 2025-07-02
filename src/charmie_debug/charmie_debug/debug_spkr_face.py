@@ -124,15 +124,15 @@ class TaskMain():
                 # time.sleep(3.0)
                 #print("Selected option via face touchscreen menu:", self.robot.set_face_touchscreen_menu(["foods", "drinks"], timeout=10, mode="multi"))
                 # time.sleep(3.0)
-                selected_option = self.robot.set_face_touchscreen_menu(["names", "drinks"], timeout=10, mode="single", speak_results=True)
-                print(selected_option[0])
+                # selected_option = self.robot.set_face_touchscreen_menu(["names", "drinks"], timeout=10, mode="single", speak_results=True)
+                # print(selected_option[0])
                 # time.sleep(3.0)
-                
-                
-                
 
-
-
+                selected_option = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True)
+                selected_option = self.robot.set_face_touchscreen_menu([selected_option[0]], timeout=10, mode="single", speak_results=True)
+                
+                selected_option_ = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True)
+                selected_option_ = self.robot.set_face_touchscreen_menu([selected_option_[0]], timeout=10, mode="single", speak_results=True)
 
 
                 

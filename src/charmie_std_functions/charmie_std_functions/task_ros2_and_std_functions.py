@@ -3211,16 +3211,25 @@ class RobotStdFunctions():
         for obj_class in self.node.objects_classes_file:
             object_classes.append(obj_class["name"].lower())
 
+        rooms = [] # this was added to have an automatic way to get all rooms for the match case
+        for rms in self.node.rooms:
+            rooms.append(rms["name"].lower())
+
         for c in choice_category:
             c = c.replace("_"," ").lower()
             match c:
-                ### AUTOMATIZAR ESTA LISTA DE CLASSES
                 case _ if c in object_classes: # this way by just changing the configuration_files about objects_classes new categories are added without having to remember to manually change this std_function
                     files_for_speech.append(self.node.objects_file)
                     folder_for_speech.append("objects_names")
                     for obj in self.node.objects_file:
                         if obj["class"].lower() == c:
                             options.append(obj["name"])
+                case _ if c in rooms: # this way by just changing the configuration_files about objects_classes new categories are added without having to remember to manually change this std_function
+                    files_for_speech.append(self.node.furniture)
+                    folder_for_speech.append("furniture")
+                    for furnit in self.node.furniture:
+                        if furnit["room"].lower() == c:
+                            options.append(furnit["name"])
                 case "names":
                     files_for_speech.append(self.node.names)
                     folder_for_speech.append("person_names")
