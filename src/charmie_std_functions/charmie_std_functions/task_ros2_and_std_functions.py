@@ -3200,7 +3200,7 @@ class RobotStdFunctions():
         self.activate_tracking(activate=True, points=points, bbox=bb)
         # self.activate_tracking(activate=False)
 
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, speak_results=True, end_speak_file="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, speak_results=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
         options = []
 
@@ -3263,7 +3263,7 @@ class RobotStdFunctions():
         
         if options:
     
-            self.set_speech(filename="face_touchscreen_menu/init_touchscreen_menu", wait_for_end_of=True)
+            self.set_speech(filename=start_speak_file, wait_for_end_of=True)
     
             request = SetFaceTouchscreenMenu.Request()
             request.command = options
@@ -3278,11 +3278,11 @@ class RobotStdFunctions():
             self.node.waited_for_end_of_face_touchscreen_menu = False
 
             if not self.node.selected_list_options_touchscreen_menu:
-                self.set_speech(filename=end_speak_file, wait_for_end_of=True)
+                self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
                 return ["ERROR"]
             
             elif self.node.selected_list_options_touchscreen_menu[0] == "TIMEOUT":
-                self.set_speech(filename=end_speak_file, wait_for_end_of=True)
+                self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
                 return self.node.selected_list_options_touchscreen_menu
         
             else:
@@ -3306,7 +3306,7 @@ class RobotStdFunctions():
         
         else:
             print("FACE TOUCHSCREEN MENU SKIPPED! NO VALID OPTIONS!")
-            self.set_speech(filename=end_speak_file, wait_for_end_of=True)
+            self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
             return ["ERROR"]
 
     def get_quaternion_from_euler(self, roll, pitch, yaw):
