@@ -3519,10 +3519,10 @@ class RobotStdFunctions():
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
                     #MOVE ARM TO INITIAL POSITION
                     if self.navigation:
+                        self.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=False)
                         self.adjust_x_ = - self.adjust_x_
                         self.adjust_y_ = - self.adjust_y_
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_) #TEST IN FUTURE
-                    self.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=True)
                 
                 print(f"Bring object to initial pose")
                 self.set_face(camera="head", show_detections=True)

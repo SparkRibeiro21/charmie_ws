@@ -19,6 +19,7 @@ def generate_launch_description():
         std_lf.lidar,
         std_lf.lidar_bottom,
         
+        std_lf.audio,
         std_lf.speakers,
         std_lf.neck,
         std_lf.face,
