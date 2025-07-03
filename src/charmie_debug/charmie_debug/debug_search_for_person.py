@@ -60,9 +60,11 @@ class TaskMain():
         Final_State = 4
 
         # VARS ...
-        self.state = Search_for_person
+        self.state = Search_for_objects
 
         print("IN NEW MAIN")
+
+        self.robot.set_initial_position([0.0, 0.0, 0.0])
 
         while True:
 
@@ -91,10 +93,10 @@ class TaskMain():
                 time.sleep(0.5)
 
                 for p in people_found:
-                    print(p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z)
+                    print(p.position_absolute.x, p.position_absolute.y, p.position_absolute.z)
                     path = self.robot.detected_person_to_face_path(person=p, send_to_face=True)
                     # self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                    self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute_head.z], wait_for_end_of=True)
+                    self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
                     time.sleep(4)
                                 
                 # next state
@@ -113,7 +115,7 @@ class TaskMain():
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-30, -45], [0, -45], [30, -45]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, use_arm=False, detect_objects=True, detect_objects_hand=True, detect_objects_base=True)
+                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=False, detect_objects_hand=False, detect_objects_base=True)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
@@ -126,9 +128,12 @@ class TaskMain():
                 self.robot.set_rgb(CYAN+HALF_ROTATE)
                 time.sleep(0.5)
 
-                for o in objects_found:
-                    path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
-                    time.sleep(4)
+                if objects_found:
+                    self.robot.set_speech(filename="generic/found_the", wait_for_end_of=True)
+                    for o in objects_found:
+                        path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
+                        self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+                        time.sleep(4)
                                 
                 # next state
                 self.state = Final_State
@@ -146,6 +151,9 @@ class TaskMain():
             
 
             elif self.state == Final_State:
+                
+                self.robot.set_face("charmie_face")
+                self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=False)
                 print("Finished task")
 
                 while True:

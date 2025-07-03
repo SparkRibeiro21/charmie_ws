@@ -34,22 +34,22 @@ def generate_launch_description():
         #####################################################################
         # Sensors                                                           # 
         #####################################################################
-        # std_lf.lidar,
-        # std_lf.lidar_bottom,
+        std_lf.lidar,
+        std_lf.lidar_bottom,
         # std_lf.audio,
         
         #####################################################################
         # Localization                                                      # 
         #####################################################################
-        # std_lf.odometry_lidar,
-        # std_lf.robot_localization,
-        # std_lf.charmie_localisation,
+        std_lf.odometry_lidar,
+        std_lf.robot_localization,
+        std_lf.charmie_localisation,
 
         #####################################################################
         # Navigation                                                        # 
         #####################################################################
-        # std_lf.delayed_nav2_localization,        
-        # std_lf.nav2_navigation,
+        std_lf.delayed_nav2_localization,        
+        std_lf.nav2_navigation,
 
         #####################################################################
         # Cameras                                                           # 

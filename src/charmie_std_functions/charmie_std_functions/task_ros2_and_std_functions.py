@@ -2011,12 +2011,13 @@ class RobotStdFunctions():
         self.node.cmd_vel_publisher.publish(Twist())  
         self.node.get_logger().info("Omnidirectional Adjustment Complete.")
 
-    def search_for_person(self, tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
+    def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
         self.set_speech(filename="generic/search_people", wait_for_end_of=False)
         # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-        
+        self.set_face(camera="head", show_detections=True)
+
         total_person_detected = []
         person_detected = []
         people_ctr = 0
@@ -2140,9 +2141,10 @@ class RobotStdFunctions():
                 # print("ADDED: ", p.index)
                 filtered_persons.append(p)
             to_append.clear()
-            
+        
+        self.set_face("charmie_face")    
         self.set_neck(position=[0, 0], wait_for_end_of=False)
-        self.set_rgb(BLUE+HALF_ROTATE)
+        self.set_rgb(YELLOW+HALF_ROTATE)
 
         sfp_pub = ListOfDetectedPerson()
         # print("FILTERED:")
@@ -2172,7 +2174,7 @@ class RobotStdFunctions():
         
         return face_path
 
-    def search_for_objects(self, tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
+    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -2207,6 +2209,14 @@ class RobotStdFunctions():
                                        activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
                                        minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
+            
+            if detect_objects or detect_furniture:        
+                self.set_face(camera="head", show_detections=True)
+            elif detect_objects_hand or detect_furniture_hand:
+                self.set_face(camera="hand", show_detections=True)
+            elif detect_objects_base or detect_furniture_base:
+                self.set_face(camera="base", show_detections=True)
+                
             # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
             
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
@@ -2455,8 +2465,9 @@ class RobotStdFunctions():
                 final_objects = filtered_objects
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
+        self.set_face("charmie_face")    
         self.set_neck(position=[0, 0], wait_for_end_of=False)
-        self.set_rgb(BLUE+HALF_ROTATE)
+        self.set_rgb(YELLOW+HALF_ROTATE)
 
         # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
