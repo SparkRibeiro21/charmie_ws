@@ -3374,19 +3374,8 @@ class RobotStdFunctions():
                 self.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                 print(f"Initial pose to search for objects")
 
-                if self.navigation:
-                    if mode == "front":
-                        self.adjust_x_ = o.position_relative.x - 0.7
-                        self.adjust_y_ = o.position_relative.y + 0.3
-                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
-                    if mode == "top":
-                        self.adjust_x_ = o.position_relative.x - 0.42
-                        self.adjust_y_ = o.position_relative.y + 0.42
-                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
-
                 if mode == "front":
-                    self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
-
+                    
                     #HEIGHT CALCULATIONS
                     high_z = (o.position_relative.z - 1.28)*100
                     rise_z = [high_z, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -3395,14 +3384,30 @@ class RobotStdFunctions():
 
                     #CHANGE ARM HEIGHT DEPENDING ON FOUND OBJECT HEIGHT
                     if 0.55 <= o.position_relative.z <= 1.1:
+                        if self.navigation:
+                            self.adjust_x_ = o.position_relative.x - 0.7
+                            self.adjust_y_ = o.position_relative.y + 0.3
+                            self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+
+                        self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
+
                         self.set_arm(command="search_front_min_z", wait_for_end_of=True)
                         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = descend_z, wait_for_end_of=True)
+
                         return self.hand_search(selected_object, mode)
                         self.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
 
                     elif 1.1 < o.position_relative.z <=1.6:
+                        if self.navigation:
+                            self.adjust_x_ = o.position_relative.x - 0.6
+                            self.adjust_y_ = o.position_relative.y + 0.2
+                            self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+
+                        self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
+
                         self.set_arm(command="search_front_max_z", wait_for_end_of=True)
                         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = rise_z, wait_for_end_of=True)
+
                         return self.hand_search(selected_object, mode)
                         self.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
 
@@ -3412,6 +3417,11 @@ class RobotStdFunctions():
 
                 #BEGIN PICK TOP IF SELECTED
                 elif mode == "top":
+                    if self.navigation:
+                        self.adjust_x_ = o.position_relative.x - 0.42
+                        self.adjust_y_ = o.position_relative.y + 0.42
+                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
                     return self.hand_search(selected_object, mode)
 
@@ -3430,6 +3440,7 @@ class RobotStdFunctions():
         # print(len(table_    '''objects))
         for o in table_objects:
             ow = self.get_object_length_from_object(o.object_name)
+            oh = self.get_object_height_from_object(o.object_name)
             conf = f"{o.confidence * 100:.0f}%"
 
             #SAVE NEW X,Y,Z
@@ -3443,9 +3454,9 @@ class RobotStdFunctions():
 
             print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} {o.orientation} ({hand_x_},{hand_y_},{hand_z_})")
             if mode == "front":
-                correct_x = ((o.position_cam.x + ow - tf_x)*1000) - 150
+                correct_x = ((o.position_cam.x + ow/2 - tf_x)*1000) - 200
             elif mode == "top":
-                correct_x = ((o.position_cam.x + ow/3 - tf_x)*1000) - 150
+                correct_x = ((o.position_cam.x + oh/2 - tf_x)*1000) - 200
             correct_y = (o.position_cam.y - tf_y)*1000
             correct_z = (o.position_cam.z - tf_z)*1000
 
@@ -3457,9 +3468,9 @@ class RobotStdFunctions():
 
             #DEFINE AND CALCULATE KEY ARM POSITIONS
             object_position = [correct_z, -correct_y, correct_x, 0.0, 0.0, correct_rotation]
-            final_position = [0.0, 0.0, 150.0, 0.0, 0.0, 0.0]
-            security_position_front = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -250.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
-            security_position_top = [0.00, 0.0, -150.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+            final_position = [0.0, 0.0, 200.0, 0.0, 0.0, 0.0]
+            security_position_front = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -225.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+            security_position_top = [0.00, 0.0, -200.0, 0.0, 0.0, 0.0]
             object_reajust = [0.0, 0.0, 0.0, 0.0, 0.0, -correct_rotation]
             
             search_table_top_joints =  [-152.2, 59.4, -129.4, -85.2, 116.7, 66.7]
@@ -3566,7 +3577,7 @@ class RobotStdFunctions():
             _, self.curr_frame = self.get_hand_rgb_image()
 
             #IF IMAGES ARE CLOSE BASED ON THRESHOLD ADD TO STABLE TIMER, IF NOT RESET STABLE TIMER 
-            if (self.is_stable()) and (image_time_out >= 0.5) :
+            if (self.is_stable()) and (image_time_out >= 0.7) :
                 stable_image += 0.1
             else:
                 stable_image = 0.0

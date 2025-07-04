@@ -77,7 +77,7 @@ class TaskMain():
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
-        self.GET_HEAR = True
+        self.GET_HEAR = False
 
         # self.initial_position = [2.8, -4.80, 90.0] # temp (near CHARMIE desk for testing)
     
@@ -255,9 +255,11 @@ class TaskMain():
 
                 if self.object_mode == "front":
                     self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
-                    self.arm_safe_first = [ -215, -70, -16, 80, 30, 182]
-                    self.arm_safe_second = [-793, 18.3, 403, 90.7, 0.3, -90.1]  
-                    final_z = (1.06 - self.furniture_z - (self.object_z/1.5)) * 1000 
+                    # self.arm_safe_first = [ -215, -70, -16, 80, 30, 182]
+                    self.arm_safe_first = [-172.2, -70.5, -13.7, 90, 33.1, 167.4]
+                    # self.arm_safe_second = [-793, 18.3, 403, 90.7, 0.3, -90.1]
+                    self.arm_safe_second = [-791, -29, 232.4, 90.7, 0.3, -90.1]  
+                    final_z = (1.125 - self.furniture_z - (self.object_z/1.5)) * 1000 
                     self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
                     self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 
