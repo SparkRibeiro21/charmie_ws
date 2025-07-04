@@ -15,7 +15,7 @@ def generate_launch_description():
         
         #####################################################################
         # Visualization and Debugging                                       # 
-        #####################################################################
+        #####################################################################1
         std_lf.rviz2_nav2_node,
         # std_lf.gui,
         std_lf.marker_arrays_debug,
@@ -27,7 +27,7 @@ def generate_launch_description():
         # LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
         # std_lf.arm,
         std_lf.speakers,
-        std_lf.neck,
+        # std_lf.neck,
         # std_lf.face,
         std_lf.low_level,
         

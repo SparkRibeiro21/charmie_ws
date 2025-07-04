@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              False,
     "charmie_audio":            False,
-    "charmie_face":             True,
+    "charmie_face":             False,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
     "charmie_base_camera":      False,
@@ -25,9 +25,9 @@ ros2_modules = {
     "charmie_low_level":        False,
     "charmie_navigation":       False,
     "charmie_nav2":             False,
-    "charmie_neck":             False,
+    "charmie_neck":             True,
     "charmie_obstacles":        False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -98,6 +98,14 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
+
+                self.robot.set_neck_coords(flc, wait_for_end_of=True)
+                # self.robot.set_neck_coords([0,0,0], wait_for_end_of=True)
+                # self.robot.set_neck_coords([1.5, 0, 0], wait_for_end_of=True)
+
+                while True:
+                    pass
+
                 # self.robot.set_face_touchscreen_menu(["dishes", "toys"])
                 # self.robot.set_face_touchscreen_menu(["custom"], custom_options=["ines", "tiago", "charmie", "etc"])
                 # self.robot.set_face_touchscreen_menu(["poker"])
@@ -139,8 +147,6 @@ class TaskMain():
                 # self.robot.set_face("qr_code")
                 # time.sleep(3.0)
                 
-                while True:
-                    pass
 
                 while True:
                     self.robot.set_face(camera="head", show_detections=True)
