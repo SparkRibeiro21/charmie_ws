@@ -60,7 +60,7 @@ class TaskMain():
         Final_State = 4
 
         # VARS ...
-        self.state = Search_for_objects
+        self.state = Search_for_person
 
         print("IN NEW MAIN")
 
@@ -115,7 +115,7 @@ class TaskMain():
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-30, -45], [0, -45], [30, -45]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=False, detect_objects_hand=False, detect_objects_base=True)
+                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:

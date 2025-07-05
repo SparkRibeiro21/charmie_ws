@@ -545,51 +545,7 @@ class NeckNode(Node):
         self.tf_broadcaster.sendTransform(neck_tilt_transform)
         # print(pose.tilt)
         # self.get_logger().info('Published TF from neck_pan_link to neck_tilt_link')
-        
-    """ def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
-        
-        
-        self.get_logger().info(f"Target: x={target_x:.3f}, y={target_y:.3f}, z={target_z:.3f}")
-
-        try:
-            # Target point in world (e.g., map or base_footprint)
-            target_point = PointStamped()
-            target_point.header.frame_id = 'map'  # or 'base_footprint', etc.
-            target_point.header.stamp = Time(sec=0, nanosec=0) 
-            target_point.point.x = target_x
-            target_point.point.y = target_y
-            target_point.point.z = target_z
-
-            # Transform into pan joint frame
-            transformed_point = self.tf_buffer.transform(
-                target_point,
-                'neck_base_link',
-                timeout=rclpy.duration.Duration(seconds=0.5)
-            )
-
-            x = transformed_point.point.x
-            y = transformed_point.point.y
-            z = transformed_point.point.z
-
-            # Compute pan (rotation around Z)
-            pan_rad = math.atan2(y, x)
-
-            # Compute tilt (rotation around Y)
-            r = math.sqrt(x ** 2 + y ** 2)
-            tilt_rad = math.atan2(z, r)
-
-            pan_deg = math.degrees(pan_rad)
-            tilt_deg = math.degrees(tilt_rad)
-
-            self.get_logger().info(f"TF-based Look At: pan={pan_deg:.2f}, tilt={tilt_deg:.2f}")
-
-            # Send command (offset by +180 for your system convention)
-            self.move_neck(pan_deg + 180.0, tilt_deg + 180.0, tracking_mode=tracking_mode)
-
-        except Exception as e:
-            self.get_logger().error(f"[TF ERROR] {str(e)}")
-            self.move_neck(180.0, 180.0, tracking_mode=False) """
-    
+            
     def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
         self.get_logger().info(f"Target: x={target_x:.3f}, y={target_y:.3f}, z={target_z:.3f}")
 
@@ -602,7 +558,15 @@ class NeckNode(Node):
             target_point.point.y = target_y
             target_point.point.z = target_z
 
-            # Get D455 camera position in 'map' frame
+            # Wait up to 0.5s for the transform to be available
+            if not self.tf_buffer.can_transform(
+                'map', 'D455_head_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=0.5)
+            ):
+                self.get_logger().error("[TF ERROR] Transform not available within 0.5s")
+                self.move_neck(180.0, 180.0, tracking_mode=False)
+                return
+
+            # Get camera pose in map frame (latest available)
             cam_tf = self.tf_buffer.lookup_transform(
                 'map', 'D455_head_link', rclpy.time.Time()
             )
