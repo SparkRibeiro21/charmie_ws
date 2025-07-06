@@ -435,7 +435,25 @@ class LaunchStdFunctions():
             }.items()
         )
 
-        
+        ### ADDITIONAL NON VISIBLE MAPS SERVER LAYER
+        manual_obstacles_map_path = os.path.join(
+            get_package_share_path('configuration_files'),
+            'maps',
+            'LAR_map_03_2025_save_blind_furniture.yaml'
+        )
+
+        self.manual_obstacles_map_server = Node(
+            package='nav2_map_server',
+            executable='map_server',
+            name='manual_obstacle_map_server',
+            output='screen',
+            parameters=[{
+                'yaml_filename': manual_obstacles_map_path,
+                'topic_name': '/manual_obstacles_map',
+                'use_sim_time': False
+            }]
+        )
+                
         ### LOCALIZATION
 
         # Exmaples of how the map should be added to launch file
