@@ -1,4 +1,4 @@
-image: LAR_map_03_2025_save_preclean.pgm
+image: map.pgm
 mode: trinary
 resolution: 0.05
 origin: [-2.41, -8.62, 0]
