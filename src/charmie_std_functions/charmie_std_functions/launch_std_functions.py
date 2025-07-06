@@ -439,7 +439,7 @@ class LaunchStdFunctions():
         manual_obstacles_map_path = os.path.join(
             get_package_share_path('configuration_files'),
             'maps',
-            'LAR_map_03_2025_save_blind_furniture.yaml'
+            'manual_obstacles.yaml'
         )
 
         self.manual_obstacles_map_server = Node(
@@ -457,7 +457,7 @@ class LaunchStdFunctions():
         ### LOCALIZATION
 
         # Exmaples of how the map should be added to launch file
-        map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', 'LAR_map_03_2025_save.yaml')
+        map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', 'map.yaml')
         # map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', 'Robocup2023', 'robocup23_house_save.yaml')
 
         # Adds localization mode (AMCL) from nav2

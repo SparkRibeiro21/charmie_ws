@@ -76,7 +76,7 @@ def generate_launch_description():
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
         # default_value=os.path.join(get_package_share_directory('configuration_files'), 'maps', 'sim_tests', 'charmie_diff_sim_map_full_save.yaml'),
-        default_value=os.path.join(get_package_share_directory('configuration_files'), 'maps', 'LAR_map_03_2025_save.yaml'),
+        default_value=os.path.join(get_package_share_directory('configuration_files'), 'maps', 'map.yaml'),
         description='Full path to map yaml file to load')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
