@@ -202,11 +202,15 @@ local_costmap:
       height: 3
       resolution: 0.05
       robot_radius: 0.28
-      plugins: ["voxel_layer", "inflation_layer"]
+      plugins: ["manual_obstacles", "voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
         inflation_radius: 0.55
+      manual_obstacles:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_topic: "/manual_obstacles_map"
+        map_subscribe_transient_local: True
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -265,7 +269,7 @@ global_costmap:
       robot_radius: 0.28
       resolution: 0.05
       track_unknown_space: true
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      plugins: ["static_layer", "manual_obstacles", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -305,6 +309,10 @@ global_costmap:
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_topic: "/map"  # Base map (navigation map)
+        map_subscribe_transient_local: True
+      manual_obstacles:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_topic: "/manual_obstacles_map"
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"

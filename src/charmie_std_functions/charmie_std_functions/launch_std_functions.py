@@ -335,6 +335,12 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
+        self.tracking = Node(package='charmie_tracking_sam2',
+                            executable='tracking_sam2',
+                            name='tracking_sam2',
+                            emulate_tty=True
+                            )
+        
         self.lidar = Node(package='charmie_lidar_hokuyo',
                             executable='lidar_hokuyo',
                             name='lidar_hokuyo',
@@ -429,11 +435,29 @@ class LaunchStdFunctions():
             }.items()
         )
 
-        
+        ### ADDITIONAL NON VISIBLE MAPS SERVER LAYER
+        manual_obstacles_map_path = os.path.join(
+            get_package_share_path('configuration_files'),
+            'maps',
+            'manual_obstacles.yaml'
+        )
+
+        self.manual_obstacles_map_server = Node(
+            package='nav2_map_server',
+            executable='map_server',
+            name='manual_obstacle_map_server',
+            output='screen',
+            parameters=[{
+                'yaml_filename': manual_obstacles_map_path,
+                'topic_name': '/manual_obstacles_map',
+                'use_sim_time': False
+            }]
+        )
+                
         ### LOCALIZATION
 
         # Exmaples of how the map should be added to launch file
-        map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', 'LAR_map_03_2025_save.yaml')
+        map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', 'map.yaml')
         # map_path = os.path.join(get_package_share_path('configuration_files'), 'maps', 'Robocup2023', 'robocup23_house_save.yaml')
 
         # Adds localization mode (AMCL) from nav2

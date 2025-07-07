@@ -2,8 +2,10 @@
 
 import rclpy
 from rclpy.node import Node
-import tf2_ros
-from geometry_msgs.msg import Pose2D, Point, TransformStamped
+from tf2_ros import Buffer, TransformListener, TransformBroadcaster
+from tf2_geometry_msgs import do_transform_point
+from geometry_msgs.msg import Pose2D, Point, TransformStamped, PointStamped
+from builtin_interfaces.msg import Time
 from example_interfaces.msg import Bool
 from charmie_interfaces.msg import NeckPosition
 from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackPerson, TrackObject, TrackContinuous
@@ -169,7 +171,10 @@ class NeckNode(Node):
         self.tracking_rem_tilt = 0
 
         # TF Broadcaster
-        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
+        self.tf_broadcaster = TransformBroadcaster(self)
+        # TF listener for transforming coordinates
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
 
         # TOPICS:
         # sends the current position of the servos after every change made on the publisher topics
@@ -540,9 +545,61 @@ class NeckNode(Node):
         self.tf_broadcaster.sendTransform(neck_tilt_transform)
         # print(pose.tilt)
         # self.get_logger().info('Published TF from neck_pan_link to neck_tilt_link')
-        
-
+            
     def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
+        self.get_logger().info(f"Target: x={target_x:.3f}, y={target_y:.3f}, z={target_z:.3f}")
+
+        try:
+            # Target point
+            target_point = PointStamped()
+            target_point.header.frame_id = 'map'
+            target_point.header.stamp = Time(sec=0, nanosec=0)
+            target_point.point.x = target_x
+            target_point.point.y = target_y
+            target_point.point.z = target_z
+
+            # Wait up to 0.5s for the transform to be available
+            if not self.tf_buffer.can_transform(
+                'map', 'D455_head_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=0.5)
+            ):
+                self.get_logger().error("[TF ERROR] Transform not available within 0.5s")
+                self.move_neck(180.0, 180.0, tracking_mode=False)
+                return
+
+            # Get camera pose in map frame (latest available)
+            cam_tf = self.tf_buffer.lookup_transform(
+                'map', 'D455_head_link', rclpy.time.Time()
+            )
+            cam_pos = cam_tf.transform.translation
+
+            # Vector from camera to target (in 'map' frame)
+            dx = target_x - cam_pos.x
+            dy = target_y - cam_pos.y
+            dz = target_z - cam_pos.z
+
+            # Compute pan (rotation around Z): angle from camera to point in XY plane
+            pan_rad = math.atan2(dy, dx)
+
+            # Compute tilt (rotation around Y): angle from camera to point in vertical plane
+            r = math.sqrt(dx**2 + dy**2)
+            tilt_rad = math.atan2(dz, r)
+
+            # Convert to degrees
+            pan_deg = math.degrees(pan_rad)
+            tilt_deg = math.degrees(tilt_rad)
+
+            self.get_logger().info(
+                f"Camera-based Look At: pan={pan_deg:.2f}, tilt={tilt_deg:.2f}"
+            )
+
+            # Send command with servo offset correction
+            self.move_neck(pan_deg + 180.0, tilt_deg + 180.0, tracking_mode=tracking_mode)
+
+        except Exception as e:
+            self.get_logger().error(f"[TF ERROR] {str(e)}")
+            self.move_neck(180.0, 180.0, tracking_mode=False)
+
+    """ def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
 
         print(target_x, target_y, target_z)
 
@@ -613,7 +670,7 @@ class NeckNode(Node):
             if final_x > 0.0: # solves rounding errors when variable is positive
                 final_x += 0.5
 
-            self.move_neck(180 + pan_neck_to_coords, final_x+180.0, tracking_mode=tracking_mode)
+            self.move_neck(180 + pan_neck_to_coords, final_x+180.0, tracking_mode=tracking_mode) """
 
         
     def move_neck_with_target_pixel(self, target_x, target_y, tracking_mode=False):
