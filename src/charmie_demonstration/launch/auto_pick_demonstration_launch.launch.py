@@ -28,6 +28,7 @@ def generate_launch_description():
         std_lf.robot_localization,
         std_lf.charmie_localisation,
 
+        std_lf.manual_obstacles_map_server,
         std_lf.delayed_nav2_localization,        
         std_lf.nav2_navigation,
 

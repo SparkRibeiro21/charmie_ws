@@ -144,30 +144,30 @@ class TaskMain():
 
                 else:
 
-                    selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, end_speak_file = "face_touchscreen_menu/menu_category")
+                    selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category")
                     print(selected_category[0])
 
                     while selected_category[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                        selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, end_speak_file = "face_touchscreen_menu/menu_category")
+                        selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category")
                         print(selected_category[0])
 
-                    selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, end_speak_file = "face_touchscreen_menu/menu_object")
+                    selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object")
                     print(selected_option[0])
 
                     while selected_option[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                        selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, end_speak_file = "face_touchscreen_menu/menu_object")
+                        selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object")
                         print(selected_option[0])
 
                     self.object_name = selected_option[0]
 
-                    selected_room = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True, end_speak_file = "face_touchscreen_menu/menu_room")
+                    selected_room = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room")
                     print(selected_room[0])
 
                     while selected_room[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                        selected_room = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True, end_speak_file = "face_touchscreen_menu/menu_room")
+                        selected_room = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room")
                         print(selected_room[0])
 
-                    selected_furniture = self.robot.set_face_touchscreen_menu([selected_room[0]], timeout=10, mode="single", speak_results=True, end_speak_file = "face_touchscreen_menu/menu_furniture")
+                    selected_furniture = self.robot.set_face_touchscreen_menu([selected_room[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_furniture")
                     print(selected_furniture[0])
 
                     self.place_furniture = selected_furniture[0]
@@ -185,7 +185,7 @@ class TaskMain():
                     if self.object_mode == "top":
                         self.tetas = [[-90, -40], [-45, -45], [0, -40]]
                     if self.object_mode == "front":
-                        self.tetas = [[-45, -45], [0, -45], [45, -45]]
+                        self.tetas = [[-40, -45], [0, -45], [40, -45]]
 
                 elif self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
                     self.tetas = [[0, 15], [0, 0], [0, -35]]
@@ -200,7 +200,7 @@ class TaskMain():
                 print("START ROUTINE NEXT START")
 
                 self.robot.set_speech(filename="generic/careful", wait_for_end_of=True)                
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
 
                 #As of now, we are going to make CHARMIE move to a location 
@@ -211,7 +211,7 @@ class TaskMain():
                     rotate_coordinates = self.robot.add_rotation_to_pick_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))))
                     self.robot.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
 
 
@@ -228,7 +228,7 @@ class TaskMain():
 
             elif self.state == self.task_states["Move_to_place"]:
 
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/" + self.place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
                 # Return to initial position
@@ -239,7 +239,7 @@ class TaskMain():
                     rotate_coordinates_furniture = self.robot.add_rotation_to_pick_position(move_coords=(self.robot.get_navigation_coords_from_furniture(self.place_furniture.replace(" ","_").lower())))
                     self.robot.move_to_position(move_coords=rotate_coordinates_furniture, wait_for_end_of=True)
 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/" + self.place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
                 # next state
@@ -253,15 +253,15 @@ class TaskMain():
                 self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 self.object_z = self.robot.get_object_height_from_object(self.object_name)
 
-                if self.object_mode == "front":
-                    self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
-                    # self.arm_safe_first = [ -215, -70, -16, 80, 30, 182]
-                    self.arm_safe_first = [-172.2, -70.5, -13.7, 90, 33.1, 167.4]
-                    # self.arm_safe_second = [-793, 18.3, 403, 90.7, 0.3, -90.1]
-                    self.arm_safe_second = [-791, -29, 232.4, 90.7, 0.3, -90.1]  
-                    final_z = (1.125 - self.furniture_z - (self.object_z/1.5)) * 1000 
-                    self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
-                    self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                if self.object_mode == "front":  
+                    #final_z = (1.125 - self.furniture_z - (self.object_z/1.5)) * 1000
+                    final_z = -(1.00 - self.furniture_z - (self.object_z/1.5)) * 1000
+
+                    if final_z<-450:
+                        final_z=-450
+
+                    self.safe_place_final = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 
                 if self.object_mode == "top":
                     self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
@@ -271,29 +271,37 @@ class TaskMain():
                     self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
                     self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
 
-
-                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
-                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
                 
                 if self.object_mode == "front":
-                    self.robot.set_arm(command="adjust_linear_motion", linear_motion_pose = self.arm_safe_second, wait_for_end_of=True)
+                    self.robot.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+
                 if self.object_mode == "top":
+                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
-                time.sleep(2)
+
+                if self.object_mode == "front":
+                    self.robot.adjust_omnidirectional_position(dx=0.3,dy=0.0)
+
+                time.sleep(0.5)
                 self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
-                time.sleep(2)
+                time.sleep(0.5)
+
+                if self.object_mode == "front":
+                    self.robot.adjust_omnidirectional_position(dx=-0.3,dy=0.0)
+
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
                 
                 if self.object_mode == "front":
-                    self.robot.set_arm(command="adjust_linear_motion", linear_motion_pose = self.arm_safe_second, wait_for_end_of=True)
+                    self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
                 if self.object_mode == "top":
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
-
-                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
-                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
-                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
 
                 # next state
                 self.state = self.task_states["Move_to_home"]
@@ -301,7 +309,7 @@ class TaskMain():
 
             elif self.state == self.task_states["Move_to_home"]:
 
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/" + self.home_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
                 self.robot.move_to_position(move_coords = self.initial_position, wait_for_end_of=True)
