@@ -503,7 +503,7 @@ class ArmUfactory(Node):
 
 	### ARM STD FUNCTIONS ###
 
-	def set_gripper_position_(self, pos=0.0, wait=True, timeout=4.0):
+	def set_gripper_position_(self, pos=0.0, wait=True, timeout=5.0):
 		set_gripper_pos = GripperMove.Request()
 		set_gripper_pos.pos = float(pos)
 		set_gripper_pos.wait = wait
@@ -521,7 +521,7 @@ class ArmUfactory(Node):
 		self.future = self.get_gripper_position.call_async(self.get_gripper_req)
 		self.future.add_done_callback(partial(self.callback_service_tr_gripper))
 
-	def set_position_values_(self, pose=None, speed=200.0, acc=1000.0, wait=True, timeout=4.0):
+	def set_position_values_(self, pose=None, speed=200.0, acc=1000.0, wait=True, timeout=40.0):
 		
 		if pose is None:
 			pose = self.get_lower_order_position_linear
@@ -535,7 +535,7 @@ class ArmUfactory(Node):
 		self.future = self.set_position_client.call_async(position_values)
 		self.future.add_done_callback(partial(self.callback_service_tr))  
 
-	def set_tool_position_values_(self, pose=None, speed=200.0, acc=1000.0, wait=True, timeout=4.0):
+	def set_tool_position_values_(self, pose=None, speed=200.0, acc=1000.0, wait=True, timeout=40.0):
 		
 		if pose is None:
 			pose = self.get_lower_order_position_linear
