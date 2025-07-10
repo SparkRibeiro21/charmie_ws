@@ -783,7 +783,7 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
-	### SEARCH FOR OBJECT ON TABLE FRONTAL###
+	### SEARCH FOR OBJECT ON TABLE FRONTAL ###
 	def initial_pose_to_search_table_front(self):
 		match self.estado_tr:
 			case 0:
@@ -823,7 +823,7 @@ class ArmUfactory(Node):
 				self.finish_arm_movement_()
 
 
-	### SEARCH FOR OBJECT ON TABLE TOP###
+	### SEARCH FOR OBJECT ON TABLE TOP ###
 	def initial_pose_to_search_table_top(self):
 		match self.estado_tr:
 			case 0:
@@ -849,8 +849,27 @@ class ArmUfactory(Node):
 	### SERVE THE BREAKFAST ARM MOVEMENTS ###
 
 	def collect_spoon_to_tray(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.above_cuttlery_cup, speed=200, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_in_cuttlery_cup, speed=200, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.step_away_from_cuttlery_cup, speed=200, wait=True)
+			case 5:
+				self.set_gripper_speed_(speed=5000)
+			case 6:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 7:
+				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=200, wait=True)
+			case 8:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
+		""" if self.estado_tr == 0:
 			self.position_values_req.pose = self.above_cuttlery_cup
 			self.position_values_req.speed = 200.0
 			self.position_values_req.acc = 1000.0
@@ -917,11 +936,30 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")
+			self.get_logger().info("FINISHED MOVEMENT") """
 
 	def collect_milk_to_tray(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.above_milk_place_spot, speed=150, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=150, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.step_away_from_milk_in_tray, speed=200, wait=True)
+			case 5:
+				self.set_gripper_speed_(speed=5000)
+			case 6:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 7:
+				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=150, wait=True)
+			case 8:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
+		""" if self.estado_tr == 0:
 			self.position_values_req.pose = self.above_milk_place_spot
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -988,11 +1026,30 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")
+			self.get_logger().info("FINISHED MOVEMENT") """
 
 	def collect_cornflakes_to_tray(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.above_cornflakes_place_spot, speed=150, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_cornflakes_in_tray, speed=200, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.step_away_from_cornflakes_in_tray, speed=200, wait=True)
+			case 5:
+				self.set_gripper_speed_(speed=5000)
+			case 6:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 7:
+				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=200, wait=True)
+			case 8:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
+		""" if self.estado_tr == 0:
 			self.position_values_req.pose = self.above_cornflakes_place_spot
 			self.position_values_req.speed = 150.0
 			self.position_values_req.acc = 1000.0
@@ -1059,11 +1116,30 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")
+			self.get_logger().info("FINISHED MOVEMENT") """
 
 	def collect_cornflakes_to_tray_alternative_robocup_cornflakes(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.above_cornflakes_place_spot_alternative, speed=60, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_cornflakes_in_tray_alternative, speed=200, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.step_away_from_cornflakes_in_tray_alternative, speed=200, wait=True)
+			case 5:
+				self.set_gripper_speed_(speed=5000)
+			case 6:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 7:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=60, wait=True)
+			case 8:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
+		""" if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.above_cornflakes_place_spot_alternative)
 			self.joint_values_req.speed = math.radians(60)
 			self.joint_values_req.wait = True
@@ -1128,12 +1204,17 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")
+			self.get_logger().info("FINISHED MOVEMENT") """
 
 
 	def collect_bowl_to_initial_position(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.initial_position_joints, speed=60, wait=True)
+			case 1:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
+		""" if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
 			self.joint_values_req.speed = math.radians(60)
 			self.joint_values_req.wait = True
@@ -1146,13 +1227,34 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 
 
 	### PLACE OBJECTS ON THE TABLE
 
 	def place_bowl_table(self):
-		# if self.estado_tr == 0:
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_place_bowl_joint, speed=60, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_bowl_table_final, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=2000)
+			case 3:
+				self.set_gripper_position_(pos=500, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.little_adjustment_after_placing_bowl, speed=100, wait=True)
+			case 5:
+				self.set_gripper_position_(pos=80, wait=True)
+			case 6:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.pre_place_bowl_linear, speed=120, wait=True)
+			case 8:
+				self.finish_arm_movement_()
+
+
+		""" # if self.estado_tr == 0:
 		# 	self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
 		# 	self.joint_values_req.speed = math.radians(60)
 		# 	self.joint_values_req.wait = True
@@ -1227,11 +1329,33 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 
 	def pour_cereals_bowl(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_cereals_tray_joints, speed=60, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.pick_cereals_tray, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=200, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.pos_pick_cereals_tray, speed=120, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=120, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.reach_position_to_pour_cereals_bowl, speed=120, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.pour_cereals_bowl_linear, speed=120, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.after_pouring_cereals_at_bowl, speed=120, wait=True)
+			case 9:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
+
+		""" if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_cereals_tray_joints)
 			self.joint_values_req.speed = math.radians(70)
 			self.joint_values_req.wait = True
@@ -1326,13 +1450,46 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 
 
 	def pour_cereals_bowl_alternative_robocup_cornflakes(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.new_cornflakes_pre_pick_tray_position, speed=50, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.new_cornflakes_pick_tray_position, speed=100, wait=True)
+			case 3:
+				self.set_gripper_speed_(speed=1000)
+			case 4:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.new_cornflakes_post_pick_tray_position, speed=100, wait=True)
+			case 6:
+				self.set_joint_values_(angles=self.new_cornflakes_pre_pour, speed=50, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.new_cornflakes_pour1, speed=100, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.new_cornflakes_pour2, speed=100, wait=True)
+			case 9:
+				self.set_position_values_(pose=self.new_cornflakes_pour3, speed=100, wait=True)
+			case 10:
+				self.set_position_values_(pose=self.new_cornflakes_pour4, speed=100, wait=True)
+			case 11:
+				self.set_position_values_(pose=self.new_cornflakes_pour3, speed=100, wait=True)
+			case 12:
+				self.set_position_values_(pose=self.new_cornflakes_pour2, speed=100, wait=True)
+			case 13:
+				self.set_position_values_(pose=self.new_cornflakes_pour1, speed=100, wait=True)
+			case 14:
+				self.set_joint_values_(angles=self.new_cornflakes_pre_pour, speed=50, wait=True)
+			case 15:
+				self.finish_arm_movement_()
 
 
-		if self.estado_tr == 0:
+		""" if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
 			self.joint_values_req.speed = math.radians(50)
 			self.joint_values_req.wait = True
@@ -1463,12 +1620,23 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 
 
 	def place_cereal_table(self):   
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.placing_cereal_at_table, speed=120, wait=True)
+			case 1:
+				self.set_gripper_speed_(speed=1000)
+			case 2:
+				self.set_gripper_position_(pos=850, wait=True)
+			case 3:
+				self.set_position_values_(pose=self.pos_placing_cereal_at_table, speed=120, wait=True)
+			case 4:
+				self.finish_arm_movement_()
 
-		if self.estado_tr ==  0:
+		""" if self.estado_tr ==  0:
 			self.position_values_req.pose = self.placing_cereal_at_table
 			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
@@ -1511,12 +1679,27 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 	
 
 	def place_cereal_table_alternative_robocup_cornflakes(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.new_cornflakes_pre_place, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.new_cornflakes_place, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=850, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.new_cornflakes_post_place, speed=120, wait=True)
+			case 5:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 6:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
+		""" if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_place)
 			self.joint_values_req.speed = math.radians(50)
 			self.joint_values_req.wait = True
@@ -1568,11 +1751,37 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 	
 
 	def pour_milk_bowl(self):
-		if self.estado_tr == 0:
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_milk_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.pos_picking_milk_tray, speed=90, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=90, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.reach_position_to_pour_milk_bowl, speed=90, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.pour_milk_bowl_linear, speed=120, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.after_pouring_milk_at_bowl, speed=120, wait=True)
+			case 9:
+				self.finish_arm_movement_()
+
+
+
+
+
+		""" if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_milk_tray_joints)
 			self.joint_values_req.speed = math.radians(60)
 			self.joint_values_req.wait = True
@@ -1665,10 +1874,23 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 	
-	def place_milk_table(self):   
-		if self.estado_tr == 0:
+	def place_milk_table(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.placing_milk_at_table, speed=120, wait=True)
+			case 1:
+				self.set_gripper_speed_(speed=1000)
+			case 2:
+				self.set_gripper_position_(pos=850, wait=True)
+			case 3:
+				self.set_position_values_(pose=self.pos_placing_milk_at_table, speed=120, wait=True)
+			case 4:
+				self.finish_arm_movement_()
+
+
+		""" if self.estado_tr == 0:
 			self.position_values_req.pose = self.placing_milk_at_table
 			self.position_values_req.speed = 120.0
 			self.position_values_req.acc = 1000.0
@@ -1711,10 +1933,37 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 	
 	def place_spoon_table(self):
-		if self.estado_tr == 0:
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_spoon_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.pre_pick_funilocopo_tray, speed=120, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.pick_funilocopo_tray, speed=120, wait=True)
+			case 3:
+				self.set_gripper_speed_(speed=1000)
+			case 4:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.lift_funilocopo_a_bit_from_tray, speed=90, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.lift_funilocopo_more, speed=90, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=90, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.reach_position_to_place_spoon_table, speed=120, wait=True)
+			case 9:
+				self.set_position_values_(pose=self.place_spoon_table_joints, speed=120, wait=True)
+			case 10:
+				self.set_position_values_(pose=self.pos_place_spoon_table, speed=120, wait=True)
+			case 11:
+				self.finish_arm_movement_()
+
+
+		""" if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_spoon_tray_joints)
 			self.joint_values_req.speed = math.radians(70)
 			self.joint_values_req.wait = True
@@ -1834,12 +2083,39 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 
 
 	def place_spoon_table_funilocopo_v2(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_spoon_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.pick_funilocopo_v2_tray, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.lift_funilocopo_v2_from_tray, speed=120, wait=True)
+			case 5:
+				self.set_joint_values_(angles=self.joints_pre_place_table_funilocopo_v2, speed=50, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.place_spoon_in_table_funilocopo_v2, speed=120, wait=True)
+			case 7:
+				self.set_gripper_position_(pos=300, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.step_away_from_table_funilocopo_v2, speed=120, wait=True)
+			case 9:
+				self.set_gripper_speed_(speed=5000)
+			case 10:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 11:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
+
+
+		""" if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_spoon_tray_joints)
 			self.joint_values_req.speed = math.radians(70)
 			self.joint_values_req.wait = True
@@ -1951,12 +2227,39 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 
 
 	def place_spoon_table_funilocopo_v2_facing_other_side(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_spoon_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.pick_funilocopo_v2_tray, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.lift_funilocopo_v2_from_tray, speed=120, wait=True)
+			case 5:
+				self.set_joint_values_(angles=self.joints_pre_place_table_funilocopo_v2_facing_other_side, speed=50, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.place_spoon_in_table_funilocopo_v2_facing_other_side, speed=120, wait=True)
+			case 7:
+				self.set_gripper_position_(pos=300, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.step_away_from_table_funilocopo_v2_facing_other_side, speed=120, wait=True)
+			case 9:
+				self.set_gripper_speed_(speed=5000)
+			case 10:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 11:
+				self.finish_arm_movement_()
 
-		if self.estado_tr == 0:
+
+
+		""" if self.estado_tr == 0:
 			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_spoon_tray_joints)
 			self.joint_values_req.speed = math.radians(70)
 			self.joint_values_req.wait = True
@@ -2068,11 +2371,19 @@ class ArmUfactory(Node):
 			temp.data = True
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+			self.get_logger().info("FINISHED MOVEMENT")	 """
 
 
 	def arm_go_rest(self):
-		# if self.estado_tr == 0:
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.initial_position, speed=60, wait=False)
+			case 1:
+				self.finish_arm_movement_()
+
+
+
+		""" # if self.estado_tr == 0:
 		# 	self.set_gripper_req.pos = 0.0
 		# 	self.set_gripper_req.wait = False
 		# 	self.set_gripper_req.timeout = 4.0
@@ -2093,7 +2404,7 @@ class ArmUfactory(Node):
 			self.flag_arm_finish_publisher.publish(temp)
 			self.estado_tr = 0
 			self.get_logger().info("FINISHED MOVEMENT")	
-
+ """
 
 	def movement_selection(self):
 		
