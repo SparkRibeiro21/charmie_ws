@@ -263,6 +263,27 @@ class TaskMain():
                     self.safe_place_final = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
                     self.safe_rise_gripper = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 
+                    self.robot.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+
+                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+                    self.robot.adjust_omnidirectional_position(dx=0.3,dy=0.0)
+
+                    # final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=0.5, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.object_name], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                    # for obj in final_objects:
+                    #     if obj.position_cam.y < 0.1 or obj.position_cam.y > 0.1:
+                    #         self.robot.adjust_omnidirectional_position(dx=0.0,dy=0.2)
+
+                    time.sleep(0.5)
+                    self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
+
+                    self.robot.adjust_omnidirectional_position(dx=-0.3,dy=0.0)
+
+                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+
+                    self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
                 if self.object_mode == "top":
                     self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
                     self.arm_safe_first = [ -177.2, 72.8, -112.8, -47.3, 105.7, 258.5]
@@ -271,37 +292,25 @@ class TaskMain():
                     self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
                     self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
 
-                
-                if self.object_mode == "front":
-                    self.robot.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
-
-                if self.object_mode == "top":
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
-                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
 
-                if self.object_mode == "front":
-                    self.robot.adjust_omnidirectional_position(dx=0.3,dy=0.0)
+                    time.sleep(0.5)
+                    self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
 
-                time.sleep(0.5)
-                self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
-                time.sleep(0.5)
+                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-                if self.object_mode == "front":
-                    self.robot.adjust_omnidirectional_position(dx=-0.3,dy=0.0)
-
-                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
-                
-                if self.object_mode == "front":
-                    self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
-
-                if self.object_mode == "top":
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
                     self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                    
+                    #TEST PLACE  OBJ #final_objects = self.search_for_objects(tetas=[[-45, -30]], time_in_each_frame=0.5, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.object_name], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                    #for obj in final_objects:
 
                 # next state
                 self.state = self.task_states["Move_to_home"]

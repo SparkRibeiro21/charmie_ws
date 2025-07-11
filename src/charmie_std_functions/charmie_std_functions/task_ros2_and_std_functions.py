@@ -3635,7 +3635,7 @@ class RobotStdFunctions():
         #RETURN BOOLEAN ON IF SCORE IS ABOVE THRESHOLD
         return score >= threshold
 
-    def wait_until_stable(self, timeout = 10, stable_duration = 0.5, check_interval= 0.1):
+    def wait_until_stable(self, timeout = 2.7, stable_duration = 0.5, check_interval= 0.1):
 
         #INITIATE VARIABLES REPRESENTING TIMER
         image_time_out = 0.0

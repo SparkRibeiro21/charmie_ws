@@ -881,7 +881,7 @@ class ArmUfactory(Node):
 			case 0:
 				self.set_joint_values_(angles=self.search_table_top_safe_position, speed=25, wait=True)
 			case 1:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=25, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=35, wait=True)
 			case 2:
 				self.finish_arm_movement_()
 
