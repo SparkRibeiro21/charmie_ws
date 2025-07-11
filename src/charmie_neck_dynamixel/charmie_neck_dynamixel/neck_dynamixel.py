@@ -545,8 +545,60 @@ class NeckNode(Node):
         self.tf_broadcaster.sendTransform(neck_tilt_transform)
         # print(pose.tilt)
         # self.get_logger().info('Published TF from neck_pan_link to neck_tilt_link')
-            
+
+
+
     def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
+        self.get_logger().info(f"Target: x={target_x:.3f}, y={target_y:.3f}, z={target_z:.3f}")
+
+        try:
+            # === 1. Get position of neck base in map frame ===
+            base_tf = self.tf_buffer.lookup_transform('map', 'neck_base_link', rclpy.time.Time())
+            base_pos = base_tf.transform.translation
+
+            # === 2. Get robot yaw (from rotation quaternion) ===
+            rot = base_tf.transform.rotation
+            # q = [rot.x, rot.y, rot.z, rot.w]
+            # _, _, robot_yaw = tf_transformations.euler_from_quaternion(q)
+            robot_yaw = self.get_yaw_from_quaternion(rot.x, rot.y, rot.z, rot.w)
+
+            # === 3. Compute vector from neck base to target (in world/map frame) ===
+            dx_world = target_x - base_pos.x
+            dy_world = target_y - base_pos.y
+            dz_world = target_z - base_pos.z
+
+            # === 4. Compute pan angle relative to robot front ===
+            angle_to_target = math.atan2(dy_world, dx_world)
+            pan_rad = angle_to_target - robot_yaw
+
+            # Normalize pan to [-pi, pi]
+            pan_rad = math.atan2(math.sin(pan_rad), math.cos(pan_rad))
+
+            # === 5. Compute tilt ===
+            ground_dist = math.sqrt(dx_world**2 + dy_world**2)
+            tilt_rad = math.atan2(dz_world, ground_dist)
+
+            # === 6. Convert to degrees and apply servo offsets ===
+            pan_deg = math.degrees(pan_rad)
+            tilt_deg = math.degrees(tilt_rad)
+
+            self.get_logger().info(f"Neck angles: pan={pan_deg:.2f}, tilt={tilt_deg:.2f}")
+
+            # === 7. Command the neck ===
+            self.move_neck(pan_deg + 180.0, tilt_deg + 180.0, tracking_mode=tracking_mode)
+
+        except Exception as e:
+            self.get_logger().error(f"[TF ERROR] {str(e)}")
+            self.move_neck(180.0, 180.0, tracking_mode=False)
+
+
+    def get_yaw_from_quaternion(self, x, y, z, w):
+        """ Convert quaternion (x, y, z, w) to Yaw (rotation around Z-axis). """
+        t3 = 2.0 * (w * z + x * y)
+        t4 = 1.0 - 2.0 * (y * y + z * z)
+        return math.atan2(t3, t4)  # Yaw angle in radians
+
+    """ def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
         self.get_logger().info(f"Target: x={target_x:.3f}, y={target_y:.3f}, z={target_z:.3f}")
 
         try:
@@ -571,6 +623,8 @@ class NeckNode(Node):
                 'map', 'D455_head_link', rclpy.time.Time()
             )
             cam_pos = cam_tf.transform.translation
+
+            print("Face position on map:", cam_pos.x, cam_pos.y, cam_pos.z)
 
             # Vector from camera to target (in 'map' frame)
             dx = target_x - cam_pos.x
@@ -597,7 +651,7 @@ class NeckNode(Node):
 
         except Exception as e:
             self.get_logger().error(f"[TF ERROR] {str(e)}")
-            self.move_neck(180.0, 180.0, tracking_mode=False)
+            self.move_neck(180.0, 180.0, tracking_mode=False) """
 
     """ def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
 
