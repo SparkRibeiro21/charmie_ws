@@ -31,7 +31,7 @@ ros2_modules = {
     "charmie_nav2":             False,
     "charmie_neck":             False,
     "charmie_obstacles":        False,
-    "charmie_speakers":         False,
+    "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -91,7 +91,7 @@ class TaskMain():
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
 
-                pose_adjust_pre = [100, 150, 200, 0, 0, 0]
+                """ pose_adjust_pre = [100, 150, 200, 0, 0, 0]
                 pose_adjust_pos = [-100, -150, -200, 0, 0, 0]
                 self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
                 print("DONE")
@@ -104,8 +104,19 @@ class TaskMain():
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=pose_adjust_pos, wait_for_end_of=True)
                 print("DONE")
                 time.sleep(3.0)
-                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True) """
 
+                final_x = 450
+                self.move_1 = [ final_x, 0.0, 0.0, 0.0, 0.0, 0.0]
+                self.move_2 = [-final_x, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.move_1, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/done", wait_for_end_of=False)
+
+                time.sleep(3.0)
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.move_2, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/done", wait_for_end_of=False)
 
                 while True:
                     pass
