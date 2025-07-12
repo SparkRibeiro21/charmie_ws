@@ -547,20 +547,21 @@ class NeckNode(Node):
         # self.get_logger().info('Published TF from neck_pan_link to neck_tilt_link')
 
 
-
     def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
         self.get_logger().info(f"Target: x={target_x:.3f}, y={target_y:.3f}, z={target_z:.3f}")
 
         try:
-            # === 1. Get position of neck base in map frame ===
+            # === 1. Get transform of neck base in map frame ===
             base_tf = self.tf_buffer.lookup_transform('map', 'neck_base_link', rclpy.time.Time())
             base_pos = base_tf.transform.translation
-
-            # === 2. Get robot yaw (from rotation quaternion) ===
             rot = base_tf.transform.rotation
-            # q = [rot.x, rot.y, rot.z, rot.w]
-            # _, _, robot_yaw = tf_transformations.euler_from_quaternion(q)
-            robot_yaw = self.get_yaw_from_quaternion(rot.x, rot.y, rot.z, rot.w)
+            q = [rot.x, rot.y, rot.z, rot.w]
+
+
+            # === 2. Get robot yaw and torso pitch ===
+            roll, pitch, yaw = self.euler_from_quaternion(q)
+            # robot_yaw = yaw
+            # torso_pitch = pitch
 
             # === 3. Compute vector from neck base to target (in world/map frame) ===
             dx_world = target_x - base_pos.x
@@ -569,14 +570,17 @@ class NeckNode(Node):
 
             # === 4. Compute pan angle relative to robot front ===
             angle_to_target = math.atan2(dy_world, dx_world)
-            pan_rad = angle_to_target - robot_yaw
-
+            pan_rad = angle_to_target - yaw
             # Normalize pan to [-pi, pi]
             pan_rad = math.atan2(math.sin(pan_rad), math.cos(pan_rad))
 
-            # === 5. Compute tilt ===
+            # === 5. Compute raw tilt angle ===
             ground_dist = math.sqrt(dx_world**2 + dy_world**2)
             tilt_rad = math.atan2(dz_world, ground_dist)
+
+            # === 6. Compensate tilt by torso pitch ===
+            # (if robot is leaning forward 20°, and you want to look level, tilt must be 20° up)
+            tilt_rad += pitch
 
             # === 6. Convert to degrees and apply servo offsets ===
             pan_deg = math.degrees(pan_rad)
@@ -591,142 +595,33 @@ class NeckNode(Node):
             self.get_logger().error(f"[TF ERROR] {str(e)}")
             self.move_neck(180.0, 180.0, tracking_mode=False)
 
+    def euler_from_quaternion(self, q):
+        """
+        Convert quaternion [x, y, z, w] to Euler angles [roll, pitch, yaw]
+        in radians.
+        """
+        x, y, z, w = q
 
-    def get_yaw_from_quaternion(self, x, y, z, w):
-        """ Convert quaternion (x, y, z, w) to Yaw (rotation around Z-axis). """
-        t3 = 2.0 * (w * z + x * y)
-        t4 = 1.0 - 2.0 * (y * y + z * z)
-        return math.atan2(t3, t4)  # Yaw angle in radians
+        # Roll (x-axis rotation)
+        sinr_cosp = 2 * (w * x + y * z)
+        cosr_cosp = 1 - 2 * (x * x + y * y)
+        roll = math.atan2(sinr_cosp, cosr_cosp)
 
-    """ def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
-        self.get_logger().info(f"Target: x={target_x:.3f}, y={target_y:.3f}, z={target_z:.3f}")
-
-        try:
-            # Target point
-            target_point = PointStamped()
-            target_point.header.frame_id = 'map'
-            target_point.header.stamp = Time(sec=0, nanosec=0)
-            target_point.point.x = target_x
-            target_point.point.y = target_y
-            target_point.point.z = target_z
-
-            # Wait up to 0.5s for the transform to be available
-            if not self.tf_buffer.can_transform(
-                'map', 'D455_head_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=0.5)
-            ):
-                self.get_logger().error("[TF ERROR] Transform not available within 0.5s")
-                self.move_neck(180.0, 180.0, tracking_mode=False)
-                return
-
-            # Get camera pose in map frame (latest available)
-            cam_tf = self.tf_buffer.lookup_transform(
-                'map', 'D455_head_link', rclpy.time.Time()
-            )
-            cam_pos = cam_tf.transform.translation
-
-            print("Face position on map:", cam_pos.x, cam_pos.y, cam_pos.z)
-
-            # Vector from camera to target (in 'map' frame)
-            dx = target_x - cam_pos.x
-            dy = target_y - cam_pos.y
-            dz = target_z - cam_pos.z
-
-            # Compute pan (rotation around Z): angle from camera to point in XY plane
-            pan_rad = math.atan2(dy, dx)
-
-            # Compute tilt (rotation around Y): angle from camera to point in vertical plane
-            r = math.sqrt(dx**2 + dy**2)
-            tilt_rad = math.atan2(dz, r)
-
-            # Convert to degrees
-            pan_deg = math.degrees(pan_rad)
-            tilt_deg = math.degrees(tilt_rad)
-
-            self.get_logger().info(
-                f"Camera-based Look At: pan={pan_deg:.2f}, tilt={tilt_deg:.2f}"
-            )
-
-            # Send command with servo offset correction
-            self.move_neck(pan_deg + 180.0, tilt_deg + 180.0, tracking_mode=tracking_mode)
-
-        except Exception as e:
-            self.get_logger().error(f"[TF ERROR] {str(e)}")
-            self.move_neck(180.0, 180.0, tracking_mode=False) """
-
-    """ def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
-
-        print(target_x, target_y, target_z)
-
-        if target_x == 0 and target_y == 0 and target_z == 0: # if something is wrong with coordinates, does not stop, continues but looks forward
-            self.move_neck(180, 180.0, tracking_mode=tracking_mode)
-            self.get_logger().error("TARGET COORDINATES ARE: (0, 0, 0). THERE IS A PROBLEM WITH THE COORDINATES.")
-
+        # Pitch (y-axis rotation)
+        sinp = 2 * (w * y - z * x)
+        if abs(sinp) >= 1:
+            pitch = math.copysign(math.pi / 2, sinp)  # use 90 degrees if out of range
         else:
-            ### PAN MOVEMENT (LEFT - RIGHT)
+            pitch = math.asin(sinp)
 
-            # 6.5 cm adjustement from bottom servo to robot center, this helps in cases where angle to coordinates are near 90 and 270 degrees
-            # where there was an error of 4/5 degrees because the axis were not alligned 
-            bottom_servo_to_robot_center = 0.065  
-            ang = math.atan2(self.robot_pose.y - target_y, -(self.robot_pose.x + bottom_servo_to_robot_center - target_x))
-            # print("ang_rad:", ang)
-            ang = math.degrees(ang)
-            # print("ang_deg:", ang)
-        
-            # print(math.degrees(self.robot_pose.theta))     
-            pan_neck_to_coords = - math.degrees(self.robot_pose.theta) - ang
-            if pan_neck_to_coords < -math.degrees(math.pi):
-                pan_neck_to_coords += math.degrees(2*math.pi)
-            if pan_neck_to_coords > math.degrees(math.pi):
-                pan_neck_to_coords -= math.degrees(2*math.pi)
-        
-            print(pan_neck_to_coords)
-            # if the robot wants to look back, it uses the correct side to do so without damaging itself
-            # this was left here but on practice is not used (decided to comment but left in case it makes sense in the future)
-            # if pan_neck_to_coords == -180:
-            #     pan_neck_to_coords = 180
+        # Yaw (z-axis rotation)
+        siny_cosp = 2 * (w * z + x * y)
+        cosy_cosp = 1 - 2 * (y * y + z * z)
+        yaw = math.atan2(siny_cosp, cosy_cosp)
 
-            # print("neck_to_coords:", pan_neck_to_coords, ang)
+        return roll, pitch, yaw
 
-            ### TILT MOVEMENT (UP - DOWN)
-            dist = math.sqrt((self.robot_pose.y - target_y)**2 + (self.robot_pose.x - target_x)**2)
 
-            # Constants
-            h = 1.30 # height of rotation axis of up/down servo from the ground (should be automatic). Does not consider changes in torso.
-            c = 0.06 # distance from center rotation axis of up/down servo to face (horizontal when looking forward)
-            d = 0.09 # distance from c to center of face. This way the center of the face is looking at the person and not the camera or servo.
-            e = math.sqrt(c**2 + d**2)
-            a = target_z
-            b = dist
-                
-            # Define the function based on the equation
-            def equation(alpha):
-                return alpha - math.atan(c / d) - math.atan((h + e * math.cos(alpha) - a) / (b - e * math.sin(alpha)))
-                # return alpha - np.arctan(c / d) - np.arctan((h + e * np.sin(alpha) - a) / (b - e * np.cos(alpha)))
-
-            # Initial guess for alpha
-            initial_guess = 0
-
-            # initial_time = time.time() 
-            # Solve the equation
-            alpha_solution = fsolve(equation, initial_guess)
-            # elapsed_time = time.time() - initial_time
-
-            phi = math.atan(d / c)
-
-            final_x = - (math.degrees(alpha_solution[0]) + math.degrees(phi) - 90)
-
-            # Debug prints of calculations of up/down movement:
-            # print("Alpha:", math.degrees(alpha_solution[0]))
-            # print("Phi:", math.degrees(phi))
-            # print("Alpha+Phi:", round(final_x, 2))
-            # print("Time:", elapsed_time)
-
-            if final_x > 0.0: # solves rounding errors when variable is positive
-                final_x += 0.5
-
-            self.move_neck(180 + pan_neck_to_coords, final_x+180.0, tracking_mode=tracking_mode) """
-
-        
     def move_neck_with_target_pixel(self, target_x, target_y, tracking_mode=False):
     
         global read_pan_open_loop, read_tilt_open_loop
