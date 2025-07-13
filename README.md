@@ -44,7 +44,10 @@ Cameras (IntelRealsense 455 and 405): [Realsense Repo](https://github.com/IntelR
 To setup the realsense package in your workspace, please follow the installation steps on the Intel Realsense repository. 
 
 Cameras (Orbecc Astra Pro Plus): [Orbecc Repo](https://github.com/orbbec/OrbbecSDK_ROS2)
-To setup the orbebc package in your workspace, please follow the installation instructions steps on the OrbbecSDK_ROS2 repository. 
+To setup the orbecc package in your workspace, please follow the installation instructions steps on the OrbbecSDK_ROS2 repository. 
+
+3D LIDAR (Livox MID360): [Livox Repo](https://github.com/Livox-SDK/livox_ros_driver2)
+To setup the Livox MID360 package in your workspace, please follow the installation instructions steps on the Livox repository. 
 
 ## :robot: RoboCup@Home Qualification Videos
 
