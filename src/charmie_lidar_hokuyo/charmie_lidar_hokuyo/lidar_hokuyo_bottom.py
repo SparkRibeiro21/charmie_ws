@@ -14,7 +14,7 @@ import serial
 import math
 
 # with the addition of the 2nd LIDAR, there may be a problem of port name.
-# In low_level and neck i ahnged the port names to /dev/serial/by-id/
+# In low_level and neck i changed the port names to /dev/serial/by-id/
 # However, both lidars seem to have the same id. So we have to change to port name or /dev/serial/by-path/ 
 # These are the paths of connections to the robot:
 # lrwxrwxrwx 1 root root 13 Feb 14 15:03 pci-0000:00:14.0-usb-0:4.2:1.0 -> ../../ttyACM0
@@ -22,7 +22,7 @@ import math
 # I will leave this here so when we actually implement the 2nd lidar we can change the port name
 # Hoppefully it will be soon.
 
-uart_port = '/dev/ttyACM1'
+uart_port = '/dev/ttyACM0'
 uart_speed = 19200
 
 # LASER_ANG_MAX = 119.885
