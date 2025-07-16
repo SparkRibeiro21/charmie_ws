@@ -25,7 +25,7 @@ import math
 uart_port = '/dev/ttyACM0'
 uart_speed = 19200
 
-ROTATION_ERROR = 3.5
+ROTATION_ERROR = 4.0
 LASER_ANG_MAX = 119.885
 LASER_STEP_DEG = 0.35208516886930985
 

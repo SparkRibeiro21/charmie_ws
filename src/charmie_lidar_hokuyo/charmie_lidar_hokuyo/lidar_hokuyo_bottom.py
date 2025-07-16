@@ -22,7 +22,7 @@ import math
 # I will leave this here so when we actually implement the 2nd lidar we can change the port name
 # Hoppefully it will be soon.
 
-uart_port = '/dev/ttyACM0'
+uart_port = '/dev/ttyACM1'
 uart_speed = 19200
 
 # LASER_ANG_MAX = 119.885
