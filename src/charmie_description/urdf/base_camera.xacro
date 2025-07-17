@@ -9,8 +9,8 @@
     <xacro:property name="base_camera_width" value="0.165" />
     <xacro:property name="base_camera_height" value="0.03" />
 
-    <xacro:property name="yy_shift_for_optical_frame" value="-0.05" />
-    <xacro:property name="yaw_shift_for_optical_frame" value="0.05" />
+    <xacro:property name="yy_shift_for_optical_frame" value="0.00" />
+    <xacro:property name="yaw_shift_for_optical_frame" value="0.00" />
 
     <xacro:property name="twenty_degrees_down_rotation" value="0.34906585" />
 
