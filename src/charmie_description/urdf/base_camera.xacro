@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
 
-    <xacro:property name="camera_height_from_base" value="0.25" />
+    <xacro:property name="camera_height_from_base" value="0.215" />
     <xacro:property name="camera_dist_from_base_limit" value="0.01" />
 
     <xacro:property name="base_camera_length" value="0.04" />
