@@ -38,6 +38,7 @@ public:
 
             robot_base_frame_ = radar["robot_base_frame"] ? radar["robot_base_frame"].as<std::string>() : "N/A";
             double update_frequency = radar["update_frequency"] ? radar["update_frequency"].as<double>() : 10.0;
+            robot_radius_ = radar["robot_radius"] ? radar["robot_radius"].as<double>() : 0.0;
 
             // Get observation_sources string and split it
             std::string sources_str = radar["observation_sources"].as<std::string>();
@@ -45,6 +46,7 @@ public:
 
             RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
             RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
+            RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f", robot_radius_);
             RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
 
             for (const auto& sensor_name : sources) {
@@ -76,14 +78,10 @@ public:
                 RCLCPP_INFO(this->get_logger(), "Obstacle range: %.2f to %.2f", obstacle_min_range, obstacle_max_range);
 
                 if (data_type == "PointCloud2") {
-                    double camera_height = sensor["camera_mount_height"] ? sensor["camera_mount_height"].as<double>() : 0.0;
-                    bool z_axis_up = sensor["camera_z_axis_up"] ? sensor["camera_z_axis_up"].as<bool>() : true;
+                    bool publish_filtered = sensor["publish_filtered"] ? sensor["publish_filtered"].as<bool>() : true;
+                    sensor_publish_filtered_[sensor_name] = publish_filtered;
 
-                    sensor_camera_height_[sensor_name] = camera_height;
-                    sensor_z_axis_up_[sensor_name] = z_axis_up;
-
-                    RCLCPP_INFO(this->get_logger(), "  Camera height: %.2f | Z up: %s",
-                                camera_height, z_axis_up ? "true" : "false");
+                    RCLCPP_INFO(this->get_logger(), "Publish Filtered: %s", publish_filtered ? "True" : "False");
                 }
                 latest_scans_new_msg_[sensor_name] = false;
 
@@ -150,10 +148,10 @@ private:
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     std::string robot_base_frame_;
+    double robot_radius_;
     rclcpp::TimerBase::SharedPtr timer_;
     std::unordered_map<std::string, SensorLimits> sensor_limits_;
-    std::unordered_map<std::string, double> sensor_camera_height_;
-    std::unordered_map<std::string, bool> sensor_z_axis_up_;
+    std::unordered_map<std::string, bool> sensor_publish_filtered_;
 
     std::vector<std::string> split_string(const std::string &input, char delimiter) {
         std::stringstream ss(input);
@@ -329,7 +327,7 @@ private:
             }
         }
         */
-
+        /*
         for (const auto& [sensor_name, msg] : latest_clouds_) {
             if (!latest_clouds_new_msg_[sensor_name]) continue;
 
@@ -391,7 +389,7 @@ private:
 
             latest_clouds_new_msg_[sensor_name] = false;
         }
-
+        */
 
         if (!all_points.empty()) {
             auto end = std::chrono::high_resolution_clock::now();
