@@ -88,6 +88,12 @@ public:
                         auto pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(filtered_topic, 10);
                         filtered_cloud_publishers_[sensor_name] = pub;
                         RCLCPP_INFO(this->get_logger(), "Created publisher for filtered data on topic: %s", filtered_topic.c_str());
+                        
+                        std::string discarded_topic = topic + "/discarded";
+                        auto discarded_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(discarded_topic, 10);
+                        discarded_cloud_publishers_[sensor_name] = discarded_pub;
+                        RCLCPP_INFO(this->get_logger(), "Created publisher for discarded points on topic: %s", discarded_topic.c_str());
+
                     }
                 }
                 latest_scans_new_msg_[sensor_name] = false;
@@ -153,6 +159,7 @@ private:
     std::unordered_map<std::string, bool> latest_scans_new_msg_;
     std::unordered_map<std::string, bool> latest_clouds_new_msg_;
     std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> filtered_cloud_publishers_;
+    std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> discarded_cloud_publishers_; // for debug ...
     rclcpp::Publisher<charmie_interfaces::msg::ListOfPoints>::SharedPtr points_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr filtered_cloud_pub_;
     //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr discarded_cloud_pub_;
@@ -189,13 +196,55 @@ private:
     
         // If publish_filtered is true for this sensor, publish raw PointCloud2
         if (sensor_publish_filtered_[source_name] && filtered_cloud_publishers_.count(source_name)) {
-            auto pub = filtered_cloud_publishers_[source_name];
-            sensor_msgs::msg::PointCloud2 output_msg = *msg;  // clone input
-            pub->publish(output_msg);
-            //RCLCPP_INFO(this->get_logger(), "[%s] Published filtered cloud to: %s",
-            //            source_name.c_str(), pub->get_topic_name());
+            const auto& limits = sensor_limits_[source_name];
+
+            // Step 1: Convert to PCL
+            pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_input(new pcl::PointCloud<pcl::PointXYZ>());
+            pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered(new pcl::PointCloud<pcl::PointXYZ>());    
+            pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_discarded(new pcl::PointCloud<pcl::PointXYZ>()); // for debug ...
+            pcl::fromROSMsg(*msg, *pcl_input);
+
+            // Step 2: Filter based on range
+            for (const auto& pt : pcl_input->points) {
+                if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z))
+                    continue;
+
+                float range_xy = std::sqrt(pt.x * pt.x + pt.y * pt.y);
+                if (range_xy >= limits.min_range && range_xy <= limits.max_range) {
+                    pcl_filtered->points.push_back(pt);
+                    continue;
+                }
+
+                pcl_discarded->points.push_back(pt);
+            }
+
+            pcl_filtered->width = pcl_filtered->points.size();
+            pcl_filtered->height = 1;
+            pcl_filtered->is_dense = true;
+
+            pcl_discarded->width = pcl_discarded->points.size();
+            pcl_discarded->height = 1;
+            pcl_discarded->is_dense = true;
+
+            auto filtered_pub = filtered_cloud_publishers_[source_name];
+            auto discarded_pub = discarded_cloud_publishers_[source_name];
+
+            sensor_msgs::msg::PointCloud2 ros_filtered;
+            pcl::toROSMsg(*pcl_filtered, ros_filtered);
+            ros_filtered.header = msg->header;
+            filtered_pub->publish(ros_filtered);
+
+            sensor_msgs::msg::PointCloud2 ros_discarded;
+            pcl::toROSMsg(*pcl_discarded, ros_discarded);
+            ros_discarded.header = msg->header;
+            discarded_pub->publish(ros_discarded);
+            
+            RCLCPP_INFO(this->get_logger(), "[%s] Published filtered cloud with %lu points (from %lu)", 
+                        source_name.c_str(), pcl_filtered->points.size(), pcl_input->points.size());
+            
+            RCLCPP_INFO(this->get_logger(), "[%s] Published discarded cloud with %lu points (from %lu)", 
+                        source_name.c_str(), pcl_discarded->points.size(), pcl_input->points.size());
         }
-    
     }
 
     void timer_callback() {
