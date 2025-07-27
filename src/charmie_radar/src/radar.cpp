@@ -82,6 +82,13 @@ public:
                     sensor_publish_filtered_[sensor_name] = publish_filtered;
 
                     RCLCPP_INFO(this->get_logger(), "Publish Filtered: %s", publish_filtered ? "True" : "False");
+
+                    if (publish_filtered) { // dynamic creates publisher for all point cloud with publish filtered set to true 
+                        std::string filtered_topic = topic + "/filtered";
+                        auto pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(filtered_topic, 10);
+                        filtered_cloud_publishers_[sensor_name] = pub;
+                        RCLCPP_INFO(this->get_logger(), "Created publisher for filtered data on topic: %s", filtered_topic.c_str());
+                    }
                 }
                 latest_scans_new_msg_[sensor_name] = false;
 
@@ -105,13 +112,16 @@ public:
                 }
 
             }
+
+            RCLCPP_INFO(this->get_logger(), "--- Finisehd Sensors Setup ---");
+            
             // TF2 setup
             tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
             tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
             // Publisher setup
             points_publisher_ = this->create_publisher<charmie_interfaces::msg::ListOfPoints>("radar_points", 10);
-            filtered_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera/depth/points_filtered", 10);
+            // filtered_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera/depth/points_filtered", 10);
             //discarded_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera/depth/points_discarded", 10);
 
 
@@ -124,7 +134,7 @@ public:
             RCLCPP_ERROR(this->get_logger(), "Failed to load or parse radar_params.yaml: %s", e.what());
         }
 
-        RCLCPP_INFO(this->get_logger(), "RadarNode setup complete.");
+        RCLCPP_INFO(this->get_logger(), "RadarNode Setup Complete.");
     }
 
 private:
@@ -142,6 +152,7 @@ private:
     std::unordered_map<std::string, sensor_msgs::msg::PointCloud2::SharedPtr> latest_clouds_;
     std::unordered_map<std::string, bool> latest_scans_new_msg_;
     std::unordered_map<std::string, bool> latest_clouds_new_msg_;
+    std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> filtered_cloud_publishers_;
     rclcpp::Publisher<charmie_interfaces::msg::ListOfPoints>::SharedPtr points_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr filtered_cloud_pub_;
     //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr discarded_cloud_pub_;
@@ -174,7 +185,17 @@ private:
     void cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg, const std::string &source_name) {
         latest_clouds_[source_name] = msg;
         latest_clouds_new_msg_[source_name] = true;
-        RCLCPP_INFO(this->get_logger(), "[%s] Received PointCloud2 with width %u, height %u", source_name.c_str(), msg->width, msg->height);
+        RCLCPP_INFO(this->get_logger(), "[%s] Received PointCloud2 with width %u points.", source_name.c_str(), msg->width);
+    
+        // If publish_filtered is true for this sensor, publish raw PointCloud2
+        if (sensor_publish_filtered_[source_name] && filtered_cloud_publishers_.count(source_name)) {
+            auto pub = filtered_cloud_publishers_[source_name];
+            sensor_msgs::msg::PointCloud2 output_msg = *msg;  // clone input
+            pub->publish(output_msg);
+            //RCLCPP_INFO(this->get_logger(), "[%s] Published filtered cloud to: %s",
+            //            source_name.c_str(), pub->get_topic_name());
+        }
+    
     }
 
     void timer_callback() {
@@ -222,174 +243,7 @@ private:
                 latest_scans_new_msg_[sensor_name] = false;
             }
         }
-        /* 
-        // Handle PointCloud2
-        for (const auto& [sensor_name, msg] : latest_clouds_) {
-            if (latest_clouds_new_msg_[sensor_name]) {
 
-                auto start2_ = std::chrono::high_resolution_clock::now();
-
-                pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_input(new pcl::PointCloud<pcl::PointXYZ>());
-                pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered(new pcl::PointCloud<pcl::PointXYZ>());
-
-                // Convert ROS2 PointCloud2 to PCL
-                pcl::fromROSMsg(*msg, *pcl_input);
-
-                RCLCPP_INFO(this->get_logger(), "[%s] Input cloud has %lu points", sensor_name.c_str(), pcl_input->points.size());
-
-                // Apply VoxelGrid filter
-                pcl::VoxelGrid<pcl::PointXYZ> voxel_filter;
-                voxel_filter.setInputCloud(pcl_input);
-                voxel_filter.setLeafSize(0.05f, 0.05f, 0.05f); // 5cm voxel size
-                voxel_filter.filter(*pcl_filtered);
-
-                auto end_voxel = std::chrono::high_resolution_clock::now();
-                double elapsed_ms_voxel = std::chrono::duration_cast<std::chrono::microseconds>(end_voxel - start2_).count() / 1000.0;
-                RCLCPP_INFO(this->get_logger(), "Elapsed Time Voxel: %.4f", elapsed_ms_voxel);
-
-                RCLCPP_INFO(this->get_logger(), "[%s] Filtered cloud has %lu points", sensor_name.c_str(), pcl_filtered->points.size());
-                double reduction = 100.0 * (1.0 - double(pcl_filtered->points.size()) / pcl_input->points.size());
-                RCLCPP_INFO(this->get_logger(), "[%s] Reduction: %.1f%%", sensor_name.c_str(), reduction);
-
-                // Create a new PCL cloud to store only points within range
-                pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_range_filtered(new pcl::PointCloud<pcl::PointXYZ>());
-                //pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_discarded(new pcl::PointCloud<pcl::PointXYZ>());
-                const auto& limits = sensor_limits_[sensor_name];
-
-                geometry_msgs::msg::PointStamped pt_in, pt_out;
-                pt_in.header = msg->header;
-
-                bool z_up = sensor_z_axis_up_[sensor_name];
-                double camera_height = sensor_camera_height_[sensor_name];
-
-                for (const auto& pt : pcl_filtered->points) {
-                    if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) continue;
-
-                    float range = std::sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z);
-                    if (range < limits.min_range || range > limits.max_range) continue;
-
-                    //float z_robot = z_up ? (camera_height + pt.z) : (camera_height - pt.z); // for 3D lidars when z axis is pointing upwards
-                    float z_robot = camera_height - pt.y; // for 3D cameras when the Z axis is pointing forward 
-
-                    if (z_robot >= limits.min_height && z_robot <= limits.max_height) {
-                        pcl_range_filtered->points.push_back(pt);
-                    }
-                }
-
-                //try {
-                //    auto tf = tf_buffer_->lookupTransform(robot_base_frame_, msg->header.frame_id, tf2::TimePointZero);
-                //
-                //    for (const auto& pt : pcl_filtered->points) {
-                //        if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) continue;
-                //
-                //        float range = std::sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z);
-                //        if (range < limits.min_range || range > limits.max_range) continue;
-                //
-                //        pt_in.point.x = pt.x;
-                //        pt_in.point.y = pt.y;
-                //        pt_in.point.z = pt.z;
-                //
-                //        tf2::doTransform(pt_in, pt_out, tf);
-                //        float z_robot = pt_out.point.z;
-                //
-                //        if (z_robot >= limits.min_height && z_robot <= limits.max_height) {
-                //            pcl_range_filtered->points.push_back(pt);  // Store in original frame
-                //        }
-                //    }
-
-                } catch (const tf2::TransformException &ex) {
-                    RCLCPP_WARN(this->get_logger(), "TF error during height filtering: %s", ex.what());
-                } 
-
-                // Convert filtered PCL back to PointCloud2
-                sensor_msgs::msg::PointCloud2 ros_output;
-                pcl::toROSMsg(*pcl_range_filtered, ros_output);
-                ros_output.header = msg->header;  // Keep same frame
-                // Publish final filtered cloud
-                filtered_cloud_pub_->publish(ros_output);
-
-                // Publish discarded points (debug)
-                //sensor_msgs::msg::PointCloud2 ros_discarded;
-                //pcl::toROSMsg(*pcl_discarded, ros_discarded);
-                //ros_discarded.header = msg->header;
-                //discarded_cloud_pub_->publish(ros_discarded);
-
-                RCLCPP_INFO(this->get_logger(), "[%s] Voxel downsampled: %lu → %lu points after range filter",
-                            sensor_name.c_str(), pcl_filtered->points.size(), pcl_range_filtered->points.size());
-
-
-                auto end2_ = std::chrono::high_resolution_clock::now();
-                double elapsed_ms_2 = std::chrono::duration_cast<std::chrono::microseconds>(end2_ - start2_).count() / 1000.0;
-                
-                RCLCPP_INFO(this->get_logger(), "Elapsed Time : %.4f", elapsed_ms_2);
-                
-                latest_clouds_new_msg_[sensor_name] = false;
-            }
-        }
-        */
-        /*
-        for (const auto& [sensor_name, msg] : latest_clouds_) {
-            if (!latest_clouds_new_msg_[sensor_name]) continue;
-
-            auto start2_ = std::chrono::high_resolution_clock::now();
-
-            pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_input(new pcl::PointCloud<pcl::PointXYZ>());
-            pcl::fromROSMsg(*msg, *pcl_input);
-
-            RCLCPP_INFO(this->get_logger(), "[%s] Input cloud has %lu points", sensor_name.c_str(), pcl_input->points.size());
-
-            // Filter by range and height BEFORE voxelizing
-            pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered(new pcl::PointCloud<pcl::PointXYZ>());
-            const auto& limits = sensor_limits_[sensor_name];
-
-            bool z_up = sensor_z_axis_up_[sensor_name];
-            double camera_height = sensor_camera_height_[sensor_name];
-
-            for (const auto& pt : pcl_input->points) {
-                if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) continue;
-
-                float range = std::sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z);
-                if (range < limits.min_range || range > limits.max_range) continue;
-
-
-                //float z_robot = z_up ? (camera_height + pt.z) : (camera_height - pt.z); // for 3D lidars when z axis is pointing upwards
-                float z_robot = camera_height - pt.y; // for 3D cameras when the Z axis is pointing forward 
-                if (z_robot >= limits.min_height && z_robot <= limits.max_height) {
-                    pcl_filtered->points.push_back(pt);
-                }
-            }
-
-            RCLCPP_INFO(this->get_logger(), "[%s] After range/height filter: %lu points", sensor_name.c_str(), pcl_filtered->points.size());
-
-            auto start_voxel = std::chrono::high_resolution_clock::now();
-
-            // Apply voxel filter AFTER filtering
-            pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_voxelized(new pcl::PointCloud<pcl::PointXYZ>());
-            pcl::VoxelGrid<pcl::PointXYZ> voxel_filter;
-            voxel_filter.setInputCloud(pcl_filtered);
-            voxel_filter.setLeafSize(0.05f, 0.05f, 0.05f); // 5cm voxel size
-            voxel_filter.filter(*pcl_voxelized);
-
-            auto end_voxel = std::chrono::high_resolution_clock::now();
-            double elapsed_ms_voxel = std::chrono::duration_cast<std::chrono::microseconds>(end_voxel - start_voxel).count() / 1000.0;
-            double reduction = 100.0 * (1.0 - double(pcl_voxelized->points.size()) / pcl_filtered->points.size());
-
-            RCLCPP_INFO(this->get_logger(), "[%s] After voxel: %lu points", sensor_name.c_str(), pcl_voxelized->points.size());
-            RCLCPP_INFO(this->get_logger(), "[%s] Voxel time: %.2f ms | Reduction: %.1f%%", sensor_name.c_str(), elapsed_ms_voxel, reduction);
-
-            // Convert to ROS and publish
-            sensor_msgs::msg::PointCloud2 ros_output;
-            pcl::toROSMsg(*pcl_voxelized, ros_output);
-            ros_output.header = msg->header;
-            filtered_cloud_pub_->publish(ros_output);
-
-            auto end2_ = std::chrono::high_resolution_clock::now();
-            double elapsed_ms_total = std::chrono::duration_cast<std::chrono::microseconds>(end2_ - start2_).count() / 1000.0;
-            RCLCPP_INFO(this->get_logger(), "[%s] Total processing time: %.2f ms", sensor_name.c_str(), elapsed_ms_total);
-
-            latest_clouds_new_msg_[sensor_name] = false;
-        }
-        */
 
         if (!all_points.empty()) {
             auto end = std::chrono::high_resolution_clock::now();
