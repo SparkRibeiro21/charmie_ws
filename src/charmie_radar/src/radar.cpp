@@ -204,6 +204,9 @@ private:
             pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_discarded(new pcl::PointCloud<pcl::PointXYZ>()); // for debug ...
             pcl::fromROSMsg(*msg, *pcl_input);
 
+            // Measure filtering time
+            auto t_start = std::chrono::high_resolution_clock::now();
+
             // Step 2: Filter based on range
             for (const auto& pt : pcl_input->points) {
                 if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z))
@@ -238,6 +241,10 @@ private:
             pcl::toROSMsg(*pcl_discarded, ros_discarded);
             ros_discarded.header = msg->header;
             discarded_pub->publish(ros_discarded);
+
+            auto t_end = std::chrono::high_resolution_clock::now();
+            double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
+            RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms", source_name.c_str(), elapsed_ms);
             
             RCLCPP_INFO(this->get_logger(), "[%s] Published filtered cloud with %lu points (from %lu)", 
                         source_name.c_str(), pcl_filtered->points.size(), pcl_input->points.size());
