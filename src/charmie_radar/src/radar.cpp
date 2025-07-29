@@ -207,18 +207,42 @@ private:
             // Measure filtering time
             auto t_start = std::chrono::high_resolution_clock::now();
 
-            // Step 2: Filter based on range
-            for (const auto& pt : pcl_input->points) {
-                if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z))
-                    continue;
+            try {
+                // Lookup the transform only once (cloud_frame → robot_base_frame)
+                geometry_msgs::msg::TransformStamped transformStamped = tf_buffer_->lookupTransform(
+                    robot_base_frame_, msg->header.frame_id, tf2::TimePointZero);
 
-                float range_xy = std::sqrt(pt.x * pt.x + pt.y * pt.y);
-                if (range_xy >= limits.min_range && range_xy <= limits.max_range) {
-                    pcl_filtered->points.push_back(pt);
-                    continue;
+                geometry_msgs::msg::PointStamped pt_in, pt_out;
+                pt_in.header = msg->header;
+
+                for (const auto& pt : pcl_input->points) {
+                    if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z))
+                        continue;
+
+                    float range_xy = std::sqrt(pt.x * pt.x + pt.y * pt.y);
+                    if (range_xy < limits.min_range || range_xy > limits.max_range) {
+                        pcl_discarded->points.push_back(pt);
+                        continue;
+                    }
+
+                    // Transform this point to robot base frame
+                    pt_in.point.x = pt.x;
+                    pt_in.point.y = pt.y;
+                    pt_in.point.z = pt.z;
+
+                    tf2::doTransform(pt_in, pt_out, transformStamped);
+
+                    double z_robot = pt_out.point.z;
+                    if (z_robot >= limits.min_height && z_robot <= limits.max_height) {
+                        pcl_filtered->points.push_back(pt);  // Still push original point (no transform)
+                    } else {
+                        pcl_discarded->points.push_back(pt);  // For debug
+                    }
                 }
-
-                pcl_discarded->points.push_back(pt);
+            }
+            catch (const tf2::TransformException &ex) {
+                RCLCPP_WARN(this->get_logger(), "[%s] TF error during height filtering: %s", source_name.c_str(), ex.what());
+                return;  // Skip publishing this frame if TF fails
             }
 
             pcl_filtered->width = pcl_filtered->points.size();
