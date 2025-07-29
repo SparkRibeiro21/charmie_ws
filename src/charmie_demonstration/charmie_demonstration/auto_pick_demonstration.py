@@ -147,9 +147,11 @@ class TaskMain():
                     selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category")
                     print(selected_category[0])
 
-                    while selected_category[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                    while True:
                         selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category")
                         print(selected_category[0])
+                        if selected_category[0] != "TIMEOUT" and self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)) != "NONE": #THINK ABOUT REPEAT LIMIT
+                            break
 
                     selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object")
                     print(selected_option[0])
@@ -296,6 +298,8 @@ class TaskMain():
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
+                    self.robot.adjust_omnidirectional_position(dx=0.15,dy=-0.15)
+
                     self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
 
                     time.sleep(0.5)
@@ -303,6 +307,8 @@ class TaskMain():
                     time.sleep(0.5)
 
                     self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+
+                    self.robot.adjust_omnidirectional_position(dx=-0.15,dy=0.15)
 
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
