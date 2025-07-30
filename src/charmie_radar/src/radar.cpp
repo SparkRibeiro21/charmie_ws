@@ -61,21 +61,27 @@ public:
                 
                 double max_obstacle_height = sensor["max_obstacle_height"] ? sensor["max_obstacle_height"].as<double>() : -1.0;
                 double min_obstacle_height = sensor["min_obstacle_height"] ? sensor["min_obstacle_height"].as<double>() : -1.0;
-                double obstacle_max_range = sensor["obstacle_max_range"] ? sensor["obstacle_max_range"].as<double>() : -1.0;
-                double obstacle_min_range = sensor["obstacle_min_range"] ? sensor["obstacle_min_range"].as<double>() : -1.0;
-
+                double max_obstacle_range = sensor["max_obstacle_range"] ? sensor["max_obstacle_range"].as<double>() : -1.0;
+                double min_obstacle_range = sensor["min_obstacle_range"] ? sensor["min_obstacle_range"].as<double>() : -1.0;
+                double min_obstacle_angle = sensor["min_obstacle_angle"] ? sensor["min_obstacle_angle"].as<double>() : -M_PI;
+                double max_obstacle_angle = sensor["max_obstacle_angle"] ? sensor["max_obstacle_angle"].as<double>() : M_PI;
+                
                 SensorLimits limits;
                 limits.min_height = min_obstacle_height;
                 limits.max_height = max_obstacle_height;
-                limits.min_range = obstacle_min_range;
-                limits.max_range = obstacle_max_range;
+                limits.min_range = min_obstacle_range;
+                limits.max_range = max_obstacle_range;
+                limits.min_angle = min_obstacle_angle;
+                limits.max_angle = max_obstacle_angle;
+
                 sensor_limits_[sensor_name] = limits;
 
                 RCLCPP_INFO(this->get_logger(), "--- Sensor: %s ---", sensor_name.c_str());
                 RCLCPP_INFO(this->get_logger(), "Topic: %s", topic.c_str());
                 RCLCPP_INFO(this->get_logger(), "Data type: %s", data_type.c_str());
                 RCLCPP_INFO(this->get_logger(), "Obstacle height: %.2f to %.2f", min_obstacle_height, max_obstacle_height);
-                RCLCPP_INFO(this->get_logger(), "Obstacle range: %.2f to %.2f", obstacle_min_range, obstacle_max_range);
+                RCLCPP_INFO(this->get_logger(), "Obstacle range: %.2f to %.2f", min_obstacle_range, max_obstacle_range);
+                RCLCPP_INFO(this->get_logger(), "Obstacle angle: %.2f to %.2f", min_obstacle_angle, max_obstacle_angle);
 
                 if (data_type == "PointCloud2") {
                     bool publish_filtered = sensor["publish_filtered"] ? sensor["publish_filtered"].as<bool>() : true;
@@ -150,6 +156,8 @@ private:
         double max_height;
         double min_range;
         double max_range;
+        double min_angle;
+        double max_angle;
     };
 
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr> laser_subscribers_;
@@ -194,65 +202,102 @@ private:
         latest_clouds_new_msg_[source_name] = true;
         RCLCPP_INFO(this->get_logger(), "[%s] Received PointCloud2 with width %u points.", source_name.c_str(), msg->width);
     
-        // If publish_filtered is true for this sensor, publish raw PointCloud2
-        if (sensor_publish_filtered_[source_name] && filtered_cloud_publishers_.count(source_name)) {
-            const auto& limits = sensor_limits_[source_name];
+        const auto& limits = sensor_limits_[source_name];
 
-            // Step 1: Convert to PCL
-            pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_input(new pcl::PointCloud<pcl::PointXYZ>());
-            pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered(new pcl::PointCloud<pcl::PointXYZ>());    
-            pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_discarded(new pcl::PointCloud<pcl::PointXYZ>()); // for debug ...
-            pcl::fromROSMsg(*msg, *pcl_input);
+        // Step 1: Convert to PCL
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_input(new pcl::PointCloud<pcl::PointXYZ>());
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered(new pcl::PointCloud<pcl::PointXYZ>());    
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_discarded(new pcl::PointCloud<pcl::PointXYZ>()); // for debug ...
+        pcl::fromROSMsg(*msg, *pcl_input);
+        
+        int discarded_due_to_range = 0;
+        int discarded_due_to_height = 0;
+        int discarded_due_to_robot_radius = 0;
+        int discarded_due_to_angle = 0;
 
-            // Measure filtering time
-            auto t_start = std::chrono::high_resolution_clock::now();
+        // Measure filtering time
+        auto t_start = std::chrono::high_resolution_clock::now();
 
-            try {
-                // Lookup the transform only once (cloud_frame → robot_base_frame)
-                geometry_msgs::msg::TransformStamped transformStamped = tf_buffer_->lookupTransform(
-                    robot_base_frame_, msg->header.frame_id, tf2::TimePointZero);
+        try {
+            // Lookup the transform only once (cloud_frame → robot_base_frame)
+            geometry_msgs::msg::TransformStamped transformStamped = tf_buffer_->lookupTransform(
+                robot_base_frame_, msg->header.frame_id, tf2::TimePointZero);
 
-                geometry_msgs::msg::PointStamped pt_in, pt_out;
-                pt_in.header = msg->header;
+            // Convert just the rotation to a rotation matrix for min and max angle checks
+            // This way the points referencial comes from the lidar tf, but the min and max angles are from the robot base frame
+            tf2::Quaternion quat;
+            tf2::fromMsg(transformStamped.transform.rotation, quat);
+            tf2::Matrix3x3 rot_matrix(quat);
 
-                for (const auto& pt : pcl_input->points) {
-                    if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z))
-                        continue;
+            geometry_msgs::msg::PointStamped pt_in, pt_out;
+            pt_in.header = msg->header;
 
-                    float range_xy = std::sqrt(pt.x * pt.x + pt.y * pt.y);
-                    if (range_xy < limits.min_range || range_xy > limits.max_range) {
-                        pcl_discarded->points.push_back(pt);
-                        continue;
-                    }
+            // Checks whether the point is valid
+            for (const auto& pt : pcl_input->points) {
+                if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z))
+                    continue;
 
-                    // Transform this point to robot base frame
-                    pt_in.point.x = pt.x;
-                    pt_in.point.y = pt.y;
-                    pt_in.point.z = pt.z;
+                // Checks min and max range
+                float range_xy = std::sqrt(pt.x * pt.x + pt.y * pt.y);
+                if (range_xy < limits.min_range || range_xy > limits.max_range) {
+                    discarded_due_to_range++;
+                    pcl_discarded->points.push_back(pt);
+                    continue;
+                }
 
-                    tf2::doTransform(pt_in, pt_out, transformStamped);
+                // Transform this point to robot base frame
+                pt_in.point.x = pt.x;
+                pt_in.point.y = pt.y;
+                pt_in.point.z = pt.z;
+                tf2::doTransform(pt_in, pt_out, transformStamped);
 
-                    double z_robot = pt_out.point.z;
-                    if (z_robot >= limits.min_height && z_robot <= limits.max_height) {
-                        pcl_filtered->points.push_back(pt);  // Still push original point (no transform)
+                double z_robot = pt_out.point.z;
+                double distance_xy = std::hypot(pt_out.point.x, pt_out.point.y);  // Equivalent to sqrt(x² + y²)
+
+                // Check height limits
+                if (z_robot >= limits.min_height && z_robot <= limits.max_height) {
+                    if (distance_xy >= robot_radius_) {
+                        
+                        // Check angle limits
+                        tf2::Vector3 original_point(pt.x, pt.y, pt.z);
+                        tf2::Vector3 rotated = rot_matrix * original_point;
+
+                        float angle = std::atan2(rotated.y(), rotated.x());
+                        if (angle < limits.min_angle || angle > limits.max_angle) {
+                            discarded_due_to_angle++;
+                            pcl_discarded->points.push_back(pt);
+                        }
+                        else {
+                            // Point is valid, add to filtered cloud
+                            pcl_filtered->points.push_back(pt);
+                        }
+
                     } else {
-                        pcl_discarded->points.push_back(pt);  // For debug
+                        discarded_due_to_robot_radius++;
+                        pcl_discarded->points.push_back(pt);  // Inside robot, discard
                     }
+                } else {
+                    discarded_due_to_height++;
+                    pcl_discarded->points.push_back(pt);  // Height outside range
                 }
             }
-            catch (const tf2::TransformException &ex) {
-                RCLCPP_WARN(this->get_logger(), "[%s] TF error during height filtering: %s", source_name.c_str(), ex.what());
-                return;  // Skip publishing this frame if TF fails
-            }
+        }
+        catch (const tf2::TransformException &ex) {
+            RCLCPP_WARN(this->get_logger(), "[%s] TF error during height filtering: %s", source_name.c_str(), ex.what());
+            return;  // Skip publishing this frame if TF fails
+        }
 
-            pcl_filtered->width = pcl_filtered->points.size();
-            pcl_filtered->height = 1;
-            pcl_filtered->is_dense = true;
+        // Creates msg headers 
+        pcl_filtered->width = pcl_filtered->points.size();
+        pcl_filtered->height = 1;
+        pcl_filtered->is_dense = true;
 
-            pcl_discarded->width = pcl_discarded->points.size();
-            pcl_discarded->height = 1;
-            pcl_discarded->is_dense = true;
+        pcl_discarded->width = pcl_discarded->points.size();
+        pcl_discarded->height = 1;
+        pcl_discarded->is_dense = true;
 
+        // If publish_filtered is true for this sensor, publish filtered PointCloud2
+        if (sensor_publish_filtered_[source_name] && filtered_cloud_publishers_.count(source_name)) {
             auto filtered_pub = filtered_cloud_publishers_[source_name];
             auto discarded_pub = discarded_cloud_publishers_[source_name];
 
@@ -265,17 +310,27 @@ private:
             pcl::toROSMsg(*pcl_discarded, ros_discarded);
             ros_discarded.header = msg->header;
             discarded_pub->publish(ros_discarded);
-
-            auto t_end = std::chrono::high_resolution_clock::now();
-            double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
-            RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms", source_name.c_str(), elapsed_ms);
-            
-            RCLCPP_INFO(this->get_logger(), "[%s] Published filtered cloud with %lu points (from %lu)", 
-                        source_name.c_str(), pcl_filtered->points.size(), pcl_input->points.size());
-            
-            RCLCPP_INFO(this->get_logger(), "[%s] Published discarded cloud with %lu points (from %lu)", 
-                        source_name.c_str(), pcl_discarded->points.size(), pcl_input->points.size());
         }
+        
+        auto t_end = std::chrono::high_resolution_clock::now();
+        double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
+        RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms", source_name.c_str(), elapsed_ms);
+        
+        RCLCPP_INFO(this->get_logger(), "[%s] Published filtered cloud with %lu points (from %lu)", 
+                    source_name.c_str(), pcl_filtered->points.size(), pcl_input->points.size());
+        
+        RCLCPP_INFO(this->get_logger(),
+            "[%s] Published discarded cloud with %lu points (from %lu). Breakdown: range=%d, height=%d, radius=%d, angle=%d",
+            source_name.c_str(),
+            pcl_discarded->points.size(),
+            pcl_input->points.size(),
+            discarded_due_to_range,
+            discarded_due_to_height,
+            discarded_due_to_robot_radius,
+            discarded_due_to_angle
+        );
+
+        
     }
 
     void timer_callback() {
