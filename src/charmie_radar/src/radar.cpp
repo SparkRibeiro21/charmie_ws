@@ -132,7 +132,11 @@ public:
             tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
             // Publisher setup
-            points_publisher_ = this->create_publisher<charmie_interfaces::msg::ListOfPoints>("radar_points", 10);
+            baseframe_debug_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+                "radar/baseframe_debug", 10);
+            RCLCPP_INFO(this->get_logger(), "Created single debug publisher on topic: radar/baseframe_debug");
+
+            //points_publisher_ = this->create_publisher<charmie_interfaces::msg::ListOfPoints>("radar_points", 10);
             // filtered_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera/depth/points_filtered", 10);
             //discarded_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera/depth/points_discarded", 10);
 
@@ -168,8 +172,9 @@ private:
     std::unordered_map<std::string, bool> latest_clouds_new_msg_;
     std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> filtered_cloud_publishers_;
     std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> discarded_cloud_publishers_; // for debug ...
-    rclcpp::Publisher<charmie_interfaces::msg::ListOfPoints>::SharedPtr points_publisher_;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr filtered_cloud_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr baseframe_debug_publisher_;
+    //rclcpp::Publisher<charmie_interfaces::msg::ListOfPoints>::SharedPtr points_publisher_;
+    //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr filtered_cloud_pub_;
     //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr discarded_cloud_pub_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -178,6 +183,7 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     std::unordered_map<std::string, SensorLimits> sensor_limits_;
     std::unordered_map<std::string, bool> sensor_publish_filtered_;
+    std::unordered_map<std::string, sensor_msgs::msg::PointCloud2::SharedPtr> latest_filtered_clouds_baseframe_;
 
     std::vector<std::string> split_string(const std::string &input, char delimiter) {
         std::stringstream ss(input);
@@ -206,6 +212,7 @@ private:
 
         // Step 1: Convert to PCL
         pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_input(new pcl::PointCloud<pcl::PointXYZ>());
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered_baseframe(new pcl::PointCloud<pcl::PointXYZ>());
         pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered(new pcl::PointCloud<pcl::PointXYZ>());    
         pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_discarded(new pcl::PointCloud<pcl::PointXYZ>()); // for debug ...
         pcl::fromROSMsg(*msg, *pcl_input);
@@ -270,6 +277,12 @@ private:
                         else {
                             // Point is valid, add to filtered cloud
                             pcl_filtered->points.push_back(pt);
+
+                            pcl::PointXYZ transformed_pt;
+                            transformed_pt.x = pt_out.point.x;
+                            transformed_pt.y = pt_out.point.y;
+                            transformed_pt.z = pt_out.point.z;
+                            pcl_filtered_baseframe->points.push_back(transformed_pt);
                         }
 
                     } else {
@@ -311,6 +324,13 @@ private:
             ros_discarded.header = msg->header;
             discarded_pub->publish(ros_discarded);
         }
+
+        auto msg_baseframe = std::make_shared<sensor_msgs::msg::PointCloud2>();
+        pcl::toROSMsg(*pcl_filtered_baseframe, *msg_baseframe);
+        msg_baseframe->header.stamp = msg->header.stamp;
+        msg_baseframe->header.frame_id = robot_base_frame_;
+
+        latest_filtered_clouds_baseframe_[source_name] = msg_baseframe;
         
         auto t_end = std::chrono::high_resolution_clock::now();
         double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
@@ -380,13 +400,28 @@ private:
         }
 
 
+        
+
+
+        for (const auto& [sensor_name, cloud_ptr] : latest_filtered_clouds_baseframe_) {
+            if (cloud_ptr && cloud_ptr->width > 0) {
+                baseframe_debug_publisher_->publish(*cloud_ptr);
+                RCLCPP_INFO(this->get_logger(), "[%s] Base frame filtered cloud has %u points.", 
+                            sensor_name.c_str(), cloud_ptr->width);
+                break; // Only publish the first available cloud - DEBUG
+            }
+        }
+
+
+
+
         if (!all_points.empty()) {
             auto end = std::chrono::high_resolution_clock::now();
             double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
 
-            charmie_interfaces::msg::ListOfPoints msg;
-            msg.coords = all_points;
-            points_publisher_->publish(msg);
+            //charmie_interfaces::msg::ListOfPoints msg;
+            //msg.coords = all_points;
+            //points_publisher_->publish(msg);
 
             RCLCPP_INFO(this->get_logger(), "Published %lu points in %.2f ms", all_points.size(), elapsed_ms);
         }
