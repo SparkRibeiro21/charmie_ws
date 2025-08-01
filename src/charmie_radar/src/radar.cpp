@@ -59,12 +59,12 @@ public:
                 std::string topic = sensor["topic"] ? sensor["topic"].as<std::string>() : "N/A";
                 std::string data_type = sensor["data_type"] ? sensor["data_type"].as<std::string>() : "N/A";
                 
-                double max_obstacle_height = sensor["max_obstacle_height"] ? sensor["max_obstacle_height"].as<double>() : -1.0;
+                double max_obstacle_height = sensor["max_obstacle_height"] ? sensor["max_obstacle_height"].as<double>() : 10.0;
                 double min_obstacle_height = sensor["min_obstacle_height"] ? sensor["min_obstacle_height"].as<double>() : -1.0;
-                double max_obstacle_range = sensor["max_obstacle_range"] ? sensor["max_obstacle_range"].as<double>() : -1.0;
-                double min_obstacle_range = sensor["min_obstacle_range"] ? sensor["min_obstacle_range"].as<double>() : -1.0;
+                double max_obstacle_range = sensor["max_obstacle_range"] ? sensor["max_obstacle_range"].as<double>() : 100.0;
+                double min_obstacle_range = sensor["min_obstacle_range"] ? sensor["min_obstacle_range"].as<double>() :   0.0;
                 double min_obstacle_angle = sensor["min_obstacle_angle"] ? sensor["min_obstacle_angle"].as<double>() : -M_PI;
-                double max_obstacle_angle = sensor["max_obstacle_angle"] ? sensor["max_obstacle_angle"].as<double>() : M_PI;
+                double max_obstacle_angle = sensor["max_obstacle_angle"] ? sensor["max_obstacle_angle"].as<double>() :  M_PI;
                 
                 SensorLimits limits;
                 limits.min_height = min_obstacle_height;
@@ -201,6 +201,129 @@ private:
         latest_scans_[source_name] = msg;
         latest_scans_new_msg_[source_name] = true;
         RCLCPP_INFO(this->get_logger(), "[%s] Received LaserScan with %lu ranges", source_name.c_str(), msg->ranges.size());
+        
+        const auto &limits = sensor_limits_[source_name];
+
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered_baseframe(new pcl::PointCloud<pcl::PointXYZ>());
+
+        // Discard reason counters
+        int discarded_due_to_range = 0;
+        int discarded_due_to_height = 0;
+        int discarded_due_to_robot_radius = 0;
+        int discarded_due_to_angle = 0;
+
+        // Measure filtering time
+        auto t_start = std::chrono::high_resolution_clock::now();
+
+        try {
+            auto tf = tf_buffer_->lookupTransform(robot_base_frame_, msg->header.frame_id, tf2::TimePointZero);
+            tf2::Quaternion quat;
+            tf2::fromMsg(tf.transform.rotation, quat);
+            tf2::Matrix3x3 rot_matrix(quat);
+
+            float angle = msg->angle_min;
+            float increment = msg->angle_increment;
+
+            geometry_msgs::msg::PointStamped pt_in, pt_out;
+            pt_in.header = msg->header;
+
+            for (float r : msg->ranges) {
+                if (!std::isfinite(r)) {
+                    angle += increment;
+                    continue;
+                }
+
+                // Check range
+                if (r < limits.min_range || r > limits.max_range) {
+                    discarded_due_to_range++;
+                    angle += increment;
+                    continue;
+                }
+
+                // Generate 3D point (in sensor frame)
+                pt_in.point.x = r * std::cos(angle);
+                pt_in.point.y = r * std::sin(angle);
+                pt_in.point.z = 0.0;
+                angle += increment;
+
+                // Rotate original point (for angle filtering)
+                tf2::Vector3 original(pt_in.point.x, pt_in.point.y, pt_in.point.z);
+                tf2::Vector3 rotated = rot_matrix * original;
+                float rot_angle = std::atan2(rotated.y(), rotated.x());
+
+                if (rot_angle < limits.min_angle || rot_angle > limits.max_angle) {
+                    discarded_due_to_angle++;
+                    continue;
+                }
+
+                try {
+                    tf2::doTransform(pt_in, pt_out, tf);
+                } catch (const tf2::TransformException &ex) {
+                    RCLCPP_WARN(this->get_logger(), "[%s] TF error: %s", source_name.c_str(), ex.what());
+                    continue;
+                }
+
+                double z = pt_out.point.z;
+                double xy_dist = std::hypot(pt_out.point.x, pt_out.point.y);
+
+                if (z < limits.min_height || z > limits.max_height) {
+                    discarded_due_to_height++;
+                    continue;
+                }
+
+                if (xy_dist < robot_radius_) {
+                    discarded_due_to_robot_radius++;
+                    continue;
+                }
+
+                // Valid point → Add to cloud (in base frame)
+                pcl::PointXYZ pt_base;
+                pt_base.x = pt_out.point.x;
+                pt_base.y = pt_out.point.y;
+                pt_base.z = pt_out.point.z;
+                pcl_filtered_baseframe->points.push_back(pt_base);
+            }
+
+        } catch (const tf2::TransformException &ex) {
+            RCLCPP_WARN(this->get_logger(), "[%s] TF error during processing: %s", source_name.c_str(), ex.what());
+            return;
+        }
+
+        // Convert to PointCloud2 and store
+        pcl_filtered_baseframe->width = pcl_filtered_baseframe->points.size();
+        pcl_filtered_baseframe->height = 1;
+        pcl_filtered_baseframe->is_dense = true;
+
+        auto msg_baseframe = std::make_shared<sensor_msgs::msg::PointCloud2>();
+        pcl::toROSMsg(*pcl_filtered_baseframe, *msg_baseframe);
+        msg_baseframe->header.stamp = msg->header.stamp;
+        msg_baseframe->header.frame_id = robot_base_frame_;
+
+        latest_filtered_clouds_baseframe_[source_name] = msg_baseframe;
+        
+        auto t_end = std::chrono::high_resolution_clock::now();
+        double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
+        RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms", source_name.c_str(), elapsed_ms);
+        
+
+        // Summary logging
+        const size_t total_points = msg->ranges.size();
+        const size_t total_discarded = discarded_due_to_range + discarded_due_to_height +
+                                    discarded_due_to_robot_radius + discarded_due_to_angle;
+        const size_t valid = pcl_filtered_baseframe->points.size();
+
+        RCLCPP_INFO(this->get_logger(),
+            "[%s] LaserScan tatel=%lu valid=%lu, discarded=%lu (range=%d, height=%d, radius=%d, angle=%d)",
+            source_name.c_str(),
+            total_points,
+            valid,
+            total_discarded,
+            discarded_due_to_range,
+            discarded_due_to_height,
+            discarded_due_to_robot_radius,
+            discarded_due_to_angle
+        );
+        
     }
 
     void cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg, const std::string &source_name) {
@@ -210,7 +333,7 @@ private:
     
         const auto& limits = sensor_limits_[source_name];
 
-        // Step 1: Convert to PCL
+        // Convert to PCL
         pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_input(new pcl::PointCloud<pcl::PointXYZ>());
         pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered_baseframe(new pcl::PointCloud<pcl::PointXYZ>());
         pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered(new pcl::PointCloud<pcl::PointXYZ>());    
@@ -362,7 +485,7 @@ private:
         std::vector<geometry_msgs::msg::Point> all_points;
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (const auto& [sensor_name, msg] : latest_scans_) {
+        /* for (const auto& [sensor_name, msg] : latest_scans_) {
             if (latest_scans_new_msg_[sensor_name]) {
             
 
@@ -397,7 +520,7 @@ private:
 
                 latest_scans_new_msg_[sensor_name] = false;
             }
-        }
+        } */
 
 
         
