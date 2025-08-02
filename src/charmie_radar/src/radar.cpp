@@ -102,7 +102,9 @@ public:
 
                     }
                 }
+                
                 latest_scans_new_msg_[sensor_name] = false;
+                latest_clouds_new_msg_[sensor_name] = false;
 
                 if (data_type == "LaserScan") {
                     auto sub = this->create_subscription<sensor_msgs::msg::LaserScan>(topic, 10, 
@@ -136,11 +138,6 @@ public:
                 "radar/baseframe_debug", 10);
             RCLCPP_INFO(this->get_logger(), "Created single debug publisher on topic: radar/baseframe_debug");
 
-            //points_publisher_ = this->create_publisher<charmie_interfaces::msg::ListOfPoints>("radar_points", 10);
-            // filtered_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera/depth/points_filtered", 10);
-            //discarded_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/camera/depth/points_discarded", 10);
-
-
             timer_ = this->create_wall_timer(
                 std::chrono::duration<double>(1.0 / update_frequency),
                 std::bind(&RadarNode::timer_callback, this)
@@ -173,9 +170,6 @@ private:
     std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> filtered_cloud_publishers_;
     std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> discarded_cloud_publishers_; // for debug ...
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr baseframe_debug_publisher_;
-    //rclcpp::Publisher<charmie_interfaces::msg::ListOfPoints>::SharedPtr points_publisher_;
-    //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr filtered_cloud_pub_;
-    //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr discarded_cloud_pub_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     std::string robot_base_frame_;
@@ -298,6 +292,7 @@ private:
         pcl::toROSMsg(*pcl_filtered_baseframe, *msg_baseframe);
         msg_baseframe->header.stamp = msg->header.stamp;
         msg_baseframe->header.frame_id = robot_base_frame_;
+        msg_baseframe->is_dense = true;
 
         latest_filtered_clouds_baseframe_[source_name] = msg_baseframe;
         
@@ -323,7 +318,7 @@ private:
             discarded_due_to_robot_radius,
             discarded_due_to_angle
         );
-        
+
     }
 
     void cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg, const std::string &source_name) {
@@ -452,6 +447,7 @@ private:
         pcl::toROSMsg(*pcl_filtered_baseframe, *msg_baseframe);
         msg_baseframe->header.stamp = msg->header.stamp;
         msg_baseframe->header.frame_id = robot_base_frame_;
+        msg_baseframe->is_dense = true;
 
         latest_filtered_clouds_baseframe_[source_name] = msg_baseframe;
         
@@ -473,7 +469,6 @@ private:
             discarded_due_to_angle
         );
 
-        
     }
 
     void timer_callback() {
@@ -484,47 +479,6 @@ private:
         
         std::vector<geometry_msgs::msg::Point> all_points;
         auto start = std::chrono::high_resolution_clock::now();
-
-        /* for (const auto& [sensor_name, msg] : latest_scans_) {
-            if (latest_scans_new_msg_[sensor_name]) {
-            
-
-                float angle = msg->angle_min;
-                float increment = msg->angle_increment;
-                std::string frame_id = msg->header.frame_id;
-
-                geometry_msgs::msg::PointStamped pt_in, pt_out;
-                pt_in.header = msg->header;
-
-                for (float r : msg->ranges) {
-                    if (!std::isfinite(r)) {
-                        angle += increment;
-                        continue;
-                    }
-
-                    pt_in.point.x = r * std::cos(angle);
-                    pt_in.point.y = r * std::sin(angle);
-                    pt_in.point.z = 0.0;
-                    angle += increment;
-
-                    try {
-                        auto tf = tf_buffer_->lookupTransform(robot_base_frame_, frame_id, tf2::TimePointZero);
-                        tf2::doTransform(pt_in, pt_out, tf);
-                        all_points.push_back(pt_out.point);
-                    } catch (const tf2::TransformException &ex) {
-                        RCLCPP_WARN(this->get_logger(), "TF error for %s -> %s: %s",
-                                    frame_id.c_str(), robot_base_frame_.c_str(), ex.what());
-                        continue;
-                    }
-                }
-
-                latest_scans_new_msg_[sensor_name] = false;
-            }
-        } */
-
-
-        
-
 
         for (const auto& [sensor_name, cloud_ptr] : latest_filtered_clouds_baseframe_) {
             if (cloud_ptr && cloud_ptr->width > 0) {
@@ -538,7 +492,7 @@ private:
 
 
 
-        if (!all_points.empty()) {
+        /* if (!all_points.empty()) {
             auto end = std::chrono::high_resolution_clock::now();
             double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
 
@@ -547,7 +501,7 @@ private:
             //points_publisher_->publish(msg);
 
             RCLCPP_INFO(this->get_logger(), "Published %lu points in %.2f ms", all_points.size(), elapsed_ms);
-        }
+        } */
     }
 
 };

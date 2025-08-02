@@ -6,7 +6,6 @@ radar_node:
   scan:
     topic: /scan
     data_type: "LaserScan"
-    publish_filtered: True
     min_obstacle_range: 0.05
     max_obstacle_range: 5.5
     min_obstacle_height: 0.0
@@ -16,7 +15,6 @@ radar_node:
   scan_bottom:
     topic: /scan_bottom
     data_type: "LaserScan"
-    publish_filtered: True
     min_obstacle_range: 0.05
     max_obstacle_range: 5.5
     min_obstacle_height: 0.0
@@ -26,7 +24,7 @@ radar_node:
   livox_lidar:
     topic: /livox/lidar
     data_type: "PointCloud2"
-    publish_filtered: True
+    publish_filtered: True # publish_filtered is only available for PointCloud2 data type
     min_obstacle_range: 0.1 # as per the datasheet: Close proximity blind zone of 0.1 meters. 
     max_obstacle_range: 5.0 # 30.0  # as per the datasheet: Has a detection range of 40 meters at 10% reflectivity and 70 meters at 80% reflectivity. 
     min_obstacle_height: 0.25  # to ignore floor noise
