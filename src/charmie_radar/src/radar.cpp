@@ -2,10 +2,11 @@
 #include "ament_index_cpp/get_package_share_directory.hpp"
 
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include "geometry_msgs/msg/point.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
-#include "charmie_interfaces/msg/list_of_points.hpp"
+
+// #include "geometry_msgs/msg/point.hpp"
+// #include "charmie_interfaces/msg/list_of_points.hpp"
 
 #include "tf2_ros/transform_listener.h"
 #include "tf2_ros/buffer.h"
@@ -14,7 +15,7 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/filters/voxel_grid.h>
+// #include <pcl/filters/voxel_grid.h>
 
 #include <yaml-cpp/yaml.h>
 #include <chrono>
@@ -102,9 +103,6 @@ public:
 
                     }
                 }
-                
-                latest_scans_new_msg_[sensor_name] = false;
-                latest_clouds_new_msg_[sensor_name] = false;
 
                 if (data_type == "LaserScan") {
                     auto sub = this->create_subscription<sensor_msgs::msg::LaserScan>(topic, 10, 
@@ -134,9 +132,9 @@ public:
             tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
             // Publisher setup
-            baseframe_debug_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-                "radar/baseframe_debug", 10);
-            RCLCPP_INFO(this->get_logger(), "Created single debug publisher on topic: radar/baseframe_debug");
+            radar_pointcloud_baseframe_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+                "radar/pointcloud_baseframe", 10);
+            RCLCPP_INFO(this->get_logger(), "Created single debug publisher on topic: radar/pointcloud_baseframe");
 
             timer_ = this->create_wall_timer(
                 std::chrono::duration<double>(1.0 / update_frequency),
@@ -165,11 +163,9 @@ private:
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> cloud_subscribers_;
     std::unordered_map<std::string, sensor_msgs::msg::LaserScan::SharedPtr> latest_scans_;
     std::unordered_map<std::string, sensor_msgs::msg::PointCloud2::SharedPtr> latest_clouds_;
-    std::unordered_map<std::string, bool> latest_scans_new_msg_;
-    std::unordered_map<std::string, bool> latest_clouds_new_msg_;
     std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> filtered_cloud_publishers_;
     std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> discarded_cloud_publishers_; // for debug ...
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr baseframe_debug_publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr radar_pointcloud_baseframe_publisher_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     std::string robot_base_frame_;
@@ -193,7 +189,6 @@ private:
 
     void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg, const std::string &source_name) {
         latest_scans_[source_name] = msg;
-        latest_scans_new_msg_[source_name] = true;
         RCLCPP_INFO(this->get_logger(), "[%s] Received LaserScan with %lu ranges", source_name.c_str(), msg->ranges.size());
         
         const auto &limits = sensor_limits_[source_name];
@@ -323,7 +318,6 @@ private:
 
     void cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg, const std::string &source_name) {
         latest_clouds_[source_name] = msg;
-        latest_clouds_new_msg_[source_name] = true;
         RCLCPP_INFO(this->get_logger(), "[%s] Received PointCloud2 with width %u points.", source_name.c_str(), msg->width);
     
         const auto& limits = sensor_limits_[source_name];
@@ -477,31 +471,40 @@ private:
             return;
         }
         
-        std::vector<geometry_msgs::msg::Point> all_points;
-        auto start = std::chrono::high_resolution_clock::now();
+        pcl::PointCloud<pcl::PointXYZ>::Ptr merged_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+        rclcpp::Time latest_stamp = this->get_clock()->now();
+
 
         for (const auto& [sensor_name, cloud_ptr] : latest_filtered_clouds_baseframe_) {
             if (cloud_ptr && cloud_ptr->width > 0) {
-                baseframe_debug_publisher_->publish(*cloud_ptr);
-                RCLCPP_INFO(this->get_logger(), "[%s] Base frame filtered cloud has %u points.", 
-                            sensor_name.c_str(), cloud_ptr->width);
-                break; // Only publish the first available cloud - DEBUG
+
+            pcl::PointCloud<pcl::PointXYZ> pcl_temp;
+            pcl::fromROSMsg(*cloud_ptr, pcl_temp);
+            *merged_cloud += pcl_temp;  // Concatenate
+
+            rclcpp::Time stamp(cloud_ptr->header.stamp);
+            if (stamp > latest_stamp) {
+                latest_stamp = stamp;
+            }
+
+            RCLCPP_INFO(this->get_logger(), "[%s] Included cloud with %u points.", sensor_name.c_str(), cloud_ptr->width);
+    
             }
         }
 
+        if (merged_cloud->empty()) {
+            RCLCPP_INFO(this->get_logger(), "No points to publish after fusing clouds.");
+            return;
+        }
 
+        sensor_msgs::msg::PointCloud2 ros_merged;
+        pcl::toROSMsg(*merged_cloud, ros_merged);
+        ros_merged.header.frame_id = robot_base_frame_;
+        ros_merged.header.stamp = latest_stamp;
+        ros_merged.is_dense = true;
 
-
-        /* if (!all_points.empty()) {
-            auto end = std::chrono::high_resolution_clock::now();
-            double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
-
-            //charmie_interfaces::msg::ListOfPoints msg;
-            //msg.coords = all_points;
-            //points_publisher_->publish(msg);
-
-            RCLCPP_INFO(this->get_logger(), "Published %lu points in %.2f ms", all_points.size(), elapsed_ms);
-        } */
+        radar_pointcloud_baseframe_publisher_->publish(ros_merged);
+        RCLCPP_INFO(this->get_logger(), "Published merged cloud with %lu points.", merged_cloud->points.size());
     }
 
 };
