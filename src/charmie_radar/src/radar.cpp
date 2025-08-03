@@ -466,6 +466,9 @@ private:
     }
 
     void timer_callback() {
+
+        auto t_start = std::chrono::high_resolution_clock::now();
+
         if (latest_scans_.empty() && latest_clouds_.empty()) {
             RCLCPP_INFO(this->get_logger(), "No scan data received yet.");
             return;
@@ -505,6 +508,11 @@ private:
 
         radar_pointcloud_baseframe_publisher_->publish(ros_merged);
         RCLCPP_INFO(this->get_logger(), "Published merged cloud with %lu points.", merged_cloud->points.size());
+
+        auto t_end = std::chrono::high_resolution_clock::now();
+        double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
+        RCLCPP_INFO(this->get_logger(), "[radar] Merging took %.2f ms", elapsed_ms);
+        
     }
 
 };
