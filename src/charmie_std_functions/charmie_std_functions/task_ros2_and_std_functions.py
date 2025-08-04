@@ -193,13 +193,14 @@ class ROS2TaskNode(Node):
         "charmie_gamepad":          False,
         "charmie_lidar":            True,
         "charmie_lidar_bottom":     False,
+        "charmie_lidar_livox":      False,
             "charmie_llm":              False,
         "charmie_localisation":     False,
             "charmie_low_level":        True,
             "charmie_navigation":       True,
             "charmie_nav2":             False,
             "charmie_neck":             True,
-            "charmie_obstacles":        True,
+        "charmie_radar":            True,
             "charmie_speakers":         True,
             "charmie_tracking":        False,
             "charmie_yolo_objects":     True,
@@ -253,10 +254,6 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
             while not self.neck_track_object_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
-
-        if self.ros2_modules["charmie_obstacles"]:
-            while not self.activate_obstacles_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
 
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
@@ -433,13 +430,14 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_gamepad      = self.ros2_modules["charmie_gamepad"]
         nodes_used.charmie_lidar        = self.ros2_modules["charmie_lidar"]
         nodes_used.charmie_lidar_bottom = self.ros2_modules["charmie_lidar_bottom"]
+        nodes_used.charmie_lidar_livox  = self.ros2_modules["charmie_lidar_livox"]
         nodes_used.charmie_localisation = self.ros2_modules["charmie_localisation"]
         nodes_used.charmie_low_level    = self.ros2_modules["charmie_low_level"]
         nodes_used.charmie_llm          = self.ros2_modules["charmie_llm"]
         nodes_used.charmie_navigation   = self.ros2_modules["charmie_navigation"]
         nodes_used.charmie_nav2         = self.ros2_modules["charmie_nav2"]
         nodes_used.charmie_neck         = self.ros2_modules["charmie_neck"]
-        nodes_used.charmie_obstacles    = self.ros2_modules["charmie_obstacles"]
+        nodes_used.charmie_radar        = self.ros2_modules["charmie_radar"]
         nodes_used.charmie_speakers     = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_tracking     = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects = self.ros2_modules["charmie_yolo_objects"]

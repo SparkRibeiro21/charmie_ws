@@ -397,13 +397,6 @@ class LaunchStdFunctions():
                 output='screen',
                 arguments=['--display-config', rviz_config_path]
             )
-
-        
-        self.obstacles = Node(package='charmie_obstacles',
-                            executable='obstacles_fusion',
-                            name='obstacles_fusion',
-                            emulate_tty=True
-                            )
         
         self.odometry_lidar = Node(package='rf2o_laser_odometry',
                 executable='rf2o_laser_odometry_node',

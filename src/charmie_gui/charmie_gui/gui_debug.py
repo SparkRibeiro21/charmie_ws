@@ -272,14 +272,18 @@ class DebugVisualNode(Node):
         # bool charmie_face
         # bool charmie_head_camera
         # bool charmie_hand_camera
+        # bool charmie_base_camera
         # bool charmie_gamepad
         # bool charmie_lidar
+        # bool charmie_lidar_bottom
+        # bool charmie_lidar_livox
+        # bool charmie_llm
         # bool charmie_localisation
         # bool charmie_low_level
         # bool charmie_navigation
         # bool charmie_nav2
         # bool charmie_neck
-        # bool charmie_obstacles
+        # bool charmie_radar
         # bool charmie_speakers
         # bool charmie_tracking
         # bool charmie_yolo_objects
