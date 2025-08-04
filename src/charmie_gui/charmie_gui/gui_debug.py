@@ -66,12 +66,6 @@ class DebugVisualNode(Node):
         # Low Level
         # self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10) ### OLD
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
-        # Camera Obstacles
-        # self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
-        # Obstacles
-        # self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
-        # Radar
-        # self.radar_subscriber = self.create_subscription(ListOfPoints, "radar_points", self.get_radar_callback, 10)
         # Livox 3D Lidar
         self.livox_3dlidar_subscriber = self.create_subscription(PointCloud2, "/livox/lidar/filtered", self.livox_3dlidar_callback, 10)
         # Gamepad Controller
@@ -215,13 +209,10 @@ class DebugVisualNode(Node):
 
         self.lidar_obstacle_points = []
         self.lidar_bottom_obstacle_points = []
-        # self.camera_obstacle_points = []
-        # self.final_obstacle_points = []
-        # self.radar_points = []
 
         self.robot_radius = 0.560/2 # meters
         self.lidar_radius = 0.050/2 # meters
-        self.lidar_to_robot_center = 0.255 # meters
+        self.livox_3dlidar_to_robot_center = 0.22 # meters, Livox is 22cm in front of robot center
 
         self.time_for_cams_fps_verification = 0.25
         self.create_timer(1.0, self.check_yolos_timer)
@@ -405,21 +396,6 @@ class DebugVisualNode(Node):
         self.gamepad_controller_time = time.time()
         self.gamepad_controller_timeout = controller.timeout
         # print("Gamepad Controller:", controller)
-
-    # def get_camera_obstacles_callback(self, points: ListOfPoints):
-    #     self.camera_obstacle_points = points.coords
-        # print("Received Points")
-        # print
-        
-    # def get_final_obstacles_callback(self, points: ListOfPoints):
-    #     self.final_obstacle_points = points.coords
-        # print("Received Points")
-        # print(self.final_obstacle_points)
-
-    # def get_radar_callback(self, points: ListOfPoints):
-    #     self.radar_points = points.coords
-        # print("Received Radar Points")
-        # print(self.radar_points)
 
     def lidar_callback(self, scan: LaserScan):
         # self.scan = scan
@@ -2271,17 +2247,13 @@ class DebugVisualMain():
             points_gen = point_cloud2.read_points(self.node.livox_3dlidar, field_names=("x", "y", "z"), skip_nans=True)
             for point in points_gen:
                 x, y, z = point
-                y += 0.22  # Livox is 22cm in front of robot center (this is for quick visualizattion, for accurate visualization please check rviz)
-                # pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(x, y), radius=1, width=0)
+                y += self.node.livox_3dlidar_to_robot_center  # Livox is 22cm in front of robot center (this is for quick visualizattion, for accurate visualization please check rviz)
+
                 angle = self.node.robot_pose.theta
-                # x_map = x * math.cos(angle) - y * math.sin(angle) + self.node.robot_pose.x
-                # y_map = x * math.sin(angle) + y * math.cos(angle) + self.node.robot_pose.y
-                # pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(x_map, y_map), radius=1, width=0)
-                # Rotate 90° to the right (−π/2 radians)
                 x_rot = x * math.cos(-math.pi/2) - y * math.sin(-math.pi/2)
                 y_rot = x * math.sin(-math.pi/2) + y * math.cos(-math.pi/2)
 
-                # Then apply robot pose transform if needed
+                # Then apply robot pose transform
                 angle = self.node.robot_pose.theta
                 x_map = x_rot * math.cos(angle) - y_rot * math.sin(angle) + self.node.robot_pose.x
                 y_map = x_rot * math.sin(angle) + y_rot * math.cos(angle) + self.node.robot_pose.y
@@ -2297,43 +2269,6 @@ class DebugVisualMain():
         for points in self.node.lidar_bottom_obstacle_points:
             # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_pose.x+points.x, self.node.robot_pose.y+points.y), radius=1, width=0)
             pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(points.x, points.y), radius=1, width=0)
-
-
-        # for points in self.node.camera_obstacle_points:
-        #     pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
-        
-        ### RADAR
-        """         
-        for points in self.node.radar_points:
-            # calculate the absolute position according to the robot localisation
-            dist_obj = math.sqrt(points.x**2 + points.y**2)
-
-            angle_obj = math.atan2(points.x, points.y)
-            theta_aux = math.pi/2 - (angle_obj - self.node.robot_pose.theta)
-
-            target = Point()
-            target.x = dist_obj * math.cos(theta_aux) + self.node.robot_pose.x
-            target.y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
-            target.z = points.z
-            # pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
-            pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(target.x, target.y), radius=2, width=0)
-            
-
-        for points in self.node.final_obstacle_points:
-
-            # calculate the absolute position according to the robot localisation
-            dist_obj = math.sqrt(points.x**2 + points.y**2)
-
-            angle_obj = math.atan2(points.x, points.y)
-            theta_aux = math.pi/2 - (angle_obj - self.node.robot_pose.theta)
-
-            target = Point()
-            target.x = dist_obj * math.cos(theta_aux) + self.node.robot_pose.x
-            target.y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
-            target.z = points.z
-
-            pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(target.x, target.y), radius=2, width=0) """
-            
 
         ### PERSON DETECTED
         for person in self.node.detected_people.persons:
