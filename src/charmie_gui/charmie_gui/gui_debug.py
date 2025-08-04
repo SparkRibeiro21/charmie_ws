@@ -70,6 +70,8 @@ class DebugVisualNode(Node):
         self.livox_3dlidar_subscriber = self.create_subscription(PointCloud2, "/livox/lidar/filtered", self.livox_3dlidar_callback, 10)
         # Gamepad Controller
         self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
+        # Radar
+        self.radar_pointcloud_subscriber = self.create_subscription(PointCloud2, "/radar/pointcloud_baseframe", self.radar_pointcloud_callback, 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -155,6 +157,7 @@ class DebugVisualNode(Node):
         self.lidar_time = 0.0
         self.lidar_bottom_time = 0.0
         self.lidar_livox_time = 0.0
+        self.radar_pointcloud_time = 0.0
         self.gamepad_controller_time = 0.0
         self.gamepad_controller_timeout = False
         self.localisation_time = 0.0
@@ -497,9 +500,15 @@ class DebugVisualNode(Node):
                 self.lidar_bottom_obstacle_points.append(target)
 
     def livox_3dlidar_callback(self, points: PointCloud2):
-        print("Received Livox 3D Lidar Points")
+        # print("Received Livox 3D Lidar Points")
         self.lidar_livox_time = time.time()
         self.livox_3dlidar = points
+        # print(points)
+
+    def radar_pointcloud_callback(self, points: PointCloud2):
+        print("Received Radar PointCloud Points")
+        self.radar_pointcloud_time = time.time()
+        # self.livox_3dlidar = points
         # print(points)
         
     def target_pos_callback(self, nav: TarNavSDNL):
@@ -570,7 +579,7 @@ class CheckNodesMain():
         self.CHECK_NAVIGATION_NODE = False
         self.CHECK_NAV2_NODE = False
         self.CHECK_NECK_NODE = False
-        self.CHECK_OBSTACLES_NODE = False
+        self.CHECK_RADAR_NODE = False
         self.CHECK_SPEAKERS_NODE = False
         self.CHECK_TRACKING_NODE = False
         self.CHECK_YOLO_OBJECTS_NODE = False
@@ -701,12 +710,12 @@ class CheckNodesMain():
             else:
                 self.CHECK_NECK_NODE = True
             
-            # OBSTACLES
-            if not self.node.activate_obstacles_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
-                # self.node.get_logger().warn("Waiting for Server Obstacles ...")
-                self.CHECK_OBSTACLES_NODE = False
+            # RADAR radar_pointcloud_time
+            if current_time - self.node.radar_pointcloud_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Radar Lidar ...")
+                self.CHECK_RADAR_NODE = False
             else:
-                self.CHECK_OBSTACLES_NODE = True
+                self.CHECK_RADAR_NODE = True
 
             # SPEAKERS
             if not self.node.speech_command_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -941,7 +950,7 @@ class DebugVisualMain():
         self.CHARMIE_NAVIGATION_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NAV2_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_RADAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_TRACKING_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1182,10 +1191,10 @@ class DebugVisualMain():
         self.draw_text("Neck", self.text_font, tc, self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_NECK_NODE_RECT)
 
-        # OBSTACLES
-        # tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_obstacles, self.check_nodes.CHECK_OBSTACLES_NODE)
-        # self.draw_text("Obstacles", self.text_font, tc, self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
-        # pygame.draw.rect(self.WIN, rc, self.CHARMIE_OBSTACLES_NODE_RECT)
+        # RADAR
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_radar, self.check_nodes.CHECK_RADAR_NODE)
+        self.draw_text("Radar", self.text_font, tc, self.CHARMIE_RADAR_NODE_RECT.x+2*self.CHARMIE_RADAR_NODE_RECT.width, self.CHARMIE_RADAR_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_RADAR_NODE_RECT)
 
         # SPEAKERS
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
