@@ -5,7 +5,8 @@ from rclpy.action import ActionClient
 
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
-from sensor_msgs.msg import Image, LaserScan
+from sensor_msgs.msg import Image, LaserScan, PointCloud2
+from sensor_msgs_py import point_cloud2
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
@@ -71,6 +72,8 @@ class DebugVisualNode(Node):
         # self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
         # Radar
         # self.radar_subscriber = self.create_subscription(ListOfPoints, "radar_points", self.get_radar_callback, 10)
+        # Livox 3D Lidar
+        self.livox_3dlidar_subscriber = self.create_subscription(PointCloud2, "/livox/lidar/filtered", self.livox_3dlidar_callback, 10)
         # Gamepad Controller
         self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
         # Yolo Pose
@@ -192,7 +195,8 @@ class DebugVisualNode(Node):
         self.all_pos_y_val = []
 
         self.nodes_used = NodesUsed.Request()
-        self.scan = LaserScan()
+        # self.scan = LaserScan()
+        self.livox_3dlidar = PointCloud2()
         self.search_for_person = ListOfDetectedPerson()
         self.search_for_object = ListOfDetectedObject()
         self.new_search_for_person = False
@@ -418,7 +422,7 @@ class DebugVisualNode(Node):
         # print(self.radar_points)
 
     def lidar_callback(self, scan: LaserScan):
-        self.scan = scan
+        # self.scan = scan
         # print(scan)
 
         self.lidar_time = time.time()
@@ -465,7 +469,7 @@ class DebugVisualNode(Node):
                 self.lidar_obstacle_points.append(target)
 
     def lidar_bottom_callback(self, scan: LaserScan):
-        self.scan = scan
+        # self.scan = scan
         # print(scan)
 
         self.lidar_bottom_time = time.time()
@@ -511,6 +515,11 @@ class DebugVisualNode(Node):
 
                 self.lidar_bottom_obstacle_points.append(target)
 
+    def livox_3dlidar_callback(self, points: PointCloud2):
+        print("Received Livox 3D Lidar Points")
+        self.livox_3dlidar = points
+        # print(points)
+        
     def target_pos_callback(self, nav: TarNavSDNL):
         self.navigation = nav
         self.is_navigating = True
@@ -2257,6 +2266,28 @@ class DebugVisualMain():
                 pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.robot_radius/2), width=0)
                 pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.node.navigation.reached_radius), width=1)
 
+        ### TO DO here 
+        if self.node.livox_3dlidar.width > 0 and len(self.node.livox_3dlidar.data) > 0:
+            points_gen = point_cloud2.read_points(self.node.livox_3dlidar, field_names=("x", "y", "z"), skip_nans=True)
+            for point in points_gen:
+                x, y, z = point
+                y += 0.22  # Livox is 22cm in front of robot center (this is for quick visualizattion, for accurate visualization please check rviz)
+                # pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(x, y), radius=1, width=0)
+                angle = self.node.robot_pose.theta
+                # x_map = x * math.cos(angle) - y * math.sin(angle) + self.node.robot_pose.x
+                # y_map = x * math.sin(angle) + y * math.cos(angle) + self.node.robot_pose.y
+                # pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(x_map, y_map), radius=1, width=0)
+                # Rotate 90° to the right (−π/2 radians)
+                x_rot = x * math.cos(-math.pi/2) - y * math.sin(-math.pi/2)
+                y_rot = x * math.sin(-math.pi/2) + y * math.cos(-math.pi/2)
+
+                # Then apply robot pose transform if needed
+                angle = self.node.robot_pose.theta
+                x_map = x_rot * math.cos(angle) - y_rot * math.sin(angle) + self.node.robot_pose.x
+                y_map = x_rot * math.sin(angle) + y_rot * math.cos(angle) + self.node.robot_pose.y
+
+                pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(x_map, y_map), radius=1, width=0)
+
 
         ### OBSTACLES POINTS (LIDAR, Depth Head Camera and Final Obstacles Fusion)
         for points in self.node.lidar_obstacle_points:
@@ -2266,6 +2297,7 @@ class DebugVisualMain():
         for points in self.node.lidar_bottom_obstacle_points:
             # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_pose.x+points.x, self.node.robot_pose.y+points.y), radius=1, width=0)
             pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(points.x, points.y), radius=1, width=0)
+
 
         # for points in self.node.camera_obstacle_points:
         #     pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
