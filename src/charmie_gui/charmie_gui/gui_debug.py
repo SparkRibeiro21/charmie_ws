@@ -66,11 +66,11 @@ class DebugVisualNode(Node):
         # self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10) ### OLD
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         # Camera Obstacles
-        self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
+        # self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
         # Obstacles
-        self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
+        # self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
         # Radar
-        self.radar_subscriber = self.create_subscription(ListOfPoints, "radar_points", self.get_radar_callback, 10)
+        # self.radar_subscriber = self.create_subscription(ListOfPoints, "radar_points", self.get_radar_callback, 10)
         # Gamepad Controller
         self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
         # Yolo Pose
@@ -211,9 +211,9 @@ class DebugVisualNode(Node):
 
         self.lidar_obstacle_points = []
         self.lidar_bottom_obstacle_points = []
-        self.camera_obstacle_points = []
-        self.final_obstacle_points = []
-        self.radar_points = []
+        # self.camera_obstacle_points = []
+        # self.final_obstacle_points = []
+        # self.radar_points = []
 
         self.robot_radius = 0.560/2 # meters
         self.lidar_radius = 0.050/2 # meters
@@ -402,18 +402,18 @@ class DebugVisualNode(Node):
         self.gamepad_controller_timeout = controller.timeout
         # print("Gamepad Controller:", controller)
 
-    def get_camera_obstacles_callback(self, points: ListOfPoints):
-        self.camera_obstacle_points = points.coords
+    # def get_camera_obstacles_callback(self, points: ListOfPoints):
+    #     self.camera_obstacle_points = points.coords
         # print("Received Points")
         # print
         
-    def get_final_obstacles_callback(self, points: ListOfPoints):
-        self.final_obstacle_points = points.coords
+    # def get_final_obstacles_callback(self, points: ListOfPoints):
+    #     self.final_obstacle_points = points.coords
         # print("Received Points")
         # print(self.final_obstacle_points)
 
-    def get_radar_callback(self, points: ListOfPoints):
-        self.radar_points = points.coords
+    # def get_radar_callback(self, points: ListOfPoints):
+    #     self.radar_points = points.coords
         # print("Received Radar Points")
         # print(self.radar_points)
 
@@ -2271,6 +2271,7 @@ class DebugVisualMain():
         #     pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
         
         ### RADAR
+        """         
         for points in self.node.radar_points:
             # calculate the absolute position according to the robot localisation
             dist_obj = math.sqrt(points.x**2 + points.y**2)
@@ -2299,7 +2300,7 @@ class DebugVisualMain():
             target.y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
             target.z = points.z
 
-            pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(target.x, target.y), radius=2, width=0)
+            pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(target.x, target.y), radius=2, width=0) """
             
 
         ### PERSON DETECTED
