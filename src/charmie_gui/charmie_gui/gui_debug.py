@@ -154,6 +154,7 @@ class DebugVisualNode(Node):
 
         self.lidar_time = 0.0
         self.lidar_bottom_time = 0.0
+        self.lidar_livox_time = 0.0
         self.gamepad_controller_time = 0.0
         self.gamepad_controller_timeout = False
         self.localisation_time = 0.0
@@ -497,6 +498,7 @@ class DebugVisualNode(Node):
 
     def livox_3dlidar_callback(self, points: PointCloud2):
         print("Received Livox 3D Lidar Points")
+        self.lidar_livox_time = time.time()
         self.livox_3dlidar = points
         # print(points)
         
@@ -561,6 +563,7 @@ class CheckNodesMain():
         self.CHECK_GAMEPAD_NODE = False
         self.CHECK_LIDAR_NODE = False
         self.CHECK_LIDAR_BOTTOM_NODE = False
+        self.CHECK_LIDAR_LIVOX_NODE = False
         self.CHECK_LLM_NODE = False
         self.CHECK_LOCALISATION_NODE = False
         self.CHECK_LOW_LEVEL_NODE = False
@@ -648,6 +651,12 @@ class CheckNodesMain():
                 self.CHECK_LIDAR_BOTTOM_NODE = False
             else:
                 self.CHECK_LIDAR_BOTTOM_NODE = True
+            # LIDAR Livox
+            if current_time - self.node.lidar_livox_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                self.CHECK_LIDAR_LIVOX_NODE = False
+            else:
+                self.CHECK_LIDAR_LIVOX_NODE = True
 
             # LLM
             if not self.node.llm_demonstration_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -924,6 +933,7 @@ class DebugVisualMain():
         self.CHARMIE_GAMEPAD_NODE_RECT          = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LIDAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LIDAR_BOTTOM_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LIDAR_LIVOX_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LLM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOCALISATION_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1126,12 +1136,16 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_NODE_RECT)
         # LIDAR Bottom
         tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar_bottom, self.check_nodes.CHECK_LIDAR_BOTTOM_NODE)
-        if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT)
+        # LIDAR Livox
+        tc3, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar_livox, self.check_nodes.CHECK_LIDAR_LIVOX_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_LIVOX_NODE_RECT)
+
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L or tc3 == self.BLUE_L:
             tc = self.BLUE_L
         else:
             tc = self.WHITE
-        self.draw_text("LIDARs (T, B)", self.text_font, tc, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT.x+2*self.CHARMIE_LIDAR_BOTTOM_NODE_RECT.width, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT.y-2)
-        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT)
+        self.draw_text("LIDARs (T, B, 3D)", self.text_font, tc, self.CHARMIE_LIDAR_LIVOX_NODE_RECT.x+2*self.CHARMIE_LIDAR_LIVOX_NODE_RECT.width, self.CHARMIE_LIDAR_LIVOX_NODE_RECT.y-2)
         
         # GAMEPAD CONTROLLER
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_gamepad, self.check_nodes.CHECK_GAMEPAD_NODE)
@@ -1169,9 +1183,9 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_NECK_NODE_RECT)
 
         # OBSTACLES
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_obstacles, self.check_nodes.CHECK_OBSTACLES_NODE)
-        self.draw_text("Obstacles", self.text_font, tc, self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
-        pygame.draw.rect(self.WIN, rc, self.CHARMIE_OBSTACLES_NODE_RECT)
+        # tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_obstacles, self.check_nodes.CHECK_OBSTACLES_NODE)
+        # self.draw_text("Obstacles", self.text_font, tc, self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
+        # pygame.draw.rect(self.WIN, rc, self.CHARMIE_OBSTACLES_NODE_RECT)
 
         # SPEAKERS
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
