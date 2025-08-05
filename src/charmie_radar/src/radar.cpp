@@ -41,14 +41,33 @@ public:
             double update_frequency = radar["update_frequency"] ? radar["update_frequency"].as<double>() : 10.0;
             robot_radius_ = radar["robot_radius"] ? radar["robot_radius"].as<double>() : 0.0;
 
+            // Read radar_configuration block
+            if (radar["radar_configuration"]) {
+                YAML::Node radar_config = radar["radar_configuration"];
+                number_of_breaks_ = radar_config["number_of_breaks"] ? radar_config["number_of_breaks"].as<int>()   :     0;
+                min_radar_angle_  = radar_config["min_radar_angle"]  ? radar_config["min_radar_angle"].as<double>() : -M_PI;
+                max_radar_angle_  = radar_config["max_radar_angle"]  ? radar_config["max_radar_angle"].as<double>() :  M_PI;
+            } else {
+                RCLCPP_WARN(this->get_logger(), "No 'radar_configuration' block found in YAML. Using defaults.");
+                number_of_breaks_ =     0;
+                min_radar_angle_  = -M_PI;
+                max_radar_angle_  =  M_PI;
+            }
+
             // Get observation_sources string and split it
             std::string sources_str = radar["observation_sources"].as<std::string>();
             std::vector<std::string> sources = split_string(sources_str, ' ');
 
+            RCLCPP_INFO(this->get_logger(), "--- General Configurations: ---");
             RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
             RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
             RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f", robot_radius_);
             RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
+
+            RCLCPP_INFO(this->get_logger(), "--- Radar Configurations: ---");
+            RCLCPP_INFO(this->get_logger(), "Breaks: %d", number_of_breaks_); 
+            RCLCPP_INFO(this->get_logger(), "Min angle: %.4f", min_radar_angle_); 
+            RCLCPP_INFO(this->get_logger(), "Max angle: %.4f", max_radar_angle_); 
 
             for (const auto& sensor_name : sources) {
                 if (!radar[sensor_name]) {
@@ -174,6 +193,11 @@ private:
     std::unordered_map<std::string, SensorLimits> sensor_limits_;
     std::unordered_map<std::string, bool> sensor_publish_filtered_;
     std::unordered_map<std::string, sensor_msgs::msg::PointCloud2::SharedPtr> latest_filtered_clouds_baseframe_;
+
+    // radar_configuration params
+    int number_of_breaks_;
+    double min_radar_angle_;
+    double max_radar_angle_;
 
     std::vector<std::string> split_string(const std::string &input, char delimiter) {
         std::stringstream ss(input);
