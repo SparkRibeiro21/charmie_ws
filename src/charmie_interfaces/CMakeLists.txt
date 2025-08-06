@@ -46,6 +46,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"
   "msg/PointCloudCoordinates.msg"
+  "msg/RadarData.msg"
+  "msg/RadarSector.msg"
   "msg/RGB.msg"
   "msg/TarNavSDNL.msg"
   "msg/TaskStatesInfo.msg"
