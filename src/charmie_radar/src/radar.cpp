@@ -54,6 +54,9 @@ public:
                 max_radar_angle_  =  M_PI;
             }
 
+            double total_angle_range = max_radar_angle_ - min_radar_angle_;
+            break_size_ = (number_of_breaks_ > 0) ? total_angle_range / static_cast<double>(number_of_breaks_) : 0.0;
+
             // Get observation_sources string and split it
             std::string sources_str = radar["observation_sources"].as<std::string>();
             std::vector<std::string> sources = split_string(sources_str, ' ');
@@ -66,8 +69,9 @@ public:
 
             RCLCPP_INFO(this->get_logger(), "--- Radar Configurations: ---");
             RCLCPP_INFO(this->get_logger(), "Breaks: %d", number_of_breaks_); 
-            RCLCPP_INFO(this->get_logger(), "Min angle: %.4f", min_radar_angle_); 
-            RCLCPP_INFO(this->get_logger(), "Max angle: %.4f", max_radar_angle_); 
+            RCLCPP_INFO(this->get_logger(), "Min angle: %.4f rad, %.2f deg", min_radar_angle_, min_radar_angle_ * 180.0 / M_PI); 
+            RCLCPP_INFO(this->get_logger(), "Max angle: %.4f rad, %.2f deg", max_radar_angle_, max_radar_angle_ * 180.0 / M_PI); 
+            RCLCPP_INFO(this->get_logger(), "Break size: %.4f rad, %.2f deg", break_size_, break_size_ * 180.0 / M_PI); 
 
             for (const auto& sensor_name : sources) {
                 if (!radar[sensor_name]) {
@@ -178,6 +182,12 @@ private:
         double max_angle;
     };
 
+    struct BreakInfo {
+        double min_distance = std::numeric_limits<double>::infinity();
+        pcl::PointXYZ closest_point;
+        bool has_point = false;
+    };
+
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr> laser_subscribers_;
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> cloud_subscribers_;
     std::unordered_map<std::string, sensor_msgs::msg::LaserScan::SharedPtr> latest_scans_;
@@ -198,6 +208,7 @@ private:
     int number_of_breaks_;
     double min_radar_angle_;
     double max_radar_angle_;
+    double break_size_;
 
     std::vector<std::string> split_string(const std::string &input, char delimiter) {
         std::stringstream ss(input);
@@ -317,8 +328,7 @@ private:
         
         auto t_end = std::chrono::high_resolution_clock::now();
         double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
-        RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms", source_name.c_str(), elapsed_ms);
-        
+        RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms.", source_name.c_str(), elapsed_ms);
 
         // Summary logging
         const size_t total_points = msg->ranges.size();
@@ -327,7 +337,7 @@ private:
         const size_t valid = pcl_filtered_baseframe->points.size();
 
         RCLCPP_INFO(this->get_logger(),
-            "[%s] LaserScan tatel=%lu valid=%lu, discarded=%lu (range=%d, height=%d, radius=%d, angle=%d)",
+            "[%s] LaserScan total=%lu valid=%lu, discarded=%lu (range=%d, height=%d, radius=%d, angle=%d)",
             source_name.c_str(),
             total_points,
             valid,
@@ -514,14 +524,70 @@ private:
                 latest_stamp = stamp;
             }
 
-            RCLCPP_INFO(this->get_logger(), "[%s] Included cloud with %u points.", sensor_name.c_str(), cloud_ptr->width);
+            RCLCPP_INFO(this->get_logger(), "[radar][%s] Included cloud with %u points.", sensor_name.c_str(), cloud_ptr->width);
     
             }
         }
 
+        auto t_start2 = std::chrono::high_resolution_clock::now();
         if (merged_cloud->empty()) {
             RCLCPP_INFO(this->get_logger(), "No points to publish after fusing clouds.");
             return;
+        }
+        else {
+            RCLCPP_INFO(this->get_logger(), "[radar] Merged cloud has %lu points.", merged_cloud->points.size());
+
+            std::vector<BreakInfo> breaks(number_of_breaks_);
+
+            // Iterate over merged cloud points
+            for (const auto& pt : merged_cloud->points) {
+                if (!std::isfinite(pt.x) || !std::isfinite(pt.y))
+                    continue;
+
+                double angle = std::atan2(pt.y, pt.x);
+                double distance_xy = std::hypot(pt.x, pt.y);
+
+                // Only consider points within angular range
+                if (angle < min_radar_angle_ || angle > max_radar_angle_)
+                    continue;
+
+                // Determine break index
+                int break_idx = static_cast<int>((angle - min_radar_angle_) / break_size_);
+                if (break_idx < 0 || break_idx >= number_of_breaks_)
+                    continue;
+
+                // Check if this point is closer than the current closest
+                if (distance_xy < breaks[break_idx].min_distance) {
+                    breaks[break_idx].min_distance = distance_xy;
+                    breaks[break_idx].closest_point = pt;
+                    breaks[break_idx].has_point = true;
+                }
+            }
+
+
+            // Output results
+            for (int i = 0; i < number_of_breaks_; ++i) {
+                double start_angle_deg = (min_radar_angle_ + break_size_ *       i) * 180.0 / M_PI;
+                double end_angle_deg   = (min_radar_angle_ + break_size_ * (i + 1)) * 180.0 / M_PI;
+
+                if (breaks[i].has_point) {
+                    RCLCPP_INFO(this->get_logger(),
+                        "Break %d [%.1f°, %.1f°]: Closest point at (%.2f, %.2f, %.2f) dist=%.2f m",
+                        i, start_angle_deg, end_angle_deg,
+                        breaks[i].closest_point.x,
+                        breaks[i].closest_point.y,
+                        breaks[i].closest_point.z,
+                        breaks[i].min_distance
+                    );
+                } else {
+                    RCLCPP_INFO(this->get_logger(),
+                        "Break %d [%.1f°, %.1f°]: No points", 
+                        i, start_angle_deg, end_angle_deg
+                    );
+                }
+            }
+
+
         }
 
         sensor_msgs::msg::PointCloud2 ros_merged;
@@ -534,8 +600,10 @@ private:
         RCLCPP_INFO(this->get_logger(), "Published merged cloud with %lu points.", merged_cloud->points.size());
 
         auto t_end = std::chrono::high_resolution_clock::now();
-        double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
-        RCLCPP_INFO(this->get_logger(), "[radar] Merging took %.2f ms", elapsed_ms);
+        double total_elapsed_ms    = std::chrono::duration_cast<std::chrono::microseconds>(t_end    - t_start ).count() / 1000.0;
+        double merging_elapsed_ms  = std::chrono::duration_cast<std::chrono::microseconds>(t_start2 - t_start ).count() / 1000.0;
+        double checking_elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end    - t_start2).count() / 1000.0;
+        RCLCPP_INFO(this->get_logger(), "[radar] Total time: %.2f ms, Merging time %.2f ms, Checking time %.2f ms", total_elapsed_ms, merging_elapsed_ms, checking_elapsed_ms);
         
     }
 
