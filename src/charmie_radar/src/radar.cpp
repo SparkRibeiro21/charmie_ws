@@ -47,18 +47,18 @@ public:
             // Read radar_configuration block
             if (radar["radar_configuration"]) {
                 YAML::Node radar_config = radar["radar_configuration"];
-                number_of_breaks_ = radar_config["number_of_breaks"] ? radar_config["number_of_breaks"].as<int>()   :     0;
+                number_of_sectors_ = radar_config["number_of_sectors"] ? radar_config["number_of_sectors"].as<int>()   :     0;
                 min_radar_angle_  = radar_config["min_radar_angle"]  ? radar_config["min_radar_angle"].as<double>() : -M_PI;
                 max_radar_angle_  = radar_config["max_radar_angle"]  ? radar_config["max_radar_angle"].as<double>() :  M_PI;
             } else {
                 RCLCPP_WARN(this->get_logger(), "No 'radar_configuration' block found in YAML. Using defaults.");
-                number_of_breaks_ =     0;
+                number_of_sectors_ =     0;
                 min_radar_angle_  = -M_PI;
                 max_radar_angle_  =  M_PI;
             }
 
             double total_angle_range = max_radar_angle_ - min_radar_angle_;
-            break_size_ = (number_of_breaks_ > 0) ? total_angle_range / static_cast<double>(number_of_breaks_) : 0.0;
+            sector_size_ = (number_of_sectors_ > 0) ? total_angle_range / static_cast<double>(number_of_sectors_) : 0.0;
 
             // Get observation_sources string and split it
             std::string sources_str = radar["observation_sources"].as<std::string>();
@@ -171,10 +171,10 @@ public:
             if (number_sensor_skipped > 0) {
                 RCLCPP_WARN(this->get_logger(), "Skipped %d sensors due to missing, wrong or unsupported configurations.", number_sensor_skipped);
             }
-            RCLCPP_INFO(this->get_logger(), "Breaks: %d", number_of_breaks_); 
+            RCLCPP_INFO(this->get_logger(), "Sectors: %d", number_of_sectors_); 
             RCLCPP_INFO(this->get_logger(), "Min angle: %.4f rad, %.2f deg", min_radar_angle_, min_radar_angle_ * 180.0 / M_PI); 
             RCLCPP_INFO(this->get_logger(), "Max angle: %.4f rad, %.2f deg", max_radar_angle_, max_radar_angle_ * 180.0 / M_PI); 
-            RCLCPP_INFO(this->get_logger(), "Break size: %.4f rad, %.2f deg", break_size_, break_size_ * 180.0 / M_PI); 
+            RCLCPP_INFO(this->get_logger(), "Sector size: %.4f rad, %.2f deg", sector_size_, sector_size_ * 180.0 / M_PI); 
             RCLCPP_INFO(this->get_logger(), "Max range: %.2f m", max_radar_range_); 
 
             if (max_radar_range_ <= robot_radius_) {
@@ -219,7 +219,7 @@ private:
         double max_angle;
     };
 
-    struct BreakInfo {
+    struct SectorInfo {
         double min_distance = std::numeric_limits<double>::infinity();
         pcl::PointXYZ closest_point;
         bool has_point = false;
@@ -245,10 +245,10 @@ private:
     std::unordered_map<std::string, sensor_msgs::msg::PointCloud2::SharedPtr> latest_filtered_clouds_baseframe_;
 
     // radar_configuration params
-    int number_of_breaks_;
+    int number_of_sectors_;
     double min_radar_angle_;
     double max_radar_angle_;
-    double break_size_;
+    double sector_size_;
     double max_radar_range_;
 
     std::vector<std::string> split_string(const std::string &input, char delimiter) {
@@ -578,7 +578,7 @@ private:
         else {
             RCLCPP_INFO(this->get_logger(), "[radar] Merged cloud has %lu points.", merged_cloud->points.size());
 
-            std::vector<BreakInfo> breaks(number_of_breaks_);
+            std::vector<SectorInfo> sectors(number_of_sectors_);
 
             // Iterate over merged cloud points
             for (const auto& pt : merged_cloud->points) {
@@ -592,37 +592,37 @@ private:
                 if (angle < min_radar_angle_ || angle > max_radar_angle_)
                     continue;
 
-                // Determine break index
-                int break_idx = static_cast<int>((angle - min_radar_angle_) / break_size_);
-                if (break_idx < 0 || break_idx >= number_of_breaks_)
+                // Determine sector index
+                int sector_idx = static_cast<int>((angle - min_radar_angle_) / sector_size_);
+                if (sector_idx < 0 || sector_idx >= number_of_sectors_)
                     continue;
 
                 // Check if this point is closer than the current closest
-                if (distance_xy < breaks[break_idx].min_distance) {
-                    breaks[break_idx].min_distance = distance_xy;
-                    breaks[break_idx].closest_point = pt;
-                    breaks[break_idx].has_point = true;
+                if (distance_xy < sectors[sector_idx].min_distance) {
+                    sectors[sector_idx].min_distance = distance_xy;
+                    sectors[sector_idx].closest_point = pt;
+                    sectors[sector_idx].has_point = true;
                 }
             }
 
 
             // Output results
-            for (int i = 0; i < number_of_breaks_; ++i) {
-                double start_angle_deg = (min_radar_angle_ + break_size_ *       i) * 180.0 / M_PI;
-                double end_angle_deg   = (min_radar_angle_ + break_size_ * (i + 1)) * 180.0 / M_PI;
+            for (int i = 0; i < number_of_sectors_; ++i) {
+                double start_angle_deg = (min_radar_angle_ + sector_size_ *       i) * 180.0 / M_PI;
+                double end_angle_deg   = (min_radar_angle_ + sector_size_ * (i + 1)) * 180.0 / M_PI;
 
-                if (breaks[i].has_point) {
+                if (sectors[i].has_point) {
                     RCLCPP_INFO(this->get_logger(),
-                        "Break %d [%.1f°, %.1f°]: Closest point at (%.2f, %.2f, %.2f) dist=%.2f m",
+                        "Sector %d [%.1f°, %.1f°]: Closest point at (%.2f, %.2f, %.2f) dist=%.2f m",
                         i, start_angle_deg, end_angle_deg,
-                        breaks[i].closest_point.x,
-                        breaks[i].closest_point.y,
-                        breaks[i].closest_point.z,
-                        breaks[i].min_distance
+                        sectors[i].closest_point.x,
+                        sectors[i].closest_point.y,
+                        sectors[i].closest_point.z,
+                        sectors[i].min_distance
                     );
                 } else {
                     RCLCPP_INFO(this->get_logger(),
-                        "Break %d [%.1f°, %.1f°]: No points", 
+                        "Sector %d [%.1f°, %.1f°]: No points", 
                         i, start_angle_deg, end_angle_deg
                     );
                 }
@@ -633,17 +633,17 @@ private:
             std_msgs::msg::Float32MultiArray distances_msg;
             std_msgs::msg::Float32MultiArray distances_normalized_msg;
 
-            distances_msg.data.resize(number_of_breaks_);
-            distances_normalized_msg.data.resize(number_of_breaks_);
+            distances_msg.data.resize(number_of_sectors_);
+            distances_normalized_msg.data.resize(number_of_sectors_);
             
             // Define max adjusted range once
             const double max_adjusted_range = max_radar_range_ - robot_radius_;
 
-            for (int i = 0; i < number_of_breaks_; ++i) {
+            for (int i = 0; i < number_of_sectors_; ++i) {
                 double raw_distance;
 
-                if (breaks[i].has_point) {
-                    raw_distance = breaks[i].min_distance;
+                if (sectors[i].has_point) {
+                    raw_distance = sectors[i].min_distance;
                 } else {
                     raw_distance = max_radar_range_;
                 }
@@ -694,21 +694,21 @@ private:
             charmie_interfaces::msg::RadarData radar_msg;
             radar_msg.header.stamp = latest_stamp;
             radar_msg.header.frame_id = robot_base_frame_;
-            radar_msg.number_of_sectors = number_of_breaks_;
-            radar_msg.sector_ang_range = break_size_;
+            radar_msg.number_of_sectors = number_of_sectors_;
+            radar_msg.sector_ang_range = sector_size_;
 
-            for (int i = 0; i < number_of_breaks_; ++i) {
+            for (int i = 0; i < number_of_sectors_; ++i) {
                 charmie_interfaces::msg::RadarSector sector;
                 
-                sector.start_angle = min_radar_angle_ + i * break_size_;
-                sector.end_angle   = sector.start_angle + break_size_;
-                sector.has_point   = breaks[i].has_point;
+                sector.start_angle = min_radar_angle_ + i * sector_size_;
+                sector.end_angle   = sector.start_angle + sector_size_;
+                sector.has_point   = sectors[i].has_point;
 
-                if (breaks[i].has_point) {
-                    sector.min_distance = breaks[i].min_distance;
-                    sector.point.x = breaks[i].closest_point.x;
-                    sector.point.y = breaks[i].closest_point.y;
-                    sector.point.z = breaks[i].closest_point.z;
+                if (sectors[i].has_point) {
+                    sector.min_distance = sectors[i].min_distance;
+                    sector.point.x = sectors[i].closest_point.x;
+                    sector.point.y = sectors[i].closest_point.y;
+                    sector.point.z = sectors[i].closest_point.z;
                 } else {
                     // If no point: use NaN for distance, zero point
                     sector.min_distance = std::numeric_limits<double>::quiet_NaN();

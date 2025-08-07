@@ -3,7 +3,7 @@ radar_node:
   robot_radius: 0.29 # radius of the robot in meters
   update_frequency: 10.0 # frequency to update the radar data in Hz
   radar_configuration:
-    number_of_breaks: 4
+    number_of_sectors: 4
     min_radar_angle: -1.57079633 # -90 degrees # -2.0944 # -120 degrees
     max_radar_angle:  1.57079633 #  90 degrees #  2.0944 # +120 degrees
   observation_sources: scan scan_bottom livox_lidar  
