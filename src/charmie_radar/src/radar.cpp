@@ -26,6 +26,8 @@
 class RadarNode : public rclcpp::Node {
 public:
     RadarNode() : Node("radar_node") {
+
+        debug_enabled_ = this->declare_parameter<bool>("debug", true);
         
         std::string full_path = ament_index_cpp::get_package_share_directory("charmie_description") + "/config/radar_params.yaml";
         std::string yaml_path = this->declare_parameter<std::string>("radar_config", full_path);
@@ -66,13 +68,15 @@ public:
 
             std::string successful_sensors_str;
             int number_sensor_skipped = 0;
-
-            RCLCPP_INFO(this->get_logger(), "--- General Configurations: ---");
-            RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
-            RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
-            RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f m", robot_radius_);
-            RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
-
+            
+            if (debug_enabled_) {
+                RCLCPP_INFO(this->get_logger(), "--- General Configurations: ---");
+                RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
+                RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
+                RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f m", robot_radius_);
+                RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
+            }
+            
             RCLCPP_INFO(this->get_logger(), "--- Sensor Configurations: ---");
 
             for (const auto& sensor_name : sources) {
@@ -225,6 +229,7 @@ private:
         bool has_point = false;
     };
 
+    bool debug_enabled_ = true;
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr> laser_subscribers_;
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> cloud_subscribers_;
     std::unordered_map<std::string, sensor_msgs::msg::LaserScan::SharedPtr> latest_scans_;
