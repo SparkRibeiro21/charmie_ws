@@ -695,6 +695,7 @@ private:
             radar_msg.header.stamp = latest_stamp;
             radar_msg.header.frame_id = robot_base_frame_;
             radar_msg.number_of_sectors = number_of_breaks_;
+            radar_msg.sector_ang_range = break_size_;
 
             for (int i = 0; i < number_of_breaks_; ++i) {
                 charmie_interfaces::msg::RadarSector sector;
