@@ -3,14 +3,14 @@
 
 #include "std_msgs/msg/float32_multi_array.hpp"
 
-// #include "geometry_msgs/msg/point.hpp"
+#include "geometry_msgs/msg/point.hpp"
 
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 
-// #include "charmie_interfaces/msg/list_of_points.hpp"
-// #include "charmie_interfaces/msg/list_of_points.hpp"
+#include "charmie_interfaces/msg/radar_sector.hpp"
+#include "charmie_interfaces/msg/radar_data.hpp"
 
 #include "tf2_ros/transform_listener.h"
 #include "tf2_ros/buffer.h"
@@ -19,7 +19,6 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
-// #include <pcl/filters/voxel_grid.h>
 
 #include <yaml-cpp/yaml.h>
 #include <chrono>
@@ -195,6 +194,7 @@ public:
             radar_pointcloud_baseframe_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("radar/pointcloud_baseframe", 10);
             radar_distances_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances", 10);
             radar_distances_normalized_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances/normalized", 10);
+            radar_custom_pub_ = this->create_publisher<charmie_interfaces::msg::RadarData>("radar/data", 10);
 
             timer_ = this->create_wall_timer(
                 std::chrono::duration<double>(1.0 / update_frequency),
@@ -234,6 +234,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr radar_pointcloud_baseframe_publisher_;
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr radar_distances_pub_;
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr radar_distances_normalized_pub_;
+    rclcpp::Publisher<charmie_interfaces::msg::RadarData>::SharedPtr radar_custom_pub_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     std::string robot_base_frame_;
@@ -628,6 +629,7 @@ private:
             }
 
 
+            // RADAR DISTANCES
             std_msgs::msg::Float32MultiArray distances_msg;
             std_msgs::msg::Float32MultiArray distances_normalized_msg;
 
@@ -685,6 +687,71 @@ private:
             // Print both in INFO logs
             RCLCPP_INFO(this->get_logger(), "%s", raw_stream.str().c_str());
             RCLCPP_INFO(this->get_logger(), "%s", norm_stream.str().c_str());
+
+
+
+            // RADAR DATA
+            charmie_interfaces::msg::RadarData radar_msg;
+            radar_msg.header.stamp = latest_stamp;
+            radar_msg.header.frame_id = robot_base_frame_;
+            radar_msg.number_of_sectors = number_of_breaks_;
+
+            for (int i = 0; i < number_of_breaks_; ++i) {
+                charmie_interfaces::msg::RadarSector sector;
+                
+                sector.start_angle = min_radar_angle_ + i * break_size_;
+                sector.end_angle   = sector.start_angle + break_size_;
+                sector.has_point   = breaks[i].has_point;
+
+                if (breaks[i].has_point) {
+                    sector.min_distance = breaks[i].min_distance;
+                    sector.point.x = breaks[i].closest_point.x;
+                    sector.point.y = breaks[i].closest_point.y;
+                    sector.point.z = breaks[i].closest_point.z;
+                } else {
+                    // If no point: use NaN for distance, zero point
+                    sector.min_distance = std::numeric_limits<double>::quiet_NaN();
+                    sector.point.x = 0.0;
+                    sector.point.y = 0.0;
+                    sector.point.z = 0.0;
+                }
+
+                radar_msg.sectors.push_back(sector);
+            }
+            
+            radar_custom_pub_->publish(radar_msg);
+
+            // Debug print of full RadarData message
+            RCLCPP_INFO(this->get_logger(), "[RadarData] frame_id: %s, sectors: %d",
+                        radar_msg.header.frame_id.c_str(),
+                        radar_msg.number_of_sectors);
+
+            for (size_t i = 0; i < radar_msg.sectors.size(); ++i) {
+                const auto& sector = radar_msg.sectors[i];
+                
+                if (sector.has_point) {
+                    RCLCPP_INFO(this->get_logger(),
+                        "  Sector %02zu: [%.4f, %.4f]rad [%.2f, %.2f]deg dist=%.2f m → (%.2f, %.2f, %.2f)",
+                        i,
+                        sector.start_angle,
+                        sector.end_angle,
+                        sector.start_angle * 180.0 / M_PI,
+                        sector.end_angle   * 180.0 / M_PI,
+                        sector.min_distance,
+                        sector.point.x,
+                        sector.point.y,
+                        sector.point.z
+                    );
+                } else {
+                    RCLCPP_INFO(this->get_logger(),
+                        "  Sector %02zu: [%.2f°, %.2f°] → No points",
+                        i,
+                        sector.start_angle * 180.0 / M_PI,
+                        sector.end_angle   * 180.0 / M_PI
+                    );
+                }
+            }
+
                         
         }
 
