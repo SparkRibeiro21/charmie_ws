@@ -1,11 +1,15 @@
 #include "rclcpp/rclcpp.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 
+#include "std_msgs/msg/float32_multi_array.hpp"
+
+// #include "geometry_msgs/msg/point.hpp"
+
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 
-// #include "geometry_msgs/msg/point.hpp"
+// #include "charmie_interfaces/msg/list_of_points.hpp"
 // #include "charmie_interfaces/msg/list_of_points.hpp"
 
 #include "tf2_ros/transform_listener.h"
@@ -174,6 +178,13 @@ public:
             RCLCPP_INFO(this->get_logger(), "Break size: %.4f rad, %.2f deg", break_size_, break_size_ * 180.0 / M_PI); 
             RCLCPP_INFO(this->get_logger(), "Max range: %.2f m", max_radar_range_); 
 
+            if (max_radar_range_ <= robot_radius_) {
+                RCLCPP_FATAL(this->get_logger(),
+                    "Invalid radar config: max_radar_range_ (%.2f m) <= robot_radius_ (%.2f m).",
+                    max_radar_range_, robot_radius_);
+                throw std::runtime_error("Radar config error: max range must be greater than robot radius.");
+            }
+
             RCLCPP_INFO(this->get_logger(), "--- Finished Sensors Setup ---");
             
             // TF2 setup
@@ -182,9 +193,8 @@ public:
 
             // Publisher setup
             radar_pointcloud_baseframe_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("radar/pointcloud_baseframe", 10);
-            //radar_distances_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances", 10);
-
-            //RCLCPP_INFO(this->get_logger(), "Created single debug publisher on topic: radar/pointcloud_baseframe");
+            radar_distances_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances", 10);
+            radar_distances_normalized_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances/normalized", 10);
 
             timer_ = this->create_wall_timer(
                 std::chrono::duration<double>(1.0 / update_frequency),
@@ -222,6 +232,8 @@ private:
     std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> filtered_cloud_publishers_;
     std::unordered_map<std::string, rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr> discarded_cloud_publishers_; // for debug ...
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr radar_pointcloud_baseframe_publisher_;
+    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr radar_distances_pub_;
+    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr radar_distances_normalized_pub_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
     std::string robot_base_frame_;
@@ -616,6 +628,64 @@ private:
             }
 
 
+            std_msgs::msg::Float32MultiArray distances_msg;
+            std_msgs::msg::Float32MultiArray distances_normalized_msg;
+
+            distances_msg.data.resize(number_of_breaks_);
+            distances_normalized_msg.data.resize(number_of_breaks_);
+            
+            // Define max adjusted range once
+            const double max_adjusted_range = max_radar_range_ - robot_radius_;
+
+            for (int i = 0; i < number_of_breaks_; ++i) {
+                double raw_distance;
+
+                if (breaks[i].has_point) {
+                    raw_distance = breaks[i].min_distance;
+                } else {
+                    raw_distance = max_radar_range_;
+                }
+
+                // Adjust for robot radius (i.e., from robot *edge*, not center)
+                double adjusted = std::max(0.0, raw_distance - robot_radius_);
+                adjusted = std::min(adjusted, max_adjusted_range);  // Clamp
+
+                // Normalized value ∈ [0, 1]
+                double normalized = adjusted / max_adjusted_range;
+
+                // Fill messages
+                distances_msg.data[i] = static_cast<float>(adjusted);         // meters from robot edge
+                distances_normalized_msg.data[i] = static_cast<float>(normalized);
+            }
+
+            radar_distances_pub_->publish(distances_msg);
+            radar_distances_normalized_pub_->publish(distances_normalized_msg);
+
+            // PRINTS RADAR DISTANCES, IN METERS AND NORMALIZED
+            // Build string for raw distances
+            std::ostringstream raw_stream;
+            raw_stream << "Radar raw: ";
+            for (size_t i = 0; i < distances_msg.data.size(); ++i) {
+                raw_stream << std::fixed << std::setprecision(2) << distances_msg.data[i];
+                if (i < distances_msg.data.size() - 1) {
+                    raw_stream << " ";
+                }
+            }
+
+            // Build string for normalized distances
+            std::ostringstream norm_stream;
+            norm_stream << "Radar norm: ";
+            for (size_t i = 0; i < distances_normalized_msg.data.size(); ++i) {
+                norm_stream << std::fixed << std::setprecision(2) << distances_normalized_msg.data[i];
+                if (i < distances_normalized_msg.data.size() - 1) {
+                    norm_stream << " ";
+                }
+            }
+
+            // Print both in INFO logs
+            RCLCPP_INFO(this->get_logger(), "%s", raw_stream.str().c_str());
+            RCLCPP_INFO(this->get_logger(), "%s", norm_stream.str().c_str());
+                        
         }
 
         sensor_msgs::msg::PointCloud2 ros_merged;
