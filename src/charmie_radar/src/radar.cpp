@@ -61,6 +61,9 @@ public:
             std::string sources_str = radar["observation_sources"].as<std::string>();
             std::vector<std::string> sources = split_string(sources_str, ' ');
 
+            std::string successful_sensors_str;
+            int number_sensor_skipped = 0;
+
             RCLCPP_INFO(this->get_logger(), "--- General Configurations: ---");
             RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
             RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
@@ -70,21 +73,32 @@ public:
             RCLCPP_INFO(this->get_logger(), "--- Sensor Configurations: ---");
 
             for (const auto& sensor_name : sources) {
+
+                RCLCPP_INFO(this->get_logger(), "\t--- Sensor: %s ---", sensor_name.c_str());
+
                 if (!radar[sensor_name]) {
-                    RCLCPP_WARN(this->get_logger(), "Sensor config block '%s' not found.", sensor_name.c_str());
+                    RCLCPP_WARN(this->get_logger(), "\tSensor config block '%s' not found. Skipping", sensor_name.c_str());
+                    number_sensor_skipped++;
                     continue;
                 }
 
                 YAML::Node sensor = radar[sensor_name];
                 std::string topic = sensor["topic"] ? sensor["topic"].as<std::string>() : "N/A";
                 std::string data_type = sensor["data_type"] ? sensor["data_type"].as<std::string>() : "N/A";
+
+                // Early Data Type validation
+                if (data_type != "LaserScan" && data_type != "PointCloud2") { // for now we only support these two types
+                    RCLCPP_WARN(this->get_logger(), "\tUnsupported data type '%s' for sensor '%s'. Skipping.", data_type.c_str(), sensor_name.c_str());
+                    number_sensor_skipped++;
+                    continue;
+                }
                 
-                double max_obstacle_height = sensor["max_obstacle_height"] ? sensor["max_obstacle_height"].as<double>() : 10.0;
-                double min_obstacle_height = sensor["min_obstacle_height"] ? sensor["min_obstacle_height"].as<double>() : -1.0;
-                double max_obstacle_range = sensor["max_obstacle_range"] ? sensor["max_obstacle_range"].as<double>() : 100.0;
-                double min_obstacle_range = sensor["min_obstacle_range"] ? sensor["min_obstacle_range"].as<double>() :   0.0;
-                double min_obstacle_angle = sensor["min_obstacle_angle"] ? sensor["min_obstacle_angle"].as<double>() : -M_PI;
-                double max_obstacle_angle = sensor["max_obstacle_angle"] ? sensor["max_obstacle_angle"].as<double>() :  M_PI;
+                double max_obstacle_height = sensor["max_obstacle_height"] ? sensor["max_obstacle_height"].as<double>() : 2.0;
+                double min_obstacle_height = sensor["min_obstacle_height"] ? sensor["min_obstacle_height"].as<double>() : 0.0;
+                double max_obstacle_range = sensor["max_obstacle_range"] ? sensor["max_obstacle_range"].as<double>() :   30.0;
+                double min_obstacle_range = sensor["min_obstacle_range"] ? sensor["min_obstacle_range"].as<double>() :    0.0;
+                double min_obstacle_angle = sensor["min_obstacle_angle"] ? sensor["min_obstacle_angle"].as<double>() :  -M_PI;
+                double max_obstacle_angle = sensor["max_obstacle_angle"] ? sensor["max_obstacle_angle"].as<double>() :   M_PI;
                 
                 SensorLimits limits;
                 limits.min_height = min_obstacle_height;
@@ -100,7 +114,6 @@ public:
                     max_radar_range_ = limits.max_range;
                 }
 
-                RCLCPP_INFO(this->get_logger(), "\t--- Sensor: %s ---", sensor_name.c_str());
                 RCLCPP_INFO(this->get_logger(), "\tTopic: %s", topic.c_str());
                 RCLCPP_INFO(this->get_logger(), "\tData type: %s", data_type.c_str());
                 RCLCPP_INFO(this->get_logger(), "\tObstacle height: %.2f to %.2f (m)", min_obstacle_height, max_obstacle_height);
@@ -143,20 +156,24 @@ public:
                     RCLCPP_INFO(this->get_logger(), "\tSubscribed to sensor '%s' of type 'PointCloud2'", sensor_name.c_str());
 
                 } else {
-                    RCLCPP_WARN(this->get_logger(), "\tUnsupported data type '%s' for sensor '%s'", data_type.c_str(), sensor_name.c_str());
+                    // Unsupported data type code ...
                 }
+
+                successful_sensors_str += sensor_name + " ";
 
             }
 
-
             RCLCPP_INFO(this->get_logger(), "--- Radar Configurations: ---");
+            RCLCPP_INFO(this->get_logger(), "Sensors Used: %s", successful_sensors_str.c_str());
+            if (number_sensor_skipped > 0) {
+                RCLCPP_WARN(this->get_logger(), "Skipped %d sensors due to missing, wrong or unsupported configurations.", number_sensor_skipped);
+            }
             RCLCPP_INFO(this->get_logger(), "Breaks: %d", number_of_breaks_); 
             RCLCPP_INFO(this->get_logger(), "Min angle: %.4f rad, %.2f deg", min_radar_angle_, min_radar_angle_ * 180.0 / M_PI); 
             RCLCPP_INFO(this->get_logger(), "Max angle: %.4f rad, %.2f deg", max_radar_angle_, max_radar_angle_ * 180.0 / M_PI); 
             RCLCPP_INFO(this->get_logger(), "Break size: %.4f rad, %.2f deg", break_size_, break_size_ * 180.0 / M_PI); 
             RCLCPP_INFO(this->get_logger(), "Max range: %.2f m", max_radar_range_); 
 
-            // Debug Prints
             RCLCPP_INFO(this->get_logger(), "--- Finished Sensors Setup ---");
             
             // TF2 setup
