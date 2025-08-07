@@ -64,14 +64,10 @@ public:
             RCLCPP_INFO(this->get_logger(), "--- General Configurations: ---");
             RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
             RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
-            RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f", robot_radius_);
+            RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f m", robot_radius_);
             RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
 
-            RCLCPP_INFO(this->get_logger(), "--- Radar Configurations: ---");
-            RCLCPP_INFO(this->get_logger(), "Breaks: %d", number_of_breaks_); 
-            RCLCPP_INFO(this->get_logger(), "Min angle: %.4f rad, %.2f deg", min_radar_angle_, min_radar_angle_ * 180.0 / M_PI); 
-            RCLCPP_INFO(this->get_logger(), "Max angle: %.4f rad, %.2f deg", max_radar_angle_, max_radar_angle_ * 180.0 / M_PI); 
-            RCLCPP_INFO(this->get_logger(), "Break size: %.4f rad, %.2f deg", break_size_, break_size_ * 180.0 / M_PI); 
+            RCLCPP_INFO(this->get_logger(), "--- Sensor Configurations: ---");
 
             for (const auto& sensor_name : sources) {
                 if (!radar[sensor_name]) {
@@ -100,29 +96,33 @@ public:
 
                 sensor_limits_[sensor_name] = limits;
 
-                RCLCPP_INFO(this->get_logger(), "--- Sensor: %s ---", sensor_name.c_str());
-                RCLCPP_INFO(this->get_logger(), "Topic: %s", topic.c_str());
-                RCLCPP_INFO(this->get_logger(), "Data type: %s", data_type.c_str());
-                RCLCPP_INFO(this->get_logger(), "Obstacle height: %.2f to %.2f", min_obstacle_height, max_obstacle_height);
-                RCLCPP_INFO(this->get_logger(), "Obstacle range: %.2f to %.2f", min_obstacle_range, max_obstacle_range);
-                RCLCPP_INFO(this->get_logger(), "Obstacle angle: %.2f to %.2f", min_obstacle_angle, max_obstacle_angle);
+                if (limits.max_range > max_radar_range_) {
+                    max_radar_range_ = limits.max_range;
+                }
+
+                RCLCPP_INFO(this->get_logger(), "\t--- Sensor: %s ---", sensor_name.c_str());
+                RCLCPP_INFO(this->get_logger(), "\tTopic: %s", topic.c_str());
+                RCLCPP_INFO(this->get_logger(), "\tData type: %s", data_type.c_str());
+                RCLCPP_INFO(this->get_logger(), "\tObstacle height: %.2f to %.2f (m)", min_obstacle_height, max_obstacle_height);
+                RCLCPP_INFO(this->get_logger(), "\tObstacle range: %.2f to %.2f (m)", min_obstacle_range, max_obstacle_range);
+                RCLCPP_INFO(this->get_logger(), "\tObstacle angle: %.4f to %.4f (rad), %.2f to %.2f (deg)", min_obstacle_angle, max_obstacle_angle, min_obstacle_angle * 180.0 / M_PI, max_obstacle_angle * 180.0 / M_PI);
 
                 if (data_type == "PointCloud2") {
                     bool publish_filtered = sensor["publish_filtered"] ? sensor["publish_filtered"].as<bool>() : true;
                     sensor_publish_filtered_[sensor_name] = publish_filtered;
 
-                    RCLCPP_INFO(this->get_logger(), "Publish Filtered: %s", publish_filtered ? "True" : "False");
+                    RCLCPP_INFO(this->get_logger(), "\tPublish Filtered: %s", publish_filtered ? "True" : "False");
 
                     if (publish_filtered) { // dynamic creates publisher for all point cloud with publish filtered set to true 
                         std::string filtered_topic = topic + "/filtered";
                         auto pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(filtered_topic, 10);
                         filtered_cloud_publishers_[sensor_name] = pub;
-                        RCLCPP_INFO(this->get_logger(), "Created publisher for filtered data on topic: %s", filtered_topic.c_str());
+                        RCLCPP_INFO(this->get_logger(), "\tCreated publisher for filtered data on topic: %s", filtered_topic.c_str());
                         
                         std::string discarded_topic = topic + "/discarded";
                         auto discarded_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(discarded_topic, 10);
                         discarded_cloud_publishers_[sensor_name] = discarded_pub;
-                        RCLCPP_INFO(this->get_logger(), "Created publisher for discarded points on topic: %s", discarded_topic.c_str());
+                        RCLCPP_INFO(this->get_logger(), "\tCreated publisher for discarded points on topic: %s", discarded_topic.c_str());
 
                     }
                 }
@@ -133,31 +133,41 @@ public:
                             this->laser_callback(msg, sensor_name);
                         });
                     laser_subscribers_[sensor_name] = sub;
-                    RCLCPP_INFO(this->get_logger(), "Subscribed to sensor '%s' of message type '%s'", sensor_name.c_str(), data_type.c_str());
+                    RCLCPP_INFO(this->get_logger(), "\tSubscribed to sensor '%s' of type '%s'", sensor_name.c_str(), data_type.c_str());
                 } else if (data_type == "PointCloud2") {
                     auto sub = this->create_subscription<sensor_msgs::msg::PointCloud2>(topic, 10,
                         [this, sensor_name](const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
                             this->cloud_callback(msg, sensor_name);
                         });
                     cloud_subscribers_[sensor_name] = sub;
-                    RCLCPP_INFO(this->get_logger(), "Subscribed to sensor '%s' of message type 'PointCloud2'", sensor_name.c_str());
+                    RCLCPP_INFO(this->get_logger(), "\tSubscribed to sensor '%s' of type 'PointCloud2'", sensor_name.c_str());
 
                 } else {
-                    RCLCPP_WARN(this->get_logger(), "Unsupported data type '%s' for sensor '%s'", data_type.c_str(), sensor_name.c_str());
+                    RCLCPP_WARN(this->get_logger(), "\tUnsupported data type '%s' for sensor '%s'", data_type.c_str(), sensor_name.c_str());
                 }
 
             }
 
-            RCLCPP_INFO(this->get_logger(), "--- Finisehd Sensors Setup ---");
+
+            RCLCPP_INFO(this->get_logger(), "--- Radar Configurations: ---");
+            RCLCPP_INFO(this->get_logger(), "Breaks: %d", number_of_breaks_); 
+            RCLCPP_INFO(this->get_logger(), "Min angle: %.4f rad, %.2f deg", min_radar_angle_, min_radar_angle_ * 180.0 / M_PI); 
+            RCLCPP_INFO(this->get_logger(), "Max angle: %.4f rad, %.2f deg", max_radar_angle_, max_radar_angle_ * 180.0 / M_PI); 
+            RCLCPP_INFO(this->get_logger(), "Break size: %.4f rad, %.2f deg", break_size_, break_size_ * 180.0 / M_PI); 
+            RCLCPP_INFO(this->get_logger(), "Max range: %.2f m", max_radar_range_); 
+
+            // Debug Prints
+            RCLCPP_INFO(this->get_logger(), "--- Finished Sensors Setup ---");
             
             // TF2 setup
             tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
             tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
             // Publisher setup
-            radar_pointcloud_baseframe_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-                "radar/pointcloud_baseframe", 10);
-            RCLCPP_INFO(this->get_logger(), "Created single debug publisher on topic: radar/pointcloud_baseframe");
+            radar_pointcloud_baseframe_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("radar/pointcloud_baseframe", 10);
+            //radar_distances_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances", 10);
+
+            //RCLCPP_INFO(this->get_logger(), "Created single debug publisher on topic: radar/pointcloud_baseframe");
 
             timer_ = this->create_wall_timer(
                 std::chrono::duration<double>(1.0 / update_frequency),
@@ -209,6 +219,7 @@ private:
     double min_radar_angle_;
     double max_radar_angle_;
     double break_size_;
+    double max_radar_range_;
 
     std::vector<std::string> split_string(const std::string &input, char delimiter) {
         std::stringstream ss(input);
