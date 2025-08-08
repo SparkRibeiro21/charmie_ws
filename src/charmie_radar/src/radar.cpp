@@ -137,10 +137,12 @@ public:
                         filtered_cloud_publishers_[sensor_name] = pub;
                         RCLCPP_INFO(this->get_logger(), "\tCreated publisher for filtered data on topic: %s", filtered_topic.c_str());
                         
-                        std::string discarded_topic = topic + "/discarded";
-                        auto discarded_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(discarded_topic, 10);
-                        discarded_cloud_publishers_[sensor_name] = discarded_pub;
-                        RCLCPP_INFO(this->get_logger(), "\tCreated publisher for discarded points on topic: %s", discarded_topic.c_str());
+                        if (debug_enabled_) {
+                            std::string discarded_topic = topic + "/discarded";
+                            auto discarded_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(discarded_topic, 10);
+                            discarded_cloud_publishers_[sensor_name] = discarded_pub;
+                            RCLCPP_INFO(this->get_logger(), "\tCreated publisher for discarded points on topic: %s", discarded_topic.c_str());
+                        }
 
                     }
                 }
@@ -520,24 +522,28 @@ private:
         pcl_filtered->height = 1;
         pcl_filtered->is_dense = true;
 
-        pcl_discarded->width = pcl_discarded->points.size();
-        pcl_discarded->height = 1;
-        pcl_discarded->is_dense = true;
+        if (debug_enabled_) {
+            pcl_discarded->width = pcl_discarded->points.size();
+            pcl_discarded->height = 1;
+            pcl_discarded->is_dense = true;
+        }
 
         // If publish_filtered is true for this sensor, publish filtered PointCloud2
         if (sensor_publish_filtered_[source_name] && filtered_cloud_publishers_.count(source_name)) {
+            
             auto filtered_pub = filtered_cloud_publishers_[source_name];
-            auto discarded_pub = discarded_cloud_publishers_[source_name];
-
             sensor_msgs::msg::PointCloud2 ros_filtered;
             pcl::toROSMsg(*pcl_filtered, ros_filtered);
             ros_filtered.header = msg->header;
             filtered_pub->publish(ros_filtered);
 
-            sensor_msgs::msg::PointCloud2 ros_discarded;
-            pcl::toROSMsg(*pcl_discarded, ros_discarded);
-            ros_discarded.header = msg->header;
-            discarded_pub->publish(ros_discarded);
+            if (debug_enabled_) {
+                auto discarded_pub = discarded_cloud_publishers_[source_name];
+                sensor_msgs::msg::PointCloud2 ros_discarded;
+                pcl::toROSMsg(*pcl_discarded, ros_discarded);
+                ros_discarded.header = msg->header;
+                discarded_pub->publish(ros_discarded);
+            }
         }
 
         auto msg_baseframe = std::make_shared<sensor_msgs::msg::PointCloud2>();
