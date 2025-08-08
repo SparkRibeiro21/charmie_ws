@@ -27,7 +27,7 @@ class RadarNode : public rclcpp::Node {
 public:
     RadarNode() : Node("radar_node") {
 
-        debug_enabled_ = this->declare_parameter<bool>("debug", true);
+        debug_enabled_ = this->declare_parameter<bool>("debug", false);
         
         std::string full_path = ament_index_cpp::get_package_share_directory("charmie_description") + "/config/radar_params.yaml";
         std::string yaml_path = this->declare_parameter<std::string>("radar_config", full_path);
@@ -69,13 +69,11 @@ public:
             std::string successful_sensors_str;
             int number_sensor_skipped = 0;
             
-            if (debug_enabled_) {
-                RCLCPP_INFO(this->get_logger(), "--- General Configurations: ---");
-                RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
-                RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
-                RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f m", robot_radius_);
-                RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
-            }
+            RCLCPP_INFO(this->get_logger(), "--- General Configurations: ---");
+            RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
+            RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
+            RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f m", robot_radius_);
+            RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
             
             RCLCPP_INFO(this->get_logger(), "--- Sensor Configurations: ---");
 
@@ -229,7 +227,7 @@ private:
         bool has_point = false;
     };
 
-    bool debug_enabled_ = true;
+    bool debug_enabled_ = false;
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr> laser_subscribers_;
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> cloud_subscribers_;
     std::unordered_map<std::string, sensor_msgs::msg::LaserScan::SharedPtr> latest_scans_;
@@ -270,8 +268,11 @@ private:
 
     void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg, const std::string &source_name) {
         latest_scans_[source_name] = msg;
-        RCLCPP_INFO(this->get_logger(), "[%s] Received LaserScan with %lu ranges", source_name.c_str(), msg->ranges.size());
-        
+
+        if (debug_enabled_) {
+            RCLCPP_INFO(this->get_logger(), "[%s] Received LaserScan with %lu ranges", source_name.c_str(), msg->ranges.size());
+        }
+
         const auto &limits = sensor_limits_[source_name];
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_filtered_baseframe(new pcl::PointCloud<pcl::PointXYZ>());
@@ -372,9 +373,11 @@ private:
 
         latest_filtered_clouds_baseframe_[source_name] = msg_baseframe;
         
-        auto t_end = std::chrono::high_resolution_clock::now();
-        double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
-        RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms.", source_name.c_str(), elapsed_ms);
+        if (debug_enabled_) {
+            auto t_end = std::chrono::high_resolution_clock::now();
+            double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
+            RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms.", source_name.c_str(), elapsed_ms);
+        }
 
         // Summary logging
         const size_t total_points = msg->ranges.size();
@@ -382,24 +385,44 @@ private:
                                     discarded_due_to_robot_radius + discarded_due_to_angle;
         const size_t valid = pcl_filtered_baseframe->points.size();
 
-        RCLCPP_INFO(this->get_logger(),
-            "[%s] LaserScan total=%lu valid=%lu, discarded=%lu (range=%d, height=%d, radius=%d, angle=%d)",
-            source_name.c_str(),
-            total_points,
-            valid,
-            total_discarded,
-            discarded_due_to_range,
-            discarded_due_to_height,
-            discarded_due_to_robot_radius,
-            discarded_due_to_angle
-        );
+
+        if (debug_enabled_ ) {
+            
+            RCLCPP_INFO(this->get_logger(),
+                "[%s] LaserScan total=%lu valid=%lu, discarded=%lu (range=%d, height=%d, radius=%d, angle=%d)",
+                source_name.c_str(),
+                total_points,
+                valid,
+                total_discarded,
+                discarded_due_to_range,
+                discarded_due_to_height,
+                discarded_due_to_robot_radius,
+                discarded_due_to_angle
+            );
+        }
+        else { // Simplified
+
+            RCLCPP_INFO(this->get_logger(),
+                "[%s] Points: %lu/%lu (range=%d, height=%d, robot=%d, back=%d)",
+                source_name.c_str(),
+                valid,
+                total_points,
+                discarded_due_to_range,
+                discarded_due_to_height,
+                discarded_due_to_robot_radius,
+                discarded_due_to_angle
+            );
+        }
 
     }
 
     void cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg, const std::string &source_name) {
         latest_clouds_[source_name] = msg;
-        RCLCPP_INFO(this->get_logger(), "[%s] Received PointCloud2 with width %u points.", source_name.c_str(), msg->width);
-    
+
+        if (debug_enabled_) {
+            RCLCPP_INFO(this->get_logger(), "[%s] Received PointCloud2 with width %u points.", source_name.c_str(), msg->width);
+        }
+
         const auto& limits = sensor_limits_[source_name];
 
         // Convert to PCL
@@ -488,7 +511,7 @@ private:
             }
         }
         catch (const tf2::TransformException &ex) {
-            RCLCPP_WARN(this->get_logger(), "[%s] TF error during height filtering: %s", source_name.c_str(), ex.what());
+            RCLCPP_WARN(this->get_logger(), "[%s] TF error during procesing: %s", source_name.c_str(), ex.what());
             return;  // Skip publishing this frame if TF fails
         }
 
@@ -525,23 +548,41 @@ private:
 
         latest_filtered_clouds_baseframe_[source_name] = msg_baseframe;
         
-        auto t_end = std::chrono::high_resolution_clock::now();
-        double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
-        RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms", source_name.c_str(), elapsed_ms);
-        
-        RCLCPP_INFO(this->get_logger(), "[%s] Published filtered cloud with %lu points (from %lu)", 
-                    source_name.c_str(), pcl_filtered->points.size(), pcl_input->points.size());
-        
-        RCLCPP_INFO(this->get_logger(),
-            "[%s] Published discarded cloud with %lu points (from %lu). Breakdown: range=%d, height=%d, radius=%d, angle=%d",
-            source_name.c_str(),
-            pcl_discarded->points.size(),
-            pcl_input->points.size(),
-            discarded_due_to_range,
-            discarded_due_to_height,
-            discarded_due_to_robot_radius,
-            discarded_due_to_angle
-        );
+        if (debug_enabled_) {
+            auto t_end = std::chrono::high_resolution_clock::now();
+            double elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
+            RCLCPP_INFO(this->get_logger(), "[%s] Filtering took %.2f ms", source_name.c_str(), elapsed_ms);
+        }
+
+
+        if (debug_enabled_) {
+            RCLCPP_INFO(this->get_logger(), "[%s] Published filtered cloud with %lu points (from %lu)", 
+                        source_name.c_str(), pcl_filtered->points.size(), pcl_input->points.size());
+            
+            RCLCPP_INFO(this->get_logger(),
+                "[%s] Published discarded cloud with %lu points (from %lu). Breakdown: range=%d, height=%d, radius=%d, angle=%d",
+                source_name.c_str(),
+                pcl_discarded->points.size(),
+                pcl_input->points.size(),
+                discarded_due_to_range,
+                discarded_due_to_height,
+                discarded_due_to_robot_radius,
+                discarded_due_to_angle
+            );
+        }
+        else { // Simplified
+
+            RCLCPP_INFO(this->get_logger(),
+                "[%s] Points: %lu/%lu (range=%d, height=%d, robot=%d, back=%d)",
+                source_name.c_str(),
+                pcl_filtered->points.size(),
+                pcl_input->points.size(),
+                discarded_due_to_range,
+                discarded_due_to_height,
+                discarded_due_to_robot_radius,
+                discarded_due_to_angle
+            );
+        }
 
     }
 
@@ -561,28 +602,34 @@ private:
         for (const auto& [sensor_name, cloud_ptr] : latest_filtered_clouds_baseframe_) {
             if (cloud_ptr && cloud_ptr->width > 0) {
 
-            pcl::PointCloud<pcl::PointXYZ> pcl_temp;
-            pcl::fromROSMsg(*cloud_ptr, pcl_temp);
-            *merged_cloud += pcl_temp;  // Concatenate
+                pcl::PointCloud<pcl::PointXYZ> pcl_temp;
+                pcl::fromROSMsg(*cloud_ptr, pcl_temp);
+                *merged_cloud += pcl_temp;  // Concatenate
 
-            rclcpp::Time stamp(cloud_ptr->header.stamp);
-            if (stamp > latest_stamp) {
-                latest_stamp = stamp;
-            }
+                rclcpp::Time stamp(cloud_ptr->header.stamp);
+                if (stamp > latest_stamp) {
+                    latest_stamp = stamp;
+                }
 
-            RCLCPP_INFO(this->get_logger(), "[radar][%s] Included cloud with %u points.", sensor_name.c_str(), cloud_ptr->width);
-    
+                if (debug_enabled_) {
+                    RCLCPP_INFO(this->get_logger(), "[radar][%s] Included cloud with %u points.", sensor_name.c_str(), cloud_ptr->width);
+                }
+
             }
         }
 
         auto t_start2 = std::chrono::high_resolution_clock::now();
         if (merged_cloud->empty()) {
-            RCLCPP_INFO(this->get_logger(), "No points to publish after fusing clouds.");
+            if (debug_enabled_) {
+                RCLCPP_INFO(this->get_logger(), "[radar] No points to publish after fusing clouds.");
+            }
             return;
         }
         else {
-            RCLCPP_INFO(this->get_logger(), "[radar] Merged cloud has %lu points.", merged_cloud->points.size());
-
+            if (debug_enabled_) {
+                RCLCPP_INFO(this->get_logger(), "[radar] Merged cloud has %lu points.", merged_cloud->points.size());
+            }
+            
             std::vector<SectorInfo> sectors(number_of_sectors_);
 
             // Iterate over merged cloud points
@@ -618,7 +665,7 @@ private:
 
                 if (sectors[i].has_point) {
                     RCLCPP_INFO(this->get_logger(),
-                        "Sector %d [%.1f°, %.1f°]: Closest point at (%.2f, %.2f, %.2f) dist=%.2f m",
+                        "[radar] Sector %d [%.1f°, %.1f°]: Point (%.2f, %.2f, %.2f) d=%.2f m",
                         i, start_angle_deg, end_angle_deg,
                         sectors[i].closest_point.x,
                         sectors[i].closest_point.y,
@@ -627,7 +674,7 @@ private:
                     );
                 } else {
                     RCLCPP_INFO(this->get_logger(),
-                        "Sector %d [%.1f°, %.1f°]: No points", 
+                        "[radar] Sector %d [%.1f°, %.1f°]: No Points", 
                         i, start_angle_deg, end_angle_deg
                     );
                 }
@@ -668,32 +715,33 @@ private:
             radar_distances_pub_->publish(distances_msg);
             radar_distances_normalized_pub_->publish(distances_normalized_msg);
 
-            // PRINTS RADAR DISTANCES, IN METERS AND NORMALIZED
-            // Build string for raw distances
-            std::ostringstream raw_stream;
-            raw_stream << "Radar raw: ";
-            for (size_t i = 0; i < distances_msg.data.size(); ++i) {
-                raw_stream << std::fixed << std::setprecision(2) << distances_msg.data[i];
-                if (i < distances_msg.data.size() - 1) {
-                    raw_stream << " ";
+
+            if (debug_enabled_) {
+                // PRINTS RADAR DISTANCES, IN METERS AND NORMALIZED
+                // Build string for raw distances
+                std::ostringstream raw_stream;
+                raw_stream << "Radar raw: ";
+                for (size_t i = 0; i < distances_msg.data.size(); ++i) {
+                    raw_stream << std::fixed << std::setprecision(2) << distances_msg.data[i];
+                    if (i < distances_msg.data.size() - 1) {
+                        raw_stream << " ";
+                    }
                 }
-            }
 
-            // Build string for normalized distances
-            std::ostringstream norm_stream;
-            norm_stream << "Radar norm: ";
-            for (size_t i = 0; i < distances_normalized_msg.data.size(); ++i) {
-                norm_stream << std::fixed << std::setprecision(2) << distances_normalized_msg.data[i];
-                if (i < distances_normalized_msg.data.size() - 1) {
-                    norm_stream << " ";
+                // Build string for normalized distances
+                std::ostringstream norm_stream;
+                norm_stream << "Radar norm: ";
+                for (size_t i = 0; i < distances_normalized_msg.data.size(); ++i) {
+                    norm_stream << std::fixed << std::setprecision(2) << distances_normalized_msg.data[i];
+                    if (i < distances_normalized_msg.data.size() - 1) {
+                        norm_stream << " ";
+                    }
                 }
+
+                // Print both in INFO logs
+                RCLCPP_INFO(this->get_logger(), "%s", raw_stream.str().c_str());
+                RCLCPP_INFO(this->get_logger(), "%s", norm_stream.str().c_str());
             }
-
-            // Print both in INFO logs
-            RCLCPP_INFO(this->get_logger(), "%s", raw_stream.str().c_str());
-            RCLCPP_INFO(this->get_logger(), "%s", norm_stream.str().c_str());
-
-
 
             // RADAR DATA
             charmie_interfaces::msg::RadarData radar_msg;
@@ -727,37 +775,39 @@ private:
             
             radar_custom_pub_->publish(radar_msg);
 
-            // Debug print of full RadarData message
-            RCLCPP_INFO(this->get_logger(), "[RadarData] frame_id: %s, sectors: %d",
-                        radar_msg.header.frame_id.c_str(),
-                        radar_msg.number_of_sectors);
 
-            for (size_t i = 0; i < radar_msg.sectors.size(); ++i) {
-                const auto& sector = radar_msg.sectors[i];
-                
-                if (sector.has_point) {
-                    RCLCPP_INFO(this->get_logger(),
-                        "  Sector %02zu: [%.4f, %.4f]rad [%.2f, %.2f]deg dist=%.2f m → (%.2f, %.2f, %.2f)",
-                        i,
-                        sector.start_angle,
-                        sector.end_angle,
-                        sector.start_angle * 180.0 / M_PI,
-                        sector.end_angle   * 180.0 / M_PI,
-                        sector.min_distance,
-                        sector.point.x,
-                        sector.point.y,
-                        sector.point.z
-                    );
-                } else {
-                    RCLCPP_INFO(this->get_logger(),
-                        "  Sector %02zu: [%.2f°, %.2f°] → No points",
-                        i,
-                        sector.start_angle * 180.0 / M_PI,
-                        sector.end_angle   * 180.0 / M_PI
-                    );
+            if (debug_enabled_) {
+                // Debug print of full RadarData message
+                RCLCPP_INFO(this->get_logger(), "[RadarData] frame_id: %s, sectors: %d",
+                            radar_msg.header.frame_id.c_str(),
+                            radar_msg.number_of_sectors);
+
+                for (size_t i = 0; i < radar_msg.sectors.size(); ++i) {
+                    const auto& sector = radar_msg.sectors[i];
+                    
+                    if (sector.has_point) {
+                        RCLCPP_INFO(this->get_logger(),
+                            "  Sector %02zu: [%.4f, %.4f]rad [%.2f, %.2f]deg dist=%.2f m → (%.2f, %.2f, %.2f)",
+                            i,
+                            sector.start_angle,
+                            sector.end_angle,
+                            sector.start_angle * 180.0 / M_PI,
+                            sector.end_angle   * 180.0 / M_PI,
+                            sector.min_distance,
+                            sector.point.x,
+                            sector.point.y,
+                            sector.point.z
+                        );
+                    } else {
+                        RCLCPP_INFO(this->get_logger(),
+                            "  Sector %02zu: [%.2f°, %.2f°] → No points",
+                            i,
+                            sector.start_angle * 180.0 / M_PI,
+                            sector.end_angle   * 180.0 / M_PI
+                        );
+                    }
                 }
             }
-
                         
         }
 
@@ -768,7 +818,7 @@ private:
         ros_merged.is_dense = true;
 
         radar_pointcloud_baseframe_publisher_->publish(ros_merged);
-        RCLCPP_INFO(this->get_logger(), "Published merged cloud with %lu points.", merged_cloud->points.size());
+        RCLCPP_INFO(this->get_logger(), "[radar] Published merged cloud with %lu points.", merged_cloud->points.size());
 
         auto t_end = std::chrono::high_resolution_clock::now();
         double total_elapsed_ms    = std::chrono::duration_cast<std::chrono::microseconds>(t_end    - t_start ).count() / 1000.0;
