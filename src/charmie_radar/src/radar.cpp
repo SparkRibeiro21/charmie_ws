@@ -42,9 +42,9 @@ public:
             
             RCLCPP_INFO(this->get_logger(), "Loading config from: %s", yaml_path.c_str());
 
-            robot_base_frame_ = radar["robot_base_frame"] ? radar["robot_base_frame"].as<std::string>() : "N/A";
+            robot_base_frame_       = radar["robot_base_frame"] ? radar["robot_base_frame"].as<std::string>() : "N/A";
             double update_frequency = radar["update_frequency"] ? radar["update_frequency"].as<double>() : 10.0;
-            robot_radius_ = radar["robot_radius"] ? radar["robot_radius"].as<double>() : 0.0;
+            robot_radius_           = radar["robot_radius"] ? radar["robot_radius"].as<double>() : 0.0;
 
             // Read radar_configuration block
             if (radar["radar_configuration"]) {
@@ -52,11 +52,13 @@ public:
                 number_of_sectors_ = radar_config["number_of_sectors"] ? radar_config["number_of_sectors"].as<int>()   :     0;
                 min_radar_angle_  = radar_config["min_radar_angle"]  ? radar_config["min_radar_angle"].as<double>() : -M_PI;
                 max_radar_angle_  = radar_config["max_radar_angle"]  ? radar_config["max_radar_angle"].as<double>() :  M_PI;
+                max_radar_range_  = radar_config["max_radar_dist"] ? radar_config["max_radar_dist"].as<double>() :   10.0;
             } else {
                 RCLCPP_WARN(this->get_logger(), "No 'radar_configuration' block found in YAML. Using defaults.");
                 number_of_sectors_ =     0;
-                min_radar_angle_  = -M_PI;
-                max_radar_angle_  =  M_PI;
+                min_radar_angle_   = -M_PI;
+                max_radar_angle_   =  M_PI;
+                max_radar_range_   =  10.0;
             }
 
             double total_angle_range = max_radar_angle_ - min_radar_angle_;
@@ -114,10 +116,6 @@ public:
                 limits.max_angle = max_obstacle_angle;
 
                 sensor_limits_[sensor_name] = limits;
-
-                if (limits.max_range > max_radar_range_) {
-                    max_radar_range_ = limits.max_range;
-                }
 
                 RCLCPP_INFO(this->get_logger(), "\tTopic: %s", topic.c_str());
                 RCLCPP_INFO(this->get_logger(), "\tData type: %s", data_type.c_str());
