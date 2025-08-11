@@ -1,11 +1,12 @@
 import rclpy
 from rclpy.node import Node
 from visualization_msgs.msg import Marker, MarkerArray
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, ListOfDetectedPerson, ListOfDetectedObject, TrackingMask
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, ListOfDetectedPerson, ListOfDetectedObject, TrackingMask, RadarData
 from geometry_msgs.msg import Point
 import math
 import json
 from pathlib import Path
+import time
 
 class MarkerPublisher(Node):
     def __init__(self):
@@ -28,6 +29,8 @@ class MarkerPublisher(Node):
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
+        # Radar
+        self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -53,6 +56,8 @@ class MarkerPublisher(Node):
         self.detected_object = ListOfDetectedObject()
         self.previous_marker_array_detected_people = ListOfDetectedPerson() 
         self.tracking = TrackingMask()
+        self.radar = RadarData()
+        self.aux_time = time.time()
 
         self.COLOR_LIST = [
             (1.0, 0.0, 0.0),  # Red
@@ -82,6 +87,10 @@ class MarkerPublisher(Node):
     def tracking_mask_callback(self, track: TrackingMask):
         self.tracking = track
         self.publish_marker_array_tracking()
+    
+    def radar_data_callback(self, radar: RadarData):
+        self.radar = radar
+        self.publish_marker_array_radar()
 
     def publish_all_marker_arrays(self):
         self.publish_marker_array_rooms()
@@ -738,6 +747,30 @@ class MarkerPublisher(Node):
             
         self.publisher_marker_array_tracking.publish(marker_array)
 
+    def publish_marker_array_radar(self):
+
+        curr_time = time.time()
+
+        print("[radar] --- Radar Data: ---")
+        print("[radar] d_t:", round(curr_time-self.aux_time, 5))
+        # print("[radar] header:", self.radar.header)
+        print("[radar] No of Sectors:", self.radar.number_of_sectors)
+        print("[radar] Sector Ang Range:", round(self.radar.sector_ang_range,3), "(rad), ", round(self.radar.sector_ang_range*180.0/math.pi, 1), "(deg)")
+        for sector in self.radar.sectors:
+            print("\t[radar] --- Sector Number:", "X")
+            print("\t[radar] Start Angle:", round(sector.start_angle, 3), "(rad), ", round(sector.start_angle*180.0/math.pi, 1))
+            print("\t[radar] End Angle:", round(sector.end_angle, 3), "(rad), ", round(sector.end_angle*180.0/math.pi, 1))
+            print("\t[radar] Has Point:", sector.has_point)
+            print("\t[radar] Min Distance:", sector.min_distance)
+            print("\t[radar] Point (x, y, z): (" + str(round(sector.point.x, 3)) + ", " + str(round(sector.point.y, 3)) + ", " + str(round(sector.point.z, 3)) + ")")
+            
+
+
+
+
+
+
+        self.aux_time = curr_time
 
 def main(args=None):
     rclpy.init(args=args)
