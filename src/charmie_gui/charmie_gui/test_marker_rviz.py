@@ -22,6 +22,7 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_detected_person =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_person", 10)
         self.publisher_marker_array_detected_object =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_object", 10)
         self.publisher_marker_array_tracking =          self.create_publisher(MarkerArray, "visualization_marker_array_tracking", 10)
+        self.publisher_marker_array_radar_points =      self.create_publisher(MarkerArray, "visualization_marker_array_radar_points", 10)
 
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
@@ -751,26 +752,77 @@ class MarkerPublisher(Node):
 
         curr_time = time.time()
 
+        marker_array = MarkerArray()
+        object_size = 0.1
+
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "base_footprint"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "Radar_sector_closest_point"
+        delete_marker.id = 0  # Use the same ID to delete it
+        delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
+        marker_array.markers.append(delete_marker)
+
         print("[radar] --- Radar Data: ---")
         print("[radar] d_t:", round(curr_time-self.aux_time, 5))
         # print("[radar] header:", self.radar.header)
         print("[radar] No of Sectors:", self.radar.number_of_sectors)
         print("[radar] Sector Ang Range:", round(self.radar.sector_ang_range,3), "(rad), ", round(self.radar.sector_ang_range*180.0/math.pi, 1), "(deg)")
+        sector_ctr = -1
         for sector in self.radar.sectors:
-            print("\t[radar] --- Sector Number:", "X")
+            sector_ctr+=1
+            print("\t[radar] --- Sector Number:", sector_ctr)
             print("\t[radar] Start Angle:", round(sector.start_angle, 3), "(rad), ", round(sector.start_angle*180.0/math.pi, 1))
             print("\t[radar] End Angle:", round(sector.end_angle, 3), "(rad), ", round(sector.end_angle*180.0/math.pi, 1))
             print("\t[radar] Has Point:", sector.has_point)
             print("\t[radar] Min Distance:", sector.min_distance)
             print("\t[radar] Point (x, y, z): (" + str(round(sector.point.x, 3)) + ", " + str(round(sector.point.y, 3)) + ", " + str(round(sector.point.z, 3)) + ")")
-            
 
+            if sector.has_point:
+                marker = Marker()
 
+                # Header - Defines frame and timestamp
+                marker.header.frame_id = "base_footprint"
+                marker.header.stamp = self.get_clock().now().to_msg()
+                # Namespace and ID (useful when publishing multiple markers)
+                marker.ns = "Radar_sector_closest_point"
+                marker.id = sector_ctr  # Each marker must have a unique ID
+                # Marker Type (Choose shape)
+                marker.type = Marker.SPHERE  # Other options: SPHERE, CYLINDER, ARROW, etc.
+                # Marker Action
+                marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
 
+                marker.pose.position.x = sector.point.x  # Set the X coordinate
+                marker.pose.position.y = sector.point.y  # Set the X coordinate
+                marker.pose.position.z = sector.point.z  # Set the Z coordinate
 
+                marker.pose.orientation.x = 0.0
+                marker.pose.orientation.y = 0.0
+                marker.pose.orientation.z = 0.0
+                marker.pose.orientation.w = 1.0  # No rotation
 
+                marker.scale.x = object_size # Width
+                marker.scale.y = object_size # Width
+                marker.scale.z = object_size # Height
+                
+                # Color (RGBA format, values from 0 to 1)
+                marker.color.r = 0.0 # 0.0  # Red
+                marker.color.g = 0.0 # 1.0  # Green
+                marker.color.b = 1.0 # 1.0  # Blue
+                marker.color.a = 0.8  # Alpha (1.0 = fully visible, 0.0 = invisible)
+                
+                # Lifetime (0 = forever, otherwise, disappears after X seconds)
+                marker.lifetime.sec = 0
+                marker.lifetime.nanosec = 0
 
+                # Frame behavior (Keeps marker always facing the camera if enabled)
+                marker.frame_locked = False
+                
+                marker_array.markers.append(marker)
+
+        self.publisher_marker_array_radar_points.publish(marker_array)
         self.aux_time = curr_time
+
 
 def main(args=None):
     rclpy.init(args=args)
