@@ -3,9 +3,9 @@ radar_node:
   robot_radius: 0.29 # radius of the robot in meters
   update_frequency: 10.0 # frequency to update the radar data in Hz
   radar_configuration:
-    number_of_sectors: 32
-    min_radar_angle: -1.57079633 # -90 degrees # -2.0944 # -120 degrees
-    max_radar_angle:  1.57079633 #  90 degrees #  2.0944 # +120 degrees
+    number_of_sectors: 24 # currently working every 10 degrees
+    min_radar_angle: -2.0944 # -120 degrees # -1.57079633 # -90 degrees # -2.0944 # -120 degrees
+    max_radar_angle:  2.0944 # +120 degrees #  1.57079633 #  90 degrees #  2.0944 # +120 degrees
     max_radar_dist: 5.0 # maximum distance to consider for radar data in meters
     # DO NOT CHANGE MAX_RADAR_DIST -> THIS VALUE IS CONNECTED TO THE REINFORCEMENT LEARNING MODEL TRAINED
     # SHOULD ONLY BE CHANGED IF THE RL MODEL IS RE-TRAINED WITH A DIFFERENT VALUE
