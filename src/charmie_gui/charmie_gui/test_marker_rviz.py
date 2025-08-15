@@ -176,7 +176,6 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_rooms.publish(marker_array)
         self.publisher_marker_array_rooms_names.publish(marker_array_names)
 
-
     def publish_marker_array_furniture(self):
 
         marker_array = MarkerArray()
@@ -259,7 +258,6 @@ class MarkerPublisher(Node):
 
         self.publisher_marker_array_furniture.publish(marker_array)
         self.publisher_marker_array_furniture_names.publish(marker_array_names)
-
 
     def publish_marker_array_navigation(self):
 
@@ -402,7 +400,6 @@ class MarkerPublisher(Node):
 
         self.publisher_marker_array_navigations.publish(marker_array)
         self.publisher_marker_array_navigations_names.publish(marker_array_names)
-
 
     def publish_marker_array_detected_person(self):
 
@@ -577,7 +574,6 @@ class MarkerPublisher(Node):
     
         # self.previous_marker_array_detected_people = self.detected_people
 
-
     def publish_marker_array_detected_object(self):
 
         marker_array = MarkerArray()
@@ -678,7 +674,6 @@ class MarkerPublisher(Node):
             
         self.publisher_marker_array_detected_object.publish(marker_array)
     
-
     def publish_marker_array_tracking(self):
 
         marker_array = MarkerArray()
@@ -747,15 +742,13 @@ class MarkerPublisher(Node):
 
             
         self.publisher_marker_array_tracking.publish(marker_array)
-
-
+                        
     def publish_marker_array_radar(self):
-
         curr_time = time.time()
-
         marker_array = MarkerArray()
         object_size = 0.1
 
+        # Delete old markers
         delete_marker = Marker()
         delete_marker.header.frame_id = "base_footprint"
         delete_marker.header.stamp = self.get_clock().now().to_msg()
@@ -773,115 +766,91 @@ class MarkerPublisher(Node):
         marker_array.markers.append(delete_marker)
 
         print("[radar] --- Radar Data: ---")
-        print("[radar] d_t:", round(curr_time-self.aux_time, 5))
+        print("[radar] d_t:", round(curr_time - self.aux_time, 5))
         # print("[radar] header:", self.radar.header)
         print("[radar] No of Sectors:", self.radar.number_of_sectors)
         print("[radar] Sector Ang Range:", round(self.radar.sector_ang_range,3), "(rad), ", round(self.radar.sector_ang_range*180.0/math.pi, 1), "(deg)")
-        sector_ctr = 0
-        for sector in self.radar.sectors:
-            sector_ctr+=1
-            print("\t[radar] --- Sector Number:", sector_ctr)
-            print("\t[radar] Start Angle:", round(sector.start_angle, 3), "(rad), ", round(sector.start_angle*180.0/math.pi, 1))
-            print("\t[radar] End Angle:", round(sector.end_angle, 3), "(rad), ", round(sector.end_angle*180.0/math.pi, 1))
-            print("\t[radar] Has Point:", sector.has_point)
-            print("\t[radar] Min Distance:", sector.min_distance)
-            print("\t[radar] Point (x, y, z): (" + str(round(sector.point.x, 3)) + ", " + str(round(sector.point.y, 3)) + ", " + str(round(sector.point.z, 3)) + ")")
+        
+        for i, sector in enumerate(self.radar.sectors):
+            print(f"\t[radar] --- Sector {i + 1} ---")
+            print(f"\t[radar] Start Angle: {round(sector.start_angle, 3)} rad")
+            print(f"\t[radar] End Angle: {round(sector.end_angle, 3)} rad")
+            print(f"\t[radar] Has Point: {sector.has_point}")
+            print(f"\t[radar] Min Distance: {sector.min_distance}")
+            print(f"\t[radar] Point: ({round(sector.point.x, 3)}, {round(sector.point.y, 3)}, {round(sector.point.z, 3)})")
 
             if sector.has_point:
-
-                ### CODE FOR RADAR CLOSEST POINTS 
+                # Closest point sphere
                 marker_point = Marker()
-                # Header - Defines frame and timestamp
                 marker_point.header.frame_id = "base_footprint"
                 marker_point.header.stamp = self.get_clock().now().to_msg()
-                # Namespace and ID (useful when publishing multiple markers)
                 marker_point.ns = "Radar_sector_closest_point"
-                marker_point.id = sector_ctr  # Each marker must have a unique ID
-                # Marker Type (Choose shape)
-                marker_point.type = Marker.SPHERE  # Other options: SPHERE, CYLINDER, ARROW, etc.
-                # Marker Action
-                marker_point.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
-
-                marker_point.pose.position.x = sector.point.x  # Set the X coordinate
-                marker_point.pose.position.y = sector.point.y  # Set the X coordinate
-                marker_point.pose.position.z = sector.point.z  # Set the Z coordinate
-
-                marker_point.pose.orientation.x = 0.0
-                marker_point.pose.orientation.y = 0.0
-                marker_point.pose.orientation.z = 0.0
-                marker_point.pose.orientation.w = 1.0  # No rotation
-
-                marker_point.scale.x = object_size # Width
-                marker_point.scale.y = object_size # Width
-                marker_point.scale.z = object_size # Height
-                
-                # Color (RGBA format, values from 0 to 1)
-                marker_point.color.r = 0.0 # 0.0  # Red
-                marker_point.color.g = 0.0 # 1.0  # Green
-                marker_point.color.b = 1.0 # 1.0  # Blue
-                marker_point.color.a = 0.8  # Alpha (1.0 = fully visible, 0.0 = invisible)
-                
-                # Lifetime (0 = forever, otherwise, disappears after X seconds)
+                marker_point.id = i+1
+                marker_point.type = Marker.SPHERE
+                marker_point.action = Marker.ADD
+                marker_point.pose.position.x = sector.point.x
+                marker_point.pose.position.y = sector.point.y
+                marker_point.pose.position.z = sector.point.z
+                marker_point.pose.orientation.w = 1.0
+                marker_point.scale.x = object_size
+                marker_point.scale.y = object_size
+                marker_point.scale.z = object_size
+                marker_point.color.r = 0.0
+                marker_point.color.g = 0.0
+                marker_point.color.b = 1.0
+                marker_point.color.a = 0.8
                 marker_point.lifetime.sec = 0
                 marker_point.lifetime.nanosec = 0
-
-                # Frame behavior (Keeps marker always facing the camera if enabled)
                 marker_point.frame_locked = False
-                
                 marker_array.markers.append(marker_point)
 
-
-                ### CODE FOR RADAR ARCS 
                 marker_arc = Marker()
-                # Header - Defines frame and timestamp
                 marker_arc.header.frame_id = "base_footprint"
                 marker_arc.header.stamp = self.get_clock().now().to_msg()
-                # Namespace and ID (useful when publishing multiple markers)
                 marker_arc.ns = "Radar_sector_arc"
-                marker_arc.id = sector_ctr  # Each marker must have a unique ID
-                # Marker Type (Choose shape)
-                marker_arc.type = Marker.LINE_STRIP  # Other options: SPHERE, CYLINDER, ARROW, etc.
-                # Marker Action
-                marker_arc.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
-
-                # marker.pose.position.x = sector.point.x  # Set the X coordinate
-                # marker.pose.position.y = sector.point.y  # Set the X coordinate
-                # marker.pose.position.z = sector.point.z  # Set the Z coordinate
-                radius_ = sector.min_distance
-                start_ = sector.start_angle
-                end_ = sector.end_angle
-                aux_arc_points_ = 20
-
-                for i in range(aux_arc_points_):
-                    theta_ = start_ + (end_ - start_) * i / aux_arc_points_
-                    p = Point()
-                    p.x = radius_ * math.cos(theta_)
-                    p.y = radius_ * math.sin(theta_)
-                    p.z = 0.2
-                    marker_arc.points.append(p)
-
-                # marker.pose.orientation.x = 0.0
-                # marker.pose.orientation.y = 0.0
-                # marker.pose.orientation.z = 0.0
-                marker_arc.pose.orientation.w = 0.1  # No rotation
-
-                marker_arc.scale.x = object_size/10 # Width
-                marker_arc.scale.y = object_size # Width
-                marker_arc.scale.z = object_size*10 # Height
-                
-                # Color (RGBA format, values from 0 to 1)
-                marker_arc.color.r = 0.0 # 0.0  # Red
-                marker_arc.color.g = 0.0 # 1.0  # Green
-                marker_arc.color.b = 1.0 # 1.0  # Blue
-                marker_arc.color.a = 0.8  # Alpha (1.0 = fully visible, 0.0 = invisible)
-                
-                # Lifetime (0 = forever, otherwise, disappears after X seconds)
+                marker_arc.id = i+1
+                marker_arc.type = Marker.TRIANGLE_LIST
+                marker_arc.action = Marker.ADD
+                marker_arc.pose.orientation.w = 1.0
+                marker_arc.scale.x = 1.0  # Required for TRIANGLE_LIST
+                marker_arc.scale.y = 1.0
+                marker_arc.scale.z = 1.0
+                marker_arc.color.r = 0.0
+                marker_arc.color.g = 0.0
+                marker_arc.color.b = 1.0
+                marker_arc.color.a = 0.5
                 marker_arc.lifetime.sec = 0
                 marker_arc.lifetime.nanosec = 0
-
-                # Frame behavior (Keeps marker always facing the camera if enabled)
                 marker_arc.frame_locked = False
-                
+
+                # Build radar arc
+                radius = sector.min_distance
+                start_angle = sector.start_angle
+                end_angle = sector.end_angle
+                arc_segments = 24
+                min_z = 0.0
+                max_z = 0.5
+
+                for j in range(arc_segments):
+                    theta0 = start_angle + (end_angle - start_angle) * (j / arc_segments)
+                    theta1 = start_angle + (end_angle - start_angle) * ((j + 1) / arc_segments)
+
+                    # Bottom arc
+                    b0 = Point(x=radius * math.cos(theta0), y=radius * math.sin(theta0), z=min_z)
+                    b1 = Point(x=radius * math.cos(theta1), y=radius * math.sin(theta1), z=min_z)
+
+                    # Top arc
+                    t0 = Point(x=radius * math.cos(theta0), y=radius * math.sin(theta0), z=max_z)
+                    t1 = Point(x=radius * math.cos(theta1), y=radius * math.sin(theta1), z=max_z)
+
+                    # Two triangles per segment
+                    marker_arc.points.extend([b0, b1, t0])
+                    marker_arc.points.extend([t0, b1, t1])
+
+                    # Duplicate in reverse (for back face)
+                    marker_arc.points.extend([t0, b1, b0])
+                    marker_arc.points.extend([t1, b1, t0])
+
                 marker_array.markers.append(marker_arc)
 
         self.publisher_marker_array_radar.publish(marker_array)
