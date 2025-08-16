@@ -765,6 +765,14 @@ class MarkerPublisher(Node):
         delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
         marker_array.markers.append(delete_marker)
 
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "base_footprint"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "Radar_sector_floor_line"
+        delete_marker.id = 0
+        delete_marker.action = Marker.DELETEALL
+        marker_array.markers.append(delete_marker)
+
         print("[radar] --- Radar Data: ---")
         print("[radar] d_t:", round(curr_time - self.aux_time, 5))
         # print("[radar] header:", self.radar.header)
@@ -804,6 +812,42 @@ class MarkerPublisher(Node):
                 marker_point.frame_locked = False
                 marker_array.markers.append(marker_point)
 
+                marker_floor_line = Marker()
+                marker_floor_line.header.frame_id = "base_footprint"
+                marker_floor_line.header.stamp = self.get_clock().now().to_msg()
+                marker_floor_line.ns = "Radar_sector_floor_line"
+                marker_floor_line.id = i + 1  # Use same ID as sector
+                marker_floor_line.type = Marker.LINE_STRIP
+                marker_floor_line.action = Marker.ADD
+                marker_floor_line.pose.orientation.w = 1.0
+                marker_floor_line.scale.x = 0.02  # Line thickness
+                marker_floor_line.color.r = 1.0
+                marker_floor_line.color.g = 1.0
+                marker_floor_line.color.b = 0.0
+                marker_floor_line.color.a = 1.0
+                marker_floor_line.lifetime.sec = 0
+                marker_floor_line.lifetime.nanosec = 0
+                marker_floor_line.frame_locked = False
+
+                # Build radar arc
+                arc_segments = 24
+                min_z = 0.0
+                max_z = 0.5
+                radius = sector.min_distance
+                start_angle = sector.start_angle
+                end_angle = sector.end_angle
+
+                # Arc along floor (inner radius, z=0)
+                for j in range(arc_segments + 1):
+                    theta = start_angle + (end_angle - start_angle) * (j / arc_segments)
+                    p = Point()
+                    p.x = radius * math.cos(theta)
+                    p.y = radius * math.sin(theta)
+                    p.z = min_z
+                    marker_floor_line.points.append(p)
+
+                marker_array.markers.append(marker_floor_line)
+
                 marker_arc = Marker()
                 marker_arc.header.frame_id = "base_footprint"
                 marker_arc.header.stamp = self.get_clock().now().to_msg()
@@ -822,14 +866,6 @@ class MarkerPublisher(Node):
                 marker_arc.lifetime.sec = 0
                 marker_arc.lifetime.nanosec = 0
                 marker_arc.frame_locked = False
-
-                # Build radar arc
-                radius = sector.min_distance
-                start_angle = sector.start_angle
-                end_angle = sector.end_angle
-                arc_segments = 24
-                min_z = 0.0
-                max_z = 0.5
 
                 for j in range(arc_segments):
                     theta0 = start_angle + (end_angle - start_angle) * (j / arc_segments)
