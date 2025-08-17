@@ -747,6 +747,7 @@ class MarkerPublisher(Node):
         curr_time = time.time()
         marker_array = MarkerArray()
         object_size = 0.1
+        max_radar_range = 4.0 # meters
 
         # Delete old markers
         delete_marker = Marker()
@@ -788,6 +789,10 @@ class MarkerPublisher(Node):
             print(f"\t[radar] Point: ({round(sector.point.x, 3)}, {round(sector.point.y, 3)}, {round(sector.point.z, 3)})")
 
             if sector.has_point:
+
+                # For Intensity-Based Color Coding
+                dist_norm = min(1.0, sector.min_distance / max_radar_range)  # Normalize
+
                 # Closest point sphere
                 marker_point = Marker()
                 marker_point.header.frame_id = "base_footprint"
@@ -821,8 +826,8 @@ class MarkerPublisher(Node):
                 marker_floor_line.action = Marker.ADD
                 marker_floor_line.pose.orientation.w = 1.0
                 marker_floor_line.scale.x = 0.02  # Line thickness
-                marker_floor_line.color.r = 1.0
-                marker_floor_line.color.g = 1.0
+                marker_floor_line.color.r = 1.0 - dist_norm
+                marker_floor_line.color.g = dist_norm
                 marker_floor_line.color.b = 0.0
                 marker_floor_line.color.a = 1.0
                 marker_floor_line.lifetime.sec = 0
@@ -859,10 +864,10 @@ class MarkerPublisher(Node):
                 marker_arc.scale.x = 1.0  # Required for TRIANGLE_LIST
                 marker_arc.scale.y = 1.0
                 marker_arc.scale.z = 1.0
-                marker_arc.color.r = 0.0
-                marker_arc.color.g = 0.0
-                marker_arc.color.b = 1.0
-                marker_arc.color.a = 0.5
+                marker_arc.color.r = 1.0 - dist_norm
+                marker_arc.color.g = dist_norm
+                marker_arc.color.b = 0.0
+                marker_arc.color.a = 0.75
                 marker_arc.lifetime.sec = 0
                 marker_arc.lifetime.nanosec = 0
                 marker_arc.frame_locked = False
