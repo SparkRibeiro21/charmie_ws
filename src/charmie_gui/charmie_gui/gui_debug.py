@@ -10,7 +10,7 @@ from sensor_msgs_py import point_cloud2
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
-    TrackingMask, VCCsLowLevel, TaskStatesInfo
+    TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, GetLLMDemo, ActivateTracking, SetRGB
 from cv_bridge import CvBridge, CvBridgeError
@@ -72,6 +72,7 @@ class DebugVisualNode(Node):
         self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
         # Radar
         self.radar_pointcloud_subscriber = self.create_subscription(PointCloud2, "/radar/pointcloud_baseframe", self.radar_pointcloud_callback, 10)
+        self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -195,6 +196,7 @@ class DebugVisualNode(Node):
         self.nodes_used = NodesUsed.Request()
         # self.scan = LaserScan()
         self.livox_3dlidar = PointCloud2()
+        self.radar = RadarData()
         self.search_for_person = ListOfDetectedPerson()
         self.search_for_object = ListOfDetectedObject()
         self.new_search_for_person = False
@@ -510,7 +512,10 @@ class DebugVisualNode(Node):
         self.radar_pointcloud_time = time.time()
         # self.livox_3dlidar = points
         # print(points)
-        
+    
+    def radar_data_callback(self, radar: RadarData):
+        self.radar = radar
+
     def target_pos_callback(self, nav: TarNavSDNL):
         self.navigation = nav
         self.is_navigating = True
@@ -2269,7 +2274,7 @@ class DebugVisualMain():
                 pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.robot_radius/2), width=0)
                 pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.node.navigation.reached_radius), width=1)
 
-        ### TO DO here 
+        ### 3D LIDAR
         if self.node.livox_3dlidar.width > 0 and len(self.node.livox_3dlidar.data) > 0:
             points_gen = point_cloud2.read_points(self.node.livox_3dlidar, field_names=("x", "y", "z"), skip_nans=True)
             for point in points_gen:
@@ -2287,6 +2292,36 @@ class DebugVisualMain():
 
                 pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(x_map, y_map), radius=1, width=0)
 
+        ### RADAR
+        if len(self.node.radar.sectors):
+            print("RECEIVED RADAR SECTORS")
+            arc_segments = 4
+
+            for sector in self.node.radar.sectors:
+                if not sector.has_point:
+                    continue
+
+                radius = sector.min_distance
+                start_angle = sector.start_angle
+                end_angle = sector.end_angle
+
+                arc_points = []
+                for j in range(arc_segments + 1):
+                    theta = start_angle + (end_angle - start_angle) * (j / arc_segments)
+                    # Point in robot frame
+                    x_local = radius * math.cos(theta)
+                    y_local = radius * math.sin(theta)
+                    # Rotate to world frame using robot orientation
+                    angle = self.node.robot_pose.theta
+                    x_rot = x_local * math.cos(angle) - y_local * math.sin(angle)
+                    y_rot = x_local * math.sin(angle) + y_local * math.cos(angle)
+                    # Translate to world coordinates
+                    x_world = self.node.robot_pose.x + x_rot
+                    y_world = self.node.robot_pose.y + y_rot
+                    arc_points.append(self.coords_to_map(x_world, y_world))
+
+                if len(arc_points) >= 2:
+                    pygame.draw.lines(self.WIN, self.YELLOW, False, arc_points, width=2)
 
         ### OBSTACLES POINTS (LIDAR, Depth Head Camera and Final Obstacles Fusion)
         for points in self.node.lidar_obstacle_points:
