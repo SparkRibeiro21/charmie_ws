@@ -508,7 +508,7 @@ class DebugVisualNode(Node):
         # print(points)
 
     def radar_pointcloud_callback(self, points: PointCloud2):
-        print("Received Radar PointCloud Points")
+        # print("Received Radar PointCloud Points")
         self.radar_pointcloud_time = time.time()
         # self.livox_3dlidar = points
         # print(points)
@@ -1066,7 +1066,7 @@ class DebugVisualMain():
         return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def button_zoom_in_function(self):
-        print(self.MAP_SCALE - self.MAP_ZOOM_INC)
+        # print(self.MAP_SCALE - self.MAP_ZOOM_INC)
         if self.MAP_SCALE - self.MAP_ZOOM_INC > 0.1:
             self.MAP_SCALE -= self.MAP_ZOOM_INC
 
@@ -2294,8 +2294,8 @@ class DebugVisualMain():
 
         ### RADAR
         if len(self.node.radar.sectors):
-            print("RECEIVED RADAR SECTORS")
             arc_segments = 4
+            max_radar_range = 4.0
 
             for sector in self.node.radar.sectors:
                 if not sector.has_point:
@@ -2321,7 +2321,11 @@ class DebugVisualMain():
                     arc_points.append(self.coords_to_map(x_world, y_world))
 
                 if len(arc_points) >= 2:
-                    pygame.draw.lines(self.WIN, self.YELLOW, False, arc_points, width=2)
+                    # For Intensity-Based Color Coding
+                    dist_norm = min(1.0, sector.min_distance / max_radar_range)  # Normalize
+                    dist_norm *= 255
+                    ibcc = (255 - dist_norm, dist_norm,  0) # Intensity-Based Color Coding
+                    pygame.draw.lines(self.WIN, ibcc, False, arc_points, width=4)
 
         ### OBSTACLES POINTS (LIDAR, Depth Head Camera and Final Obstacles Fusion)
         for points in self.node.lidar_obstacle_points:
