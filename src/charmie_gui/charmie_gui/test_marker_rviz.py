@@ -752,7 +752,7 @@ class MarkerPublisher(Node):
         # Delete old markers
         delete_marker = Marker()
         delete_marker.header.frame_id = "base_footprint"
-        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.header.stamp = rclpy.time.Time().to_msg()
         delete_marker.ns = "Radar_sector_closest_point"
         delete_marker.id = 0  # Use the same ID to delete it
         delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
@@ -760,7 +760,7 @@ class MarkerPublisher(Node):
 
         delete_marker = Marker()
         delete_marker.header.frame_id = "base_footprint"
-        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.header.stamp = rclpy.time.Time().to_msg()
         delete_marker.ns = "Radar_sector_arc"
         delete_marker.id = 0  # Use the same ID to delete it
         delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
@@ -768,7 +768,7 @@ class MarkerPublisher(Node):
 
         delete_marker = Marker()
         delete_marker.header.frame_id = "base_footprint"
-        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.header.stamp = rclpy.time.Time().to_msg()
         delete_marker.ns = "Radar_sector_floor_line"
         delete_marker.id = 0
         delete_marker.action = Marker.DELETEALL
@@ -796,7 +796,7 @@ class MarkerPublisher(Node):
                 # Closest point sphere
                 marker_point = Marker()
                 marker_point.header.frame_id = "base_footprint"
-                marker_point.header.stamp = self.get_clock().now().to_msg()
+                marker_point.header.stamp = rclpy.time.Time().to_msg()
                 marker_point.ns = "Radar_sector_closest_point"
                 marker_point.id = i+1
                 marker_point.type = Marker.SPHERE
@@ -819,7 +819,7 @@ class MarkerPublisher(Node):
 
                 marker_floor_line = Marker()
                 marker_floor_line.header.frame_id = "base_footprint"
-                marker_floor_line.header.stamp = self.get_clock().now().to_msg()
+                marker_floor_line.header.stamp = rclpy.time.Time().to_msg()
                 marker_floor_line.ns = "Radar_sector_floor_line"
                 marker_floor_line.id = i + 1  # Use same ID as sector
                 marker_floor_line.type = Marker.LINE_STRIP
@@ -855,7 +855,7 @@ class MarkerPublisher(Node):
 
                 marker_arc = Marker()
                 marker_arc.header.frame_id = "base_footprint"
-                marker_arc.header.stamp = self.get_clock().now().to_msg()
+                marker_arc.header.stamp = rclpy.time.Time().to_msg()
                 marker_arc.ns = "Radar_sector_arc"
                 marker_arc.id = i+1
                 marker_arc.type = Marker.TRIANGLE_LIST
