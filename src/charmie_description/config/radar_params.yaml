@@ -33,7 +33,7 @@ radar_node:
     data_type: "PointCloud2"
     publish_filtered: True # publish_filtered is only available for PointCloud2 data type
     min_obstacle_range: 0.1 # as per the datasheet: Close proximity blind zone of 0.1 meters. 
-    max_obstacle_range: 10.0 # 30.0  # as per the datasheet: Has a detection range of 40 meters at 10% reflectivity and 70 meters at 80% reflectivity. 
+    max_obstacle_range: 30.0 # 30.0  # as per the datasheet: Has a detection range of 40 meters at 10% reflectivity and 70 meters at 80% reflectivity. 
     min_obstacle_height: 0.25  # to ignore floor noise
     max_obstacle_height: 1.65  # to ignore ceiling noise (obstacles above the robot height) 
     min_obstacle_angle: -2.0944 # -120 degrees

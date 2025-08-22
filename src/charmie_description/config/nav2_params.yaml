@@ -193,34 +193,38 @@ local_costmap:
   local_costmap:
     ros__parameters:
       update_frequency: 5.0
-      publish_frequency: 2.0
+      publish_frequency: 5.0
       global_frame: odom
       robot_base_frame: base_footprint
       use_sim_time: False
       rolling_window: true
-      width: 3
-      height: 3
+      width: 5
+      height: 5
       resolution: 0.05
-      robot_radius: 0.28
-      plugins: ["manual_obstacles", "voxel_layer", "inflation_layer"]
+      robot_radius: 0.2 # 0.28
+      # plugins: ["manual_obstacles", "voxel_layer", "inflation_layer"]
+      plugins: ["obstacle_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        cost_scaling_factor: 10.0
+        inflation_radius: 0.350
       manual_obstacles:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_topic: "/manual_obstacles_map"
         map_subscribe_transient_local: True
-      voxel_layer:
-        plugin: "nav2_costmap_2d::VoxelLayer"
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        publish_voxel_map: True
-        origin_z: 0.0
-        z_resolution: 0.05
-        z_voxels: 16
-        max_obstacle_height: 1.8
-        mark_threshold: 0
-        observation_sources: scan scan_bottom # base_camera_points
+        # clearing: true
+        # marking: true
+        # publish_voxel_map: True
+        # origin_z: 0.2
+        # z_resolution: 0.05
+        # z_voxels: 32
+        # max_obstacle_height: 1.8
+        # min_obstacle_height: 0.2
+        # mark_threshold: 1
+        observation_sources: scan scan_bottom # livox_lidar
         scan:
           topic: /scan
           max_obstacle_height: 1.8
@@ -231,6 +235,7 @@ local_costmap:
           raytrace_min_range: 0.05
           obstacle_max_range: 5.5
           obstacle_min_range: 0.05
+          # observation_persistence: 0.0
         scan_bottom:
           topic: /scan_bottom
           max_obstacle_height: 1.8
@@ -241,18 +246,20 @@ local_costmap:
           raytrace_min_range: 0.05
           obstacle_max_range: 5.5
           obstacle_min_range: 0.05
-        # base_camera_points:
-        #   topic: /camera/depth/points
-        #   max_obstacle_height: 1.8
-        #   min_obstacle_height: 0.2  # to ignore floor noise
-        #   clearing: True
-        #   marking: True
-        #   data_type: "PointCloud2"
-        #   expected_update_rate: 0.2
-        #   raytrace_max_range: 3.0
-        #   raytrace_min_range: 0.4
-        #   obstacle_max_range: 3.0
-        #   obstacle_min_range: 0.4
+          # observation_persistence: 0.0
+        livox_lidar:
+          topic: /livox/lidar/filtered
+          max_obstacle_height: 1.8
+          min_obstacle_height: 0.2  # to ignore floor noise
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
+          expected_update_rate: 10.0
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.1
+          obstacle_max_range: 5.0
+          obstacle_min_range: 0.1
+          observation_persistence: 1.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -266,14 +273,15 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_footprint
       use_sim_time: False
-      robot_radius: 0.28
+      robot_radius: 0.2 # 0.28
       resolution: 0.05
       track_unknown_space: true
-      plugins: ["static_layer", "manual_obstacles", "obstacle_layer", "inflation_layer"]
+      # plugins: ["static_layer", "manual_obstacles", "obstacle_layer", "inflation_layer"]
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan scan_bottom # base_camera_points
+        observation_sources: scan scan_bottom # livox_lidar
         scan:
           topic: /scan
           max_obstacle_height: 1.8
@@ -294,18 +302,20 @@ global_costmap:
           raytrace_min_range: 0.05
           obstacle_max_range: 5.5
           obstacle_min_range: 0.05
-        # base_camera_points:
-        #   topic: /camera/depth/points
-        #   max_obstacle_height: 1.8
-        #   min_obstacle_height: 0.2  # to ignore floor noise
-        #   clearing: True
-        #   marking: True
-        #   data_type: "PointCloud2"
-        #   expected_update_rate: 0.2
-        #   raytrace_max_range: 3.0
-        #   raytrace_min_range: 0.4
-        #   obstacle_max_range: 3.0
-        #   obstacle_min_range: 0.4
+        livox_lidar:
+          topic: /livox/lidar/filtered
+          max_obstacle_height: 1.8
+          min_obstacle_height: 0.2  # to ignore floor noise
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
+          expected_update_rate: 10.0
+          raytrace_max_range: 20.0
+          raytrace_min_range: 0.1
+          obstacle_max_range: 20.0
+          obstacle_min_range: 0.1
+          observation_persistence: 1.0
+          # observation_persistence: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_topic: "/map"  # Base map (navigation map)
@@ -316,8 +326,8 @@ global_costmap:
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        cost_scaling_factor: 10.0
+        inflation_radius: 0.35
       always_send_full_costmap: True
 
 map_server:
