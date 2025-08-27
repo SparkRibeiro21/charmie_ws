@@ -99,18 +99,18 @@ class TaskMain():
                     print(guest_name, guest_drink)
 
                     # self.robot.set_speech(filename="receptionist/dear", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    # self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                     self.robot.set_speech(filename="receptionist/first_guest_name_is", wait_for_end_of=True)
-                    self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                     # self.robot.set_speech(filename="receptionist/second_guest_name_is", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    # self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                     # self.robot.set_speech(filename="receptionist/host_name_is", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    # self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
-                    # self.robot.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
+                    # self.robot.set_speech(filename="person_names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
                     self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
                     self.robot.set_speech(filename="objects_names/"+keyword_list[1].lower(), wait_for_end_of=True)
 

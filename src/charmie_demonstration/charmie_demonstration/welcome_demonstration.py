@@ -440,7 +440,7 @@ class TaskMain():
                     print(guest_name, guest_drink)
 
                     self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
-                    self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                     random_drink = str(random.randint(1, 3))
                     self.robot.set_speech(filename="demonstration/favourite_drink_demo_"+random_drink, wait_for_end_of=True)
