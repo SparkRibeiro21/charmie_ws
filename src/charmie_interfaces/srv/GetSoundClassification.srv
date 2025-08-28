@@ -1,0 +1,8 @@
+# Service to get the list of sound classifications heard  
+
+float32 duration   # seconds to listen (e.g., 3.0)
+---
+string[] labels    # unique labels heard, sorted by score desc
+float32[] scores   # corresponding max scores per label
+bool success
+string message

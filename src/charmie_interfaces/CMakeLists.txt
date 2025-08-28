@@ -70,6 +70,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetNeckPosition.srv"
   "srv/GetPointCloudBB.srv"
   "srv/GetPointCloudMask.srv"
+  "srv/GetSoundClassification.srv"
   "srv/GetTorso.srv"
   "srv/GetVCCs.srv"
   "srv/NodesUsed.srv"
