@@ -1,0 +1,9 @@
+# Service to break when one of the sounds in break_sounds is heard  
+
+string[] break_sounds
+float32  timeout   # seconds; <=0 means "no timeout"
+---
+string   detected_label
+float32  detected_score
+bool success
+string message

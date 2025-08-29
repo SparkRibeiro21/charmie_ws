@@ -71,6 +71,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetPointCloudBB.srv"
   "srv/GetPointCloudMask.srv"
   "srv/GetSoundClassification.srv"
+  "srv/GetSoundClassificationContinuous.srv"
   "srv/GetTorso.srv"
   "srv/GetVCCs.srv"
   "srv/NodesUsed.srv"
