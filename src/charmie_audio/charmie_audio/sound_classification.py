@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 import time
+import gc
+import threading
+import json
 import numpy as np
 from queue import Queue, Empty
-import threading
-import gc
 
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 
-from charmie_interfaces.srv import GetSoundClassification
+from charmie_interfaces.srv import GetSoundClassification, GetSoundClassificationContinuous
 
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import audio as mp_audio
@@ -17,47 +19,45 @@ from mediapipe.tasks.python.audio.core import audio_record
 
 from pathlib import Path
 
+
 class SoundClassificationNode(Node):
     def __init__(self):
         super().__init__('sound_classification')
 
-        # Parameters (kept simple; same defaults as your script)
-        # self.declare_parameter('model_path', 'classifier.tflite')
+        # Params
         self.declare_parameter('max_results', 5)
         self.declare_parameter('score_threshold', 0.1)
         self.declare_parameter('overlap', 0.5)
         self.declare_parameter('sample_rate', 16000)
         self.declare_parameter('num_channels', 1)
 
-        # Ensure exclusive mic usage (e.g., when Whisper runs after this)
+        # Lock so the mic is never held by two calls
         self.mic_lock = threading.Lock()
 
-        # Service
-        self.srv = self.create_service(GetSoundClassification, 'get_sound', self.handle_get_sound)
-        self.get_logger().info('Sound classification service "/get_sound" ready.')
+        # Simple String publisher for live window results (JSON)
+        self.current_pub = self.create_publisher(String, 'sound_current', 10)
 
-    # ---- core classification (mirrors your Mediapipe loop) ----
-    def classify_for(self, duration_s: float):
+        # Services
+        self.srv_once = self.create_service(GetSoundClassification, 'get_sound', self.handle_get_sound)
+        self.srv_cont = self.create_service(GetSoundClassificationContinuous, 'get_sound_continuous', self.handle_get_sound_continuous)
 
-        # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
+        self.get_logger().info('Services ready: /get_sound, /get_sound_continuous')
+
+    # --- helpers ---
+    def _build_paths_and_params(self):
         home = str(Path.home())
-        sound_classification_models = "charmie_ws/src/charmie_audio/charmie_audio/sound_classification_models"
-        model_path = home+'/'+sound_classification_models+'/'+'classifier.tflite'
+        model_dir = f"{home}/charmie_ws/src/charmie_audio/charmie_audio/sound_classification_models"
+        model_path = f"{model_dir}/classifier.tflite"
+        return dict(
+            model_path=model_path,
+            max_results=int(self.get_parameter('max_results').value),
+            score_threshold=float(self.get_parameter('score_threshold').value),
+            overlap=float(self.get_parameter('overlap').value),
+            sample_rate=int(self.get_parameter('sample_rate').value),
+            num_channels=int(self.get_parameter('num_channels').value),
+        )
 
-        # model_path      = self.get_parameter('model_path').get_parameter_value().string_value
-        max_results     = int(self.get_parameter('max_results').value)
-        score_threshold = float(self.get_parameter('score_threshold').value)
-        overlap         = float(self.get_parameter('overlap').value)
-        sample_rate     = int(self.get_parameter('sample_rate').value)
-        num_channels    = int(self.get_parameter('num_channels').value)
-
-        # Validations (same as your script)
-        if not (0.0 <= overlap < 1.0):
-            raise ValueError('overlap must be in [0.0, 1.0).')
-        if not (0.0 <= score_threshold <= 1.0):
-            raise ValueError('score_threshold must be in [0.0, 1.0].')
-
-        # Thread-safe results buffer
+    def _open_pipeline(self, model_path, max_results, score_threshold, sample_rate, num_channels):
         results_q: "Queue[mp_audio.AudioClassifierResult]" = Queue(maxsize=16)
 
         def save_result(result: mp_audio.AudioClassifierResult, timestamp_ms: int):
@@ -71,7 +71,6 @@ class SoundClassificationNode(Node):
                     pass
                 results_q.put_nowait(result)
 
-        # Build classifier
         base_options = mp_python.BaseOptions(model_asset_path=model_path)
         options = mp_audio.AudioClassifierOptions(
             base_options=base_options,
@@ -82,23 +81,57 @@ class SoundClassificationNode(Node):
         )
         classifier = mp_audio.AudioClassifier.create_from_options(options)
 
-        # Audio I/O
-        buffer_size = int(0.975 * sample_rate)  # ~0.975 s @ 16kHz -> 15600
+        buffer_size = int(0.975 * sample_rate)
         audio_format = containers.AudioDataFormat(num_channels, sample_rate)
         record = audio_record.AudioRecord(num_channels, sample_rate, buffer_size)
         audio_data = containers.AudioData(buffer_size, audio_format)
 
-        # Inference cadence
-        input_len_sec = buffer_size / float(sample_rate)
-        interval = input_len_sec * (1.0 - overlap)
+        record.start_recording()
+        return results_q, classifier, record, audio_data, buffer_size
+
+    def _close_pipeline(self, results_q, classifier, record, audio_data):
+        try:
+            record.stop_recording()
+        except Exception:
+            pass
+        try:
+            record.stop()  # harmless if not implemented
+        except Exception:
+            pass
+        try:
+            classifier.close()
+        except Exception:
+            pass
+        # clear refs & GC to free mic immediately
+        try:
+            while True:
+                results_q.get_nowait()
+        except Empty:
+            pass
+        results_q = None
+        classifier = None
+        record = None
+        audio_data = None
+        gc.collect()
+
+    # --- single-shot (like your mediapipe script) ---
+    def classify_for(self, duration_s: float):
+        cfg = self._build_paths_and_params()
+        if not (0.0 <= cfg['overlap'] < 1.0):
+            raise ValueError('overlap must be in [0.0, 1.0).')
+        if not (0.0 <= cfg['score_threshold'] <= 1.0):
+            raise ValueError('score_threshold must be in [0.0, 1.0].')
+
+        results_q, classifier, record, audio_data, buffer_size = self._open_pipeline(
+            cfg['model_path'], cfg['max_results'], cfg['score_threshold'],
+            cfg['sample_rate'], cfg['num_channels']
+        )
+
+        input_len_sec = buffer_size / float(cfg['sample_rate'])
+        interval = input_len_sec * (1.0 - cfg['overlap'])
         last_infer = time.time()
 
-        # Start
-        record.start_recording()
-
-        # Collect max score per label across the whole duration
-        max_scores = {}  # label -> max score seen
-
+        max_scores = {}
         try:
             start_time = time.time()
             while time.time() - start_time < duration_s:
@@ -108,18 +141,83 @@ class SoundClassificationNode(Node):
                     time.sleep(remaining)
                 last_infer = time.time()
 
-                # Read mic buffer -> float32
                 data = record.read(buffer_size)
                 if data.dtype != np.float32:
-                    # If backend gives int16, you can scale to [-1,1] instead:
-                    # if data.dtype == np.int16:
-                    #     data = data.astype(np.float32) / 32768.0
                     data = data.astype(np.float32, copy=False)
 
                 audio_data.load_from_array(data)
                 classifier.classify_async(audio_data, time.time_ns() // 1_000_000)
 
-                # Drain queue; process newest result only (like your print loop)
+                newest = None
+                while True:
+                    try:
+                        newest = results_q.get_nowait()
+                    except Empty:
+                        break
+
+                if newest and newest.classifications:
+                    cats = newest.classifications[0].categories
+                    detected = {c.category_name: round(float(c.score), 2) for c in cats}
+                    detected = dict(sorted(detected.items(), key=lambda kv: kv[1], reverse=True))
+                    print(detected)
+
+                    for c in cats:
+                        lbl = c.category_name
+                        sc = float(c.score)
+                        if sc >= cfg['score_threshold']:
+                            if lbl not in max_scores or sc > max_scores[lbl]:
+                                max_scores[lbl] = sc
+        finally:
+            self._close_pipeline(results_q, classifier, record, audio_data)
+
+        if not max_scores:
+            return [], []
+        items = sorted(max_scores.items(), key=lambda kv: kv[1], reverse=True)
+        labels = [k for k, _ in items]
+        scores = [float(v) for _, v in items]
+        return labels, scores
+
+    # --- continuous (publish current window; stop on break or timeout) ---
+    def classify_until(self, break_sounds, timeout_s: float):
+        cfg = self._build_paths_and_params()
+        if not (0.0 <= cfg['overlap'] < 1.0):
+            raise ValueError('overlap must be in [0.0, 1.0).')
+        if not (0.0 <= cfg['score_threshold'] <= 1.0):
+            raise ValueError('score_threshold must be in [0.0, 1.0].')
+
+        results_q, classifier, record, audio_data, buffer_size = self._open_pipeline(
+            cfg['model_path'], cfg['max_results'], cfg['score_threshold'],
+            cfg['sample_rate'], cfg['num_channels']
+        )
+
+        input_len_sec = buffer_size / float(cfg['sample_rate'])
+        interval = input_len_sec * (1.0 - cfg['overlap'])
+        last_infer = time.time()
+
+        break_set = set(break_sounds or [])
+        start_time = time.time()
+        hit = False
+        label = ""
+        score = 0.0
+
+        try:
+            while True:
+                if timeout_s > 0 and (time.time() - start_time) >= timeout_s:
+                    break
+
+                now = time.time()
+                remaining = interval - (now - last_infer)
+                if remaining > 0:
+                    time.sleep(remaining)
+                last_infer = time.time()
+
+                data = record.read(buffer_size)
+                if data.dtype != np.float32:
+                    data = data.astype(np.float32, copy=False)
+
+                audio_data.load_from_array(data)
+                classifier.classify_async(audio_data, time.time_ns() // 1_000_000)
+
                 newest = None
                 while True:
                     try:
@@ -130,60 +228,34 @@ class SoundClassificationNode(Node):
                 if newest and newest.classifications:
                     cats = newest.classifications[0].categories
 
-                    detected_sounds = {c.category_name: round(float(c.score), 2) for c in cats}
-                    detected_sounds = dict(sorted(detected_sounds.items(),
-                                                  key=lambda kv: kv[1],
-                                                  reverse=True))
-                    print(detected_sounds)
+                    window = {c.category_name: round(float(c.score), 2) for c in cats}
+                    window = dict(sorted(window.items(), key=lambda kv: kv[1], reverse=True))
+                    print(window)
 
-                    for c in cats:
-                        lbl = c.category_name
-                        sc = float(c.score)
-                        if sc >= score_threshold:
-                            if lbl not in max_scores or sc > max_scores[lbl]:
-                                max_scores[lbl] = sc
+                    msg = String()
+                    msg.data = json.dumps(window, ensure_ascii=False)
+                    self.current_pub.publish(msg)
 
+                    if break_set:
+                        for c in cats:
+                            lbl = c.category_name
+                            sc = float(c.score)
+                            if lbl in break_set and sc >= cfg['score_threshold']:
+                                hit = True
+                                label = lbl
+                                score = sc
+                                break
+                        if hit:
+                            break
         finally:
-            # hard-stop the stream and release native handles
-            try:
-                record.stop_recording()
-            except Exception:
-                pass
-            try:
-                # some backends expose an extra stop(); if absent this is harmless
-                record.stop()
-            except Exception:
-                pass
-            try:
-                classifier.close()
-            except Exception:
-                pass
-            # drain and drop references so GC can free PortAudio/OS handles
-            try:
-                while True:
-                    results_q.get_nowait()
-            except Empty:
-                pass
-            record = None
-            audio_data = None
-            audio_format = None
-            classifier = None
-            gc.collect()
+            self._close_pipeline(results_q, classifier, record, audio_data)
 
-        # Prepare sorted arrays
-        if not max_scores:
-            return [], []
+        return hit, label, float(score)
 
-        sorted_items = sorted(max_scores.items(), key=lambda kv: kv[1], reverse=True)
-        labels = [k for k, _ in sorted_items]
-        scores = [float(v) for _, v in sorted_items]
-        return labels, scores
-
-    # ---- service handler ----
+    # --- service handlers ---
     def handle_get_sound(self, request: GetSoundClassification.Request, response: GetSoundClassification.Response):
         duration = float(request.duration) if request.duration > 0.0 else 2.0
         try:
-            # ensure only one request owns the mic at a time
             with self.mic_lock:
                 labels, scores = self.classify_for(duration)
             response.labels = labels
@@ -194,6 +266,24 @@ class SoundClassificationNode(Node):
             response.labels = []
             response.scores = []
             response.success = False
+            response.message = f"error: {e}"
+        return response
+
+    def handle_get_sound_continuous(self, request: GetSoundClassificationContinuous.Request,
+                                    response: GetSoundClassificationContinuous.Response):
+        break_sounds = list(request.break_sounds) if request.break_sounds else []
+        timeout = float(request.timeout)
+        try:
+            with self.mic_lock:
+                hit, lbl, sc = self.classify_until(break_sounds, timeout)
+            response.success = bool(hit)
+            response.detected_label = lbl if hit else ""
+            response.detected_score = float(sc if hit else 0.0)
+            response.message = "break detected" if hit else ("timeout" if timeout > 0 else "stopped")
+        except Exception as e:
+            response.success = False
+            response.detected_label = ""
+            response.detected_score = 0.0
             response.message = f"error: {e}"
         return response
 
