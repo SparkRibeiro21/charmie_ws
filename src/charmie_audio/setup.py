@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
 		"audio_with_sound_classification = charmie_audio.audio_with_sound_classification:main",
-		"audio = charmie_audio.audio:main"
+		"audio = charmie_audio.audio:main",
+        "sound_classification = charmie_audio.sound_classification:main"
         ],
     },
 )
