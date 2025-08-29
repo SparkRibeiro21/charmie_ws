@@ -28,7 +28,8 @@ class LaunchStdFunctions():
         self.robot_state_publisher_real_node = Node(
             package="robot_state_publisher",
             executable="robot_state_publisher",
-            parameters=[{'robot_description': robot_description_real}]
+            parameters=[{'robot_description': robot_description_real}],
+            remappings=[('/joint_states','/xarm/joint_states')]
         )
 
         urdf_path_gazebo = os.path.join(get_package_share_path('charmie_description'), 
