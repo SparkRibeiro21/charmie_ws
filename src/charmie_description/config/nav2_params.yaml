@@ -112,9 +112,9 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: False
-    controller_frequency: 20.0
+    controller_frequency: 30.0
     min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.5
+    min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
     progress_checker_plugin: "progress_checker"
@@ -137,51 +137,143 @@ controller_server:
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.05
-    # DWB parameters
+    # MPPI parameters
     FollowPath:
-      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      plugin: "nav2_mppi_controller::MPPIController"
 
-      # --- Make heading behavior decisive & fast ---
-      use_rotate_to_heading: true                  # enable in-place rotate logic
-      rotate_to_heading_min_angle: 0.35            # trigger rotate if |heading error| > ~20°
-      rotate_to_heading_angular_vel: 0.5           # speed of in-place rotates
-      max_angular_vel: 0.5                         # raise overall turn speed cap
-      max_angular_accel: 3.5                        # quicker spin-up for turns
+      # --- Core MPPI ---
+      motion_model: "DiffDrive"
+      controller_frequency: 20.0        # (inherited from node, keep for clarity)
+      iteration_count: 1
+      batch_size: 1000                   # 1000@50Hz or 2000@30Hz is typical; 1000@20Hz OK
+      time_steps: 56
+      model_dt: 0.05                     # 20 Hz -> 0.05s; horizon = 2.8s
 
-      # Lookahead: see past the jambs so it commits through the door
-      use_velocity_scaled_lookahead: true
-      min_lookahead_dist: 0.25         # ↑ from 0.25 (0.35–0.45 is a good range)
-      max_lookahead_dist: 1.20         # ↑ give it a longer preview
-      lookahead_time: 1.2
-      use_fixed_curvature_lookahead: true           # decouple curvature from momentary path jitter
-      curvature_lookahead_dist: 0.6                 # stable curvature reference
+      # --- Limits (diff) ---
+      vx_max: 0.40
+      vx_min: 0.00                       # no reverse (front sensors)
+      wz_max: 1.0
+      wz_min: -1.0
+      ax_max: 3.0
+      ax_min: -3.0
+      az_max: 2.5
 
-      # --- Keep rolling near costs (since you disabled collision_detection) ---
-      use_regulated_linear_velocity_scaling: true
-      use_cost_regulated_linear_velocity_scaling: true
-      cost_scaling_dist: 0.45                        # small slowdown bubble
-      cost_scaling_gain: 0.8                         # moderate slowdown (<= 1.0)
-      regulated_linear_scaling_min_radius: 0.55
-      regulated_linear_scaling_min_speed: 0.28       # don’t stall to zero
-      approach_velocity_scaling_dist: 0.45
+      # --- Sampling noise (exploration) ---
+      vx_std: 0.20
+      vy_std: 0.00                       # diff-drive
+      wz_std: 0.18
 
-      # Base speeds / agility
-      desired_linear_vel: 0.42
-      max_linear_accel: 2.5
+      # --- Path handling / viz ---
+      prune_distance: 1.0
+      transform_tolerance: 0.1
+      temperature: 0.2
+      gamma: 0.015
+      visualize: false
+      reset_period: 1.0                  # Humble
+      regenerate_noises: false
 
-      # --- Optional guardrails ---
-      min_approach_linear_velocity: 0.05             # ensure progress near goal
-      transform_tolerance: 0.2
-      stateful: true                                  # clean final-heading handling
-      use_collision_detection: false                  # (as you tested)
-      allow_reversing: false                          # keep behavior predictable
-      max_robot_pose_search_dist: 10.0
+      TrajectoryVisualizer:
+        trajectory_step: 5
+        time_step: 3
+
+      TrajectoryValidator:
+        plugin: "mppi::DefaultOptimalTrajectoryValidator"
+        collision_lookahead_time: 2.0
+        consider_footprint: false
+
+      # --- Critics (Humble names) ---
+      critics: [
+        "ConstraintCritic",
+        "ObstaclesCritic",
+        "CostCritic",
+        "PathFollowCritic",
+        "PathAlignCritic",
+        "PathAngleCritic",
+        "GoalCritic",
+        "GoalAngleCritic",
+        "PreferForwardCritic"
+      ]
+
+      ConstraintCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 4.0
+
+      # Keep moving along the path (set thresholds ~= horizon: 56 * 0.05 = 2.8 m @ 1 m/pt path)
+      PathFollowCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 12.0
+        offset_from_furthest: 10
+        threshold_to_consider: 2.8
+
+      # Face & align to path (Navfn has no headings -> keep use_path_orientations false)
+      PathAlignCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 18.0
+        max_path_occupancy_ratio: 0.6
+        trajectory_point_step: 1
+        threshold_to_consider: 2.8
+        offset_from_furthest: 14
+        use_path_orientations: true
+
+      PathAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 2.0
+        offset_from_furthest: 18
+        threshold_to_consider: 2.8
+        max_angle_to_furthest: 0.5
+        mode: 2
+
+      GoalCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 5.0
+        threshold_to_consider: 2.8
+
+      GoalAngleCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 1.5
+        threshold_to_consider: 0.4
+
+      PreferForwardCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 8.0
+        threshold_to_consider: 2.8
+
+      # Obstacle avoidance tuned to your inflation (radius=0.45, scale=4.0); start conservative
+      ObstaclesCritic:
+        enabled: true
+        cost_power: 1
+        consider_footprint: true         # set true later if you need tighter checks (more CPU)
+        collision_cost: 10000.0
+        collision_margin_distance: 0.10
+        near_goal_distance: 0.5
+        repulsion_weight: 1.1             # lower if you see wobble at cost boundary
+        critical_weight: 20.0
+        inflation_radius: 0.40            # Humble: match your costmap
+        cost_scaling_factor: 4.0          # Humble: match your costmap
+
+      CostCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 2.4
+        consider_footprint: true
+        collision_cost: 1000000.0
+        near_goal_distance: 1.0
+        critical_cost: 300.0
+        trajectory_point_step: 2
+
 
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 5.0
-      publish_frequency: 2.0
+      update_frequency: 10.0
+      publish_frequency: 5.0
       global_frame: odom
       robot_base_frame: base_footprint
       use_sim_time: False
@@ -190,15 +282,16 @@ local_costmap:
       height: 3
       resolution: 0.05
       robot_radius: 0.28
-      plugins: ["manual_obstacles", "voxel_layer", "inflation_layer"]
+      # plugins: ["manual_obstacles", "voxel_layer", "inflation_layer"]
+      plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 4.0
-        inflation_radius: 0.45
-      manual_obstacles:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: "/manual_obstacles_map"
-        map_subscribe_transient_local: True
+        inflation_radius: 0.40
+      # manual_obstacles:
+      #   plugin: "nav2_costmap_2d::StaticLayer"
+      #   map_topic: "/manual_obstacles_map"
+      #   map_subscribe_transient_local: True
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -257,7 +350,8 @@ global_costmap:
       robot_radius: 0.28
       resolution: 0.05
       track_unknown_space: true
-      plugins: ["static_layer", "manual_obstacles", "obstacle_layer", "inflation_layer"]
+      # plugins: ["static_layer", "manual_obstacles", "obstacle_layer", "inflation_layer"]
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -298,14 +392,14 @@ global_costmap:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_topic: "/map"  # Base map (navigation map)
         map_subscribe_transient_local: True
-      manual_obstacles:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: "/manual_obstacles_map"
-        map_subscribe_transient_local: True
+      # manual_obstacles:
+      #   plugin: "nav2_costmap_2d::StaticLayer"
+      #   map_topic: "/manual_obstacles_map"
+      #   map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 4.0
-        inflation_radius: 0.45
+        inflation_radius: 0.40
       always_send_full_costmap: True
 
 map_server:
@@ -325,14 +419,49 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 20.0
-    use_sim_time: False
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "nav2_navfn_planner/NavfnPlanner"
-      tolerance: 0.5
-      use_astar: false
+      plugin: "nav2_smac_planner/SmacPlannerHybrid"
       allow_unknown: true
+      tolerance: 0.5
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      max_planning_time: 5.0
+
+      # forward-only kinematics
+      motion_model_for_search: "DUBIN"   # <-- no reverse
+      angle_quantization_bins: 72
+      minimum_turning_radius: 0.35       # MUST be > 0.0 (set to your robot’s true min)
+
+      # gentle biases (reverse_* is ignored in DUBIN)
+      change_penalty: 2.0
+      non_straight_penalty: 1.2
+      cost_penalty: 2.0
+      retrospective_penalty: 0.015
+      lookup_table_size: 20.0
+
+      # finishers
+      analytic_expansion_ratio: 3.5
+      analytic_expansion_max_length: 3.0
+      analytic_expansion_max_cost: 200.0
+      analytic_expansion_max_cost_override: false
+
+      # optional: try this if goals near doorways struggle (still forward-only)
+      goal_heading_mode: "BIDIRECTIONAL"
+
+      # keep your downsampling
+      downsample_costmap: true
+      downsampling_factor: 2
+
+      # smoothing (OK to keep your smoother_server too)
+      smooth_path: true
+      smoother:
+        max_iterations: 1000
+        w_smooth: 0.3
+        w_data: 0.2
+        tolerance: 1.0e-10
+        do_refinement: true
+        refinement_num: 2
 
 smoother_server:
   ros__parameters:
