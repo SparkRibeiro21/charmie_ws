@@ -3270,8 +3270,8 @@ class RobotStdFunctions():
             options = sorted(options)
         # print("OPTIONS: ", options)
         
-        if options:
-    
+        if options or mode == "keyboard": # keybord mode does not need options to work
+            
             self.set_speech(filename=start_speak_file, wait_for_end_of=True)
     
             request = SetFaceTouchscreenMenu.Request()

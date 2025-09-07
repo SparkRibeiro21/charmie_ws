@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":              False,
     "charmie_audio":            False,
-    "charmie_face":             False,
+    "charmie_face":             True,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
     "charmie_base_camera":      False,
@@ -26,9 +26,9 @@ ros2_modules = {
     "charmie_low_level":        False,
     "charmie_navigation":       False,
     "charmie_nav2":             False,
-    "charmie_neck":             True,
+    "charmie_neck":             False,
     "charmie_radar":            False,
-    "charmie_speakers":         False,
+    "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -99,8 +99,17 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
+                selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="keyboard", speak_results=True)
+                print(selected_option)
+                time.sleep(3.0)
 
-                self.robot.set_neck_coords(flc, wait_for_end_of=True)
+                selected_option = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True)
+                selected_option = self.robot.set_face_touchscreen_menu([selected_option[0]], timeout=10, mode="single", speak_results=True)
+                
+                selected_option_ = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True)
+                selected_option_ = self.robot.set_face_touchscreen_menu([selected_option_[0]], timeout=10, mode="single", speak_results=True)
+
+                # self.robot.set_neck_coords(flc, wait_for_end_of=True)
                 # self.robot.set_neck_coords([0,0,0], wait_for_end_of=True)
                 # self.robot.set_neck_coords([1.5, 0, 0], wait_for_end_of=True)
 

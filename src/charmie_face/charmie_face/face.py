@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 
 
-DEBUG_WITHOUT_DISPLAY = False
+DEBUG_WITHOUT_DISPLAY = True
 
 # ROS2 Face Node
 class FaceNode(Node):
@@ -1147,6 +1147,17 @@ class FaceMain():
                     self.confirming_multi_button = None
             return
 
+    def handle_touchscreen_menu_keyboard(self):
+
+        print("ENTERED KEYBOARD MODE - NOT IMPLEMENTED YET")
+        
+        # send selected items through service
+        request = GetFaceTouchscreenMenu.Request()
+        request.command = ["TEST"]
+        self.node.call_face_get_touchscreen_menu_server(request=request)
+
+        self.node.is_touchscreen_menu = False
+        self.node.touchscreen_menu_start_time = None
 
     def main(self):
         
@@ -1198,8 +1209,10 @@ class FaceMain():
 
                     if self.node.touchscreen_menu_mode == "single":
                         self.handle_touchscreen_menu()
-                    else: # "multi"
+                    elif self.node.touchscreen_menu_mode == "multi":
                         self.handle_touchscreen_menu_multiple_options()
+                    else: # elif self.node.touchscreen_menu_mode == "keyboard":
+                        self.handle_touchscreen_menu_keyboard()
 
             elif self.node.cams_flag:
 

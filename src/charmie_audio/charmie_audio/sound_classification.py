@@ -19,6 +19,7 @@ from mediapipe.tasks.python.audio.core import audio_record
 
 from pathlib import Path
 
+# nao usar ros2 params para configs, receber pelo serviço
 
 class SoundClassificationNode(Node):
     def __init__(self):
