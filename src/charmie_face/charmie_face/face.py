@@ -406,6 +406,11 @@ class FaceMain():
         self.pressed_confirm_button = None
         self.option_counts = {}
 
+        # Reset timeout state
+        self.keyboard_typed_text = ""
+        self.keyboard_pressed_key = None      # ('CHAR', 'A') for letters
+        self.keyboard_pressed_action = None   # 'BACKSPACE' or 'DONE'
+
 
     def get_touchscreen_id(self, name_contains="touch"):
 
@@ -1149,6 +1154,7 @@ class FaceMain():
 
     def handle_touchscreen_menu_keyboard(self):
 
+        """ 
         print("ENTERED KEYBOARD MODE - NOT IMPLEMENTED YET")
         
         # send selected items through service
@@ -1158,6 +1164,195 @@ class FaceMain():
 
         self.node.is_touchscreen_menu = False
         self.node.touchscreen_menu_start_time = None
+         """
+
+        """
+        Draws a QWERTY keyboard for name entry.
+        Letters only + BACKSPACE + DONE.
+        Sends the typed text via GetFaceTouchscreenMenu when DONE is tapped.
+        Visuals match other menus (colors, rounded rects, press darkening).
+        """
+
+        # --- Layout parameters ---
+        screen_w, screen_h = self.resolution
+        bg = self.LIGHT_BLUE_CHARMIE_FACE
+        key_color = self.GREY_LAR_LOGO
+        text_color = self.LIGHT_BLUE_CHARMIE_FACE
+
+        self.SCREEN.fill(bg)
+
+        # --- Title + current text display ---
+        title_font = pygame.font.SysFont(None, 80)
+        entry_font = pygame.font.SysFont(None, 90)
+
+        title = title_font.render("Enter your name", True, self.GREY_LAR_LOGO)
+        self.SCREEN.blit(title, title.get_rect(center=(screen_w // 2, int(screen_h * 0.12))))
+
+        # Show current typed text (clipped if too long)
+        shown_text = self.keyboard_typed_text[:30]  # soft cap
+        entry_box_w = int(screen_w * 0.80)
+        entry_box_h = 100
+        entry_box_rect = pygame.Rect((screen_w - entry_box_w)//2, int(screen_h*0.18), entry_box_w, entry_box_h)
+
+        # Box (subtle contrast)
+        self.draw_transparent_rect(self.SCREEN, entry_box_rect.x, entry_box_rect.y, entry_box_rect.w, entry_box_rect.h, self.GREY_LAR_LOGO, 30)
+        entry_surf = entry_font.render(shown_text if shown_text else " ", True, self.GREY_LAR_LOGO)
+        self.SCREEN.blit(entry_surf, entry_surf.get_rect(midleft=(entry_box_rect.x + 20, entry_box_rect.centery)))
+
+        # --- Keyboard geometry ---
+        # QWERTY rows (letters only)
+        rows = [
+            list("QWERTYUIOP"),
+            list("ASDFGHJKL"),
+            list("ZXCVBNM")
+        ]
+
+        # Keyboard area
+        kb_top = int(screen_h * 0.40)
+        row_gap = 18
+        key_h = 90
+        key_radius = 10
+
+        # Base key width is computed from first row having 10 keys + margins
+        side_margin = 20
+        inter_key_gap = 14
+        # 10 keys + 9 gaps
+        key_w = (screen_w - 2*side_margin - (10 - 1)*inter_key_gap) // 10
+        key_font = pygame.font.SysFont(None, 60)
+
+        # We'll build rect lists to hit-test later
+        self._kb_letter_keys = []   # list of (rect, char)
+        self._kb_action_keys = {}   # map 'BACKSPACE'/'DONE' -> rect
+
+        # Row 1 (10 keys) – no horizontal offset
+        y = kb_top
+        x = side_margin
+        for ch in rows[0]:
+            rect = pygame.Rect(x, y, key_w, key_h)
+            # Press feedback
+            pressed = (self.keyboard_pressed_key == ('CHAR', ch))
+            color = tuple(max(c - 30, 0) for c in key_color) if pressed else key_color
+            pygame.draw.rect(self.SCREEN, color, rect, border_radius=key_radius)
+            glyph = key_font.render(ch, True, text_color)
+            self.SCREEN.blit(glyph, glyph.get_rect(center=rect.center))
+            self._kb_letter_keys.append((rect, ch))
+            x += key_w + inter_key_gap
+
+        # Row 2 (9 keys) – center them
+        y += key_h + row_gap
+        total_w_row2 = 9*key_w + 8*inter_key_gap
+        x = (screen_w - total_w_row2)//2
+        for ch in rows[1]:
+            rect = pygame.Rect(x, y, key_w, key_h)
+            pressed = (self.keyboard_pressed_key == ('CHAR', ch))
+            color = tuple(max(c - 30, 0) for c in key_color) if pressed else key_color
+            pygame.draw.rect(self.SCREEN, color, rect, border_radius=key_radius)
+            glyph = key_font.render(ch, True, text_color)
+            self.SCREEN.blit(glyph, glyph.get_rect(center=rect.center))
+            self._kb_letter_keys.append((rect, ch))
+            x += key_w + inter_key_gap
+
+        # Row 3 (7 keys + BACKSPACE + DONE)
+        y += key_h + row_gap
+        total_w_row3_letters = 7*key_w + 6*inter_key_gap
+        # We’ll place: [letters centered], then BACKSPACE (1.5x), DONE (2x) spaced to the right
+        letters_start_x = (screen_w - (total_w_row3_letters + inter_key_gap + int(1.5*key_w) + inter_key_gap + 2*key_w)) // 2
+
+        x = letters_start_x
+        for ch in rows[2]:
+            rect = pygame.Rect(x, y, key_w, key_h)
+            pressed = (self.keyboard_pressed_key == ('CHAR', ch))
+            color = tuple(max(c - 30, 0) for c in key_color) if pressed else key_color
+            pygame.draw.rect(self.SCREEN, color, rect, border_radius=key_radius)
+            glyph = key_font.render(ch, True, text_color)
+            self.SCREEN.blit(glyph, glyph.get_rect(center=rect.center))
+            self._kb_letter_keys.append((rect, ch))
+            x += key_w + inter_key_gap
+
+        # BACKSPACE (1.5x key)
+        back_w = int(1.5 * key_w)
+        back_rect = pygame.Rect(x, y, back_w, key_h)
+        pressed_bk = (self.keyboard_pressed_action == 'BACKSPACE')
+        back_color = tuple(max(c - 30, 0) for c in self.RED_PASTEL) if pressed_bk else self.RED_PASTEL
+        pygame.draw.rect(self.SCREEN, back_color, back_rect, border_radius=key_radius)
+        bk_glyph = key_font.render("BACK", True, self.GREY_LAR_LOGO)
+        self.SCREEN.blit(bk_glyph, bk_glyph.get_rect(center=back_rect.center))
+        self._kb_action_keys['BACKSPACE'] = back_rect
+        x += back_w + inter_key_gap
+
+        # DONE (2x key)
+        done_w = 2 * key_w
+        done_rect = pygame.Rect(x, y, done_w, key_h)
+        pressed_dn = (self.keyboard_pressed_action == 'DONE')
+        done_color = tuple(max(c - 30, 0) for c in self.GREEN_PASTEL) if pressed_dn else self.GREEN_PASTEL
+        pygame.draw.rect(self.SCREEN, done_color, done_rect, border_radius=key_radius)
+        dn_glyph = key_font.render("DONE", True, self.GREY_LAR_LOGO)
+        self.SCREEN.blit(dn_glyph, dn_glyph.get_rect(center=done_rect.center))
+        self._kb_action_keys['DONE'] = done_rect
+
+        pygame.display.update()
+
+        # --- Events ---
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+
+                # letters
+                for rect, ch in self._kb_letter_keys:
+                    if rect.collidepoint(pos):
+                        self.keyboard_pressed_key = ('CHAR', ch)
+                        break
+
+                # actions
+                if self._kb_action_keys['BACKSPACE'].collidepoint(pos):
+                    self.keyboard_pressed_action = 'BACKSPACE'
+                elif self._kb_action_keys['DONE'].collidepoint(pos):
+                    self.keyboard_pressed_action = 'DONE'
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+
+                # letters
+                if self.keyboard_pressed_key is not None:
+                    tag, ch = self.keyboard_pressed_key
+                    for rect, rch in self._kb_letter_keys:
+                        if rch == ch and rect.collidepoint(pos):
+                            # append uppercase letters (you can .title() later if desired)
+                            if len(self.keyboard_typed_text) < 30:
+                                self.keyboard_typed_text += ch
+                            self.node.touchscreen_menu_start_time = None
+                    self.keyboard_pressed_key = None
+
+                # actions
+                if self.keyboard_pressed_action == 'BACKSPACE':
+                    if self._kb_action_keys['BACKSPACE'].collidepoint(pos):
+                        if len(self.keyboard_typed_text) > 0:
+                            self.keyboard_typed_text = self.keyboard_typed_text[:-1]
+                        self.node.touchscreen_menu_start_time = None
+                    self.keyboard_pressed_action = None
+
+                elif self.keyboard_pressed_action == 'DONE':
+                    if self._kb_action_keys['DONE'].collidepoint(pos):
+                        # If empty, you can decide to ignore or send empty; here we send even if empty.
+                        result_text = self.keyboard_typed_text
+                        print("Keyboard DONE ->", result_text)
+
+                        # send through service as a single string inside a list (to match your interface)
+                        request = GetFaceTouchscreenMenu.Request()
+                        request.command = [result_text if result_text != "" else ""]
+                        self.node.call_face_get_touchscreen_menu_server(request=request)
+
+                        # Reset state and close keyboard mode
+                        self.node.is_touchscreen_menu = False
+                        self.node.touchscreen_menu_start_time = None
+                        self.keyboard_typed_text = ""
+                        self.keyboard_pressed_key = None
+                        self.keyboard_pressed_action = None
+
+                    self.keyboard_pressed_action = None
+
+        return
+
 
     def main(self):
         
@@ -1211,8 +1406,13 @@ class FaceMain():
                         self.handle_touchscreen_menu()
                     elif self.node.touchscreen_menu_mode == "multi":
                         self.handle_touchscreen_menu_multiple_options()
-                    else: # elif self.node.touchscreen_menu_mode == "keyboard":
+                    elif self.node.touchscreen_menu_mode == "keyboard":
                         self.handle_touchscreen_menu_keyboard()
+                    else: # if a non existing mode is selected, returns empty selection, which is filtered by std_fucntion
+                        request = GetFaceTouchscreenMenu.Request()
+                        self.node.call_face_get_touchscreen_menu_server(request=request)
+                        self.node.is_touchscreen_menu = False
+                        self.node.touchscreen_menu_start_time = None
 
             elif self.node.cams_flag:
 
