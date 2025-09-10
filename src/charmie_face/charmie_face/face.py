@@ -1171,7 +1171,7 @@ class FaceMain():
         title_font = pygame.font.SysFont(None, 80)
         entry_font = pygame.font.SysFont(None, 90)
 
-        title = title_font.render("Please write down", True, self.GREY_LAR_LOGO)
+        title = title_font.render("Please write down and press DONE", True, self.GREY_LAR_LOGO)
         self.SCREEN.blit(title, title.get_rect(center=(screen_w // 2, int(screen_h * 0.12))))
 
         shown_text = self.keyboard_typed_text[:30]  # cap for display
