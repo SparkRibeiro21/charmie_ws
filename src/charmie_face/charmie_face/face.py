@@ -1363,11 +1363,200 @@ class FaceMain():
 
     def handle_touchscreen_menu_numpad(self):
         
-        request = GetFaceTouchscreenMenu.Request()
+        """ request = GetFaceTouchscreenMenu.Request()
         request.command = ["NUMPAD"]
         self.node.call_face_get_touchscreen_menu_server(request=request)
         self.node.is_touchscreen_menu = False
-        self.node.touchscreen_menu_start_time = None
+        self.node.touchscreen_menu_start_time = None """
+
+        """
+        Numeric keypad entry (new mode).
+        Layout:
+        Row 1: 1  2  3
+        Row 2: 4  5  6
+        Row 3: 7  8  9
+        Row 4: UNDO   0   DONE   (UNDO and DONE equal width)
+        Uses self.keyboard_typed_text to accumulate digits.
+        Sends result via GetFaceTouchscreenMenu on DONE.
+        """
+
+        # --- Layout & colors ---
+        screen_w, screen_h = self.resolution
+        bg = self.LIGHT_BLUE_CHARMIE_FACE
+        key_color = self.GREY_LAR_LOGO
+        text_color = self.LIGHT_BLUE_CHARMIE_FACE
+
+        if not hasattr(self, "keyboard_typed_text"):
+            self.keyboard_typed_text = ""
+        if not hasattr(self, "keyboard_pressed_key"):
+            self.keyboard_pressed_key = None
+        if not hasattr(self, "keyboard_pressed_action"):
+            self.keyboard_pressed_action = None
+
+        self.SCREEN.fill(bg)
+
+        # --- Title + current text display ---
+        title_font = pygame.font.SysFont(None, 80)
+        entry_font = pygame.font.SysFont(None, 90)
+
+        title = title_font.render("Enter the number", True, self.GREY_LAR_LOGO)
+        self.SCREEN.blit(title, title.get_rect(center=(screen_w // 2, int(screen_h * 0.12))))
+
+        shown_text = self.keyboard_typed_text[:30]  # cap for display
+        entry_box_w = int(screen_w * 0.70)
+        entry_box_h = 110
+        entry_box_rect = pygame.Rect((screen_w - entry_box_w)//2, int(screen_h*0.18), entry_box_w, entry_box_h)
+
+        # Subtle box behind typed text
+        self.draw_transparent_rect(self.SCREEN, entry_box_rect.x, entry_box_rect.y, entry_box_rect.w, entry_box_rect.h, self.GREY_LAR_LOGO, 30)
+        entry_surf = entry_font.render(shown_text if shown_text else " ", True, self.GREY_LAR_LOGO)
+        self.SCREEN.blit(entry_surf, entry_surf.get_rect(midleft=(entry_box_rect.x + 20, entry_box_rect.centery)))
+
+        # --- Keypad geometry ---
+        rows = [
+            ["1", "2", "3"],
+            ["4", "5", "6"],
+            ["7", "8", "9"],
+        ]
+
+        # Where keypad starts; under the entry box
+        pad_top = max(int(screen_h * 0.40), entry_box_rect.bottom + 40)
+        side_margin = 40
+        inter_key_gap = 20
+
+        # Compute key sizes to fit 3 columns
+        # 3 keys + 2 gaps + side margins
+        key_w = (screen_w - 2*side_margin - 2*inter_key_gap) // 3
+
+        bottom_margin = 32
+        row_gap = max(16, min(28, int(screen_h * 0.02)))  # 16..28 px
+        rows_needed = 4  # 3 digit rows + 1 action row
+        gaps_needed = rows_needed - 1
+        available_h = (screen_h - bottom_margin) - pad_top
+        key_h = max(70, min(120, (available_h - gaps_needed * row_gap) // rows_needed))
+
+        key_radius = 14
+        key_font = pygame.font.SysFont(None, max(44, int(key_h * 0.55)))
+
+        # Hit-test lists
+        self._np_digit_keys = []   # list of (rect, digit_str)
+        self._np_action_keys = {}  # map 'UNDO'/'DONE' -> rect
+
+        # --- Row 1..3: digits ---
+        y = pad_top
+        for r in rows:
+            total_w = 3*key_w + 2*inter_key_gap
+            x = (screen_w - total_w)//2
+            for d in r:
+                rect = pygame.Rect(x, y, key_w, key_h)
+                pressed = (self.keyboard_pressed_key == ('NUM', d))
+                color = tuple(max(c - 30, 0) for c in key_color) if pressed else key_color
+                pygame.draw.rect(self.SCREEN, color, rect, border_radius=key_radius)
+                glyph = key_font.render(d, True, text_color)
+                self.SCREEN.blit(glyph, glyph.get_rect(center=rect.center))
+                self._np_digit_keys.append((rect, d))
+                x += key_w + inter_key_gap
+            y += key_h + row_gap
+
+        # --- Row 4: UNDO + 0 + DONE (UNDO and DONE equal widths) ---
+        undo_w = max(int(2.2 * key_w), int(2.0 * key_h))
+        done_w = undo_w
+        zero_w = key_w  # standard width for "0"
+
+        total_action_w = undo_w + inter_key_gap + zero_w + inter_key_gap + done_w
+        x = (screen_w - total_action_w)//2
+
+        # UNDO
+        undo_rect = pygame.Rect(x, y, undo_w, key_h)
+        pressed_undo = (self.keyboard_pressed_action == 'UNDO')
+        undo_color = tuple(max(c - 30, 0) for c in self.RED_PASTEL) if pressed_undo else self.RED_PASTEL
+        pygame.draw.rect(self.SCREEN, undo_color, undo_rect, border_radius=key_radius)
+        undo_glyph = key_font.render("UNDO", True, self.GREY_LAR_LOGO)
+        self.SCREEN.blit(undo_glyph, undo_glyph.get_rect(center=undo_rect.center))
+        self._np_action_keys['UNDO'] = undo_rect
+        x += undo_w + inter_key_gap
+
+        # "0"
+        zero_rect = pygame.Rect(x, y, zero_w, key_h)
+        pressed_zero = (self.keyboard_pressed_key == ('NUM', '0'))
+        zero_color = tuple(max(c - 30, 0) for c in key_color) if pressed_zero else key_color
+        pygame.draw.rect(self.SCREEN, zero_color, zero_rect, border_radius=key_radius)
+        zero_glyph = key_font.render("0", True, text_color)
+        self.SCREEN.blit(zero_glyph, zero_glyph.get_rect(center=zero_rect.center))
+        self._np_digit_keys.append((zero_rect, "0"))
+        x += zero_w + inter_key_gap
+
+        # DONE
+        done_rect = pygame.Rect(x, y, done_w, key_h)
+        pressed_done = (self.keyboard_pressed_action == 'DONE')
+        done_color = tuple(max(c - 30, 0) for c in self.GREEN_PASTEL) if pressed_done else self.GREEN_PASTEL
+        pygame.draw.rect(self.SCREEN, done_color, done_rect, border_radius=key_radius)
+        done_glyph = key_font.render("DONE", True, self.GREY_LAR_LOGO)
+        self.SCREEN.blit(done_glyph, done_glyph.get_rect(center=done_rect.center))
+        self._np_action_keys['DONE'] = done_rect
+
+        pygame.display.update()
+
+        # --- Events ---
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+
+                # digits
+                for rect, d in self._np_digit_keys:
+                    if rect.collidepoint(pos):
+                        self.keyboard_pressed_key = ('NUM', d)
+                        break
+
+                # actions
+                if self._np_action_keys.get('UNDO') and self._np_action_keys['UNDO'].collidepoint(pos):
+                    self.keyboard_pressed_action = 'UNDO'
+                elif self._np_action_keys.get('DONE') and self._np_action_keys['DONE'].collidepoint(pos):
+                    self.keyboard_pressed_action = 'DONE'
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+
+                # digits
+                if self.keyboard_pressed_key is not None:
+                    tag, d = self.keyboard_pressed_key
+                    for rect, rd in self._np_digit_keys:
+                        if rd == d and rect.collidepoint(pos):
+                            if len(self.keyboard_typed_text) < 30:
+                                self.keyboard_typed_text += d
+                            self.node.touchscreen_menu_start_time = None
+                    self.keyboard_pressed_key = None
+
+                # UNDO
+                if self.keyboard_pressed_action == 'UNDO':
+                    if self._np_action_keys['UNDO'].collidepoint(pos):
+                        if len(self.keyboard_typed_text) > 0:
+                            self.keyboard_typed_text = self.keyboard_typed_text[:-1]
+                        self.node.touchscreen_menu_start_time = None
+                    self.keyboard_pressed_action = None
+
+                # DONE
+                elif self.keyboard_pressed_action == 'DONE':
+                    if self._np_action_keys['DONE'].collidepoint(pos):
+                        result_text = self.keyboard_typed_text
+                        print("Numpad DONE ->", result_text)
+
+                        # send through service as single string in a list (fits your interface)
+                        request = GetFaceTouchscreenMenu.Request()
+                        request.command = [result_text if result_text != "" else ""]
+                        self.node.call_face_get_touchscreen_menu_server(request=request)
+
+                        # Reset & exit numpad mode
+                        self.node.is_touchscreen_menu = False
+                        self.node.touchscreen_menu_start_time = None
+                        self.keyboard_typed_text = ""
+                        self.keyboard_pressed_key = None
+                        self.keyboard_pressed_action = None
+
+                    self.keyboard_pressed_action = None
+
+        return
+
 
     def main(self):
         
