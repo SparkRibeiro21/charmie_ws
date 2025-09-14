@@ -1399,7 +1399,7 @@ class FaceMain():
         title_font = pygame.font.SysFont(None, 80)
         entry_font = pygame.font.SysFont(None, 90)
 
-        title = title_font.render("Enter the number", True, self.GREY_LAR_LOGO)
+        title = title_font.render("Please write down and press DONE", True, self.GREY_LAR_LOGO)
         self.SCREEN.blit(title, title.get_rect(center=(screen_w // 2, int(screen_h * 0.12))))
 
         shown_text = self.keyboard_typed_text[:30]  # cap for display
@@ -1459,9 +1459,9 @@ class FaceMain():
             y += key_h + row_gap
 
         # --- Row 4: UNDO + 0 + DONE (UNDO and DONE equal widths) ---
-        undo_w = max(int(2.2 * key_w), int(2.0 * key_h))
-        done_w = undo_w
-        zero_w = key_w  # standard width for "0"
+        undo_w = key_w
+        done_w = key_w
+        zero_w = key_w
 
         total_action_w = undo_w + inter_key_gap + zero_w + inter_key_gap + done_w
         x = (screen_w - total_action_w)//2
