@@ -99,19 +99,21 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
-                selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="numpad", start_speak_file="face_touchscreen_menu/init_touchscreen_keyboard_menu", speak_results=True)
-                print(selected_option)
-                time.sleep(3.0)
+                while True:
 
-                selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="keyboard", start_speak_file="face_touchscreen_menu/init_touchscreen_keyboard_menu", speak_results=True)
-                print(selected_option)
-                time.sleep(3.0)
+                    selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="numpad", start_speak_file="face_touchscreen_menu/init_touchscreen_keyboard_menu", speak_results=True)
+                    print(selected_option)
+                    time.sleep(3.0)
 
-                selected_option = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True)
-                selected_option = self.robot.set_face_touchscreen_menu([selected_option[0]], timeout=10, mode="single", speak_results=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="keyboard", start_speak_file="face_touchscreen_menu/init_touchscreen_keyboard_menu", speak_results=True)
+                    print(selected_option)
+                    time.sleep(3.0)
+
+                # selected_option = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True)
+                # selected_option = self.robot.set_face_touchscreen_menu([selected_option[0]], timeout=10, mode="single", speak_results=True)
                 
-                selected_option_ = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True)
-                selected_option_ = self.robot.set_face_touchscreen_menu([selected_option_[0]], timeout=10, mode="single", speak_results=True)
+                # selected_option_ = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True)
+                # selected_option_ = self.robot.set_face_touchscreen_menu([selected_option_[0]], timeout=10, mode="single", speak_results=True)
 
                 # self.robot.set_neck_coords(flc, wait_for_end_of=True)
                 # self.robot.set_neck_coords([0,0,0], wait_for_end_of=True)
