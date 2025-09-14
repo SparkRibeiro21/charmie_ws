@@ -172,6 +172,7 @@ class FaceNode(Node):
         self.touchscreen_menu_mode          = request.mode
         
         self.is_touchscreen_menu = True
+        self.touchscreen_menu_start_time = None
         self.selected_touchscreen_option.clear()
 
         print(request.command)
@@ -1363,12 +1364,6 @@ class FaceMain():
 
     def handle_touchscreen_menu_numpad(self):
         
-        """ request = GetFaceTouchscreenMenu.Request()
-        request.command = ["NUMPAD"]
-        self.node.call_face_get_touchscreen_menu_server(request=request)
-        self.node.is_touchscreen_menu = False
-        self.node.touchscreen_menu_start_time = None """
-
         """
         Numeric keypad entry (new mode).
         Layout:
@@ -1616,6 +1611,7 @@ class FaceMain():
                         self.handle_touchscreen_menu_numpad()
                     else: # if a non existing mode is selected, returns empty selection, which is filtered by std_fucntion
                         request = GetFaceTouchscreenMenu.Request()
+                        # request.command = ["ERROR"] # empty selection is filtered by std_function
                         self.node.call_face_get_touchscreen_menu_server(request=request)
                         self.node.is_touchscreen_menu = False
                         self.node.touchscreen_menu_start_time = None
