@@ -3297,19 +3297,23 @@ class RobotStdFunctions():
             else:
                 if speak_results:
                     self.set_speech(filename="face_touchscreen_menu/selected_touchscreen_menu", wait_for_end_of=True)
+                    if mode == "keyboard" or mode == "numpad":
+                        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                        self.save_speech(command=self.node.selected_list_options_touchscreen_menu[0].lower(), filename=current_datetime, quick_voice=False, play_command=True, show_in_face=True, wait_for_end_of=True)
 
-                    # function just for automatically search for the speak file amongst the sppech folder
-                    said = False    
-                    for so in self.node.selected_list_options_touchscreen_menu:
-                        said = False
-                        for file, folder in zip(files_for_speech, folder_for_speech):
-                            # print(file)
-                            for obj in file:
-                                # print(so.lower(), "| " ,obj["name"].lower())
-                                if so.lower() == obj["name"].lower():
-                                    if not said:
-                                        self.set_speech(filename=folder+"/"+so.replace(" ","_").lower())
-                                        said = True
+                    else:
+                        # function just for automatically search for the speak file amongst the sppech folder
+                        said = False    
+                        for so in self.node.selected_list_options_touchscreen_menu:
+                            said = False
+                            for file, folder in zip(files_for_speech, folder_for_speech):
+                                # print(file)
+                                for obj in file:
+                                    # print(so.lower(), "| " ,obj["name"].lower())
+                                    if so.lower() == obj["name"].lower():
+                                        if not said:
+                                            self.set_speech(filename=folder+"/"+so.replace(" ","_").lower())
+                                            said = True
 
                 return self.node.selected_list_options_touchscreen_menu
         
