@@ -26,9 +26,9 @@ class SoundClassificationNode(Node):
         super().__init__('sound_classification')
 
         # Params
-        self.declare_parameter('max_results', 5)
-        self.declare_parameter('score_threshold', 0.1)
-        self.declare_parameter('overlap', 0.5)
+        self.declare_parameter('max_results', 10)
+        self.declare_parameter('score_threshold', 0.05)
+        self.declare_parameter('overlap', 0.5) # Hz 0.5 is approx 2Hz (0.0 is approx 1Hz and 0.9 is approx 4Hz)
         self.declare_parameter('sample_rate', 16000)
         self.declare_parameter('num_channels', 1)
 
@@ -39,10 +39,10 @@ class SoundClassificationNode(Node):
         self.current_pub = self.create_publisher(String, 'sound_current', 10)
 
         # Services
-        self.srv_once = self.create_service(GetSoundClassification, 'get_sound', self.handle_get_sound)
-        self.srv_cont = self.create_service(GetSoundClassificationContinuous, 'get_sound_continuous', self.handle_get_sound_continuous)
+        self.srv_once = self.create_service(GetSoundClassification, 'get_sound_classification', self.handle_get_sound)
+        self.srv_cont = self.create_service(GetSoundClassificationContinuous, 'get_sound_classification_continuous', self.handle_get_sound_continuous)
 
-        self.get_logger().info('Services ready: /get_sound, /get_sound_continuous')
+        self.get_logger().info('Services ready: /get_sound_classification, /get_sound_classification_continuous')
 
     # --- helpers ---
     def _build_paths_and_params(self):
