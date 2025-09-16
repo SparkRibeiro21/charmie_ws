@@ -16,7 +16,9 @@ from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, B
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
-    ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu
+    ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
+    GetSoundClassificationContinuous
+
 from charmie_point_cloud.point_cloud_class import PointCloud
 
 import cv2 
@@ -137,6 +139,9 @@ class ROS2TaskNode(Node):
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
         self.continuous_get_audio_client = self.create_client(ContinuousGetAudio, "continuous_audio")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
+        # Sound Classification
+        self.get_sound_classification_client = self.create_client(GetSoundClassification, "get_sound_classification")
+        self.continuous_get_sound_classification_client = self.create_client(GetSoundClassificationContinuous, "get_sound_classification_continuous")
         # Face
         self.face_command_client = self.create_client(SetFace, "face_command")
         self.face_set_touchscreen_menu_client = self.create_client(SetFaceTouchscreenMenu, "set_face_touchscreen_menu")
@@ -289,6 +294,8 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
         self.waited_for_end_of_continuous_audio = False
+        self.waited_for_end_of_sound_classification = False
+        self.waited_for_end_of_continuous_sound_classification = False
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_save_speaking = False
         self.waited_for_end_of_neck_pos = False
@@ -352,6 +359,10 @@ class ROS2TaskNode(Node):
         self.continuous_audio_message = ""
         self.calibrate_audio_success = True
         self.calibrate_audio_message = ""
+        self.sound_classification_success = True
+        self.sound_classification_message = ""
+        self.continuous_sound_classification_success = True
+        self.continuous_sound_classification_message = ""
         self.face_success = True
         self.face_message = ""
         self.neck_success = True
@@ -379,6 +390,10 @@ class ROS2TaskNode(Node):
 
         self.audio_command = ""
         self.received_continuous_audio = False
+
+        self.sound_classification_labels = []
+        self.sound_classification_scores = []
+        self.received_continuous_sound_classification = False
 
         self.CAM_IMAGE_WIDTH = 848
         self.CAM_IMAGE_HEIGHT = 480
@@ -719,6 +734,72 @@ class ROS2TaskNode(Node):
             self.waited_for_end_of_calibrate_audio = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
+
+
+    #### SOUND CLASSIFICATION SERVER FUNCTIONS #####
+    def call_sound_classification_server(self, request=GetSoundClassification.Request(), wait_for_end_of=True):
+
+        future = self.get_sound_classification_client.call_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_sound_classification)
+        else:
+            self.sound_classification_success = True
+            self.sound_classification_message = "Wait for answer not needed"
+    
+    def callback_call_sound_classification(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.labels)+" "+str(response.scores))
+            self.sound_classification_success = True
+            self.sound_classification_message = "Finished sound classification command"
+            self.sound_classification_labels = response.labels
+            self.sound_classification_scores = response.scores
+            self.waited_for_end_of_sound_classification = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+    
+    def call_continuous_sound_classification_server(self, request=GetSoundClassificationContinuous.Request(), wait_for_end_of=True):
+
+        future = self.continuous_get_sound_classification_client.call_async(request)
+
+        future.add_done_callback(self.callback_call_continuous_sound_classification)
+
+    def callback_call_continuous_sound_classification(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.continuous_sound_classification_success = response.success
+            self.continuous_sound_classification_message = response.message
+            self.waited_for_end_of_continuous_sound_classification = True
+            self.received_continuous_sound_classification = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     #### SET NECK POSITION SERVER FUNCTIONS #####
     def call_neck_position_server(self, request = SetNeckPosition.Request(), wait_for_end_of=True):
@@ -1446,6 +1527,46 @@ class RobotStdFunctions():
         self.node.waited_for_end_of_calibrate_audio = False
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
+    
+    def get_sound_classification(self, question="", duration=0.0, face_hearing="charmie_face_green", wait_for_end_of=True):
+
+        request = GetSoundClassification.Request()
+        request.duration = float(duration)
+        
+        self.set_speech(filename=question, wait_for_end_of=True)
+        self.set_face(face_hearing)
+        self.node.call_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_sound_classification:
+                pass
+        self.node.waited_for_end_of_sound_classification = False
+
+        return self.node.sound_classification_labels, self.node.sound_classification_scores 
+    
+    def get_continuous_sound_classification(self, break_sounds=[], timeout=0.0, wait_for_end_of=True):
+        pass
+        
+        """ request = ContinuousGetSoundClassification.Request()
+        request.break_sounds = break_sounds
+        request.timeout = float(timeout)
+            
+        self.node.call_continuous_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_continuous_sound_classification:
+                pass
+        self.node.waited_for_end_of_continuous_sound_classification = False
+
+        return self.node.continuous_sound_classification_success, self.node.continuous_sound_classification_message """
+
+    def is_get_continuous_sound_classification_done(self):
+
+        if self.node.received_continuous_sound_classification:
+            self.node.received_continuous_sound_classification = False
+            return True, self.node.continuous_sound_classification_success, self.node.continuous_sound_classification_message
+        
+        return False, False, ""
     
     def set_face(self, command="", custom="", camera="", show_detections=False, wait_for_end_of=False):
         
