@@ -4,6 +4,7 @@ import threading
 import time
 from datetime import datetime
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
+import random
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -12,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 ros2_modules = {
     "charmie_arm":              False,
-    "charmie_audio":            True,
+    "charmie_audio":            False,
     "charmie_face":             False,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
@@ -62,23 +63,17 @@ class TaskMain():
         Audio_egpsr = 3
         Continuous_audio = 4
         Calibrate_audio = 5
-        Final_State = 6
+        Sound_classification = 6
+        Continuous_sound_classification = 7
+        Final_State = 8
 
         # VARS ...
-        self.state = Audio_receptionist
+        self.state = Sound_classification
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")
         
         while True:
-
-            # State Machine
-            # State 0 = Initial
-            # State 1 = Audio Receptionist
-            # State 2 = Audio Restaurant
-            # State 3 = Audio EGPSR
-            # State 4 = Calibrate Audio
-            # State 5 = Final Speech
 
             if self.state == Audio_receptionist:
                 print('State 1 = Audio Receptionist')
@@ -257,6 +252,19 @@ class TaskMain():
                 
                 # next state
                 self.state = Final_State
+
+            elif self.state == Sound_classification:
+                print('State 6 = Sound Classification')
+
+                labels, scores = self.robot.get_sound_classification(question="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), duration=3.0, wait_for_end_of=True)
+                
+                print("Heard Sounds:")
+                print("Scores:\tLabels:")
+                for l, s in zip(labels, scores):
+                    print(f"{s:.2f} - {l}")
+                print("\n")
+
+                time.sleep(5)
             
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 
