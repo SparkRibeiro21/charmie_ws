@@ -1481,7 +1481,7 @@ class RobotStdFunctions():
             self.node.get_logger().error("ERROR: No audio type selected")
             return "ERROR: No audio type selected" 
 
-    def get_continuous_audio(self, keywords=[], max_number_attempts=3, speak_pre_hearing=True, wait_for_end_of=True):
+    def get_continuous_audio(self, keywords=[], max_number_attempts=3, speak_pre_hearing=True, speak_post_hearing=True, wait_for_end_of=True):
 
         request = ContinuousGetAudio.Request()
         request.keywords = keywords
@@ -1490,7 +1490,7 @@ class RobotStdFunctions():
         self.node.continuous_audio_detected_keyword = ""
            
         if speak_pre_hearing:
-            self.set_speech(filename="audio/audio_continuous_start_"+str(random.randint(1, 6)), wait_for_end_of=True)
+            self.set_speech(filename="audio/audio_continuous_start_"+str(random.randint(1, 5)), wait_for_end_of=True)
             for k in keywords:
                 self.set_speech(command=k, wait_for_end_of=True)
             
@@ -1499,16 +1499,28 @@ class RobotStdFunctions():
         if wait_for_end_of:
             while not self.node.waited_for_end_of_continuous_audio:
                 pass
+            if speak_post_hearing:
+                if self.node.continuous_audio_success:
+                    self.set_speech(filename="audio/audio_continuous_stop", wait_for_end_of=True)
+                    self.set_speech(command=self.node.continuous_audio_detected_keyword, wait_for_end_of=True)
+                else: # timeout or error
+                    self.set_speech(filename="audio/audio_continuous_timeout", wait_for_end_of=True)
         self.node.waited_for_end_of_continuous_audio = False
 
         return  self.node.continuous_audio_success, \
                 self.node.continuous_audio_message, \
                 self.node.continuous_audio_detected_keyword
     
-    def is_get_continuous_audio_done(self):
+    def is_get_continuous_audio_done(self, speak_post_hearing=True):
 
         if self.node.received_continuous_audio:
             self.node.received_continuous_audio = False
+            if speak_post_hearing:
+                if self.node.continuous_audio_success:
+                    self.set_speech(filename="audio/audio_continuous_stop", wait_for_end_of=True)
+                    self.set_speech(command=self.node.continuous_audio_detected_keyword, wait_for_end_of=True)
+                else: # timeout or error
+                    self.set_speech(filename="audio/audio_continuous_timeout", wait_for_end_of=True)
             return  True, \
                     self.node.continuous_audio_success, \
                     self.node.continuous_audio_message, \

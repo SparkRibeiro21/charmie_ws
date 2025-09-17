@@ -224,20 +224,18 @@ class TaskMain():
             if self.state == Continuous_audio:
 
                 ### CONTINUOUS AUDIO EXAMPLE
-                # WAIT FOR END OF = TRUE
-                
-                # s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, speak_pre_hearing=True, wait_for_end_of=True)
-                # print(s, m, detected_keyword)
-
-                # WAIT FOR END OF = FALSE
-
-                s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, speak_pre_hearing=True, wait_for_end_of=False)
+                ### WAIT FOR END OF = TRUE
+                s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, speak_pre_hearing=True, speak_post_hearing=True, wait_for_end_of=True)
                 print(s, m, detected_keyword)
-                message_received = False
-                while not message_received:
-                    message_received, s, m, detected_keyword = self.robot.is_get_continuous_audio_done()
-                    print(message_received, s, m, detected_keyword)
-                    time.sleep(0.5)
+
+                ### WAIT FOR END OF = FALSE
+                # s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, speak_pre_hearing=True, speak_post_hearing=True, wait_for_end_of=False)
+                # print(s, m, detected_keyword)
+                # message_received = False
+                # while not message_received:
+                #     message_received, s, m, detected_keyword = self.robot.is_get_continuous_audio_done(speak_post_hearing=True)
+                #     print(message_received, s, m, detected_keyword)
+                #     time.sleep(0.5)
                 
                 print("Continuous Audio Mode Done")
                 
