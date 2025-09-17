@@ -68,7 +68,7 @@ class TaskMain():
         Final_State = 8
 
         # VARS ...
-        self.state = Sound_classification
+        self.state = Continuous_sound_classification
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")
@@ -221,8 +221,7 @@ class TaskMain():
                     
                 time.sleep(5)
 
-            
-            elif self.state == Continuous_audio:
+            if self.state == Continuous_audio:
 
                 ### CONTINUOUS AUDIO EXAMPLE
                 # WAIT FOR END OF = TRUE
@@ -239,12 +238,12 @@ class TaskMain():
                 #     print(message_received, s, m)
                 #     time.sleep(0.5)
                 
-                print("Continuous Mode Audio Done")
+                print("Continuous Audio Mode Done")
                 
-                while True:
-                    pass
+                # next state
+                self.state = Final_State
                 
-            elif self.state == Calibrate_audio:
+            if self.state == Calibrate_audio:
 
                 ### CALIBRATION EXAMPLE
                 s, m = self.robot.calibrate_audio(wait_for_end_of=True)
@@ -253,7 +252,7 @@ class TaskMain():
                 # next state
                 self.state = Final_State
 
-            elif self.state == Sound_classification:
+            if self.state == Sound_classification:
                 print('State 6 = Sound Classification')
 
                 labels, scores = self.robot.get_sound_classification(question="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), duration=3.0, wait_for_end_of=True)
@@ -265,6 +264,29 @@ class TaskMain():
                 print("\n")
 
                 time.sleep(5)
+
+            if self.state == Continuous_sound_classification:
+                print('State 7 = Sound Classification Continuous')
+
+                ### CONTINUOUS SOUND CLASSIFICATION EXAMPLE
+                # WAIT FOR END OF = TRUE
+                # s, m, label, score = self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "Whistling"], timeout=10, wait_for_end_of=True)
+                # print(s, m, label, score)
+                # if m.lower() == "timeout":
+                #     print("TIMEOUT REACHED")
+
+                # WAIT FOR END OF = FALSE
+                # self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "Whistling"], timeout=0, wait_for_end_of=False)
+                # message_received = False
+                # while not message_received:
+                    # message_received, s, m, label, score = self.robot.is_get_continuous_sound_classification_done()
+                    # print(message_received, s, m, label, score)
+                    # time.sleep(0.5)
+                
+                print("Continuous Sound Classification Mode Done")
+                
+                # next state
+                self.state = Final_State
             
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 

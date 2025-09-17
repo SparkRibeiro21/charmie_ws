@@ -394,6 +394,8 @@ class ROS2TaskNode(Node):
         self.sound_classification_labels = []
         self.sound_classification_scores = []
         self.received_continuous_sound_classification = False
+        self.continuous_sound_classification_detected_label = ""
+        self.continuous_sound_classification_detected_score = 0.0
 
         self.CAM_IMAGE_WIDTH = 848
         self.CAM_IMAGE_HEIGHT = 480
@@ -779,27 +781,12 @@ class ROS2TaskNode(Node):
             self.get_logger().info(str(response.success) + " - " + str(response.message))
             self.continuous_sound_classification_success = response.success
             self.continuous_sound_classification_message = response.message
+            self.continuous_sound_classification_detected_label = response.detected_label
+            self.continuous_sound_classification_detected_score = response.detected_score
             self.waited_for_end_of_continuous_sound_classification = True
             self.received_continuous_sound_classification = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     #### SET NECK POSITION SERVER FUNCTIONS #####
     def call_neck_position_server(self, request = SetNeckPosition.Request(), wait_for_end_of=True):
@@ -1545,11 +1532,13 @@ class RobotStdFunctions():
         return self.node.sound_classification_labels, self.node.sound_classification_scores 
     
     def get_continuous_sound_classification(self, break_sounds=[], timeout=0.0, wait_for_end_of=True):
-        pass
         
-        """ request = ContinuousGetSoundClassification.Request()
+        request = GetSoundClassificationContinuous.Request()
         request.break_sounds = break_sounds
         request.timeout = float(timeout)
+
+        self.node.continuous_sound_classification_detected_label = ""
+        self.node.continuous_sound_classification_detected_score = 0.0
             
         self.node.call_continuous_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
 
@@ -1558,15 +1547,22 @@ class RobotStdFunctions():
                 pass
         self.node.waited_for_end_of_continuous_sound_classification = False
 
-        return self.node.continuous_sound_classification_success, self.node.continuous_sound_classification_message """
-
+        return  self.node.continuous_sound_classification_success, \
+                self.node.continuous_sound_classification_message, \
+                self.node.continuous_sound_classification_detected_label, \
+                self.node.continuous_sound_classification_detected_score
+        
     def is_get_continuous_sound_classification_done(self):
 
         if self.node.received_continuous_sound_classification:
             self.node.received_continuous_sound_classification = False
-            return True, self.node.continuous_sound_classification_success, self.node.continuous_sound_classification_message
+            return  True, \
+                    self.node.continuous_sound_classification_success, \
+                    self.node.continuous_sound_classification_message, \
+                    self.node.continuous_sound_classification_detected_label, \
+                    self.node.continuous_sound_classification_detected_score
         
-        return False, False, ""
+        return False, False, "", "", 0.0
     
     def set_face(self, command="", custom="", camera="", show_detections=False, wait_for_end_of=False):
         
