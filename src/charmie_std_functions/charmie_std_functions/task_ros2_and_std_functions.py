@@ -1481,13 +1481,18 @@ class RobotStdFunctions():
             self.node.get_logger().error("ERROR: No audio type selected")
             return "ERROR: No audio type selected" 
 
-    def get_continuous_audio(self, keywords=[], max_number_attempts=3, wait_for_end_of=True):
+    def get_continuous_audio(self, keywords=[], max_number_attempts=3, speak_pre_hearing=True, wait_for_end_of=True):
 
         request = ContinuousGetAudio.Request()
         request.keywords = keywords
         request.max_number_attempts = max_number_attempts
 
         self.node.continuous_audio_detected_keyword = ""
+           
+        if speak_pre_hearing:
+            self.set_speech(filename="audio/audio_continuous_start_"+str(random.randint(1, 6)), wait_for_end_of=True)
+            for k in keywords:
+                self.set_speech(command=k, wait_for_end_of=True)
             
         self.node.call_continuous_audio_server(request=request, wait_for_end_of=wait_for_end_of)
 
@@ -1528,7 +1533,7 @@ class RobotStdFunctions():
 
         request = GetSoundClassification.Request()
         request.duration = float(duration)
-        
+
         self.set_speech(filename=question, wait_for_end_of=True)
         self.set_face(face_hearing)
         self.node.call_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)

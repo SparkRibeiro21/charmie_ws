@@ -226,12 +226,12 @@ class TaskMain():
                 ### CONTINUOUS AUDIO EXAMPLE
                 # WAIT FOR END OF = TRUE
                 
-                # s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, wait_for_end_of=True)
+                # s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, speak_pre_hearing=True, wait_for_end_of=True)
                 # print(s, m, detected_keyword)
 
                 # WAIT FOR END OF = FALSE
 
-                s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, wait_for_end_of=False)
+                s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, speak_pre_hearing=True, wait_for_end_of=False)
                 print(s, m, detected_keyword)
                 message_received = False
                 while not message_received:
