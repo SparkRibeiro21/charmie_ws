@@ -390,6 +390,7 @@ class ROS2TaskNode(Node):
 
         self.audio_command = ""
         self.received_continuous_audio = False
+        self.continuous_audio_detected_keyword = ""
 
         self.sound_classification_labels = []
         self.sound_classification_scores = []
@@ -704,9 +705,10 @@ class ROS2TaskNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.get_logger().info(str(response.success) + " - " + str(response.message) + " - " + str(response.detected_keyword))
             self.continuous_audio_success = response.success
             self.continuous_audio_message = response.message
+            self.continuous_audio_detected_keyword = response.detected_keyword
             self.waited_for_end_of_continuous_audio = True
             self.received_continuous_audio = True
         except Exception as e:
@@ -1484,6 +1486,8 @@ class RobotStdFunctions():
         request = ContinuousGetAudio.Request()
         request.keywords = keywords
         request.max_number_attempts = max_number_attempts
+
+        self.node.continuous_audio_detected_keyword = ""
             
         self.node.call_continuous_audio_server(request=request, wait_for_end_of=wait_for_end_of)
 
@@ -1492,15 +1496,20 @@ class RobotStdFunctions():
                 pass
         self.node.waited_for_end_of_continuous_audio = False
 
-        return self.node.continuous_audio_success, self.node.continuous_audio_message 
+        return  self.node.continuous_audio_success, \
+                self.node.continuous_audio_message, \
+                self.node.continuous_audio_detected_keyword
     
     def is_get_continuous_audio_done(self):
 
         if self.node.received_continuous_audio:
             self.node.received_continuous_audio = False
-            return True, self.node.continuous_audio_success, self.node.continuous_audio_message
+            return  True, \
+                    self.node.continuous_audio_success, \
+                    self.node.continuous_audio_message, \
+                    self.node.continuous_audio_detected_keyword
         
-        return False, False, ""
+        return False, False, "", ""
     
     def calibrate_audio(self, wait_for_end_of=True):
 
