@@ -3,5 +3,6 @@
 string[] keywords # words the robot must hear to answer the service
 int32 max_number_attempts # max number of attempts for audio, just for safety
 ---
+string detected_keyword  # returns the keyword that was detected
 bool success    # indicate successful run of triggered service
 string message  # informational, e.g. for error messages.
