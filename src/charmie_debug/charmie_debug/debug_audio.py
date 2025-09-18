@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 ros2_modules = {
     "charmie_arm":              False,
-    "charmie_audio":            True,
+    "charmie_audio":            False, # True
     "charmie_face":             False,
     "charmie_head_camera":      False,
     "charmie_hand_camera":      False,
@@ -68,7 +68,7 @@ class TaskMain():
         Final_State = 8
 
         # VARS ...
-        self.state = Continuous_audio
+        self.state = Continuous_sound_classification
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")
@@ -269,18 +269,18 @@ class TaskMain():
 
                 ### CONTINUOUS SOUND CLASSIFICATION EXAMPLE
                 # WAIT FOR END OF = TRUE
-                # s, m, label, score = self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "Whistling"], timeout=10, wait_for_end_of=True)
+                # s, m, label, score = self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling"], timeout=10, wait_for_end_of=True)
                 # print(s, m, label, score)
                 # if m.lower() == "timeout":
                 #     print("TIMEOUT REACHED")
 
                 # WAIT FOR END OF = FALSE
-                # self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "Whistling"], timeout=0, wait_for_end_of=False)
-                # message_received = False
-                # while not message_received:
-                    # message_received, s, m, label, score = self.robot.is_get_continuous_sound_classification_done()
-                    # print(message_received, s, m, label, score)
-                    # time.sleep(0.5)
+                self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling"], timeout=0, wait_for_end_of=False)
+                message_received = False
+                while not message_received:
+                    message_received, s, m, label, score = self.robot.is_get_continuous_sound_classification_done()
+                    print(message_received, s, m, label, score)
+                    time.sleep(0.5)
                 
                 print("Continuous Sound Classification Mode Done")
                 

@@ -180,7 +180,9 @@ class SoundClassificationNode(Node):
 
     # --- continuous (publish current window; stop on break or timeout) ---
     def classify_until(self, break_sounds, timeout_s: float):
+        
         cfg = self._build_paths_and_params()
+        
         if not (0.0 <= cfg['overlap'] < 1.0):
             raise ValueError('overlap must be in [0.0, 1.0).')
         if not (0.0 <= cfg['score_threshold'] <= 1.0):
@@ -195,7 +197,8 @@ class SoundClassificationNode(Node):
         interval = input_len_sec * (1.0 - cfg['overlap'])
         last_infer = time.time()
 
-        break_set = set(break_sounds or [])
+        # Case Insensitive
+        break_set = set(s.lower() for s in (break_sounds or []))
         start_time = time.time()
         hit = False
         label = ""
@@ -229,7 +232,7 @@ class SoundClassificationNode(Node):
                 if newest and newest.classifications:
                     cats = newest.classifications[0].categories
 
-                    window = {c.category_name: round(float(c.score), 2) for c in cats}
+                    window = {c.category_name.lower(): round(float(c.score), 2) for c in cats}
                     window = dict(sorted(window.items(), key=lambda kv: kv[1], reverse=True))
                     print(window)
 
@@ -239,7 +242,7 @@ class SoundClassificationNode(Node):
 
                     if break_set:
                         for c in cats:
-                            lbl = c.category_name
+                            lbl = c.category_name.lower()
                             sc = float(c.score)
                             if lbl in break_set and sc >= cfg['score_threshold']:
                                 hit = True

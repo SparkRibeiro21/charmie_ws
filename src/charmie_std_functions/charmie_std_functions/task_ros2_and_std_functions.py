@@ -780,7 +780,7 @@ class ROS2TaskNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.get_logger().info(str(response.success) + " - " + str(response.message) + " - " + str(response.detected_label) + " - " + str(response.detected_score))
             self.continuous_sound_classification_success = response.success
             self.continuous_sound_classification_message = response.message
             self.continuous_sound_classification_detected_label = response.detected_label
