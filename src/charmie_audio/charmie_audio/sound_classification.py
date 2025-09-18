@@ -115,16 +115,29 @@ class SoundClassificationNode(Node):
         audio_data = None
         gc.collect()
 
+    def _pick_threshold(self, request_value: float, default_value: float) -> float:
+        """Return request_value if it is in [0,1], else default_value."""
+        if request_value is not None and 1.0 >= request_value >= 0.0:
+            if 0.0 <= float(request_value) <= 1.0:
+                return float(request_value)
+            raise ValueError("score_threshold must be in [0, 1].")
+        return float(default_value)
+
     # --- single-shot (like your mediapipe script) ---
-    def classify_for(self, duration_s: float):
+    def classify_for(self, duration_s: float, threshold_override: float = None):
         cfg = self._build_paths_and_params()
+
+        # Validate static params
         if not (0.0 <= cfg['overlap'] < 1.0):
             raise ValueError('overlap must be in [0.0, 1.0).')
         if not (0.0 <= cfg['score_threshold'] <= 1.0):
             raise ValueError('score_threshold must be in [0.0, 1.0].')
 
+        # Decide which threshold to use this call
+        use_threshold = self._pick_threshold(threshold_override, cfg['score_threshold'])
+
         results_q, classifier, record, audio_data, buffer_size = self._open_pipeline(
-            cfg['model_path'], cfg['max_results'], cfg['score_threshold'],
+            cfg['model_path'], cfg['max_results'], use_threshold,
             cfg['sample_rate'], cfg['num_channels']
         )
 
@@ -165,7 +178,7 @@ class SoundClassificationNode(Node):
                     for c in cats:
                         lbl = c.category_name
                         sc = float(c.score)
-                        if sc >= cfg['score_threshold']:
+                        if sc >= use_threshold:
                             if lbl not in max_scores or sc > max_scores[lbl]:
                                 max_scores[lbl] = sc
         finally:
@@ -179,17 +192,20 @@ class SoundClassificationNode(Node):
         return labels, scores
 
     # --- continuous (publish current window; stop on break or timeout) ---
-    def classify_until(self, break_sounds, timeout_s: float):
-        
+    def classify_until(self, break_sounds, timeout_s: float, threshold_override: float = None):
         cfg = self._build_paths_and_params()
         
+        # Validate static params
         if not (0.0 <= cfg['overlap'] < 1.0):
             raise ValueError('overlap must be in [0.0, 1.0).')
         if not (0.0 <= cfg['score_threshold'] <= 1.0):
             raise ValueError('score_threshold must be in [0.0, 1.0].')
+        
+        # Decide which threshold to use this call
+        use_threshold = self._pick_threshold(threshold_override, cfg['score_threshold'])
 
         results_q, classifier, record, audio_data, buffer_size = self._open_pipeline(
-            cfg['model_path'], cfg['max_results'], cfg['score_threshold'],
+            cfg['model_path'], cfg['max_results'], use_threshold,
             cfg['sample_rate'], cfg['num_channels']
         )
 
@@ -244,7 +260,7 @@ class SoundClassificationNode(Node):
                         for c in cats:
                             lbl = c.category_name.lower()
                             sc = float(c.score)
-                            if lbl in break_set and sc >= cfg['score_threshold']:
+                            if lbl in break_set and sc >= use_threshold:
                                 hit = True
                                 label = lbl
                                 score = sc
@@ -261,7 +277,7 @@ class SoundClassificationNode(Node):
         duration = float(request.duration) if request.duration > 0.0 else 2.0
         try:
             with self.mic_lock:
-                labels, scores = self.classify_for(duration)
+                labels, scores = self.classify_for(duration, threshold_override=request.score_threshold)
             response.labels = labels
             response.scores = [float(s) for s in scores]
             response.success = True
@@ -279,7 +295,7 @@ class SoundClassificationNode(Node):
         timeout = float(request.timeout)
         try:
             with self.mic_lock:
-                hit, lbl, sc = self.classify_until(break_sounds, timeout)
+                hit, lbl, sc = self.classify_until(break_sounds, timeout, threshold_override=request.score_threshold)
             response.success = bool(hit)
             response.detected_label = lbl if hit else ""
             response.detected_score = float(sc if hit else 0.0)
