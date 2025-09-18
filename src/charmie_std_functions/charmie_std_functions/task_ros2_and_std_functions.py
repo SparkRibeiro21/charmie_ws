@@ -1541,13 +1541,14 @@ class RobotStdFunctions():
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
-    def get_sound_classification(self, question="", duration=0.0, face_hearing="charmie_face_green", wait_for_end_of=True):
+    def get_sound_classification(self, question="", duration=0.0, score_threshold=-1.0, face_hearing="charmie_face_green", wait_for_end_of=True):
 
         request = GetSoundClassification.Request()
         request.duration = float(duration)
+        request.score_threshold = float(score_threshold) # from 0 to 1, if by deafult -1 is used, sound_classification server default value is used
 
-        self.set_speech(filename=question, wait_for_end_of=True)
-        self.set_face(face_hearing)
+        # self.set_speech(filename=question, wait_for_end_of=True)
+        # self.set_face(face_hearing)
         self.node.call_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
@@ -1557,11 +1558,12 @@ class RobotStdFunctions():
 
         return self.node.sound_classification_labels, self.node.sound_classification_scores 
     
-    def get_continuous_sound_classification(self, break_sounds=[], timeout=0.0, wait_for_end_of=True):
+    def get_continuous_sound_classification(self, break_sounds=[], timeout=0.0, score_threshold=-1.0, wait_for_end_of=True):
         
         request = GetSoundClassificationContinuous.Request()
         request.break_sounds = break_sounds
         request.timeout = float(timeout)
+        request.score_threshold = float(score_threshold) # from 0 to 1, if by deafult -1 is used, sound_classification server default value is used
 
         self.node.continuous_sound_classification_detected_label = ""
         self.node.continuous_sound_classification_detected_score = 0.0

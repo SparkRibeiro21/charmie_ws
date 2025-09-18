@@ -29,7 +29,7 @@ ros2_modules = {
     "charmie_nav2":             False,
     "charmie_neck":             False,
     "charmie_radar":            False,
-    "charmie_speakers":         True,
+    "charmie_speakers":         False, # True
     "charmie_tracking":         False,
     "charmie_yolo_objects":     False,
     "charmie_yolo_pose":        False,
@@ -254,7 +254,7 @@ class TaskMain():
             if self.state == Sound_classification:
                 print('State 6 = Sound Classification')
 
-                labels, scores = self.robot.get_sound_classification(question="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), duration=3.0, wait_for_end_of=True)
+                labels, scores = self.robot.get_sound_classification(question="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), duration=3.0, score_threshold=0.1, wait_for_end_of=True)
                 
                 print("Heard Sounds:")
                 print("Scores:\tLabels:")
@@ -269,18 +269,18 @@ class TaskMain():
 
                 ### CONTINUOUS SOUND CLASSIFICATION EXAMPLE
                 # WAIT FOR END OF = TRUE
-                # s, m, label, score = self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling"], timeout=10, wait_for_end_of=True)
-                # print(s, m, label, score)
-                # if m.lower() == "timeout":
-                #     print("TIMEOUT REACHED")
+                s, m, label, score = self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling", 'whistle'], timeout=10, score_threshold=0.1, wait_for_end_of=True)
+                print(s, m, label, score)
+                if m.lower() == "timeout":
+                    print("TIMEOUT REACHED")
 
                 # WAIT FOR END OF = FALSE
-                self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling"], timeout=0, wait_for_end_of=False)
-                message_received = False
-                while not message_received:
-                    message_received, s, m, label, score = self.robot.is_get_continuous_sound_classification_done()
-                    print(message_received, s, m, label, score)
-                    time.sleep(0.5)
+                # self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling", 'whistle'], timeout=20, score_threshold=0.1, wait_for_end_of=False)
+                # message_received = False
+                # while not message_received:
+                #     message_received, s, m, label, score = self.robot.is_get_continuous_sound_classification_done()
+                #     print(message_received, s, m, label, score)
+                #     time.sleep(0.5)
                 
                 print("Continuous Sound Classification Mode Done")
                 
