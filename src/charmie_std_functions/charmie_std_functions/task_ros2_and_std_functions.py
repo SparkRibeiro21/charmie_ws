@@ -1481,7 +1481,7 @@ class RobotStdFunctions():
             self.node.get_logger().error("ERROR: No audio type selected")
             return "ERROR: No audio type selected" 
 
-    def get_continuous_audio(self, keywords=[], max_number_attempts=3, speak_pre_hearing=True, speak_post_hearing=True, wait_for_end_of=True):
+    def get_continuous_audio(self, keywords=[], max_number_attempts=3, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=True):
 
         request = ContinuousGetAudio.Request()
         request.keywords = keywords
@@ -1493,12 +1493,14 @@ class RobotStdFunctions():
             self.set_speech(filename="audio/audio_continuous_start_"+str(random.randint(1, 5)), wait_for_end_of=True)
             for k in keywords:
                 self.set_speech(command=k, wait_for_end_of=True)
+        self.set_face(face_hearing)
             
         self.node.call_continuous_audio_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
             while not self.node.waited_for_end_of_continuous_audio:
                 pass
+            self.set_face("charmie_face")
             if speak_post_hearing:
                 if self.node.continuous_audio_success:
                     self.set_speech(filename="audio/audio_continuous_stop", wait_for_end_of=True)
@@ -1515,6 +1517,7 @@ class RobotStdFunctions():
 
         if self.node.received_continuous_audio:
             self.node.received_continuous_audio = False
+            self.set_face("charmie_face")
             if speak_post_hearing:
                 if self.node.continuous_audio_success:
                     self.set_speech(filename="audio/audio_continuous_stop", wait_for_end_of=True)
