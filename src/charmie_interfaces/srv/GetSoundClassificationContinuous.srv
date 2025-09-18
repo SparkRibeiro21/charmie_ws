@@ -2,6 +2,7 @@
 
 string[] break_sounds
 float32  timeout   # seconds; <=0 means "no timeout"
+float32  score_threshold   # 0..1 ; if < 0, the node's param will be used
 ---
 string   detected_label
 float32  detected_score
