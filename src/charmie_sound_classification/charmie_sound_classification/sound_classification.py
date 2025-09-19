@@ -47,7 +47,7 @@ class SoundClassificationNode(Node):
     # --- helpers ---
     def _build_paths_and_params(self):
         home = str(Path.home())
-        model_dir = f"{home}/charmie_ws/src/charmie_audio/charmie_audio/sound_classification_models"
+        model_dir = f"{home}/charmie_ws/src/charmie_sound_classification/charmie_sound_classification/sound_classification_models"
         model_path = f"{model_dir}/classifier.tflite"
         return dict(
             model_path=model_path,

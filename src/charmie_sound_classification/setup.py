@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "sound_classification = charmie_audio.sound_classification:main"
+            "sound_classification = charmie_sound_classification.sound_classification:main"
         ],
     },
 )
