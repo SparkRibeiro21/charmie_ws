@@ -270,11 +270,15 @@ class LaunchStdFunctions():
                 name='test_marker_rviz',
                 )
         
-        
         self.audio = Node(package='charmie_audio',
                       executable='audio',
                       name = 'audio',
                       )
+        
+        self.sound_classification = Node(package='charmie_sound_classification',
+                                        executable='sound_classification',
+                                        name = 'sound_classification',
+                                        )
         
         self.speakers = Node(package='charmie_speakers',
                             executable='speakers',
