@@ -74,12 +74,12 @@ class TaskMain():
             if self.state == Sound_classification:
                 print('State 6 = Sound Classification')
 
-                labels, scores = self.robot.get_sound_classification(question="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), duration=3.0, score_threshold=0.1, wait_for_end_of=True)
+                labels, scores = self.robot.get_sound_classification(question="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), duration=10.0, score_threshold=0.1, face_hearing="charmie_face_green", wait_for_end_of=True)
                 
                 print("Heard Sounds:")
                 print("Scores:\tLabels:")
                 for l, s in zip(labels, scores):
-                    print(f"{s:.2f} - {l}")
+                    print(f"{s:.2f} -> {l}")
                 print("\n")
 
                 time.sleep(5)
@@ -87,21 +87,19 @@ class TaskMain():
             if self.state == Continuous_sound_classification_wfeo_true:
                 ### CONTINUOUS SOUND CLASSIFICATION EXAMPLE - WAIT FOR END OF = TRUE
 
-                s, m, label, score = self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling", 'whistle'], timeout=10, score_threshold=0.1, wait_for_end_of=True)
+                s, m, label, score = self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling", "whistle"], timeout=10, score_threshold=0.1, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=True)
                 print(s, m, label, score)
-                if m.lower() == "timeout":
-                    print("TIMEOUT REACHED")
-
+                
                 # next state
                 self.state = Final_State
 
             if self.state == Continuous_sound_classification_wfeo_false:
                 ### CONTINUOUS SOUND CLASSIFICATION EXAMPLE - WAIT FOR END OF = FALSE
                 
-                self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling", 'whistle'], timeout=20, score_threshold=0.1, wait_for_end_of=False)
+                self.robot.get_continuous_sound_classification(break_sounds=["finger snapping", "whistling", "whistle"], timeout=10, score_threshold=0.1, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=False)
                 message_received = False
                 while not message_received:
-                    message_received, s, m, label, score = self.robot.is_get_continuous_sound_classification_done()
+                    message_received, s, m, label, score = self.robot.is_get_continuous_sound_classification_done(speak_post_hearing=True)
                     print(message_received, s, m, label, score)
                     time.sleep(0.5)
                 

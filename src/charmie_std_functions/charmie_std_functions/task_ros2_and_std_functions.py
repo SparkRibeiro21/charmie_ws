@@ -1556,18 +1556,19 @@ class RobotStdFunctions():
         request.duration = float(duration)
         request.score_threshold = float(score_threshold) # from 0 to 1, if by deafult -1 is used, sound_classification server default value is used
 
-        # self.set_speech(filename=question, wait_for_end_of=True)
-        # self.set_face(face_hearing)
+        self.set_speech(filename=question, wait_for_end_of=True)
+        self.set_face(face_hearing)
         self.node.call_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
             while not self.node.waited_for_end_of_sound_classification:
                 pass
         self.node.waited_for_end_of_sound_classification = False
+        self.set_face("charmie_face")
 
         return self.node.sound_classification_labels, self.node.sound_classification_scores 
     
-    def get_continuous_sound_classification(self, break_sounds=[], timeout=0.0, score_threshold=-1.0, wait_for_end_of=True):
+    def get_continuous_sound_classification(self, break_sounds=[], timeout=0.0, score_threshold=-1.0, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=True):
         
         request = GetSoundClassificationContinuous.Request()
         request.break_sounds = break_sounds
@@ -1576,12 +1577,23 @@ class RobotStdFunctions():
 
         self.node.continuous_sound_classification_detected_label = ""
         self.node.continuous_sound_classification_detected_score = 0.0
-            
+        
+        if speak_pre_hearing:
+            self.set_speech(filename="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), wait_for_end_of=True)
+        self.set_face(face_hearing)
+        
         self.node.call_continuous_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
             while not self.node.waited_for_end_of_continuous_sound_classification:
                 pass
+            self.set_face("charmie_face")
+            if speak_post_hearing:
+                if self.node.continuous_sound_classification_success:
+                    self.set_speech(filename="sound_classification/sound_classification_continuous_stop", wait_for_end_of=True)
+                    self.set_speech(command=self.node.continuous_sound_classification_detected_label, wait_for_end_of=True)
+                else: # timeout or error
+                    self.set_speech(filename="sound_classification/sound_classification_continuous_timeout", wait_for_end_of=True)
         self.node.waited_for_end_of_continuous_sound_classification = False
 
         return  self.node.continuous_sound_classification_success, \
@@ -1589,10 +1601,17 @@ class RobotStdFunctions():
                 self.node.continuous_sound_classification_detected_label, \
                 self.node.continuous_sound_classification_detected_score
         
-    def is_get_continuous_sound_classification_done(self):
+    def is_get_continuous_sound_classification_done(self, speak_post_hearing=True):
 
         if self.node.received_continuous_sound_classification:
             self.node.received_continuous_sound_classification = False
+            self.set_face("charmie_face")
+            if speak_post_hearing:
+                if self.node.continuous_sound_classification_success:
+                    self.set_speech(filename="sound_classification/sound_classification_continuous_stop", wait_for_end_of=True)
+                    self.set_speech(command=self.node.continuous_sound_classification_detected_label, wait_for_end_of=True)
+                else: # timeout or error
+                    self.set_speech(filename="sound_classification/sound_classification_continuous_timeout", wait_for_end_of=True)
             return  True, \
                     self.node.continuous_sound_classification_success, \
                     self.node.continuous_sound_classification_message, \
@@ -1601,6 +1620,15 @@ class RobotStdFunctions():
         
         return False, False, "", "", 0.0
     
+    def wait_for_doorbell(self, timeout=20.0, wait_for_end_of=True):
+
+        pass
+        # list of possible doorbell sounds
+        # pre speak specific for doorbell
+        # call sound classification continuous(with list of possible doorbell break sounds, timeout and wait_for_end_of)
+        # post speak specific for doorbell if detected or timeout
+        # return
+
     def set_face(self, command="", custom="", camera="", show_detections=False, wait_for_end_of=False):
         
         request = SetFace.Request()
