@@ -1620,14 +1620,44 @@ class RobotStdFunctions():
         
         return False, False, "", "", 0.0
     
-    def wait_for_doorbell(self, timeout=20.0, wait_for_end_of=True):
+    def wait_for_doorbell(self, timeout=20.0, score_threshold=0.1):
 
-        pass
-        # list of possible doorbell sounds
-        # pre speak specific for doorbell
-        # call sound classification continuous(with list of possible doorbell break sounds, timeout and wait_for_end_of)
-        # post speak specific for doorbell if detected or timeout
-        # return
+        # List of possible doorbell sounds
+        doorbell_break_sounds=["alarm",
+                               "alarm clock",
+                               "beep, bleep",
+                               "bell",
+                               "bicycle bell",
+                               "buzzer",
+                               "chime",
+                               "clock",
+                               "ding-dong",
+                               "doorbell",
+                               "glockenspiel",
+                               "mains hum",
+                               "mallet percussion",
+                               "marimba, xylophone",
+                               "ringtone",
+                               "telephone",
+                               "telephone bell ringing",
+                               "tubular bells",
+                               "tuning fork",
+                               "vibraphone",
+                              ]
+        
+        # Speak specific for doorbell before starting listening for doorbell 
+        self.set_speech(filename="sound_classification/doorbell_sound_classification_start_"+str(random.randint(1, 6)), wait_for_end_of=True)
+
+        # Call sound classification continuous(with list of possible doorbell break sounds)
+        success, message, label, score = self.get_continuous_sound_classification(break_sounds=doorbell_break_sounds, timeout=timeout, score_threshold=score_threshold, speak_pre_hearing=False, speak_post_hearing=False, wait_for_end_of=True)
+
+        # Speak specific for doorbell after starting listening for doorbell if success:
+        if success:
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_stop", wait_for_end_of=True)
+        else: # timeout or error
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_timeout", wait_for_end_of=True)
+
+        return success, message, label, score
 
     def set_face(self, command="", custom="", camera="", show_detections=False, wait_for_end_of=False):
         

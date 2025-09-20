@@ -61,7 +61,8 @@ class TaskMain():
         Sound_classification = 1
         Continuous_sound_classification_wfeo_true = 2
         Continuous_sound_classification_wfeo_false = 3
-        Final_State = 4
+        Check_doorbell = 4
+        Final_State = 5
 
         # VARS ...
         self.state = Continuous_sound_classification_wfeo_true
@@ -72,7 +73,7 @@ class TaskMain():
         while True:
 
             if self.state == Sound_classification:
-                print('State 6 = Sound Classification')
+                ### LISTEN FOR SOUNDS
 
                 labels, scores = self.robot.get_sound_classification(question="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), duration=10.0, score_threshold=0.1, face_hearing="charmie_face_green", wait_for_end_of=True)
                 
@@ -105,6 +106,16 @@ class TaskMain():
                 
                 # next state
                 self.state = Final_State
+
+            if self.state == Check_doorbell:
+                # WAIT FOR THE DOORBELL SOUND USING: CONTINUOUS SOUND CLASSIFICATION WITH WFEO = TRUE
+                s, m, label, score = self.robot.wait_for_doorbell(timeout=20, score_threshold=0.1)
+                print("FINISHED WAITING FOR DOORBELL")
+                if s: # doorbell detected
+                    print("DOORBELL DETECTED!")
+                else: # timeout or error
+                    print("TIMEOUT OR ERROR WAITING FOR DOORBELL!")
+
             
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 
