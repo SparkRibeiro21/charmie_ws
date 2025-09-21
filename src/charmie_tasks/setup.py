@@ -23,6 +23,11 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+
+		"serve_breakfast              = charmie_tasks.serve_breakfast:main",
+        
+        "serve_breakfast_robocup2024_ = charmie_tasks.old.serve_breakfast.serve_breakfast_robocup2024_:main"
+		
         ],
     },
 )
