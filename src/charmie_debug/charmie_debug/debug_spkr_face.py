@@ -102,6 +102,32 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
+                path1 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_12-41-44_.jpg" # RENATA
+                path2 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-34-28_.jpg" # XIAOI
+                path3 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-35-55_.jpg" # ADAM
+                
+                self.robot.add_face_to_face_recognition(image=path1, name="Renata")
+                self.robot.add_face_to_face_recognition(image=path2, name="Xiaoi")
+                self.robot.add_face_to_face_recognition(image=path3, name="Adam")
+
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
+                print(pred, pred_perc, "Should be ADAM")
+
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_154i_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
+                print(pred, pred_perc, "Should be XIAOI")
+
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_07-24-43_126i_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
+                print(pred, pred_perc, "Should be RENATA")
+                
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-16_20-40-04_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
+                print(pred, pred_perc, "Should be UNKNOWN")
+
+                
+
                 """ while True:
 
                     selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="numpad", start_speak_file="face_touchscreen_menu/init_touchscreen_keyboard_menu", speak_results=True)

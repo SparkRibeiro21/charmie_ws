@@ -4,7 +4,7 @@
 {"name": "Right Lounge Chair", 	    "height": [0.97], 			                "room": "Living Room",  "nav_coords": [ 1.96,  1.95, -30.0], "top_left_coords": [ 3.88,  1.58], "bot_right_coords": [ 2.73,  0.67]},
 {"name": "Shelf", 		            "height": [1.20, 0.69, 0.18],               "room": "Living Room",  "nav_coords": [ 1.90,  0.94, 180.0], "top_left_coords": [ 1.15,  1.38], "bot_right_coords": [ 0.68,  0.50]},
 {"name": "Coffee Table", 	        "height": [0.74], 			                "room": "Living Room",  "nav_coords": [ 2.00,  2.70, 180.0], "top_left_coords": [ 1.35,  3.61], "bot_right_coords": [ 0.68,  1.80]},
-{"name": "Living Room Trashcan",    "height": [0.28], 			                "room": "Living Room", "nav_coords": [ 1.95,  3.95, 160.0], "top_left_coords": [ 1.16,  4.44], "bot_right_coords": [ 0.88,  4.16]},
+{"name": "Living Room Trashcan",    "height": [0.28], 			                "room": "Living Room",  "nav_coords": [ 1.95,  3.95, 160.0], "top_left_coords": [ 1.16,  4.44], "bot_right_coords": [ 0.88,  4.16]},
 
 {"name": "Dishwasher", 	            "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 4.73,  3.30,  90.0], "top_left_coords": [ 5.10,  4.90], "bot_right_coords": [ 4.37,  3.90]},
 {"name": "Fridge", 		            "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 4.45,  3.30, 110.0], "top_left_coords": [ 4.37,  4.90], "bot_right_coords": [ 3.88,  4.00]},

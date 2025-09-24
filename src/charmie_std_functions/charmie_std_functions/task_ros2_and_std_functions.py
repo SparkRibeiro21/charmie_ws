@@ -30,6 +30,7 @@ from pathlib import Path
 from datetime import datetime
 import random
 import json
+import face_recognition
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -403,6 +404,9 @@ class ROS2TaskNode(Node):
         self.continuous_sound_classification_detected_label = ""
         self.continuous_sound_classification_detected_score = 0.0
 
+        self.face_recognition_encoding = []
+        self.face_recognition_names = []
+        
         self.CAM_IMAGE_WIDTH = 848
         self.CAM_IMAGE_HEIGHT = 480
 
@@ -3533,7 +3537,54 @@ class RobotStdFunctions():
             print("FACE TOUCHSCREEN MENU SKIPPED! NO VALID OPTIONS!")
             self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
             return ["ERROR"]
+        
+    def add_face_to_face_recognition(self, person=DetectedPerson(), image="", name=""):
+        
+        # TODO: add DetectedPerson option to save image from the camera directly
+        # TODO: Test if bad image is added (no face in the image)
 
+        image = face_recognition.load_image_file(image)
+        encoding_entry = face_recognition.face_encodings(image)
+
+        if len(encoding_entry) > 0:
+
+            self.node.face_recognition_encoding.append(encoding_entry[0])
+            self.node.face_recognition_names.append(name)
+            # print(self.node.face_recognition_encoding)
+            # print(self.node.face_recognition_names)
+        else:
+            print("No face found in the image. Please try again.")
+
+    def recognize_face_from_face_recognition(self, person=DetectedPerson(), image="", tolerance=40):
+        
+        # TODO: add DetectedPerson option to save image from the camera directly
+        # TODO: Test if bad image is added (no face in the image)
+        
+        if not self.node.face_recognition_encoding:
+            print("RECOGNIZED: Unknown 0.0")
+            return "unknown", 0.0
+        
+        image = face_recognition.load_image_file(image)
+        encoding_entry = face_recognition.face_encodings(image)
+        if len(encoding_entry) == 0:
+            print("RECOGNIZED: Unknown 0.0")
+            return "unknown", 0.0
+        encoding_entry = encoding_entry[0]  
+
+        all_percentages = []
+        for enc in self.node.face_recognition_encoding:
+        
+            distance = face_recognition.face_distance([enc], encoding_entry)[0]
+            confidence = (1 - distance) * 100
+            all_percentages.append(confidence)
+
+        name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
+        if biggest_conf_recognized < tolerance:
+            name_recognized = "unknown"
+        # print("RECOGNIZED:", name_recognized, biggest_conf_recognized, all_percentages)
+
+        return name_recognized.lower(), biggest_conf_recognized
+            
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
 		Convert an Euler angle to a quaternion.
