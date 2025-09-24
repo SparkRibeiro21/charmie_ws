@@ -193,7 +193,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 ros2_modules = {
     "charmie_arm":                  False,
-    "charmie_audio":                True,
+    "charmie_audio":                False,
     "charmie_face":                 False,
     "charmie_head_camera":          False,
     "charmie_hand_camera":          False,
@@ -210,7 +210,7 @@ ros2_modules = {
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
@@ -287,7 +287,7 @@ class TaskMain():
             print("ERROR!!! - FURNITURE:", self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, "DOES NOT EXIST IN furniture.json")
             while True:
                 pass
-        self.SB_TABLE_HEIGHT = self.robot.get_height_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+        self.SB_TABLE_HEIGHT = self.robot.get_height_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)[0]
         print("Table Height =", self.SB_TABLE_HEIGHT)
         
         # Neck Positions

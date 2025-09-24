@@ -201,7 +201,7 @@ class MarkerPublisher(Node):
 
             marker.pose.position.x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0]) / 2  # Set the X coordinate
             marker.pose.position.y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1]) / 2  # Set the X coordinate
-            marker.pose.position.z = furniture['height']/2  # Set the Z coordinate
+            marker.pose.position.z = furniture['height'][0]/2  # Set the Z coordinate
 
             marker.pose.orientation.x = 0.0
             marker.pose.orientation.y = 0.0
@@ -210,7 +210,7 @@ class MarkerPublisher(Node):
 
             marker.scale.x = abs(furniture['top_left_coords'][0] - furniture['bot_right_coords'][0]) # + 2*margin_x  # Width
             marker.scale.y = abs(furniture['top_left_coords'][1] - furniture['bot_right_coords'][1]) # + 2*margin_y # Width
-            marker.scale.z = furniture['height']  # Height
+            marker.scale.z = furniture['height'][0]  # Height
 
             # rgb_v = self.COLOR_LIST[index % len(self.COLOR_LIST)]
             # print(ctr % len(self.COLOR_LIST), rgb_v)
@@ -245,7 +245,7 @@ class MarkerPublisher(Node):
             marker_name.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
             marker_name.pose.position.x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0]) / 2  # Set the X coordinate
             marker_name.pose.position.y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1]) / 2  # Set the X coordinate
-            marker_name.pose.position.z = furniture['height']/2  # Set the Z coordinate
+            marker_name.pose.position.z = furniture['height'][0]/2  # Set the Z coordinate
             marker_name.pose.orientation.w = 1.0  # No rotation
             marker_name.scale.z = self.NAMES_TEXT_SIZE # Height
             marker_name.text = furniture['name'].replace(" ", "_")

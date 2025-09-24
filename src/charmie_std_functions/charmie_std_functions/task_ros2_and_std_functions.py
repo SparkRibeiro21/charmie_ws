@@ -3277,7 +3277,7 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height']]  # Return the class
+                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height'][0]]  # Return the class
         return None  # Return None if the object is not found
 
     def get_height_from_furniture(self, furniture):
@@ -3286,7 +3286,7 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['height'] # Return the height
+                return obj['height'].copy() # Return the height
         return None  # Return None if the object is not found
 
     def set_continuous_tracking_with_coordinates(self):
