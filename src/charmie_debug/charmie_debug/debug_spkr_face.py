@@ -102,31 +102,43 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
+                print(pred, round(pred_perc, 2), "Should be ADAM")
+
                 path1 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_12-41-44_.jpg" # RENATA
                 path2 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-34-28_.jpg" # XIAOI
                 path3 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-35-55_.jpg" # ADAM
+
+                # path4 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2025-07-11_14-36-49_150_spoon_head.jpg" # INVALID PATH
+                path5 = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces/2025-07-11_14-36-49_150_spoon_head.jpg"        # NO FACE
                 
-                self.robot.add_face_to_face_recognition(image=path1, name="Renata")
-                self.robot.add_face_to_face_recognition(image=path2, name="Xiaoi")
-                self.robot.add_face_to_face_recognition(image=path3, name="Adam")
+                self.robot.add_face_to_face_recognition(image_path=path1, name="Renata")
+                self.robot.add_face_to_face_recognition(image_path=path2, name="Xiaoi")
+                self.robot.add_face_to_face_recognition(image_path=path3, name="Adam")
+                # self.robot.add_face_to_face_recognition(image_path=path4, name="T1")
+                self.robot.add_face_to_face_recognition(image_path=path5, name="T2")
 
                 path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
-                print(pred, pred_perc, "Should be ADAM")
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
+                print(pred, round(pred_perc, 2), "Should be ADAM")
 
                 path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_154i_.jpg"
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
-                print(pred, pred_perc, "Should be XIAOI")
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
+                print(pred, round(pred_perc, 2), "Should be XIAOI")
 
                 path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_07-24-43_126i_.jpg"
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
-                print(pred, pred_perc, "Should be RENATA")
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
+                print(pred, round(pred_perc, 2), "Should be RENATA")
                 
                 path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-16_20-40-04_.jpg"
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
-                print(pred, pred_perc, "Should be UNKNOWN")
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
+                print(pred, round(pred_perc, 2), "Should be UNKNOWN")
 
                 
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path5)
+                print(pred, round(pred_perc, 2), "Should be ERROR")
 
                 """ while True:
 

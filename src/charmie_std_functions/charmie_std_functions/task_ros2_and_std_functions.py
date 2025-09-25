@@ -3538,50 +3538,74 @@ class RobotStdFunctions():
             self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
             return ["ERROR"]
         
-    def add_face_to_face_recognition(self, person=DetectedPerson(), image="", name=""):
+    def add_face_to_face_recognition(self, person=DetectedPerson(), image_path="", name=""):
         
+        # image_path is for exceptions, Detected Person should always be used
         # TODO: add DetectedPerson option to save image from the camera directly
-        # TODO: Test if bad image is added (no face in the image)
+        # DONE: Test if bad image is added (no face in the image)
+        # TODO: Test if path is incorrect (no image found)
 
-        image = face_recognition.load_image_file(image)
+        # self.home = str(Path.home())
+        # custom_face_midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
+        # configuration_files_midpath = "/charmie_ws/src/configuration_files/"
+        # self.complete_path_custom_face = self.home+'/'+custom_face_midpath+'/'
+        image_path = self.node.home+'/'+image_path
+        print(image_path)
+
+        image = face_recognition.load_image_file(image_path)
         encoding_entry = face_recognition.face_encodings(image)
 
-        if len(encoding_entry) > 0:
+        success = False
+        message = ""
 
+        if len(encoding_entry) > 0:
             self.node.face_recognition_encoding.append(encoding_entry[0])
             self.node.face_recognition_names.append(name)
+            success = True
+            message = "Face encoding added to list successfully."
             # print(self.node.face_recognition_encoding)
             # print(self.node.face_recognition_names)
         else:
-            print("No face found in the image. Please try again.")
+            self.node.get_logger().warn("No face found in the image. Encodings not added to list.")
+            print("No face found in the image. Encodings not added to list.")
+            success = False
+            message = "No face found in the image. Encodings not added to list."
 
-    def recognize_face_from_face_recognition(self, person=DetectedPerson(), image="", tolerance=40):
+        return success, message
+
+    def recognize_face_from_face_recognition(self, person=DetectedPerson(), image_path="", tolerance=0.4):
         
+        # image_path is for exceptions, Detected Person should always be used
         # TODO: add DetectedPerson option to save image from the camera directly
-        # TODO: Test if bad image is added (no face in the image)
+        # DONE: Test if bad image is added (no face in the image)
+        # TODO: Test if path is incorrect (no image found)
         
+        image_path = self.node.home+'/'+image_path
+        print(image_path)
+    
         if not self.node.face_recognition_encoding:
-            print("RECOGNIZED: Unknown 0.0")
-            return "unknown", 0.0
+            self.node.get_logger().warn("Face recognition encoding List is empty.")
+            return "error", 0.0
         
-        image = face_recognition.load_image_file(image)
+        image = face_recognition.load_image_file(image_path)
         encoding_entry = face_recognition.face_encodings(image)
+
         if len(encoding_entry) == 0:
-            print("RECOGNIZED: Unknown 0.0")
-            return "unknown", 0.0
+            self.node.get_logger().warn("No face found in the image. Could not comapre to encodings list.")
+            return "error", 0.0
         encoding_entry = encoding_entry[0]  
 
         all_percentages = []
         for enc in self.node.face_recognition_encoding:
         
             distance = face_recognition.face_distance([enc], encoding_entry)[0]
-            confidence = (1 - distance) * 100
+            confidence = (1 - distance)
             all_percentages.append(confidence)
 
         name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
         if biggest_conf_recognized < tolerance:
             name_recognized = "unknown"
-        # print("RECOGNIZED:", name_recognized, biggest_conf_recognized, all_percentages)
+        print("RECOGNIZED:", name_recognized, biggest_conf_recognized, all_percentages)
 
         return name_recognized.lower(), biggest_conf_recognized
             
