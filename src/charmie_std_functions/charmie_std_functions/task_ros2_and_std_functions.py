@@ -2938,6 +2938,76 @@ class RobotStdFunctions():
             print("Finished:", confirmation)
 
         return confirmation
+    
+    def ask_help_pick_fallen_object(self, selected_object = "", look_judge=[45, 0], search_tetas=[[45, 0]], wait_time_detect_object=12.0, wait_time_show_detection=1.5, attempts_at_receiving=2, show_detection=True, alternative_help_pick_face = "", bb_color=(0, 255, 0)):
+
+        selected_object_files = selected_object.replace(" ","_").lower()
+        print('SELECTED OBJECT:', selected_object)
+
+        self.set_neck(position=look_judge, wait_for_end_of=False)
+
+        self.set_speech(filename="generic/ask_help_pick_fallen_object_first", wait_for_end_of=False)
+        self.set_speech(filename="objects_names/"+selected_object_files, wait_for_end_of=False)
+        self.set_speech(filename="generic/ask_help_pick_fallen_object_second", wait_for_end_of=False)
+
+        self.search_for_objects(tetas = search_tetas, time_in_each_frame=wait_time_detect_object, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+
+        self.set_neck([45.0, 0.0],wait_for_end_of=False)
+
+        if show_detection:
+            self.set_speech(filename="generic/found_the", wait_for_end_of=False)
+            self.set_speech(filename="objects_names/"+selected_object_files, wait_for_end_of=False)
+            
+            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
+
+        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+
+        if show_detection:
+            # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
+            # this way is more natural, since it only opens the gripper before asking to receive object
+            time.sleep(3.0 + wait_time_show_detection) 
+        
+        self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+        self.set_speech(filename="generic/check_face_put_object_hand_p1", wait_for_end_of=True)
+        self.set_speech(filename="objects_names/"+selected_object_files, wait_for_end_of=True)
+        self.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
+        
+        if not alternative_help_pick_face:
+            self.set_face("help_pick_"+selected_object_files)
+        else:
+            self.set_face(alternative_help_pick_face)
+
+        time.sleep(wait_time_show_detection)
+    
+        object_in_gripper = False
+        gripper_ctr = 0
+        while not object_in_gripper and gripper_ctr < attempts_at_receiving:
+            
+            gripper_ctr += 1
+            
+            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
+
+            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+            
+            if not object_in_gripper:
+        
+                if gripper_ctr < attempts_at_receiving:
+
+                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
+                
+                self.set_arm(command="open_gripper", wait_for_end_of=False)
+
+        if object_in_gripper:
+        #and gripper_ctr >= attempts_at_receiving:
+
+            self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
+        self.set_face("charmie_face")
+
+        self.set_neck([0.0, 0.0],wait_for_end_of=False)
+
+        return object_in_gripper
 
     def place_object(self, arm_command="", speak_before=False, speak_after=False, verb="", object_name="", preposition="", furniture_name=""):
         
