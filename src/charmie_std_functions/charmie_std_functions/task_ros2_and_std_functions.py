@@ -21,6 +21,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
+import os
 import cv2 
 import time
 from cv_bridge import CvBridge
@@ -3543,7 +3544,10 @@ class RobotStdFunctions():
         # image_path is for exceptions, Detected Person should always be used
         # TODO: add DetectedPerson option to save image from the camera directly
         # DONE: Test if bad image is added (no face in the image)
-        # TODO: Test if path is incorrect (no image found)
+        # DONE: Test if path is incorrect (no image found)
+        
+        success = False
+        message = ""
 
         # self.home = str(Path.home())
         # custom_face_midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
@@ -3552,24 +3556,29 @@ class RobotStdFunctions():
         image_path = self.node.home+'/'+image_path
         print(image_path)
 
-        image = face_recognition.load_image_file(image_path)
-        encoding_entry = face_recognition.face_encodings(image)
+        if os.path.isfile(image_path):
 
-        success = False
-        message = ""
+            image = face_recognition.load_image_file(image_path)
+            encoding_entry = face_recognition.face_encodings(image)
 
-        if len(encoding_entry) > 0:
-            self.node.face_recognition_encoding.append(encoding_entry[0])
-            self.node.face_recognition_names.append(name)
-            success = True
-            message = "Face encoding added to list successfully."
-            # print(self.node.face_recognition_encoding)
-            # print(self.node.face_recognition_names)
+            if len(encoding_entry) > 0:
+                self.node.face_recognition_encoding.append(encoding_entry[0])
+                self.node.face_recognition_names.append(name)
+                success = True
+                message = "Face encoding added to list successfully."
+                # print(self.node.face_recognition_encoding)
+                # print(self.node.face_recognition_names)
+            else:
+                self.node.get_logger().warn("No face found in the image. Encodings not added to list.")
+                print("No face found in the image. Encodings not added to list.")
+                success = False
+                message = "No face found in the image. Encodings not added to list."
+        
         else:
-            self.node.get_logger().warn("No face found in the image. Encodings not added to list.")
-            print("No face found in the image. Encodings not added to list.")
+            self.node.get_logger().warn("Image path does not exist. Encodings not added to list.")
+            print("Image path does not exist. Encodings not added to list.")
             success = False
-            message = "No face found in the image. Encodings not added to list."
+            message = "Image path does not exist. Encodings not added to list."
 
         return success, message
 
@@ -3578,37 +3587,43 @@ class RobotStdFunctions():
         # image_path is for exceptions, Detected Person should always be used
         # TODO: add DetectedPerson option to save image from the camera directly
         # DONE: Test if bad image is added (no face in the image)
-        # TODO: Test if path is incorrect (no image found)
+        # DONE: Test if path is incorrect (no image found)
         
         image_path = self.node.home+'/'+image_path
         print(image_path)
+
+        if os.path.isfile(image_path):
     
-        if not self.node.face_recognition_encoding:
-            self.node.get_logger().warn("Face recognition encoding List is empty.")
-            return "error", 0.0
-        
-        image = face_recognition.load_image_file(image_path)
-        encoding_entry = face_recognition.face_encodings(image)
-
-        if len(encoding_entry) == 0:
-            self.node.get_logger().warn("No face found in the image. Could not comapre to encodings list.")
-            return "error", 0.0
-        encoding_entry = encoding_entry[0]  
-
-        all_percentages = []
-        for enc in self.node.face_recognition_encoding:
-        
-            distance = face_recognition.face_distance([enc], encoding_entry)[0]
-            confidence = (1 - distance)
-            all_percentages.append(confidence)
-
-        name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
-        if biggest_conf_recognized < tolerance:
-            name_recognized = "unknown"
-        print("RECOGNIZED:", name_recognized, biggest_conf_recognized, all_percentages)
-
-        return name_recognized.lower(), biggest_conf_recognized
+            if not self.node.face_recognition_encoding:
+                self.node.get_logger().warn("Face recognition encoding List is empty.")
+                return "error", 0.0
             
+            image = face_recognition.load_image_file(image_path)
+            encoding_entry = face_recognition.face_encodings(image)
+
+            if len(encoding_entry) == 0:
+                self.node.get_logger().warn("No face found in the image. Could not comapre to encodings list.")
+                return "error", 0.0
+            encoding_entry = encoding_entry[0]  
+
+            all_percentages = []
+            for enc in self.node.face_recognition_encoding:
+            
+                distance = face_recognition.face_distance([enc], encoding_entry)[0]
+                confidence = (1 - distance)
+                all_percentages.append(confidence)
+
+            name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
+            if biggest_conf_recognized < tolerance:
+                name_recognized = "unknown"
+            print("RECOGNIZED:", name_recognized, biggest_conf_recognized, all_percentages)
+
+            return name_recognized.lower(), biggest_conf_recognized
+
+        else:
+            self.node.get_logger().warn("Image path does not exist.")
+            return "error", 0.0
+
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
 		Convert an Euler angle to a quaternion.

@@ -110,13 +110,13 @@ class TaskMain():
                 path2 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-34-28_.jpg" # XIAOI
                 path3 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-35-55_.jpg" # ADAM
 
-                # path4 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2025-07-11_14-36-49_150_spoon_head.jpg" # INVALID PATH
+                path4 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2025-07-11_14-36-49_150_spoon_head.jpg" # INVALID PATH
                 path5 = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces/2025-07-11_14-36-49_150_spoon_head.jpg"        # NO FACE
                 
                 self.robot.add_face_to_face_recognition(image_path=path1, name="Renata")
                 self.robot.add_face_to_face_recognition(image_path=path2, name="Xiaoi")
                 self.robot.add_face_to_face_recognition(image_path=path3, name="Adam")
-                # self.robot.add_face_to_face_recognition(image_path=path4, name="T1")
+                self.robot.add_face_to_face_recognition(image_path=path4, name="T1")
                 self.robot.add_face_to_face_recognition(image_path=path5, name="T2")
 
                 path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
@@ -135,10 +135,12 @@ class TaskMain():
                 pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
                 print(pred, round(pred_perc, 2), "Should be UNKNOWN")
 
-                
-                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path4)
+                print(pred, round(pred_perc, 2), "Should be ERROR")
+
                 pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path5)
                 print(pred, round(pred_perc, 2), "Should be ERROR")
+
 
                 """ while True:
 
