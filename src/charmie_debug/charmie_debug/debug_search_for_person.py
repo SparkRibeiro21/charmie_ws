@@ -10,26 +10,28 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
-    "charmie_audio":            False,
-    "charmie_face":             False,
-    "charmie_head_camera":      True,
-    "charmie_hand_camera":      False,
-    "charmie_base_camera":      False,
-    "charmie_gamepad":          False,
-    "charmie_lidar":            False,
-    "charmie_lidar_bottom":     False,
-    "charmie_llm":              False,
-    "charmie_localisation":     False,
-    "charmie_low_level":        False,
-    "charmie_navigation":       False,
-    "charmie_nav2":             False,
-    "charmie_neck":             True,
-    "charmie_obstacles":        False,
-    "charmie_speakers":         True,
-    "charmie_tracking":         False,
-    "charmie_yolo_objects":     False,
-    "charmie_yolo_pose":        True,
+    "charmie_arm":                  False,
+    "charmie_audio":                False,
+    "charmie_face":                 False,
+    "charmie_head_camera":          True,
+    "charmie_hand_camera":          False,
+    "charmie_base_camera":          False,
+    "charmie_gamepad":              False,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
+    "charmie_llm":                  False,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
+    "charmie_neck":                 True,
+    "charmie_radar":                False,
+    "charmie_sound_classification": False,
+    "charmie_speakers":             True,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            True,
 }
 
 # main function that already creates the thread for the task state machine
@@ -64,7 +66,7 @@ class TaskMain():
 
         print("IN NEW MAIN")
 
-        self.robot.set_initial_position([0.0, 0.0, 0.0])
+        # self.robot.set_initial_position([0.0, 0.0, 0.0])
 
         while True:
 
@@ -96,7 +98,8 @@ class TaskMain():
                     print(p.position_absolute.x, p.position_absolute.y, p.position_absolute.z)
                     path = self.robot.detected_person_to_face_path(person=p, send_to_face=True)
                     # self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
-                    self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
+                    # self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
+                    self.robot.set_neck_coords(position=[p.position_absolute_head.x, p.position_absolute_head.y, p.position_absolute_head.z], wait_for_end_of=True)
                     time.sleep(4)
                                 
                 # next state

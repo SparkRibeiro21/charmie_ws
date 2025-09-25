@@ -7,7 +7,7 @@ Panels:
         - /Global Options1
         - /PointCloud21/Topic1
       Splitter Ratio: 0.5
-    Tree Height: 638
+    Tree Height: 1317
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -99,6 +99,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        hand_camera_support_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         head_camera_link:
           Alpha: 1
           Show Axes: false
@@ -120,6 +125,11 @@ Visualization Manager:
           Show Trail: false
           Value: true
         lidar_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        livox_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -149,6 +159,80 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
         torso_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_gripper_left_finger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_gripper_left_inner_knuckle:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_gripper_left_outer_knuckle:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_gripper_link_tcp:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        xarm_gripper_right_finger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_gripper_right_inner_knuckle:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_gripper_right_outer_knuckle:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_gripper_xarm_gripper_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_link1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_link2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_link3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_link4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_link5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_link6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        xarm_link_base:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -186,6 +270,8 @@ Visualization Manager:
           Value: true
         hand_camera_link:
           Value: true
+        hand_camera_support_link:
+          Value: true
         head_camera_link:
           Value: true
         left_wheel_link:
@@ -195,6 +281,8 @@ Visualization Manager:
         lidar_bottom_frame:
           Value: true
         lidar_frame:
+          Value: true
+        livox_frame:
           Value: true
         neck_base_link:
           Value: true
@@ -259,9 +347,6 @@ Visualization Manager:
           legs_link:
             torso_link:
               top_torso_link:
-                hand_camera_link:
-                  D405_hand_link:
-                    {}
                 neck_base_link:
                   neck_pan_link:
                     neck_tilt_link:
@@ -269,9 +354,35 @@ Visualization Manager:
                         head_camera_link:
                           D455_head_link:
                             {}
+                xarm_link_base:
+                  xarm_link1:
+                    xarm_link2:
+                      xarm_link3:
+                        xarm_link4:
+                          xarm_link5:
+                            xarm_link6:
+                              hand_camera_support_link:
+                                hand_camera_link:
+                                  D405_hand_link:
+                                    {}
+                              xarm_gripper_xarm_gripper_base_link:
+                                xarm_gripper_left_inner_knuckle:
+                                  {}
+                                xarm_gripper_left_outer_knuckle:
+                                  xarm_gripper_left_finger:
+                                    {}
+                                xarm_gripper_link_tcp:
+                                  {}
+                                xarm_gripper_right_inner_knuckle:
+                                  {}
+                                xarm_gripper_right_outer_knuckle:
+                                  xarm_gripper_right_finger:
+                                    {}
           lidar_bottom_frame:
             {}
           lidar_frame:
+            {}
+          livox_frame:
             {}
           right_wheel_link:
             {}
@@ -378,7 +489,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: RGB8
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -399,9 +510,9 @@ Visualization Manager:
         Value: /CHARMIE/D455_head/depth/color/points
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/Image
-      Enabled: true
+      Enabled: false
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -413,7 +524,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /CHARMIE/D455_head/color/image_raw
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -426,7 +537,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: RGB8
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -447,9 +558,9 @@ Visualization Manager:
         Value: /camera/depth_registered/points
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/Image
-      Enabled: true
+      Enabled: false
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -461,6 +572,108 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /camera/color/image_raw
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 167
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /livox/lidar
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: ""
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: ""
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /livox/lidar/filtered
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: ""
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: ""
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /livox/lidar/discarded
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
   Enabled: true
   Global Options:
@@ -536,7 +749,7 @@ Window Geometry:
   Hide Right Dock: false
   Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000015600000562fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000002bb000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006501000002fe000001770000002800fffffffb0000000a0049006d006100670065010000047b000001240000002800ffffff000000010000010f00000562fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000562000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000009ba0000003efc0100000002fb0000000800540069006d00650100000000000009ba000002fb00fffffffb0000000800540069006d00650100000000000004500000000000000000000007490000056200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000015600000562fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000562000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006500000003c0000001df0000002800fffffffb0000000a0049006d006100670065000000047b000001240000002800ffffff000000010000010f00000562fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000562000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000009ba0000003efc0100000002fb0000000800540069006d00650100000000000009ba000002fb00fffffffb0000000800540069006d00650100000000000004500000000000000000000007490000056200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:

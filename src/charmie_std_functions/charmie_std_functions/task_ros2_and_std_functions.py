@@ -16,7 +16,9 @@ from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, B
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
-    ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu
+    ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
+    GetSoundClassificationContinuous
+
 from charmie_point_cloud.point_cloud_class import PointCloud
 
 import cv2 
@@ -28,6 +30,7 @@ from pathlib import Path
 from datetime import datetime
 import random
 import json
+import face_recognition
 from skimage.metrics import structural_similarity as ssim
 
 # Constant Variables to ease RGB_MODE coding
@@ -139,6 +142,9 @@ class ROS2TaskNode(Node):
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
         self.continuous_get_audio_client = self.create_client(ContinuousGetAudio, "continuous_audio")
         self.calibrate_audio_client = self.create_client(CalibrateAudio, "calibrate_audio")
+        # Sound Classification
+        self.get_sound_classification_client = self.create_client(GetSoundClassification, "get_sound_classification")
+        self.continuous_get_sound_classification_client = self.create_client(GetSoundClassificationContinuous, "get_sound_classification_continuous")
         # Face
         self.face_command_client = self.create_client(SetFace, "face_command")
         self.face_set_touchscreen_menu_client = self.create_client(SetFaceTouchscreenMenu, "set_face_touchscreen_menu")
@@ -186,26 +192,28 @@ class ROS2TaskNode(Node):
         self.send_node_used_to_gui()
 
         """
-            "charmie_arm":              True,
-            "charmie_audio":            True,
-            "charmie_face":             True,
-        "charmie_head_camera":      True,
-        "charmie_hand_camera":      True,
-        "charmie_base_camera":      False,
-        "charmie_gamepad":          False,
-        "charmie_lidar":            True,
-        "charmie_lidar_bottom":     False,
-            "charmie_llm":              False,
-        "charmie_localisation":     False,
-            "charmie_low_level":        True,
-            "charmie_navigation":       True,
-            "charmie_nav2":             False,
-            "charmie_neck":             True,
-            "charmie_obstacles":        True,
-            "charmie_speakers":         True,
-            "charmie_tracking":        False,
-            "charmie_yolo_objects":     True,
-            "charmie_yolo_pose":        False,
+            "charmie_arm":                  True,
+            "charmie_audio":                True,
+            "charmie_face":                 True,
+        "charmie_head_camera":              True,
+        "charmie_hand_camera":              True,
+        "charmie_base_camera":              False,
+        "charmie_gamepad":                  False,
+        "charmie_lidar":                    True,
+        "charmie_lidar_bottom":             False,
+        "charmie_lidar_livox":              False,
+            "charmie_llm":                  False,
+        "charmie_localisation":             False,
+            "charmie_low_level":            True,
+            "charmie_navigation":           True,
+            "charmie_nav2":                 False,
+            "charmie_neck":                 True,
+        "charmie_radar":                    True,
+            "charmie_sound_classification": False,
+            "charmie_speakers":             True,
+            "charmie_tracking":             False,
+            "charmie_yolo_objects":         True,
+            "charmie_yolo_pose":            False,
         """
 
         # waits until all modules are correctly turned ON
@@ -255,11 +263,11 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for Server Set Neck Track Person Command...")
             while not self.neck_track_object_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
-
-        if self.ros2_modules["charmie_obstacles"]:
-            while not self.activate_obstacles_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Activate Obstacles Command...")
-
+        
+        if self.ros2_modules["charmie_sound_classification"]:
+            while not self.get_sound_classification_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Sound Classification Command...")
+            
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Speech Command...")
@@ -294,6 +302,8 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_audio = False
         self.waited_for_end_of_calibrate_audio = False
         self.waited_for_end_of_continuous_audio = False
+        self.waited_for_end_of_sound_classification = False
+        self.waited_for_end_of_continuous_sound_classification = False
         self.waited_for_end_of_speaking = False
         self.waited_for_end_of_save_speaking = False
         self.waited_for_end_of_neck_pos = False
@@ -358,6 +368,10 @@ class ROS2TaskNode(Node):
         self.continuous_audio_message = ""
         self.calibrate_audio_success = True
         self.calibrate_audio_message = ""
+        self.sound_classification_success = True
+        self.sound_classification_message = ""
+        self.continuous_sound_classification_success = True
+        self.continuous_sound_classification_message = ""
         self.face_success = True
         self.face_message = ""
         self.neck_success = True
@@ -385,7 +399,17 @@ class ROS2TaskNode(Node):
 
         self.audio_command = ""
         self.received_continuous_audio = False
+        self.continuous_audio_detected_keyword = ""
 
+        self.sound_classification_labels = []
+        self.sound_classification_scores = []
+        self.received_continuous_sound_classification = False
+        self.continuous_sound_classification_detected_label = ""
+        self.continuous_sound_classification_detected_score = 0.0
+
+        self.face_recognition_encoding = []
+        self.face_recognition_names = []
+        
         self.CAM_IMAGE_WIDTH = 848
         self.CAM_IMAGE_HEIGHT = 480
 
@@ -427,26 +451,28 @@ class ROS2TaskNode(Node):
 
         nodes_used = NodesUsed.Request()
 
-        nodes_used.charmie_arm          = self.ros2_modules["charmie_arm"]
-        nodes_used.charmie_audio        = self.ros2_modules["charmie_audio"]
-        nodes_used.charmie_face         = self.ros2_modules["charmie_face"]
-        nodes_used.charmie_head_camera  = self.ros2_modules["charmie_head_camera"]
-        nodes_used.charmie_hand_camera  = self.ros2_modules["charmie_hand_camera"]
-        nodes_used.charmie_base_camera  = self.ros2_modules["charmie_base_camera"]
-        nodes_used.charmie_gamepad      = self.ros2_modules["charmie_gamepad"]
-        nodes_used.charmie_lidar        = self.ros2_modules["charmie_lidar"]
-        nodes_used.charmie_lidar_bottom = self.ros2_modules["charmie_lidar_bottom"]
-        nodes_used.charmie_localisation = self.ros2_modules["charmie_localisation"]
-        nodes_used.charmie_low_level    = self.ros2_modules["charmie_low_level"]
-        nodes_used.charmie_llm          = self.ros2_modules["charmie_llm"]
-        nodes_used.charmie_navigation   = self.ros2_modules["charmie_navigation"]
-        nodes_used.charmie_nav2         = self.ros2_modules["charmie_nav2"]
-        nodes_used.charmie_neck         = self.ros2_modules["charmie_neck"]
-        nodes_used.charmie_obstacles    = self.ros2_modules["charmie_obstacles"]
-        nodes_used.charmie_speakers     = self.ros2_modules["charmie_speakers"]
-        nodes_used.charmie_tracking     = self.ros2_modules["charmie_tracking"]
-        nodes_used.charmie_yolo_objects = self.ros2_modules["charmie_yolo_objects"]
-        nodes_used.charmie_yolo_pose    = self.ros2_modules["charmie_yolo_pose"]
+        nodes_used.charmie_arm                  = self.ros2_modules["charmie_arm"]
+        nodes_used.charmie_audio                = self.ros2_modules["charmie_audio"]
+        nodes_used.charmie_face                 = self.ros2_modules["charmie_face"]
+        nodes_used.charmie_head_camera          = self.ros2_modules["charmie_head_camera"]
+        nodes_used.charmie_hand_camera          = self.ros2_modules["charmie_hand_camera"]
+        nodes_used.charmie_base_camera          = self.ros2_modules["charmie_base_camera"]
+        nodes_used.charmie_gamepad              = self.ros2_modules["charmie_gamepad"]
+        nodes_used.charmie_lidar                = self.ros2_modules["charmie_lidar"]
+        nodes_used.charmie_lidar_bottom         = self.ros2_modules["charmie_lidar_bottom"]
+        nodes_used.charmie_lidar_livox          = self.ros2_modules["charmie_lidar_livox"]
+        nodes_used.charmie_localisation         = self.ros2_modules["charmie_localisation"]
+        nodes_used.charmie_low_level            = self.ros2_modules["charmie_low_level"]
+        nodes_used.charmie_llm                  = self.ros2_modules["charmie_llm"]
+        nodes_used.charmie_navigation           = self.ros2_modules["charmie_navigation"]
+        nodes_used.charmie_nav2                 = self.ros2_modules["charmie_nav2"]
+        nodes_used.charmie_neck                 = self.ros2_modules["charmie_neck"]
+        nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
+        nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
+        nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
+        nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
+        nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
+        nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
 
         self.nodes_used_client.call_async(nodes_used)
 
@@ -695,9 +721,10 @@ class ROS2TaskNode(Node):
             # it seems that when using future variables, it creates some type of threading system
             # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
             response = future.result()
-            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.get_logger().info(str(response.success) + " - " + str(response.message) + " - " + str(response.detected_keyword))
             self.continuous_audio_success = response.success
             self.continuous_audio_message = response.message
+            self.continuous_audio_detected_keyword = response.detected_keyword
             self.waited_for_end_of_continuous_audio = True
             self.received_continuous_audio = True
         except Exception as e:
@@ -725,6 +752,57 @@ class ROS2TaskNode(Node):
             self.calibrate_audio_success = response.success
             self.calibrate_audio_message = response.message
             self.waited_for_end_of_calibrate_audio = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+    #### SOUND CLASSIFICATION SERVER FUNCTIONS #####
+    def call_sound_classification_server(self, request=GetSoundClassification.Request(), wait_for_end_of=True):
+
+        future = self.get_sound_classification_client.call_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_sound_classification)
+        else:
+            self.sound_classification_success = True
+            self.sound_classification_message = "Wait for answer not needed"
+    
+    def callback_call_sound_classification(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.labels)+" "+str(response.scores))
+            self.sound_classification_success = True
+            self.sound_classification_message = "Finished sound classification command"
+            self.sound_classification_labels = response.labels
+            self.sound_classification_scores = response.scores
+            self.waited_for_end_of_sound_classification = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+    
+    def call_continuous_sound_classification_server(self, request=GetSoundClassificationContinuous.Request(), wait_for_end_of=True):
+
+        future = self.continuous_get_sound_classification_client.call_async(request)
+
+        future.add_done_callback(self.callback_call_continuous_sound_classification)
+
+    def callback_call_continuous_sound_classification(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message) + " - " + str(response.detected_label) + " - " + str(response.detected_score))
+            self.continuous_sound_classification_success = response.success
+            self.continuous_sound_classification_message = response.message
+            self.continuous_sound_classification_detected_label = response.detected_label
+            self.continuous_sound_classification_detected_score = response.detected_score
+            self.waited_for_end_of_continuous_sound_classification = True
+            self.received_continuous_sound_classification = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -1419,28 +1497,55 @@ class RobotStdFunctions():
             self.node.get_logger().error("ERROR: No audio type selected")
             return "ERROR: No audio type selected" 
 
-    def get_continuous_audio(self, keywords=[], max_number_attempts=3, wait_for_end_of=True):
+    def get_continuous_audio(self, keywords=[], max_number_attempts=3, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=True):
 
         request = ContinuousGetAudio.Request()
         request.keywords = keywords
         request.max_number_attempts = max_number_attempts
+
+        self.node.continuous_audio_detected_keyword = ""
+           
+        if speak_pre_hearing:
+            self.set_speech(filename="audio/audio_continuous_start_"+str(random.randint(1, 5)), wait_for_end_of=True)
+            for k in keywords:
+                self.set_speech(command=k, wait_for_end_of=True)
+        self.set_face(face_hearing)
             
         self.node.call_continuous_audio_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
             while not self.node.waited_for_end_of_continuous_audio:
                 pass
+            self.set_face("charmie_face")
+            if speak_post_hearing:
+                if self.node.continuous_audio_success:
+                    self.set_speech(filename="audio/audio_continuous_stop", wait_for_end_of=True)
+                    self.set_speech(command=self.node.continuous_audio_detected_keyword, wait_for_end_of=True)
+                else: # timeout or error
+                    self.set_speech(filename="audio/audio_continuous_timeout", wait_for_end_of=True)
         self.node.waited_for_end_of_continuous_audio = False
 
-        return self.node.continuous_audio_success, self.node.continuous_audio_message 
+        return  self.node.continuous_audio_success, \
+                self.node.continuous_audio_message, \
+                self.node.continuous_audio_detected_keyword
     
-    def is_get_continuous_audio_done(self):
+    def is_get_continuous_audio_done(self, speak_post_hearing=True):
 
         if self.node.received_continuous_audio:
             self.node.received_continuous_audio = False
-            return True, self.node.continuous_audio_success, self.node.continuous_audio_message
+            self.set_face("charmie_face")
+            if speak_post_hearing:
+                if self.node.continuous_audio_success:
+                    self.set_speech(filename="audio/audio_continuous_stop", wait_for_end_of=True)
+                    self.set_speech(command=self.node.continuous_audio_detected_keyword, wait_for_end_of=True)
+                else: # timeout or error
+                    self.set_speech(filename="audio/audio_continuous_timeout", wait_for_end_of=True)
+            return  True, \
+                    self.node.continuous_audio_success, \
+                    self.node.continuous_audio_message, \
+                    self.node.continuous_audio_detected_keyword
         
-        return False, False, ""
+        return False, False, "", ""
     
     def calibrate_audio(self, wait_for_end_of=True):
 
@@ -1455,6 +1560,115 @@ class RobotStdFunctions():
 
         return self.node.calibrate_audio_success, self.node.calibrate_audio_message 
     
+    def get_sound_classification(self, question="", duration=0.0, score_threshold=-1.0, face_hearing="charmie_face_green", wait_for_end_of=True):
+
+        request = GetSoundClassification.Request()
+        request.duration = float(duration)
+        request.score_threshold = float(score_threshold) # from 0 to 1, if by deafult -1 is used, sound_classification server default value is used
+
+        self.set_speech(filename=question, wait_for_end_of=True)
+        self.set_face(face_hearing)
+        self.node.call_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_sound_classification:
+                pass
+        self.node.waited_for_end_of_sound_classification = False
+        self.set_face("charmie_face")
+
+        return self.node.sound_classification_labels, self.node.sound_classification_scores 
+    
+    def get_continuous_sound_classification(self, break_sounds=[], timeout=0.0, score_threshold=-1.0, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=True):
+        
+        request = GetSoundClassificationContinuous.Request()
+        request.break_sounds = break_sounds
+        request.timeout = float(timeout)
+        request.score_threshold = float(score_threshold) # from 0 to 1, if by deafult -1 is used, sound_classification server default value is used
+
+        self.node.continuous_sound_classification_detected_label = ""
+        self.node.continuous_sound_classification_detected_score = 0.0
+        
+        if speak_pre_hearing:
+            self.set_speech(filename="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), wait_for_end_of=True)
+        self.set_face(face_hearing)
+        
+        self.node.call_continuous_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_continuous_sound_classification:
+                pass
+            self.set_face("charmie_face")
+            if speak_post_hearing:
+                if self.node.continuous_sound_classification_success:
+                    self.set_speech(filename="sound_classification/sound_classification_continuous_stop", wait_for_end_of=True)
+                    self.set_speech(command=self.node.continuous_sound_classification_detected_label, wait_for_end_of=True)
+                else: # timeout or error
+                    self.set_speech(filename="sound_classification/sound_classification_continuous_timeout", wait_for_end_of=True)
+        self.node.waited_for_end_of_continuous_sound_classification = False
+
+        return  self.node.continuous_sound_classification_success, \
+                self.node.continuous_sound_classification_message, \
+                self.node.continuous_sound_classification_detected_label, \
+                self.node.continuous_sound_classification_detected_score
+        
+    def is_get_continuous_sound_classification_done(self, speak_post_hearing=True):
+
+        if self.node.received_continuous_sound_classification:
+            self.node.received_continuous_sound_classification = False
+            self.set_face("charmie_face")
+            if speak_post_hearing:
+                if self.node.continuous_sound_classification_success:
+                    self.set_speech(filename="sound_classification/sound_classification_continuous_stop", wait_for_end_of=True)
+                    self.set_speech(command=self.node.continuous_sound_classification_detected_label, wait_for_end_of=True)
+                else: # timeout or error
+                    self.set_speech(filename="sound_classification/sound_classification_continuous_timeout", wait_for_end_of=True)
+            return  True, \
+                    self.node.continuous_sound_classification_success, \
+                    self.node.continuous_sound_classification_message, \
+                    self.node.continuous_sound_classification_detected_label, \
+                    self.node.continuous_sound_classification_detected_score
+        
+        return False, False, "", "", 0.0
+    
+    def wait_for_doorbell(self, timeout=20.0, score_threshold=0.1):
+
+        # List of possible doorbell sounds
+        doorbell_break_sounds=["alarm",
+                               "alarm clock",
+                               "beep, bleep",
+                               "bell",
+                               "bicycle bell",
+                               "buzzer",
+                               "chime",
+                               "clock",
+                               "ding-dong",
+                               "doorbell",
+                               "glockenspiel",
+                               "mains hum",
+                               "mallet percussion",
+                               "marimba, xylophone",
+                               "ringtone",
+                               "telephone",
+                               "telephone bell ringing",
+                               "tubular bells",
+                               "tuning fork",
+                               "vibraphone",
+                              ]
+        
+        # Speak specific for doorbell before starting listening for doorbell 
+        self.set_speech(filename="sound_classification/doorbell_sound_classification_start_"+str(random.randint(1, 6)), wait_for_end_of=True)
+
+        # Call sound classification continuous(with list of possible doorbell break sounds)
+        success, message, label, score = self.get_continuous_sound_classification(break_sounds=doorbell_break_sounds, timeout=timeout, score_threshold=score_threshold, speak_pre_hearing=False, speak_post_hearing=False, wait_for_end_of=True)
+
+        # Speak specific for doorbell after starting listening for doorbell if success:
+        if success:
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_stop", wait_for_end_of=True)
+        else: # timeout or error
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_timeout", wait_for_end_of=True)
+
+        return success, message, label, score
+
     def set_face(self, command="", custom="", camera="", show_detections=False, wait_for_end_of=False):
         
         request = SetFace.Request()
@@ -3149,7 +3363,25 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height']]  # Return the class
+                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height'][0]] # Return the class
+        return None  # Return None if the object is not found
+    
+    def get_top_coords_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['top_left_coords'].copy()
+        return None  # Return None if the object is not found
+    
+    def get_bot_coords_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['bot_right_coords'].copy()
         return None  # Return None if the object is not found
     
     def get_top_coords_from_furniture(self, furniture):
@@ -3176,7 +3408,16 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['height'] # Return the height
+                return obj['height'].copy() # Return the height
+        return None  # Return None if the object is not found
+
+    def get_look_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['look'] # Return the look
         return None  # Return None if the object is not found
 
     def get_look_from_furniture(self, furniture):
@@ -3381,8 +3622,8 @@ class RobotStdFunctions():
             options = sorted(options)
         # print("OPTIONS: ", options)
         
-        if options:
-    
+        if options or mode == "keyboard" or mode == "numpad": # keybord and numpad modes do not need options to work
+            
             self.set_speech(filename=start_speak_file, wait_for_end_of=True)
     
             request = SetFaceTouchscreenMenu.Request()
@@ -3408,19 +3649,23 @@ class RobotStdFunctions():
             else:
                 if speak_results:
                     self.set_speech(filename="face_touchscreen_menu/selected_touchscreen_menu", wait_for_end_of=True)
+                    if mode == "keyboard" or mode == "numpad":
+                        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                        self.save_speech(command=self.node.selected_list_options_touchscreen_menu[0].lower(), filename=current_datetime, quick_voice=False, play_command=True, show_in_face=True, wait_for_end_of=True)
 
-                    # function just for automatically search for the speak file amongst the sppech folder
-                    said = False    
-                    for so in self.node.selected_list_options_touchscreen_menu:
-                        said = False
-                        for file, folder in zip(files_for_speech, folder_for_speech):
-                            # print(file)
-                            for obj in file:
-                                # print(so.lower(), "| " ,obj["name"].lower())
-                                if so.lower() == obj["name"].lower():
-                                    if not said:
-                                        self.set_speech(filename=folder+"/"+so.replace(" ","_").lower())
-                                        said = True
+                    else:
+                        # function just for automatically search for the speak file amongst the sppech folder
+                        said = False    
+                        for so in self.node.selected_list_options_touchscreen_menu:
+                            said = False
+                            for file, folder in zip(files_for_speech, folder_for_speech):
+                                # print(file)
+                                for obj in file:
+                                    # print(so.lower(), "| " ,obj["name"].lower())
+                                    if so.lower() == obj["name"].lower():
+                                        if not said:
+                                            self.set_speech(filename=folder+"/"+so.replace(" ","_").lower())
+                                            said = True
 
                 return self.node.selected_list_options_touchscreen_menu
         
@@ -3428,7 +3673,54 @@ class RobotStdFunctions():
             print("FACE TOUCHSCREEN MENU SKIPPED! NO VALID OPTIONS!")
             self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
             return ["ERROR"]
+        
+    def add_face_to_face_recognition(self, person=DetectedPerson(), image="", name=""):
+        
+        # TODO: add DetectedPerson option to save image from the camera directly
+        # TODO: Test if bad image is added (no face in the image)
 
+        image = face_recognition.load_image_file(image)
+        encoding_entry = face_recognition.face_encodings(image)
+
+        if len(encoding_entry) > 0:
+
+            self.node.face_recognition_encoding.append(encoding_entry[0])
+            self.node.face_recognition_names.append(name)
+            # print(self.node.face_recognition_encoding)
+            # print(self.node.face_recognition_names)
+        else:
+            print("No face found in the image. Please try again.")
+
+    def recognize_face_from_face_recognition(self, person=DetectedPerson(), image="", tolerance=40):
+        
+        # TODO: add DetectedPerson option to save image from the camera directly
+        # TODO: Test if bad image is added (no face in the image)
+        
+        if not self.node.face_recognition_encoding:
+            print("RECOGNIZED: Unknown 0.0")
+            return "unknown", 0.0
+        
+        image = face_recognition.load_image_file(image)
+        encoding_entry = face_recognition.face_encodings(image)
+        if len(encoding_entry) == 0:
+            print("RECOGNIZED: Unknown 0.0")
+            return "unknown", 0.0
+        encoding_entry = encoding_entry[0]  
+
+        all_percentages = []
+        for enc in self.node.face_recognition_encoding:
+        
+            distance = face_recognition.face_distance([enc], encoding_entry)[0]
+            confidence = (1 - distance) * 100
+            all_percentages.append(confidence)
+
+        name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
+        if biggest_conf_recognized < tolerance:
+            name_recognized = "unknown"
+        # print("RECOGNIZED:", name_recognized, biggest_conf_recognized, all_percentages)
+
+        return name_recognized.lower(), biggest_conf_recognized
+            
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
 		Convert an Euler angle to a quaternion.

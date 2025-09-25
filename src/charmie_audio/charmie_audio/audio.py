@@ -697,13 +697,13 @@ class WhisperAudio():
         print()
 
         if word_ctr > 0:
-            print("HEAR A KEYWORD:'%s'" %  word_predicted)
+            print("HEARD A KEYWORD:'%s'" %  word_predicted)
             self.node.set_rgb(GREEN+BACK_AND_FORTH_8)
-            return True
+            return True, word_predicted
         else:
             print("DID NOT HEAR A KEYWORD")
             self.node.set_rgb(RED+BACK_AND_FORTH_8)
-            return False
+            return False, ""
             
 
     def compare_commands(self, w_dict, predicted_text, lst):
@@ -1033,10 +1033,11 @@ class AudioNode(Node):
         print(request.keywords)
         print(request.max_number_attempts)
 
-        heard_keyword = False
+        is_heard_keyword = False
         hear_attempt_ctr = 0
+        detected_keyword = ""
 
-        while not heard_keyword:
+        while not is_heard_keyword:
 
             self.charmie_audio.hear_speech()
             self.get_logger().info("Finished Hearing, Start Processing")
@@ -1052,24 +1053,22 @@ class AudioNode(Node):
                 self.audio_interpreted_publisher.publish(debug_interpreted_audio)
                 
                 # publish rgb estou a calcular as keywords
-                heard_keyword = self.charmie_audio.check_continuous_keywords(speech_heard, request.keywords)
+                is_heard_keyword, detected_keyword = self.charmie_audio.check_continuous_keywords(speech_heard, request.keywords)
 
-                if heard_keyword:
+                if is_heard_keyword:
                     break
                 # print("Keywords:", keywords)
-            # else:
-            #     self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
-            #     keywords = None
+            else:
+                self.charmie_audio.ERRO_MAXIMO = False # temp var unltil i fix the timeout when no speak start is detected
             
             hear_attempt_ctr += 1
             if hear_attempt_ctr >= request.max_number_attempts:
                 break
-            # if keywords=="" or keywords=="ERROR" or keywords==None:
-            #     self.get_logger().info("Got error, have to retry the hearing")
-            #     keywords = "ERROR"
-        
-        response.success = heard_keyword
+                    
+        response.success = is_heard_keyword
         response.message = "Finished Continuous Audio Mode"
+        response.detected_keyword = detected_keyword
+        
         return response
     
     def set_rgb(self, command=0, wait_for_end_of=True):

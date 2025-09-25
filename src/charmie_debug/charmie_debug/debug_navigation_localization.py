@@ -10,25 +10,28 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
-    "charmie_audio":            False,
-    "charmie_face":             False,
-    "charmie_head_camera":      True,
-    "charmie_hand_camera":      False,
-    "charmie_base_camera":      False,
-    "charmie_gamepad":          False,
-    "charmie_lidar":            True,
-    "charmie_lidar_bottom":     False,
-    "charmie_llm":              False,
-    "charmie_localisation":     False,
-    "charmie_low_level":        True,
-    "charmie_navigation":       True,
-    "charmie_neck":             True,
-    "charmie_obstacles":        True,
-    "charmie_speakers":         False,
-    "charmie_tracking":         False,
-    "charmie_yolo_objects":     False,
-    "charmie_yolo_pose":        False,
+    "charmie_arm":                  False,
+    "charmie_audio":                False,
+    "charmie_face":                 False,
+    "charmie_head_camera":          False,
+    "charmie_hand_camera":          False,
+    "charmie_base_camera":          False,
+    "charmie_gamepad":              False,
+    "charmie_lidar":                True,
+    "charmie_lidar_bottom":         True,
+    "charmie_lidar_livox":          False,
+    "charmie_llm":                  False,
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 True,
+    "charmie_neck":                 False,
+    "charmie_radar":                False,
+    "charmie_sound_classification": False,
+    "charmie_speakers":             True,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -53,20 +56,12 @@ class TaskMain():
 
     def main(self):
         Waiting_for_start_button = 0
-        Searching_for_clients = 1
-        Navigation_to_person = 2
-        Receiving_order_speach = 3
-        Receiving_order_listen_and_confirm = 4
-        Collect_order_from_barman = 5
-        Delivering_order_to_client = 6
-        Final_State = 7
+        Move_to_location1 = 1
+        Final_State = 2
         
-        # self.initial_position = [-2.5, 1.5, 0]
-        self.initial_position = [0.0, 0.1, 0.0]
-
-        # navigation positions
-        self.front_of_sofa = [-2.5, 1.5]
-        self.sofa = [-2.5, 3.0]
+        # self.initial_position = [0.0, 0.0, 0.0]
+        self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
+        self.NAVIGATION_TARGET = "couch"
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -84,68 +79,48 @@ class TaskMain():
                 # This command must only be sent once, at the start of the task
                 self.robot.set_initial_position(self.initial_position)
 
-                self.robot.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=True)
+                # self.robot.activate_obstacles(obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=True)
 
                 self.robot.wait_for_start_button()
                 
-                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                # self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                self.robot.wait_for_door_start()
+                # self.robot.wait_for_door_start()
 
                 # time.sleep(5)
-                self.robot.set_neck(position=[0-0, -50.0], wait_for_end_of=True)
+                # self.robot.set_neck(position=[0-0, -50.0], wait_for_end_of=True)
 
                 # next state
-                self.state = Searching_for_clients
+                self.state = Move_to_location1
 
-            elif self.state == Searching_for_clients:
+            elif self.state == Move_to_location1:
                 print('State 1 = Hand Raising Detect')
 
-                # time.sleep(5)
-                # time.sleep(3)
-                
-                # self.set_navigation(movement="move", target=[-2.0, 2.1], max_speed=10, reached_radius=0.5, flag_not_obs=False, wait_for_end_of=True)
-                self.robot.set_navigation(movement="rotate", target=[-0.5, 1.5], wait_for_end_of=True)
-                self.robot.set_navigation(movement="move", target=[-0.5, 1.5], max_speed=15, reached_radius=0.5, flag_not_obs=False, wait_for_end_of=False)
-
-                # after new nav2 update:
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=False)
 
-                # create a rotation to a specicific direction (no longer needed to do, after the mandatory initial rotation to path planning orientation update)
-                # just rotate by yourself to be facing the direction of next movement
-                move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk"))))
-                move_coords[2] = -45.0
+                # must be removed after the update to minimize as much as possivle the final orientation error 
+                move_coords = self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET)                
+                # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
 
-                # move to target position, adding the +45 degree orientation for somepicking options
-                self.robot.move_to_position(move_coords=self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")))), wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=True)
 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
-                                    
-                """
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=0.0, wait_for_end_of=True)
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
-                # time.sleep(1.0)
-                self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                # time.sleep(1.0)
+                time.sleep(3.0)
+
+                self.robot.adjust_omnidirectional_position(dx=0.0, dy=1.0)
+
+                time.sleep(3.0)
                 
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=0.0, wait_for_end_of=True)
-                self.set_navigation(movement="adjust", flag_not_obs=True, adjust_distance=0.25, adjust_direction=180.0, wait_for_end_of=True)
-                # time.sleep(1.0)
-                self.set_navigation(movement="adjust_angle", absolute_angle=5.0, flag_not_obs=True, wait_for_end_of=True)
-                # self.set_navigation(movement="adjust_angle", absolute_angle=0.0, flag_not_obs=True, wait_for_end_of=True)
-                """
+                # self.robot.set_neck(position=self.look_table_objects, wait_for_end_of=False)
 
-                while True:
-                    print(self.robot.get_robot_localization())
-                    time.sleep(0.5)
-                    pass    
+                # while True:
+                #     print(self.robot.get_robot_localization())
+                #     time.sleep(0.5)
+                #     pass    
 
-                # your code here ...
-                                
                 # next state
                 # self.state = Final_State
             

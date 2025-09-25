@@ -11,26 +11,28 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
-    "charmie_audio":            False,
-    "charmie_face":             False,
-    "charmie_head_camera":      False,
-    "charmie_hand_camera":      False,
-    "charmie_base_camera":      False,
-    "charmie_gamepad":          False,
-    "charmie_lidar":            False,
-    "charmie_lidar_bottom":     False,
-    "charmie_llm":              False,
-    "charmie_localisation":     False,
-    "charmie_low_level":        False,
-    "charmie_navigation":       False,
-    "charmie_nav2":             False,
-    "charmie_neck":             True,
-    "charmie_obstacles":        False,
-    "charmie_speakers":         False,
-    "charmie_tracking":         False,
-    "charmie_yolo_objects":     False,
-    "charmie_yolo_pose":        False,
+    "charmie_arm":                  False,
+    "charmie_audio":                False,
+    "charmie_face":                 False,
+    "charmie_head_camera":          False,
+    "charmie_hand_camera":          False,
+    "charmie_base_camera":          False,
+    "charmie_gamepad":              False,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
+    "charmie_llm":                  False,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
+    "charmie_neck":                 False,
+    "charmie_radar":                False,
+    "charmie_sound_classification": False,
+    "charmie_speakers":             False,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -81,14 +83,16 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
-                o = "knife"
+                o = "milk"
                 c = self.robot.get_object_class_from_object(o)
                 f = self.robot.get_furniture_from_object_class(c)
                 r = self.robot.get_room_from_furniture(f)
+                fh = self.robot.get_height_from_furniture(f)
+
                 fnc = self.robot.get_navigation_coords_from_furniture(f)
                 flc = self.robot.get_location_coords_from_furniture(f)
                 rnc = self.robot.get_navigation_coords_from_room(r)
-                print(o, "|", c, "|", f, "|", fnc, "|", flc, "|", r, "|", rnc)
+                print(o, "|", c, "|", f, "|", fh, "|", fnc, "|", flc, "|", r, "|", rnc)
 
                 ow = self.robot.get_object_width_from_object(o)
                 ol = self.robot.get_object_length_from_object(o)
@@ -98,8 +102,49 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
+                path1 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_12-41-44_.jpg" # RENATA
+                path2 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-34-28_.jpg" # XIAOI
+                path3 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-35-55_.jpg" # ADAM
+                
+                self.robot.add_face_to_face_recognition(image=path1, name="Renata")
+                self.robot.add_face_to_face_recognition(image=path2, name="Xiaoi")
+                self.robot.add_face_to_face_recognition(image=path3, name="Adam")
 
-                self.robot.set_neck_coords(flc, wait_for_end_of=True)
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
+                print(pred, pred_perc, "Should be ADAM")
+
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_154i_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
+                print(pred, pred_perc, "Should be XIAOI")
+
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_07-24-43_126i_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
+                print(pred, pred_perc, "Should be RENATA")
+                
+                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-16_20-40-04_.jpg"
+                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image=path_recognize)
+                print(pred, pred_perc, "Should be UNKNOWN")
+
+                
+
+                """ while True:
+
+                    selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="numpad", start_speak_file="face_touchscreen_menu/init_touchscreen_keyboard_menu", speak_results=True)
+                    print(selected_option)
+                    time.sleep(3.0)
+
+                    selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="keyboard", start_speak_file="face_touchscreen_menu/init_touchscreen_keyboard_menu", speak_results=True)
+                    print(selected_option)
+                    time.sleep(3.0) """
+
+                # selected_option = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True)
+                # selected_option = self.robot.set_face_touchscreen_menu([selected_option[0]], timeout=10, mode="single", speak_results=True)
+                
+                # selected_option_ = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True)
+                # selected_option_ = self.robot.set_face_touchscreen_menu([selected_option_[0]], timeout=10, mode="single", speak_results=True)
+
+                # self.robot.set_neck_coords(flc, wait_for_end_of=True)
                 # self.robot.set_neck_coords([0,0,0], wait_for_end_of=True)
                 # self.robot.set_neck_coords([1.5, 0, 0], wait_for_end_of=True)
 

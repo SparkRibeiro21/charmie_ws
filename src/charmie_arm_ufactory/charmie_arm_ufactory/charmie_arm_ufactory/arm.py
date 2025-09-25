@@ -889,1251 +889,330 @@ class ArmUfactory(Node):
 	### SERVE THE BREAKFAST ARM MOVEMENTS ###
 
 	def collect_spoon_to_tray(self):
-
-		if self.estado_tr == 0:
-			self.position_values_req.pose = self.above_cuttlery_cup
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.place_in_cuttlery_cup
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.position_values_req.pose = self.step_away_from_cuttlery_cup
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		if self.estado_tr == 5:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 5000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 7:
-			self.position_values_req.pose = self.get_lower_order_position_linear
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.above_cuttlery_cup, speed=200, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_in_cuttlery_cup, speed=200, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.step_away_from_cuttlery_cup, speed=200, wait=True)
+			case 5:
+				self.set_gripper_speed_(speed=5000)
+			case 6:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 7:
+				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=200, wait=True)
+			case 8:
+				self.finish_arm_movement_()
 
 	def collect_milk_to_tray(self):
-
-		if self.estado_tr == 0:
-			self.position_values_req.pose = self.above_milk_place_spot
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.place_milk_in_tray
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.position_values_req.pose = self.step_away_from_milk_in_tray
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		if self.estado_tr == 5:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 5000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 7:
-			self.position_values_req.pose = self.get_lower_order_position_linear
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.above_milk_place_spot, speed=150, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=150, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.step_away_from_milk_in_tray, speed=200, wait=True)
+			case 5:
+				self.set_gripper_speed_(speed=5000)
+			case 6:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 7:
+				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=150, wait=True)
+			case 8:
+				self.finish_arm_movement_()
 
 	def collect_cornflakes_to_tray(self):
-
-		if self.estado_tr == 0:
-			self.position_values_req.pose = self.above_cornflakes_place_spot
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.place_cornflakes_in_tray
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.position_values_req.pose = self.step_away_from_cornflakes_in_tray
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		if self.estado_tr == 5:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 5000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 7:
-			self.position_values_req.pose = self.get_lower_order_position_linear
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.above_cornflakes_place_spot, speed=150, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_cornflakes_in_tray, speed=200, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.step_away_from_cornflakes_in_tray, speed=200, wait=True)
+			case 5:
+				self.set_gripper_speed_(speed=5000)
+			case 6:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 7:
+				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=200, wait=True)
+			case 8:
+				self.finish_arm_movement_()
 
 	def collect_cornflakes_to_tray_alternative_robocup_cornflakes(self):
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.above_cornflakes_place_spot_alternative)
-			self.joint_values_req.speed = math.radians(60)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.place_cornflakes_in_tray_alternative # -221.6
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 900.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.position_values_req.pose = self.step_away_from_cornflakes_in_tray_alternative # -224.5
-			self.position_values_req.speed = 200.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		if self.estado_tr == 5:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 5000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-					
-		elif self.estado_tr == 7:
-			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = math.radians(60)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.above_cornflakes_place_spot_alternative, speed=60, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_cornflakes_in_tray_alternative, speed=200, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.step_away_from_cornflakes_in_tray_alternative, speed=200, wait=True)
+			case 5:
+				self.set_gripper_speed_(speed=5000)
+			case 6:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 7:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=60, wait=True)
+			case 8:
+				self.finish_arm_movement_()
 
 	def collect_bowl_to_initial_position(self):
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
-			self.joint_values_req.speed = math.radians(60)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.initial_position_joints, speed=60, wait=True)
+			case 1:
+				self.finish_arm_movement_()
 
 	### PLACE OBJECTS ON THE TABLE
 
 	def place_bowl_table(self):
-		# if self.estado_tr == 0:
-		# 	self.joint_values_req.angles = self.deg_to_rad(self.initial_position_joints)
-		# 	self.joint_values_req.speed = math.radians(60)
-		# 	self.joint_values_req.wait = True
-		# 	self.joint_values_req.radius = 0.0
-		# 	self.future = self.set_joint_client.call_async(self.joint_values_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_place_bowl_joint)
-			self.joint_values_req.speed = math.radians(70)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.place_bowl_table_final
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 2000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 500.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.position_values_req.pose = self.little_adjustment_after_placing_bowl
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 5:
-			self.set_gripper_req.pos = 80.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.set_gripper_req.pos = 850.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 7:
-			self.position_values_req.pose = self.pre_place_bowl_linear
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 8:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_place_bowl_joint, speed=60, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_bowl_table_final, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=2000)
+			case 3:
+				self.set_gripper_position_(pos=500, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.little_adjustment_after_placing_bowl, speed=100, wait=True)
+			case 5:
+				self.set_gripper_position_(pos=80, wait=True)
+			case 6:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.pre_place_bowl_linear, speed=120, wait=True)
+			case 8:
+				self.finish_arm_movement_()
 
 	def pour_cereals_bowl(self):
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_cereals_tray_joints)
-			self.joint_values_req.speed = math.radians(70)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.get_logger().warning("FINISH MOVE TO CEREAL")
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 1:
-		# 	set_gripper_speed_req= SetFloat32.Request()
-		# 	set_gripper_speed_req.data = 5000.0
-		# 	self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 2:
-		# 	self.set_gripper_req.pos = 850.0
-		# 	self.set_gripper_req.wait = True
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  1:
-			self.position_values_req.pose = self.pick_cereals_tray
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.get_logger().warning("START DESCEND TO CEREAL")
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 200.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  4:
-			self.position_values_req.pose = self.pos_pick_cereals_tray
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  5:
-			self.position_values_req.pose = self.strategic_avoid_possible_chair_cereals
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  6:
-			self.position_values_req.pose = self.reach_position_to_pour_cereals_bowl
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  7:
-			self.position_values_req.pose = self.pour_cereals_bowl_linear
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			self.position_values_req.pose = self.after_pouring_cereals_at_bowl
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 9:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_cereals_tray_joints, speed=60, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.pick_cereals_tray, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=200, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.pos_pick_cereals_tray, speed=120, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=120, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.reach_position_to_pour_cereals_bowl, speed=120, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.pour_cereals_bowl_linear, speed=120, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.after_pouring_cereals_at_bowl, speed=120, wait=True)
+			case 9:
+				self.finish_arm_movement_()
 
 	def pour_cereals_bowl_alternative_robocup_cornflakes(self):
-
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = math.radians(50)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 1:
-			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_pick_tray_position)
-			self.joint_values_req.speed = math.radians(50)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr ==  2:
-			self.position_values_req.pose = self.new_cornflakes_pick_tray_position
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-  
-		elif self.estado_tr ==  5:
-			self.position_values_req.pose = self.new_cornflakes_post_pick_tray_position
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_pour)
-			self.joint_values_req.speed = math.radians(50)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr ==  7:
-			self.position_values_req.pose = self.new_cornflakes_pour1
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr ==  8:
-			self.position_values_req.pose = self.new_cornflakes_pour2
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr ==  9:
-			self.position_values_req.pose = self.new_cornflakes_pour3
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr ==  10:
-			self.position_values_req.pose = self.new_cornflakes_pour4
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr ==  11:
-			self.position_values_req.pose = self.new_cornflakes_pour3
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr ==  12:
-			self.position_values_req.pose = self.new_cornflakes_pour2
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr ==  13:
-			self.position_values_req.pose = self.new_cornflakes_pour1
-			self.position_values_req.speed = 100.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 14:
-			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_pour)
-			self.joint_values_req.speed = math.radians(50)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 15:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.new_cornflakes_pre_pick_tray_position, speed=50, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.new_cornflakes_pick_tray_position, speed=100, wait=True)
+			case 3:
+				self.set_gripper_speed_(speed=1000)
+			case 4:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.new_cornflakes_post_pick_tray_position, speed=100, wait=True)
+			case 6:
+				self.set_joint_values_(angles=self.new_cornflakes_pre_pour, speed=50, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.new_cornflakes_pour1, speed=100, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.new_cornflakes_pour2, speed=100, wait=True)
+			case 9:
+				self.set_position_values_(pose=self.new_cornflakes_pour3, speed=100, wait=True)
+			case 10:
+				self.set_position_values_(pose=self.new_cornflakes_pour4, speed=100, wait=True)
+			case 11:
+				self.set_position_values_(pose=self.new_cornflakes_pour3, speed=100, wait=True)
+			case 12:
+				self.set_position_values_(pose=self.new_cornflakes_pour2, speed=100, wait=True)
+			case 13:
+				self.set_position_values_(pose=self.new_cornflakes_pour1, speed=100, wait=True)
+			case 14:
+				self.set_joint_values_(angles=self.new_cornflakes_pre_pour, speed=50, wait=True)
+			case 15:
+				self.finish_arm_movement_()
 
 	def place_cereal_table(self):   
-
-		if self.estado_tr ==  0:
-			self.position_values_req.pose = self.placing_cereal_at_table
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 1:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 2:
-		# 	self.set_gripper_req.pos = 400.0
-		# 	self.set_gripper_req.wait = True
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 2:
-			self.set_gripper_req.pos = 850.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 3:
-			self.position_values_req.pose = self.pos_placing_cereal_at_table
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 4:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-	
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.placing_cereal_at_table, speed=120, wait=True)
+			case 1:
+				self.set_gripper_speed_(speed=1000)
+			case 2:
+				self.set_gripper_position_(pos=850, wait=True)
+			case 3:
+				self.set_position_values_(pose=self.pos_placing_cereal_at_table, speed=120, wait=True)
+			case 4:
+				self.finish_arm_movement_()
 
 	def place_cereal_table_alternative_robocup_cornflakes(self):
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.new_cornflakes_pre_place)
-			self.joint_values_req.speed = math.radians(50)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr ==  1:
-			self.position_values_req.pose = self.new_cornflakes_place
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 850.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr ==  4:
-			self.position_values_req.pose = self.new_cornflakes_post_place
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5:
-			self.joint_values_req.angles = self.deg_to_rad(self.get_lower_order_position_joints)
-			self.joint_values_req.speed = math.radians(50)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-	
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.new_cornflakes_pre_place, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.new_cornflakes_place, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=850, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.new_cornflakes_post_place, speed=120, wait=True)
+			case 5:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 6:
+				self.finish_arm_movement_()
 
 	def pour_milk_bowl(self):
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_milk_tray_joints)
-			self.joint_values_req.speed = math.radians(60)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		# elif self.estado_tr ==  1:
-		# 	set_gripper_speed_req= SetFloat32.Request()
-		# 	set_gripper_speed_req.data = 5000.0
-		# 	self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_milk_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.pos_picking_milk_tray, speed=90, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=90, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.reach_position_to_pour_milk_bowl, speed=90, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.pour_milk_bowl_linear, speed=120, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.after_pouring_milk_at_bowl, speed=120, wait=True)
+			case 9:
+				self.finish_arm_movement_()
 
-		# elif self.estado_tr == 2:
-		# 	self.set_gripper_req.pos = 850.0
-		# 	self.set_gripper_req.wait = True
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
+	def place_milk_table(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.placing_milk_at_table, speed=120, wait=True)
+			case 1:
+				self.set_gripper_speed_(speed=1000)
+			case 2:
+				self.set_gripper_position_(pos=850, wait=True)
+			case 3:
+				self.set_position_values_(pose=self.pos_placing_milk_at_table, speed=120, wait=True)
+			case 4:
+				self.finish_arm_movement_()
 
-		elif self.estado_tr ==  1:
-			self.position_values_req.pose = self.place_milk_in_tray
-			self.position_values_req.speed = 150.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  4:
-			self.position_values_req.pose = self.pos_picking_milk_tray
-			self.position_values_req.speed = 99.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  5:
-			self.position_values_req.pose = self.strategic_avoid_possible_chair_cereals
-			self.position_values_req.speed = 99.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  6:
-			self.position_values_req.pose = self.reach_position_to_pour_milk_bowl
-			self.position_values_req.speed = 99.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr ==  7:
-			self.position_values_req.pose = self.pour_milk_bowl_linear
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			self.position_values_req.pose = self.after_pouring_milk_at_bowl
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 9:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-	
-	def place_milk_table(self):   
-		if self.estado_tr == 0:
-			self.position_values_req.pose = self.placing_milk_at_table
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 1:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 2:
-		# 	self.set_gripper_req.pos = 600.0
-		# 	self.set_gripper_req.wait = True
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 2:
-			self.set_gripper_req.pos = 850.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 3:
-			self.position_values_req.pose = self.pos_placing_milk_at_table
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 4:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-	
 	def place_spoon_table(self):
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_spoon_tray_joints)
-			self.joint_values_req.speed = math.radians(70)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		# elif self.estado_tr == 1:
-		# 	set_gripper_speed_req= SetFloat32.Request()
-		# 	set_gripper_speed_req.data = 5000.0
-		# 	self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 2:
-		# 	self.set_gripper_req.pos = 850.0
-		# 	self.set_gripper_req.wait = True
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.pre_pick_funilocopo_tray
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 2:
-			self.position_values_req.pose = self.pick_funilocopo_tray
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 3:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 4:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 5:
-			self.position_values_req.pose = self.lift_funilocopo_a_bit_from_tray
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.position_values_req.pose = self.lift_funilocopo_more
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 7:
-			self.position_values_req.pose = self.strategic_avoid_possible_chair_cereals
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			self.position_values_req.pose = self.reach_position_to_place_spoon_table
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 9:
-			self.position_values_req.pose = self.place_spoon_table_joints
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		# elif self.estado_tr == 10:
-		# 	self.position_values_req.pose = self.small_up_after_drop_spoon_table
-		# 	self.position_values_req.speed = 150.0
-		# 	self.position_values_req.acc = 1000.0
-		# 	self.position_values_req.wait = True
-		# 	self.position_values_req.timeout = 14.0
-		# 	self.future = self.set_position_client.call_async(self.position_values_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 10:
-			self.position_values_req.pose = self.pos_place_spoon_table
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 14.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-		
-		elif self.estado_tr == 11:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_spoon_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.pre_pick_funilocopo_tray, speed=120, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.pick_funilocopo_tray, speed=120, wait=True)
+			case 3:
+				self.set_gripper_speed_(speed=1000)
+			case 4:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.lift_funilocopo_a_bit_from_tray, speed=90, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.lift_funilocopo_more, speed=90, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=90, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.reach_position_to_place_spoon_table, speed=120, wait=True)
+			case 9:
+				self.set_position_values_(pose=self.place_spoon_table_joints, speed=120, wait=True)
+			case 10:
+				self.set_position_values_(pose=self.pos_place_spoon_table, speed=120, wait=True)
+			case 11:
+				self.finish_arm_movement_()
 
 	def place_spoon_table_funilocopo_v2(self):
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_spoon_tray_joints)
-			self.joint_values_req.speed = math.radians(70)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 1:
-		# 	set_gripper_speed_req= SetFloat32.Request()
-		# 	set_gripper_speed_req.data = 5000.0
-		# 	self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 2:
-		# 	self.set_gripper_req.pos = 850.0
-		# 	self.set_gripper_req.wait = True
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 1:
-		# 	self.position_values_req.pose = self.pre_pick_funilocopo_v2_tray
-		# 	self.position_values_req.speed = 120.0
-		# 	self.position_values_req.acc = 1000.0
-		# 	self.position_values_req.wait = True
-		#	self.position_values_req.timeout = 4.0
-		#	self.future = self.set_position_client.call_async(self.position_values_req)
-		#	self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.pick_funilocopo_v2_tray
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 4:
-			self.position_values_req.pose = self.lift_funilocopo_v2_from_tray
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5:
-			self.joint_values_req.angles = self.deg_to_rad(self.joints_pre_place_table_funilocopo_v2)
-			self.joint_values_req.speed = math.radians(70)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.position_values_req.pose = self.place_spoon_in_table_funilocopo_v2
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 7:
-			self.set_gripper_req.pos = 300.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			self.position_values_req.pose = self.step_away_from_table_funilocopo_v2
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 9:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 5000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 10:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 11:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_spoon_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.pick_funilocopo_v2_tray, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.lift_funilocopo_v2_from_tray, speed=120, wait=True)
+			case 5:
+				self.set_joint_values_(angles=self.joints_pre_place_table_funilocopo_v2, speed=50, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.place_spoon_in_table_funilocopo_v2, speed=120, wait=True)
+			case 7:
+				self.set_gripper_position_(pos=300, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.step_away_from_table_funilocopo_v2, speed=120, wait=True)
+			case 9:
+				self.set_gripper_speed_(speed=5000)
+			case 10:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 11:
+				self.finish_arm_movement_()
 
 	def place_spoon_table_funilocopo_v2_facing_other_side(self):
-
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.pre_pick_spoon_tray_joints)
-			self.joint_values_req.speed = math.radians(70)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 1:
-		# 	set_gripper_speed_req= SetFloat32.Request()
-		# 	set_gripper_speed_req.data = 5000.0
-		# 	self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 2:
-		# 	self.set_gripper_req.pos = 850.0
-		# 	self.set_gripper_req.wait = True
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-
-		# elif self.estado_tr == 1:
-		# 	self.position_values_req.pose = self.pre_pick_funilocopo_v2_tray
-		# 	self.position_values_req.speed = 120.0
-		# 	self.position_values_req.acc = 1000.0
-		# 	self.position_values_req.wait = True
-		# 	self.position_values_req.timeout = 4.0
-		# 	self.future = self.set_position_client.call_async(self.position_values_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 1:
-			self.position_values_req.pose = self.pick_funilocopo_v2_tray
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 2:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 1000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 3:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-   
-		elif self.estado_tr == 4:
-			self.position_values_req.pose = self.lift_funilocopo_v2_from_tray
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 5:
-			self.joint_values_req.angles = self.deg_to_rad(self.joints_pre_place_table_funilocopo_v2_facing_other_side)
-			self.joint_values_req.speed = math.radians(70)
-			self.joint_values_req.wait = True
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 6:
-			self.position_values_req.pose = self.place_spoon_in_table_funilocopo_v2_facing_other_side
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 7:
-			self.set_gripper_req.pos = 300.0
-			self.set_gripper_req.wait = True
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 8:
-			self.position_values_req.pose = self.step_away_from_table_funilocopo_v2_facing_other_side
-			self.position_values_req.speed = 120.0
-			self.position_values_req.acc = 1000.0
-			self.position_values_req.wait = True
-			self.position_values_req.timeout = 4.0
-			self.future = self.set_position_client.call_async(self.position_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 9:
-			set_gripper_speed_req= SetFloat32.Request()
-			set_gripper_speed_req.data = 5000.0
-			self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 10:
-			self.set_gripper_req.pos = 0.0
-			self.set_gripper_req.wait = False
-			self.set_gripper_req.timeout = 4.0
-			self.future = self.set_gripper.call_async(self.set_gripper_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 11:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_spoon_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.pick_funilocopo_v2_tray, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.lift_funilocopo_v2_from_tray, speed=120, wait=True)
+			case 5:
+				self.set_joint_values_(angles=self.joints_pre_place_table_funilocopo_v2_facing_other_side, speed=50, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.place_spoon_in_table_funilocopo_v2_facing_other_side, speed=120, wait=True)
+			case 7:
+				self.set_gripper_position_(pos=300, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.step_away_from_table_funilocopo_v2_facing_other_side, speed=120, wait=True)
+			case 9:
+				self.set_gripper_speed_(speed=5000)
+			case 10:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 11:
+				self.finish_arm_movement_()
 
 	def arm_go_rest(self):
-		# if self.estado_tr == 0:
-		# 	self.set_gripper_req.pos = 0.0
-		# 	self.set_gripper_req.wait = False
-		# 	self.set_gripper_req.timeout = 4.0
-		# 	self.future = self.set_gripper.call_async(self.set_gripper_req)
-		# 	self.future.add_done_callback(partial(self.callback_service_tr))
-			
-		if self.estado_tr == 0:
-			self.joint_values_req.angles = self.deg_to_rad(self.initial_position)
-			self.joint_values_req.speed = math.radians(60)
-			self.joint_values_req.wait = False
-			self.joint_values_req.radius = 0.0
-			self.future = self.set_joint_client.call_async(self.joint_values_req)
-			self.future.add_done_callback(partial(self.callback_service_tr))
-
-		elif self.estado_tr == 1:
-			temp = Bool()
-			temp.data = True
-			self.flag_arm_finish_publisher.publish(temp)
-			self.estado_tr = 0
-			self.get_logger().info("FINISHED MOVEMENT")	
-
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.initial_position, speed=60, wait=False)
+			case 1:
+				self.finish_arm_movement_()
 
 	def movement_selection(self):
 		

@@ -5,13 +5,15 @@ from rclpy.action import ActionClient
 
 from example_interfaces.msg import Bool, String, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Point
-from sensor_msgs.msg import Image, LaserScan
+from sensor_msgs.msg import Image, LaserScan, PointCloud2
+from sensor_msgs_py import point_cloud2
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
-    TrackingMask, VCCsLowLevel, TaskStatesInfo
+    TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
-    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, SetAcceleration, NodesUsed, GetVCCs, GetLLMGPSR, GetLLMDemo, ActivateTracking, SetRGB
+    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
+    SetRGB
 from cv_bridge import CvBridge, CvBridgeError
 from realsense2_camera_msgs.msg import RGBD
 
@@ -65,14 +67,13 @@ class DebugVisualNode(Node):
         # Low Level
         # self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10) ### OLD
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
-        # Camera Obstacles
-        self.temp_camera_obstacles_subscriber = self.create_subscription(ListOfPoints, "camera_head_obstacles", self.get_camera_obstacles_callback, 10)
-        # Obstacles
-        self.final_obstacles_subscriber = self.create_subscription(ListOfPoints, "final_obstacles", self.get_final_obstacles_callback, 10)
-        # Radar
-        self.radar_subscriber = self.create_subscription(ListOfPoints, "radar_points", self.get_radar_callback, 10)
+        # Livox 3D Lidar
+        self.livox_3dlidar_subscriber = self.create_subscription(PointCloud2, "/livox/lidar/filtered", self.livox_3dlidar_callback, 10)
         # Gamepad Controller
         self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
+        # Radar
+        self.radar_pointcloud_subscriber = self.create_subscription(PointCloud2, "/radar/pointcloud_baseframe", self.radar_pointcloud_callback, 10)
+        self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -100,6 +101,8 @@ class DebugVisualNode(Node):
         self.set_neck_coordinates_client = self.create_client(SetNeckCoordinates, "neck_to_coords")
         self.neck_track_person_client = self.create_client(TrackPerson, "neck_track_person")
         self.neck_track_object_client = self.create_client(TrackObject, "neck_track_object")
+        # Sound Classification
+        self.sound_classification_client = self.create_client(GetSoundClassification, "get_sound_classification")
         # Yolo Pose
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
@@ -157,6 +160,8 @@ class DebugVisualNode(Node):
 
         self.lidar_time = 0.0
         self.lidar_bottom_time = 0.0
+        self.lidar_livox_time = 0.0
+        self.radar_pointcloud_time = 0.0
         self.gamepad_controller_time = 0.0
         self.gamepad_controller_timeout = False
         self.localisation_time = 0.0
@@ -192,7 +197,9 @@ class DebugVisualNode(Node):
         self.all_pos_y_val = []
 
         self.nodes_used = NodesUsed.Request()
-        self.scan = LaserScan()
+        # self.scan = LaserScan()
+        self.livox_3dlidar = PointCloud2()
+        self.radar = RadarData()
         self.search_for_person = ListOfDetectedPerson()
         self.search_for_object = ListOfDetectedObject()
         self.new_search_for_person = False
@@ -211,13 +218,10 @@ class DebugVisualNode(Node):
 
         self.lidar_obstacle_points = []
         self.lidar_bottom_obstacle_points = []
-        self.camera_obstacle_points = []
-        self.final_obstacle_points = []
-        self.radar_points = []
 
         self.robot_radius = 0.560/2 # meters
         self.lidar_radius = 0.050/2 # meters
-        self.lidar_to_robot_center = 0.255 # meters
+        self.livox_3dlidar_to_robot_center = 0.22 # meters, Livox is 22cm in front of robot center
 
         self.time_for_cams_fps_verification = 0.25
         self.create_timer(1.0, self.check_yolos_timer)
@@ -277,14 +281,19 @@ class DebugVisualNode(Node):
         # bool charmie_face
         # bool charmie_head_camera
         # bool charmie_hand_camera
+        # bool charmie_base_camera
         # bool charmie_gamepad
         # bool charmie_lidar
+        # bool charmie_lidar_bottom
+        # bool charmie_lidar_livox
+        # bool charmie_llm
         # bool charmie_localisation
         # bool charmie_low_level
         # bool charmie_navigation
         # bool charmie_nav2
         # bool charmie_neck
-        # bool charmie_obstacles
+        # bool charmie_radar
+        # bool charmie_sound_classification
         # bool charmie_speakers
         # bool charmie_tracking
         # bool charmie_yolo_objects
@@ -402,23 +411,8 @@ class DebugVisualNode(Node):
         self.gamepad_controller_timeout = controller.timeout
         # print("Gamepad Controller:", controller)
 
-    def get_camera_obstacles_callback(self, points: ListOfPoints):
-        self.camera_obstacle_points = points.coords
-        # print("Received Points")
-        # print
-        
-    def get_final_obstacles_callback(self, points: ListOfPoints):
-        self.final_obstacle_points = points.coords
-        # print("Received Points")
-        # print(self.final_obstacle_points)
-
-    def get_radar_callback(self, points: ListOfPoints):
-        self.radar_points = points.coords
-        # print("Received Radar Points")
-        # print(self.radar_points)
-
     def lidar_callback(self, scan: LaserScan):
-        self.scan = scan
+        # self.scan = scan
         # print(scan)
 
         self.lidar_time = time.time()
@@ -465,7 +459,7 @@ class DebugVisualNode(Node):
                 self.lidar_obstacle_points.append(target)
 
     def lidar_bottom_callback(self, scan: LaserScan):
-        self.scan = scan
+        # self.scan = scan
         # print(scan)
 
         self.lidar_bottom_time = time.time()
@@ -510,6 +504,21 @@ class DebugVisualNode(Node):
                 target.z = 0.08 # lidar height on the robot
 
                 self.lidar_bottom_obstacle_points.append(target)
+
+    def livox_3dlidar_callback(self, points: PointCloud2):
+        # print("Received Livox 3D Lidar Points")
+        self.lidar_livox_time = time.time()
+        self.livox_3dlidar = points
+        # print(points)
+
+    def radar_pointcloud_callback(self, points: PointCloud2):
+        # print("Received Radar PointCloud Points")
+        self.radar_pointcloud_time = time.time()
+        # self.livox_3dlidar = points
+        # print(points)
+    
+    def radar_data_callback(self, radar: RadarData):
+        self.radar = radar
 
     def target_pos_callback(self, nav: TarNavSDNL):
         self.navigation = nav
@@ -572,13 +581,15 @@ class CheckNodesMain():
         self.CHECK_GAMEPAD_NODE = False
         self.CHECK_LIDAR_NODE = False
         self.CHECK_LIDAR_BOTTOM_NODE = False
+        self.CHECK_LIDAR_LIVOX_NODE = False
         self.CHECK_LLM_NODE = False
         self.CHECK_LOCALISATION_NODE = False
         self.CHECK_LOW_LEVEL_NODE = False
         self.CHECK_NAVIGATION_NODE = False
         self.CHECK_NAV2_NODE = False
         self.CHECK_NECK_NODE = False
-        self.CHECK_OBSTACLES_NODE = False
+        self.CHECK_RADAR_NODE = False
+        self.CHECK_SOUND_CLASSIFICATION_NODE = False
         self.CHECK_SPEAKERS_NODE = False
         self.CHECK_TRACKING_NODE = False
         self.CHECK_YOLO_OBJECTS_NODE = False
@@ -659,6 +670,12 @@ class CheckNodesMain():
                 self.CHECK_LIDAR_BOTTOM_NODE = False
             else:
                 self.CHECK_LIDAR_BOTTOM_NODE = True
+            # LIDAR Livox
+            if current_time - self.node.lidar_livox_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Topic Lidar ...")
+                self.CHECK_LIDAR_LIVOX_NODE = False
+            else:
+                self.CHECK_LIDAR_LIVOX_NODE = True
 
             # LLM
             if not self.node.llm_demonstration_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -703,12 +720,19 @@ class CheckNodesMain():
             else:
                 self.CHECK_NECK_NODE = True
             
-            # OBSTACLES
-            if not self.node.activate_obstacles_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
-                # self.node.get_logger().warn("Waiting for Server Obstacles ...")
-                self.CHECK_OBSTACLES_NODE = False
+            # RADAR radar_pointcloud_time
+            if current_time - self.node.radar_pointcloud_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+                # self.node.get_logger().warn("Waiting for Radar Lidar ...")
+                self.CHECK_RADAR_NODE = False
             else:
-                self.CHECK_OBSTACLES_NODE = True
+                self.CHECK_RADAR_NODE = True
+
+            # SOUND CLASSIFICATION
+            if not self.node.sound_classification_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Sound Classification ...")
+                self.CHECK_SOUND_CLASSIFICATION_NODE = False
+            else:
+                self.CHECK_SOUND_CLASSIFICATION_NODE = True
 
             # SPEAKERS
             if not self.node.speech_command_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -925,28 +949,30 @@ class DebugVisualMain():
         self.deviation_pos_w_rect_check_nodes = 20
         self.square_size_rect_check_nodes = 10
 
-        self.ARM_UFACTORY_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*0, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_ARM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*1, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_AUDIO_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*2, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.HEAD_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.HAND_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.BASE_CAMERA_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_FACE_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_GAMEPAD_NODE_RECT          = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LIDAR_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LIDAR_BOTTOM_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LLM_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LOCALISATION_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LOW_LEVEL_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.ARM_UFACTORY_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*0, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_ARM_NODE_RECT                  = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*1, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_AUDIO_NODE_RECT                = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*2, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.HEAD_CAMERA_NODE_RECT                  = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.HAND_CAMERA_NODE_RECT                  = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.BASE_CAMERA_NODE_RECT                  = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*3, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_FACE_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*4, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_GAMEPAD_NODE_RECT              = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*5, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LIDAR_NODE_RECT                = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LIDAR_BOTTOM_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LIDAR_LIVOX_NODE_RECT          = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LLM_NODE_RECT                  = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LOCALISATION_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LOW_LEVEL_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         # the two navs have the same node rect for now, only nav2 will be used for now
-        self.CHARMIE_NAVIGATION_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_NAV2_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_NECK_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_OBSTACLES_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_SPEAKERS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_TRACKING_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_OBJECTS_NODE_RECT     = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_YOLO_POSE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAVIGATION_NODE_RECT           = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAV2_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NECK_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_RADAR_NODE_RECT                = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_SPEAKERS_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_TRACKING_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_OBJECTS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_POSE_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*17, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
 
         self.toggle_h_init = 21.0
         self.toggle_h_diff = 2.25
@@ -1053,7 +1079,7 @@ class DebugVisualMain():
         return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def button_zoom_in_function(self):
-        print(self.MAP_SCALE - self.MAP_ZOOM_INC)
+        # print(self.MAP_SCALE - self.MAP_ZOOM_INC)
         if self.MAP_SCALE - self.MAP_ZOOM_INC > 0.1:
             self.MAP_SCALE -= self.MAP_ZOOM_INC
 
@@ -1137,12 +1163,16 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_NODE_RECT)
         # LIDAR Bottom
         tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar_bottom, self.check_nodes.CHECK_LIDAR_BOTTOM_NODE)
-        if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT)
+        # LIDAR Livox
+        tc3, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar_livox, self.check_nodes.CHECK_LIDAR_LIVOX_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_LIVOX_NODE_RECT)
+
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L or tc3 == self.BLUE_L:
             tc = self.BLUE_L
         else:
             tc = self.WHITE
-        self.draw_text("LIDARs (T, B)", self.text_font, tc, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT.x+2*self.CHARMIE_LIDAR_BOTTOM_NODE_RECT.width, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT.y-2)
-        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_BOTTOM_NODE_RECT)
+        self.draw_text("LIDARs (T, B, 3D)", self.text_font, tc, self.CHARMIE_LIDAR_LIVOX_NODE_RECT.x+2*self.CHARMIE_LIDAR_LIVOX_NODE_RECT.width, self.CHARMIE_LIDAR_LIVOX_NODE_RECT.y-2)
         
         # GAMEPAD CONTROLLER
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_gamepad, self.check_nodes.CHECK_GAMEPAD_NODE)
@@ -1179,10 +1209,15 @@ class DebugVisualMain():
         self.draw_text("Neck", self.text_font, tc, self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_NECK_NODE_RECT)
 
-        # OBSTACLES
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_obstacles, self.check_nodes.CHECK_OBSTACLES_NODE)
-        self.draw_text("Obstacles", self.text_font, tc, self.CHARMIE_OBSTACLES_NODE_RECT.x+2*self.CHARMIE_OBSTACLES_NODE_RECT.width, self.CHARMIE_OBSTACLES_NODE_RECT.y-2)
-        pygame.draw.rect(self.WIN, rc, self.CHARMIE_OBSTACLES_NODE_RECT)
+        # RADAR
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_radar, self.check_nodes.CHECK_RADAR_NODE)
+        self.draw_text("Radar", self.text_font, tc, self.CHARMIE_RADAR_NODE_RECT.x+2*self.CHARMIE_RADAR_NODE_RECT.width, self.CHARMIE_RADAR_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_RADAR_NODE_RECT)
+
+        # SOUND CLASSIFICATION
+        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_sound_classification, self.check_nodes.CHECK_SOUND_CLASSIFICATION_NODE)
+        self.draw_text("Sound Classification", self.text_font, tc, self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT.x+2*self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT.width, self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT.y-2)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT)
 
         # SPEAKERS
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
@@ -2257,6 +2292,58 @@ class DebugVisualMain():
                 pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.robot_radius/2), width=0)
                 pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.node.navigation.reached_radius), width=1)
 
+        ### 3D LIDAR
+        if self.node.livox_3dlidar.width > 0 and len(self.node.livox_3dlidar.data) > 0:
+            points_gen = point_cloud2.read_points(self.node.livox_3dlidar, field_names=("x", "y", "z"), skip_nans=True)
+            for point in points_gen:
+                x, y, z = point
+                y += self.node.livox_3dlidar_to_robot_center  # Livox is 22cm in front of robot center (this is for quick visualizattion, for accurate visualization please check rviz)
+
+                angle = self.node.robot_pose.theta
+                x_rot = x * math.cos(-math.pi/2) - y * math.sin(-math.pi/2)
+                y_rot = x * math.sin(-math.pi/2) + y * math.cos(-math.pi/2)
+
+                # Then apply robot pose transform
+                angle = self.node.robot_pose.theta
+                x_map = x_rot * math.cos(angle) - y_rot * math.sin(angle) + self.node.robot_pose.x
+                y_map = x_rot * math.sin(angle) + y_rot * math.cos(angle) + self.node.robot_pose.y
+
+                pygame.draw.circle(self.WIN, self.WHITE, self.coords_to_map(x_map, y_map), radius=1, width=0)
+
+        ### RADAR
+        if len(self.node.radar.sectors):
+            arc_segments = 4
+            max_radar_range = 4.0
+
+            for sector in self.node.radar.sectors:
+                if not sector.has_point:
+                    continue
+
+                radius = sector.min_distance
+                start_angle = sector.start_angle
+                end_angle = sector.end_angle
+
+                arc_points = []
+                for j in range(arc_segments + 1):
+                    theta = start_angle + (end_angle - start_angle) * (j / arc_segments)
+                    # Point in robot frame
+                    x_local = radius * math.cos(theta)
+                    y_local = radius * math.sin(theta)
+                    # Rotate to world frame using robot orientation
+                    angle = self.node.robot_pose.theta
+                    x_rot = x_local * math.cos(angle) - y_local * math.sin(angle)
+                    y_rot = x_local * math.sin(angle) + y_local * math.cos(angle)
+                    # Translate to world coordinates
+                    x_world = self.node.robot_pose.x + x_rot
+                    y_world = self.node.robot_pose.y + y_rot
+                    arc_points.append(self.coords_to_map(x_world, y_world))
+
+                if len(arc_points) >= 2:
+                    # For Intensity-Based Color Coding
+                    dist_norm = min(1.0, sector.min_distance / max_radar_range)  # Normalize
+                    dist_norm *= 255
+                    ibcc = (255 - dist_norm, dist_norm,  0) # Intensity-Based Color Coding
+                    pygame.draw.lines(self.WIN, ibcc, False, arc_points, width=4)
 
         ### OBSTACLES POINTS (LIDAR, Depth Head Camera and Final Obstacles Fusion)
         for points in self.node.lidar_obstacle_points:
@@ -2266,41 +2353,6 @@ class DebugVisualMain():
         for points in self.node.lidar_bottom_obstacle_points:
             # pygame.draw.circle(self.WIN, self.RED, self.coords_to_map(self.node.robot_pose.x+points.x, self.node.robot_pose.y+points.y), radius=1, width=0)
             pygame.draw.circle(self.WIN, self.MAGENTA, self.coords_to_map(points.x, points.y), radius=1, width=0)
-
-        # for points in self.node.camera_obstacle_points:
-        #     pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
-        
-        ### RADAR
-        for points in self.node.radar_points:
-            # calculate the absolute position according to the robot localisation
-            dist_obj = math.sqrt(points.x**2 + points.y**2)
-
-            angle_obj = math.atan2(points.x, points.y)
-            theta_aux = math.pi/2 - (angle_obj - self.node.robot_pose.theta)
-
-            target = Point()
-            target.x = dist_obj * math.cos(theta_aux) + self.node.robot_pose.x
-            target.y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
-            target.z = points.z
-            # pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(points.x, points.y), radius=2, width=0)
-            pygame.draw.circle(self.WIN, self.BLUE, self.coords_to_map(target.x, target.y), radius=2, width=0)
-            
-
-        for points in self.node.final_obstacle_points:
-
-            # calculate the absolute position according to the robot localisation
-            dist_obj = math.sqrt(points.x**2 + points.y**2)
-
-            angle_obj = math.atan2(points.x, points.y)
-            theta_aux = math.pi/2 - (angle_obj - self.node.robot_pose.theta)
-
-            target = Point()
-            target.x = dist_obj * math.cos(theta_aux) + self.node.robot_pose.x
-            target.y = dist_obj * math.sin(theta_aux) + self.node.robot_pose.y
-            target.z = points.z
-
-            pygame.draw.circle(self.WIN, self.ORANGE, self.coords_to_map(target.x, target.y), radius=2, width=0)
-            
 
         ### PERSON DETECTED
         for person in self.node.detected_people.persons:

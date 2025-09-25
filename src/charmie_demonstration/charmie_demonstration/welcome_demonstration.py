@@ -14,26 +14,28 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              True,
-    "charmie_audio":            False,
-    "charmie_face":             False,
-    "charmie_head_camera":      True,
-    "charmie_hand_camera":      True,
-    "charmie_base_camera":      True,
-    "charmie_gamepad":          True,
-    "charmie_lidar":            False,
-    "charmie_lidar_bottom":     False,
-    "charmie_llm":              True,
-    "charmie_localisation":     False,
-    "charmie_low_level":        True,
-    "charmie_navigation":       False,
-    "charmie_nav2":             False,
-    "charmie_neck":             True,
-    "charmie_obstacles":        False,
-    "charmie_speakers":         True,
-    "charmie_tracking":         False,
-    "charmie_yolo_objects":     True,
-    "charmie_yolo_pose":        True,
+    "charmie_arm":                  True,
+    "charmie_audio":                False,
+    "charmie_face":                 False,
+    "charmie_head_camera":          True,
+    "charmie_hand_camera":          True,
+    "charmie_base_camera":          True,
+    "charmie_gamepad":              True,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
+    "charmie_llm":                  True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            True,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
+    "charmie_neck":                 True,
+    "charmie_radar":                False,
+    "charmie_sound_classification": False,
+    "charmie_speakers":             True,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         True,
+    "charmie_yolo_pose":            True,
 }
 
 # main function that already creates the thread for the task state machine
@@ -439,7 +441,7 @@ class TaskMain():
                     print(guest_name, guest_drink)
 
                     self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
-                    self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                     random_drink = str(random.randint(1, 3))
                     self.robot.set_speech(filename="demonstration/favourite_drink_demo_"+random_drink, wait_for_end_of=True)

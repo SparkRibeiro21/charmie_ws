@@ -4,6 +4,7 @@ import threading
 import time
 from datetime import datetime
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
+import random
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -11,26 +12,28 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              False,
-    "charmie_audio":            True,
-    "charmie_face":             False,
-    "charmie_head_camera":      False,
-    "charmie_hand_camera":      False,
-    "charmie_base_camera":      False,
-    "charmie_gamepad":          False,
-    "charmie_lidar":            False,
-    "charmie_lidar_bottom":     False,
-    "charmie_llm":              False,
-    "charmie_localisation":     False,
-    "charmie_low_level":        False,
-    "charmie_navigation":       False,
-    "charmie_nav2":             False,
-    "charmie_neck":             False,
-    "charmie_obstacles":        False,
-    "charmie_speakers":         True,
-    "charmie_tracking":         False,
-    "charmie_yolo_objects":     False,
-    "charmie_yolo_pose":        False,
+    "charmie_arm":                  False,
+    "charmie_audio":                True,
+    "charmie_face":                 False,
+    "charmie_head_camera":          False,
+    "charmie_hand_camera":          False,
+    "charmie_base_camera":          False,
+    "charmie_gamepad":              False,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
+    "charmie_llm":                  False,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
+    "charmie_neck":                 False,
+    "charmie_radar":                False,
+    "charmie_sound_classification": False,
+    "charmie_speakers":             True,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -59,25 +62,18 @@ class TaskMain():
         Audio_receptionist = 1
         Audio_restaurant = 2
         Audio_egpsr = 3
-        Continuous_audio = 4
-        Calibrate_audio = 5
-        Final_State = 6
+        Continuous_audio_wfeo_true = 4
+        Continuous_audio_wfeo_false = 5
+        Calibrate_audio = 6
+        Final_State = 7
 
         # VARS ...
-        self.state = Audio_receptionist
+        self.state = Continuous_audio_wfeo_true
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")
         
         while True:
-
-            # State Machine
-            # State 0 = Initial
-            # State 1 = Audio Receptionist
-            # State 2 = Audio Restaurant
-            # State 3 = Audio EGPSR
-            # State 4 = Calibrate Audio
-            # State 5 = Final Speech
 
             if self.state == Audio_receptionist:
                 print('State 1 = Audio Receptionist')
@@ -98,18 +94,18 @@ class TaskMain():
                     print(guest_name, guest_drink)
 
                     # self.robot.set_speech(filename="receptionist/dear", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    # self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                     self.robot.set_speech(filename="receptionist/first_guest_name_is", wait_for_end_of=True)
-                    self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                     # self.robot.set_speech(filename="receptionist/second_guest_name_is", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    # self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                     # self.robot.set_speech(filename="receptionist/host_name_is", wait_for_end_of=True)
-                    # self.robot.set_speech(filename="receptionist/names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    # self.robot.set_speech(filename="person_names/"+guest_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
-                    # self.robot.set_speech(filename="receptionist/names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
+                    # self.robot.set_speech(filename="person_names/recep_first_guest_"+keyword_list[0].lower(), wait_for_end_of=True)
                     self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
                     self.robot.set_speech(filename="objects_names/"+keyword_list[1].lower(), wait_for_end_of=True)
 
@@ -225,30 +221,30 @@ class TaskMain():
                     
                 time.sleep(5)
 
-            
-            elif self.state == Continuous_audio:
+            if self.state == Continuous_audio_wfeo_true:
+                ### CONTINUOUS AUDIO EXAMPLE - WAIT FOR END OF = TRUE
 
-                ### CONTINUOUS AUDIO EXAMPLE
-                # WAIT FOR END OF = TRUE
-                s, m = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, wait_for_end_of=True)
-                print(s, m)
+                s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=True)
+                print(s, m, detected_keyword)
+                
+                # next state
+                self.state = Final_State
 
-                # WAIT FOR END OF = FALSE
-                # s, m = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, wait_for_end_of=False)
-                # print(s, m)
+            if self.state == Continuous_audio_wfeo_false:
+                ### CONTINUOUS AUDIO EXAMPLE - WAIT FOR END OF = FALSE
+
+                s, m, detected_keyword = self.robot.get_continuous_audio(keywords=["stop", "finish", "end"], max_number_attempts=3, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=False)
+                print(s, m, detected_keyword)
+                message_received = False
+                while not message_received:
+                    message_received, s, m, detected_keyword = self.robot.is_get_continuous_audio_done(speak_post_hearing=True)
+                    print(message_received, s, m, detected_keyword)
+                    time.sleep(0.5)
+                                
+                # next state
+                self.state = Final_State
                 
-                # message_received = False
-                # while not message_received:
-                #     message_received, s, m = self.robot.is_get_continuous_audio_done()
-                #     print(message_received, s, m)
-                #     time.sleep(0.5)
-                
-                print("Continuous Mode Audio Done")
-                
-                while True:
-                    pass
-                
-            elif self.state == Calibrate_audio:
+            if self.state == Calibrate_audio:
 
                 ### CALIBRATION EXAMPLE
                 s, m = self.robot.calibrate_audio(wait_for_end_of=True)
@@ -256,7 +252,7 @@ class TaskMain():
                 
                 # next state
                 self.state = Final_State
-            
+
             elif self.state == Final_State:
                 # self.node.speech_str.command = "I have finished my restaurant task." 
                 # self.node.speaker_publisher.publish(self.node.speech_str)

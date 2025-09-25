@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-    <xacro:property name="lidar_height_from_base" value="0.34" />
+    <xacro:property name="lidar_height_from_base" value="0.31" />
     <xacro:property name="lidar_dist_from_base_limit" value="0.015" />
 
     <joint name="laser_joint" type="fixed">
@@ -15,18 +15,17 @@
             <origin xyz="0 0 -0.062" rpy="${pi/2} 0 ${pi}"/>
             <geometry>
                 <mesh filename="file://$(find charmie_description)/meshes/lidar.stl" scale="0.001 0.001 0.001"/>
-                <!-- <cylinder radius="0.05" length="0.04"/> -->
             </geometry>
             <material name="dark_grey"/>
         </visual>
         <collision>
-            <origin xyz="0 0 -0.011" rpy="0 0 0"/>
+            <origin xyz="0 0 -0.062" rpy="0 0 0"/>
             <geometry>
                 <cylinder radius="0.021" length="0.038"/>
             </geometry>
         </collision>
-        <xacro:inertial_cylinder mass="0.1" length="0.038" radius="0.021"> <!-- ajustar -->
-            <origin xyz="0 0 -0.011" rpy="0 0 0"/>
+        <xacro:inertial_cylinder mass="0.1" length="0.038" radius="0.021">
+            <origin xyz="0 0 -0.062" rpy="0 0 0"/>
         </xacro:inertial_cylinder>
     </link>
 

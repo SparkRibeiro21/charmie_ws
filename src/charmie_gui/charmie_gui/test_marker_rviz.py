@@ -1,11 +1,12 @@
 import rclpy
 from rclpy.node import Node
 from visualization_msgs.msg import Marker, MarkerArray
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, ListOfDetectedPerson, ListOfDetectedObject, TrackingMask
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, ListOfDetectedPerson, ListOfDetectedObject, TrackingMask, RadarData
 from geometry_msgs.msg import Point
 import math
 import json
 from pathlib import Path
+import time
 
 class MarkerPublisher(Node):
     def __init__(self):
@@ -21,13 +22,17 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_detected_person =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_person", 10)
         self.publisher_marker_array_detected_object =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_object", 10)
         self.publisher_marker_array_tracking =          self.create_publisher(MarkerArray, "visualization_marker_array_tracking", 10)
-
+        
+        self.publisher_marker_array_radar =             self.create_publisher(MarkerArray, "visualization_marker_array_radar", 10)
+        
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
+        # Radar
+        self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -53,6 +58,8 @@ class MarkerPublisher(Node):
         self.detected_object = ListOfDetectedObject()
         self.previous_marker_array_detected_people = ListOfDetectedPerson() 
         self.tracking = TrackingMask()
+        self.radar = RadarData()
+        self.aux_time = time.time()
 
         self.COLOR_LIST = [
             (1.0, 0.0, 0.0),  # Red
@@ -82,6 +89,10 @@ class MarkerPublisher(Node):
     def tracking_mask_callback(self, track: TrackingMask):
         self.tracking = track
         self.publish_marker_array_tracking()
+    
+    def radar_data_callback(self, radar: RadarData):
+        self.radar = radar
+        self.publish_marker_array_radar()
 
     def publish_all_marker_arrays(self):
         self.publish_marker_array_rooms()
@@ -165,7 +176,6 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_rooms.publish(marker_array)
         self.publisher_marker_array_rooms_names.publish(marker_array_names)
 
-
     def publish_marker_array_furniture(self):
 
         marker_array = MarkerArray()
@@ -191,7 +201,7 @@ class MarkerPublisher(Node):
 
             marker.pose.position.x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0]) / 2  # Set the X coordinate
             marker.pose.position.y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1]) / 2  # Set the X coordinate
-            marker.pose.position.z = furniture['height']/2  # Set the Z coordinate
+            marker.pose.position.z = furniture['height'][0]/2  # Set the Z coordinate
 
             marker.pose.orientation.x = 0.0
             marker.pose.orientation.y = 0.0
@@ -200,7 +210,7 @@ class MarkerPublisher(Node):
 
             marker.scale.x = abs(furniture['top_left_coords'][0] - furniture['bot_right_coords'][0]) # + 2*margin_x  # Width
             marker.scale.y = abs(furniture['top_left_coords'][1] - furniture['bot_right_coords'][1]) # + 2*margin_y # Width
-            marker.scale.z = furniture['height']  # Height
+            marker.scale.z = furniture['height'][0]  # Height
 
             # rgb_v = self.COLOR_LIST[index % len(self.COLOR_LIST)]
             # print(ctr % len(self.COLOR_LIST), rgb_v)
@@ -235,7 +245,7 @@ class MarkerPublisher(Node):
             marker_name.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
             marker_name.pose.position.x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0]) / 2  # Set the X coordinate
             marker_name.pose.position.y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1]) / 2  # Set the X coordinate
-            marker_name.pose.position.z = furniture['height']/2  # Set the Z coordinate
+            marker_name.pose.position.z = furniture['height'][0]/2  # Set the Z coordinate
             marker_name.pose.orientation.w = 1.0  # No rotation
             marker_name.scale.z = self.NAMES_TEXT_SIZE # Height
             marker_name.text = furniture['name'].replace(" ", "_")
@@ -248,7 +258,6 @@ class MarkerPublisher(Node):
 
         self.publisher_marker_array_furniture.publish(marker_array)
         self.publisher_marker_array_furniture_names.publish(marker_array_names)
-
 
     def publish_marker_array_navigation(self):
 
@@ -391,7 +400,6 @@ class MarkerPublisher(Node):
 
         self.publisher_marker_array_navigations.publish(marker_array)
         self.publisher_marker_array_navigations_names.publish(marker_array_names)
-
 
     def publish_marker_array_detected_person(self):
 
@@ -566,8 +574,6 @@ class MarkerPublisher(Node):
     
         # self.previous_marker_array_detected_people = self.detected_people
 
-
-
     def publish_marker_array_detected_object(self):
 
         marker_array = MarkerArray()
@@ -668,7 +674,6 @@ class MarkerPublisher(Node):
             
         self.publisher_marker_array_detected_object.publish(marker_array)
     
-
     def publish_marker_array_tracking(self):
 
         marker_array = MarkerArray()
@@ -737,6 +742,160 @@ class MarkerPublisher(Node):
 
             
         self.publisher_marker_array_tracking.publish(marker_array)
+                        
+    def publish_marker_array_radar(self):
+        curr_time = time.time()
+        marker_array = MarkerArray()
+        object_size = 0.1
+        max_radar_range = 4.0 # meters
+
+        # Delete old markers
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "base_footprint"
+        delete_marker.header.stamp = rclpy.time.Time().to_msg()
+        delete_marker.ns = "Radar_sector_closest_point"
+        delete_marker.id = 0  # Use the same ID to delete it
+        delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
+        marker_array.markers.append(delete_marker)
+
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "base_footprint"
+        delete_marker.header.stamp = rclpy.time.Time().to_msg()
+        delete_marker.ns = "Radar_sector_arc"
+        delete_marker.id = 0  # Use the same ID to delete it
+        delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
+        marker_array.markers.append(delete_marker)
+
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "base_footprint"
+        delete_marker.header.stamp = rclpy.time.Time().to_msg()
+        delete_marker.ns = "Radar_sector_floor_line"
+        delete_marker.id = 0
+        delete_marker.action = Marker.DELETEALL
+        marker_array.markers.append(delete_marker)
+
+        print("[radar] --- Radar Data: ---")
+        print("[radar] d_t:", round(curr_time - self.aux_time, 5))
+        # print("[radar] header:", self.radar.header)
+        print("[radar] No of Sectors:", self.radar.number_of_sectors)
+        print("[radar] Sector Ang Range:", round(self.radar.sector_ang_range,3), "(rad), ", round(self.radar.sector_ang_range*180.0/math.pi, 1), "(deg)")
+        
+        for i, sector in enumerate(self.radar.sectors):
+            print(f"\t[radar] --- Sector {i + 1} ---")
+            print(f"\t[radar] Start Angle: {round(sector.start_angle, 3)} rad")
+            print(f"\t[radar] End Angle: {round(sector.end_angle, 3)} rad")
+            print(f"\t[radar] Has Point: {sector.has_point}")
+            print(f"\t[radar] Min Distance: {sector.min_distance}")
+            print(f"\t[radar] Point: ({round(sector.point.x, 3)}, {round(sector.point.y, 3)}, {round(sector.point.z, 3)})")
+
+            if sector.has_point:
+
+                # For Intensity-Based Color Coding
+                dist_norm = min(1.0, sector.min_distance / max_radar_range)  # Normalize
+
+                # Closest point sphere
+                marker_point = Marker()
+                marker_point.header.frame_id = "base_footprint"
+                marker_point.header.stamp = rclpy.time.Time().to_msg()
+                marker_point.ns = "Radar_sector_closest_point"
+                marker_point.id = i+1
+                marker_point.type = Marker.SPHERE
+                marker_point.action = Marker.ADD
+                marker_point.pose.position.x = sector.point.x
+                marker_point.pose.position.y = sector.point.y
+                marker_point.pose.position.z = sector.point.z
+                marker_point.pose.orientation.w = 1.0
+                marker_point.scale.x = object_size
+                marker_point.scale.y = object_size
+                marker_point.scale.z = object_size
+                marker_point.color.r = 0.0
+                marker_point.color.g = 0.0
+                marker_point.color.b = 1.0
+                marker_point.color.a = 0.8
+                marker_point.lifetime.sec = 0
+                marker_point.lifetime.nanosec = 0
+                marker_point.frame_locked = False
+                marker_array.markers.append(marker_point)
+
+                marker_floor_line = Marker()
+                marker_floor_line.header.frame_id = "base_footprint"
+                marker_floor_line.header.stamp = rclpy.time.Time().to_msg()
+                marker_floor_line.ns = "Radar_sector_floor_line"
+                marker_floor_line.id = i + 1  # Use same ID as sector
+                marker_floor_line.type = Marker.LINE_STRIP
+                marker_floor_line.action = Marker.ADD
+                marker_floor_line.pose.orientation.w = 1.0
+                marker_floor_line.scale.x = 0.02  # Line thickness
+                marker_floor_line.color.r = 1.0 - dist_norm
+                marker_floor_line.color.g = dist_norm
+                marker_floor_line.color.b = 0.0
+                marker_floor_line.color.a = 1.0
+                marker_floor_line.lifetime.sec = 0
+                marker_floor_line.lifetime.nanosec = 0
+                marker_floor_line.frame_locked = False
+
+                # Build radar arc
+                arc_segments = 24
+                min_z = 0.0
+                max_z = 0.5
+                radius = sector.min_distance
+                start_angle = sector.start_angle
+                end_angle = sector.end_angle
+
+                # Arc along floor (inner radius, z=0)
+                for j in range(arc_segments + 1):
+                    theta = start_angle + (end_angle - start_angle) * (j / arc_segments)
+                    p = Point()
+                    p.x = radius * math.cos(theta)
+                    p.y = radius * math.sin(theta)
+                    p.z = min_z
+                    marker_floor_line.points.append(p)
+
+                marker_array.markers.append(marker_floor_line)
+
+                marker_arc = Marker()
+                marker_arc.header.frame_id = "base_footprint"
+                marker_arc.header.stamp = rclpy.time.Time().to_msg()
+                marker_arc.ns = "Radar_sector_arc"
+                marker_arc.id = i+1
+                marker_arc.type = Marker.TRIANGLE_LIST
+                marker_arc.action = Marker.ADD
+                marker_arc.pose.orientation.w = 1.0
+                marker_arc.scale.x = 1.0  # Required for TRIANGLE_LIST
+                marker_arc.scale.y = 1.0
+                marker_arc.scale.z = 1.0
+                marker_arc.color.r = 1.0 - dist_norm
+                marker_arc.color.g = dist_norm
+                marker_arc.color.b = 0.0
+                marker_arc.color.a = 0.75
+                marker_arc.lifetime.sec = 0
+                marker_arc.lifetime.nanosec = 0
+                marker_arc.frame_locked = False
+
+                for j in range(arc_segments):
+                    theta0 = start_angle + (end_angle - start_angle) * (j / arc_segments)
+                    theta1 = start_angle + (end_angle - start_angle) * ((j + 1) / arc_segments)
+
+                    # Bottom arc
+                    b0 = Point(x=radius * math.cos(theta0), y=radius * math.sin(theta0), z=min_z)
+                    b1 = Point(x=radius * math.cos(theta1), y=radius * math.sin(theta1), z=min_z)
+
+                    # Top arc
+                    t0 = Point(x=radius * math.cos(theta0), y=radius * math.sin(theta0), z=max_z)
+                    t1 = Point(x=radius * math.cos(theta1), y=radius * math.sin(theta1), z=max_z)
+
+                    # Two triangles per segment
+                    marker_arc.points.extend([b0, b1, t0])
+                    marker_arc.points.extend([t0, b1, t1])
+
+                    # Duplicate in reverse (for back face)
+                    marker_arc.points.extend([t0, b1, b0])
+                    marker_arc.points.extend([t1, b1, t0])
+
+                marker_array.markers.append(marker_arc)
+
+        self.publisher_marker_array_radar.publish(marker_array)
+        self.aux_time = curr_time
 
 
 def main(args=None):
