@@ -3426,7 +3426,7 @@ class RobotStdFunctions():
         self.activate_tracking(activate=True, points=points, bbox=bb)
         # self.activate_tracking(activate=False)
 
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, speak_results=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
         options = []
 
@@ -3492,9 +3492,10 @@ class RobotStdFunctions():
             self.set_speech(filename=start_speak_file, wait_for_end_of=True)
     
             request = SetFaceTouchscreenMenu.Request()
-            request.command = options
-            request.timeout = float(timeout)
-            request.mode    = str(mode)
+            request.command     = options
+            request.timeout     = float(timeout)
+            request.mode        = str(mode)
+            request.instruction = str(instruction)
             
             self.node.call_face_set_touchscreen_menu_server(request=request)
 
