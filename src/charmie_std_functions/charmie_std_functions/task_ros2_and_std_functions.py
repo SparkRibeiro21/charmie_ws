@@ -2375,20 +2375,24 @@ class RobotStdFunctions():
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
         
         cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
+        img_path = ""
 
         if not just_face:
             just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
             img_path = current_datetime + str(person.index)
+            cv2.imwrite(self.node.complete_path_custom_face + img_path + ".jpg", just_person_image) 
+            time.sleep(0.1)
         else:
-            just_person_image = cf[person.box_head_top_left_y:person.box_head_top_left_y+person.box_head_height, person.box_head_top_left_x:person.box_head_top_left_x+person.box_head_width]
-            img_path = current_datetime + str(person.index) + "face"
+            if person.is_box_head:
+                just_person_image = cf[person.box_head_top_left_y:person.box_head_top_left_y+person.box_head_height, person.box_head_top_left_x:person.box_head_top_left_x+person.box_head_width]
+                img_path = current_datetime + str(person.index) + "face"
+                cv2.imwrite(self.node.complete_path_custom_face + img_path + ".jpg", just_person_image) 
+                time.sleep(0.1)
+        
         # print(img_path)
         
         # cv2.imshow("Search for Person", just_person_image)
         # cv2.waitKey(100)
-
-        cv2.imwrite(self.node.complete_path_custom_face + img_path + ".jpg", just_person_image) 
-        time.sleep(0.1)
 
         if send_to_face:
             self.set_face(custom=img_path)
@@ -3547,12 +3551,7 @@ class RobotStdFunctions():
             return ["ERROR"]
         
     def add_face_to_face_recognition(self, person=DetectedPerson(), image_path="", name=""):
-        
-        # image_path is for exceptions, Detected Person should always be used
-        # TODO: add DetectedPerson option to save image from the camera directly
-        # DONE: Test if bad image is added (no face in the image)
-        # DONE: Test if path is incorrect (no image found)
-        
+
         success = False
         message = ""
         
@@ -3595,12 +3594,12 @@ class RobotStdFunctions():
 
     def recognize_face_from_face_recognition(self, person=DetectedPerson(), image_path="", tolerance=0.4):
         
-        # image_path is for exceptions, Detected Person should always be used
-        # TODO: add DetectedPerson option to save image from the camera directly
-        # DONE: Test if bad image is added (no face in the image)
-        # DONE: Test if path is incorrect (no image found)
-        
-        image_path = self.node.home+'/'+image_path
+        if image_path != "": # uses image_path
+            image_path = self.node.home+'/'+image_path
+        else: # uses DetectedPerson
+            image_path = self.detected_person_to_face_path(person=person, just_face=True, send_to_face=False)
+            image_path = self.node.complete_path_custom_face + image_path + ".jpg"
+
         print(image_path)
 
         if os.path.isfile(image_path):

@@ -118,6 +118,11 @@ class TaskMain():
 
                     elif choice == 'c':
                         print("You pressed C")
+                        for person in det_ppl:
+                            print("ID:", person.index)
+                            pred, pred_perc = self.robot.recognize_face_from_face_recognition(person=person)
+                            print(pred, round(pred_perc, 2), "Should be ???")
+                            
                     else:
                         print("Other key")
                     
