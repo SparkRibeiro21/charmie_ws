@@ -102,7 +102,27 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
-                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
+                while True:
+                    
+                    # input("\nPress Enter to continue... (DEBUG)")
+                    choice = input("\nPress 'a' to add or 'c' to compare. Press Enter to continue... (DEBUG)").strip().lower()[:1]
+
+                    det_ppl = self.robot.node.detected_people.persons
+                    print(len(det_ppl))
+                    
+                    if choice == 'a':
+                        print("You pressed A")
+                        for person in det_ppl:
+                            print("ID:", person.index)
+                            self.robot.add_face_to_face_recognition(person=person, name=f"Person_{person.index}")
+
+                    elif choice == 'c':
+                        print("You pressed C")
+                    else:
+                        print("Other key")
+                    
+
+                """ path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
                 pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
                 print(pred, round(pred_perc, 2), "Should be ADAM")
 
@@ -139,7 +159,7 @@ class TaskMain():
                 print(pred, round(pred_perc, 2), "Should be ERROR")
 
                 pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path5)
-                print(pred, round(pred_perc, 2), "Should be ERROR")
+                print(pred, round(pred_perc, 2), "Should be ERROR") """
 
 
                 """ while True:

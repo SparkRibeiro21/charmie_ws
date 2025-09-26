@@ -2370,24 +2370,30 @@ class RobotStdFunctions():
 
         return filtered_persons
 
-    def detected_person_to_face_path(self, person, send_to_face):
+    def detected_person_to_face_path(self, person=DetectedPerson(), just_face=False, send_to_face=False):
 
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
         
         cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
-        just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
+
+        if not just_face:
+            just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
+            img_path = current_datetime + str(person.index)
+        else:
+            just_person_image = cf[person.box_head_top_left_y:person.box_head_top_left_y+person.box_head_height, person.box_head_top_left_x:person.box_head_top_left_x+person.box_head_width]
+            img_path = current_datetime + str(person.index) + "face"
+        # print(img_path)
+        
         # cv2.imshow("Search for Person", just_person_image)
         # cv2.waitKey(100)
-        
-        face_path = current_datetime + str(person.index)
-        
-        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
+
+        cv2.imwrite(self.node.complete_path_custom_face + img_path + ".jpg", just_person_image) 
         time.sleep(0.1)
 
         if send_to_face:
-            self.set_face(custom=face_path)
+            self.set_face(custom=img_path)
         
-        return face_path
+        return img_path
 
     def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
 
@@ -2698,7 +2704,7 @@ class RobotStdFunctions():
             
         return final_objects        
 
-    def detected_object_to_face_path(self, object, send_to_face, bb_color=(0,0,255)):
+    def detected_object_to_face_path(self, object=DetectedObject(), send_to_face=False, bb_color=(0,0,255)):
 
         thresh_h = 220
         thresh_v = 220
@@ -3549,12 +3555,13 @@ class RobotStdFunctions():
         
         success = False
         message = ""
+        
+        if image_path != "": # uses image_path
+            image_path = self.node.home+'/'+image_path
+        else: # uses DetectedPerson
+            image_path = self.detected_person_to_face_path(person=person, just_face=True, send_to_face=False)
+            image_path = self.node.complete_path_custom_face + image_path + ".jpg"
 
-        # self.home = str(Path.home())
-        # custom_face_midpath = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces"
-        # configuration_files_midpath = "/charmie_ws/src/configuration_files/"
-        # self.complete_path_custom_face = self.home+'/'+custom_face_midpath+'/'
-        image_path = self.node.home+'/'+image_path
         print(image_path)
 
         if os.path.isfile(image_path):
@@ -3567,8 +3574,11 @@ class RobotStdFunctions():
                 self.node.face_recognition_names.append(name)
                 success = True
                 message = "Face encoding added to list successfully."
+                self.node.get_logger().info("Face encoding added to list successfully. - " + str(name))
+                print("Face encoding added to list successfully.")
                 # print(self.node.face_recognition_encoding)
                 # print(self.node.face_recognition_names)
+
             else:
                 self.node.get_logger().warn("No face found in the image. Encodings not added to list.")
                 print("No face found in the image. Encodings not added to list.")
