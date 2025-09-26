@@ -58,12 +58,7 @@ class TaskMain():
     def main(self):
         Waiting_for_start_button = 0
         Searching_for_clients = 1
-        Navigation_to_person = 2
-        Receiving_order_speach = 3
-        Receiving_order_listen_and_confirm = 4
-        Collect_order_from_barman = 5
-        Delivering_order_to_client = 6
-        Final_State = 7
+        Final_State = 2
 
         self.state = Waiting_for_start_button
 
@@ -102,72 +97,8 @@ class TaskMain():
                 osp = self.robot.get_standard_pick_from_object(o)
                 print(o, "|", ow, "|", ol, "|", oh, "|", os, "|", ocp, "|", osp)
 
+
                 while True:
-                    
-                    # input("\nPress Enter to continue... (DEBUG)")
-                    choice = input("\nPress 'a' to add or 'c' to compare. Press Enter to continue... (DEBUG)").strip().lower()[:1]
-
-                    det_ppl = self.robot.node.detected_people.persons
-                    print(len(det_ppl))
-                    
-                    if choice == 'a':
-                        print("You pressed A")
-                        for person in det_ppl:
-                            print("ID:", person.index)
-                            self.robot.add_face_to_face_recognition(person=person, name=f"Person_{person.index}")
-
-                    elif choice == 'c':
-                        print("You pressed C")
-                        for person in det_ppl:
-                            print("ID:", person.index)
-                            pred, pred_perc = self.robot.recognize_face_from_face_recognition(person=person)
-                            print(pred, round(pred_perc, 2), "Should be ???")
-                            
-                    else:
-                        print("Other key")
-                    
-
-                """ path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
-                print(pred, round(pred_perc, 2), "Should be ADAM")
-
-                path1 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_12-41-44_.jpg" # RENATA
-                path2 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-34-28_.jpg" # XIAOI
-                path3 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-35-55_.jpg" # ADAM
-
-                path4 = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2025-07-11_14-36-49_150_spoon_head.jpg" # INVALID PATH
-                path5 = "charmie_ws/src/charmie_face/charmie_face/list_of_temp_faces/2025-07-11_14-36-49_150_spoon_head.jpg"        # NO FACE
-                
-                self.robot.add_face_to_face_recognition(image_path=path1, name="Renata")
-                self.robot.add_face_to_face_recognition(image_path=path2, name="Xiaoi")
-                self.robot.add_face_to_face_recognition(image_path=path3, name="Adam")
-                self.robot.add_face_to_face_recognition(image_path=path4, name="T1")
-                self.robot.add_face_to_face_recognition(image_path=path5, name="T2")
-
-                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_153i_.jpg"
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
-                print(pred, round(pred_perc, 2), "Should be ADAM")
-
-                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_13-38-42_154i_.jpg"
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
-                print(pred, round(pred_perc, 2), "Should be XIAOI")
-
-                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-18_07-24-43_126i_.jpg"
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
-                print(pred, round(pred_perc, 2), "Should be RENATA")
-                
-                path_recognize = "charmie_ws/src/charmie_tasks/charmie_tasks/old/receptionist/images/2024-07-16_20-40-04_.jpg"
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path_recognize)
-                print(pred, round(pred_perc, 2), "Should be UNKNOWN")
-
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path4)
-                print(pred, round(pred_perc, 2), "Should be ERROR")
-
-                pred, pred_perc = self.robot.recognize_face_from_face_recognition(image_path=path5)
-                print(pred, round(pred_perc, 2), "Should be ERROR") """
-
-
-                """ while True:
 
                     selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="numpad", start_speak_file="face_touchscreen_menu/init_touchscreen_keyboard_menu", speak_results=True)
                     print(selected_option)
@@ -181,7 +112,7 @@ class TaskMain():
                     time.sleep(3.0)
                     
                     selected_option = self.robot.set_face_touchscreen_menu([selected_option[0]], timeout=10, mode="single", speak_results=True)
-                    time.sleep(3.0) """
+                    time.sleep(3.0)
 
                 # selected_option_ = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True)
                 # selected_option_ = self.robot.set_face_touchscreen_menu([selected_option_[0]], timeout=10, mode="single", speak_results=True)

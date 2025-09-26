@@ -3561,7 +3561,7 @@ class RobotStdFunctions():
             image_path = self.detected_person_to_face_path(person=person, just_face=True, send_to_face=False)
             image_path = self.node.complete_path_custom_face + image_path + ".jpg"
 
-        print(image_path)
+        # print(image_path)
 
         if os.path.isfile(image_path):
 
@@ -3600,7 +3600,7 @@ class RobotStdFunctions():
             image_path = self.detected_person_to_face_path(person=person, just_face=True, send_to_face=False)
             image_path = self.node.complete_path_custom_face + image_path + ".jpg"
 
-        print(image_path)
+        # print(image_path)
 
         if os.path.isfile(image_path):
     
@@ -3626,7 +3626,11 @@ class RobotStdFunctions():
             name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
             if biggest_conf_recognized < tolerance:
                 name_recognized = "unknown"
-            print("RECOGNIZED:", name_recognized, biggest_conf_recognized, all_percentages)
+
+            print("RECOGNITION COMPARE TABLE:")
+            for prob, name in zip(all_percentages, self.node.face_recognition_names):
+                print(str(round(prob,2))+" -> "+name)
+            print("OUTCOME:", name_recognized, str(round(biggest_conf_recognized,2)))
 
             return name_recognized.lower(), biggest_conf_recognized
 
