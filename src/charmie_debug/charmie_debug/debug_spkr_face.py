@@ -150,11 +150,14 @@ class TaskMain():
 
                     selected_option = self.robot.set_face_touchscreen_menu(timeout=10, mode="keyboard", start_speak_file="face_touchscreen_menu/init_touchscreen_keyboard_menu", speak_results=True)
                     print(selected_option)
+                    time.sleep(3.0)
+
+                    selected_option = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", instruction="Shelves are counter from bottom to up. Bottom is first shelf", speak_results=True)
+                    time.sleep(3.0)
+                    
+                    selected_option = self.robot.set_face_touchscreen_menu([selected_option[0]], timeout=10, mode="single", speak_results=True)
                     time.sleep(3.0) """
 
-                # selected_option = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True)
-                # selected_option = self.robot.set_face_touchscreen_menu([selected_option[0]], timeout=10, mode="single", speak_results=True)
-                
                 # selected_option_ = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True)
                 # selected_option_ = self.robot.set_face_touchscreen_menu([selected_option_[0]], timeout=10, mode="single", speak_results=True)
 

@@ -32,7 +32,6 @@ class FaceNode(Node):
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("show_speech", True) 
         self.declare_parameter("initial_face", "charmie_face") 
-        # self.declare_parameter("initial_face", "place_bowl_in_tray") 
         # self.declare_parameter("initial_face", "charmie_face_old_tablet") 
         
         self.home = str(Path.home())
@@ -160,9 +159,10 @@ class FaceNode(Node):
     def callback_face_set_touchscreen_menu(self, request, response):
 
         # Type of service received: 
-        # string[] command # options for the face touchscreen menu
-        # float64 timeout  # maximum wait time for a menu selection
-        # string mode      # select whether we need a single selection or a list of selected items
+        # string[] command    # options for the face touchscreen menu
+        # float64 timeout     # maximum wait time for a menu selection
+        # string mode         # select whether we need a single selection, a list of selected items, keyboard input or numpad input. Valid values: "single", "multi", "keyboard" and "numpad"
+        # string instruction  # displayed instruction for the user
         # ---
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
@@ -170,6 +170,7 @@ class FaceNode(Node):
         self.list_options_touchscreen_menu  = request.command
         self.touchscreen_menu_timeout       = request.timeout
         self.touchscreen_menu_mode          = request.mode
+        self.touchscreen_menu_instruction   = request.instruction
         
         self.is_touchscreen_menu = True
         self.touchscreen_menu_start_time = None
@@ -799,6 +800,21 @@ class FaceMain():
         ### 1) Show Selection Grid ###
         if not self.confirming_selection:
             self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)  # Light blue background
+            
+            # Optional instruction banner (above options)
+            instr_bottom = 0
+            if getattr(self.node, "touchscreen_menu_instruction", ""):
+                instr_font = pygame.font.SysFont(None, 56)
+                margin = 24
+                max_w = self.resolution[0] - 2 * margin
+                lines = self.wrap_text(self.node.touchscreen_menu_instruction, instr_font, max_w)
+                y = 28
+                for line in lines:
+                    surf = instr_font.render(line, True, self.GREY_LAR_LOGO)
+                    rect = surf.get_rect(center=(self.resolution[0] // 2, y + surf.get_height() // 2))
+                    self.SCREEN.blit(surf, rect)
+                    y += surf.get_height() + 6
+                instr_bottom = y  # y is already advanced past the last line
 
             num_options = len(self.node.list_options_touchscreen_menu)
             margin = 20 if num_options <= 21 else 6
@@ -812,6 +828,7 @@ class FaceMain():
             num_rows = (num_options + num_columns - 1) // num_columns
             total_height = num_rows * (button_height + margin)
             start_y = (self.resolution[1] - total_height) // 2
+            start_y = max(start_y, (instr_bottom + 20) if instr_bottom else start_y)
 
             self.menu_buttons = []
 
@@ -966,6 +983,21 @@ class FaceMain():
 
             self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)
 
+            # Optional instruction banner (above options)
+            instr_bottom = 0
+            if getattr(self.node, "touchscreen_menu_instruction", ""):
+                instr_font = pygame.font.SysFont(None, 56)
+                margin = 24
+                max_w = self.resolution[0] - 2 * margin
+                lines = self.wrap_text(self.node.touchscreen_menu_instruction, instr_font, max_w)
+                y = 28
+                for line in lines:
+                    surf = instr_font.render(line, True, self.GREY_LAR_LOGO)
+                    rect = surf.get_rect(center=(self.resolution[0] // 2, y + surf.get_height() // 2))
+                    self.SCREEN.blit(surf, rect)
+                    y += surf.get_height() + 6
+                instr_bottom = y
+
             num_options = len(self.node.list_options_touchscreen_menu)
             margin = 20 if num_options <= 21 else 6
             num_columns = 3 # 4 if num_options > 21 else 3
@@ -978,6 +1010,7 @@ class FaceMain():
             num_rows = (num_options + num_columns - 1) // num_columns
             total_height = num_rows * (button_height + margin)
             start_y = (self.resolution[1] - total_height) // 2
+            start_y = max(start_y, (instr_bottom + 20) if instr_bottom else start_y)
 
             self.plus_buttons = []
             self.minus_buttons = []
