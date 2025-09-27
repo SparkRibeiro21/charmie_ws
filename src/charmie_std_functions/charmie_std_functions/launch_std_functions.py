@@ -357,7 +357,7 @@ class LaunchStdFunctions():
                             name='lidar_hokuyo_bottom',
                             emulate_tty=True
                             )
-        
+        """ 
         ################### user configure livox parameters for ros2 start ###################
         xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
         multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
@@ -401,7 +401,7 @@ class LaunchStdFunctions():
                 executable='rviz2',
                 output='screen',
                 arguments=['--display-config', rviz_config_path]
-            )
+            ) """
         
         self.radar = Node(  package='charmie_radar',
                             executable='radar',

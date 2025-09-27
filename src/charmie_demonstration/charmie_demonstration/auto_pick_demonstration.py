@@ -146,21 +146,21 @@ class TaskMain():
                 else:
 
                     while True:
-                        selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category")
+                        selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                         print(selected_category[0])
                         if selected_category[0] != "TIMEOUT" and self.robot.get_furniture_from_object_class(selected_category[0]) != "NONE": #THINK ABOUT REPEAT LIMIT
                             break
 
-                    selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object")
+                    selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                     print(selected_option[0])
 
                     while selected_option[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                        selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object")
+                        selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                         print(selected_option[0])
 
                     self.object_name = selected_option[0]
 
-                    selected_room = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room")
+                    selected_room = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                     print(selected_room[0])
 
                     while selected_room[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
@@ -174,6 +174,41 @@ class TaskMain():
 
                     if selected_furniture[0] == "TIMEOUT":
                         self.place_furniture = selected_furniture[0] = "Office Table"
+
+                    furniture_height = self.robot.get_height_from_furniture(self.place_furniture)
+
+                    max_limit = 1.75
+                    min_limit = 0.30
+
+                    reachable_shelfs = []
+
+                    for h in furniture_height:
+                        if min_limit <= h <= max_limit:
+                            reachable_shelfs.append(h)
+                            print("REACHABLE SHELFS VALUES:", reachable_shelfs)
+
+                    if len(reachable_shelfs)>1:
+                        shelf_options = []
+                        for i in range(len(reachable_shelfs)):
+                            if i == len(reachable_shelfs) - 1:
+                                shelf_options.append(f"Top Shelf {i+1}")
+                            elif i == 0:
+                                shelf_options.append(f"Bottom Shelf {i+1}")
+                            else:
+                                shelf_options.append(f"Shelf {i+1}")
+
+                        self.selected_shelf = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=shelf_options, timeout=10, mode="single", speak_results=True, start_speak_file="face_touchscreen_menu/init_touch", end_speak_file_error="face_touchscreen_menu/problem_to")
+                        print("Selected shelf:", self.selected_shelf)
+                        shelf_index = shelf_options.index(self.selected_shelf[0])
+                        print("Selected index:", shelf_index)
+                        self.selected_height = list(reversed(reachable_shelfs))[shelf_index]
+                        print("Selected height:", self.selected_height)
+
+                    elif len(reachable_shelfs)==1:
+                        self.selected_height = reachable_shelfs[0]
+
+                    else:
+                        print("Can't place an object in that furniture")
 
 
                 #self.object_name = "Pringles"
@@ -220,7 +255,7 @@ class TaskMain():
 
             elif self.state == self.task_states["Pick_Object"]:
 
-                picked_height = self.robot.pick_obj(selected_object=self.object_name, mode=self.object_mode, first_tetas=self.tetas)
+                picked_height, asked_help = self.robot.pick_obj(selected_object=self.object_name, mode=self.object_mode, first_tetas=self.tetas)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.state = self.task_states["Move_to_place"]
@@ -264,19 +299,19 @@ class TaskMain():
 
             elif self.state == self.task_states["Place_object"]:
 
-                self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
+                #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
 
                 if self.object_mode == "front":  
 
-                    #final_z = -(1.00 - self.furniture_z - (self.object_z/1.5)) * 1000
-
                     self.robot.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
 
                     gripper_place_position = self.robot.get_gripper_localization()
-                    final_z = (gripper_place_position.z - self.furniture_z - picked_height - 0.02)*1000
-                    print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.furniture_z, " picked height : ", picked_height)
-                    
+                    if asked_help:
+                        final_z = (gripper_place_position.z - self.selected_height - (self.robot.get_object_height_from_object(self.object_name)/1.25) - 0.02)*1000
+                    else:
+                        final_z = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
+                    print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
                     
                     if final_z > 450:
                         final_z=450
@@ -398,8 +433,8 @@ class TaskMain():
                     print("Adjust Movement x:", dx," || y:", dy)
                     self.robot.adjust_omnidirectional_position(dx=dx,dy=dy)
 
-                    final_x = (gripper_place_position.z - self.furniture_z - picked_height - 0.02)*1000
-                    print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.furniture_z, " picked height : ", picked_height)
+                    final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
+                    print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
                     self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
                     self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
 

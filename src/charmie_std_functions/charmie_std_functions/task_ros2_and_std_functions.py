@@ -264,9 +264,9 @@ class ROS2TaskNode(Node):
             while not self.neck_track_object_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         
-        if self.ros2_modules["charmie_sound_classification"]:
-            while not self.get_sound_classification_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Sound Classification Command...")
+        # if self.ros2_modules["charmie_sound_classification"]:
+        #     while not self.get_sound_classification_client.wait_for_service(1.0):
+        #         self.get_logger().warn("Waiting for Server Sound Classification Command...")
             
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
@@ -460,15 +460,15 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_gamepad              = self.ros2_modules["charmie_gamepad"]
         nodes_used.charmie_lidar                = self.ros2_modules["charmie_lidar"]
         nodes_used.charmie_lidar_bottom         = self.ros2_modules["charmie_lidar_bottom"]
-        nodes_used.charmie_lidar_livox          = self.ros2_modules["charmie_lidar_livox"]
+        #nodes_used.charmie_lidar_livox          = self.ros2_modules["charmie_lidar_livox"]
         nodes_used.charmie_localisation         = self.ros2_modules["charmie_localisation"]
         nodes_used.charmie_low_level            = self.ros2_modules["charmie_low_level"]
         nodes_used.charmie_llm                  = self.ros2_modules["charmie_llm"]
         nodes_used.charmie_navigation           = self.ros2_modules["charmie_navigation"]
         nodes_used.charmie_nav2                 = self.ros2_modules["charmie_nav2"]
         nodes_used.charmie_neck                 = self.ros2_modules["charmie_neck"]
-        nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
-        nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
+        #nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
+        #nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
@@ -3761,6 +3761,7 @@ class RobotStdFunctions():
         print("LIST OF DETECTED OBJECTS:")
 
         for o in objects_found:
+            self.asked_help = False
             conf = f"{o.confidence * 100:.0f}%"
             cam_x_ = f"{o.position_relative.x:5.2f}"
             cam_y_ = f"{o.position_relative.y:5.2f}"
@@ -3818,9 +3819,6 @@ class RobotStdFunctions():
                         self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=False)
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
 
-
-                        
-
                         self.set_arm(command="search_front_min_z", wait_for_end_of=True)
                         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = descend_z, wait_for_end_of=True)
 
@@ -3860,7 +3858,8 @@ class RobotStdFunctions():
                         self.ask_help_pick_object_gripper(object_d=objects_found[0])
                         self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                         picked_height = 0.0
-                        return picked_height
+                        self.asked_help = True
+                        return picked_height, self.asked_help
 
                 #BEGIN PICK TOP IF SELECTED
                 elif mode == "top":
@@ -3988,9 +3987,12 @@ class RobotStdFunctions():
                 #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = final_position, wait_for_end_of=True)
 
                 current_gripper_height = self.get_gripper_localization()
-                height_furniture = self.get_height_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))
-                                                                  
-                picked_height = current_gripper_height.z - height_furniture
+                height_furniture = self.get_shelf_from_height( object_height = current_gripper_height.z, furniture = self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))
+                if (height_furniture >= 0):                                                  
+                    picked_height = current_gripper_height.z - height_furniture
+                else:
+                    self.asked_help = True
+                print("HEIGHT FURNITURE:", height_furniture)
                 print("Picked Height: ", picked_height)
 
                 #CHECK CLOSE GRIPPER
@@ -4008,14 +4010,14 @@ class RobotStdFunctions():
 
                 if mode == "front":
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
-
-                    #MOVE TO SEARCH TABLE
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_front_joints, wait_for_end_of=True)
                     
                     if navigation:
                         self.adjust_x_ = - self.adjust_x_
                         self.adjust_y_ = - self.adjust_y_
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+
+                    #MOVE TO SEARCH TABLE
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_front_joints, wait_for_end_of=True)
 
                     if not object_in_gripper:
                         self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))))
@@ -4048,7 +4050,7 @@ class RobotStdFunctions():
 
                 # Return the distance which the gripper was at in relation to the furniture
                
-                return picked_height
+                return picked_height, self.asked_help
 
             #IF AN OBJECT WAS NOT FOUND
             else:
@@ -4094,3 +4096,20 @@ class RobotStdFunctions():
             else:
                 stable_image = 0.0
             image_time_out += 0.1
+
+    def get_shelf_from_height(self, object_height = 0, furniture = ""):
+
+        furniture_height = self.get_height_from_furniture(furniture)
+        print("FURNITURE:", furniture)
+        print("FURNITURE HEIGHTS:", furniture_height)
+        print("OBJECT HEIGHT:", object_height)
+
+        for h in furniture_height:
+            print("HEIGHT COMPARATION:", h)
+            if h < object_height:
+                print("Altura do objeto:", object_height)
+                print("Altura da shelf:", h)
+                return float(h)
+            
+        print("Cannot get height from shelf")
+        return False
