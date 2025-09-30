@@ -88,14 +88,14 @@ class TaskMain():
                     for person in det_ppl:
                         # print("ID:", person.index)
                         pred, pred_perc = self.robot.recognize_face_from_face_recognition(person=person)
-                        # print(pred, round(pred_perc, 2))
+                        print("COMPARE OUTCOME:", pred, round(pred_perc, 2))
                 
                 else: # name of person to add
                     print("ADD ENCODING MODE, name:", choice)
                     for person in det_ppl:
                         # print("ID:", person.index)
-                        self.robot.add_face_to_face_recognition(person=person, name=choice)
-                
+                        s, m = self.robot.add_face_to_face_recognition(person=person, name=choice)
+                        print("ADD OUTCOME:", s, m)
     
             elif self.state == Final_State:
                 self.state += 1
