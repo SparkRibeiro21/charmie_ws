@@ -3792,7 +3792,7 @@ class RobotStdFunctions():
                     descend_z = [low_z, 0.0, 0.0, 0.0, 0.0, 0.0]
 
                     #CHANGE ARM HEIGHT DEPENDING ON FOUND OBJECT HEIGHT
-                    if 0.55 <= o.position_relative.z <= 1.1:
+                    if 0.55 <= o.position_relative.z <= 1.2:
                         if navigation:
                             self.adjust_x_ = o.position_relative.x - 0.6
 
@@ -3825,7 +3825,7 @@ class RobotStdFunctions():
                         return self.hand_search(selected_object, mode, navigation)
                         self.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
 
-                    elif 1.1 < o.position_relative.z <=1.70:
+                    elif 1.2 < o.position_relative.z <=1.70:
                         if navigation:
                             self.adjust_x_ = o.position_relative.x - 0.6
 

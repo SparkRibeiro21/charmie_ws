@@ -29,7 +29,7 @@ class LaunchStdFunctions():
             package="robot_state_publisher",
             executable="robot_state_publisher",
             parameters=[{'robot_description': robot_description_real}],
-            remappings=[('/joint_states','/xarm/joint_states')]
+            remappings=[('/joint_states','/xarm/joint_states')] # Comment this line if you just want to use charmie.display
         )
 
         urdf_path_gazebo = os.path.join(get_package_share_path('charmie_description'), 

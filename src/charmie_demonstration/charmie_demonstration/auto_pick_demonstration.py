@@ -197,8 +197,13 @@ class TaskMain():
                             else:
                                 shelf_options.append(f"Shelf {i+1}")
 
-                        self.selected_shelf = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=shelf_options, timeout=10, mode="single", speak_results=True, start_speak_file="face_touchscreen_menu/init_touch", end_speak_file_error="face_touchscreen_menu/problem_to")
+                        self.selected_shelf = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=shelf_options, timeout=10, mode="single", speak_results=False, start_speak_file="face_touchscreen_menu/menu_shelf", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                         print("Selected shelf:", self.selected_shelf)
+
+                        while self.selected_shelf[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                            self.selected_shelf = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=shelf_options, timeout=10, mode="single", speak_results=False, start_speak_file="face_touchscreen_menu/menu_shelf", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                            print("Selected shelf:", self.selected_shelf)
+
                         shelf_index = shelf_options.index(self.selected_shelf[0])
                         print("Selected index:", shelf_index)
                         self.selected_height = list(reversed(reachable_shelfs))[shelf_index]
