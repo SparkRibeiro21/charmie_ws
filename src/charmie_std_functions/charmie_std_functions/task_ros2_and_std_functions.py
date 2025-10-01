@@ -12,7 +12,7 @@ from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
     Obstacles, ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
-    TaskStatesInfo
+    TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
@@ -131,6 +131,8 @@ class ROS2TaskNode(Node):
         # Odom
         self.odom_subscriber = self.create_subscription(Odometry, "/odometry/filtered", self.odom_callback, 10)
         self.odom_wheels_subscriber = self.create_subscription(Odometry, "/wheel_encoders", self.odom_wheels_callback, 10)
+        # Radar
+        self.radar_dara_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
         
 
         ### Services (Clients) ###
@@ -421,6 +423,8 @@ class ROS2TaskNode(Node):
         self.llm_confirm_command_response = ""
         self.llm_gpsr_response = ListOfStrings()
         self.received_demo_tsi = TaskStatesInfo()
+        self.radar = RadarData()
+        self.is_radar_initialized = False
 
         self.nav2_goal_accepted = False
         self.nav2_feedback = NavigateToPose.Feedback()
@@ -1181,15 +1185,34 @@ class ROS2TaskNode(Node):
         # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
 
+    def radar_data_callback(self, radar: RadarData):
+        self.radar = radar
+        self.is_radar_initialized = True
+
+        # DEBUG PRINTS
+        # nos     = self.radar.number_of_sectors
+        # sar     = self.radar.sector_ang_range
+        # sectors = self.radar.sectors
+        # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
+        # i = 0
+        # for s in sectors:
+        #     sa = s.start_angle
+        #     ea = s.end_angle
+        #     md = s.min_distance
+        #     p  = s.point
+        #     hp = s.has_point
+        #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}, Point: ({round(p.x,2)}, {round(p.y,2)}, {round(p.z,2)})")
+        #     i += 1    
+            
+            
 
 
 
-
-
-
-
-
-
+#############################################################################################################################
+#
+#   Robot Standard Functions Class
+#
+#############################################################################################################################
 
 
 
@@ -1233,6 +1256,8 @@ class RobotStdFunctions():
         self.RISING = 1
         self.OFF = 2
         self.FALLING = 3
+
+        self.ROBOT_RADIUS = 0.28 # in meters
 
     def get_demo_mode(self):
         return self.node.DEMO_OPTION
@@ -2225,6 +2250,71 @@ class RobotStdFunctions():
         time.sleep(0.1)  # wait for the cmd_vel to be published
         self.node.cmd_vel_publisher.publish(Twist())  
         self.node.get_logger().info("Omnidirectional Adjustment Complete.")
+
+    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5):
+
+        success = False
+        message = ""
+
+        distance_to_adjust = 0.0
+
+        if self.node.is_radar_initialized and distance > 0.0:
+            radar = self.node.radar
+            used_sectors = []
+            min_distance = None
+            min_distance_to_robot_edge = 0.0 
+
+            # DEBUG PRINTS
+            # nos     = radar.number_of_sectors
+            # sar     = radar.sector_ang_range
+            # sectors = radar.sectors
+            # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
+            # i = 0
+            # for s in sectors:
+            #     sa = s.start_angle
+            #     ea = s.end_angle
+            #     md = s.min_distance
+            #     p  = s.point
+            #     hp = s.has_point
+            #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}")
+            #     i += 1    
+
+            print("USED SECTORS:")
+            for s in radar.sectors:
+                if -math.radians(ang_obstacle_check/2) <= s.start_angle - math.radians(direction) <= math.radians(ang_obstacle_check/2) and \
+                   -math.radians(ang_obstacle_check/2) <= s.end_angle   - math.radians(direction) <= math.radians(ang_obstacle_check/2):
+                    used_sectors.append(s)
+                    print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
+           
+                    if s.has_point:
+                        if min_distance is None:
+                            min_distance = s.min_distance
+                        elif s.min_distance < min_distance:
+                            min_distance = s.min_distance
+            
+            if min_distance is not None:
+                print("MIN DISTANCE IN USED SECTORS:", round(min_distance,2))
+                min_distance_to_robot_edge = min_distance - self.ROBOT_RADIUS
+                print("MIN DISTANCE TO ROBOT EDGE IN USED SECTORS:", round(min_distance_to_robot_edge,2))
+                distance_to_adjust = min_distance_to_robot_edge - distance
+                print("DISTANCE TO ADJUST (positive means move forward):", round(distance_to_adjust,2))
+            else:
+                success = False
+                message = "No obstacles detected in the selected direction"
+                return success, message
+        else:
+            success = False
+            message = "Radar not initialized or wrong distance parameter"
+            return success, message
+
+
+
+            
+        success = True
+        message = ""
+        return success, message
+            
+
 
     def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
