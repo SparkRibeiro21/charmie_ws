@@ -2190,6 +2190,9 @@ class RobotStdFunctions():
         ### else:
         ###     USE: self.node.current_odom_pose
 
+        success = False
+        message = ""
+
         # Wait until odom is received
         while self.node.current_odom_pose is None:
             self.node.get_logger().warning("Waiting for odom pose...") 
@@ -2250,6 +2253,10 @@ class RobotStdFunctions():
         time.sleep(0.1)  # wait for the cmd_vel to be published
         self.node.cmd_vel_publisher.publish(Twist())  
         self.node.get_logger().info("Omnidirectional Adjustment Complete.")
+
+        success = True
+        message = "Omnidirectional Adjustment Complete."
+        return success, message
 
     def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5):
 
