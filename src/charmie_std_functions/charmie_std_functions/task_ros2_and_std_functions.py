@@ -1384,35 +1384,49 @@ class RobotStdFunctions():
         
     def wait_for_door_opening(self):
         
-        self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
-        
-        # max angle considered to be a door (degrees)
-        MAX_DOOR_ANGLE = math.radians(10.0)
-        # max distance to be considered a door (meters)
-        MAX_DOOR_DISTANCE = 1.0 
-        
+        success = False
+        message = ""
+
+        MAX_DOOR_ANGLE = 25.0 # max angle considered to be a door (degrees)
+        MAX_DOOR_DISTANCE = 1.5 # max distance to be considered a door (meters) from robot edge
         door_open = False
 
+        self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
 
-        """ while not door_open:
-            ctr = 0
-            for obs in self.node.obstacles.obstacles:
-                # if the robot detects any obstacle inside the max_angle with a dist under max_dist it considers the door is closed
-                # the max distance was introduced since in some cases, there may be a sofa, 3 meters away in that direction...
-                if -MAX_DOOR_ANGLE < obs.alfa < MAX_DOOR_ANGLE and obs.dist < MAX_DOOR_DISTANCE:
-                    ctr += 1
-                    # print(math.degrees(obs.alfa), obs.dist)
+        if self.node.is_radar_initialized:
+
+            while not door_open:
+                radar = self.node.radar
+                obstacle_ctr = 0
+
+                print("USED SECTORS:")
+                for s in radar.sectors:
+                    if -math.radians(MAX_DOOR_ANGLE/2) <= s.start_angle <= math.radians(MAX_DOOR_ANGLE/2) and \
+                       -math.radians(MAX_DOOR_ANGLE/2) <= s.end_angle   <= math.radians(MAX_DOOR_ANGLE/2):
+                        # used_sectors.append(s)
+                        print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
             
-            if ctr == 0:
-                door_open = True
-                print("DOOR OPEN")
-            else:
-                door_open = False
-                print("DOOR CLOSED", ctr) """
-        
-        self.set_rgb(GREEN+ALTERNATE_QUARTERS)
-    
+                        if s.has_point:
+                            if s.min_distance - self.ROBOT_RADIUS < MAX_DOOR_DISTANCE:
+                                obstacle_ctr += 1
+
+                if obstacle_ctr == 0:
+                    self.set_rgb(GREEN+ALTERNATE_QUARTERS)
+                    door_open = True
+                    print("DOOR OPEN")
+                    success = True
+                    message = "Door opened successfully detected"
+                    return success, message
+                else:
+                    door_open = False
+                    print("DOOR CLOSED", obstacle_ctr)
+
+        else:
+            success = False
+            message = "Radar not initialized or wrong distance parameter"
+            return success, message
+            
     def set_torso_position(self, legs=0.0, torso=0.0, wait_for_end_of=True):
         
         request = SetTorso.Request()
