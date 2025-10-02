@@ -85,7 +85,7 @@ class TaskMain():
                 
                 # self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                # self.robot.wait_for_door_start()
+                # self.robot.wait_for_door_opening()
 
                 # time.sleep(5)
                 # self.robot.set_neck(position=[0-0, -50.0], wait_for_end_of=True)

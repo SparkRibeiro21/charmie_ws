@@ -1382,7 +1382,7 @@ class RobotStdFunctions():
 
         return self.node.orientation_yaw
         
-    def wait_for_door_start(self):
+    def wait_for_door_opening(self):
         
         self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
         

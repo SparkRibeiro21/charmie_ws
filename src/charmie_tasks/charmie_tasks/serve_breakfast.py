@@ -141,7 +141,7 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                ### self.robot.wait_for_door_start()
+                ### self.robot.wait_for_door_opening()
 
                 ### self.robot.initial_move_past_entrance_door() # to do ...
 
