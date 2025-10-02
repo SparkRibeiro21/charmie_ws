@@ -11,10 +11,10 @@ from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
-    Obstacles, ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
+    ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
     TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
-    SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
+    SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
     GetSoundClassificationContinuous
@@ -108,8 +108,6 @@ class ROS2TaskNode(Node):
         # Search for person and object 
         self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
-        # Obstacles
-        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
         # Gamepad Controller
         self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
         # Low level
@@ -165,8 +163,6 @@ class ROS2TaskNode(Node):
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
         self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
-        # Obstacles
-        self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
@@ -338,7 +334,6 @@ class ROS2TaskNode(Node):
         self.detected_objects = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
-        self.obstacles = Obstacles()
         self.gamepad_controller_state = GamepadController()
         self.previous_gamepad_controller_state = GamepadController()
         self.current_gamepad_controller_state = GamepadController()
@@ -390,8 +385,6 @@ class ROS2TaskNode(Node):
         self.arm_message = ""
         self.navigation_success = True
         self.navigation_message = ""
-        self.activate_obstacles_success = True
-        self.activate_obstacles_message = ""
         self.activate_motors_success = True
         self.activate_motors_message = ""
         self.activate_tracking_success = True
@@ -513,10 +506,6 @@ class ROS2TaskNode(Node):
         self.depth_base_img = img
         self.first_depth_base_image_received = True
 
-    ### OBSTACLES
-    def obstacles_callback(self, obs: Obstacles):
-        self.obstacles = obs
-
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_pose = pose
 
@@ -582,13 +571,7 @@ class ROS2TaskNode(Node):
         self.activate_yolo_objects_client.call_async(request)
 
 
-    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
-    def call_activate_obstacles_server(self, request=ActivateObstacles.Request()):
-
-        self.activate_obstacles_client.call_async(request)
-
-
-    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
+    ### ACTIVATE TRACKING SERVER FUNCTIONS ###
     def call_activate_tracking_server(self, request=ActivateTracking.Request()):
 
         self.activate_tracking_client.call_async(request)
@@ -1412,7 +1395,7 @@ class RobotStdFunctions():
 
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
 
-        while not door_open:
+        """ while not door_open:
             ctr = 0
             for obs in self.node.obstacles.obstacles:
                 # if the robot detects any obstacle inside the max_angle with a dist under max_dist it considers the door is closed
@@ -1426,7 +1409,7 @@ class RobotStdFunctions():
                 print("DOOR OPEN")
             else:
                 door_open = False
-                print("DOOR CLOSED", ctr)
+                print("DOOR CLOSED", ctr) """
         
         self.set_rgb(GREEN+ALTERNATE_QUARTERS)
     
@@ -2858,20 +2841,6 @@ class RobotStdFunctions():
         
         self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_img, camera=camera, bbox=None)
         pass
-
-    def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
-        
-        request = ActivateObstacles.Request()
-        request.activate_lidar_up = obstacles_lidar_up
-        request.activate_lidar_bottom = obstacles_lidar_bottom
-        request.activate_camera_head = obstacles_camera_head
-
-        self.node.call_activate_obstacles_server(request=request)
-
-        self.node.activate_obstacles_success = True
-        self.node.activate_obstacles_message = "Activated with selected parameters"
-
-        return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def get_robot_localization(self):
 
