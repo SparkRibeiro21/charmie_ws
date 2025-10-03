@@ -2312,14 +2312,17 @@ class RobotStdFunctions():
                 else:
                     success = False
                     message = "No obstacles detected in the selected direction"
+                    self.node.get_logger().warn("No obstacles detected in the selected direction")
                     return success, message
             else:
                 success = False
                 message = "Wrong parameter definition"
+                self.node.get_logger().warn("Wrong parameter definition")
                 return success, message
         else:
             success = False
             message = "Radar not initialized"
+            self.node.get_logger().warn("Radar not initialized")
             return success, message
 
         # Copilot suggestion
