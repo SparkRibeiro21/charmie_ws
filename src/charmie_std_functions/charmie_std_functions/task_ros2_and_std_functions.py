@@ -2311,15 +2311,16 @@ class RobotStdFunctions():
             message = "Radar not initialized or wrong distance parameter"
             return success, message
 
+        # Copilot suggestion
+        ### dx = distance_to_adjust * math.cos(math.radians(direction))
+        ### dy = distance_to_adjust * math.sin(math.radians(direction))
+        
+        self.adjust_omnidirectional_position(dx=distance_to_adjust, dy=0.0, max_speed=max_speed, tolerance=tolerance, kp=kp)
 
-
-            
         success = True
-        message = ""
+        message = "Obstacle Adjustment Complete."
         return success, message
-            
-
-
+    
     def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 

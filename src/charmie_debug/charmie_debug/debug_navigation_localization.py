@@ -61,6 +61,7 @@ class TaskMain():
         
         # self.initial_position = [0.0, 0.0, 0.0]
         self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
+        self.initial_position = [2.5, -4.50, 0.0] # temp (near Tiago desk for testing)
         self.NAVIGATION_TARGET = "couch"
 
         # Neck Positions
@@ -85,13 +86,19 @@ class TaskMain():
                 
                 # self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                # self.robot.wait_for_door_opening()
+                # s, m = self.robot.wait_for_door_opening()
+                # self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                # self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=False)
+
 
                 # time.sleep(5)
                 # self.robot.set_neck(position=[0-0, -50.0], wait_for_end_of=True)
 
+
+                s, m = self.robot.adjust_obstacles(distance=0.3, direction=0)
+
                 # next state
-                self.state = Move_to_location1
+                # self.state = Move_to_location1
 
             elif self.state == Move_to_location1:
                 print('State 1 = Hand Raising Detect')
