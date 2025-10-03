@@ -2262,60 +2262,71 @@ class RobotStdFunctions():
 
         distance_to_adjust = 0.0
 
-        if self.node.is_radar_initialized and distance > 0.0:
-            radar = self.node.radar
-            used_sectors = []
-            min_distance = None
-            min_distance_to_robot_edge = 0.0 
+        # normalize direction to be between -180 and 180 (how radar handles angles)
+        while direction > 180:
+            direction -= 360
+        while direction < -180:
+            direction += 360
 
-            # DEBUG PRINTS
-            # nos     = radar.number_of_sectors
-            # sar     = radar.sector_ang_range
-            # sectors = radar.sectors
-            # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
-            # i = 0
-            # for s in sectors:
-            #     sa = s.start_angle
-            #     ea = s.end_angle
-            #     md = s.min_distance
-            #     p  = s.point
-            #     hp = s.has_point
-            #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}")
-            #     i += 1    
+        if self.node.is_radar_initialized:
+            if distance > 0.0 and -100 <= direction <= 100 and 0 < ang_obstacle_check <= 360:
+                radar = self.node.radar
+                used_sectors = []
+                min_distance = None
+                min_distance_to_robot_edge = 0.0 
 
-            print("USED SECTORS:")
-            for s in radar.sectors:
-                if -math.radians(ang_obstacle_check/2) <= s.start_angle - math.radians(direction) <= math.radians(ang_obstacle_check/2) and \
-                   -math.radians(ang_obstacle_check/2) <= s.end_angle   - math.radians(direction) <= math.radians(ang_obstacle_check/2):
-                    used_sectors.append(s)
-                    print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
-           
-                    if s.has_point:
-                        if min_distance is None:
-                            min_distance = s.min_distance
-                        elif s.min_distance < min_distance:
-                            min_distance = s.min_distance
+                # DEBUG PRINTS
+                # nos     = radar.number_of_sectors
+                # sar     = radar.sector_ang_range
+                # sectors = radar.sectors
+                # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
+                # i = 0
+                # for s in sectors:
+                #     sa = s.start_angle
+                #     ea = s.end_angle
+                #     md = s.min_distance
+                #     p  = s.point
+                #     hp = s.has_point
+                #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}")
+                #     i += 1    
+
+                print("USED SECTORS:")
+                for s in radar.sectors:
+                    if -math.radians(ang_obstacle_check/2) <= s.start_angle - math.radians(direction) <= math.radians(ang_obstacle_check/2) and \
+                    -math.radians(ang_obstacle_check/2) <= s.end_angle   - math.radians(direction) <= math.radians(ang_obstacle_check/2):
+                        used_sectors.append(s)
+                        print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
             
-            if min_distance is not None:
-                print("MIN DISTANCE IN USED SECTORS:", round(min_distance,2))
-                min_distance_to_robot_edge = min_distance - self.ROBOT_RADIUS
-                print("MIN DISTANCE TO ROBOT EDGE IN USED SECTORS:", round(min_distance_to_robot_edge,2))
-                distance_to_adjust = min_distance_to_robot_edge - distance
-                print("DISTANCE TO ADJUST (positive means move forward):", round(distance_to_adjust,2))
+                        if s.has_point:
+                            if min_distance is None:
+                                min_distance = s.min_distance
+                            elif s.min_distance < min_distance:
+                                min_distance = s.min_distance
+                
+                if min_distance is not None:
+                    print("MIN DISTANCE IN USED SECTORS:", round(min_distance,2))
+                    min_distance_to_robot_edge = min_distance - self.ROBOT_RADIUS
+                    print("MIN DISTANCE TO ROBOT EDGE IN USED SECTORS:", round(min_distance_to_robot_edge,2))
+                    distance_to_adjust = min_distance_to_robot_edge - distance
+                    print("DISTANCE TO ADJUST (positive means move forward):", round(distance_to_adjust,2))
+                else:
+                    success = False
+                    message = "No obstacles detected in the selected direction"
+                    return success, message
             else:
                 success = False
-                message = "No obstacles detected in the selected direction"
+                message = "Wrong parameter definition"
                 return success, message
         else:
             success = False
-            message = "Radar not initialized or wrong distance parameter"
+            message = "Radar not initialized"
             return success, message
 
         # Copilot suggestion
-        ### dx = distance_to_adjust * math.cos(math.radians(direction))
-        ### dy = distance_to_adjust * math.sin(math.radians(direction))
+        dx = distance_to_adjust * math.cos(math.radians(direction))
+        dy = distance_to_adjust * math.sin(math.radians(direction))
         
-        self.adjust_omnidirectional_position(dx=distance_to_adjust, dy=0.0, max_speed=max_speed, tolerance=tolerance, kp=kp)
+        self.adjust_omnidirectional_position(dx=dx, dy=dy, max_speed=max_speed, tolerance=tolerance, kp=kp)
 
         success = True
         message = "Obstacle Adjustment Complete."

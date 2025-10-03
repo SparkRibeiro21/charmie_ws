@@ -62,6 +62,7 @@ class TaskMain():
         # self.initial_position = [0.0, 0.0, 0.0]
         self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         self.initial_position = [2.5, -4.50, 0.0] # temp (near Tiago desk for testing)
+        self.initial_position = [2.6, -3.60, 45.0] # temp (near Tiago desk for testing)
         self.NAVIGATION_TARGET = "couch"
 
         # Neck Positions
@@ -95,7 +96,10 @@ class TaskMain():
                 # self.robot.set_neck(position=[0-0, -50.0], wait_for_end_of=True)
 
 
-                s, m = self.robot.adjust_obstacles(distance=0.3, direction=0)
+                s, m = self.robot.adjust_obstacles(distance=0.1, direction=-110)
+                if not s:
+                    print("Error adjusting obstacles: "+m)
+                    time.sleep(1.0)
 
                 # next state
                 # self.state = Move_to_location1
