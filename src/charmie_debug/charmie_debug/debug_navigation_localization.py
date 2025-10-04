@@ -96,7 +96,7 @@ class TaskMain():
                 # self.robot.set_neck(position=[0-0, -50.0], wait_for_end_of=True)
 
 
-                s, m = self.robot.adjust_obstacles(distance=0.1, direction=-110)
+                s, m = self.robot.adjust_obstacles(distance=0.30, direction=-45.0)
                 if not s:
                     print("Error adjusting obstacles: "+m)
                     time.sleep(1.0)
