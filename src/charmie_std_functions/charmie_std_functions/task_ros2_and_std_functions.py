@@ -2175,7 +2175,7 @@ class RobotStdFunctions():
         move_coords_copy[2]+=45.0
         return move_coords_copy
     
-    def adjust_omnidirectional_position(self, dx, dy, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
 
         ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
         ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
@@ -2190,6 +2190,23 @@ class RobotStdFunctions():
         success = False
         message = ""
 
+        if safety:
+            SAFETY_DISTANCE_FROM_ROBOT_EDGE = 0.02 # from robot edge to obstacle
+
+            s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=ang_obstacle_check)
+            if not s:
+                success = False
+                message = m
+                return success, message
+            elif min_radar_distance_to_robot_edge - SAFETY_DISTANCE_FROM_ROBOT_EDGE < dx and dx > 0:
+                success = False
+                message = "Not enough space in front of the robot to perform the adjustment"
+                self.node.get_logger().warn("Not enough space in front of the robot to perform the adjustment")
+                print("Wanted to move forward:", round(dx,2), "meters. But minimum distance to obstacle in front of robot is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
+                return success, message
+            
+            print("GOOD! Want to move forward:", round(dx,2), "meters. Minimum distance to obstacle in front is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
+        
         # Wait until odom is received
         while self.node.current_odom_pose is None:
             self.node.get_logger().warning("Waiting for odom pose...") 
@@ -2202,9 +2219,19 @@ class RobotStdFunctions():
         q = pose.orientation
         yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
 
+        print("Adjusting Omnidirectional Position:", round(dx,2), round(dy,2), "meters")
+
         # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
-        dx = dx + tolerance if dx > 0 else dx - tolerance
-        dy = dy + tolerance if dy > 0 else dy - tolerance
+        # fixed bug where dx = 0 or dy = 0 still moved the robot
+        if dx > 0:
+            dx = dx + tolerance
+        elif dx < 0:
+            dx = dx - tolerance
+        
+        if dy > 0:
+            dy = dy + tolerance
+        elif dy < 0:
+            dy = dy - tolerance
 
         # Compute target in odom frame
         target_x = start_x + math.cos(yaw) * dx - math.sin(yaw) * dy
@@ -2268,12 +2295,37 @@ class RobotStdFunctions():
         while direction < -180:
             direction += 360
 
+        s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=direction, ang_obstacle_check=ang_obstacle_check)
+
+        if not s:
+            success = False
+            message = m
+            return success, message
+        else:
+            distance_to_adjust = min_radar_distance_to_robot_edge - distance
+            print("DISTANCE TO ADJUST (positive means move forward):", round(distance_to_adjust,2))
+
+            # Copilot suggestion
+            dx = distance_to_adjust * math.cos(math.radians(direction))
+            dy = distance_to_adjust * math.sin(math.radians(direction))
+            
+            self.adjust_omnidirectional_position(dx=dx, dy=dy, max_speed=max_speed, safety=False, tolerance=tolerance, kp=kp)
+
+            success = True
+            message = "Obstacle Adjustment Complete."
+            return success, message
+
+    def get_minimum_radar_distance(self, direction=0.0, ang_obstacle_check=45):
+
+        success = False
+        message = ""
+        min_radar_distance_to_robot_edge = None
+
         if self.node.is_radar_initialized:
-            if distance > 0.0 and -100 <= direction <= 100 and 0 < ang_obstacle_check <= 360:
+            if -100 <= direction <= 100 and 0 < ang_obstacle_check <= 360:
                 radar = self.node.radar
                 used_sectors = []
                 min_distance = None
-                min_distance_to_robot_edge = 0.0 
 
                 # DEBUG PRINTS
                 # nos     = radar.number_of_sectors
@@ -2290,12 +2342,12 @@ class RobotStdFunctions():
                 #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}")
                 #     i += 1    
 
-                print("USED SECTORS:")
+                # print("USED SECTORS:")
                 for s in radar.sectors:
-                    if -math.radians(ang_obstacle_check/2) <= s.start_angle - math.radians(direction) <= math.radians(ang_obstacle_check/2) and \
-                    -math.radians(ang_obstacle_check/2) <= s.end_angle   - math.radians(direction) <= math.radians(ang_obstacle_check/2):
+                    if  -math.radians(ang_obstacle_check/2) <= s.start_angle - math.radians(direction) <= math.radians(ang_obstacle_check/2) and \
+                        -math.radians(ang_obstacle_check/2) <= s.end_angle   - math.radians(direction) <= math.radians(ang_obstacle_check/2):
                         used_sectors.append(s)
-                        print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
+                        # print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
             
                         if s.has_point:
                             if min_distance is None:
@@ -2304,36 +2356,27 @@ class RobotStdFunctions():
                                 min_distance = s.min_distance
                 
                 if min_distance is not None:
-                    print("MIN DISTANCE IN USED SECTORS:", round(min_distance,2))
-                    min_distance_to_robot_edge = min_distance - self.ROBOT_RADIUS
-                    print("MIN DISTANCE TO ROBOT EDGE IN USED SECTORS:", round(min_distance_to_robot_edge,2))
-                    distance_to_adjust = min_distance_to_robot_edge - distance
-                    print("DISTANCE TO ADJUST (positive means move forward):", round(distance_to_adjust,2))
+                    # print("MIN DISTANCE IN USED SECTORS:", round(min_distance,2))
+                    min_radar_distance_to_robot_edge = min_distance - self.ROBOT_RADIUS
+                    # print("MIN DISTANCE TO ROBOT EDGE IN USED SECTORS:", round(min_radar_distance_to_robot_edge,2))
+                    success = True
+                    message = ""
+                    return success, message, min_radar_distance_to_robot_edge
                 else:
                     success = False
                     message = "No obstacles detected in the selected direction"
                     self.node.get_logger().warn("No obstacles detected in the selected direction")
-                    return success, message
+                    return success, message, min_radar_distance_to_robot_edge
             else:
                 success = False
                 message = "Wrong parameter definition"
                 self.node.get_logger().warn("Wrong parameter definition")
-                return success, message
+                return success, message, min_radar_distance_to_robot_edge
         else:
             success = False
             message = "Radar not initialized"
             self.node.get_logger().warn("Radar not initialized")
-            return success, message
-
-        # Copilot suggestion
-        dx = distance_to_adjust * math.cos(math.radians(direction))
-        dy = distance_to_adjust * math.sin(math.radians(direction))
-        
-        self.adjust_omnidirectional_position(dx=dx, dy=dy, max_speed=max_speed, tolerance=tolerance, kp=kp)
-
-        success = True
-        message = "Obstacle Adjustment Complete."
-        return success, message
+            return success, message, min_radar_distance_to_robot_edge
     
     def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 

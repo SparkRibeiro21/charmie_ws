@@ -96,7 +96,22 @@ class TaskMain():
                 # self.robot.set_neck(position=[0-0, -50.0], wait_for_end_of=True)
 
 
-                s, m = self.robot.adjust_obstacles(distance=0.30, direction=-45.0)
+                s, m = self.robot.adjust_obstacles(distance=0.30, direction=0.0)
+                if not s:
+                    print("Error adjusting obstacles: "+m)
+                    time.sleep(1.0)
+
+
+                self.robot.wait_for_start_button()
+
+                s, m = self.robot.adjust_omnidirectional_position(dx=0.30, dy=0.0)
+                if not s:
+                    print("Error adjusting obstacles: "+m)
+                    time.sleep(1.0)
+
+                self.robot.wait_for_start_button()
+
+                s, m = self.robot.adjust_omnidirectional_position(dx=0.25, dy=0.0)
                 if not s:
                     print("Error adjusting obstacles: "+m)
                     time.sleep(1.0)
