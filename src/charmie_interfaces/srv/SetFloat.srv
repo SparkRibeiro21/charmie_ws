@@ -1,0 +1,6 @@
+# Generic Service to send a Float value 
+
+float64 data   # generic float value sent 
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.
