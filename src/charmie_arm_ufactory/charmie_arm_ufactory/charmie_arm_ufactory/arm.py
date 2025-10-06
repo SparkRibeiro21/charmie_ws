@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from example_interfaces.msg import Bool, String
+from example_interfaces.msg import Bool
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from charmie_interfaces.msg import ArmController
 from charmie_interfaces.srv import Trigger, SetFloat
@@ -15,9 +15,6 @@ class ArmUfactory(Node):
 		self.get_logger().info("Initialised my test Node")	
 		
 		# THIS VALUE HAS TO BE IN "cm" 1cm = 0.01m
-		# self.HEIGHT_TABLE_PLACE_OBJECTS = 91.0
-		# self.HEIGHT_TABLE_PLACE_OBJECTS = 58.0
-		# self.HEIGHT_TABLE_PLACE_OBJECTS = 78.0
 		self.HEIGHT_TABLE_PLACE_OBJECTS = 74.0
 
 		# ARM TOPICS
@@ -101,7 +98,8 @@ class ArmUfactory(Node):
 		self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-		self.setup()
+		self.setup_arm_movement_variables()
+		self.setup_arm_movement_services()
 		print('---------')
 		self.movement_selection()
 
@@ -146,6 +144,7 @@ class ArmUfactory(Node):
 		
 		self.HEIGHT_TABLE_PLACE_OBJECTS = request.data
 		print("New table height received:", self.HEIGHT_TABLE_PLACE_OBJECTS)
+		self.setup_arm_movement_variables()
 
 		response.success = True
 		response.message = "New table height set."
@@ -188,15 +187,12 @@ class ArmUfactory(Node):
 				self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 
-	def setup(self):
-		# new_put_tray
-		
-		#define key positions and keypoints
-		self.initial_position_bruno = [-215.0, 83.4, -65.0, -0.5, 74.9, 270.0] 
-		self.orient_to_table = [-195.4, 40.2, -52.7, 163.4, 77.8, 96.2]
-		self.get_order_position = [-161.0, 20.0, -63.0, 256.0, 13.0, 24.0]
+	def setup_arm_movement_variables(self):
 
-
+		### SERVE THE BREAKFAST VARIABLES: ###
+		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
+		print("height_adjust:", height_adjust)
+				
 		# INITIAL DEBUG MOVEMENT
 		self.secondary_initial_position_debug = [-214.8, 83.4, -65.0, -0.5, 74.9, 270.0] 
 
@@ -205,52 +201,6 @@ class ArmUfactory(Node):
 		self.first_waving_position =  [ -90.0,  -53.0,  -35.0,  154.0,  -20.9,  110.0] 
 		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0,  110.0] 
 
-
-		""" self.pre_place_bowl = [-649.9, 199.0, 786.7, 0.69, 0.007, -1.56]
-		self.place_bowl = [-553.7, 199.3, 671.6, 1.520, -0.8796, -3.0927]
-		self.pos_place_bowl = [-553.7, 132.3, 671.6, 1.520, -0.8796, -3.0927]
-		self.orient_to_table_linear = [-357.3, 224.5, 433.0, 0.689, 0.0506, -1.614]
-		self.pre_pre_grab_second_object_tray = [-434.3, 105.1, 51.0, 3.017, 0.0069, -1.56]
-		self.pre_grab_second_object_tray = [-198.0, 350.0, 170.0, -1.57, 0.0, -1.57]
-		self.grab_second_object_tray = [-198.0, 420.0, 170.0, -1.57, 0.0, -1.57]
-		self.pos_grab_second_object_tray = [-198.0, 300.0, 170.0, -1.57, 0.0, -1.57]
-		self.pre_place_cereal_table = [-649.9, 179.0, 786.7, 0.687, 0.0069, -1.56]
-		self.place_cereal_table = [-650.2, 210.4, 786.9, 0.69115, 0.0069, -1.56]
-		self.pre_grab_milk_tray = [-320.9, 430.0, 49.3, -2.2689, 0.0, -1.57]
-		self.grab_milk_tray = [-230.0, 430.0, -27.0, -2.2689, 0.0, -1.57]
-		self.pre_place_milk_tray = [-230.0, 380.0, -27.0, -2.2689, 0.0, -1.57]
-		self.pos_grab_milk = [-230.0, 300.0, -27.0, -2.2689, 0.0, -1.57]
-		self.place_milk_table = [-650.2, 210.4, 786.9, 0.69115, 0.0069, -1.56]
-		self.grab_funilocopo = [-131.5, 430.0, -155.8, -2.2689, 0.0, -1.57]
-		self.lift_funilocopo = [-135.0, 345.0, -160.0, -2.2689, 0.0, -1.57]
-		self.place_cuttlery_table = [-489.1, 179.5, 593.5, 1.97, -0.808, 2.595]
-		self.last_movement = [-572.3, -14.3, -45.4, 3.019, 0.0069, -1.56]
-		self.pos_place_cereal_table = [-489.1, 150.5, 593.5, 1.97, -0.808, 2.595]
-		self.place_cuttlery_table_up = [-489.1, 150.5, 593.5, 1.97, -0.808, 2.595] """
-
-
-		# self.get_order_position_linear =  [-581.4, -211.5, 121.8, 2.305, 0.033, -1.52]
-		# self.above_tray = [-135.0, 120.0, -160.0, - 2.2689, 0.0, -1.57]
-		# self.above_cuttlery_cup = [-135.0, 280.0, -160.0, - 2.2689, 0.0, -1.57]
-		# self.middle_cuttlery_cup = [-135.0, 345.0, -160.0, - 2.2689, 0.0, -1.57]
-		# self.pos_cuttlery_cup = [-198.8, 344.9, -106.2, - 2.2689, 0.0, -1.57]
-		# self.detect_objects_first_position = [-186.6, 1.9, 663.7, 1.531, 0.05, -2.407]
-
-
-
-
-		# self.above_tray = 				  		[ -135.0,  120.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		# self.above_cuttlery_cup = 				[ -135.0,  280.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		# self.middle_cuttlery_cup = 				[ -135.0,  345.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		# self.pos_cuttlery_cup = 					[ -198.8,  344.9, -106.2, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-
-		### APRIL 1 TEST: ###
-
-		self.first_motion_joints =						[-225.0,   83.0,   -65.0,   -1.0,   75.0,   270.0]
-		self.second_motion_joints =						[-207.1,   86.5,   -72.5,   48.2,   79.4,   267.2]
-		self.third_motion_linear =						[-614.9,   125.0,  158.2,   math.radians(110.6), math.radians(1.7), math.radians(-92.2)]
-		self.fourth_motion_joints =						[-213.8,   53.0,   -75.0,   40.6,   110.6,  286.9]
-
 		### SEARCH FOR OBJECT ON TABLE FRONTAL JOINT VARIABLES###
 		self.initial_position_joints_Pedro =								[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
 		self.initial_position_to_search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
@@ -258,18 +208,11 @@ class ArmUfactory(Node):
 		# self.search_front_max_z_joints =									[-108.1, -50.4, -16.4, -109.1, 80.1, 22.9]
 		self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
 
+		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES ###
+		self.search_table_top_joints =							[-152.2, 59.4, -129.4, -85.2, 116.7,  66.7]
+		self.search_table_top_safe_position =					[-194.9, 69.4, -106.4,  23.2,  71.5, 264.8]
 
-
-
-		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
-		self.search_table_top_joints =					[-152.2, 59.4, -129.4, -85.2, 116.7, 66.7]
-		self.search_table_top_safe_position =					[-194.9, 69.4, -106.4, 23.2, 71.5, 264.8]
-		### SERVE THE BREAKFAST VARIABLES: ###
-		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
-		print("height_adjust:", height_adjust)
-		
 		# SET JOINTS VARIABLES
-		# self.get_order_position_joints = 				[ -161.0,   20.0,  -63.0,  256.0,   13.0,   24.0]
 		self.get_lower_order_position_joints = 			[ -184.8,   17.5,  -62.0,  115.2,    4.9,  148.0]
 		self.initial_position_joints = 					[ -224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
 		self.initial_position_joints_alternative_robocup_cornflakes = 	[ -206.0,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
@@ -298,11 +241,10 @@ class ArmUfactory(Node):
 		self.place_cornflakes_in_tray =					[ -198.0,  420.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 		self.step_away_from_cornflakes_in_tray =		[ -198.0,  300.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 			
-		
 		### ALTERNATIVE ###
-		self.above_cornflakes_place_spot_alternative = 	[-232.7, -13.0, -37.8, -2.9, 51.8, 219.7]
-		self.place_cornflakes_in_tray_alternative = 	[-221.6, 377.9, 107.6, math.radians(-179.0), math.radians(  -0.1), math.radians( -89.4)]
-		self.step_away_from_cornflakes_in_tray_alternative = [-224.5, 378.1, 273.4, math.radians(-179.0), math.radians(  -0.1), math.radians( -89.4)] 
+		self.above_cornflakes_place_spot_alternative = 			[-232.7, -13.0, -37.8, -2.9, 51.8, 219.7]
+		self.place_cornflakes_in_tray_alternative = 			[-221.6, 377.9, 107.6, math.radians(-179.0), math.radians(  -0.1), math.radians( -89.4)]
+		self.step_away_from_cornflakes_in_tray_alternative = 	[-224.5, 378.1, 273.4, math.radians(-179.0), math.radians(  -0.1), math.radians( -89.4)] 
 		
 		self.pre_pick_cereals_tray_joints_cornflakes_alternative = 	[-238.9, -5.6, -69.0, -2.4, 75.5, 213.1]
 		self.pick_cereals_tray_cornflakes_alternative = 			[-222.5, 377.9, 159.4, math.radians(-179.0), math.radians(-0.1), math.radians(-89.4)]							
@@ -325,34 +267,13 @@ class ArmUfactory(Node):
 		self.new_cornflakes_pour3 = [-602.4, 131.0+height_adjust, 628.0, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
 		self.new_cornflakes_pour4 = [-605.1, 148.1+height_adjust, 576.4, math.radians(-86.7), math.radians(   5.2), math.radians(  89.9)]
 		
-		# pour 3
-		# pour 2 
-		# pour 1
-		# self.new_cornflakes_pre_pour
-
-
 		# place positions
 		self.new_cornflakes_pre_place = [-153.6,  10.2, -124.9,  95.3, -46.5, 148.7]
 		self.new_cornflakes_place = [-555.4,  92.6+height_adjust, 784.8, math.radians( 77.5), math.radians(  8.4), math.radians(-112.7)]
 		self.new_cornflakes_post_place = [-392.7,  30.7+height_adjust, 745.5, math.radians( 77.5), math.radians(  8.4), math.radians(-112.7)]
 		
-		# get lower order posiiton joints
-
-		
-
-
-		# -184.8 joints (low order)
-		# -238.9 joints (pre pick cron)
-		# -222.5 linear (aprox pick corn)
-		# close 
-		# -221.5 linear (pos pick corn)
-		# 3 -184.8 joints (low order)
-
-
-
-
 		# self.pre_place_bowl_linear = 					[-667.9, 149.0+height_adjust, 481.1, math.radians(59.4), math.radians(39.8), math.radians(175.8)]
-		# self.place_bowl_table_final = 					[-719.1, 320.5+height_adjust, 557.6, math.radians(59.4), math.radians(39.8), math.radians(175.8)]				
+		# self.place_bowl_table_final = 				[-719.1, 320.5+height_adjust, 557.6, math.radians(59.4), math.radians(39.8), math.radians(175.8)]				
 		# self.little_adjustment_after_placing_bowl = 	[-709.5, 289.1+height_adjust, 543.2, math.radians(59.4), math.radians(39.8), math.radians(175.8)]
 		self.pre_place_bowl_linear = 					[-619.4, 149.0+height_adjust, 426.1, math.radians(59.4), math.radians(39.8), math.radians(175.8)]
 		self.place_bowl_table_final = 					[-670.6, 320.5+height_adjust, 502.6, math.radians(59.4), math.radians(39.8), math.radians(175.8)]				
@@ -366,14 +287,12 @@ class ArmUfactory(Node):
 		# self.pour_cereals_bowl_linear = 				[-726.2, 229.5, 611.1, math.radians(-34.7), math.radians(22.4), math.radians(119.0)]
 		self.pour_cereals_bowl_linear = 				[-634.7, 226.4+height_adjust, 580.6, math.radians(-24.4), math.radians(33.4), math.radians(140.6)]
 		
-  
 		self.after_pouring_cereals_at_bowl = 			[-606.9, 223+height_adjust, 600.9, math.radians(31.0), math.radians(27.5), math.radians(-127.5)]
 		
-		# self.placing_cereal_at_table = 					[-630.3, 240.0+height_adjust, 872.3, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
-		# self.pos_placing_cereal_at_table = 				[-630.3,  40.0+height_adjust, 872.3, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
+		# self.placing_cereal_at_table = 				[-630.3, 240.0+height_adjust, 872.3, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
+		# self.pos_placing_cereal_at_table = 			[-630.3,  40.0+height_adjust, 872.3, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
 		self.placing_cereal_at_table = 					[-579.5, 230.0+height_adjust, 812.9, math.radians(40.6), math.radians(4.5), math.radians(-90.1)]
 		self.pos_placing_cereal_at_table = 				[-579.5,  40.0+height_adjust, 812.9, math.radians(40.6), math.radians(4.5), math.radians(-90.1)]
-  
   
 		self.pos_picking_milk_tray = 					[-394.4, 120.0, 74.4, math.radians(173.3), math.radians(0.0), math.radians(-90.0)]
 		self.reach_position_to_pour_milk_bowl = 		[-600.2, 220.0+height_adjust, 620.5, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
@@ -391,12 +310,10 @@ class ArmUfactory(Node):
 		self.lift_funilocopo_a_bit_from_tray = 			[-131.2, 380.0, -157.8, math.radians(-130.0), math.radians(0.0), math.radians( -90.0)]
 		self.lift_funilocopo_more =						[-394.4, 120.0, 74.4, math.radians(173.3), math.radians(0.0), math.radians( -90.0)]
 
-
 		self.reach_position_to_place_spoon_table = 		[-648.7, 220.0+height_adjust, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
 		self.place_spoon_table_joints =         		[-455.4, 239.3+height_adjust, 459.7, math.radians(114.0), math.radians(-44.7), math.radians(147.6)]
 		self.pos_place_spoon_table = 					[-648.7, 120.0+height_adjust, 677.4, math.radians(40.5), math.radians(0.0), math.radians(-90.0)]
   
-
   		# place spoon serve breakfast with v2 of funilocopo
 		self.pre_pick_funilocopo_v2_tray = 				[-208.7, 430.0, -105.0, math.radians(-130.0), math.radians(0.0), math.radians( -90.0)]
 		self.pick_funilocopo_v2_tray = 					[-162.5, 430.0, -143.8, math.radians(-130.0), math.radians(0.0), math.radians( -90.0)]
@@ -410,7 +327,7 @@ class ArmUfactory(Node):
 		self.place_spoon_in_table_funilocopo_v2_facing_other_side =     	[ -591.5, 308.7+height_adjust, 648.8, math.radians(-82.2), math.radians(49.1), math.radians(3.8)]
 		self.step_away_from_table_funilocopo_v2_facing_other_side =     	[ -648.7, 20.0, 677.4, math.radians(-40.5), math.radians(0.0), math.radians(90.0)]
 		
-		print('Nada')
+	def setup_arm_movement_services(self):
 
 		########### EXPLANATION OF EACH MODE: ########### 
 		#   0: position mode
