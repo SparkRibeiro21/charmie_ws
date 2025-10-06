@@ -32,10 +32,7 @@ from datetime import datetime
 import random
 import json
 import face_recognition
-<<<<<<< HEAD
 from skimage.metrics import structural_similarity as ssim
-=======
->>>>>>> main
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -266,15 +263,9 @@ class ROS2TaskNode(Node):
             while not self.neck_track_object_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         
-<<<<<<< HEAD
         # if self.ros2_modules["charmie_sound_classification"]:
         #     while not self.get_sound_classification_client.wait_for_service(1.0):
         #         self.get_logger().warn("Waiting for Server Sound Classification Command...")
-=======
-        if self.ros2_modules["charmie_sound_classification"]:
-            while not self.get_sound_classification_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Sound Classification Command...")
->>>>>>> main
             
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
@@ -467,24 +458,15 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_gamepad              = self.ros2_modules["charmie_gamepad"]
         nodes_used.charmie_lidar                = self.ros2_modules["charmie_lidar"]
         nodes_used.charmie_lidar_bottom         = self.ros2_modules["charmie_lidar_bottom"]
-<<<<<<< HEAD
-        #nodes_used.charmie_lidar_livox          = self.ros2_modules["charmie_lidar_livox"]
-=======
         nodes_used.charmie_lidar_livox          = self.ros2_modules["charmie_lidar_livox"]
->>>>>>> main
         nodes_used.charmie_localisation         = self.ros2_modules["charmie_localisation"]
         nodes_used.charmie_low_level            = self.ros2_modules["charmie_low_level"]
         nodes_used.charmie_llm                  = self.ros2_modules["charmie_llm"]
         nodes_used.charmie_navigation           = self.ros2_modules["charmie_navigation"]
         nodes_used.charmie_nav2                 = self.ros2_modules["charmie_nav2"]
         nodes_used.charmie_neck                 = self.ros2_modules["charmie_neck"]
-<<<<<<< HEAD
-        #nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
-        #nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
-=======
         nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
         nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
->>>>>>> main
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
@@ -3530,7 +3512,6 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-<<<<<<< HEAD
                 return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height'][0]] # Return the class
         return None  # Return None if the object is not found
     
@@ -3568,9 +3549,6 @@ class RobotStdFunctions():
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['bot_right_coords'].copy()
-=======
-                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height'][0]]  # Return the class
->>>>>>> main
         return None  # Return None if the object is not found
 
     def get_height_from_furniture(self, furniture):
@@ -3580,7 +3558,6 @@ class RobotStdFunctions():
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['height'].copy() # Return the height
-<<<<<<< HEAD
         return None  # Return None if the object is not found
 
     def get_look_from_furniture(self, furniture):
@@ -3599,8 +3576,6 @@ class RobotStdFunctions():
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['look'] # Return the look
-=======
->>>>>>> main
         return None  # Return None if the object is not found
 
     def set_continuous_tracking_with_coordinates(self):
@@ -3849,12 +3824,6 @@ class RobotStdFunctions():
             self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
             return ["ERROR"]
         
-<<<<<<< HEAD
-    def add_face_to_face_recognition(self, person=DetectedPerson(), image="", name=""):
-        
-        # TODO: add DetectedPerson option to save image from the camera directly
-        # TODO: Test if bad image is added (no face in the image)
-=======
     def add_face_to_face_recognition(self, person=DetectedPerson(), image_path="", name=""):
 
         success = False
@@ -3942,7 +3911,6 @@ class RobotStdFunctions():
         else:
             self.node.get_logger().warn("Image path does not exist.")
             return "error", 0.0
->>>>>>> main
 
         image = face_recognition.load_image_file(image)
         encoding_entry = face_recognition.face_encodings(image)
