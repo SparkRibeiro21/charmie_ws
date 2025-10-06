@@ -2337,7 +2337,7 @@ class RobotStdFunctions():
             message = "Obstacle Adjustment Complete."
             return success, message
     
-    def adjust_angle(self, angle=0.0, max_angular_speed=0.3, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1, kp=1.3, use_wheel_odometry=False):
 
         # def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
 
@@ -2370,7 +2370,7 @@ class RobotStdFunctions():
         q = pose.orientation
         yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
 
-        print("Adjusting Angle Position:", round(angle,2), "degrees")
+        # print("Adjusting Angle Position:", round(angle,2), "degrees")
 
         # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
         # fixed bug where dx = 0 or dy = 0 still moved the robot
@@ -2381,7 +2381,8 @@ class RobotStdFunctions():
 
         # Compute target in odom frame
         target_angle = yaw + math.radians(angle)
-        # print("TARGETS", target_angle)
+        tolerance_rad = math.radians(tolerance)
+        # print("TARGETS", math.degrees(target_angle))
 
         rate_hz = 20  # Hz
         rate = 1.0 / rate_hz
@@ -2390,12 +2391,13 @@ class RobotStdFunctions():
             pose = self.node.current_odom_pose.pose
             q = pose.orientation
             curr_yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
+            # print("CURR YAW:", math.degrees(curr_yaw))
 
             error_angle = target_angle - curr_yaw
-            # print("ERROR:", error_angle)
-            # print("TOLERANCE", tolerance)
+            # print("ERROR:", math.degrees(error_angle))
+            # print("TOLERANCE", math.degrees(tolerance_rad))
 
-            if error_angle < tolerance:
+            if abs(error_angle) < tolerance_rad:
                 break
 
             twist = Twist()
