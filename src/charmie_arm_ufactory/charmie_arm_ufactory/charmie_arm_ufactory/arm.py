@@ -14,8 +14,9 @@ class ArmUfactory(Node):
 		super().__init__("arm_ufactory")
 		self.get_logger().info("Initialised my test Node")	
 		
-		# THIS VALUE HAS TO BE IN "cm" 1cm = 0.01m
-		self.HEIGHT_TABLE_PLACE_OBJECTS = 74.0
+		# THIS VALUE HAS TO BE IN METERS
+		self.HEIGHT_TABLE_PLACE_OBJECTS = 0.74
+		self.get_logger().info(f"New table height received: {str(self.HEIGHT_TABLE_PLACE_OBJECTS)}")
 
 		# ARM TOPICS
 		self.arm_command_subscriber = self.create_subscription(ArmController, "arm_command", self.arm_command_callback, 10)
@@ -143,7 +144,7 @@ class ArmUfactory(Node):
 		# string message # informational, e.g. for error messages.
 		
 		self.HEIGHT_TABLE_PLACE_OBJECTS = request.data
-		print("New table height received:", self.HEIGHT_TABLE_PLACE_OBJECTS)
+		self.get_logger().info(f"New table height received: {str(self.HEIGHT_TABLE_PLACE_OBJECTS)}")
 		self.setup_arm_movement_variables()
 
 		response.success = True
@@ -190,8 +191,8 @@ class ArmUfactory(Node):
 	def setup_arm_movement_variables(self):
 
 		### SERVE THE BREAKFAST VARIABLES: ###
-		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
-		print("height_adjust:", height_adjust)
+		height_adjust = float(-((self.HEIGHT_TABLE_PLACE_OBJECTS*100)-74.0)*10) #76.0
+		self.get_logger().info(f"Height Adjust: {str(height_adjust)}")
 				
 		# INITIAL DEBUG MOVEMENT
 		self.secondary_initial_position_debug = [-214.8, 83.4, -65.0, -0.5, 74.9, 270.0] 

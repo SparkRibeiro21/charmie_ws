@@ -582,7 +582,7 @@ class ROS2TaskNode(Node):
 
 
     ### SET TABLE HEIGHT FOR MANUAL ARM MOVMENTS ###
-    def call_set_height_furniture_for_arm_manual_movement_server(self, request=Float32.Request()):
+    def call_set_height_furniture_for_arm_manual_movement_server(self, request=SetFloat.Request()):
 
         self.set_height_furniture_for_arm_manual_movement_client.call_async(request)
 
