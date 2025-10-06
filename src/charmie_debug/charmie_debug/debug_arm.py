@@ -93,6 +93,13 @@ class TaskMain():
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
 
+                self.SB_TABLE_HEIGHT = self.robot.get_height_from_furniture("Dinner Table")[0]
+                print("SB_TABLE_HEIGHT", self.SB_TABLE_HEIGHT)
+                self.robot.set_height_furniture_for_arm_manual_movements(self.SB_TABLE_HEIGHT)
+
+                while True:
+                    pass
+
                 """ pose_adjust_pre = [100, 150, 200, 0, 0, 0]
                 pose_adjust_pos = [-100, -150, -200, 0, 0, 0]
                 self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)

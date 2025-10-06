@@ -14,7 +14,7 @@ from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, B
     ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
     TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
-    SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, \
+    SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, SetFloat, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
     GetSoundClassificationContinuous
@@ -134,6 +134,8 @@ class ROS2TaskNode(Node):
         
 
         ### Services (Clients) ###
+        # Arm
+        self.set_height_furniture_for_arm_manual_movement_client = self.create_client(SetFloat, "set_table_height")
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
@@ -389,6 +391,8 @@ class ROS2TaskNode(Node):
         self.activate_motors_message = ""
         self.activate_tracking_success = True
         self.activate_tracking_message = ""
+        self.set_height_furniture_for_arm_manual_movement_client_success = True
+        self.set_height_furniture_for_arm_manual_movement_client_message = ""
 
         self.audio_command = ""
         self.received_continuous_audio = False
@@ -575,6 +579,12 @@ class ROS2TaskNode(Node):
     def call_activate_tracking_server(self, request=ActivateTracking.Request()):
 
         self.activate_tracking_client.call_async(request)
+
+
+    ### SET TABLE HEIGHT FOR MANUAL ARM MOVMENTS ###
+    def call_set_height_furniture_for_arm_manual_movement_server(self, request=Float32.Request()):
+
+        self.set_height_furniture_for_arm_manual_movement_client.call_async(request)
 
 
     #### FACE SERVER FUNCTIONS #####
@@ -1880,6 +1890,18 @@ class RobotStdFunctions():
 
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
+    
+    def set_height_furniture_for_arm_manual_movements(self, height=0.0, wait_for_end_of=True):        
+
+        request = SetFloat.Request()
+        request.data = float(height)
+
+        self.node.call_set_height_furniture_for_arm_manual_movement_server(request=request)
+
+        self.node.set_height_furniture_for_arm_manual_movement_client_success = True
+        self.node.set_height_furniture_for_arm_manual_movement_client_message = "Height set for arm manual movements"
+
+        return self.node.set_height_furniture_for_arm_manual_movement_client_success, self.node.set_height_furniture_for_arm_manual_movement_client_message
     
     def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, avoid_people=False, wait_for_end_of=True):
 

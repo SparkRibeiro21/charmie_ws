@@ -3,7 +3,7 @@ from rclpy.node import Node
 from example_interfaces.msg import Bool, String
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
 from charmie_interfaces.msg import ArmController
-from charmie_interfaces.srv import Trigger
+from charmie_interfaces.srv import Trigger, SetFloat
 from functools import partial
 import math
 import time
@@ -40,6 +40,9 @@ class ArmUfactory(Node):
 		#self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
 		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
+
+		# ARM SERVICES SERVER:
+		self.set_table_height_service = self.create_service(SetFloat, 'set_table_height', self.set_table_height_callback)
 
 
 		while not self.set_position_client.wait_for_service(1.0):
@@ -134,6 +137,20 @@ class ArmUfactory(Node):
 		response.message = "Arm Trigger"
 		return response
 
+	def set_table_height_callback(self, request, response):
+        # Type of service received: 
+		# float64 data   # generic float value sent 
+		# ---
+		# bool success   # indicate successful run of triggered service
+		# string message # informational, e.g. for error messages.
+		
+		self.HEIGHT_TABLE_PLACE_OBJECTS = request.data
+		print("New table height received:", self.HEIGHT_TABLE_PLACE_OBJECTS)
+
+		response.success = True
+		response.message = "New table height set."
+
+		return response
 
 	def arm_command_callback(self, move: ArmController):
 		self.get_logger().info(f"Received movement selection: {move}")
