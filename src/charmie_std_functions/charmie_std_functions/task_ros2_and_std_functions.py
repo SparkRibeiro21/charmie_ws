@@ -2336,6 +2336,88 @@ class RobotStdFunctions():
             success = True
             message = "Obstacle Adjustment Complete."
             return success, message
+    
+    def adjust_angle(self, angle=0.0, max_angular_speed=0.3, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+
+        # def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+
+        ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
+        ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
+        ### ALL THE CODE IS READY. JUST REPLACE:
+        ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
+        ### THE FUNCTION PARAMETER use_wheel_odometry SHOULD BE USED
+        ### if use_wheel_odometry:
+        ###     USE: self.node.current_odom_wheels_pose
+        ### else:
+        ###     USE: self.node.current_odom_pose
+
+        success = False
+        message = ""
+
+        # normalize direction to be between -180 and 180
+        while angle > 180:
+            angle -= 360
+        while angle < -180:
+            angle += 360
+
+        # Wait until odom is received
+        while self.node.current_odom_pose is None:
+            self.node.get_logger().warning("Waiting for odom pose...") 
+            time.sleep(0.01)
+
+        # Initial pose and orientation
+        pose = self.node.current_odom_pose.pose
+        q = pose.orientation
+        yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
+
+        print("Adjusting Angle Position:", round(angle,2), "degrees")
+
+        # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
+        # fixed bug where dx = 0 or dy = 0 still moved the robot
+        if angle > 0:
+            angle = angle + tolerance
+        elif angle < 0:
+            angle = angle - tolerance
+
+        # Compute target in odom frame
+        target_angle = yaw + math.radians(angle)
+        # print("TARGETS", target_angle)
+
+        rate_hz = 20  # Hz
+        rate = 1.0 / rate_hz
+
+        while True:
+            pose = self.node.current_odom_pose.pose
+            q = pose.orientation
+            curr_yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
+
+            error_angle = target_angle - curr_yaw
+            # print("ERROR:", error_angle)
+            # print("TOLERANCE", tolerance)
+
+            if error_angle < tolerance:
+                break
+
+            twist = Twist()
+            twist.linear.x  = 0.0 
+            twist.linear.y  = 0.0
+            twist.angular.z = max(-max_angular_speed, min(max_angular_speed, error_angle * kp))
+
+            self.node.cmd_vel_publisher.publish(twist)
+            time.sleep(rate)
+
+        # Stop the robot
+        # Dirty, but had to do this way because of some commands to low_level being lost
+        self.node.cmd_vel_publisher.publish(Twist())
+        time.sleep(0.1)  # wait for the cmd_vel to be published
+        self.node.cmd_vel_publisher.publish(Twist())
+        time.sleep(0.1)  # wait for the cmd_vel to be published
+        self.node.cmd_vel_publisher.publish(Twist())  
+        self.node.get_logger().info("Angle Adjustment Complete.")
+
+        success = True
+        message = "Angle Adjustment Complete."
+        return success, message
 
     def get_minimum_radar_distance(self, direction=0.0, ang_obstacle_check=45):
 
