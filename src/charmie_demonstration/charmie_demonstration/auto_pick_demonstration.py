@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 ros2_modules = {
     "charmie_arm":              True,
-    "charmie_audio":            True,
+    "charmie_audio":            False,
     "charmie_face":             True,
     "charmie_gamepad":          False,
     "charmie_head_camera":      True,
@@ -21,12 +21,15 @@ ros2_modules = {
     "charmie_base_camera":      False,
     "charmie_lidar":            True,
     "charmie_lidar_bottom":     True,
+    "charmie_lidar_livox":      True,
     "charmie_llm":              False,
     "charmie_localisation":     True,
     "charmie_low_level":        True,
     "charmie_navigation":       False,
     "charmie_nav2":             True,
     "charmie_neck":             True,
+    "charmie_radar":            True,
+    "charmie_sound_classification": False,
     "charmie_obstacles":        False,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
@@ -286,8 +289,10 @@ class TaskMain():
                     self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))), wait_for_end_of=True)
                
                 if self.object_mode == "top":
-                    rotate_coordinates = self.robot.add_rotation_to_pick_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))))
-                    self.robot.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
+                    #rotate_coordinates = self.robot.add_rotation_to_pick_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))))
+                    #self.robot.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))), wait_for_end_of=True)
+
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
@@ -345,7 +350,9 @@ class TaskMain():
                 #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
 
-                if self.object_mode == "front":  
+                if self.object_mode == "front":
+
+                    _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
 
                     self.robot.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
 
@@ -397,29 +404,23 @@ class TaskMain():
                         print("Y MAX: ", y_max)
                         print("Y GRIPPER:", gripper_place_position.y)
 
-                    #dx = 0.3
                     dx = abs(dx)
-
                     print("Adjust Movement:", dx)
-                    self.robot.adjust_omnidirectional_position(dx=dx,dy=dy)
 
-                    #self.robot.adjust_omnidirectional_position(dx=0.3,dy=0.0)
+                    if furniture_distance >= dx:
+                        
+                        self.robot.adjust_omnidirectional_position(dx=dx,dy=dy, safety=False)
 
-                    # final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=0.5, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.object_name], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
-                    # for obj in final_objects:
-                    #     if obj.position_cam.y < 0.1 or obj.position_cam.y > 0.1:
-                    #         self.robot.adjust_omnidirectional_position(dx=0.0,dy=0.2)
+                        time.sleep(0.5)
+                        self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                        time.sleep(0.5)
 
-                    time.sleep(0.5)
-                    self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
-                    time.sleep(0.5)
+                        self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
+                        # self.robot.adjust_omnidirectional_position(dx=-0.3,dy=0.0)
 
-                    self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
-                    # self.robot.adjust_omnidirectional_position(dx=-0.3,dy=0.0)
+                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
-
-                    self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                        self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
 
                 if self.object_mode == "top":
                     self.arm_safe_start_position = [-215, 83.1, -74.8, 9.1, 65.8, 268.8]
