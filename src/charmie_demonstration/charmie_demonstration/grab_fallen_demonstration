@@ -56,7 +56,7 @@ class TaskMain():
         self.robot = robot
 
         # Task Name
-        self.TASK_NAME = "Auto_pick_object"
+        self.TASK_NAME = "Grab_fallen_object"
 
         # Task States
         self.task_states ={
@@ -77,18 +77,7 @@ class TaskMain():
         self.home_furniture = "Exit"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
-
-        self.GET_HEAR = False
-
-        #Furniture which we cannot place with place_front
-
-        self.unreachable_furniture_front = ["Right Lounge Chair", "Left Lounge Chair", "Reading Chair", "Bed", "TV Table", "Workbench", "Tool Cabinet", "Drill Press"]
-        self.unreachable_room_front = ["Hallway"]
-
-        #Furniture which we cannot place with place_top
-
-        self.unreachable_furniture_top = ["Right Lounge Chair", "Left Lounge Chair", "Shelf", "Pantry", "Kitchen Counter", "Kitchen Cabinet", "Reading Chair", "Bed", "TV Table", "Workbench", "Tool Cabinet", "Drill Press"]
-        self.unreachable_room_top = ["Hallway"]
+        self.place_furniture = "Office Table"
 
         # self.initial_position = [2.8, -4.80, 90.0] # temp (near CHARMIE desk for testing)
     
@@ -133,140 +122,10 @@ class TaskMain():
             
             if self.state == self.task_states["Select_object_to_pick"]:
 
-                if self.GET_HEAR:
-
-                    # selected_category = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_category", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
-                    # print(selected_category)
-
-
-                    selected_option = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_object", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
-                    print(selected_option)
-
-                    self.object_name = selected_option
-
-                    # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
-                    # print(selected_room)
-
-                    selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
-                    print(selected_furniture)
-
-                    self.place_furniture = selected_furniture
-
-
-                else:
-
-                    while True:
-                        selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                        print(selected_category[0])
-                        if selected_category[0] != "TIMEOUT" and self.robot.get_furniture_from_object_class(selected_category[0]) != "NONE": #THINK ABOUT REPEAT LIMIT
-                            break
-
-                    selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                    print(selected_option[0])
-
-                    while selected_option[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                        selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                        print(selected_option[0])
-
-                    self.object_name = selected_option[0]
-
-                    self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
-
-                    rooms = []
-                    for obj in self.robot.node.rooms:
-                        if self.object_mode == "top":
-                            if obj["name"] not in self.unreachable_room_top:
-                                rooms.append(obj["name"])
-                                print("ROOMS", rooms)
-                        elif self.object_mode == "front":
-                            if obj["name"] not in self.unreachable_room_front:
-                                rooms.append(obj["name"])
-                                print("ROOMS", rooms)
-
-                    selected_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                selected_room = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room")
+                while selected_room[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                    selected_room = self.robot.set_face_touchscreen_menu(["rooms"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room")
                     print(selected_room[0])
-                    self.robot.set_speech(filename="rooms/"+selected_room[0].replace(" ","_").lower())
-
-                    while selected_room[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                        selected_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                        print(selected_room[0])
-                        self.robot.set_speech(filename="rooms/"+selected_room[0].replace(" ","_").lower())
-
-                    furniture = []
-                    for obj in self.robot.node.furniture:
-                        if self.object_mode == "top":
-                            if obj["name"] not in self.unreachable_furniture_top and obj["room"] in selected_room[0]:
-                                furniture.append(obj["name"])
-                                print("ROOMS", furniture)
-                        elif self.object_mode == "front":
-                            if obj["name"] not in self.unreachable_furniture_front and obj["room"] in selected_room[0]:
-                                furniture.append(obj["name"])
-                                print("ROOMS", furniture)
-
-                    selected_furniture = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=furniture, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_furniture")
-                    print(selected_furniture[0])
-                    self.robot.set_speech(filename="furniture/"+selected_furniture[0].replace(" ","_").lower())
-
-                    self.place_furniture = selected_furniture[0]
-
-                    if selected_furniture[0] == "TIMEOUT":
-                        self.place_furniture = selected_furniture[0] = "Office Table"
-
-                    furniture_height = self.robot.get_height_from_furniture(self.place_furniture)
-
-                    max_limit = 1.75
-                    min_limit = 0.30
-
-                    reachable_shelfs = []
-
-                    for h in furniture_height:
-                        if min_limit <= h <= max_limit:
-                            reachable_shelfs.append(h)
-                            print("REACHABLE SHELFS VALUES:", reachable_shelfs)
-
-                    if len(reachable_shelfs)>1:
-                        shelf_options = []
-                        for i in range(len(reachable_shelfs)):
-                            if i == len(reachable_shelfs) - 1:
-                                shelf_options.append(f"Top Shelf {i+1}")
-                            elif i == 0:
-                                shelf_options.append(f"Bottom Shelf {i+1}")
-                            else:
-                                shelf_options.append(f"Shelf {i+1}")
-
-                        self.selected_shelf = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=shelf_options, timeout=10, mode="single", speak_results=False, start_speak_file="face_touchscreen_menu/menu_shelf", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                        print("Selected shelf:", self.selected_shelf)
-                        self.robot.set_speech(filename="face_touchscreen_menu/shelf_register")
-
-
-                        while self.selected_shelf[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                            self.selected_shelf = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=shelf_options, timeout=10, mode="single", speak_results=False, start_speak_file="face_touchscreen_menu/menu_shelf", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                            print("Selected shelf:", self.selected_shelf)
-                            self.robot.set_speech(filename="face_touchscreen_menu/shelf_register")
-
-                        shelf_index = shelf_options.index(self.selected_shelf[0])
-                        print("Selected index:", shelf_index)
-                        self.selected_height = list(reversed(reachable_shelfs))[shelf_index]
-                        print("Selected height:", self.selected_height)
-
-                    elif len(reachable_shelfs)==1:
-                        self.selected_height = reachable_shelfs[0]
-
-                    else:
-                        print("Can't place an object in that furniture")
-
-
-                #self.object_name = "Pringles"
-
-                # All neck positions
-                if self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "horizontal":
-                    if self.object_mode == "top":
-                        self.tetas = [[-90, -40], [-45, -45], [0, -40]]
-                    if self.object_mode == "front":
-                        self.tetas = [[-40, -45], [0, -45], [40, -45]]
-
-                elif self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
-                    self.tetas = [[0, 15], [0, 0], [0, -35]]
 
                 self.state = self.task_states["Move_to_Location"]
 
@@ -282,15 +141,10 @@ class TaskMain():
                 self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
 
                 #As of now, we are going to make CHARMIE move to a location 
-                if self.object_mode == "front":
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))), wait_for_end_of=True)
-               
-                if self.object_mode == "top":
-                    rotate_coordinates = self.robot.add_rotation_to_pick_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))))
-                    self.robot.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(selected_room[0]), wait_for_end_of=True)
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
+                #self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
 
 
                 self.state = self.task_states["Pick_Object"]
@@ -298,7 +152,7 @@ class TaskMain():
 
             elif self.state == self.task_states["Pick_Object"]:
 
-                picked_height, asked_help = self.robot.pick_obj(selected_object=self.object_name, mode=self.object_mode, first_tetas=self.tetas)
+                picked_height, asked_help = self.robot.pick_obj(selected_object=self.object_name, mode=self.object_mode, first_tetas=self.tetas, furniture_check=False ,search_head=False)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.state = self.task_states["Move_to_place"]
@@ -476,34 +330,24 @@ class TaskMain():
                     print("Adjust Movement x:", dx," || y:", dy)
                     self.robot.adjust_omnidirectional_position(dx=dx,dy=dy)
 
-                    #MAKE SPECIAL CASE MORE IN LINE WITH REST OF CODE LATER:
+                    final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
+                    print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
+                    self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
 
-                    if self.object_name == "Bowl":
+                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
 
-                        self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
-                        self.robot.set_arm(command="arm_go_rest", wait_for_end_of=True)
+                    time.sleep(0.5)
+                    self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
 
-                        
+                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-                    else:
-                        final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
-                        print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
-                        self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
-                        self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+                    self.robot.adjust_omnidirectional_position(dx=-0.15,dy=0.15)
 
-                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
-
-                        time.sleep(0.5)
-                        self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
-                        time.sleep(0.5)
-
-                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
-
-                        self.robot.adjust_omnidirectional_position(dx=-0.15,dy=0.15)
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
-
+                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
                     self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
                     
                     #TEST PLACE  OBJ #final_objects = self.search_for_objects(tetas=[[-45, -30]], time_in_each_frame=0.5, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.object_name], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
