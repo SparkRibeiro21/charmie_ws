@@ -833,7 +833,6 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
-
 	### PLACE OBJECT FRONT###
 	def initial_pose_to_place_front(self):
 		match self.estado_tr:
@@ -860,9 +859,7 @@ class ArmUfactory(Node):
 			case 2:
 				self.finish_arm_movement_()
 
-
-
-	### SEARCH FOR OBJECT ON TABLE TOP###
+	### SEARCH FOR OBJECT ON TABLE TOP ###
 	def initial_pose_to_search_table_top(self):
 		match self.estado_tr:
 			case 0:

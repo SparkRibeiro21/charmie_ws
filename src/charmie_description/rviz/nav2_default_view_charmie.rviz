@@ -771,29 +771,81 @@ Visualization Manager:
         Value: /visualization_marker_array_rooms_names
       Value: false
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        Bed: true
+        Bedroom Trashcan: true
+        Bench: true
+        Coffee Table: true
+        Couch: true
+        Desk: true
+        Dinner Table: true
+        Dishwasher: true
+        Drill Press: true
+        Entrance: true
+        Exit: true
+        Fridge: true
+        Kitchen Cabinet: true
+        Kitchen Counter: true
+        Kitchen Trashcan: true
+        Left Lounge Chair: true
+        Living Room Trashcan: true
+        Night Stand: true
+        Office Counter: true
+        Pantry: true
+        Reading Chair: true
+        Right Lounge Chair: true
+        Shelf: true
+        TV Table: true
+        Tool Cabinet: true
+        Workbench: true
+        Workshop Desk: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visualization_marker_array_furniture
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        Bed Name: true
+        Bedroom Trashcan Name: true
+        Bench Name: true
+        Coffee Table Name: true
+        Couch Name: true
+        Desk Name: true
+        Dinner Table Name: true
+        Dishwasher Name: true
+        Drill Press Name: true
+        Entrance Name: true
+        Exit Name: true
+        Fridge Name: true
+        Kitchen Cabinet Name: true
+        Kitchen Counter Name: true
+        Kitchen Trashcan Name: true
+        Left Lounge Chair Name: true
+        Living Room Trashcan Name: true
+        Night Stand Name: true
+        Office Counter Name: true
+        Pantry Name: true
+        Reading Chair Name: true
+        Right Lounge Chair Name: true
+        Shelf Name: true
+        TV Table Name: true
+        Tool Cabinet Name: true
+        Workbench Name: true
+        Workshop Desk Name: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visualization_marker_array_furniture_names
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: false
       Name: MarkerArray
@@ -853,6 +905,18 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visualization_marker_array_tracking
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visualization_marker_array_radar
       Value: true
     - Class: rviz_default_plugins/Image
       Enabled: false

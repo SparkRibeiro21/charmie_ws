@@ -11,16 +11,17 @@ from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
-    Obstacles, ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
-    TaskStatesInfo
+    ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
+    TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
-    SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, \
+    SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
     GetSoundClassificationContinuous
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
+import os
 import cv2 
 import time
 from cv_bridge import CvBridge
@@ -31,7 +32,10 @@ from datetime import datetime
 import random
 import json
 import face_recognition
+<<<<<<< HEAD
 from skimage.metrics import structural_similarity as ssim
+=======
+>>>>>>> main
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -109,8 +113,6 @@ class ROS2TaskNode(Node):
         # Search for person and object 
         self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
-        # Obstacles
-        self.obs_lidar_subscriber = self.create_subscription(Obstacles, "obs_lidar", self.obstacles_callback, 10)
         # Gamepad Controller
         self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
         # Low level
@@ -132,6 +134,8 @@ class ROS2TaskNode(Node):
         # Odom
         self.odom_subscriber = self.create_subscription(Odometry, "/odometry/filtered", self.odom_callback, 10)
         self.odom_wheels_subscriber = self.create_subscription(Odometry, "/wheel_encoders", self.odom_wheels_callback, 10)
+        # Radar
+        self.radar_dara_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
         
 
         ### Services (Clients) ###
@@ -164,8 +168,6 @@ class ROS2TaskNode(Node):
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
         self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
-        # Obstacles
-        self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
@@ -264,9 +266,15 @@ class ROS2TaskNode(Node):
             while not self.neck_track_object_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         
+<<<<<<< HEAD
         # if self.ros2_modules["charmie_sound_classification"]:
         #     while not self.get_sound_classification_client.wait_for_service(1.0):
         #         self.get_logger().warn("Waiting for Server Sound Classification Command...")
+=======
+        if self.ros2_modules["charmie_sound_classification"]:
+            while not self.get_sound_classification_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Sound Classification Command...")
+>>>>>>> main
             
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
@@ -337,7 +345,6 @@ class ROS2TaskNode(Node):
         self.detected_objects = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
-        self.obstacles = Obstacles()
         self.gamepad_controller_state = GamepadController()
         self.previous_gamepad_controller_state = GamepadController()
         self.current_gamepad_controller_state = GamepadController()
@@ -390,8 +397,6 @@ class ROS2TaskNode(Node):
         self.arm_message = ""
         self.navigation_success = True
         self.navigation_message = ""
-        self.activate_obstacles_success = True
-        self.activate_obstacles_message = ""
         self.activate_motors_success = True
         self.activate_motors_message = ""
         self.activate_tracking_success = True
@@ -423,6 +428,8 @@ class ROS2TaskNode(Node):
         self.llm_confirm_command_response = ""
         self.llm_gpsr_response = ListOfStrings()
         self.received_demo_tsi = TaskStatesInfo()
+        self.radar = RadarData()
+        self.is_radar_initialized = False
 
         self.nav2_goal_accepted = False
         self.nav2_feedback = NavigateToPose.Feedback()
@@ -460,15 +467,24 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_gamepad              = self.ros2_modules["charmie_gamepad"]
         nodes_used.charmie_lidar                = self.ros2_modules["charmie_lidar"]
         nodes_used.charmie_lidar_bottom         = self.ros2_modules["charmie_lidar_bottom"]
+<<<<<<< HEAD
         #nodes_used.charmie_lidar_livox          = self.ros2_modules["charmie_lidar_livox"]
+=======
+        nodes_used.charmie_lidar_livox          = self.ros2_modules["charmie_lidar_livox"]
+>>>>>>> main
         nodes_used.charmie_localisation         = self.ros2_modules["charmie_localisation"]
         nodes_used.charmie_low_level            = self.ros2_modules["charmie_low_level"]
         nodes_used.charmie_llm                  = self.ros2_modules["charmie_llm"]
         nodes_used.charmie_navigation           = self.ros2_modules["charmie_navigation"]
         nodes_used.charmie_nav2                 = self.ros2_modules["charmie_nav2"]
         nodes_used.charmie_neck                 = self.ros2_modules["charmie_neck"]
+<<<<<<< HEAD
         #nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
         #nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
+=======
+        nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
+        nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
+>>>>>>> main
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
@@ -510,10 +526,6 @@ class ROS2TaskNode(Node):
     def get_depth_base_image_callback(self, img: Image):
         self.depth_base_img = img
         self.first_depth_base_image_received = True
-
-    ### OBSTACLES
-    def obstacles_callback(self, obs: Obstacles):
-        self.obstacles = obs
 
     def robot_localisation_callback(self, pose: Pose2D):
         self.robot_pose = pose
@@ -583,13 +595,7 @@ class ROS2TaskNode(Node):
         self.activate_yolo_objects_client.call_async(request)
 
 
-    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
-    def call_activate_obstacles_server(self, request=ActivateObstacles.Request()):
-
-        self.activate_obstacles_client.call_async(request)
-
-
-    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
+    ### ACTIVATE TRACKING SERVER FUNCTIONS ###
     def call_activate_tracking_server(self, request=ActivateTracking.Request()):
 
         self.activate_tracking_client.call_async(request)
@@ -1186,15 +1192,34 @@ class ROS2TaskNode(Node):
         # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
 
+    def radar_data_callback(self, radar: RadarData):
+        self.radar = radar
+        self.is_radar_initialized = True
+
+        # DEBUG PRINTS
+        # nos     = self.radar.number_of_sectors
+        # sar     = self.radar.sector_ang_range
+        # sectors = self.radar.sectors
+        # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
+        # i = 0
+        # for s in sectors:
+        #     sa = s.start_angle
+        #     ea = s.end_angle
+        #     md = s.min_distance
+        #     p  = s.point
+        #     hp = s.has_point
+        #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}, Point: ({round(p.x,2)}, {round(p.y,2)}, {round(p.z,2)})")
+        #     i += 1    
+            
+            
 
 
 
-
-
-
-
-
-
+#############################################################################################################################
+#
+#   Robot Standard Functions Class
+#
+#############################################################################################################################
 
 
 
@@ -1238,6 +1263,8 @@ class RobotStdFunctions():
         self.RISING = 1
         self.OFF = 2
         self.FALLING = 3
+
+        self.ROBOT_RADIUS = 0.28 # in meters
 
     def get_demo_mode(self):
         return self.node.DEMO_OPTION
@@ -1379,37 +1406,51 @@ class RobotStdFunctions():
 
         return self.node.orientation_yaw
         
-    def wait_for_door_start(self):
+    def wait_for_door_opening(self):
         
-        self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
-        
-        # max angle considered to be a door (degrees)
-        MAX_DOOR_ANGLE = math.radians(10.0)
-        # max distance to be considered a door (meters)
-        MAX_DOOR_DISTANCE = 1.0 
-        
+        success = False
+        message = ""
+
+        MAX_DOOR_ANGLE = 25.0 # max angle considered to be a door (degrees)
+        MAX_DOOR_DISTANCE = 1.5 # max distance to be considered a door (meters) from robot edge
         door_open = False
 
+        self.set_speech(filename="generic/waiting_door_open", wait_for_end_of=False)
         self.set_rgb(WHITE+ALTERNATE_QUARTERS)
 
-        while not door_open:
-            ctr = 0
-            for obs in self.node.obstacles.obstacles:
-                # if the robot detects any obstacle inside the max_angle with a dist under max_dist it considers the door is closed
-                # the max distance was introduced since in some cases, there may be a sofa, 3 meters away in that direction...
-                if -MAX_DOOR_ANGLE < obs.alfa < MAX_DOOR_ANGLE and obs.dist < MAX_DOOR_DISTANCE:
-                    ctr += 1
-                    # print(math.degrees(obs.alfa), obs.dist)
+        if self.node.is_radar_initialized:
+
+            while not door_open:
+                radar = self.node.radar
+                obstacle_ctr = 0
+
+                print("USED SECTORS:")
+                for s in radar.sectors:
+                    if -math.radians(MAX_DOOR_ANGLE/2) <= s.start_angle <= math.radians(MAX_DOOR_ANGLE/2) and \
+                       -math.radians(MAX_DOOR_ANGLE/2) <= s.end_angle   <= math.radians(MAX_DOOR_ANGLE/2):
+                        # used_sectors.append(s)
+                        print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
             
-            if ctr == 0:
-                door_open = True
-                print("DOOR OPEN")
-            else:
-                door_open = False
-                print("DOOR CLOSED", ctr)
-        
-        self.set_rgb(GREEN+ALTERNATE_QUARTERS)
-    
+                        if s.has_point:
+                            if s.min_distance - self.ROBOT_RADIUS < MAX_DOOR_DISTANCE:
+                                obstacle_ctr += 1
+
+                if obstacle_ctr == 0:
+                    self.set_rgb(GREEN+ALTERNATE_QUARTERS)
+                    door_open = True
+                    print("DOOR OPEN")
+                    success = True
+                    message = "Door opened successfully detected"
+                    return success, message
+                else:
+                    door_open = False
+                    print("DOOR CLOSED", obstacle_ctr)
+
+        else:
+            success = False
+            message = "Radar not initialized or wrong distance parameter"
+            return success, message
+            
     def set_torso_position(self, legs=0.0, torso=0.0, wait_for_end_of=True):
         
         request = SetTorso.Request()
@@ -2158,7 +2199,7 @@ class RobotStdFunctions():
         move_coords_copy[2]+=45.0
         return move_coords_copy
     
-    def adjust_omnidirectional_position(self, dx, dy, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
 
         ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
         ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
@@ -2170,6 +2211,26 @@ class RobotStdFunctions():
         ### else:
         ###     USE: self.node.current_odom_pose
 
+        success = False
+        message = ""
+
+        if safety:
+            SAFETY_DISTANCE_FROM_ROBOT_EDGE = 0.02 # from robot edge to obstacle
+
+            s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=ang_obstacle_check)
+            if not s:
+                success = False
+                message = m
+                return success, message
+            elif min_radar_distance_to_robot_edge - SAFETY_DISTANCE_FROM_ROBOT_EDGE < dx and dx > 0:
+                success = False
+                message = "Not enough space in front of the robot to perform the adjustment"
+                self.node.get_logger().warn("Not enough space in front of the robot to perform the adjustment")
+                print("Wanted to move forward:", round(dx,2), "meters. But minimum distance to obstacle in front of robot is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
+                return success, message
+            
+            print("GOOD! Want to move forward:", round(dx,2), "meters. Minimum distance to obstacle in front is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
+        
         # Wait until odom is received
         while self.node.current_odom_pose is None:
             self.node.get_logger().warning("Waiting for odom pose...") 
@@ -2182,9 +2243,19 @@ class RobotStdFunctions():
         q = pose.orientation
         yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
 
+        print("Adjusting Omnidirectional Position:", round(dx,2), round(dy,2), "meters")
+
         # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
-        dx = dx + tolerance if dx > 0 else dx - tolerance
-        dy = dy + tolerance if dy > 0 else dy - tolerance
+        # fixed bug where dx = 0 or dy = 0 still moved the robot
+        if dx > 0:
+            dx = dx + tolerance
+        elif dx < 0:
+            dx = dx - tolerance
+        
+        if dy > 0:
+            dy = dy + tolerance
+        elif dy < 0:
+            dy = dy - tolerance
 
         # Compute target in odom frame
         target_x = start_x + math.cos(yaw) * dx - math.sin(yaw) * dy
@@ -2231,6 +2302,106 @@ class RobotStdFunctions():
         self.node.cmd_vel_publisher.publish(Twist())  
         self.node.get_logger().info("Omnidirectional Adjustment Complete.")
 
+        success = True
+        message = "Omnidirectional Adjustment Complete."
+        return success, message
+
+    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5):
+
+        success = False
+        message = ""
+
+        distance_to_adjust = 0.0
+
+        # normalize direction to be between -180 and 180 (how radar handles angles)
+        while direction > 180:
+            direction -= 360
+        while direction < -180:
+            direction += 360
+
+        s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=direction, ang_obstacle_check=ang_obstacle_check)
+
+        if not s:
+            success = False
+            message = m
+            return success, message
+        else:
+            distance_to_adjust = min_radar_distance_to_robot_edge - distance
+            print("DISTANCE TO ADJUST (positive means move forward):", round(distance_to_adjust,2))
+
+            # Copilot suggestion
+            dx = distance_to_adjust * math.cos(math.radians(direction))
+            dy = distance_to_adjust * math.sin(math.radians(direction))
+            
+            self.adjust_omnidirectional_position(dx=dx, dy=dy, max_speed=max_speed, safety=False, tolerance=tolerance, kp=kp)
+
+            success = True
+            message = "Obstacle Adjustment Complete."
+            return success, message
+
+    def get_minimum_radar_distance(self, direction=0.0, ang_obstacle_check=45):
+
+        success = False
+        message = ""
+        min_radar_distance_to_robot_edge = None
+
+        if self.node.is_radar_initialized:
+            if -100 <= direction <= 100 and 0 < ang_obstacle_check <= 360:
+                radar = self.node.radar
+                used_sectors = []
+                min_distance = None
+
+                # DEBUG PRINTS
+                # nos     = radar.number_of_sectors
+                # sar     = radar.sector_ang_range
+                # sectors = radar.sectors
+                # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
+                # i = 0
+                # for s in sectors:
+                #     sa = s.start_angle
+                #     ea = s.end_angle
+                #     md = s.min_distance
+                #     p  = s.point
+                #     hp = s.has_point
+                #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}")
+                #     i += 1    
+
+                # print("USED SECTORS:")
+                for s in radar.sectors:
+                    if  -math.radians(ang_obstacle_check/2) <= s.start_angle - math.radians(direction) <= math.radians(ang_obstacle_check/2) and \
+                        -math.radians(ang_obstacle_check/2) <= s.end_angle   - math.radians(direction) <= math.radians(ang_obstacle_check/2):
+                        used_sectors.append(s)
+                        # print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
+            
+                        if s.has_point:
+                            if min_distance is None:
+                                min_distance = s.min_distance
+                            elif s.min_distance < min_distance:
+                                min_distance = s.min_distance
+                
+                if min_distance is not None:
+                    # print("MIN DISTANCE IN USED SECTORS:", round(min_distance,2))
+                    min_radar_distance_to_robot_edge = min_distance - self.ROBOT_RADIUS
+                    # print("MIN DISTANCE TO ROBOT EDGE IN USED SECTORS:", round(min_radar_distance_to_robot_edge,2))
+                    success = True
+                    message = ""
+                    return success, message, min_radar_distance_to_robot_edge
+                else:
+                    success = False
+                    message = "No obstacles detected in the selected direction"
+                    self.node.get_logger().warn("No obstacles detected in the selected direction")
+                    return success, message, min_radar_distance_to_robot_edge
+            else:
+                success = False
+                message = "Wrong parameter definition"
+                self.node.get_logger().warn("Wrong parameter definition")
+                return success, message, min_radar_distance_to_robot_edge
+        else:
+            success = False
+            message = "Radar not initialized"
+            self.node.get_logger().warn("Radar not initialized")
+            return success, message, min_radar_distance_to_robot_edge
+    
     def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
@@ -2375,24 +2546,34 @@ class RobotStdFunctions():
 
         return filtered_persons
 
-    def detected_person_to_face_path(self, person, send_to_face):
+    def detected_person_to_face_path(self, person=DetectedPerson(), just_face=False, send_to_face=False):
 
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
         
         cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
-        just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
+        img_path = ""
+
+        if not just_face:
+            just_person_image = cf[person.box_top_left_y:person.box_top_left_y+person.box_height, person.box_top_left_x:person.box_top_left_x+person.box_width]
+            img_path = current_datetime + str(person.index)
+            cv2.imwrite(self.node.complete_path_custom_face + img_path + ".jpg", just_person_image) 
+            time.sleep(0.1)
+        else:
+            if person.is_box_head:
+                just_person_image = cf[person.box_head_top_left_y:person.box_head_top_left_y+person.box_head_height, person.box_head_top_left_x:person.box_head_top_left_x+person.box_head_width]
+                img_path = current_datetime + str(person.index) + "face"
+                cv2.imwrite(self.node.complete_path_custom_face + img_path + ".jpg", just_person_image) 
+                time.sleep(0.1)
+        
+        # print(img_path)
+        
         # cv2.imshow("Search for Person", just_person_image)
         # cv2.waitKey(100)
-        
-        face_path = current_datetime + str(person.index)
-        
-        cv2.imwrite(self.node.complete_path_custom_face + face_path + ".jpg", just_person_image) 
-        time.sleep(0.1)
 
         if send_to_face:
-            self.set_face(custom=face_path)
+            self.set_face(custom=img_path)
         
-        return face_path
+        return img_path
 
     def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
 
@@ -2703,7 +2884,7 @@ class RobotStdFunctions():
             
         return final_objects        
 
-    def detected_object_to_face_path(self, object, send_to_face, bb_color=(0,0,255)):
+    def detected_object_to_face_path(self, object=DetectedObject(), send_to_face=False, bb_color=(0,0,255)):
 
         thresh_h = 220
         thresh_v = 220
@@ -2756,20 +2937,6 @@ class RobotStdFunctions():
         
         self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_img, camera=camera, bbox=None)
         pass
-
-    def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
-        
-        request = ActivateObstacles.Request()
-        request.activate_lidar_up = obstacles_lidar_up
-        request.activate_lidar_bottom = obstacles_lidar_bottom
-        request.activate_camera_head = obstacles_camera_head
-
-        self.node.call_activate_obstacles_server(request=request)
-
-        self.node.activate_obstacles_success = True
-        self.node.activate_obstacles_message = "Activated with selected parameters"
-
-        return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def get_robot_localization(self):
 
@@ -3363,6 +3530,7 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+<<<<<<< HEAD
                 return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height'][0]] # Return the class
         return None  # Return None if the object is not found
     
@@ -3400,6 +3568,9 @@ class RobotStdFunctions():
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['bot_right_coords'].copy()
+=======
+                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height'][0]]  # Return the class
+>>>>>>> main
         return None  # Return None if the object is not found
 
     def get_height_from_furniture(self, furniture):
@@ -3409,6 +3580,7 @@ class RobotStdFunctions():
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['height'].copy() # Return the height
+<<<<<<< HEAD
         return None  # Return None if the object is not found
 
     def get_look_from_furniture(self, furniture):
@@ -3427,6 +3599,8 @@ class RobotStdFunctions():
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['look'] # Return the look
+=======
+>>>>>>> main
         return None  # Return None if the object is not found
 
     def set_continuous_tracking_with_coordinates(self):
@@ -3561,7 +3735,7 @@ class RobotStdFunctions():
         self.activate_tracking(activate=True, points=points, bbox=bb)
         # self.activate_tracking(activate=False)
 
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", alphabetical_order=True, speak_results=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
         options = []
 
@@ -3627,9 +3801,10 @@ class RobotStdFunctions():
             self.set_speech(filename=start_speak_file, wait_for_end_of=True)
     
             request = SetFaceTouchscreenMenu.Request()
-            request.command = options
-            request.timeout = float(timeout)
-            request.mode    = str(mode)
+            request.command     = options
+            request.timeout     = float(timeout)
+            request.mode        = str(mode)
+            request.instruction = str(instruction)
             
             self.node.call_face_set_touchscreen_menu_server(request=request)
 
@@ -3674,10 +3849,100 @@ class RobotStdFunctions():
             self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
             return ["ERROR"]
         
+<<<<<<< HEAD
     def add_face_to_face_recognition(self, person=DetectedPerson(), image="", name=""):
         
         # TODO: add DetectedPerson option to save image from the camera directly
         # TODO: Test if bad image is added (no face in the image)
+=======
+    def add_face_to_face_recognition(self, person=DetectedPerson(), image_path="", name=""):
+
+        success = False
+        message = ""
+        
+        if image_path != "": # uses image_path
+            image_path = self.node.home+'/'+image_path
+        else: # uses DetectedPerson
+            image_path = self.detected_person_to_face_path(person=person, just_face=True, send_to_face=False)
+            image_path = self.node.complete_path_custom_face + image_path + ".jpg"
+
+        # print(image_path)
+
+        if os.path.isfile(image_path):
+
+            image = face_recognition.load_image_file(image_path)
+            encoding_entry = face_recognition.face_encodings(image)
+
+            if len(encoding_entry) > 0:
+                self.node.face_recognition_encoding.append(encoding_entry[0])
+                self.node.face_recognition_names.append(name)
+                success = True
+                message = "Face encoding added to list successfully."
+                self.node.get_logger().info("Face encoding added to list successfully. - " + str(name))
+                print("Face encoding added to list successfully.")
+                # print(self.node.face_recognition_encoding)
+                # print(self.node.face_recognition_names)
+
+            else:
+                self.node.get_logger().warn("No face found in the image. Encodings not added to list.")
+                print("No face found in the image. Encodings not added to list.")
+                success = False
+                message = "No face found in the image. Encodings not added to list."
+        
+        else:
+            self.node.get_logger().warn("Image path does not exist. Encodings not added to list.")
+            print("Image path does not exist. Encodings not added to list.")
+            success = False
+            message = "Image path does not exist. Encodings not added to list."
+
+        return success, message
+
+    def recognize_face_from_face_recognition(self, person=DetectedPerson(), image_path="", tolerance=0.4):
+        
+        if image_path != "": # uses image_path
+            image_path = self.node.home+'/'+image_path
+        else: # uses DetectedPerson
+            image_path = self.detected_person_to_face_path(person=person, just_face=True, send_to_face=False)
+            image_path = self.node.complete_path_custom_face + image_path + ".jpg"
+
+        # print(image_path)
+
+        if os.path.isfile(image_path):
+    
+            if not self.node.face_recognition_encoding:
+                self.node.get_logger().warn("Face recognition encoding List is empty.")
+                return "error", 0.0
+            
+            image = face_recognition.load_image_file(image_path)
+            encoding_entry = face_recognition.face_encodings(image)
+
+            if len(encoding_entry) == 0:
+                self.node.get_logger().warn("No face found in the image. Could not comapre to encodings list.")
+                return "error", 0.0
+            encoding_entry = encoding_entry[0]  
+
+            all_percentages = []
+            for enc in self.node.face_recognition_encoding:
+            
+                distance = face_recognition.face_distance([enc], encoding_entry)[0]
+                confidence = (1 - distance)
+                all_percentages.append(confidence)
+
+            name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
+            if biggest_conf_recognized < tolerance:
+                name_recognized = "unknown"
+
+            print("RECOGNITION COMPARE TABLE:")
+            for prob, name in zip(all_percentages, self.node.face_recognition_names):
+                print(str(round(prob,2))+" -> "+name)
+            print("OUTCOME:", name_recognized, str(round(biggest_conf_recognized,2)))
+
+            return name_recognized.lower(), biggest_conf_recognized
+
+        else:
+            self.node.get_logger().warn("Image path does not exist.")
+            return "error", 0.0
+>>>>>>> main
 
         image = face_recognition.load_image_file(image)
         encoding_entry = face_recognition.face_encodings(image)

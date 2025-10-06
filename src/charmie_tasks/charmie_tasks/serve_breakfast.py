@@ -141,11 +141,12 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                ### self.robot.wait_for_door_start()
+                ### self.robot.wait_for_door_opening()
 
                 ### self.robot.initial_move_past_entrance_door() # to do ...
 
-                self.state = self.task_states["Move_milk_location"]
+                # self.state = self.task_states["Move_milk_location"]
+                self.state = self.task_states["Move_kitchen_table"]
 
 
             elif self.state == self.task_states["Move_milk_location"]:
@@ -278,6 +279,8 @@ class TaskMain():
                 # must be removed after the update to minimize as much as possivle the final orientation error 
                 move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))                
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
+
+                self.robot.adjust_obstacles(distance=0.3, direction=-45.0)
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)

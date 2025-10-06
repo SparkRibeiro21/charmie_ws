@@ -147,7 +147,7 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                self.robot.wait_for_door_start()
+                self.robot.wait_for_door_opening()
 
                 # self.state = self.Approach_kitchen_table
                 self.state = self.Detect_and_pick_all_objects_audio # debug without NAV
