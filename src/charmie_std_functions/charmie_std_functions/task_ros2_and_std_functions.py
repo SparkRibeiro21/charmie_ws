@@ -3989,9 +3989,9 @@ class RobotStdFunctions():
 
         # Implement the logic for picking an object here
         if search_head:
-            objects_found = self.search_for_objects(tetas = first_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+            objects_found = self.search_for_objects(tetas = first_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
         else:
-             objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
+             objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
         # self.set_neck(position=[45.0, 0.0], wait_for_end_of=True) #Head turned 45 deg
         #self.set_face(camera="hand",show_detections=True,wait_for_end_of=False)
         print("LIST OF DETECTED OBJECTS:")
@@ -4025,86 +4025,66 @@ class RobotStdFunctions():
                 print(f"Initial pose to search for objects")
 
                 if mode == "front":
-                    
-                    #HEIGHT CALCULATIONS
-                    high_z = (o.position_relative.z - 1.25)*100
-                    rise_z = [high_z, 0.0, 0.0, 0.0, 0.0, 0.0]
-                    low_z = (o.position_relative.z - 0.8)*100
-                    descend_z = [low_z, 0.0, 0.0, 0.0, 0.0, 0.0]
 
                     print("OBJECT_HEIGHT", o.position_relative.z)
 
-                    #CHANGE ARM HEIGHT DEPENDING ON FOUND OBJECT HEIGHT
-                    if 0.55 <= o.position_relative.z <= 1.2:
-                        if navigation:
-                            self.adjust_x_ = o.position_relative.x - 0.6
-
-                            print("INITIAL X ADJUST:", self.adjust_x_)
-
-                            if self.adjust_x_ > 0.5:
-                                self.adjust_x_ = 0.5
-
-                            elif self.adjust_x_ < -0.5:
-                                self.adjust_x_ = -0.5
-
-                            self.adjust_y_ = o.position_relative.y + 0.3
-
-                            print("INITIAL X ADJUST:", self.adjust_x_)
-
-                            if self.adjust_y_ > 0.5:
-                                self.adjust_y_ = 0.5
-
-                            elif self.adjust_y_ < -0.5:
-                                self.adjust_y_ = -0.5
-
-                        print("FINAL ADJUST:", self.adjust_x_, self.adjust_y_)
-
-                        self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=False)
-                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
-
-                        self.set_arm(command="search_front_min_z", wait_for_end_of=True)
-                        print("LOW", low_z)
-                        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = descend_z, wait_for_end_of=True)
-
-                        return self.hand_search(selected_object, mode, navigation)
-                        self.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
-
-                    elif 1.2 < o.position_relative.z <=1.70:
-                        if navigation:
-                            self.adjust_x_ = o.position_relative.x - 0.6
-
-                            if self.adjust_x_ > 0.5:
-                                self.adjust_x_ = 0.5
-
-                            elif self.adjust_x_ < -0.5:
-                                self.adjust_x_ = -0.5
-
-                            self.adjust_y_ = o.position_relative.y + 0.25
-
-                            if self.adjust_y_ > 0.5:
-                                self.adjust_y_ = 0.5
-
-                            elif self.adjust_y_ < -0.5:
-                                self.adjust_y_ = -0.5
-
-                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
-
-                        self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
-
-                        self.set_arm(command="search_front_max_z", wait_for_end_of=True)
-                        print("HIGH", high_z)
-                        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = rise_z, wait_for_end_of=True)
-
-                        return self.hand_search(selected_object, mode, navigation)
-                        self.set_speech(filename="objects_names/"+o.object_name.reset_speeplace(" ","_").lower(), wait_for_end_of=True)
-
-                    elif 0.55 > o.position_relative.z or o.position_relative.z > 1.70:
+                    if 0.55 > o.position_relative.z or o.position_relative.z > 1.70:
                         self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
                         self.ask_help_pick_object_gripper(object_d=objects_found[0])
                         self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                         picked_height = 0.0
                         self.asked_help = True
                         return picked_height, self.asked_help
+
+                    #CHANGE ARM HEIGHT DEPENDING ON FOUND OBJECT HEIGHT
+                    if navigation:
+                        self.adjust_x_ = o.position_relative.x - 0.6
+
+                        if self.adjust_x_ > 0.5:
+                            self.adjust_x_ = 0.5
+
+                        elif self.adjust_x_ < -0.5:
+                            self.adjust_x_ = -0.5
+
+                        self.adjust_y_ = o.position_relative.y + 0.3
+
+                        if self.adjust_y_ > 0.5:
+                            self.adjust_y_ = 0.5
+
+                        elif self.adjust_y_ < -0.5:
+                            self.adjust_y_ = -0.5
+
+                        print("FINAL ADJUST:", self.adjust_x_, self.adjust_y_)
+
+                        s = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+
+                    if not s:
+                        self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
+                        self.ask_help_pick_object_gripper(object_d=objects_found[0])
+                        self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                        picked_height = 0.0
+                        self.asked_help = True
+                        return picked_height, self.asked_help
+
+                    self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
+                    
+                    if 0.55 <= o.position_relative.z <= 1.2:
+
+                        self.set_arm(command="search_front_min_z", wait_for_end_of=True)
+                        gripper_search_height = self.get_gripper_localization().z
+                        low_z = (o.position_relative.z - gripper_search_height)*100
+                        print("LOW", low_z)
+                        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [low_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
+                        
+                    elif 1.2 < o.position_relative.z <=1.70:
+
+                        self.set_arm(command="search_front_max_z", wait_for_end_of=True)
+                        gripper_search_height = self.get_gripper_localization().z
+                        high_z = (o.position_relative.z - gripper_search_height)*100
+                        print("HIGH", high_z)
+                        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [high_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
+
+                    return self.hand_search(selected_object, mode, navigation)
 
                 #BEGIN PICK TOP IF SELECTED
                 elif mode == "top":
@@ -4126,15 +4106,15 @@ class RobotStdFunctions():
                         self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
 
                     if navigation:
-                        self.adjust_x_ = o.position_relative.x - 0.40
+                        self.adjust_x_ = o.position_relative.x - 0.65
 
-                        if self.adjust_x_ > 0.4:
-                            self.adjust_x_ = 0.4
+                        if self.adjust_x_ > 0.6:
+                            self.adjust_x_ = 0.6
 
                         elif self.adjust_x_ < -0.3:
                             self.adjust_x_ = -0.3
 
-                        self.adjust_y_ = o.position_relative.y + 0.38
+                        self.adjust_y_ = o.position_relative.y + 0.30
 
                         if self.adjust_y_ > 0.4:
                             self.adjust_y_ = 0.4
@@ -4143,6 +4123,10 @@ class RobotStdFunctions():
                             self.adjust_y_ = -0.5
 
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+                        rotate_coordinates = self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(o.object_name))))
+                        self.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
+
+
 
                     return self.hand_search(selected_object, mode, navigation)
 
