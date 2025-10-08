@@ -107,6 +107,8 @@ class TaskMain():
                 pass
         self.SB_TABLE_HEIGHT = self.robot.get_height_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)[0]
         print("Table Height =", self.SB_TABLE_HEIGHT)
+        # Set the height of the table where breakfast is served, so that the manual arm movements are adapted to this height (placing and pouring)
+        self.robot.set_height_furniture_for_arm_manual_movements(self.SB_TABLE_HEIGHT) #####
         
         # Neck Positions
         self.look_forward = [0, 0]
@@ -145,9 +147,8 @@ class TaskMain():
 
                 ### self.robot.initial_move_past_entrance_door() # to do ...
 
-                # self.state = self.task_states["Move_milk_location"]
-                self.state = self.task_states["Move_kitchen_table"]
-
+                self.state = self.task_states["Move_milk_location"]
+                
 
             elif self.state == self.task_states["Move_milk_location"]:
                                         

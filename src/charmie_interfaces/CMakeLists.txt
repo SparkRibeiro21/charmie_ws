@@ -79,6 +79,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetAcceleration.srv"
   "srv/SetFace.srv"
   "srv/SetFaceTouchscreenMenu.srv"
+  "srv/SetFloat.srv"
   "srv/SetInt.srv"
   "srv/SetNeckCoordinates.srv"
   "srv/SetNeckPosition.srv"
