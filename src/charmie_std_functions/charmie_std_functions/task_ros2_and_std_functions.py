@@ -4206,21 +4206,21 @@ class RobotStdFunctions():
                         #FOLLOWING CODE NEEDS TO BE MADE INTO ARM.PY ROUTINE AFTER TESTING 
                         #search_table_top_low = [-183.9, 21, -69.7, -95.4, 87, 83.3]
                         #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_low, wait_for_end_of=True)
-                        self.set_torso_position(legs=80, torso=8) 
+                        #self.set_torso_position(legs=80, torso=8) 
 
                     elif 0.6 < o.position_relative.z < 1:
                         self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
 
                     if navigation:
-                        self.adjust_x_ = o.position_relative.x - 0.65
+                        self.adjust_x_ = o.position_relative.x - 0.55
 
-                        if self.adjust_x_ > 0.6:
-                            self.adjust_x_ = 0.6
+                        if self.adjust_x_ > 0.5:
+                            self.adjust_x_ = 0.5
 
                         elif self.adjust_x_ < -0.3:
                             self.adjust_x_ = -0.3
 
-                        self.adjust_y_ = o.position_relative.y + 0.30
+                        self.adjust_y_ = o.position_relative.y
 
                         if self.adjust_y_ > 0.4:
                             self.adjust_y_ = 0.4
@@ -4229,8 +4229,8 @@ class RobotStdFunctions():
                             self.adjust_y_ = -0.5
 
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
-                        rotate_coordinates = self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(o.object_name))))
-                        self.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
+                        #rotate_coordinates = self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(o.object_name))))
+                        #self.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
 
 
 
@@ -4246,6 +4246,7 @@ class RobotStdFunctions():
                 time.sleep(4.0)
     
     def hand_search(self, selected_object, mode, navigation):
+        _, _ = self.adjust_angle(45)
         table_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
         #self.set_face(camera="hand",show_detections=True, wait_for_end_of=False)
 
@@ -4392,8 +4393,8 @@ class RobotStdFunctions():
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
 
                     if navigation:
-                        self.adjust_x_ = - self.adjust_x_
-                        self.adjust_y_ = - self.adjust_y_
+                        self.adjust_x_ = - self.adjust_x_ * 0.707107 - self.adjust_x_ * 0.99608783514
+                        self.adjust_y_ = self.adjust_y_ * 0.707107 + self.adjust_y_ * 0.0883686861
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
 
 

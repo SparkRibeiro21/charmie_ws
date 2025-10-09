@@ -264,7 +264,8 @@ class TaskMain():
                 # All neck positions
                 if self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "horizontal":
                     if self.object_mode == "top":
-                        self.tetas = [[-90, -40], [-45, -45], [0, -40]]
+                        #self.tetas = [[-90, -40], [-45, -45], [0, -40]]
+                        self.tetas = [[-40, -45], [0, -45], [40, -45]]
                     if self.object_mode == "front":
                         self.tetas = [[-40, -45], [0, -45], [40, -45]]
 
