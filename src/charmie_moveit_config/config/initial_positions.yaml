@@ -1,9 +1,0 @@
-# Default initial positions for charmie's ros2_control fake system
-
-initial_positions:
-  xarm_joint1: -3.926
-  xarm_joint2: 1.449
-  xarm_joint3: -1.134
-  xarm_joint4: -0.017
-  xarm_joint5: 1.309
-  xarm_joint6: 4.712
