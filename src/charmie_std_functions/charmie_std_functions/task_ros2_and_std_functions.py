@@ -4208,7 +4208,7 @@ class RobotStdFunctions():
                         #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_low, wait_for_end_of=True)
                         #self.set_torso_position(legs=80, torso=8) 
 
-                    elif 0.6 < o.position_relative.z < 1:
+                    elif 0.6 < o.position_relative.z < 1.10:
                         self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
 
                     if navigation:
