@@ -9,6 +9,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point,
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
+from nav2_msgs.srv import ClearEntireCostmap
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
     ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
@@ -165,6 +166,9 @@ class ROS2TaskNode(Node):
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
         self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
+        # NAV2
+        self.clear_entire_local_costmap_client  = self.create_client(ClearEntireCostmap, "/local_costmap/clear_entirely_local_costmap")
+        self.clear_entire_global_costmap_client = self.create_client(ClearEntireCostmap, "/global_costmap/clear_entirely_global_costmap")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
@@ -1196,8 +1200,21 @@ class ROS2TaskNode(Node):
         #     hp = s.has_point
         #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}, Point: ({round(p.x,2)}, {round(p.y,2)}, {round(p.z,2)})")
         #     i += 1    
-            
-            
+    
+    def call_clear_entire_local_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
+        
+        self.clear_entire_local_costmap_client.call_async(request)
+
+        self.clear_local_costmap_success = True
+        self.clear_local_costmap_message = "Clear Local Costmap Sucessfully Sent"
+
+
+    def call_clear_entire_global_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
+        
+        self.clear_entire_global_costmap_client.call_async(request)
+        
+        self.clear_global_costmap_success = True
+        self.clear_global_costmap_message = "Clear Global Costmap Sucessfully Sent"
 
 
 
@@ -1957,7 +1974,7 @@ class RobotStdFunctions():
 
         return self.node.navigation_success, self.node.navigation_message   
 
-    def set_initial_position(self, initial_position):
+    def set_initial_position(self, initial_position, clear_costmaps=True):
 
         if initial_position is not None:
 
@@ -2027,7 +2044,7 @@ class RobotStdFunctions():
 
             print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
-    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, wait_for_end_of=True):
 
         # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
@@ -2048,6 +2065,13 @@ class RobotStdFunctions():
         self.set_rgb(BLUE+BACK_AND_FORTH_8)
 
         while not nav2_goal_completed:
+
+            # Clear costmaps before sending a new goal
+            # Helps clearing cluttered costmaps that may cause navigation problems
+            if clear_costmaps:
+                self.node.call_clear_entire_local_costmap_server()
+                self.node.call_clear_entire_global_costmap_server()
+                time.sleep(0.5) # wait a bit for costmaps to be cleared
                 
             self.node.nav2_goal_accepted = False
             self.node.nav2_status = GoalStatus.STATUS_UNKNOWN
