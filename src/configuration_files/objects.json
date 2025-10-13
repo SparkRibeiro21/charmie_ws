@@ -44,8 +44,8 @@
 
 {"name": "Spoon", 		    "class": "Dishes",		"width": 0.018, "length": 0.192, "height": 0.018, "shape": "cilinder", "can_pick": "top", "std_pick": "top"},
 {"name": "Plate", 		    "class": "Dishes",		"width": 0.257, "length": 0.257, "height": 0.028, "shape": "cilinder", "can_pick": "front", "std_pick": "front"},
-{"name": "Cup", 		    "class": "Dishes",		"width": 0.081, "length": 0.081, "height": 0.078, "shape": "special", "can_pick": "both", "std_pick": "top"},
+{"name": "Cup", 		    "class": "Dishes",		"width": 0.081, "length": 0.081, "height": 0.058, "shape": "special", "can_pick": "both", "std_pick": "top"},
 {"name": "Fork", 		    "class": "Dishes",		"width": 0.018, "length": 0.195, "height": 0.013, "shape": "cilinder", "can_pick": "top", "std_pick": "top"},
-{"name": "Bowl", 		    "class": "Dishes",		"width": 0.160, "length": 0.160, "height": 0.050, "shape": "special", "can_pick": "top", "std_pick": "top"},
+{"name": "Bowl", 		    "class": "Dishes",		"width": 0.160, "length": 0.160, "height": 0.048, "shape": "special", "can_pick": "top", "std_pick": "top"},
 {"name": "Knife", 		    "class": "Dishes",		"width": 0.018, "length": 0.213, "height": 0.018, "shape": "cilinder", "can_pick": "top", "std_pick": "top"}
 ]

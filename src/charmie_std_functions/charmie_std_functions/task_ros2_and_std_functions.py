@@ -4229,6 +4229,7 @@ class RobotStdFunctions():
                             self.adjust_y_ = -0.5
 
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+                        _, _ = self.adjust_angle(45)
                         #rotate_coordinates = self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(o.object_name))))
                         #self.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
 
@@ -4246,7 +4247,6 @@ class RobotStdFunctions():
                 time.sleep(4.0)
     
     def hand_search(self, selected_object, mode, navigation):
-        _, _ = self.adjust_angle(45)
         table_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
         #self.set_face(camera="hand",show_detections=True, wait_for_end_of=False)
 
@@ -4334,6 +4334,9 @@ class RobotStdFunctions():
                     if mode == "top":
                         if obj.object_name == "Bowl":
                             correct_y_grab += 90
+                        if obj.object_name == "Cup":
+                            correct_y_grab += 40
+                            correct_x_grab = 210
                         object_position_grab = [0.0, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
 
                 #APPLY ADJUSTEMENT BEFORE GRABBING
