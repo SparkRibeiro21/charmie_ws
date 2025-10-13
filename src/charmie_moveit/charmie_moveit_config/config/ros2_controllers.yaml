@@ -7,6 +7,10 @@ controller_manager:
       type: joint_trajectory_controller/JointTrajectoryController
 
 
+    xarm_gripper_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
@@ -19,6 +23,14 @@ xarm6_controller:
       - xarm_joint4
       - xarm_joint5
       - xarm_joint6
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+xarm_gripper_controller:
+  ros__parameters:
+    joints:
+      - xarm_gripper_drive_joint
     command_interfaces:
       - position
     state_interfaces:

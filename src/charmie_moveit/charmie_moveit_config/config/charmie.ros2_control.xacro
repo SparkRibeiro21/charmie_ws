@@ -44,6 +44,12 @@
                   <param name="initial_value">${initial_positions['xarm_joint6']}</param>
                 </state_interface>
             </joint>
+            <joint name="xarm_gripper_drive_joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['xarm_gripper_drive_joint']}</param>
+                </state_interface>
+            </joint>
 
         </ros2_control>
     </xacro:macro>

@@ -5,6 +5,7 @@ moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControll
 moveit_simple_controller_manager:
   controller_names:
     - xarm6_controller
+    - xarm_gripper_controller
 
   xarm6_controller:
     type: FollowJointTrajectory
@@ -15,3 +16,9 @@ moveit_simple_controller_manager:
       - xarm_joint4
       - xarm_joint5
       - xarm_joint6
+  xarm_gripper_controller:
+    type: FollowJointTrajectory
+    joints:
+      - xarm_gripper_drive_joint
+    action_ns: follow_joint_trajectory
+    default: true
