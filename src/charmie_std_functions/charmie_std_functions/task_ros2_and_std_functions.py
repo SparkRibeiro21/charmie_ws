@@ -1453,7 +1453,27 @@ class RobotStdFunctions():
             success = False
             message = "Radar not initialized or wrong distance parameter"
             return success, message
+
+    def enter_house_after_door_opening(self, distance=0.5, speed=0.3):
+
+        position_threshold = 0.5 # meters
+
+        self.set_speech(filename="generic/entering_house", wait_for_end_of=False)
+
+        # Clear costmaps before sending a new goal
+        # Helps clearing cluttered costmaps that may cause navigation problems
+        self.node.call_clear_entire_local_costmap_server()
+        self.node.call_clear_entire_global_costmap_server()
             
+        self.adjust_omnidirectional_position(dx=distance+position_threshold, dy=0.0, safety=False, max_speed=speed, tolerance=position_threshold, kp=3.0, enter_house_special_case=True, use_wheel_odometry=False)
+        
+        # Clear costmaps before sending a new goal
+        # Helps clearing cluttered costmaps that may cause navigation problems
+        self.node.call_clear_entire_local_costmap_server()
+        self.node.call_clear_entire_global_costmap_server()
+
+        self.set_initial_position([distance+position_threshold/2, 0.0, 0.0]) #  set initial position to be inside the house, the position_threshold/2 is because the robot is already moving
+
     def set_torso_position(self, legs=0.0, torso=0.0, wait_for_end_of=True):
         
         request = SetTorso.Request()
@@ -2221,7 +2241,7 @@ class RobotStdFunctions():
         move_coords_copy[2]+=45.0
         return move_coords_copy
     
-    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False):
 
         ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
         ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
@@ -2315,13 +2335,15 @@ class RobotStdFunctions():
             self.node.cmd_vel_publisher.publish(twist)
             time.sleep(rate)
 
-        # Stop the robot
-        # Dirty, but had to do this way because of some commands to low_level being lost
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())  
+        if not enter_house_special_case:
+            # Stop the robot
+            # Dirty, but had to do this way because of some commands to low_level being lost
+            self.node.cmd_vel_publisher.publish(Twist())
+            time.sleep(0.1)  # wait for the cmd_vel to be published
+            self.node.cmd_vel_publisher.publish(Twist())
+            time.sleep(0.1)  # wait for the cmd_vel to be published
+            self.node.cmd_vel_publisher.publish(Twist())  
+
         self.node.get_logger().info("Omnidirectional Adjustment Complete.")
 
         success = True
