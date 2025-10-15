@@ -56,7 +56,7 @@
     add_gripper="true"
     add_bio_gripper="false"
     ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware"
-    robot_ip=""
+    robot_ip="192.168.1.219"
     report_type="normal"
     baud_checkset="true"
     default_gripper_baud="2000000" />

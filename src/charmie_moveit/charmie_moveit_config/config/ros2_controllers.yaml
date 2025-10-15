@@ -27,7 +27,7 @@ xarm6_controller:
       - position
     state_interfaces:
       - position
-    allow_nonzero_velocity_at trajectory_end: true
+    allow_nonzero_velocity_at_trajectory_end: true
 xarm_gripper_controller:
   ros__parameters:
     joints:
@@ -36,4 +36,4 @@ xarm_gripper_controller:
       - position
     state_interfaces:
       - position
-    allow_nonzero_velocity_at trajectory_end: true
+    allow_nonzero_velocity_at_trajectory_end: true
