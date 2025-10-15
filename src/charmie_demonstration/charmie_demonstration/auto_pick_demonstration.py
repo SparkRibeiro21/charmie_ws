@@ -304,7 +304,7 @@ class TaskMain():
 
             elif self.state == self.task_states["Pick_Object"]:
 
-                picked_height, asked_help = self.robot.pick_obj(selected_object=self.object_name, mode=self.object_mode, first_tetas=self.tetas)
+                picked_height, asked_help = self.robot.pick_obj(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.state = self.task_states["Move_to_place"]
