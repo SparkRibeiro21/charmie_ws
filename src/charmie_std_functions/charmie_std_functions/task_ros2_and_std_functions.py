@@ -2440,6 +2440,12 @@ class RobotStdFunctions():
             # print("CURR YAW:", math.degrees(curr_yaw))
 
             error_angle = target_angle - curr_yaw
+            # error circular correction due to angle circularity
+            if error_angle >= 360:
+                error_angle -= 360
+            elif error_angle <= -360:
+                error_angle += 360
+
             # print("ERROR:", math.degrees(error_angle))
             # print("TOLERANCE", math.degrees(tolerance_rad))
 
