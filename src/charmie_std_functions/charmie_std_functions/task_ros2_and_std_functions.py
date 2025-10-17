@@ -9,6 +9,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point,
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
+from nav2_msgs.srv import ClearEntireCostmap
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
     ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
@@ -167,6 +168,9 @@ class ROS2TaskNode(Node):
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
         self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
+        # NAV2
+        self.clear_entire_local_costmap_client  = self.create_client(ClearEntireCostmap, "/local_costmap/clear_entirely_local_costmap")
+        self.clear_entire_global_costmap_client = self.create_client(ClearEntireCostmap, "/global_costmap/clear_entirely_global_costmap")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
@@ -1202,8 +1206,21 @@ class ROS2TaskNode(Node):
         #     hp = s.has_point
         #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}, Point: ({round(p.x,2)}, {round(p.y,2)}, {round(p.z,2)})")
         #     i += 1    
-            
-            
+    
+    def call_clear_entire_local_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
+        
+        self.clear_entire_local_costmap_client.call_async(request)
+
+        self.clear_local_costmap_success = True
+        self.clear_local_costmap_message = "Clear Local Costmap Sucessfully Sent"
+
+
+    def call_clear_entire_global_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
+        
+        self.clear_entire_global_costmap_client.call_async(request)
+        
+        self.clear_global_costmap_success = True
+        self.clear_global_costmap_message = "Clear Global Costmap Sucessfully Sent"
 
 
 
@@ -1442,7 +1459,27 @@ class RobotStdFunctions():
             success = False
             message = "Radar not initialized or wrong distance parameter"
             return success, message
+
+    def enter_house_after_door_opening(self, distance=0.5, speed=0.3):
+
+        position_threshold = 0.5 # meters
+
+        self.set_speech(filename="generic/entering_house", wait_for_end_of=False)
+
+        # Clear costmaps before sending a new goal
+        # Helps clearing cluttered costmaps that may cause navigation problems
+        self.node.call_clear_entire_local_costmap_server()
+        self.node.call_clear_entire_global_costmap_server()
             
+        self.adjust_omnidirectional_position(dx=distance+position_threshold, dy=0.0, safety=False, max_speed=speed, tolerance=position_threshold, kp=3.0, enter_house_special_case=True, use_wheel_odometry=False)
+        
+        # Clear costmaps before sending a new goal
+        # Helps clearing cluttered costmaps that may cause navigation problems
+        self.node.call_clear_entire_local_costmap_server()
+        self.node.call_clear_entire_global_costmap_server()
+
+        self.set_initial_position([distance+position_threshold/2, 0.0, 0.0]) #  set initial position to be inside the house, the position_threshold/2 is because the robot is already moving
+
     def set_torso_position(self, legs=0.0, torso=0.0, wait_for_end_of=True):
         
         request = SetTorso.Request()
@@ -1963,7 +2000,7 @@ class RobotStdFunctions():
 
         return self.node.navigation_success, self.node.navigation_message   
 
-    def set_initial_position(self, initial_position):
+    def set_initial_position(self, initial_position, clear_costmaps=True):
 
         if initial_position is not None:
 
@@ -2033,7 +2070,7 @@ class RobotStdFunctions():
 
             print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
-    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, wait_for_end_of=True):
 
         # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
@@ -2054,6 +2091,13 @@ class RobotStdFunctions():
         self.set_rgb(BLUE+BACK_AND_FORTH_8)
 
         while not nav2_goal_completed:
+
+            # Clear costmaps before sending a new goal
+            # Helps clearing cluttered costmaps that may cause navigation problems
+            if clear_costmaps:
+                self.node.call_clear_entire_local_costmap_server()
+                self.node.call_clear_entire_global_costmap_server()
+                time.sleep(0.5) # wait a bit for costmaps to be cleared
                 
             self.node.nav2_goal_accepted = False
             self.node.nav2_status = GoalStatus.STATUS_UNKNOWN
@@ -2203,7 +2247,7 @@ class RobotStdFunctions():
         move_coords_copy[2]+=45.0
         return move_coords_copy
     
-    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False):
 
         ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
         ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
@@ -2297,13 +2341,15 @@ class RobotStdFunctions():
             self.node.cmd_vel_publisher.publish(twist)
             time.sleep(rate)
 
-        # Stop the robot
-        # Dirty, but had to do this way because of some commands to low_level being lost
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())  
+        if not enter_house_special_case:
+            # Stop the robot
+            # Dirty, but had to do this way because of some commands to low_level being lost
+            self.node.cmd_vel_publisher.publish(Twist())
+            time.sleep(0.1)  # wait for the cmd_vel to be published
+            self.node.cmd_vel_publisher.publish(Twist())
+            time.sleep(0.1)  # wait for the cmd_vel to be published
+            self.node.cmd_vel_publisher.publish(Twist())  
+
         self.node.get_logger().info("Omnidirectional Adjustment Complete.")
 
         success = True
@@ -2400,6 +2446,12 @@ class RobotStdFunctions():
             # print("CURR YAW:", math.degrees(curr_yaw))
 
             error_angle = target_angle - curr_yaw
+            # error circular correction due to angle circularity
+            if error_angle >= 360:
+                error_angle -= 360
+            elif error_angle <= -360:
+                error_angle += 360
+
             # print("ERROR:", math.degrees(error_angle))
             # print("TOLERANCE", math.degrees(tolerance_rad))
 

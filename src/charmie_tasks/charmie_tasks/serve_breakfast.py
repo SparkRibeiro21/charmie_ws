@@ -87,9 +87,9 @@ class TaskMain():
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
 
         # Initial Position
-        self.initial_position = self.robot.get_navigation_coords_from_furniture("Entrance")
+        self.initial_position = [0.0, 0.0, 0.0]
+        # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         print(self.initial_position)
-        self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         
     def main(self):
 
@@ -143,9 +143,9 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                ### self.robot.wait_for_door_opening()
+                self.robot.wait_for_door_opening()
 
-                ### self.robot.initial_move_past_entrance_door() # to do ...
+                self.robot.enter_house_after_door_opening()
 
                 self.state = self.task_states["Move_milk_location"]
                 
