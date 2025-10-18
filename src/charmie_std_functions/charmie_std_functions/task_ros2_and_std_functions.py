@@ -427,6 +427,8 @@ class ROS2TaskNode(Node):
         self.radar = RadarData()
         self.is_radar_initialized = False
 
+        self.goal_handle_ = None
+        self.goal_follow_waypoints_handle_ = None
         self.nav2_goal_accepted = False
         self.nav2_feedback = NavigateToPose.Feedback()
         self.nav2_status = GoalStatus.STATUS_UNKNOWN
@@ -1102,10 +1104,14 @@ class ROS2TaskNode(Node):
             self.get_logger().warn("Goal rejected.")
 
     def nav2_client_cancel_goal(self):
-        self.get_logger().info("Canceling goal...")
-        # Not implemented yet
-        # self.goal_handle_.cancel_goal_async() # Not ideal, but just to test, goal_handle_ is only defined in goal_response_callback
-        # self.timer_.cancel()
+        if self.goal_handle_ is None:
+            self.get_logger().warn("No active NavigateToPose goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_handle_ = None
 
     def nav2_client_goal_result_callback(self, future):
         status = future.result().status
@@ -1136,7 +1142,6 @@ class ROS2TaskNode(Node):
         # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
 
-
     # Navigate through poses
     def nav2_follow_waypoints_client_goal_response_callback(self, future):
         self.goal_follow_waypoints_handle_:ClientGoalHandle = future.result()
@@ -1148,10 +1153,14 @@ class ROS2TaskNode(Node):
             self.get_logger().warn("Goal rejected.")
 
     def nav2_follow_waypoints_client_cancel_goal(self):
-        self.get_logger().info("Canceling goal...")
-        # Not implemented yet
-        # self.goal_follow_waypoints_handle_.cancel_goal_async() # Not ideal, but just to test, goal_follow_waypoints_handle_ is only defined in goal_response_callback
-        # self.timer_.cancel()
+        if self.goal_follow_waypoints_handle_ is None:
+            self.get_logger().warn("No active NavigateToPoseFollowWaypoints goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_follow_waypoints_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_follow_waypoints_handle_ = None
 
     def nav2_follow_waypoints_client_goal_result_callback(self, future):
         status = future.result().status
@@ -2064,7 +2073,7 @@ class RobotStdFunctions():
 
             print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
-    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, wait_for_end_of=True):
+    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, inspection_safety_nav=False, wait_for_end_of=True):
 
         # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
@@ -2081,6 +2090,9 @@ class RobotStdFunctions():
         goal_msg.pose.pose.orientation.y = q_y
         goal_msg.pose.pose.orientation.z = q_z
         goal_msg.pose.pose.orientation.w = q_w
+
+        success = True
+        message = ""
         
         self.set_rgb(BLUE+BACK_AND_FORTH_8)
 
@@ -2113,16 +2125,37 @@ class RobotStdFunctions():
 
             if wait_for_end_of:
 
-                timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
-                start_time = time.time()
+                feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                feedback_start_time = time.time()
+
+                temp_start_time = time.time()
 
                 self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
                 while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
+
+                    ### ABORT INSPECTION TASK CODE GOES HERE ...
+                    ### STD_FUNCTION INTERMADIA PARA NAO ESTAR CODIGO DE RECOMEÇAR DEPOIS DE ABORT NA TASK?
+                    ### BASICAMENTE SERIA UM WHILE COM O CHECK DAS CONDICOES DE ABORT, PARA SABER SE PODERIA
+                    ### REENVIAR A TARGET POSITION PARA O NAV2
+                    ### OU SEJA PRECISO DE UMA HELPER STD FUNCTION QUE FAÇA CHECK DAS CONDIÇOES DE ABORT
+                    ### E TAMBEM PRECISO DA ROS2 FUNCTION QUE MANDA O SERVIÇO DO ABORT
+                    ### SUPOSTAMENTE TAMBEM DEVIA TER UM NAV2_PARAMS DIFERENTE, COM VELOCIDADES MAIS LENTAS
+                    if inspection_safety_nav:
+
+                        ### IF CONDITION TO ABORT:
+                        if time.time() - temp_start_time > 5.0:
+                            self.node.nav2_client_cancel_goal()
+
+                            temp_start_time = time.time()
+                            ### ABORT
+
+                        pass
+                        ### check for abort conditions 
                     
                     if print_feedback:
 
-                        if time.time() - start_time > timer_period:
+                        if time.time() - feedback_start_time > feedback_timer_period:
 
                             # prints de feedback
                             feedback = self.node.nav2_feedback
@@ -2136,23 +2169,28 @@ class RobotStdFunctions():
                             print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
                             # self.get_logger().info(f"Feedback: {feedback}")
                             
-                            start_time = time.time()
+                            feedback_start_time = time.time()
 
                 
                 if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
                     self.set_rgb(GREEN+BACK_AND_FORTH_8)
-                    print("FINISHED TR SUCCEEDED")
-                    nav2_goal_completed = True                
+                    self.node.get_logger().info("NAV2 RESULT: SUCCEEDED.")
+                    nav2_goal_completed = True
+                    success = True
+                    message = "Successfully moved to position"
+                    return success, message
                 elif self.node.nav2_status == GoalStatus.STATUS_ABORTED:
                     self.set_rgb(RED+BACK_AND_FORTH_8)
-                    print("FINISHED TR ABORTED")
-                    print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                    self.node.get_logger().info("NAV2 RESULT: ABORTED.")
+                    self.node.get_logger().info("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE.")
                 elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
                     self.set_rgb(RED+BACK_AND_FORTH_8)
-                    print("FINISHED TR CANCELED")
-                    print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                    self.node.get_logger().info("NAV2 RESULT: CANCELED.")
+                    success = False
+                    message = "Aborted moved to position due to safety measures"
+                    return success, message
 
-    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, clear_costmaps=True, inspection_safety_nav=False, wait_for_end_of=True):
 
         # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
@@ -2181,7 +2219,15 @@ class RobotStdFunctions():
             self.set_rgb(BLUE+BACK_AND_FORTH_8)
                     
             while not nav2_goal_completed:
+
+                # Clear costmaps before sending a new goal
+                # Helps clearing cluttered costmaps that may cause navigation problems
+                if clear_costmaps:
+                    self.node.call_clear_entire_local_costmap_server()
+                    self.node.call_clear_entire_global_costmap_server()
+                    time.sleep(0.5) # wait a bit for costmaps to be cleared
                     
+                        
                 self.node.nav2_follow_waypoints_goal_accepted = False
                 self.node.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
@@ -2202,8 +2248,8 @@ class RobotStdFunctions():
 
                 if wait_for_end_of:
 
-                    timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
-                    start_time = time.time()
+                    feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                    feedback_start_time = time.time()
 
                     self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
@@ -2211,7 +2257,7 @@ class RobotStdFunctions():
                         
                         if print_feedback:
 
-                            if time.time() - start_time > timer_period:
+                            if time.time() - feedback_start_time > feedback_timer_period:
 
                                 # prints de feedback
                                 feedback = self.node.nav2_follow_waypoints_feedback
@@ -2220,7 +2266,7 @@ class RobotStdFunctions():
                                 self.node.get_logger().info(f"Current Waypoint: {current_waypoint}")
                                 # self.node.get_logger().info(f"Feedback: {feedback}")
                                 
-                                start_time = time.time()
+                                feedback_start_time = time.time()
 
                     
                     if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
@@ -2814,7 +2860,7 @@ class RobotStdFunctions():
                         for m_object in merged_lists:
                             is_in_mandatory_list = False
                             
-                            # checks for previous tetas
+                            # checks for previou
                             for frame in range(len(total_objects_detected)):
                                 for object in range(len(total_objects_detected[frame])):
                                     

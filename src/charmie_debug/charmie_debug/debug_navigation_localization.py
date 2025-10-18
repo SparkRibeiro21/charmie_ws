@@ -61,10 +61,10 @@ class TaskMain():
         
         # self.initial_position = [0.0, 0.0, 0.0]
         self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        self.initial_position = [2.5, -4.50, 0.0] # temp (near Tiago desk for testing)
-        self.initial_position = [2.6, -3.60, 45.0] # temp (near Tiago desk for testing)
-        self.initial_position = [0.0, 0.0, 0.0] # temp (near Tiago desk for testing)
-        self.NAVIGATION_TARGET = "pantry"
+        # self.initial_position = [2.5, -4.50, 0.0] # temp (near Tiago desk for testing)
+        # self.initial_position = [2.6, -3.60, 45.0] # temp (near Tiago desk for testing)
+        # self.initial_position = [0.0, 0.0, 0.0] # temp (near Tiago desk for testing)
+        self.NAVIGATION_TARGET = "couch"
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -77,6 +77,28 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
                 # your code here ...
+
+                self.robot.set_initial_position(self.initial_position)
+
+                self.robot.wait_for_start_button()
+
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=False)
+
+                # must be removed after the update to minimize as much as possivle the final orientation error 
+                move_coords = self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET)                
+                # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
+                s = False
+
+                while not s:
+                
+                    s, m = self.robot.move_to_position(move_coords=move_coords, inspection_safety_nav=True, wait_for_end_of=True)
+                    print("s =", s)
+                    time.sleep(5.0)
+
+                print("DONE")
+                while True:
+                    pass
 
                 # If initial position is inside while loop you are telling the robot the wrong localisation.
                 # This command must only be sent once, at the start of the task
