@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
 
+		"inspection      = charmie_tasks.inspection:main",
 		"receptionist    = charmie_tasks.receptionist:main",
 		"serve_breakfast = charmie_tasks.serve_breakfast:main",
 		
