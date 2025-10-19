@@ -2128,30 +2128,13 @@ class RobotStdFunctions():
                 feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
                 feedback_start_time = time.time()
 
-                temp_start_time = time.time()
-
                 self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
                 while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
 
-                    ### ABORT INSPECTION TASK CODE GOES HERE ...
-                    ### STD_FUNCTION INTERMADIA PARA NAO ESTAR CODIGO DE RECOMEÇAR DEPOIS DE ABORT NA TASK?
-                    ### BASICAMENTE SERIA UM WHILE COM O CHECK DAS CONDICOES DE ABORT, PARA SABER SE PODERIA
-                    ### REENVIAR A TARGET POSITION PARA O NAV2
-                    ### OU SEJA PRECISO DE UMA HELPER STD FUNCTION QUE FAÇA CHECK DAS CONDIÇOES DE ABORT
-                    ### E TAMBEM PRECISO DA ROS2 FUNCTION QUE MANDA O SERVIÇO DO ABORT
-                    ### SUPOSTAMENTE TAMBEM DEVIA TER UM NAV2_PARAMS DIFERENTE, COM VELOCIDADES MAIS LENTAS
-                    if inspection_safety_nav:
-
-                        ### IF CONDITION TO ABORT:
-                        if time.time() - temp_start_time > 5.0:
-                            self.node.nav2_client_cancel_goal()
-
-                            temp_start_time = time.time()
-                            ### ABORT
-
-                        pass
-                        ### check for abort conditions 
+                    # Checks conditions to cancel safety navigation (used in inspection task)
+                    if inspection_safety_nav and self.check_conditions_to_stop_safety_navigation():
+                        self.node.nav2_client_cancel_goal()
                     
                     if print_feedback:
 
@@ -2286,6 +2269,28 @@ class RobotStdFunctions():
         move_coords_copy = move_coords.copy()
         move_coords_copy[2]+=45.0
         return move_coords_copy
+
+    def move_to_position_with_safety_navigation(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, wait_for_end_of=True):
+
+        success = False
+        message = ""
+
+        while not success:
+
+            if self.check_conditions_to_stop_safety_navigation():
+
+                success, message = self.move_to_position(move_coords=move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, clear_costmaps=clear_costmaps, inspection_safety_nav=True, wait_for_end_of=wait_for_end_of)
+                
+                if not success:
+                    while not self.check_conditions_to_stop_safety_navigation():
+                        pass
+                    time.sleep(1.0) # wait a bit before retrying
+
+        return success, message
+    
+    def check_conditions_to_stop_safety_navigation(self):
+        # TO BE IMPLEMENTED LATER
+        return True
     
     def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False):
 

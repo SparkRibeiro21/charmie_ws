@@ -127,7 +127,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="inspection/inspection_point", wait_for_end_of=False)
 
-                ###self.robot.move_to_position(move_coords=self.INSPECTION_POINT_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position_with_safety_navigation(move_coords=self.INSPECTION_POINT_COORDS, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="inspection/inspection_point", wait_for_end_of=False)
@@ -150,7 +150,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.EXIT_LOCATION_NAME, wait_for_end_of=False)
 
-                ###self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.EXIT_LOCATION_NAME), wait_for_end_of=True)
+                self.robot.move_to_position_with_safety_navigation(move_coords=self.robot.get_navigation_coords_from_furniture(self.EXIT_LOCATION_NAME), wait_for_end_of=True)
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.EXIT_LOCATION_NAME, wait_for_end_of=False)

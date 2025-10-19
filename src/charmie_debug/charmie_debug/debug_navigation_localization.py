@@ -88,14 +88,9 @@ class TaskMain():
                 # must be removed after the update to minimize as much as possivle the final orientation error 
                 move_coords = self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET)                
                 # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
-                s = False
-
-                while not s:
                 
-                    s, m = self.robot.move_to_position(move_coords=move_coords, inspection_safety_nav=True, wait_for_end_of=True)
-                    print("s =", s)
-                    time.sleep(5.0)
-
+                self.robot.move_to_position_with_safety_navigation(move_coords=move_coords, wait_for_end_of=True)
+                
                 print("DONE")
                 while True:
                     pass
