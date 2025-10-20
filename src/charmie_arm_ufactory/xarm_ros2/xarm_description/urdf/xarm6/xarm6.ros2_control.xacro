@@ -17,8 +17,8 @@
         <xacro:if value="${ros2_control_plugin == 'uf_robot_hardware/UFRobotSystemHardware'}">
           <param name="hw_ns">${prefix}${hw_ns}</param>
           <param name="velocity_control">${velocity_control}</param>
-          <param name="prefix">P${prefix}</param>
-          <param name="robot_ip">R${robot_ip}</param>
+          <param name="prefix">${prefix}</param>
+          <param name="robot_ip">${robot_ip}</param>
           <param name="report_type">${report_type}</param>
           <param name="dof">6</param>
           <param name="baud_checkset">${baud_checkset}</param>
@@ -34,7 +34,7 @@
         <!-- <plugin>gazebo_ros2_control/GazeboSystem</plugin> -->
 
         <!-- real xarm -->
-        <plugin>uf_robot_hardware/UFRobotSystemHardware</plugin>
+        <!-- <plugin>uf_robot_hardware/UFRobotSystemHardware</plugin> -->
       </hardware>
       <joint name="${prefix}joint1">
         <command_interface name="position">
