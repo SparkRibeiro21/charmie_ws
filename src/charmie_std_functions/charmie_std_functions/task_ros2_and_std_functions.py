@@ -1408,11 +1408,13 @@ class RobotStdFunctions():
     def wait_for_start_button(self):
         
         self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
         
         print("Waiting for Start Button...")
         while not self.node.buttons_low_level.start_button:
             time.sleep(0.05)
         print("Start Button Pressed")
+        self.set_rgb(GREEN+ALTERNATE_QUARTERS)
 
     def get_orientation_yaw(self, wait_for_end_of=True):
 
@@ -2128,13 +2130,16 @@ class RobotStdFunctions():
                 feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
                 feedback_start_time = time.time()
 
+                is_canceled = False
+
                 self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
                 while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
 
                     # Checks conditions to cancel safety navigation (used in inspection task)
-                    if inspection_safety_nav and self.check_conditions_to_stop_safety_navigation():
+                    if inspection_safety_nav and not self.check_conditions_to_stop_safety_navigation() and not is_canceled:
                         self.node.nav2_client_cancel_goal()
+                        is_canceled = True
                     
                     if print_feedback:
 
@@ -2275,6 +2280,8 @@ class RobotStdFunctions():
         success = False
         message = ""
 
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True, wait_for_end_of=False)
+
         while not success:
 
             if self.check_conditions_to_stop_safety_navigation():
@@ -2286,10 +2293,107 @@ class RobotStdFunctions():
                         pass
                     time.sleep(1.0) # wait a bit before retrying
 
+        self.activate_yolo_pose(activate=False, wait_for_end_of=False)
+
         return success, message
     
     def check_conditions_to_stop_safety_navigation(self):
         # TO BE IMPLEMENTED LATER
+
+        # for now we will just use person_right_in_front from yolo pose as condition to stop safety navigation
+        if len(self.node.detected_people.persons) > 0:
+            return False
+        else:
+            return True
+        
+        # CHECKS:
+            # 1) yolo pose 
+                # - person right in front
+                # OR
+                # - detect all persons and filter by coords relative to the robot
+            # 2) % of depth head camera filled
+                # - half_image_zero_or_near
+                # AND
+                # - full_image_near
+
+        """if len(self.detected_people.persons) > 0 or self.check_person_depth_head():
+            self.PERSON_IN_FRONT = True"""
+
+        """def check_person_depth_head(self, half_image_zero_or_near_percentage=0.6, full_image_near_percentage=0.3, near_max_dist=800):
+
+        overall = False
+        DEBUG = False
+
+        print(self.first_depth_image_received)
+
+        if self.first_depth_image_received:
+
+            print("in")
+            current_frame_depth_head = self.br.imgmsg_to_cv2(self.depth_img, desired_encoding="passthrough")
+            height, width = current_frame_depth_head.shape
+            current_frame_depth_head_half = current_frame_depth_head[height//2:height,:]
+            
+            # FOR THE FULL IMAGE
+
+            tot_pixeis = height*width 
+            mask_zero = (current_frame_depth_head == 0)
+            mask_near = (current_frame_depth_head > 0) & (current_frame_depth_head <= near_max_dist)
+            
+            if DEBUG:
+                mask_remaining = (current_frame_depth_head > near_max_dist) # just for debug
+                blank_image = np.zeros((height,width,3), np.uint8)
+                blank_image[mask_zero] = [255,255,255]
+                blank_image[mask_near] = [255,0,0]
+                blank_image[mask_remaining] = [0,0,255]
+
+            pixel_count_zeros = np.count_nonzero(mask_zero)
+            pixel_count_near = np.count_nonzero(mask_near)
+
+            # FOR THE BOTTOM HALF OF THE IMAGE
+
+            mask_zero_half = (current_frame_depth_head_half == 0)
+            mask_near_half = (current_frame_depth_head_half > 0) & (current_frame_depth_head_half <= near_max_dist)
+            
+            if DEBUG:
+                mask_remaining_half = (current_frame_depth_head_half > near_max_dist) # just for debug
+                blank_image_half = np.zeros((height//2,width,3), np.uint8)
+                blank_image_half[mask_zero_half] = [255,255,255]
+                blank_image_half[mask_near_half] = [255,0,0]
+                blank_image_half[mask_remaining_half] = [0,0,255]
+                    
+            pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
+            pixel_count_near_half = np.count_nonzero(mask_near_half)
+            
+            if DEBUG:
+                cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
+                cv2.imshow("New Img Distance Inspection", blank_image)
+                cv2.waitKey(10)
+
+            half_image_zero_or_near = False
+            half_image_zero_or_near_err = 0.0
+            
+            full_image_near = False
+            full_image_near_err = 0.0
+
+
+            half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
+            if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
+                half_image_zero_or_near = True
+            
+            full_image_near_err = pixel_count_near/tot_pixeis
+            if full_image_near_err >= full_image_near_percentage:
+                full_image_near = True
+            
+            
+            if half_image_zero_or_near or full_image_near:
+                overall = True
+
+            # just for debug
+            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
+            # return overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err
+        
+        return overall"""
+
         return True
     
     def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False):
