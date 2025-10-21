@@ -95,7 +95,7 @@ class TaskMain():
         
         # Neck Positions
         self.look_forward = [0, 0]
-        self.look_navigation = [0, -30]
+        self.look_navigation = [0, -10]
         
         self.state = self.task_states["Waiting_for_task_start"]
 
