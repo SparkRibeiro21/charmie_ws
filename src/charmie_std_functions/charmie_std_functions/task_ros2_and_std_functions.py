@@ -115,6 +115,7 @@ class ROS2TaskNode(Node):
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for gamepad controller
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for gamepad controller
         self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
+        self.cmd_vel_subscriber = self.create_subscription(Twist, "cmd_vel", self.cmd_vel_callback, 10)
         self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", self.torso_low_level_callback, 10)
@@ -425,6 +426,7 @@ class ROS2TaskNode(Node):
         self.llm_gpsr_response = ListOfStrings()
         self.received_demo_tsi = TaskStatesInfo()
         self.radar = RadarData()
+        self.cmd_vel = Twist()
         self.is_radar_initialized = False
 
         self.goal_handle_ = None
@@ -1190,6 +1192,9 @@ class ROS2TaskNode(Node):
         # distance_remaining = str(round(feedback.distance_remaining, 2))
         # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
+
+    def cmd_vel_callback(self, msg: Twist):
+        self.cmd_vel = msg
 
     def radar_data_callback(self, radar: RadarData):
         self.radar = radar
@@ -2137,7 +2142,7 @@ class RobotStdFunctions():
                 while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
 
                     # Checks conditions to cancel safety navigation (used in inspection task)
-                    if inspection_safety_nav and not self.check_conditions_to_stop_safety_navigation() and not is_canceled:
+                    if inspection_safety_nav and not self.check_conditions_to_stop_safety_navigation(move_coords) and not is_canceled:
                         self.node.nav2_client_cancel_goal()
                         is_canceled = True
                     
@@ -2284,12 +2289,12 @@ class RobotStdFunctions():
 
         while not success:
 
-            if self.check_conditions_to_stop_safety_navigation():
+            if self.check_conditions_to_stop_safety_navigation(move_coords):
 
                 success, message = self.move_to_position(move_coords=move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, clear_costmaps=clear_costmaps, inspection_safety_nav=True, wait_for_end_of=wait_for_end_of)
                 
                 if not success:
-                    while not self.check_conditions_to_stop_safety_navigation():
+                    while not self.check_conditions_to_stop_safety_navigation(move_coords):
                         pass
                     time.sleep(1.0) # wait a bit before retrying
 
@@ -2297,15 +2302,59 @@ class RobotStdFunctions():
 
         return success, message
     
-    def check_conditions_to_stop_safety_navigation(self):
+    def check_conditions_to_stop_safety_navigation(self, move_coords):
         # TO BE IMPLEMENTED LATER
 
         # for now we will just use person_right_in_front from yolo pose as condition to stop safety navigation
-        if len(self.node.detected_people.persons) > 0:
-            return False
-        else:
-            return True
+        # if len(self.node.detected_people.persons) > 0:
+        #     return False
+        # else:
+        #     return True
         
+        dist_from_goal = math.sqrt( (move_coords[0] - self.node.nav2_feedback.current_pose.pose.position.x)**2 + (move_coords[1] - self.node.nav2_feedback.current_pose.pose.position.y)**2 )
+        linear_speed = math.sqrt( self.node.cmd_vel.linear.x**2 + self.node.cmd_vel.linear.y**2 )
+
+        # print(len(self.node.detected_people.persons), 
+        #       dist_from_goal, 
+              # self.node.robot_pose.x, 
+              # self.node.robot_pose.y, 
+              # self.node.nav2_feedback.current_pose.pose.position.x, 
+              # self.node.nav2_feedback.current_pose.pose.position.y, 
+              # self.node.cmd_vel.linear.x, 
+              # self.node.cmd_vel.linear.y, 
+        #       linear_speed)
+        
+        # time.sleep(0.025)
+        
+        # 1) person detected right in front
+        # 2) moving forward
+        # 3) far away from the goal
+        
+        # if len(self.node.detected_people.persons) > 0 and linear_speed > 0.1 and dist_from_goal > 0.1:
+        #     return False
+        # else:
+        #     return True
+        
+        # if i dont see anyone or i am just rotating near the goal, i dont need to use safety navigation
+        if len(self.node.detected_people.persons) == 0 or \
+            (linear_speed < 0.01 and dist_from_goal < 0.3):
+            return True
+        else:
+            return False
+
+            # testar se ligo e deligo o yolo_pose na altura certa
+            # testar nova logica invertida
+            # testar calculos de dist_from_goal e linear_speed
+        
+        # testar se ainda pára na rotação final 
+        
+        # testar limites da deteção de pessoas (laterais da imagem) e distancia
+        # mudar para sistema em que analiso todas as pessoas que deteto em vez de ser right_in_front apenas ???
+
+        # por ultimo começar a ver o check da profundidade da head camera
+        # self.node.depth_head_img
+
+
         # CHECKS:
             # 1) yolo pose 
                 # - person right in front
