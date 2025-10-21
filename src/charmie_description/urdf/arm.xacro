@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Add argument for hardware selection -->
+  <xacro:arg name="use_real_hardware" default="false"/>
   <!-- Set required flags used by xarm_description flags -->
   <xacro:property name="is_ros2" value="true"/>
   <xacro:property name="use_xacro_load_yaml" value="true"/>
@@ -29,6 +31,17 @@
   <xacro:common_material prefix="xarm_" />
   <xacro:common_material prefix="xarm_gripper_" />
 
+  <!-- Determine which plugin to use -->
+  <xacro:property name="control_plugin" value="$(arg use_real_hardware)"/>
+  <xacro:if value="${control_plugin}">
+    <xacro:property name="ros2_control_plugin" value="uf_robot_hardware/UFRobotSystemHardware"/>
+    <xacro:property name="robot_ip" value="192.168.1.219"/>
+  </xacro:if>
+  <xacro:unless value="${control_plugin}">
+    <xacro:property name="ros2_control_plugin" value="mock_components/GenericSystem"/>
+    <xacro:property name="robot_ip" value=""/>
+  </xacro:unless>
+
   <!-- Instantiate the xArm6 robot with xarm prefix -->
   <xacro:xarm6_robot
     prefix="xarm_"
@@ -37,8 +50,8 @@
     velocity_control="false"
     add_gripper="true"
     add_bio_gripper="false"
-    ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware"
-    robot_ip=""
+    ros2_control_plugin="${ros2_control_plugin}"
+    robot_ip="${robot_ip}"
     report_type="normal"
     baud_checkset="true"
     default_gripper_baud="2000000"
@@ -49,23 +62,23 @@
 
   <xacro:xarm6_transmission prefix="xarm_" />
 
-  <xacro:xarm6_ros2_control
+  <!--<xacro:xarm6_ros2_control
     prefix="xarm_"
     hw_ns="xarm"
     velocity_control="false"
     add_gripper="true"
     add_bio_gripper="false"
-    ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware"
-    robot_ip="192.168.1.219"
+    ros2_control_plugin="${ros2_control_plugin}"
+    robot_ip="${robot_ip}"
     report_type="normal"
     baud_checkset="true"
-    default_gripper_baud="2000000" />
+    default_gripper_baud="2000000" /> -->
 
   <xacro:xarm_gripper_transmission prefix="xarm_gripper_" hard_interface="PositionJointInterface" />
   
-  <xacro:xarm_gripper_ros2_control 
+  <!-- <xacro:xarm_gripper_ros2_control 
     prefix="xarm_gripper_" 
-    ros2_control_plugin="uf_robot_hardware/UFRobotSystemHardware" />
+    ros2_control_plugin="${ros2_control_plugin}"/> -->
 
   <!-- Mount the xArm6 on CHARMIE -->
   <joint name="xarm_mount_joint" type="fixed">

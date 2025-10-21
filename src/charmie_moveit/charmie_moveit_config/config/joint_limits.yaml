@@ -10,61 +10,73 @@ default_acceleration_scaling_factor: 0.1
 joint_limits:
   xarm_gripper_drive_joint:
     has_velocity_limits: true
-    max_velocity: 2.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_gripper_left_finger_joint:
     has_velocity_limits: true
-    max_velocity: 2.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_gripper_left_inner_knuckle_joint:
     has_velocity_limits: true
-    max_velocity: 2.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_gripper_right_finger_joint:
     has_velocity_limits: true
-    max_velocity: 2.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_gripper_right_inner_knuckle_joint:
     has_velocity_limits: true
-    max_velocity: 2.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_gripper_right_outer_knuckle_joint:
     has_velocity_limits: true
-    max_velocity: 2.0
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 3.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_joint1:
+    min_position: -6.28
+    max_position: 6.28
     has_velocity_limits: true
-    max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_joint2:
+    min_position: -2.05
+    max_position: 2.05
     has_velocity_limits: true
-    max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_joint3:
+    min_position: -3.92
+    max_position: 0.19
     has_velocity_limits: true
-    max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_joint4:
+    min_position: -6.28
+    max_position: 6.28
     has_velocity_limits: true
-    max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_joint5:
+    min_position: -1.69
+    max_position: 3.14
     has_velocity_limits: true
-    max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0
   xarm_joint6:
+    min_position: -6.28
+    max_position: 6.28
     has_velocity_limits: true
-    max_velocity: 3.1400000000000001
-    has_acceleration_limits: false
-    max_acceleration: 0
+    max_velocity: 2.14
+    has_acceleration_limits: true
+    max_acceleration: 10.0

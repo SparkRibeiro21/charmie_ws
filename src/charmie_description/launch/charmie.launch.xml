@@ -1,0 +1,34 @@
+<launch>
+    <let name = "urdf_path"
+        value = "$(find-pkg-share charmie_description)/urdf/charmie_real.urdf.xacro" />
+    <let name = "rviz_config_path"
+        value = "$(find-pkg-share charmie_description)/rviz/moveit.rviz" />
+    <let name = "robot_description_param" value = "$(command 'xacro $(var urdf_path)')" />
+
+    
+    <!-- Robot State Publisher -->
+    <!-- <node pkg="robot_state_publisher" exec="robot_state_publisher">
+        <param name="robot_description"
+            value="$(var robot_description_param)" />
+    </node> -->
+
+    <!-- ROS2 Control Node -->
+    <node pkg="controller_manager" exec="ros2_control_node">
+        <!--<param name="robot_description" value="$(var robot_description_param)" />-->
+        <param from ="$(find-pkg-share charmie_moveit_config)/config/ros2_controllers.yaml" />
+        <remap from="~/robot_description" to="/robot_description" />
+    </node>
+
+    <!-- Joint State/xarm/gripper Broadcaster -->
+    <node pkg="controller_manager" exec="spawner" args="joint_state_broadcaster"/>
+    <node pkg="controller_manager" exec="spawner" args="xarm6_controller"/>
+    <node pkg="controller_manager" exec="spawner" args="xarm_gripper_controller"/>
+    
+    <!-- MoveIt -->
+    <include file="$(find-pkg-share charmie_moveit_config)/launch/move_group.launch.py"/>
+
+    <!-- RViz -->
+    <node pkg="rviz2" exec="rviz2" output="screen"
+        args="-d $(var rviz_config_path)" />
+
+</launch>
