@@ -264,10 +264,10 @@ class TaskMain():
                 #self.object_name = "Pringles"
 
                 # All neck positions
-                if self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "horizontal":
+                if self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "horizontal":
                     self.tetas = [[0, -45], [-40, -45], [40, -45]]
 
-                elif self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
+                elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
                     self.tetas = [[0, 0], [0, 15], [0, -35]]
 
                 self.state = self.task_states["Move_to_Location"]
@@ -438,7 +438,7 @@ class TaskMain():
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
                     top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
-                    bottom_furniture_points = self.robot.get_bot_coords_from_furniture(self.place_furniture)
+                    bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
 
                     gripper_place_position = self.robot.get_gripper_localization()
 

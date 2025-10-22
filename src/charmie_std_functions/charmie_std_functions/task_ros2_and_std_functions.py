@@ -3564,6 +3564,8 @@ class RobotStdFunctions():
 
             self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
+        self.set_face("charmie_face")
+
         return object_in_gripper
 
     def ask_help_pick_object_tray(self, object_d=DetectedObject(), look_judge=[45, 0], first_help_request=False, wait_time_show_detection=0.0, wait_time_show_help_face=0.0, bb_color=(0, 255, 0), audio_confirmation=False):
@@ -3763,7 +3765,7 @@ class RobotStdFunctions():
                 return obj['top_left_coords'].copy()
         return None  # Return None if the object is not found
     
-    def get_bot_coords_from_furniture(self, furniture):
+    def get_bottom_coords_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
         for obj in self.node.furniture:
@@ -3781,7 +3783,7 @@ class RobotStdFunctions():
                 return obj['height'].copy() # Return the height
         return None  # Return None if the object is not found
 
-    def get_look_from_furniture(self, furniture):
+    def get_look_orientation_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
         for obj in self.node.furniture:

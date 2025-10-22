@@ -207,7 +207,7 @@ class TaskMain():
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
                     top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
-                    bottom_furniture_points = self.robot.get_bot_coords_from_furniture(self.place_furniture)
+                    bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
 
                     gripper_place_position = self.robot.get_gripper_localization()
 
