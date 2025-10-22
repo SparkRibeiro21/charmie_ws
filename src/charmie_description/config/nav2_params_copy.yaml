@@ -139,8 +139,11 @@ controller_server:
       yaw_goal_tolerance: 0.05
     # DWB parameters
     FollowPath:
+      # plugin: "dwb_core::DWBLocalPlanner"
       plugin: "nav2_rotation_shim_controller::RotationShimController"
-      primary_controller: "dwb_core::DWBLocalPlanner" # TEB # Regulated Pure Pursuit
+      primary_controller: "dwb_core::DWBLocalPlanner" # TEB # RPP # MPPI
+
+      # ShimController Parameters
       angular_dist_threshold: 1.5708
       angular_disengage_threshold: 0.3925
       forward_sampling_distance: 0.5
@@ -154,18 +157,18 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.42
       max_vel_y: 0.0
-      max_vel_theta: 0.5
+      max_vel_theta: 0.9
       min_speed_xy: 0.0
       max_speed_xy: 0.42
       min_speed_theta: 0.0
-      # Add high threshold velocity for turtlebot 3 issue.
-      # https://github.com/ROBOTIS-GIT/turtlebot3_simulations/issues/75
+      
       acc_lim_x: 2.5
       acc_lim_y: 0.0
       acc_lim_theta: 3.2
       decel_lim_x: -2.5
       decel_lim_y: 0.0
       decel_lim_theta: -3.2
+
       vx_samples: 20
       vy_samples: 5
       vtheta_samples: 20
@@ -177,6 +180,7 @@ controller_server:
       trans_stopped_velocity: 0.25
       short_circuit_trajectory_evaluation: True
       stateful: True
+
       critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
       BaseObstacle.scale: 0.02
       PathAlign.scale: 32.0
@@ -205,7 +209,7 @@ local_costmap:
       plugins: ["manual_obstacles", "voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
+        cost_scaling_factor: 4.0
         inflation_radius: 0.55
       manual_obstacles:
         plugin: "nav2_costmap_2d::StaticLayer"
@@ -220,7 +224,7 @@ local_costmap:
         z_voxels: 16
         max_obstacle_height: 1.8
         mark_threshold: 0
-        observation_sources: scan scan_bottom # base_camera_points
+        observation_sources: scan scan_bottom #scan_livox
         scan:
           topic: /scan
           max_obstacle_height: 1.8
@@ -241,18 +245,17 @@ local_costmap:
           raytrace_min_range: 0.05
           obstacle_max_range: 5.5
           obstacle_min_range: 0.05
-        # base_camera_points:
-        #   topic: /camera/depth/points
-        #   max_obstacle_height: 1.8
-        #   min_obstacle_height: 0.2  # to ignore floor noise
-        #   clearing: True
-        #   marking: True
-        #   data_type: "PointCloud2"
-        #   expected_update_rate: 0.2
-        #   raytrace_max_range: 3.0
-        #   raytrace_min_range: 0.4
-        #   obstacle_max_range: 3.0
-        #   obstacle_min_range: 0.4
+        scan_livox:
+          topic: /livox/lidar/filtered
+          max_obstacle_height: 1.8
+          min_obstacle_height: 0.2  # to ignore floor noise
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
+          raytrace_max_range: 30.0
+          raytrace_min_range: 0.1
+          obstacle_max_range: 30.0
+          obstacle_min_range: 0.1
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -273,7 +276,7 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan scan_bottom # base_camera_points
+        observation_sources: scan scan_bottom #scan_livox
         scan:
           topic: /scan
           max_obstacle_height: 1.8
@@ -294,18 +297,17 @@ global_costmap:
           raytrace_min_range: 0.05
           obstacle_max_range: 5.5
           obstacle_min_range: 0.05
-        # base_camera_points:
-        #   topic: /camera/depth/points
-        #   max_obstacle_height: 1.8
-        #   min_obstacle_height: 0.2  # to ignore floor noise
-        #   clearing: True
-        #   marking: True
-        #   data_type: "PointCloud2"
-        #   expected_update_rate: 0.2
-        #   raytrace_max_range: 3.0
-        #   raytrace_min_range: 0.4
-        #   obstacle_max_range: 3.0
-        #   obstacle_min_range: 0.4
+        scan_livox:
+          topic: /livox/lidar/filtered
+          max_obstacle_height: 1.8
+          min_obstacle_height: 0.2  # to ignore floor noise
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
+          raytrace_max_range: 30.0
+          raytrace_min_range: 0.1
+          obstacle_max_range: 30.0
+          obstacle_min_range: 0.1
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_topic: "/map"  # Base map (navigation map)
@@ -316,7 +318,7 @@ global_costmap:
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
+        cost_scaling_factor: 4.0
         inflation_radius: 0.55
       always_send_full_costmap: True
 
@@ -402,8 +404,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.42, 0.0, 1.0]
-    min_velocity: [-0.42, 0.0, -1.0]
+    max_velocity: [0.42, 0.0, 0.9]
+    min_velocity: [-0.42, 0.0, -0.9]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "odom"

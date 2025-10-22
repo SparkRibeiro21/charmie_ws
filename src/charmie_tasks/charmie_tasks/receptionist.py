@@ -11,11 +11,11 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
-    "charmie_audio":                False,
+    "charmie_arm":                  False,
+    "charmie_audio":                True,
     "charmie_face":                 True,
     "charmie_head_camera":          True,
-    "charmie_hand_camera":          True,
+    "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
@@ -28,11 +28,11 @@ ros2_modules = {
     "charmie_nav2":                 True,
     "charmie_neck":                 True,
     "charmie_radar":                False,
-    "charmie_sound_classification": False,
+    "charmie_sound_classification": True,
     "charmie_speakers":             True,
-    "charmie_tracking":             False,
+    "charmie_tracking":             True,
     "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            False,
+    "charmie_yolo_pose":            True,
 }
 
 # main function that already creates the thread for the task state machine
@@ -56,7 +56,7 @@ class TaskMain():
         self.robot = robot
 
         # Task Name
-        self.TASK_NAME = "Serve Breakfast"
+        self.TASK_NAME = "Receptionist"
 
         # Task States
         self.task_states ={
