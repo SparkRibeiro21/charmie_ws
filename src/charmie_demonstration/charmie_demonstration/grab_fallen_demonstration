@@ -27,7 +27,6 @@ ros2_modules = {
     "charmie_navigation":       False,
     "charmie_nav2":             True,
     "charmie_neck":             True,
-    "charmie_obstacles":        False,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     True,
@@ -166,7 +165,7 @@ class TaskMain():
                     
                 if not object_in_gripper:
 
-                    self.robot.ask_help_pick_fallen_object(selected_object = self.object_name)
+                    pass # Add proper ask for help
 
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/" + self.place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
@@ -186,7 +185,7 @@ class TaskMain():
                     
                 if not object_in_gripper:
 
-                    self.robot.ask_help_pick_fallen_object(selected_object = self.object_name)
+                    pass # Add proper ask for help
 
                 # next state
                 self.state = self.task_states["Place_object"]
@@ -273,8 +272,8 @@ class TaskMain():
                     #TEST PLACE  OBJ #final_objects = self.search_for_objects(tetas=[[-45, -30]], time_in_each_frame=0.5, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.object_name], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
                     #for obj in final_objects:
 
-                # next state
-                self.state = self.task_states["Move_to_home"]
+                    # next state
+                    self.state = self.task_states["Move_to_home"]
 
 
             elif self.state == self.task_states["Move_to_home"]:

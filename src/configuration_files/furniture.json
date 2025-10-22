@@ -8,7 +8,7 @@
 
 {"name": "Dishwasher", 	            "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 4.73,  3.30,  90.0], "top_left_coords": [ 5.10,  4.90], "bot_right_coords": [ 4.37,  3.90], "look":"horizontal"},
 {"name": "Fridge", 		            "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 4.45,  3.30, 110.0], "top_left_coords": [ 4.37,  4.90], "bot_right_coords": [ 3.88,  4.00], "look":"vertical"},
-{"name": "Dinner Table", 	        "height": [0.74], 			                "room": "Kitchen", 	    "nav_coords": [ 5.55,  3.42, 270.0], "top_left_coords": [ 6.20,  2.80], "bot_right_coords": [ 4.90,  0.76], "look":"horizontal"},
+{"name": "Dinner Table", 	        "height": [0.75], 			                "room": "Kitchen", 	    "nav_coords": [ 5.70,  3.62, 270.0], "top_left_coords": [ 6.20,  2.80], "bot_right_coords": [ 4.90,  0.76], "look":"horizontal"},
 {"name": "Kitchen Counter",         "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 6.00,  3.62,  90.0], "top_left_coords": [ 6.89,  5.16], "bot_right_coords": [ 5.10,  4.46], "look":"horizontal"},
 {"name": "Kitchen Cabinet", 	    "height": [1.81, 1.39, 0.97, 0.55, 0.13],   "room": "Kitchen", 	    "nav_coords": [ 6.00,  3.62,   0.0], "top_left_coords": [ 7.36,  4.15], "bot_right_coords": [ 6.80,  3.10], "look":"vertical"},
 {"name": "Kitchen Trashcan",	    "height": [0.28], 			                "room": "Kitchen", 	    "nav_coords": [ 6.69,  1.87,  70.0], "top_left_coords": [ 7.15,  2.88], "bot_right_coords": [ 6.87,  2.60], "look":"horizontal"},
@@ -19,7 +19,7 @@
 {"name": "Night Stand", 	        "height": [0.42], 			                "room": "Bedroom", 	    "nav_coords": [ 4.96, -5.08, 280.0], "top_left_coords": [ 5.38, -5.70], "bot_right_coords": [ 4.80, -6.50], "look": "horizontal"},
 {"name": "Bedroom Trashcan", 	    "height": [0.28], 			                "room": "Bedroom", 	    "nav_coords": [ 4.96, -3.57,   0.0], "top_left_coords": [ 6.06, -3.44], "bot_right_coords": [ 5.78, -3.72], "look": "horizontal"},
 
-{"name": "TV Table", 		        "height": [0.74], 			                "room": "Office", 	    "nav_coords": [ 2.28, -2.99, 180.0], "top_left_coords": [ 1.40, -2.09], "bot_right_coords": [ 0.70, -3.89], "look": "horizontal"},
+{"name": "TV Table", 		        "height": [0.75], 			                "room": "Office", 	    "nav_coords": [ 2.28, -2.99, 180.0], "top_left_coords": [ 1.40, -2.09], "bot_right_coords": [ 0.70, -3.89], "look": "horizontal"},
 {"name": "Desk", 	                "height": [0.75], 			                "room": "Office", 	    "nav_coords": [ 2.05, -4.75, 180.0], "top_left_coords": [ 1.40, -3.89], "bot_right_coords": [ 0.70, -5.69], "look": "horizontal"},
 {"name": "Office Counter",          "height": [0.85], 			                "room": "Office", 	    "nav_coords": [ 2.66, -5.34, 270.0], "top_left_coords": [ 3.24, -6.15], "bot_right_coords": [ 2.08, -6.75], "look": "horizontal"},
 {"name": "Office Table",            "height": [0.727],                          "room": "Office",       "nav_coords": [2.58, -4.19, 0.0],    "top_left_coords": [ 3.81, -3.48], "bot_right_coords": [ 3.20, -4.88], "look": "horizontal"},

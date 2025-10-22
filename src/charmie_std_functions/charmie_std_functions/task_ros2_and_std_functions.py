@@ -270,9 +270,9 @@ class ROS2TaskNode(Node):
             while not self.neck_track_object_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         
-        # if self.ros2_modules["charmie_sound_classification"]:
-        #     while not self.get_sound_classification_client.wait_for_service(1.0):
-        #         self.get_logger().warn("Waiting for Server Sound Classification Command...")
+        if self.ros2_modules["charmie_sound_classification"]:
+            while not self.get_sound_classification_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Sound Classification Command...")
             
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
@@ -2575,7 +2575,7 @@ class RobotStdFunctions():
         q = pose.orientation
         yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
 
-        print("Adjusting Angle Position:", round(angle,2), "degrees")
+        # print("Adjusting Angle Position:", round(angle,2), "degrees")
 
         # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
         # fixed bug where dx = 0 or dy = 0 still moved the robot
@@ -2587,7 +2587,7 @@ class RobotStdFunctions():
         # Compute target in odom frame
         target_angle = yaw + math.radians(angle)
         tolerance_rad = math.radians(tolerance)
-        print("TARGETS", math.degrees(target_angle))
+        # print("TARGETS", math.degrees(target_angle))
 
         rate_hz = 20  # Hz
         rate = 1.0 / rate_hz
@@ -2608,7 +2608,7 @@ class RobotStdFunctions():
             # print("ERROR:", math.degrees(error_angle))
             # print("TOLERANCE", math.degrees(tolerance_rad))
 
-            print("target", math.degrees(target_angle), "curr_yaw", math.degrees(curr_yaw), "error", math.degrees(error_angle), "tol", math.degrees(tolerance_rad))
+            # print("target", math.degrees(target_angle), "curr_yaw", math.degrees(curr_yaw), "error", math.degrees(error_angle), "tol", math.degrees(tolerance_rad))
 
             if abs(error_angle) < tolerance_rad:
                 break
@@ -3564,10 +3564,6 @@ class RobotStdFunctions():
 
             self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
-        self.set_face("charmie_face")
-
-        self.set_neck([0.0, 0.0],wait_for_end_of=False)
-
         return object_in_gripper
 
     def ask_help_pick_object_tray(self, object_d=DetectedObject(), look_judge=[45, 0], first_help_request=False, wait_time_show_detection=0.0, wait_time_show_help_face=0.0, bb_color=(0, 255, 0), audio_confirmation=False):
@@ -3615,76 +3611,6 @@ class RobotStdFunctions():
 
         return confirmation
     
-    def ask_help_pick_fallen_object(self, selected_object = "", look_judge=[45, 0], search_tetas=[[45, 0]], wait_time_detect_object=12.0, wait_time_show_detection=1.5, attempts_at_receiving=2, show_detection=True, alternative_help_pick_face = "", bb_color=(0, 255, 0)):
-
-        selected_object_files = selected_object.replace(" ","_").lower()
-        print('SELECTED OBJECT:', selected_object)
-
-        self.set_neck(position=look_judge, wait_for_end_of=False)
-
-        self.set_speech(filename="generic/ask_help_pick_fallen_object_first", wait_for_end_of=False)
-        self.set_speech(filename="objects_names/"+selected_object_files, wait_for_end_of=False)
-        self.set_speech(filename="generic/ask_help_pick_fallen_object_second", wait_for_end_of=False)
-
-        self.search_for_objects(tetas = search_tetas, time_in_each_frame=wait_time_detect_object, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
-
-        self.set_neck([45.0, 0.0],wait_for_end_of=False)
-
-        if show_detection:
-            self.set_speech(filename="generic/found_the", wait_for_end_of=False)
-            self.set_speech(filename="objects_names/"+selected_object_files, wait_for_end_of=False)
-            
-            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
-
-        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-
-        if show_detection:
-            # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
-            # this way is more natural, since it only opens the gripper before asking to receive object
-            time.sleep(3.0 + wait_time_show_detection) 
-        
-        self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-        self.set_speech(filename="generic/check_face_put_object_hand_p1", wait_for_end_of=True)
-        self.set_speech(filename="objects_names/"+selected_object_files, wait_for_end_of=True)
-        self.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
-        
-        if not alternative_help_pick_face:
-            self.set_face("help_pick_"+selected_object_files)
-        else:
-            self.set_face(alternative_help_pick_face)
-
-        time.sleep(wait_time_show_detection)
-    
-        object_in_gripper = False
-        gripper_ctr = 0
-        while not object_in_gripper and gripper_ctr < attempts_at_receiving:
-            
-            gripper_ctr += 1
-            
-            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-            
-            if not object_in_gripper:
-        
-                if gripper_ctr < attempts_at_receiving:
-
-                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                
-                self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-        if object_in_gripper:
-        #and gripper_ctr >= attempts_at_receiving:
-
-            self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-
-        self.set_face("charmie_face")
-
-        self.set_neck([0.0, 0.0],wait_for_end_of=False)
-
-        return object_in_gripper
-
     def place_object(self, arm_command="", speak_before=False, speak_after=False, verb="", object_name="", preposition="", furniture_name=""):
         
         object_name_for_files = object_name.replace(" ","_").lower()
@@ -3845,24 +3771,6 @@ class RobotStdFunctions():
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['bot_right_coords'].copy()
         return None  # Return None if the object is not found
-    
-    def get_top_coords_from_furniture(self, furniture):
-
-        # Iterate through the list of dictionaries
-        for obj in self.node.furniture:
-            # To make sure there are no errors due to spaces/underscores and upper/lower cases
-            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['top_left_coords'].copy()
-        return None  # Return None if the object is not found
-    
-    def get_bot_coords_from_furniture(self, furniture):
-
-        # Iterate through the list of dictionaries
-        for obj in self.node.furniture:
-            # To make sure there are no errors due to spaces/underscores and upper/lower cases
-            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['bot_right_coords'].copy()
-        return None  # Return None if the object is not found
 
     def get_height_from_furniture(self, furniture):
 
@@ -3882,14 +3790,6 @@ class RobotStdFunctions():
                 return obj['look'] # Return the look
         return None  # Return None if the object is not found
 
-    def get_look_from_furniture(self, furniture):
-
-        # Iterate through the list of dictionaries
-        for obj in self.node.furniture:
-            # To make sure there are no errors due to spaces/underscores and upper/lower cases
-            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['look'] # Return the look
-        return None  # Return None if the object is not found
 
     def set_continuous_tracking_with_coordinates(self):
 
@@ -4224,48 +4124,6 @@ class RobotStdFunctions():
         else:
             self.node.get_logger().warn("Image path does not exist.")
             return "error", 0.0
-
-        image = face_recognition.load_image_file(image)
-        encoding_entry = face_recognition.face_encodings(image)
-
-        if len(encoding_entry) > 0:
-
-            self.node.face_recognition_encoding.append(encoding_entry[0])
-            self.node.face_recognition_names.append(name)
-            # print(self.node.face_recognition_encoding)
-            # print(self.node.face_recognition_names)
-        else:
-            print("No face found in the image. Please try again.")
-
-    def recognize_face_from_face_recognition(self, person=DetectedPerson(), image="", tolerance=40):
-        
-        # TODO: add DetectedPerson option to save image from the camera directly
-        # TODO: Test if bad image is added (no face in the image)
-        
-        if not self.node.face_recognition_encoding:
-            print("RECOGNIZED: Unknown 0.0")
-            return "unknown", 0.0
-        
-        image = face_recognition.load_image_file(image)
-        encoding_entry = face_recognition.face_encodings(image)
-        if len(encoding_entry) == 0:
-            print("RECOGNIZED: Unknown 0.0")
-            return "unknown", 0.0
-        encoding_entry = encoding_entry[0]  
-
-        all_percentages = []
-        for enc in self.node.face_recognition_encoding:
-        
-            distance = face_recognition.face_distance([enc], encoding_entry)[0]
-            confidence = (1 - distance) * 100
-            all_percentages.append(confidence)
-
-        name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
-        if biggest_conf_recognized < tolerance:
-            name_recognized = "unknown"
-        # print("RECOGNIZED:", name_recognized, biggest_conf_recognized, all_percentages)
-
-        return name_recognized.lower(), biggest_conf_recognized
             
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
@@ -4474,7 +4332,7 @@ class RobotStdFunctions():
 
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
                     self.set_torso_position(legs=80, torso=8, wait_for_end_of=False) 
-                    self.wait_until_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
+                    self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
 
                 elif HALFWAY_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
@@ -4582,7 +4440,7 @@ class RobotStdFunctions():
 
                 #MOVE ARM IN THAT DIRECTION
                 self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
-                self.wait_until_stable() # Temporary measure, while wait_for_end_of is not working for adjust_move finish
+                self.wait_until_camera_stable() # Temporary measure, while wait_for_end_of is not working for adjust_move finish
                 
                 #CALIBRATE GRIPPER BEFORE GRABBING
                 final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
@@ -4698,10 +4556,7 @@ class RobotStdFunctions():
                         self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
                     
                     self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
-                    self.wait_until_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
-
-                    #MOVE ARM TO INITIAL POSITION
-                    #self.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=True                    
+                    self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)            
                 
                 print(f"Bring object to initial pose")
 
@@ -4714,34 +4569,21 @@ class RobotStdFunctions():
                 self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Could not bring object to initial pose")
 
-
-    def is_stable(self, threshold = 0.88):
-
-        #CONVERT IMG TO GRAYSCALE TO REDUCE LIGHT EFFECT
-        prev_gray = cv2.cvtColor(self.prev_frame, cv2.COLOR_BGR2GRAY)
-        curr_gray = cv2.cvtColor(self.curr_frame, cv2.COLOR_BGR2GRAY)
-
-        #CALCULATE DIFFERENCE SCORE FROM LAST TO CURRENT FRAME
-        score, _ = ssim(prev_gray, curr_gray, full=True)
-        print("Score", score)
-
-        #RETURN BOOLEAN ON IF SCORE IS ABOVE THRESHOLD
-        return score >= threshold
-
-    def wait_until_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1,get_gripper = True):
+    def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
 
         #INITIATE VARIABLES REPRESENTING TIMER
         image_time_out = 0.0
         stable_image = 0.0
+        threshold = 0.88
 
         #STAY IN WHILE LOOP UNTIL CALIBRATION
         while (stable_image <= stable_duration) and (image_time_out < timeout):
 
             #GET FIRST FRAME
             if get_gripper:
-                _, self.prev_frame = self.get_hand_rgb_image()
+                _, prev_frame = self.get_hand_rgb_image()
             else:
-                _, self.prev_frame = self.get_head_rgb_image()
+                _, prev_frame = self.get_head_rgb_image()
             print("Waiting for camera to stabilize...", image_time_out, stable_image)
 
             #WAIT INTERVAL
@@ -4749,12 +4591,26 @@ class RobotStdFunctions():
 
             #GET SECOND FRAME TO COMPARE
             if get_gripper:
-                _, self.curr_frame = self.get_hand_rgb_image()
+                _, curr_frame = self.get_hand_rgb_image()
             else:
-                _, self.curr_frame = self.get_head_rgb_image()
+                _, curr_frame = self.get_head_rgb_image()
+                
+            is_stable = False
+
+            #CONVERT IMG TO GRAYSCALE TO REDUCE LIGHT EFFECT
+            prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+            curr_gray = cv2.cvtColor(curr_frame, cv2.COLOR_BGR2GRAY)
+
+            #CALCULATE DIFFERENCE SCORE FROM LAST TO CURRENT FRAME
+            score, _ = ssim(prev_gray, curr_gray, full=True)
+            print("Score", score)
+
+            #RETURN BOOLEAN ON IF SCORE IS ABOVE THRESHOLD
+            if score >= threshold:
+                is_stable = True
 
             #IF IMAGES ARE CLOSE BASED ON THRESHOLD ADD TO STABLE TIMER, IF NOT RESET STABLE TIMER 
-            if (self.is_stable()) and (image_time_out >= ( 7 * check_interval) ):
+            if (is_stable) and (image_time_out >= ( 7 * check_interval) ):
                 stable_image += check_interval
             else:
                 stable_image = 0.0

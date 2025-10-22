@@ -30,7 +30,6 @@ ros2_modules = {
     "charmie_neck":             True,
     "charmie_radar":            True,
     "charmie_sound_classification": False,
-    "charmie_obstacles":        False,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     True,
@@ -125,7 +124,7 @@ class TaskMain():
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.robot.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
-                self.robot.wait_until_stable(timeout=120, check_interval=0.3, stable_duration=0.3, get_gripper=False)
+                self.robot.wait_until_camera_stable(timeout=120, check_interval=0.3, stable_duration=0.3, get_gripper=False)
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
@@ -320,7 +319,7 @@ class TaskMain():
                     
                 if not object_in_gripper:
 
-                    self.robot.ask_help_pick_fallen_object(selected_object = self.object_name)
+                    pass # Add proper ask for help
 
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/" + self.place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
@@ -340,7 +339,7 @@ class TaskMain():
                     
                 if not object_in_gripper:
 
-                    self.robot.ask_help_pick_fallen_object(selected_object = self.object_name)
+                    pass # Add proper ask for help
 
                 # next state
                 self.state = self.task_states["Place_object"]
@@ -375,7 +374,7 @@ class TaskMain():
                     self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
                     
                     top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
-                    bottom_furniture_points = self.robot.get_bot_coords_from_furniture(self.place_furniture)
+                    bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
 
                     x_min = min(top_furniture_points[0], bottom_furniture_points[0])
                     x_max = max(top_furniture_points[0], bottom_furniture_points[0])
