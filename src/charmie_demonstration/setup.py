@@ -23,6 +23,10 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+        "auto_pick_demonstration = charmie_demonstration.auto_pick_demonstration:main",
+        "grab_fallen_demonstration = charmie_demonstration.grab_fallen_demonstration:main",
+        "JEF_demonstration = charmie_demonstration.JEF_demonstration:main",
+        "JEF_demonstration_eng = charmie_demonstration.JEF_demonstration_eng:main",
 		"navigation_demonstration = charmie_demonstration.navigation_demonstration:main",
 		"opening_doors_demonstration = charmie_demonstration.opening_doors_demonstration:main",
 		"pick_place_demonstration = charmie_demonstration.pick_place_demonstration:main",

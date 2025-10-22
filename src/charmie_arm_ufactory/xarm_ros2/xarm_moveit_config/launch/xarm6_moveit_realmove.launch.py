@@ -14,7 +14,7 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    robot_ip = LaunchConfiguration('robot_ip')
+    robot_ip = LaunchConfiguration('robot_ip', default='192.168.1.219')
     report_type = LaunchConfiguration('report_type', default='normal')
     prefix = LaunchConfiguration('prefix', default='')
     hw_ns = LaunchConfiguration('hw_ns', default='xarm')

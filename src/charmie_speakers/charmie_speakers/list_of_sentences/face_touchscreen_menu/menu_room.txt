@@ -1,0 +1,1 @@
+Please select the room where you want me to place the object.

@@ -202,17 +202,27 @@ class ArmUfactory(Node):
 		self.first_waving_position =  [ -90.0,  -53.0,  -35.0,  154.0,  -20.9,  110.0] 
 		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0,  110.0] 
 
-		### SEARCH FOR OBJECT ON TABLE FRONTAL JOINT VARIABLES###
-		self.initial_position_joints_Pedro =								[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
+		### PICK OBJECT FRONT JOINT VARIABLES###
+		self.initial_position_joints_pick =								[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
 		self.initial_position_to_search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
-		# self.search_front_max_z_joints =									[-108.1, -50.4, -16.4, -109.1, 80.1, 22.9]
-		self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
+		#self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
+		self.search_front_max_z_joints =									[-145, -33, -35.7, -122.9, 44.8, 33.2]
 
-		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES ###
-		self.search_table_top_joints =							[-152.2, 59.4, -129.4, -85.2, 116.7,  66.7]
-		self.search_table_top_safe_position =					[-194.9, 69.4, -106.4,  23.2,  71.5, 264.8]
+		# PLACE OBJECT FRONT VARIABLES
+		self.initial_position_to_safe_joints = 								[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
+		self.safe_to_placing_linear = 										[-672.9, 98.2, 234.6, math.radians(90.7), math.radians(0.3), math.radians(-90.1)]
+		self.placing_to_safe_linear =										[-342.5, -131.3, 441.1, math.radians(89.7), math.radians(5), math.radians(-48.6)]
 
+
+		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
+		self.search_table_top_joints =					[-147.5, 40.4, -91.8, -70.9, 114.9, 84.7]
+		self.search_table_top_safe_position =		    [-194.9, 69.4, -106.4, 23.2, 71.5, 264.8]
+		self.safe_top_second_joints =                   [-197.5, 85.4, -103.3, 28.7, 109.1, 279.5]
+		### SERVE THE BREAKFAST VARIABLES: ###
+		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
+		print("height_adjust:", height_adjust)
+		
 		# SET JOINTS VARIABLES
 		self.get_lower_order_position_joints = 			[ -184.8,   17.5,  -62.0,  115.2,    4.9,  148.0]
 		self.initial_position_joints = 					[ -224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
@@ -697,6 +707,17 @@ class ArmUfactory(Node):
 			case 2:
 				self.finish_arm_movement_()
 
+
+	def slow_open_gripper(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=1000)
+			case 1:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
+
 	def adjust_linear_motion(self):
 		match self.estado_tr:
 			case 0:
@@ -718,18 +739,14 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
-	### SEARCH FOR OBJECT ON TABLE FRONTAL ###
+	### PICK OBJECT FRONT###
 	def initial_pose_to_search_table_front(self):
 		match self.estado_tr:
 			case 0:
-				self.set_gripper_speed_(speed=5000)
+				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=30, wait=True)
 			case 1:
-				self.set_gripper_position_(pos=0, wait=True)
-			case 2:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
-			case 3:
 				self.set_joint_values_(angles=self.initial_position_to_search_table_front_joints, speed=30, wait=True)
-			case 4:
+			case 2:
 				# self.set_joint_values_(angles=self.search_table_front_joints, speed=30, wait=True)
 			# case 5:
 				self.finish_arm_movement_()
@@ -739,7 +756,7 @@ class ArmUfactory(Node):
 			case 0:
 				self.set_joint_values_(angles=self.initial_position_to_search_table_front_joints, speed=30, wait=True)
 			case 1:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=30, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=30, wait=True)
 			case 2:
 				self.finish_arm_movement_()
 
@@ -757,6 +774,31 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
+	### PLACE OBJECT FRONT###
+	def initial_pose_to_place_front(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=5000)
+			case 1:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 2:
+				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
+			case 3:
+				self.set_joint_values_(angles=self.initial_position_to_safe_joints, speed=25, wait=True) 
+			case 4:
+				self.set_position_values_(pose=self.safe_to_placing_linear, speed=100, wait=True)
+			case 5:
+				self.finish_arm_movement_()
+			
+	def place_front_to_initial_pose(self):
+		match self.estado_tr:
+			case 0:
+				#self.set_position_values_(pose=self.placing_to_safe_linear, speed=100, wait=True)
+				self.set_gripper_position_(pos=0,wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
+			case 2:
+				self.finish_arm_movement_()
 
 	### SEARCH FOR OBJECT ON TABLE TOP ###
 	def initial_pose_to_search_table_top(self):
@@ -766,18 +808,18 @@ class ArmUfactory(Node):
 			case 1:
 				self.set_gripper_position_(pos=0, wait=True)
 			case 2:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=25, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
 			case 3:
 				self.set_joint_values_(angles=self.search_table_top_joints, speed=25, wait=True)
 			case 4:
 				self.finish_arm_movement_()
 
-	def search_table_to_initial_pose_Tiago(self):
+	def search_table_to_initial_pose_top(self):
 		match self.estado_tr:
 			case 0:
-				self.set_joint_values_(angles=self.search_table_top_safe_position, speed=25, wait=True)
+				self.set_joint_values_(angles=self.safe_top_second_joints, speed=25, wait_for_end_of=True)
 			case 1:
-				self.set_joint_values_(angles=self.initial_position_joints_Pedro, speed=25, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
 			case 2:
 				self.finish_arm_movement_()
 
@@ -1143,6 +1185,8 @@ class ArmUfactory(Node):
 				self.close_gripper_with_check_object(0)
 			case "open_gripper":
 				self.open_gripper()
+			case "slow_open_gripper":
+				self.slow_open_gripper()
 
 			# ADJUSTS MOVEMENTS FROM ARMCONTROLLER
 			case "adjust_linear_motion":
@@ -1188,7 +1232,7 @@ class ArmUfactory(Node):
 			case "ask_for_objects_to_initial_position_alternative_robocup_cornflakes":
 				self.ask_for_objects_to_initial_position_alternative_robocup_cornflakes()
 
-			# SEARCH FOR OBJECT ON TABLE FRONTAL
+			# PICK OBJECT FRONT
 			case "initial_pose_to_search_table_front":
 				self.initial_pose_to_search_table_front()
 			case "search_table_to_initial_pose":
@@ -1198,11 +1242,17 @@ class ArmUfactory(Node):
 			case "search_front_max_z":
 				self.search_front_max_z()
 
+			#PLACE OBJECT FRONT
+			case "initial_pose_to_place_front":
+				self.initial_pose_to_place_front()
+			case "place_front_to_initial_pose":
+				self.place_front_to_initial_pose()
+
 			# SEARCH FOR OBJECT ON TABLE TOP
 			case "initial_pose_to_search_table_top":
 				self.initial_pose_to_search_table_top()
-			case "search_table_to_initial_pose_Tiago":
-				self.search_table_to_initial_pose_Tiago()
+			case "search_table_to_initial_pose_top":
+				self.search_table_to_initial_pose_top()
 			
 			# if there is an error regarding a movement
 			case _:

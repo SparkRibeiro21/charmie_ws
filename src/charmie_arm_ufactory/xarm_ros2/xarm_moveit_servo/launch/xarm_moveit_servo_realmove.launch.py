@@ -14,7 +14,7 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    robot_ip = LaunchConfiguration('robot_ip')
+    robot_ip = LaunchConfiguration('robot_ip', default='192.168.1.219')
     report_type = LaunchConfiguration('report_type', default='dev')
     dof = LaunchConfiguration('dof')
     prefix = LaunchConfiguration('prefix', default='')
@@ -37,7 +37,7 @@ def generate_launch_description():
             'report_type': report_type,
             'baud_checkset': baud_checkset,
             'default_gripper_baud': default_gripper_baud,
-            'dof': dof,
+            'dof': '6',
             'prefix': prefix,
             'hw_ns': hw_ns,
             'limited': limited,

@@ -28,8 +28,15 @@ class LaunchStdFunctions():
         self.robot_state_publisher_real_node = Node(
             package="robot_state_publisher",
             executable="robot_state_publisher",
-            parameters=[{'robot_description': robot_description_real}]
+            parameters=[{'robot_description': robot_description_real}],
+            remappings=[('/joint_states','/xarm/joint_states')] # Comment this line if you just want to use charmie.display
         )
+
+        self.robot_state_publisher_real_node_without_remappings = Node(
+            package="robot_state_publisher",
+            executable="robot_state_publisher",
+            parameters=[{'robot_description': robot_description_real}]
+            )
 
         urdf_path_gazebo = os.path.join(get_package_share_path('charmie_description'), 
                              'urdf', 'charmie_gazebo.urdf.xacro')
@@ -173,7 +180,7 @@ class LaunchStdFunctions():
             }.items(),
         )
 
-        # added by Pedro
+        # added by Pedro to initialize the ROS2 control system for the xArm
         # ros2 control launch
         # xarm_controller/launch/_ros2_control.launch.py
         self.xarm_ros2_control = IncludeLaunchDescription(
@@ -198,7 +205,7 @@ class LaunchStdFunctions():
             }.items()
         )
 
-        # added by Pedro
+        # added by Pedro to spawn and start the xArm controllers
         self.xarm_controller_spawner = Node(
             package='controller_manager',
             executable='spawner',
