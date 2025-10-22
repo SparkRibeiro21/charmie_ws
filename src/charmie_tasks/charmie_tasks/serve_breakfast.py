@@ -78,8 +78,8 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
         # Which objects should be acquired
-        self.GET_MILK = True
-        self.GET_CORNFLAKES = True
+        self.GET_MILK = False
+        self.GET_CORNFLAKES = False
         self.GET_DISHES = True
         self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
 
@@ -240,7 +240,8 @@ class TaskMain():
             elif self.state == self.task_states["Detect_and_pick_dishes"]:
 
                 if self.GET_DISHES:
-                    object_in_gripper = False
+                    
+                    """ object_in_gripper = False
                     correct_object_bowl = DetectedObject()
                     correct_object_spoon = DetectedObject()
                     while not object_in_gripper:
@@ -266,7 +267,7 @@ class TaskMain():
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
                     # SPOON
-                    self.robot.ask_help_pick_object_tray(object_d=correct_object_spoon, look_judge=self.look_judge, first_help_request=False, bb_color=(0, 255, 0), audio_confirmation=False)
+                    self.robot.ask_help_pick_object_tray(object_d=correct_object_spoon, look_judge=self.look_judge, first_help_request=False, bb_color=(0, 255, 0), audio_confirmation=False) """
 
                 self.state = self.task_states["Move_kitchen_table"]
 

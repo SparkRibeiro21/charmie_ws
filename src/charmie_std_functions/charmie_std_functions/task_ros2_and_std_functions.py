@@ -571,6 +571,7 @@ class ROS2TaskNode(Node):
 
     def torso_low_level_callback(self, torso: TorsoPosition):
         self.torso_position = torso
+        print("Received Torso Position:", torso.position) 
 
     def orientation_callback(self, orientation: Float32):
         self.orientation_yaw = orientation.data
@@ -1516,7 +1517,7 @@ class RobotStdFunctions():
                 error_t = abs(request.torso - t)
                 # print(l, t, error_l, error_t)
 
-                if error_l <= MAX_ERROR_LEGS_READING and error_t<=MAX_ERROR_TORSO_READING:
+                if error_l <= MAX_ERROR_LEGS_READING and error_t <= MAX_ERROR_TORSO_READING:
                     self.node.waited_for_end_of_set_torso_position = True
                 else:
                     time.sleep(0.25)
