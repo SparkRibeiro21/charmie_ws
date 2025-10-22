@@ -2447,10 +2447,10 @@ class RobotStdFunctions():
 
             error_angle = target_angle - curr_yaw
             # error circular correction due to angle circularity
-            if error_angle >= 360:
-                error_angle -= 360
-            elif error_angle <= -360:
-                error_angle += 360
+            if error_angle >= 2*math.pi:
+                error_angle -= 2*math.pi
+            elif error_angle <= -2*math.pi:
+                error_angle += 2*math.pi
 
             # print("ERROR:", math.degrees(error_angle))
             # print("TOLERANCE", math.degrees(tolerance_rad))
@@ -4320,9 +4320,10 @@ class RobotStdFunctions():
                 elif HALFWAY_TOP_HEIGHT > valid_detected_object.position_relative.z:
 
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
-                    self.set_torso_position(legs=80, torso=8) 
+                    self.set_torso_position(legs=80, torso=8, wait_for_end_of=False) 
+                    self.wait_until_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
 
-                elif MAXIMUM_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
+                elif HALFWAY_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
 
                 # ADJUST ROBOT POSITION IN RELATION TO THE OBJECT
@@ -4343,7 +4344,17 @@ class RobotStdFunctions():
                     elif self.adjust_y_ < -MAXIMUM_ADJUST_DISTANCE:
                         self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
 
-                    self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+
+                    # IF ADJUST IS NOT POSSIBLE DUE TO OBSTACLES ASK FOR HELP
+                    if not s:
+                        self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
+                        self.ask_help_pick_object_gripper(object_d=objects_found[0])
+                        self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                        picked_height = 0.0
+                        self.asked_help = True
+                        return picked_height, self.asked_help
+                
                     _, _ = self.adjust_angle(45)
                     #rotate_coordinates = self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(o.object_name))))
                     #self.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
@@ -4515,8 +4526,10 @@ class RobotStdFunctions():
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
 
                     if navigation:
-                        self.adjust_x_ = self.adjust_x_ * math.cos(math.radians(315)) + self.adjust_x_ * math.cos(math.radians(135))
-                        self.adjust_y_ = self.adjust_y_ * math.sin(math.radians(315)) + self.adjust_y_ * math.sin(math.radians(135))
+
+                        self.adjust_x_  =   (- self.adjust_x_ ) * math.cos(math.radians(45)) + (- self.adjust_y_) * math.sin(math.radians(45))
+                        self.adjust_y_  = - (- self.adjust_x_ ) * math.sin(math.radians(45)) + (- self.adjust_y_) * math.cos(math.radians(45))
+
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
 
 
@@ -4525,12 +4538,15 @@ class RobotStdFunctions():
                         self.ask_help_pick_object_gripper(object_d=final_objects[0])
                         self.set_neck([0.0,0.0],wait_for_end_of=False)
                     
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = safe_top_second_joints, wait_for_end_of=True)
-                    
                     if return_arm_to_initial_position:
+                        self.set_arm(command="adjust_joint_motion", joint_motion_values = safe_top_second_joints, wait_for_end_of=True)
                         self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
                     else:
                         self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                    
+                    self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
+                    self.wait_until_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
+
                     #MOVE ARM TO INITIAL POSITION
                     #self.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=True                    
                 
@@ -4559,7 +4575,7 @@ class RobotStdFunctions():
         #RETURN BOOLEAN ON IF SCORE IS ABOVE THRESHOLD
         return score >= threshold
 
-    def wait_until_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1):
+    def wait_until_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1,get_gripper = True):
 
         #INITIATE VARIABLES REPRESENTING TIMER
         image_time_out = 0.0
@@ -4569,21 +4585,27 @@ class RobotStdFunctions():
         while (stable_image <= stable_duration) and (image_time_out < timeout):
 
             #GET FIRST FRAME
-            _, self.prev_frame = self.get_hand_rgb_image()
+            if get_gripper:
+                _, self.prev_frame = self.get_hand_rgb_image()
+            else:
+                _, self.prev_frame = self.get_head_rgb_image()
             print("Waiting for camera to stabilize...", image_time_out, stable_image)
 
             #WAIT INTERVAL
             time.sleep(check_interval)
 
             #GET SECOND FRAME TO COMPARE
-            _, self.curr_frame = self.get_hand_rgb_image()
+            if get_gripper:
+                _, self.curr_frame = self.get_hand_rgb_image()
+            else:
+                _, self.curr_frame = self.get_head_rgb_image()
 
             #IF IMAGES ARE CLOSE BASED ON THRESHOLD ADD TO STABLE TIMER, IF NOT RESET STABLE TIMER 
-            if (self.is_stable()) and (image_time_out >= 0.7) :
-                stable_image += 0.1
+            if (self.is_stable()) and (image_time_out >= ( 7 * check_interval) ):
+                stable_image += check_interval
             else:
                 stable_image = 0.0
-            image_time_out += 0.1
+            image_time_out += check_interval
 
     def get_shelf_from_height(self, object_height = 0, furniture = ""):
 
