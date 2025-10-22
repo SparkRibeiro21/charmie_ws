@@ -1,3 +1,0 @@
-[
-{"name": "Book", 		    "class": "Toys",		"width": 0.015, "length": 0.016, "height": 0.023, "shape": "cuboid",   "can_pick": "both",  "std_pick": "front"}
-]
