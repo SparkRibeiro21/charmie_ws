@@ -1,7 +1,7 @@
 # Service to define the two torso angles  
 
-int32 legs  # up and down torso movement 
-int32 torso # take a bow torso movement 
+float32 legs  # up and down torso movement 
+float32 torso # take a bow torso movement 
 ---
 bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages.

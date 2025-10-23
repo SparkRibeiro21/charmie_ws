@@ -123,8 +123,8 @@ class TaskMain():
         
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
-                self.robot.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
-                self.robot.wait_until_camera_stable(timeout=120, check_interval=0.3, stable_duration=0.3, get_gripper=False)
+                self.robot.set_torso_position(legs=0.10, torso=10, wait_for_end_of=True) 
+                #self.robot.wait_until_camera_stable(timeout=120, check_interval=0.3, stable_duration=0.3, get_gripper=False)
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 

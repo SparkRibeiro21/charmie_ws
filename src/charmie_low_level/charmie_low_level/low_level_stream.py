@@ -855,8 +855,8 @@ class LowLevelNode(Node):
         # string message # informational, e.g. for error messages.
 
         self.get_logger().info("Received Set Torso Position")
-        self.robot.set_omni_variables(self.robot.LEGS, request.legs)
-        self.robot.set_omni_variables(self.robot.TORSO, request.torso)
+        self.robot.set_omni_variables(self.robot.LEGS, int(request.legs*1000))
+        self.robot.set_omni_variables(self.robot.TORSO, int(request.torso))
         print("Legs_pos: ", request.legs, " Torso_pos: ", request.torso)
 
         # returns whether the message was played and some informations regarding status
