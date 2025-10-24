@@ -14,9 +14,14 @@ Visualization Manager:
       Name: Grid
       Value: true
     - Class: moveit_rviz_plugin/MotionPlanning
+      Enabled: true
       Name: MotionPlanning
+      Planning Request:
+        Query Goal State: true
+        Query Start State: true
+        Interactive Marker Size: 0.15
       Planned Path:
-        Loop Animation: true
+        Loop Animation: false
         State Display Time: 0.05 s
         Trajectory Topic: display_planned_path
       Planning Scene Topic: monitored_planning_scene

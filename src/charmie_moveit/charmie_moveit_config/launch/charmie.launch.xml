@@ -3,14 +3,16 @@
         value = "$(find-pkg-share charmie_description)/urdf/charmie_real.urdf.xacro" />
     <let name = "rviz_config_path"
         value = "$(find-pkg-share charmie_description)/rviz/moveit.rviz" />
-    <let name = "robot_description_param" value = "$(command 'xacro $(var urdf_path)')" />
-
+    <let name = "robot_description_param"
+        value = "$(command 'xacro $(var urdf_path)')" />
+    <let name="kinematics_config"
+        value="$(find-pkg-share charmie_moveit_config)/config/kinematics.yaml" />
     
     <!-- Robot State Publisher -->
-    <!-- <node pkg="robot_state_publisher" exec="robot_state_publisher">
+    <node pkg="robot_state_publisher" exec="robot_state_publisher">
         <param name="robot_description"
             value="$(var robot_description_param)" />
-    </node> -->
+    </node>
 
     <!-- ROS2 Control Node -->
     <node pkg="controller_manager" exec="ros2_control_node">
@@ -29,6 +31,7 @@
 
     <!-- RViz -->
     <node pkg="rviz2" exec="rviz2" output="screen"
-        args="-d $(var rviz_config_path)" />
+        args="-d $(var rviz_config_path)">
+    </node>
 
 </launch>
