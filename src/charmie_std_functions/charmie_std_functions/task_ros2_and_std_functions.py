@@ -571,7 +571,7 @@ class ROS2TaskNode(Node):
 
     def torso_low_level_callback(self, torso: TorsoPosition):
         self.torso_position = torso
-        print("Received Torso Position:", torso.position) 
+        # print("Received Torso Position:", torso) 
 
     def orientation_callback(self, orientation: Float32):
         self.orientation_yaw = orientation.data
@@ -1498,35 +1498,69 @@ class RobotStdFunctions():
         self.set_initial_position([distance+position_threshold/2, 0.0, 0.0]) #  set initial position to be inside the house, the position_threshold/2 is because the robot is already moving
 
     def set_torso_position(self, legs=0.0, torso=0.0, wait_for_end_of=True):
+        # legs from 0.0 (minimum height) to 0.14 (maximum height)
+        # torso from 8 degrees (vertical torso) to 64 (horizontal torso)
         
-        request = SetTorso.Request()
-        request.legs = int(legs)
-        request.torso = int(torso)
+        success = False
+        message = ""
 
+        MAX_ERROR_LEGS_READING = 0.003
         MAX_ERROR_TORSO_READING = 3
-        MAX_ERROR_LEGS_READING = 3
 
-        self.node.call_set_torso_position_server(request=request)
+        MIN_POSSIBLE_LEGS =  0.00 - (MAX_ERROR_LEGS_READING/2)
+        MAX_POSSIBLE_LEGS =  0.14 + (MAX_ERROR_LEGS_READING/2)
+        MIN_POSSIBLE_TORSO =  8.0 - (MAX_ERROR_TORSO_READING/2)
+        MAX_POSSIBLE_TORSO = 64.0 + (MAX_ERROR_TORSO_READING/2)
 
-        if wait_for_end_of:
-            # must check the position until it has arrived 
-            while not self.node.waited_for_end_of_set_torso_position:
-                
-                l, t = self.get_torso_position()
-                error_l = abs(request.legs - l)
-                error_t = abs(request.torso - t)
-                # print(l, t, error_l, error_t)
+        legs_valid = False
+        if MIN_POSSIBLE_LEGS <= legs <= MAX_POSSIBLE_LEGS:
+            legs_valid = True
 
-                if error_l <= MAX_ERROR_LEGS_READING and error_t <= MAX_ERROR_TORSO_READING:
-                    self.node.waited_for_end_of_set_torso_position = True
-                else:
-                    time.sleep(0.25)
+        torso_valid = False
+        if MIN_POSSIBLE_TORSO <= torso <= MAX_POSSIBLE_TORSO:
+            torso_valid = True
         
-            # time.sleep(0.5) # the max error may make robot think it has reached before it has acutally reached
+        if legs_valid and torso_valid:
+        
+            request = SetTorso.Request()
+            request.legs = float(legs)
+            request.torso = float(torso)
 
-        self.node.waited_for_end_of_set_torso_position = False
+            self.node.call_set_torso_position_server(request=request)
 
-        return self.node.torso_success, self.node.torso_message
+            if wait_for_end_of:
+                # must check the position until it has arrived 
+                while not self.node.waited_for_end_of_set_torso_position:
+                    
+                    l, t = self.get_torso_position()
+                    error_l = abs(request.legs - l)
+                    error_t = abs(request.torso - t)
+                    # print(l, t, error_l, error_t)
+
+                    if error_l <= MAX_ERROR_LEGS_READING and error_t <= MAX_ERROR_TORSO_READING:
+                        self.node.waited_for_end_of_set_torso_position = True
+                    else:
+                        time.sleep(0.25)
+            
+                # time.sleep(0.5) # the max error may make robot think it has reached before it has acutally reached
+
+            self.node.waited_for_end_of_set_torso_position = False
+
+            success = self.node.torso_success
+            message = self.node.torso_message
+        
+        else:
+            if legs_valid and not torso_valid:
+                message = "Invalid Torso Value, please select a value from " + str(round(MIN_POSSIBLE_TORSO,2)) + " to " +  str(round(MAX_POSSIBLE_TORSO,2)) + "!"
+            if not legs_valid and torso_valid:
+                message = "Invalid Legs Value, please select a value from " + str(round(MIN_POSSIBLE_LEGS,2)) + " to " +  str(round(MAX_POSSIBLE_LEGS,2)) + "!"
+            if not legs_valid and not torso_valid:
+                message = "Invalid Legs AND Torso Value. For legs please select a value from " + str(round(MIN_POSSIBLE_LEGS,2)) + " to " +  str(round(MAX_POSSIBLE_LEGS,2)) + "!" + \
+                        " And for torso, please select a value from " + str(round(MIN_POSSIBLE_TORSO,2)) + " to " +  str(round(MIN_POSSIBLE_TORSO,2)) + "!"
+
+            self.node.get_logger().error(message)
+
+        return success, message
     
     def get_torso_position(self,  wait_for_end_of=True):
 
@@ -4159,7 +4193,7 @@ class RobotStdFunctions():
     # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
 
-    def pick_obj(self, selected_object="", pick_mode="", first_search_tetas=[], navigation = True, is_object_in_furniture_check = True, search_with_head_camera = True, return_arm_to_initial_position = True):
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", navigation = True, search_with_head_camera = True, return_arm_to_initial_position = True):
 
         ###########
         # Inputs:
@@ -4183,18 +4217,47 @@ class RobotStdFunctions():
 
         valid_detected_object = DetectedObject()
         not_validated = True
+        is_object_in_furniture_check = False
+        selected_object = selected_object.replace(" ","_").lower()
+
+        MIN_OBJECT_DISTANCE_X = 0.05
+        MAX_OBJECT_DISTANCE_X = 2
+        MIN_OBJECT_DISTANCE_Y = -1
+        MAX_OBJECT_DISTANCE_Y = 1
+
+
+        if furniture != "":
+                is_object_in_furniture_check = True
+        
+        if first_search_tetas == []:
+
+            if self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "horizontal":
+                first_search_tetas = [[0, -45], [-40, -45], [40, -45]]
+
+            elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
+                first_search_tetas = [[0, -15], [0, -35], [0, 15]]
+
+        if pick_mode == "":
+            pick_mode = self.get_standard_pick_from_object(selected_object)
+
+
+        pick_mode = pick_mode.lower()
+        furniture = furniture.replace(" ","_").lower()
+
 
         ### While cycle to get a valid detected object ###
         while not_validated:
 
             # If search_with_head_camera is true the first object detection will be made with the head camera, otherwise the robot will use the base camera instead
             if search_with_head_camera:
+                self.set_face(camera="head", show_detections=True)
                 objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
             else:
                 objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
         
         
             print("LIST OF DETECTED OBJECTS:")
+
 
             for obj in objects_found:
                 self.asked_help = False
@@ -4216,17 +4279,18 @@ class RobotStdFunctions():
                         not_validated = False
 
 
-                if (obj.object_name == selected_object \
-                    and object_location != self.get_furniture_from_object_class(self.get_object_class_from_object(obj.object_name)) \
-                    and is_object_in_furniture_check):
+                if  obj.object_name == selected_object \
+                    and object_location != furniture \
+                    and is_object_in_furniture_check:
+
                     self.set_speech(filename="generic/Object_may_not_be_on_furniture.wav", wait_for_end_of=True)
 
                     first_search_tetas.reverse()
                         
 
-                if obj.object_name == selected_object:
+                if obj.object_name == selected_object and MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y :
                     
-                    if  object_location == self.get_furniture_from_object_class(self.get_object_class_from_object(obj.object_name)) and is_object_in_furniture_check \
+                    if  (object_location == furniture and is_object_in_furniture_check) \
                         or is_object_in_furniture_check == False: 
 
                         if not_validated == False and (valid_detected_object.confidence < obj.confidence):
@@ -4248,8 +4312,9 @@ class RobotStdFunctions():
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
             DISTANCE_IN_FRONT_X     = 0.6 
-            DISTANCE_IN_TOP_X       = 0.55
             DISTANCE_IN_FRONT_Y     = 0.3 
+            DISTANCE_IN_TOP_X       = 0.58
+            DISTANCE_IN_TOP_Y       = 0.15
             MINIMUM_FRONT_HEIGHT    = 0.55
             MAXIMUM_FRONT_HEIGHT    = 1.70
             HALFWAY_FRONT_HEIGHT    = 1.2 
@@ -4350,7 +4415,7 @@ class RobotStdFunctions():
                     elif self.adjust_x_ < -MAXIMUM_ADJUST_DISTANCE:
                         self.adjust_x_  = -MAXIMUM_ADJUST_DISTANCE
 
-                    self.adjust_y_      = valid_detected_object.position_relative.y
+                    self.adjust_y_      = valid_detected_object.position_relative.y - DISTANCE_IN_TOP_Y
 
                     if self.adjust_y_   > MAXIMUM_ADJUST_DISTANCE:
                         self.adjust_y_  = MAXIMUM_ADJUST_DISTANCE
@@ -4359,6 +4424,8 @@ class RobotStdFunctions():
                         self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
 
                     s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+
+                    print("Front X:", self.adjust_x_, " Front y:", self.adjust_y_)
 
                     # IF ADJUST IS NOT POSSIBLE DUE TO OBSTACLES ASK FOR HELP
                     if not s:
@@ -4385,7 +4452,10 @@ class RobotStdFunctions():
     def hand_search(self, selected_object, pick_mode, navigation, return_arm_to_initial_position):
 
         # 1) SEARCH FOR OBJECTS USING HAND CAMERA
+        self.set_face(camera="hand", show_detections=True)
         table_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+        self.set_face(camera="hand", show_detections=True)
+
         #self.set_face(camera="hand",show_detections=True, wait_for_end_of=False)
 
         # print("LIST OF DETECTED OBJECTS:")
@@ -4447,6 +4517,8 @@ class RobotStdFunctions():
                 
                 #CALIBRATE GRIPPER BEFORE GRABBING
                 final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+                self.set_face(camera="hand", show_detections=True)
+
                 #self.set_face(camera="hand",show_detections=True,wait_for_end_of=False)
                 for obj in final_objects:
                     conf = f"{obj.confidence * 100:.0f}%"
@@ -4476,9 +4548,9 @@ class RobotStdFunctions():
                     if pick_mode == "top":
 
                         # THE FOLLOWING ARE SPECIAL CASES WHERE DIFFERENT MANUAL INFORMATION IS USED TO PICK THEM, DO NOT CHANGE UNLESS NECESSARY !!!!
-                        if obj.object_name == "Bowl":
+                        if obj.object_name == "bowl":
                             correct_y_grab += 90
-                        if obj.object_name == "Cup":
+                        if obj.object_name == "cup":
                             correct_y_grab += 40
                             correct_x_grab = 210
 
@@ -4513,6 +4585,8 @@ class RobotStdFunctions():
 
                 if pick_mode == "front":
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
+                    self.set_face("charmie_face", wait_for_end_of=False)
+
                     
                     if navigation:
                         self.adjust_x_ = - self.adjust_x_
@@ -4528,21 +4602,30 @@ class RobotStdFunctions():
                         self.set_neck([0.0,0.0],wait_for_end_of=False)
 
                     #MOVE ARM TO INITIAL POSITION
-                    self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                    if return_arm_to_initial_position:
+                        self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                    else:
+                        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
 
                 elif pick_mode == "top":
 
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_top, wait_for_end_of=True)
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
+                    #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
                     #self.set_torso_position(legs=140, torso=8) 
 
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
+                    self.set_face("charmie_face", wait_for_end_of=False)
+
 
                     if navigation:
 
-                        self.adjust_x_  =   (- self.adjust_x_ ) * math.cos(math.radians(45)) + (- self.adjust_y_) * math.sin(math.radians(45))
-                        self.adjust_y_  = - (- self.adjust_x_ ) * math.sin(math.radians(45)) + (- self.adjust_y_) * math.cos(math.radians(45))
+                        dx = self.adjust_x_
+                        dy = self.adjust_y_
+                        self.adjust_x_  = (- dx ) * math.cos(-math.radians(45)) - (- dy) * math.sin(-math.radians(45))
+                        self.adjust_y_  = (- dx ) * math.sin(-math.radians(45)) + (- dy) * math.cos(-math.radians(45))
+
+                        print("Reverse X:", self.adjust_x_, " Reverse y:", self.adjust_y_)
 
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
 
@@ -4558,8 +4641,8 @@ class RobotStdFunctions():
                     else:
                         self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
                     
-                    self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
-                    self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)            
+                    #self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
+                    #self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)            
                 
                 print(f"Bring object to initial pose")
 
