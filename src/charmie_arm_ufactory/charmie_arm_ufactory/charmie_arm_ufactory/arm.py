@@ -220,8 +220,8 @@ class ArmUfactory(Node):
 		self.search_table_top_safe_position =		    [-194.9, 69.4, -106.4, 23.2, 71.5, 264.8]
 		self.safe_top_second_joints =                   [-197.5, 85.4, -103.3, 28.7, 109.1, 279.5]
 		### SERVE THE BREAKFAST VARIABLES: ###
-		height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
-		print("height_adjust:", height_adjust)
+		# height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
+		#Cprint("height_adjust:", height_adjust)
 		
 		# SET JOINTS VARIABLES
 		self.get_lower_order_position_joints = 			[ -184.8,   17.5,  -62.0,  115.2,    4.9,  148.0]
