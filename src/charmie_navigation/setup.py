@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "navigation_sdnl = charmie_navigation.navigation_sdnl:main",
             "navigation = charmie_navigation.navigation:main"
         ],
     },
