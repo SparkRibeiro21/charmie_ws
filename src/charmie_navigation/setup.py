@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'charmie_navigation_sdnl'
+package_name = 'charmie_navigation'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "navigation = charmie_navigation_sdnl.navigation:main"
+            "navigation = charmie_navigation.navigation:main"
         ],
     },
 )
