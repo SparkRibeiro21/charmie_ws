@@ -1,0 +1,7 @@
+# Service to get the position of both servos on charmie neck (pan, tilt)
+float32 direction
+float32 ang_obstacle_check
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages.
+float32 min_radar_distance_to_robot_edge  # minimum distance from radar to robot edge in meters
