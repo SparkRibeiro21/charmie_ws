@@ -965,7 +965,7 @@ class DebugVisualMain():
         self.CHARMIE_LOW_LEVEL_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         # the two navs have the same node rect for now, only nav2 will be used for now
         self.CHARMIE_NAVIGATION_NODE_RECT           = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_NAV2_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAV2_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NECK_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_RADAR_NODE_RECT                = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1167,7 +1167,6 @@ class DebugVisualMain():
         # LIDAR Livox
         tc3, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_lidar_livox, self.check_nodes.CHECK_LIDAR_LIVOX_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_LIDAR_LIVOX_NODE_RECT)
-
         if tc1 == self.BLUE_L or tc2 == self.BLUE_L or tc3 == self.BLUE_L:
             tc = self.BLUE_L
         else:
@@ -1195,15 +1194,17 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_LOW_LEVEL_NODE_RECT)
         
         # NAVIGATION
-        # tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_navigation, self.check_nodes.CHECK_NAVIGATION_NODE)
-        # self.draw_text("Navigation", self.text_font, tc, self.CHARMIE_NAVIGATION_NODE_RECT.x+2*self.CHARMIE_NAVIGATION_NODE_RECT.width, self.CHARMIE_NAVIGATION_NODE_RECT.y-2)
-        # pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAVIGATION_NODE_RECT)
-        
+        tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_navigation, self.check_nodes.CHECK_NAVIGATION_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAVIGATION_NODE_RECT)
         # NAV2
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_nav2, self.check_nodes.CHECK_NAV2_NODE)
-        self.draw_text("Nav2", self.text_font, tc, self.CHARMIE_NAV2_NODE_RECT.x+2*self.CHARMIE_NAV2_NODE_RECT.width, self.CHARMIE_NAV2_NODE_RECT.y-2)
+        tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_nav2, self.check_nodes.CHECK_NAV2_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAV2_NODE_RECT)
-
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
+            tc = self.BLUE_L
+        else:
+            tc = self.WHITE
+        self.draw_text("Navigation/Nav2", self.text_font, tc, self.CHARMIE_NAV2_NODE_RECT.x+2*self.CHARMIE_NAV2_NODE_RECT.width, self.CHARMIE_NAV2_NODE_RECT.y-2)
+        
         # NECK
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_neck, self.check_nodes.CHECK_NECK_NODE)
         self.draw_text("Neck", self.text_font, tc, self.CHARMIE_NECK_NODE_RECT.x+2*self.CHARMIE_NECK_NODE_RECT.width, self.CHARMIE_NECK_NODE_RECT.y-2)
