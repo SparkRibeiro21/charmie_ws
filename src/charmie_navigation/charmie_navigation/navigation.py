@@ -7,7 +7,7 @@ from example_interfaces.msg import Bool, Float32, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped, Twist
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import RadarData
-from charmie_interfaces.srv import SetRGB
+from charmie_interfaces.srv import SetRGB, Trigger
 
 import time
 import threading
@@ -18,12 +18,15 @@ RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
+### Do adjusts structures in std_functions
+### inspection nav here
+### Do the same with the nav2 related stuff ???
 
-class ROS2TaskNode(Node):
+class ROS2NavigationNode(Node):
 
-    def __init__(self, ros2_modules):
-        super().__init__("ROS2TaskCHARMIE")
-        self.get_logger().info("Initialised CHARMIE ROS2Task Node")
+    def __init__(self):
+        super().__init__("ROS2CHARMIENavigation")
+        self.get_logger().info("Initialised CHARMIE Navigation Node")
 
         ### TOPICS ###
         # Low level
@@ -32,7 +35,7 @@ class ROS2TaskNode(Node):
         self.odom_subscriber = self.create_subscription(Odometry, "/odometry/filtered", self.odom_callback, 10)
         self.odom_wheels_subscriber = self.create_subscription(Odometry, "/wheel_encoders", self.odom_wheels_callback, 10)
         # Radar
-        self.radar_dara_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
+        self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
         
         
         
@@ -50,7 +53,8 @@ class ROS2TaskNode(Node):
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode") # just for low_level initialization checking 
         
         # Navigation
-        ###self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
+        self.nav_trigger_server = self.create_service(Trigger, "nav_trigger", self.nav_trigger_callback)
+
         # Low level
         ###self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
         ##self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
@@ -58,11 +62,13 @@ class ROS2TaskNode(Node):
         ## CHECKS DE RADAR E LOW LEVEL ???? ###
         ## localisation
 
-        while not self.set_rgb_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for Server Low Level ...")
+        # while not self.set_rgb_client.wait_for_service(1.0):
+        #     self.get_logger().warn("Waiting for Server Low Level ...")
 
 
         ### INTERNAL SERVICES
+
+
 
 
 
@@ -130,29 +136,41 @@ class ROS2TaskNode(Node):
 
     ### SERVICES ###
 
+    def nav_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
+        # Type of service received: 
+        # (nothing)
+        # ---
+        # bool success    # indicate successful run of triggered service
+        # string message  # informational, e.g. for error messages
+
+        response.success = True
+        response.message = "Nav Trigger"
+        return response
 
 
-# main function that already creates the thread for the task state machine
+
+# main function that already creates the thread for the navigation state machine
 def main(args=None):
     rclpy.init(args=args)
-    node = ROS2TaskNode()
-    th_main = threading.Thread(target=ThreadMainTask, args=(node,), daemon=True)
+    node = ROS2NavigationNode()
+    th_main = threading.Thread(target=ThreadMainNav, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-def ThreadMainTask(node: ROS2TaskNode):
-    main = TaskMain(node)
+def ThreadMainNav(node: ROS2NavigationNode):
+    main = NavigationMain(node)
     main.main()
 
-class TaskMain():
+class NavigationMain():
 
-    def __init__(self, node: ROS2TaskNode):
+    def __init__(self, node: ROS2NavigationNode):
 
         self.node = node
 
     def main(self):
-        pass
+        while True:
+            pass
 
     def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, wait_for_end_of=True):
 

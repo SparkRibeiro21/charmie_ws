@@ -429,7 +429,7 @@ class LaunchStdFunctions():
                     'freq' : 10.0}],
                 )
         
-        self.navigation = Node(package='charmie_navigation',
+        self.charmie_navigation = Node(package='charmie_navigation',
                     executable='navigation',
                     name='navigation',
                     emulate_tty=True
