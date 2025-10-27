@@ -13,7 +13,7 @@ from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListO
     TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
-    SetRGB
+    SetRGB, GetMinRadarDistance
 from cv_bridge import CvBridge, CvBridgeError
 from realsense2_camera_msgs.msg import RGBD
 
@@ -110,7 +110,7 @@ class DebugVisualNode(Node):
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
-        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
+        self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance")
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Low level
@@ -700,7 +700,7 @@ class CheckNodesMain():
                 self.CHECK_LOW_LEVEL_NODE = True
 
             # NAVIGATION
-            if not self.node.nav_trigger_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+            if not self.node.get_minimum_radar_distance_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
                 # self.node.get_logger().warn("Waiting for Server Navigation ...")
                 self.CHECK_NAVIGATION_NODE = False
             else:

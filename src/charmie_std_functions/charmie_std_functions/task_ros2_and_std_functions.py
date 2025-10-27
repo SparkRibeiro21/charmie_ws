@@ -18,7 +18,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, SetFloat, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
-    GetSoundClassificationContinuous
+    GetSoundClassificationContinuous, GetMinRadarDistance
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
@@ -168,7 +168,7 @@ class ROS2TaskNode(Node):
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Navigation
-        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
+        self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance")
         # NAV2
         self.clear_entire_local_costmap_client  = self.create_client(ClearEntireCostmap, "/local_costmap/clear_entirely_local_costmap")
         self.clear_entire_global_costmap_client = self.create_client(ClearEntireCostmap, "/global_costmap/clear_entirely_global_costmap")
@@ -250,7 +250,7 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for Server Low Level ...")
 
         if self.ros2_modules["charmie_navigation"]:
-            while not self.nav_trigger_client.wait_for_service(1.0):
+            while not self.get_minimum_radar_distance_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
 
         if self.ros2_modules["charmie_nav2"]:
@@ -2436,6 +2436,96 @@ class RobotStdFunctions():
 
     
     def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, wait_for_end_of=True):
+
+
+        """ def get_continuous_sound_classification(self, break_sounds=[], timeout=0.0, score_threshold=-1.0, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=True):
+            
+            request = GetSoundClassificationContinuous.Request()
+            request.break_sounds = break_sounds
+            request.timeout = float(timeout)
+            request.score_threshold = float(score_threshold) # from 0 to 1, if by deafult -1 is used, sound_classification server default value is used
+
+            self.node.continuous_sound_classification_detected_label = ""
+            self.node.continuous_sound_classification_detected_score = 0.0
+            
+            if speak_pre_hearing:
+                self.set_speech(filename="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), wait_for_end_of=True)
+            self.set_face(face_hearing)
+            
+            self.node.call_continuous_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
+
+            if wait_for_end_of:
+                while not self.node.waited_for_end_of_continuous_sound_classification:
+                    pass
+                self.set_face("charmie_face")
+                if speak_post_hearing:
+                    if self.node.continuous_sound_classification_success:
+                        self.set_speech(filename="sound_classification/sound_classification_continuous_stop", wait_for_end_of=True)
+                        self.set_speech(command=self.node.continuous_sound_classification_detected_label, wait_for_end_of=True)
+                    else: # timeout or error
+                        self.set_speech(filename="sound_classification/sound_classification_continuous_timeout", wait_for_end_of=True)
+            self.node.waited_for_end_of_continuous_sound_classification = False
+
+            return  self.node.continuous_sound_classification_success, \
+                    self.node.continuous_sound_classification_message, \
+                    self.node.continuous_sound_classification_detected_label, \
+                    self.node.continuous_sound_classification_detected_score
+            
+        def is_get_continuous_sound_classification_done(self, speak_post_hearing=True):
+
+            if self.node.received_continuous_sound_classification:
+                self.node.received_continuous_sound_classification = False
+                self.set_face("charmie_face")
+                if speak_post_hearing:
+                    if self.node.continuous_sound_classification_success:
+                        self.set_speech(filename="sound_classification/sound_classification_continuous_stop", wait_for_end_of=True)
+                        self.set_speech(command=self.node.continuous_sound_classification_detected_label, wait_for_end_of=True)
+                    else: # timeout or error
+                        self.set_speech(filename="sound_classification/sound_classification_continuous_timeout", wait_for_end_of=True)
+                return  True, \
+                        self.node.continuous_sound_classification_success, \
+                        self.node.continuous_sound_classification_message, \
+                        self.node.continuous_sound_classification_detected_label, \
+                        self.node.continuous_sound_classification_detected_score
+            
+            return False, False, "", "", 0.0 """
+
+        """# this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
+        self.node.waited_for_end_of_arm = False
+
+        ### convert the lists to floats (prevents ROS2 errors)
+        linear_motion_pose = [float(x) for x in linear_motion_pose]
+        move_tool_line_pose = [float(x) for x in move_tool_line_pose]
+        joint_motion_values = [float(x) for x in joint_motion_values]
+
+        # converts values that should be radians but we are using blockly standard so we expect values as degrees, which are then internally converted to radians 
+        linear_motion_pose[3] = math.radians(linear_motion_pose[3])
+        linear_motion_pose[4] = math.radians(linear_motion_pose[4])
+        linear_motion_pose[5] = math.radians(linear_motion_pose[5])
+       
+        move_tool_line_pose[3] = math.radians(move_tool_line_pose[3])
+        move_tool_line_pose[4] = math.radians(move_tool_line_pose[4])
+        move_tool_line_pose[5] = math.radians(move_tool_line_pose[5])
+    
+        temp = ArmController()
+        temp.command = command
+        temp.linear_motion_pose  = linear_motion_pose
+        temp.move_tool_line_pose = move_tool_line_pose
+        temp.joint_motion_values = joint_motion_values
+        self.node.arm_command_publisher.publish(temp)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_arm:
+                pass
+            self.node.waited_for_end_of_arm = False
+        else:
+            self.node.arm_success = True
+            self.node.arm_message = "Wait for answer not needed"
+
+        # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
+        return self.node.arm_success, self.node.arm_message"""
+
+
 
         ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
         ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD

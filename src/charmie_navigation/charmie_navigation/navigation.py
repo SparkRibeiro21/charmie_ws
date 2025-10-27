@@ -7,7 +7,7 @@ from example_interfaces.msg import Bool, Float32, Int16
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point, PoseStamped, Twist
 from nav_msgs.msg import Odometry
 from charmie_interfaces.msg import RadarData
-from charmie_interfaces.srv import SetRGB, Trigger
+from charmie_interfaces.srv import SetRGB, Trigger, GetMinRadarDistance
 
 import time
 import threading
@@ -53,7 +53,8 @@ class ROS2NavigationNode(Node):
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode") # just for low_level initialization checking 
         
         # Navigation
-        self.nav_trigger_server = self.create_service(Trigger, "nav_trigger", self.nav_trigger_callback)
+        self.get_minimum_radar_distance_server = self.create_service(GetMinRadarDistance, "get_min_radar_distance", self.get_min_radar_dist)
+    
 
         # Low level
         ###self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
@@ -135,16 +136,20 @@ class ROS2NavigationNode(Node):
 
 
     ### SERVICES ###
+    
 
-    def nav_trigger_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
+    def get_min_radar_dist(self, request, response):
         # Type of service received: 
-        # (nothing)
+        # float32 direction
+        # float32 ang_obstacle_check
         # ---
-        # bool success    # indicate successful run of triggered service
-        # string message  # informational, e.g. for error messages
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages.
+        # float32 min_radar_distance_to_robot_edge  # minimum distance from radar to robot edge in meters
 
         response.success = True
         response.message = "Nav Trigger"
+        response.min_radar_distance_to_robot_edge = 0.0
         return response
 
 
