@@ -6,8 +6,8 @@
 {"name": "Coffee Table", 	        "height": [0.75], 			                "room": "Living Room",  "nav_coords": [ 2.00,  2.70, 180.0], "top_left_coords": [ 1.35,  3.61], "bot_right_coords": [ 0.68,  1.80], "look": "horizontal"},
 {"name": "Living Room Trashcan",    "height": [0.28], 			                "room": "Living Room",  "nav_coords": [ 1.95,  3.95, 160.0], "top_left_coords": [ 1.16,  4.44], "bot_right_coords": [ 0.88,  4.16], "look": "horizontal"},
 
-{"name": "Dishwasher", 	            "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 4.45,  3.30,  90.0], "top_left_coords": [ 5.10,  4.90], "bot_right_coords": [ 4.37,  3.90], "look":"horizontal"},
-{"name": "Fridge", 		            "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 4.45,  3.30, 110.0], "top_left_coords": [ 4.37,  4.90], "bot_right_coords": [ 3.88,  4.00], "look":"vertical"},
+{"name": "Dishwasher", 	            "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 4.30,  3.30,  90.0], "top_left_coords": [ 5.10,  4.90], "bot_right_coords": [ 4.37,  3.90], "look":"horizontal"},
+{"name": "Fridge", 		            "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 4.30,  3.30, 110.0], "top_left_coords": [ 4.37,  4.90], "bot_right_coords": [ 3.88,  4.00], "look":"vertical"},
 {"name": "Dinner Table", 	        "height": [0.75], 			                "room": "Kitchen", 	    "nav_coords": [ 5.70,  3.62, 270.0], "top_left_coords": [ 6.20,  2.80], "bot_right_coords": [ 4.90,  0.76], "look":"horizontal"},
 {"name": "Kitchen Counter",         "height": [0.85], 			                "room": "Kitchen", 	    "nav_coords": [ 6.00,  3.62,  90.0], "top_left_coords": [ 6.89,  5.16], "bot_right_coords": [ 5.10,  4.46], "look":"horizontal"},
 {"name": "Kitchen Cabinet", 	    "height": [1.81, 1.39, 0.97, 0.55, 0.13],   "room": "Kitchen", 	    "nav_coords": [ 6.00,  3.62,   0.0], "top_left_coords": [ 7.36,  4.15], "bot_right_coords": [ 6.80,  3.10], "look":"vertical"},

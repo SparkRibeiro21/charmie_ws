@@ -3198,7 +3198,7 @@ class RobotStdFunctions():
         self.set_neck(position=[0, 0], wait_for_end_of=False)
         self.set_rgb(YELLOW+HALF_ROTATE)
 
-        self.set_speech(filename="sound_effects/ai_preto", wait_for_end_of=False)
+        # self.set_speech(filename="sound_effects/ai_preto", wait_for_end_of=False)
 
         # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
@@ -4366,7 +4366,7 @@ class RobotStdFunctions():
                     self.asked_help = True
                     return picked_height, self.asked_help
 
-                self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
+                self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=False)
 
                 # ADJUST ARM POSITION DEPENDING ON OBJECT HEIGHT
                 if MINIMUM_FRONT_HEIGHT <= valid_detected_object.position_relative.z <= HALFWAY_FRONT_HEIGHT:
@@ -4398,12 +4398,12 @@ class RobotStdFunctions():
 
                 elif HALFWAY_TOP_HEIGHT > valid_detected_object.position_relative.z:
 
-                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
+                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=False)
                     self.set_torso_position(legs=80, torso=8, wait_for_end_of=False) 
                     self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
 
                 elif HALFWAY_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
-                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
+                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=False)
 
                 # ADJUST ROBOT POSITION IN RELATION TO THE OBJECT
                 if navigation:
@@ -4584,7 +4584,7 @@ class RobotStdFunctions():
                 #MOVE TO SAFE POSITION DEPENDING ON MODE SELECTED
 
                 if pick_mode == "front":
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=False)
                     self.set_face("charmie_face", wait_for_end_of=False)
 
                     
@@ -4614,7 +4614,7 @@ class RobotStdFunctions():
                     #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
                     #self.set_torso_position(legs=140, torso=8) 
 
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=False)
                     self.set_face("charmie_face", wait_for_end_of=False)
 
 
