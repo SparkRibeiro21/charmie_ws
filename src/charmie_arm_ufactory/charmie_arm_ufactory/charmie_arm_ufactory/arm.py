@@ -203,7 +203,7 @@ class ArmUfactory(Node):
 		self.second_waving_position = [ -90.0,  -53.0,  -58.0,  154.0,    7.0,  110.0] 
 
 		### PICK OBJECT FRONT JOINT VARIABLES###
-		self.initial_position_joints_pick =								[-225.0, 83.0, -65.0, -1.0, 75.0, 270.0]
+		self.initial_position_joints_pick =									[-225.0,  83.0, -65.0, -1.0, 75.0, 270.0]
 		self.initial_position_to_search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
 		#self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
@@ -803,15 +803,15 @@ class ArmUfactory(Node):
 	### SEARCH FOR OBJECT ON TABLE TOP ###
 	def initial_pose_to_search_table_top(self):
 		match self.estado_tr:
+			# case 0:
+			# 	self.set_gripper_speed_(speed=5000)
+			# case 1:
+			# 	self.set_gripper_position_(pos=0, wait=True)
 			case 0:
-				self.set_gripper_speed_(speed=5000)
-			case 1:
-				self.set_gripper_position_(pos=0, wait=True)
-			case 2:
 				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
-			case 3:
+			case 1:
 				self.set_joint_values_(angles=self.search_table_top_joints, speed=25, wait=True)
-			case 4:
+			case 2:
 				self.finish_arm_movement_()
 
 	def search_table_to_initial_pose_top(self):
