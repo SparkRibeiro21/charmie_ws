@@ -1,9 +1,10 @@
 # Goal
-float32 angle
-float32 max_angular_speed
+float32 distance
+float32 direction
+float32 ang_obstacle_check
+float32 max_speed
 float32 tolerance
 float32 kp
-bool use_wheel_odometry
 float32 timeout
 ---
 # Result

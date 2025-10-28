@@ -2648,13 +2648,13 @@ class RobotStdFunctions():
             message = "Obstacle Adjustment Complete."
             return success, message
 
-    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1, kp=1.3, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1.0, kp=1.3, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
 
         # Create a goal
         adjust_msg = AdjustNavigationAngle.Goal()
         adjust_msg.angle =              float(angle)
         adjust_msg.max_angular_speed =  float(max_angular_speed)
-        adjust_msg.tolerance =          int(tolerance)
+        adjust_msg.tolerance =          float(tolerance)
         adjust_msg.kp =                 float(kp)
         adjust_msg.use_wheel_odometry = use_wheel_odometry
         adjust_msg.timeout =            float(timeout)

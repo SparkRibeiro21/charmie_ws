@@ -213,7 +213,7 @@ class ROS2NavigationNode(Node):
             err_code, msg = self.adjust_angle(
                 angle=angle_deg,
                 max_angular_speed=max_ang_speed,
-                tolerance=int(tol_deg),
+                tolerance=tol_deg,
                 kp=kp,
                 use_wheel_odometry=use_wheel_odom,
                 should_stop_fn=should_stop_fn,
@@ -260,7 +260,7 @@ class ROS2NavigationNode(Node):
         finally:
             self._clear_active_goal(goal_handle)
 
-    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1, kp=1.3, use_wheel_odometry=False, \
+    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1.0, kp=1.3, use_wheel_odometry=False, \
                      should_stop_fn=None, feedback_fn=None, timeout_s=0.0):
 
         # normalize direction to be between -180 and 180
