@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- Add argument for hardware selection -->
-  <xacro:arg name="use_real_hardware" default="false"/>
+  <xacro:arg name="use_real_hardware" default="true"/>
   <!-- Set required flags used by xarm_description flags -->
   <xacro:property name="is_ros2" value="true"/>
   <xacro:property name="use_xacro_load_yaml" value="true"/>
@@ -35,7 +35,7 @@
   <xacro:property name="control_plugin" value="$(arg use_real_hardware)"/>
   <xacro:if value="${control_plugin}">
     <xacro:property name="ros2_control_plugin" value="uf_robot_hardware/UFRobotSystemHardware"/>
-    <xacro:property name="robot_ip" value="192.168.1.219"/>
+    <xacro:property name="robot_ip" value="0192.168.1.219"/>
   </xacro:if>
   <xacro:unless value="${control_plugin}">
     <xacro:property name="ros2_control_plugin" value="mock_components/GenericSystem"/>
