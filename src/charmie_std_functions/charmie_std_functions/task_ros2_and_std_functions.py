@@ -19,6 +19,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
     GetSoundClassificationContinuous, GetMinRadarDistance
+from charmie_interfaces.action import AdjustNavigationAngle
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
@@ -193,6 +194,8 @@ class ROS2TaskNode(Node):
         ### Actions (Clients) ###
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
+
+        self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
     
 
         self.send_node_used_to_gui()
@@ -252,6 +255,8 @@ class ROS2TaskNode(Node):
         if self.ros2_modules["charmie_navigation"]:
             while not self.get_minimum_radar_distance_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+            while not self.adjust_navigation_angle_client.wait_for_server(1.0):
+                self.get_logger().warn("Waiting for Action Server Adjust Angle Command...")
 
         if self.ros2_modules["charmie_nav2"]:
             while not self.nav2_client_.server_is_ready():
@@ -433,13 +438,19 @@ class ROS2TaskNode(Node):
         self.is_radar_initialized = False
 
         self.goal_handle_ = None
-        self.goal_follow_waypoints_handle_ = None
-        self.nav2_goal_accepted = False
+        self.nav2_goal_accepted = None
         self.nav2_feedback = NavigateToPose.Feedback()
         self.nav2_status = GoalStatus.STATUS_UNKNOWN
-        self.nav2_follow_waypoints_goal_accepted = False
+
+        self.goal_follow_waypoints_handle_ = None
+        self.nav2_follow_waypoints_goal_accepted = None
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+
+        self.adjust_angle_navigation_handle_ = None
+        self.adjust_angle_navigation_accepted = None
+        self.adjust_angle_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_angle_navigation_status = GoalStatus.STATUS_UNKNOWN
 
         self.current_odom_pose = None
         self.current_odom_wheels_pose = None
@@ -575,6 +586,28 @@ class ROS2TaskNode(Node):
 
     def orientation_callback(self, orientation: Float32):
         self.orientation_yaw = orientation.data
+
+    def cmd_vel_callback(self, msg: Twist):
+        self.cmd_vel = msg
+
+    def radar_data_callback(self, radar: RadarData):
+        self.radar = radar
+        self.is_radar_initialized = True
+
+        # DEBUG PRINTS
+        # nos     = self.radar.number_of_sectors
+        # sar     = self.radar.sector_ang_range
+        # sectors = self.radar.sectors
+        # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
+        # i = 0
+        # for s in sectors:
+        #     sa = s.start_angle
+        #     ea = s.end_angle
+        #     md = s.min_distance
+        #     p  = s.point
+        #     hp = s.has_point
+        #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}, Point: ({round(p.x,2)}, {round(p.y,2)}, {round(p.z,2)})")
+        #     i += 1    
 
     ### SERVICES ###
 
@@ -1099,6 +1132,20 @@ class ROS2TaskNode(Node):
         print(response.message)
 
         return response
+    
+    def call_clear_entire_local_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
+        
+        self.clear_entire_local_costmap_client.call_async(request)
+
+        self.clear_local_costmap_success = True
+        self.clear_local_costmap_message = "Clear Local Costmap Sucessfully Sent"
+
+    def call_clear_entire_global_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
+        
+        self.clear_entire_global_costmap_client.call_async(request)
+        
+        self.clear_global_costmap_success = True
+        self.clear_global_costmap_message = "Clear Global Costmap Sucessfully Sent"
 
     ### Nav2 Action Client ###
     # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
@@ -1110,17 +1157,8 @@ class ROS2TaskNode(Node):
             self.goal_handle_.get_result_async().add_done_callback(self.nav2_client_goal_result_callback)
             self.nav2_goal_accepted = True
         else:
+            self.nav2_goal_accepted = False
             self.get_logger().warn("Goal rejected.")
-
-    def nav2_client_cancel_goal(self):
-        if self.goal_handle_ is None:
-            self.get_logger().warn("No active NavigateToPose goal handle to cancel.")
-            return
-
-        self.get_logger().info("Sending cancel request to Nav2...")
-        self.goal_handle_.cancel_goal_async()
-        self.get_logger().info("Cancel request sent.")
-        self.goal_handle_ = None
 
     def nav2_client_goal_result_callback(self, future):
         status = future.result().status
@@ -1137,6 +1175,15 @@ class ROS2TaskNode(Node):
             self.get_logger().warn("CANCELED.")
             
         # self.get_logger().info(f"Result: {result.reached_number}")
+    def nav2_client_cancel_goal(self):
+        if self.goal_handle_ is None:
+            self.get_logger().warn("No active NavigateToPose goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_handle_ = None
 
     def nav2_client_goal_feedback_callback(self, feedback_msg):
         self.nav2_feedback = feedback_msg.feedback
@@ -1159,6 +1206,7 @@ class ROS2TaskNode(Node):
             self.goal_follow_waypoints_handle_.get_result_async().add_done_callback(self.nav2_follow_waypoints_client_goal_result_callback)
             self.nav2_follow_waypoints_goal_accepted = True
         else:
+            self.nav2_follow_waypoints_goal_accepted = False
             self.get_logger().warn("Goal rejected.")
 
     def nav2_follow_waypoints_client_cancel_goal(self):
@@ -1199,43 +1247,60 @@ class ROS2TaskNode(Node):
         # distance_remaining = str(round(feedback.distance_remaining, 2))
         # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
-
-    def cmd_vel_callback(self, msg: Twist):
-        self.cmd_vel = msg
-
-    def radar_data_callback(self, radar: RadarData):
-        self.radar = radar
-        self.is_radar_initialized = True
-
-        # DEBUG PRINTS
-        # nos     = self.radar.number_of_sectors
-        # sar     = self.radar.sector_ang_range
-        # sectors = self.radar.sectors
-        # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
-        # i = 0
-        # for s in sectors:
-        #     sa = s.start_angle
-        #     ea = s.end_angle
-        #     md = s.min_distance
-        #     p  = s.point
-        #     hp = s.has_point
-        #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}, Point: ({round(p.x,2)}, {round(p.y,2)}, {round(p.z,2)})")
-        #     i += 1    
     
-    def call_clear_entire_local_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
-        
-        self.clear_entire_local_costmap_client.call_async(request)
 
-        self.clear_local_costmap_success = True
-        self.clear_local_costmap_message = "Clear Local Costmap Sucessfully Sent"
+    # Adjust Angle Navigation Action Client
+    def adjust_angle_navigation_client_goal_response_callback(self, future):
+        self.adjust_angle_navigation_handle_:ClientGoalHandle = future.result()
+        if self.adjust_angle_navigation_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.adjust_angle_navigation_handle_.get_result_async().add_done_callback(self.adjust_angle_navigation_client_goal_result_callback)
+            self.adjust_angle_navigation_accepted = True
+        else:
+            self.adjust_angle_navigation_accepted = False
+            self.adjust_angle_navigation_handle_ = None
+            self.get_logger().warn("Goal rejected.")
+
+    def adjust_angle_navigation_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.adjust_angle_navigation_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.adjust_angle_navigation_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.adjust_angle_navigation_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.adjust_angle_navigation_status = status
+            self.get_logger().warn(f"Finished with status={status}")
+            
+        # When goal is finished, clear the handle
+        self.adjust_angle_navigation_handle_ = None
+            
+        # self.get_logger().info(f"Result: {result.reached_number}")
+    def adjust_angle_navigation_client_cancel_goal(self):
+        if self.adjust_angle_navigation_handle_ is None:
+            self.get_logger().warn("No active Adjust Angle Navigation goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to adjust_angle_navigation...")
+        self.adjust_angle_navigation_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.adjust_angle_navigation_handle_ = None
+        
+    def adjust_angle_navigation_client_goal_feedback_callback(self, feedback_msg):
+        self.adjust_angle_navigation_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
 
 
-    def call_clear_entire_global_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
-        
-        self.clear_entire_global_costmap_client.call_async(request)
-        
-        self.clear_global_costmap_success = True
-        self.clear_global_costmap_message = "Clear Global Costmap Sucessfully Sent"
 
 
 
@@ -2201,7 +2266,7 @@ class RobotStdFunctions():
                             no_recoveries = str(feedback.number_of_recoveries)
                             distance_remaining = str(round(feedback.distance_remaining, 2))
                             print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
-                            # self.get_logger().info(f"Feedback: {feedback}")
+                            # self.node.get_logger().info(f"Feedback: {feedback}")
                             
                             feedback_start_time = time.time()
 
@@ -2225,6 +2290,12 @@ class RobotStdFunctions():
                     return success, message
 
     def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, clear_costmaps=True, inspection_safety_nav=False, wait_for_end_of=True):
+
+
+        ### NA FUNCAO DO NAV2
+        ### ADD CANCEL AND IS DONE
+        ### Updates aos callbacks do nav2
+
 
         # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
@@ -2437,96 +2508,6 @@ class RobotStdFunctions():
     
     def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, wait_for_end_of=True):
 
-
-        """ def get_continuous_sound_classification(self, break_sounds=[], timeout=0.0, score_threshold=-1.0, speak_pre_hearing=True, speak_post_hearing=True, face_hearing="charmie_face_green", wait_for_end_of=True):
-            
-            request = GetSoundClassificationContinuous.Request()
-            request.break_sounds = break_sounds
-            request.timeout = float(timeout)
-            request.score_threshold = float(score_threshold) # from 0 to 1, if by deafult -1 is used, sound_classification server default value is used
-
-            self.node.continuous_sound_classification_detected_label = ""
-            self.node.continuous_sound_classification_detected_score = 0.0
-            
-            if speak_pre_hearing:
-                self.set_speech(filename="sound_classification/sound_classification_start_"+str(random.randint(1, 6)), wait_for_end_of=True)
-            self.set_face(face_hearing)
-            
-            self.node.call_continuous_sound_classification_server(request=request, wait_for_end_of=wait_for_end_of)
-
-            if wait_for_end_of:
-                while not self.node.waited_for_end_of_continuous_sound_classification:
-                    pass
-                self.set_face("charmie_face")
-                if speak_post_hearing:
-                    if self.node.continuous_sound_classification_success:
-                        self.set_speech(filename="sound_classification/sound_classification_continuous_stop", wait_for_end_of=True)
-                        self.set_speech(command=self.node.continuous_sound_classification_detected_label, wait_for_end_of=True)
-                    else: # timeout or error
-                        self.set_speech(filename="sound_classification/sound_classification_continuous_timeout", wait_for_end_of=True)
-            self.node.waited_for_end_of_continuous_sound_classification = False
-
-            return  self.node.continuous_sound_classification_success, \
-                    self.node.continuous_sound_classification_message, \
-                    self.node.continuous_sound_classification_detected_label, \
-                    self.node.continuous_sound_classification_detected_score
-            
-        def is_get_continuous_sound_classification_done(self, speak_post_hearing=True):
-
-            if self.node.received_continuous_sound_classification:
-                self.node.received_continuous_sound_classification = False
-                self.set_face("charmie_face")
-                if speak_post_hearing:
-                    if self.node.continuous_sound_classification_success:
-                        self.set_speech(filename="sound_classification/sound_classification_continuous_stop", wait_for_end_of=True)
-                        self.set_speech(command=self.node.continuous_sound_classification_detected_label, wait_for_end_of=True)
-                    else: # timeout or error
-                        self.set_speech(filename="sound_classification/sound_classification_continuous_timeout", wait_for_end_of=True)
-                return  True, \
-                        self.node.continuous_sound_classification_success, \
-                        self.node.continuous_sound_classification_message, \
-                        self.node.continuous_sound_classification_detected_label, \
-                        self.node.continuous_sound_classification_detected_score
-            
-            return False, False, "", "", 0.0 """
-
-        """# this prevents some previous unwanted value that may be in the wait_for_end_of_ variable 
-        self.node.waited_for_end_of_arm = False
-
-        ### convert the lists to floats (prevents ROS2 errors)
-        linear_motion_pose = [float(x) for x in linear_motion_pose]
-        move_tool_line_pose = [float(x) for x in move_tool_line_pose]
-        joint_motion_values = [float(x) for x in joint_motion_values]
-
-        # converts values that should be radians but we are using blockly standard so we expect values as degrees, which are then internally converted to radians 
-        linear_motion_pose[3] = math.radians(linear_motion_pose[3])
-        linear_motion_pose[4] = math.radians(linear_motion_pose[4])
-        linear_motion_pose[5] = math.radians(linear_motion_pose[5])
-       
-        move_tool_line_pose[3] = math.radians(move_tool_line_pose[3])
-        move_tool_line_pose[4] = math.radians(move_tool_line_pose[4])
-        move_tool_line_pose[5] = math.radians(move_tool_line_pose[5])
-    
-        temp = ArmController()
-        temp.command = command
-        temp.linear_motion_pose  = linear_motion_pose
-        temp.move_tool_line_pose = move_tool_line_pose
-        temp.joint_motion_values = joint_motion_values
-        self.node.arm_command_publisher.publish(temp)
-
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_arm:
-                pass
-            self.node.waited_for_end_of_arm = False
-        else:
-            self.node.arm_success = True
-            self.node.arm_message = "Wait for answer not needed"
-
-        # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
-        return self.node.arm_success, self.node.arm_message"""
-
-
-
         ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
         ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
         ### ALL THE CODE IS READY. JUST REPLACE:
@@ -2666,10 +2647,85 @@ class RobotStdFunctions():
             success = True
             message = "Obstacle Adjustment Complete."
             return success, message
-    
-    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1, kp=1.3, use_wheel_odometry=False, wait_for_end_of=True):
 
-        ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
+    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1, kp=1.3, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+
+        # Create a goal
+        adjust_msg = AdjustNavigationAngle.Goal()
+        adjust_msg.angle =              float(angle)
+        adjust_msg.max_angular_speed =  float(max_angular_speed)
+        adjust_msg.tolerance =          int(tolerance)
+        adjust_msg.kp =                 float(kp)
+        adjust_msg.use_wheel_odometry = use_wheel_odometry
+        adjust_msg.timeout =            float(timeout)
+
+        self.node.get_logger().info("Waiting for adjust navigation server...")
+        self.node.adjust_navigation_angle_client.wait_for_server()
+        self.node.get_logger().info("Adjust Navigation server is ON...")
+
+        self.node.adjust_angle_navigation_handle_ = None
+        self.node.adjust_angle_navigation_accepted = None
+        self.node.adjust_angle_navigation_status = GoalStatus.STATUS_UNKNOWN
+        self.node.adjust_angle_navigation_feedback = None
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.adjust_navigation_angle_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_angle_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_angle_navigation_client_goal_response_callback)
+        self.node.get_logger().info("Adjust Navigation Goal Sent")
+
+        self.set_rgb(BLUE+BACK_AND_FORTH_8)
+
+        while self.node.adjust_angle_navigation_accepted is None:
+            time.sleep(0.05)
+        
+        success = self.node.adjust_angle_navigation_accepted
+        message = ""
+
+        self.set_rgb(CYAN+BACK_AND_FORTH_8)
+
+        if wait_for_end_of:
+
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.adjust_angle_navigation_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.adjust_angle_navigation_feedback
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+                        # self.node.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.adjust_angle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+                self.set_rgb(GREEN+BACK_AND_FORTH_8)
+                self.node.get_logger().info("ADJUST ANGLE RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            elif self.node.adjust_angle_navigation_status == GoalStatus.STATUS_ABORTED:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
+                self.node.get_logger().info("ADJUST ANGLE RESULT: ABORTED.")
+                success = False
+                message = "Canceled moved to position"
+            elif self.node.adjust_angle_navigation_status == GoalStatus.STATUS_CANCELED:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
+                self.node.get_logger().info("ADJUST ANGLE RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            return success, message
+        
+        else:
+            success = True
+            message = "Sent Command to Adjust Angle, not waiting for end of"
+            return success, message
+
+
+        """ ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
         ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
         ### ALL THE CODE IS READY. JUST REPLACE:
         ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
@@ -2755,7 +2811,18 @@ class RobotStdFunctions():
 
         success = True
         message = "Angle Adjustment Complete."
-        return success, message
+        return success, message """
+    
+    def adjust_angle_cancel(self):
+        if self.node.adjust_angle_navigation_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.adjust_angle_navigation_client_cancel_goal()
+
+    def adjust_angle_is_done(self):
+        if self.node.adjust_angle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
 
     def get_minimum_radar_distance(self, direction=0.0, ang_obstacle_check=45):
 
