@@ -24,8 +24,10 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "action/CountUntil.action"
   "action/AdjustNavigationAngle.action"
+  "action/AdjustNavigationObstacles.action"
+  "action/AdjustNavigationOmnidirectional.action"
+  "action/CountUntil.action"
   "msg/ArmController.msg"
   "msg/BoundingBox.msg"
   "msg/BoundingBoxAndPoints.msg"
