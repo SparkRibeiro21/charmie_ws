@@ -563,26 +563,31 @@ class ROS2NavigationNode(Node):
             )
 
             if err_code == self.ERR_SUCCESS:
-                self._stop_robot()
+                if not enter_special:
+                    self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.succeed()
                 res.error_code = self.ERR_SUCCESS
             elif err_code == self.ERR_CANCELED:
-                self._stop_robot()
+                if not enter_special:
+                    self._stop_robot()
                 goal_handle.canceled()
                 res.error_code = self.ERR_CANCELED
             elif err_code == self.ERR_TIMEOUT:
-                self._stop_robot()
+                if not enter_special:
+                    self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
                 res.error_code = self.ERR_TIMEOUT
             elif err_code == self.ERR_NO_ODOM:
-                self._stop_robot()
+                if not enter_special:
+                    self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
                 res.error_code = self.ERR_NO_ODOM
             else:
-                self._stop_robot()
+                if not enter_special:
+                    self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
                 res.error_code = self.ERR_EXCEPTION
