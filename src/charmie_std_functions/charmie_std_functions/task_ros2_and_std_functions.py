@@ -2333,7 +2333,7 @@ class RobotStdFunctions():
 
 
 
-    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, inspection_safety_nav=False, wait_for_end_of=True):
+    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         goal_msg = NavigateToPose.Goal()
@@ -2520,15 +2520,91 @@ class RobotStdFunctions():
         else:
             return False
         
-    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, clear_costmaps=True, inspection_safety_nav=False, wait_for_end_of=True):
+    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        if move_coords:
+
+            goal_msg = FollowWaypoints.Goal()
+            goal_msg.poses = []
+
+            for x, y, yaw in move_coords: 
+                
+                pose = PoseStamped()
+                pose.header.frame_id = "map"
+                pose.header.stamp = self.node.get_clock().now().to_msg()
+                pose.pose.position.x = float(x)
+                pose.pose.position.y = float(y)
+                pose.pose.position.z = float(0.0)
+                q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(yaw)) # math.radians(initial_position[2]))        
+                pose.pose.orientation.x = q_x
+                pose.pose.orientation.y = q_y
+                pose.pose.orientation.z = q_z
+                pose.pose.orientation.w = q_w
+                
+                goal_msg.poses.append(pose)
+
+            self.node.get_logger().info("Waiting for CHARMIE Nav2 Follow Waypoints server...")
+            self.node.nav2_client_follow_waypoints_.wait_for_server()
+            self.node.get_logger().info("CHARMIE Nav2 Follow Waypoints server is ON...")
+
+            self.node.goal_follow_waypoints_handle_ = None
+            self.node.nav2_follow_waypoints_goal_accepted = None
+            self.node.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+            self.node.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
+
+            # Send the goal
+            # self.node.get_logger().info("Sending goal...")
+            self.node.nav2_client_follow_waypoints_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_follow_waypoints_client_goal_feedback_callback).add_done_callback(self.node.nav2_follow_waypoints_client_goal_response_callback)
+            self.node.get_logger().info("CHARMIE Nav2 Follow Waypoints Goal Sent")
+
+            while self.node.nav2_follow_waypoints_goal_accepted is None:
+                time.sleep(0.05)
+            
+            success = self.node.nav2_follow_waypoints_goal_accepted
+            message = ""
+
+            if wait_for_end_of:
+
+                feedback_freq = 1.0
+                feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                feedback_start_time = time.time()
+
+                while self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
+
+                    if print_feedback:
+
+                        if time.time() - feedback_start_time > feedback_timer_period:
+                            feedback = self.node.nav2_follow_waypoints_feedback
+                            navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                            distance_remaining = str(round(feedback.distance_remaining, 2))
+                            print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+                            # self.node.get_logger().info(f"Feedback: {feedback}")
+                            feedback_start_time = time.time()
+                
+                if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+                    self.node.get_logger().info("CHARMIE NAV2 FOLLOW WAYPOINTS RESULT: SUCCEEDED.")
+                    success = True
+                    message = "Successfully moved to position"
+                # elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_ABORTED:
+                #     self.set_rgb(RED+BACK_AND_FORTH_8)
+                #     self.node.get_logger().info("CHARMIE NAV2 RESULT: ABORTED.")
+                #     success = False
+                #     message = "Canceled moved to position"
+                elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
+                    self.node.get_logger().info("CHARMIEN NAV2 FOLLOW WAYPOINTS RESULT: CANCELED.")
+                    success = False
+                    message = "Canceled moved to position"
+
+                return success, message
+            
+            else:
+                success = True
+                message = "Sent Command to CHARMIE Nav2 Follow Waypoints, not waiting for end of"
+                return success, message
+            
 
 
-        ### NA FUNCAO DO NAV2
-        ### ADD CANCEL AND IS DONE
-        ### Updates aos callbacks do nav2
-
-
-        # Whether the nav2 goal has been successfully completed until the end
+        """ # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
 
         if move_coords:
@@ -2615,8 +2691,19 @@ class RobotStdFunctions():
                     elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
                         self.set_rgb(RED+BACK_AND_FORTH_8)
                         print("FINISHED TR CANCELED")
-                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE") """
 
+    def move_to_position_follow_waypoints_cancel(self):
+        if self.node.goal_follow_waypoints_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.nav2_client_cancel_goal()
+
+    def move_to_position_follow_waypoints_is_done(self):
+        if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
+        
     def add_rotation_to_pick_position(self, move_coords):
         move_coords_copy = move_coords.copy()
         move_coords_copy[2]+=45.0

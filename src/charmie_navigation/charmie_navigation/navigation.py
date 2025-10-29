@@ -9,7 +9,7 @@ from rclpy.action import ActionServer, GoalResponse, CancelResponse
 from rclpy.action.server import ServerGoalHandle
 from rclpy.action.client import ClientGoalHandle
 
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, PoseStamped
 from realsense2_camera_msgs.msg import RGBD
 from nav_msgs.msg import Odometry
 from nav2_msgs.srv import ClearEntireCostmap
@@ -55,6 +55,12 @@ class ROS2NavigationNode(Node):
         self.nav2_goal_accepted = False
         self.nav2_status = GoalStatus.STATUS_UNKNOWN
 
+        self.goal_follow_waypoints_handle_ = None
+        self._active_charmie_goal_follow_waypoints = None         # active ServerGoalHandle for our wrapper
+        self.nav2_follow_waypoints_goal_accepted = None
+        self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
+        self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+        
         # Error codes for AdjustNavigationAngle.Result
         self.ERR_SUCCESS  = 0
         self.ERR_TIMEOUT  = 1
@@ -138,6 +144,16 @@ class ROS2NavigationNode(Node):
             goal_callback=self._charmie_nav_goal_cb,
             cancel_callback=self._charmie_nav_cancel_cb,
             execute_callback=self._charmie_nav_execute_cb,
+            callback_group=self.cb_group,
+        )
+
+        self.charmie_nav_server = ActionServer(
+            self,
+            FollowWaypoints,
+            "charmie_follow_waypoints",
+            goal_callback=self._charmie_nav_follow_waypoints_goal_cb,
+            cancel_callback=self._charmie_nav_follow_waypoints_cancel_cb,
+            execute_callback=self._charmie_nav_follow_waypoints_execute_cb,
             callback_group=self.cb_group,
         )
 
@@ -1242,6 +1258,237 @@ class ROS2NavigationNode(Node):
                     success = False
                     message = "Aborted moved to position due to safety measures"
                     return success, message
+
+
+
+
+
+
+
+
+
+
+    def _charmie_nav_follow_waypoints_goal_cb(self, goal: NavigateToPose.Goal):
+        # If we already have a Charmie goal running, mark it as CANCELED (preemption)
+        if self._active_charmie_goal_follow_waypoints and self._active_charmie_goal_follow_waypoints.is_active:
+            try:
+                self.get_logger().info("Preempt: canceling previous Charmie goal (marking CANCELED).")
+                self._active_charmie_goal_follow_waypoints.canceled()
+            except Exception as e:
+                self.get_logger().warn(f"Could not mark previous Charmie goal canceled: {e}")
+
+        # Also cancel the underlying Nav2 FollowWAypoints goal so the robot stops moving
+        if self.goal_follow_waypoints_handle_ is not None:
+            self.get_logger().info("Preempt: canceling current Nav2 FollowWAypoints.")
+            try:
+                self.nav2_client_cancel_goal()
+            except Exception as e:
+                self.get_logger().warn(f"Preempt: Nav2 FollowWAypoints cancel request failed/ignored: {e}")
+
+        return GoalResponse.ACCEPT
+
+
+    def _charmie_nav_follow_waypoints_cancel_cb(self, goal_handle):
+        # We’ll forward a cancel to Nav2 FollowWAypoint swhen we detect it in execute()
+        return CancelResponse.ACCEPT
+
+    def _charmie_nav_follow_waypoints_execute_cb(self, goal_handle):
+        # ---- ADD: record this as the active Charmie goal
+        self._active_charmie_goal_follow_waypoints = goal_handle
+        try:
+            goal: NavigateToPose.Goal = goal_handle.request
+            pose = goal.pose.pose
+
+            x = float(pose.position.x)
+            y = float(pose.position.y)
+            theta_deg = math.degrees(self.get_yaw_from_quaternion(
+                pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w
+            ))
+            move_coords = [x, y, theta_deg]
+
+            ok, msg = self.move_to_position(
+                move_coords=move_coords,
+                print_feedback=True,
+                feedback_freq=10.0,
+                clear_costmaps=True,
+                inspection_safety_nav=False,
+                wait_for_end_of=True,
+                goal_handle=goal_handle,
+            )
+
+            result = NavigateToPose.Result()
+
+            # ---- ADD: if this goal was already marked canceled (by preemption), exit quietly
+            if not goal_handle.is_active:
+                return result
+
+            # Your existing logic:
+            if goal_handle.is_cancel_requested:
+                goal_handle.canceled()
+                return result
+
+            if ok:
+                goal_handle.succeed()
+            else:
+                goal_handle.abort()
+            return result
+
+        finally:
+            # ---- ADD: clear the pointer when we leave execute
+            self._active_charmie_goal_follow_waypoints = None
+
+
+
+
+    # Navigate through poses
+    def nav2_follow_waypoints_client_goal_response_callback(self, future):
+        self.goal_follow_waypoints_handle_:ClientGoalHandle = future.result()
+        if self.goal_follow_waypoints_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.goal_follow_waypoints_handle_.get_result_async().add_done_callback(self.nav2_follow_waypoints_client_goal_result_callback)
+            self.nav2_follow_waypoints_goal_accepted = True
+        else:
+            self.nav2_follow_waypoints_goal_accepted = False
+            self.goal_follow_waypoints_handle_ = None
+            self.get_logger().warn("Goal rejected.")
+
+    def nav2_follow_waypoints_client_cancel_goal(self):
+        if self.goal_follow_waypoints_handle_ is None:
+            self.get_logger().warn("No active NavigateToPoseFollowWaypoints goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_follow_waypoints_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_follow_waypoints_handle_ = None
+
+    def nav2_follow_waypoints_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.nav2_follow_waypoints_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.nav2_follow_waypoints_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.nav2_follow_waypoints_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.nav2_follow_waypoints_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}")
+            
+        # When goal is finished, clear the handle
+        self.goal_follow_waypoints_handle_ = None
+
+    def nav2_follow_waypoints_client_goal_feedback_callback(self, feedback_msg):
+        self.nav2_follow_waypoints_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+        # current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+        # current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+        # no_recoveries = str(feedback.number_of_recoveries)
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
+    
+    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        # Whether the nav2 goal has been successfully completed until the end
+        nav2_goal_completed = False
+
+        if move_coords:
+
+            goal_msg = FollowWaypoints.Goal()
+            goal_msg.poses = []
+
+            for x, y, yaw in move_coords: 
+                
+                pose = PoseStamped()
+                pose.header.frame_id = "map"
+                pose.header.stamp = self.get_clock().now().to_msg()
+                pose.pose.position.x = float(x)
+                pose.pose.position.y = float(y)
+                pose.pose.position.z = float(0.0)
+                q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(yaw)) # math.radians(initial_position[2]))        
+                pose.pose.orientation.x = q_x
+                pose.pose.orientation.y = q_y
+                pose.pose.orientation.z = q_z
+                pose.pose.orientation.w = q_w
+                
+                goal_msg.poses.append(pose)
+
+            self.set_rgb(BLUE+BACK_AND_FORTH_8)
+                    
+            while not nav2_goal_completed:
+                        
+                self.nav2_follow_waypoints_goal_accepted = False
+                self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+
+                # Makes sure goal is accepted, and if not attempts to resend it
+                while not self.nav2_follow_waypoints_goal_accepted:
+                    
+                    self.get_logger().info("Waiting for nav2 server...")
+                    self.nav2_client_follow_waypoints_.wait_for_server()
+                    self.get_logger().info("Nav2 server is ON...")
+
+                    # Send the goal
+                    self.get_logger().info("Sending goal...")
+                    self.nav2_client_follow_waypoints_.send_goal_async(goal_msg, feedback_callback=self.nav2_follow_waypoints_client_goal_feedback_callback).add_done_callback(self.nav2_follow_waypoints_client_goal_response_callback)
+                    self.get_logger().info("Goal Sent")
+
+                    time.sleep(0.5)
+
+
+                if wait_for_end_of:
+
+                    feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                    feedback_start_time = time.time()
+
+                    self.set_rgb(CYAN+BACK_AND_FORTH_8)
+
+                    while self.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
+                        
+                        if print_feedback:
+
+                            if time.time() - feedback_start_time > feedback_timer_period:
+
+                                # prints de feedback
+                                feedback = self.nav2_follow_waypoints_feedback
+                                current_waypoint = str(feedback.current_waypoint)
+                                
+                                self.get_logger().info(f"Current Waypoint: {current_waypoint}")
+                                # self.get_logger().info(f"Feedback: {feedback}")
+                                
+                                feedback_start_time = time.time()
+
+                    
+                    if self.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+                        self.set_rgb(GREEN+BACK_AND_FORTH_8)
+                        print("FINISHED TR SUCCEEDED")
+                        nav2_goal_completed = True                
+                    elif self.nav2_follow_waypoints_status == GoalStatus.STATUS_ABORTED:
+                        self.set_rgb(RED+BACK_AND_FORTH_8)
+                        print("FINISHED TR ABORTED")
+                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                    elif self.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
+                        self.set_rgb(RED+BACK_AND_FORTH_8)
+                        print("FINISHED TR CANCELED")
+                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+
+
+
+
+
+
+
+
+
+
+
 
 
        

@@ -94,13 +94,13 @@ class TaskMain():
                 # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=False)
 
-                time.sleep(5.0)
-                self.robot.move_to_position_cancel()
+                # time.sleep(5.0)
+                # self.robot.move_to_position_cancel()
 
-                # while not self.robot.move_to_position_is_done():
-                #     print("Waiting...")
-                #     time.sleep(0.5)
-                #     pass
+                while not self.robot.move_to_position_is_done():
+                    print("Waiting...")
+                    time.sleep(0.5)
+                    pass
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
                 self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=True)
@@ -118,13 +118,13 @@ class TaskMain():
                 # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=False)
 
-                time.sleep(5.0)
-                self.robot.move_to_position_cancel()
+                # time.sleep(5.0)
+                # self.robot.move_to_position_cancel()
 
-                # while not self.robot.move_to_position_is_done():
-                #     print("Waiting...")
-                #     time.sleep(0.5)
-                #     pass
+                while not self.robot.move_to_position_is_done():
+                    print("Waiting...")
+                    time.sleep(0.5)
+                    pass
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
                 self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET2, wait_for_end_of=True)
