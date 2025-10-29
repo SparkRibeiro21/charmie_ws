@@ -2362,15 +2362,11 @@ class RobotStdFunctions():
         self.node.charmie_nav2_client_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_client_goal_feedback_callback).add_done_callback(self.node.nav2_client_goal_response_callback)
         self.node.get_logger().info("CHARMIE Nav2 Goal Sent")
 
-        self.set_rgb(BLUE+BACK_AND_FORTH_8)
-
         while self.node.nav2_goal_accepted is None:
             time.sleep(0.05)
         
         success = self.node.nav2_goal_accepted
         message = ""
-
-        self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
         if wait_for_end_of:
 
@@ -2391,7 +2387,6 @@ class RobotStdFunctions():
                         feedback_start_time = time.time()
             
             if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
-                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 self.node.get_logger().info("CHARMIE NAV2 RESULT: SUCCEEDED.")
                 success = True
                 message = "Successfully moved to position"
@@ -2401,7 +2396,6 @@ class RobotStdFunctions():
             #     success = False
             #     message = "Canceled moved to position"
             elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("CHARMIEN NAV2 RESULT: CANCELED.")
                 success = False
                 message = "Canceled moved to position"
@@ -2781,15 +2775,11 @@ class RobotStdFunctions():
         self.node.adjust_navigation_omni_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_omni_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_omni_navigation_client_goal_response_callback)
         self.node.get_logger().info("Adjust Navigation Goal Sent")
 
-        self.set_rgb(BLUE+BACK_AND_FORTH_8)
-
         while self.node.adjust_omni_navigation_accepted is None:
             time.sleep(0.05)
         
         success = self.node.adjust_omni_navigation_accepted
         message = ""
-
-        self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
         if wait_for_end_of:
 
@@ -2810,17 +2800,14 @@ class RobotStdFunctions():
                         feedback_start_time = time.time()
             
             if self.node.adjust_omni_navigation_status == GoalStatus.STATUS_SUCCEEDED:
-                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OMNI RESULT: SUCCEEDED.")
                 success = True
                 message = "Successfully moved to position"
             elif self.node.adjust_omni_navigation_status == GoalStatus.STATUS_ABORTED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OMNI RESULT: ABORTED.")
                 success = False
                 message = "Canceled moved to position"
             elif self.node.adjust_omni_navigation_status == GoalStatus.STATUS_CANCELED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OMNI RESULT: CANCELED.")
                 success = False
                 message = "Canceled moved to position"
@@ -2869,15 +2856,11 @@ class RobotStdFunctions():
         self.node.adjust_navigation_obstacle_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_obstacle_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_obstacle_navigation_client_goal_response_callback)
         self.node.get_logger().info("Adjust Navigation Goal Sent")
 
-        self.set_rgb(BLUE+BACK_AND_FORTH_8)
-
         while self.node.adjust_obstacle_navigation_accepted is None:
             time.sleep(0.05)
         
         success = self.node.adjust_obstacle_navigation_accepted
         message = ""
-
-        self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
         if wait_for_end_of:
 
@@ -2898,17 +2881,14 @@ class RobotStdFunctions():
                         feedback_start_time = time.time()
             
             if self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
-                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OBSTACLE RESULT: SUCCEEDED.")
                 success = True
                 message = "Successfully moved to position"
             elif self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_ABORTED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OBSTACLE RESULT: ABORTED.")
                 success = False
                 message = "Canceled moved to position"
             elif self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_CANCELED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OBSTACLE RESULT: CANCELED.")
                 success = False
                 message = "Canceled moved to position"
@@ -2956,15 +2936,11 @@ class RobotStdFunctions():
         self.node.adjust_navigation_angle_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_angle_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_angle_navigation_client_goal_response_callback)
         self.node.get_logger().info("Adjust Navigation Goal Sent")
 
-        self.set_rgb(BLUE+BACK_AND_FORTH_8)
-
         while self.node.adjust_angle_navigation_accepted is None:
             time.sleep(0.05)
         
         success = self.node.adjust_angle_navigation_accepted
         message = ""
-
-        self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
         if wait_for_end_of:
 
@@ -2985,17 +2961,14 @@ class RobotStdFunctions():
                         feedback_start_time = time.time()
             
             if self.node.adjust_angle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
-                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST ANGLE RESULT: SUCCEEDED.")
                 success = True
                 message = "Successfully moved to position"
             elif self.node.adjust_angle_navigation_status == GoalStatus.STATUS_ABORTED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST ANGLE RESULT: ABORTED.")
                 success = False
                 message = "Canceled moved to position"
             elif self.node.adjust_angle_navigation_status == GoalStatus.STATUS_CANCELED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST ANGLE RESULT: CANCELED.")
                 success = False
                 message = "Canceled moved to position"

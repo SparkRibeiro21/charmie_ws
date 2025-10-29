@@ -364,25 +364,30 @@ class ROS2NavigationNode(Node):
 
             # map outcome to action state/result
             if err_code == self.ERR_SUCCESS:
+                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.succeed()
                 res.error_code = self.ERR_SUCCESS
             elif err_code == self.ERR_CANCELED:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self._stop_robot()
                 goal_handle.canceled()
                 res.error_code = self.ERR_CANCELED
             elif err_code == self.ERR_TIMEOUT:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
                 res.error_code = self.ERR_TIMEOUT
             elif err_code == self.ERR_NO_ODOM:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
                 res.error_code = self.ERR_NO_ODOM
             else:  # ERR_EXCEPTION or unknown
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
@@ -403,6 +408,8 @@ class ROS2NavigationNode(Node):
 
     def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1.0, kp=1.3, use_wheel_odometry=False, \
                      should_stop_fn=None, feedback_fn=None, timeout_s=0.0):
+        
+        self.set_rgb(BLUE+BACK_AND_FORTH_8)
 
         # normalize direction to be between -180 and 180
         while angle > 180:
@@ -443,6 +450,8 @@ class ROS2NavigationNode(Node):
 
             rate_hz = 20  # Hz
             rate = 1.0 / rate_hz
+
+            self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
             while True:
                 # cooperative cancel/timeout
@@ -611,29 +620,34 @@ class ROS2NavigationNode(Node):
             )
 
             if err_code == self.ERR_SUCCESS:
+                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 if not enter_special:
                     self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.succeed()
                 res.error_code = self.ERR_SUCCESS
             elif err_code == self.ERR_CANCELED:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 if not enter_special:
                     self._stop_robot()
                 goal_handle.canceled()
                 res.error_code = self.ERR_CANCELED
             elif err_code == self.ERR_TIMEOUT:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 if not enter_special:
                     self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
                 res.error_code = self.ERR_TIMEOUT
             elif err_code == self.ERR_NO_ODOM:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 if not enter_special:
                     self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
                 res.error_code = self.ERR_NO_ODOM
             else:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 if not enter_special:
                     self._stop_robot()
                 if goal_handle.is_active:
@@ -655,6 +669,8 @@ class ROS2NavigationNode(Node):
 
 
     def adjust_omnidirectional(self, dx, dy, ang_obstacle_check=45.0, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, should_stop_fn=None, feedback_fn=None, timeout_s=0.0):
+
+        self.set_rgb(BLUE+BACK_AND_FORTH_8)
 
         SAFETY_DISTANCE_FROM_ROBOT_EDGE = 0.02  # m
 
@@ -701,6 +717,8 @@ class ROS2NavigationNode(Node):
         rate_hz = 20.0
         dt = 1.0 / rate_hz
         tstart = time.monotonic()
+
+        self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
         while True:
             if should_stop_fn and should_stop_fn():
@@ -852,26 +870,31 @@ class ROS2NavigationNode(Node):
             )
 
             if err_code == self.ERR_SUCCESS:
+                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.succeed()
                 res.error_code = self.ERR_SUCCESS
             elif err_code == self.ERR_CANCELED:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self._stop_robot()
                 goal_handle.canceled()
                 res.error_code = self.ERR_CANCELED
             elif err_code == self.ERR_TIMEOUT:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
                 res.error_code = self.ERR_TIMEOUT
             elif err_code == self.ERR_NO_ODOM:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 # not used here, but keep mapping consistent
                 self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
                 res.error_code = self.ERR_NO_ODOM
             else:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self._stop_robot()
                 if goal_handle.is_active:
                     goal_handle.abort()
@@ -893,6 +916,8 @@ class ROS2NavigationNode(Node):
 
     def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5, \
                          should_stop_fn=None, feedback_fn=None, timeout_s=0.0):
+
+        self.set_rgb(BLUE+BACK_AND_FORTH_8)
 
         # Cooperative pre-check
         if should_stop_fn and should_stop_fn():
