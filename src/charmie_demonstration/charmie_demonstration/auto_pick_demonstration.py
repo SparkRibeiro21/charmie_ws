@@ -128,6 +128,8 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
+                self.robot.set_initial_position(self.initial_position)
+
                 self.robot.wait_for_start_button()
                 
                 self.robot.set_initial_position(self.initial_position)
@@ -155,7 +157,10 @@ class TaskMain():
                     selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     print(selected_furniture)
 
-                    self.place_furniture = selected_furniture
+                    self.place_furniture = "Shelf"
+
+                    self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
+
 
 
                 else:

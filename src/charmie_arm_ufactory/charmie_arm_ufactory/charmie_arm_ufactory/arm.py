@@ -204,6 +204,7 @@ class ArmUfactory(Node):
 
 		### PICK OBJECT FRONT JOINT VARIABLES###
 		self.initial_position_joints_pick =									[-225.0,  83.0, -65.0, -1.0, 75.0, 270.0]
+		self.safe_risky_begin_joints =                                      [-216.1, 75.2, -65.0, -1.0, 75.0, 271.0]
 		self.initial_position_to_search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
 		#self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
@@ -217,6 +218,7 @@ class ArmUfactory(Node):
 
 		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
 		self.search_table_top_joints =					[-147.5, 40.4, -91.8, -70.9, 114.9, 84.7]
+		self.search_table_top_risky_joints =			[-146.5, 55.7, -88, -61.3, 109.5, 64.2]
 		self.search_table_top_safe_position =		    [-194.9, 69.4, -106.4, 23.2, 71.5, 264.8]
 		self.safe_top_second_joints =                   [-197.5, 85.4, -103.3, 28.7, 109.1, 279.5]
 		### SERVE THE BREAKFAST VARIABLES: ###
@@ -813,6 +815,19 @@ class ArmUfactory(Node):
 				self.set_joint_values_(angles=self.search_table_top_joints, speed=25, wait=True)
 			case 2:
 				self.finish_arm_movement_()
+
+	def initial_pose_to_search_table_top_risky(self):
+		match self.estado_tr:
+			# case 0:
+			# 	self.set_gripper_speed_(speed=5000)
+			# case 1:
+			# 	self.set_gripper_position_(pos=0, wait=True)
+			case 0:
+				self.set_joint_values_(angles=self.safe_risky_begin_joints, speed=25, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.search_table_top_risky_joints, speed=25, wait=False)
+			case 2:
+				self.finish_arm_movement_()			
 
 	def search_table_to_initial_pose_top(self):
 		match self.estado_tr:
