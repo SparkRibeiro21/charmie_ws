@@ -1173,21 +1173,6 @@ class ROS2TaskNode(Node):
         
         self.clear_nav2_costmaps_client.call_async(request)
 
-    
-    """ def call_clear_entire_local_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
-        
-        self.clear_entire_local_costmap_client.call_async(request)
-
-        self.clear_local_costmap_success = True
-        self.clear_local_costmap_message = "Clear Local Costmap Sucessfully Sent"
-
-    def call_clear_entire_global_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
-        
-        self.clear_entire_global_costmap_client.call_async(request)
-        
-        self.clear_global_costmap_success = True
-        self.clear_global_costmap_message = "Clear Global Costmap Sucessfully Sent" """
-
     ### Nav2 Action Client ###
     # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
 
@@ -2726,114 +2711,6 @@ class RobotStdFunctions():
             success = True
             message = "Sent Command to Adjust Omni, not waiting for end of"
             return success, message
-        
-
-        """ ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
-        ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
-        ### ALL THE CODE IS READY. JUST REPLACE:
-        ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
-        ### THE FUNCTION PARAMETER use_wheel_odometry SHOULD BE USED
-        ### if use_wheel_odometry:
-        ###     USE: self.node.current_odom_wheels_pose
-        ### else:
-        ###     USE: self.node.current_odom_pose
-
-        success = False
-        message = ""
-
-        if safety:
-            SAFETY_DISTANCE_FROM_ROBOT_EDGE = 0.02 # from robot edge to obstacle
-
-            s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=ang_obstacle_check)
-            if not s:
-                success = False
-                message = m
-                return success, message
-            elif min_radar_distance_to_robot_edge - SAFETY_DISTANCE_FROM_ROBOT_EDGE < dx and dx > 0:
-                success = False
-                message = "Not enough space in front of the robot to perform the adjustment"
-                self.node.get_logger().warn("Not enough space in front of the robot to perform the adjustment")
-                print("Wanted to move forward:", round(dx,2), "meters. But minimum distance to obstacle in front of robot is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
-                return success, message
-            
-            print("GOOD! Want to move forward:", round(dx,2), "meters. Minimum distance to obstacle in front is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
-        
-        # Wait until odom is received
-        while self.node.current_odom_pose is None:
-            self.node.get_logger().warning("Waiting for odom pose...") 
-            time.sleep(0.01)
-
-        # Initial pose and orientation
-        pose = self.node.current_odom_pose.pose
-        start_x = pose.position.x
-        start_y = pose.position.y
-        q = pose.orientation
-        yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
-
-        print("Adjusting Omnidirectional Position:", round(dx,2), round(dy,2), "meters")
-
-        # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
-        # fixed bug where dx = 0 or dy = 0 still moved the robot
-        if dx > 0:
-            dx = dx + tolerance
-        elif dx < 0:
-            dx = dx - tolerance
-        
-        if dy > 0:
-            dy = dy + tolerance
-        elif dy < 0:
-            dy = dy - tolerance
-
-        # Compute target in odom frame
-        target_x = start_x + math.cos(yaw) * dx - math.sin(yaw) * dy
-        target_y = start_y + math.sin(yaw) * dx + math.cos(yaw) * dy
-        # print("TARGETS", target_x, target_y)
-
-        rate_hz = 20  # Hz
-        rate = 1.0 / rate_hz
-
-        while True:
-            pose = self.node.current_odom_pose.pose
-            curr_x = pose.position.x
-            curr_y = pose.position.y
-
-            error_x = target_x - curr_x
-            error_y = target_y - curr_y
-            dist_error = math.sqrt(error_x**2 + error_y**2)
-            # print("ERRORS", error_x, error_y, dist_error)
-            # print("TOLERANCE", tolerance)
-
-            if dist_error < tolerance:
-                break
-
-            # Convert error from odom frame to base_footprint frame
-            vx = math.cos(-yaw) * error_x - math.sin(-yaw) * error_y
-            vy = math.sin(-yaw) * error_x + math.cos(-yaw) * error_y
-            # print("X Speed", max(-max_speed, min(max_speed, vx * kp)))
-            # print("Y Speed", max(-max_speed, min(max_speed, vy * kp)))
-
-            twist = Twist()
-            twist.linear.x = max(-max_speed, min(max_speed, vx * kp))
-            twist.linear.y = max(-max_speed, min(max_speed, vy * kp))
-            twist.angular.z = 0.0
-
-            self.node.cmd_vel_publisher.publish(twist)
-            time.sleep(rate)
-
-        if not enter_house_special_case:
-            # Stop the robot
-            # Dirty, but had to do this way because of some commands to low_level being lost
-            self.node.cmd_vel_publisher.publish(Twist())
-            time.sleep(0.1)  # wait for the cmd_vel to be published
-            self.node.cmd_vel_publisher.publish(Twist())
-            time.sleep(0.1)  # wait for the cmd_vel to be published
-            self.node.cmd_vel_publisher.publish(Twist())  
-
-        self.node.get_logger().info("Omnidirectional Adjustment Complete.")
-
-        success = True
-        message = "Omnidirectional Adjustment Complete."
-        return success, message """
     
     def adjust_omnidirectional_position_cancel(self):
         if self.node.adjust_omni_navigation_handle_ is not None:
@@ -2922,39 +2799,7 @@ class RobotStdFunctions():
             success = True
             message = "Sent Command to Adjust Obstacle, not waiting for end of"
             return success, message
-        
-
-        """ success = False
-        message = ""
-
-        distance_to_adjust = 0.0
-
-        # normalize direction to be between -180 and 180 (how radar handles angles)
-        while direction > 180:
-            direction -= 360
-        while direction < -180:
-            direction += 360
-
-        s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=direction, ang_obstacle_check=ang_obstacle_check)
-
-        if not s:
-            success = False
-            message = m
-            return success, message
-        else:
-            distance_to_adjust = min_radar_distance_to_robot_edge - distance
-            print("DISTANCE TO ADJUST (positive means move forward):", round(distance_to_adjust,2))
-
-            # Copilot suggestion
-            dx = distance_to_adjust * math.cos(math.radians(direction))
-            dy = distance_to_adjust * math.sin(math.radians(direction))
             
-            self.adjust_omnidirectional_position(dx=dx, dy=dy, max_speed=max_speed, safety=False, tolerance=tolerance, kp=kp)
-
-            success = True
-            message = "Obstacle Adjustment Complete."
-            return success, message """
-    
     def adjust_obstacle_cancel(self):
         if self.node.adjust_obstacle_navigation_handle_ is not None:
             self.set_rgb(RED+BACK_AND_FORTH_8)
@@ -3041,95 +2886,6 @@ class RobotStdFunctions():
             success = True
             message = "Sent Command to Adjust Angle, not waiting for end of"
             return success, message
-
-
-        """ ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
-        ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
-        ### ALL THE CODE IS READY. JUST REPLACE:
-        ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
-        ### THE FUNCTION PARAMETER use_wheel_odometry SHOULD BE USED
-        ### if use_wheel_odometry:
-        ###     USE: self.node.current_odom_wheels_pose
-        ### else:
-        ###     USE: self.node.current_odom_pose
-
-        success = False
-        message = ""
-
-        # normalize direction to be between -180 and 180
-        while angle > 180:
-            angle -= 360
-        while angle < -180:
-            angle += 360
-
-        # Wait until odom is received
-        while self.node.current_odom_pose is None:
-            self.node.get_logger().warning("Waiting for odom pose...") 
-            time.sleep(0.01)
-
-        # Initial pose and orientation
-        pose = self.node.current_odom_pose.pose
-        q = pose.orientation
-        yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
-
-        # print("Adjusting Angle Position:", round(angle,2), "degrees")
-
-        # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
-        # fixed bug where dx = 0 or dy = 0 still moved the robot
-        if angle > 0:
-            angle = angle + tolerance
-        elif angle < 0:
-            angle = angle - tolerance
-
-        # Compute target in odom frame
-        target_angle = yaw + math.radians(angle)
-        tolerance_rad = math.radians(tolerance)
-        # print("TARGETS", math.degrees(target_angle))
-
-        rate_hz = 20  # Hz
-        rate = 1.0 / rate_hz
-
-        while True:
-            pose = self.node.current_odom_pose.pose
-            q = pose.orientation
-            curr_yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
-            # print("CURR YAW:", math.degrees(curr_yaw))
-
-            error_angle = target_angle - curr_yaw
-            # error circular correction due to angle circularity
-            if error_angle >= 2*math.pi:
-                error_angle -= 2*math.pi
-            elif error_angle <= -2*math.pi:
-                error_angle += 2*math.pi
-
-            # print("ERROR:", math.degrees(error_angle))
-            # print("TOLERANCE", math.degrees(tolerance_rad))
-
-            # print("target", math.degrees(target_angle), "curr_yaw", math.degrees(curr_yaw), "error", math.degrees(error_angle), "tol", math.degrees(tolerance_rad))
-
-            if abs(error_angle) < tolerance_rad:
-                break
-
-            twist = Twist()
-            twist.linear.x  = 0.0 
-            twist.linear.y  = 0.0
-            twist.angular.z = max(-max_angular_speed, min(max_angular_speed, error_angle * kp))
-
-            self.node.cmd_vel_publisher.publish(twist)
-            time.sleep(rate)
-
-        # Stop the robot
-        # Dirty, but had to do this way because of some commands to low_level being lost
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())  
-        self.node.get_logger().info("Angle Adjustment Complete.")
-
-        success = True
-        message = "Angle Adjustment Complete."
-        return success, message """
     
     def adjust_angle_cancel(self):
         if self.node.adjust_angle_navigation_handle_ is not None:
@@ -3163,69 +2919,6 @@ class RobotStdFunctions():
         print(success, message, min_radar_distance_to_robot_edge)
         
         return success, message, min_radar_distance_to_robot_edge
-
-
-
-        """ success = False
-        message = ""
-        min_radar_distance_to_robot_edge = None
-
-        if self.node.is_radar_initialized:
-            if -100 <= direction <= 100 and 0 < ang_obstacle_check <= 360:
-                radar = self.node.radar
-                used_sectors = []
-                min_distance = None
-
-                # DEBUG PRINTS
-                # nos     = radar.number_of_sectors
-                # sar     = radar.sector_ang_range
-                # sectors = radar.sectors
-                # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
-                # i = 0
-                # for s in sectors:
-                #     sa = s.start_angle
-                #     ea = s.end_angle
-                #     md = s.min_distance
-                #     p  = s.point
-                #     hp = s.has_point
-                #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}")
-                #     i += 1    
-
-                # print("USED SECTORS:")
-                for s in radar.sectors:
-                    if  -math.radians(ang_obstacle_check/2) <= s.start_angle - math.radians(direction) <= math.radians(ang_obstacle_check/2) and \
-                        -math.radians(ang_obstacle_check/2) <= s.end_angle   - math.radians(direction) <= math.radians(ang_obstacle_check/2):
-                        used_sectors.append(s)
-                        # print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
-            
-                        if s.has_point:
-                            if min_distance is None:
-                                min_distance = s.min_distance
-                            elif s.min_distance < min_distance:
-                                min_distance = s.min_distance
-                
-                if min_distance is not None:
-                    # print("MIN DISTANCE IN USED SECTORS:", round(min_distance,2))
-                    min_radar_distance_to_robot_edge = min_distance - self.ROBOT_RADIUS
-                    # print("MIN DISTANCE TO ROBOT EDGE IN USED SECTORS:", round(min_radar_distance_to_robot_edge,2))
-                    success = True
-                    message = ""
-                    return success, message, min_radar_distance_to_robot_edge
-                else:
-                    success = False
-                    message = "No obstacles detected in the selected direction"
-                    self.node.get_logger().warn("No obstacles detected in the selected direction")
-                    return success, message, min_radar_distance_to_robot_edge
-            else:
-                success = False
-                message = "Wrong parameter definition"
-                self.node.get_logger().warn("Wrong parameter definition")
-                return success, message, min_radar_distance_to_robot_edge
-        else:
-            success = False
-            message = "Radar not initialized"
-            self.node.get_logger().warn("Radar not initialized")
-            return success, message, min_radar_distance_to_robot_edge """
     
     def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
