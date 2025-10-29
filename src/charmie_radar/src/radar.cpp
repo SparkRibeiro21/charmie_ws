@@ -12,6 +12,8 @@
 #include "charmie_interfaces/msg/radar_sector.hpp"
 #include "charmie_interfaces/msg/radar_data.hpp"
 
+#include "charmie_interfaces/srv/get_min_radar_distance.hpp"
+
 #include "tf2_ros/transform_listener.h"
 #include "tf2_ros/buffer.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
@@ -22,6 +24,9 @@
 
 #include <yaml-cpp/yaml.h>
 #include <chrono>
+#include <mutex>
+#include <optional>
+
 
 class RadarNode : public rclcpp::Node {
 public:
@@ -198,6 +203,8 @@ public:
             radar_distances_normalized_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances/normalized", 10);
             radar_custom_pub_ = this->create_publisher<charmie_interfaces::msg::RadarData>("radar/data", 10);
 
+            get_min_srv_ = this->create_service<charmie_interfaces::srv::GetMinRadarDistance>("get_min_radar_distance", std::bind(&RadarNode::getMinRadarDistanceSrv, this, std::placeholders::_1, std::placeholders::_2));
+
             timer_ = this->create_wall_timer(
                 std::chrono::duration<double>(1.0 / update_frequency),
                 std::bind(&RadarNode::timer_callback, this)
@@ -246,6 +253,12 @@ private:
     std::unordered_map<std::string, SensorLimits> sensor_limits_;
     std::unordered_map<std::string, bool> sensor_publish_filtered_;
     std::unordered_map<std::string, sensor_msgs::msg::PointCloud2::SharedPtr> latest_filtered_clouds_baseframe_;
+    
+    // For Get Minimum Radar Distance Service
+    rclcpp::Service<charmie_interfaces::srv::GetMinRadarDistance>::SharedPtr get_min_srv_;
+    std::mutex radar_mutex_;
+    charmie_interfaces::msg::RadarData latest_radar_msg_;
+    bool radar_initialized_ = false;
 
     // radar_configuration params
     int number_of_sectors_;
@@ -779,6 +792,9 @@ private:
             
             radar_custom_pub_->publish(radar_msg);
 
+            std::lock_guard<std::mutex> lock(radar_mutex_);
+            latest_radar_msg_ = radar_msg;
+            radar_initialized_ = true;
 
             if (debug_enabled_) {
                 // Debug print of full RadarData message
@@ -831,6 +847,89 @@ private:
         RCLCPP_INFO(this->get_logger(), "[radar] Total time: %.2f ms, Merging time %.2f ms, Checking time %.2f ms", total_elapsed_ms, merging_elapsed_ms, checking_elapsed_ms);
         
     }
+
+    void getMinRadarDistanceSrv( 
+    const std::shared_ptr<charmie_interfaces::srv::GetMinRadarDistance::Request> req,
+    std::shared_ptr<charmie_interfaces::srv::GetMinRadarDistance::Response> res)
+    {
+        // Defaults
+        res->success = false;
+        res->message = "";
+        res->min_radar_distance_to_robot_edge = 0.0f;
+
+        // Snapshot current radar data
+        charmie_interfaces::msg::RadarData radar;
+        {
+            std::lock_guard<std::mutex> lock(radar_mutex_);
+            if (!radar_initialized_) {
+                res->message = "Radar not initialized";
+                RCLCPP_WARN(this->get_logger(), "%s", res->message.c_str());
+                return;
+            }
+            radar = latest_radar_msg_;
+        }
+
+        // Validate inputs (match your Python constraints)
+        const double direction_deg = static_cast<double>(req->direction);
+        const double window_deg    = static_cast<double>(req->ang_obstacle_check);
+
+        if (direction_deg < -100.0 || direction_deg > 100.0 || !(window_deg > 0.0 && window_deg <= 360.0)) {
+            res->message = "Wrong parameter definition";
+            RCLCPP_WARN(this->get_logger(), "%s (direction=%.2f deg, window=%.2f deg)",
+                        res->message.c_str(), direction_deg, window_deg);
+            return;
+        }
+
+        // Convert to radians
+        const double dir_rad = direction_deg * M_PI / 180.0;
+        const double halfwin = (window_deg * M_PI / 180.0) / 2.0;
+
+        // Scan sectors where BOTH start and end lie inside the requested window
+        std::optional<double> min_distance_center;
+        int used_count = 0;
+
+        for (const auto& s : radar.sectors) {
+            // shift by -dir and wrap using atan2(sin,cos) (no helper needed)
+            const double dStart = std::atan2(std::sin(static_cast<double>(s.start_angle) - dir_rad),
+                                            std::cos(static_cast<double>(s.start_angle) - dir_rad));
+            const double dEnd   = std::atan2(std::sin(static_cast<double>(s.end_angle)   - dir_rad),
+                                            std::cos(static_cast<double>(s.end_angle)   - dir_rad));
+
+            if (dStart >= -halfwin && dStart <= halfwin &&
+                dEnd   >= -halfwin && dEnd   <= halfwin)
+            {
+                ++used_count;
+                if (s.has_point && std::isfinite(s.min_distance)) {
+                    const double d = static_cast<double>(s.min_distance);
+                    if (!min_distance_center.has_value() || d < *min_distance_center) {
+                        min_distance_center = d;
+                    }
+                }
+            }
+        }
+
+        if (!min_distance_center.has_value()) {
+            res->success = false;
+            res->message = "No obstacles detected in the selected direction";
+            RCLCPP_WARN(this->get_logger(), "%s (used_sectors=%d)", res->message.c_str(), used_count);
+            return;
+        }
+
+        // Return distance from robot EDGE (>= 0)
+        double edge = *min_distance_center - robot_radius_;
+        if (edge < 0.0) edge = 0.0;
+
+        res->success = true;
+        res->message = "";
+        res->min_radar_distance_to_robot_edge = static_cast<float>(edge);
+
+        if (debug_enabled_) {
+            RCLCPP_INFO(this->get_logger(),
+                "get_min_radar_distance: dir=%.1f deg, win=%.1f deg → center=%.2f m, edge=%.2f m (used=%d)",
+                direction_deg, window_deg, *min_distance_center, edge, used_count);
+        }
+    }
+
 
 };
 
