@@ -24,6 +24,9 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "action/AdjustNavigationAngle.action"
+  "action/AdjustNavigationObstacles.action"
+  "action/AdjustNavigationOmnidirectional.action"
   "action/CountUntil.action"
   "msg/ArmController.msg"
   "msg/BoundingBox.msg"
@@ -42,9 +45,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ListOfPoints.msg"
   "msg/ListOfStrings.msg"
   "msg/MaskDetection.msg"
-  "msg/NavAdjustAngle.msg"
-  "msg/NavAdjustObstacle.msg"
-  "msg/NavAdjustOmni.msg"
   "msg/NeckPosition.msg"
   "msg/ObstacleInfo.msg"
   "msg/Obstacles.msg"

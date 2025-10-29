@@ -13,7 +13,8 @@ from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListO
     TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
-    SetRGB
+    SetRGB, GetMinRadarDistance
+from charmie_interfaces.action import AdjustNavigationAngle
 from cv_bridge import CvBridge, CvBridgeError
 from realsense2_camera_msgs.msg import RGBD
 
@@ -109,8 +110,8 @@ class DebugVisualNode(Node):
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
-        # Navigation
-        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
+        # Radar
+        self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance")
         # Obstacles
         self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Low level
@@ -124,6 +125,7 @@ class DebugVisualNode(Node):
 
         ### Actions (Clients) ###
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
+        self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
@@ -700,7 +702,7 @@ class CheckNodesMain():
                 self.CHECK_LOW_LEVEL_NODE = True
 
             # NAVIGATION
-            if not self.node.nav_trigger_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+            if not self.node.adjust_navigation_angle_client.server_is_ready():
                 # self.node.get_logger().warn("Waiting for Server Navigation ...")
                 self.CHECK_NAVIGATION_NODE = False
             else:
@@ -721,11 +723,17 @@ class CheckNodesMain():
                 self.CHECK_NECK_NODE = True
             
             # RADAR radar_pointcloud_time
-            if current_time - self.node.radar_pointcloud_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
-                # self.node.get_logger().warn("Waiting for Radar Lidar ...")
+            # if current_time - self.node.radar_pointcloud_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
+            #     # self.node.get_logger().warn("Waiting for Radar Lidar ...")
+            #     self.CHECK_RADAR_NODE = False
+            # else:
+            #     self.CHECK_RADAR_NODE = True
+            if not self.node.get_minimum_radar_distance_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Navigation ...")
                 self.CHECK_RADAR_NODE = False
             else:
                 self.CHECK_RADAR_NODE = True
+
 
             # SOUND CLASSIFICATION
             if not self.node.sound_classification_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):

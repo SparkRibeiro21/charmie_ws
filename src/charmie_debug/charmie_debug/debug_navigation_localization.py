@@ -82,14 +82,60 @@ class TaskMain():
 
                 self.robot.wait_for_start_button()
 
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=False)
+                self.robot.adjust_angle(angle=30.0, wait_for_end_of=False)
+                
+                while not self.robot.adjust_angle_is_done():
+                    print("Waiting...")
+                    time.sleep(0.1)
+                    pass
+                    
+                print("MOVED ON")
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=True)
+                self.robot.adjust_angle_cancel()
+                time.sleep(0.5)
+                
+
+                self.robot.wait_for_start_button()
+
+                self.robot.adjust_angle(angle=-60.0, wait_for_end_of=False)
+                
+                while not self.robot.adjust_angle_is_done():
+                    print("Waiting...")
+                    time.sleep(0.1)
+                    pass
+                    
+                print("MOVED ON")
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=True)
+                self.robot.adjust_angle_cancel()
+                time.sleep(0.5)
+                
+
+                self.robot.wait_for_start_button()
+
+                self.robot.adjust_angle(angle=30.0, wait_for_end_of=False)
+                
+                while not self.robot.adjust_angle_is_done():
+                    print("Waiting...")
+                    time.sleep(0.1)
+                    pass
+                    
+                print("MOVED ON")
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=True)
+                self.robot.adjust_angle_cancel()
+                time.sleep(0.5)
+                
+
+                # self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                # self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=False)
 
                 # must be removed after the update to minimize as much as possivle the final orientation error 
-                move_coords = self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET)                
+                # move_coords = self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET)                
                 # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
                 
-                self.robot.move_to_position_with_safety_navigation(move_coords=move_coords, wait_for_end_of=True)
+                # self.robot.move_to_position_with_safety_navigation(move_coords=move_coords, wait_for_end_of=True)
                 
                 print("DONE")
                 while True:
