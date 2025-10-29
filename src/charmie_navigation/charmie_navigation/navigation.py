@@ -9,6 +9,7 @@ from rclpy.action.server import ServerGoalHandle
 
 # import variables from standard libraries and both messages and services from custom charmie_interfaces
 from geometry_msgs.msg import Twist
+from realsense2_camera_msgs.msg import RGBD
 from nav_msgs.msg import Odometry
 from builtin_interfaces.msg import Duration
 from charmie_interfaces.msg import RadarData
@@ -66,10 +67,11 @@ class ROS2NavigationNode(Node):
         self.odom_subscriber = self.create_subscription(Odometry, "/odometry/filtered", self.odom_callback, 10, callback_group=self.cb_group)
         self.odom_wheels_subscriber = self.create_subscription(Odometry, "/wheel_encoders", self.odom_wheels_callback, 10, callback_group=self.cb_group)
         self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10, callback_group=self.cb_group)
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10, callback_group=self.cb_group)
         
         # Clients/Servers (optional)
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
-        self.get_minimum_radar_distance_server = self.create_service(GetMinRadarDistance, "get_min_radar_distance", self.get_min_radar_dist,  callback_group=self.cb_group)
+        #self.get_minimum_radar_distance_server = self.create_service(GetMinRadarDistance, "get_min_radar_distance", self.get_min_radar_dist,  callback_group=self.cb_group)
         
         # 3) Action server
         self.adjust_navigation_angle_server = ActionServer(
@@ -110,11 +112,28 @@ class ROS2NavigationNode(Node):
             #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}, Point: ({round(p.x,2)}, {round(p.y,2)}, {round(p.z,2)})")
             #     i += 1    
 
+    def get_rgbd_head_callback(self, rgbd: RGBD):
+        self.rgb_head_img = rgbd.rgb
+        self.first_rgb_head_image_received = True
+        self.depth_head_img = rgbd.depth
+        self.first_depth_head_image_received = True
+        # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    """ 
+    def get_head_depth_image(self):
+
+        if self.node.first_depth_head_image_received:
+            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
+        else:
+            current_frame_depth_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
+        
+        return self.node.first_depth_head_image_received, current_frame_depth_head
+  """
 
     ### SERVICES ###
     
 
-    def get_min_radar_dist(self, request, response):
+    """ def get_min_radar_dist(self, request, response):
         # Type of service received: 
         # float32 direction
         # float32 ang_obstacle_check
@@ -127,7 +146,7 @@ class ROS2NavigationNode(Node):
         response.message = "Nav Trigger"
         response.min_radar_distance_to_robot_edge = 0.0
         return response
-
+ """
 
     def _adjust_nav_angle_goal_cb(self, goal: AdjustNavigationAngle.Goal):
         angle_deg       = float(goal.angle)
