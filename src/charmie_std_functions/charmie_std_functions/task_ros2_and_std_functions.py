@@ -19,7 +19,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
     GetSoundClassificationContinuous, GetMinRadarDistance
-from charmie_interfaces.action import AdjustNavigationAngle
+from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
@@ -195,6 +195,8 @@ class ROS2TaskNode(Node):
         self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
 
         self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
+        self.adjust_navigation_omni_client = ActionClient(self, AdjustNavigationOmnidirectional, "adjust_navigation_omni")
+        self.adjust_navigation_obstacle_client = ActionClient(self, AdjustNavigationObstacles, "adjust_navigation_obstacle")
     
 
         self.send_node_used_to_gui()
@@ -252,8 +254,9 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for Server Low Level ...")
 
         if self.ros2_modules["charmie_navigation"]:
-            while not self.adjust_navigation_angle_client.wait_for_server(1.0):
+            while not self.adjust_navigation_angle_client.server_is_ready():
                 self.get_logger().warn("Waiting for Action Server Adjust Angle Command...")
+                time.sleep(1.0)
 
         if self.ros2_modules["charmie_nav2"]:
             while not self.nav2_client_.server_is_ready():
@@ -454,6 +457,16 @@ class ROS2TaskNode(Node):
         self.adjust_angle_navigation_accepted = None
         self.adjust_angle_navigation_feedback = AdjustNavigationAngle.Feedback()
         self.adjust_angle_navigation_status = GoalStatus.STATUS_UNKNOWN
+
+        self.adjust_omni_navigation_handle_ = None
+        self.adjust_omni_navigation_accepted = None
+        self.adjust_omni_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_omni_navigation_status = GoalStatus.STATUS_UNKNOWN
+
+        self.adjust_obstacle_navigation_handle_ = None
+        self.adjust_obstacle_navigation_accepted = None
+        self.adjust_obstacle_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_obstacle_navigation_status = GoalStatus.STATUS_UNKNOWN
 
         self.current_odom_pose = None
         self.current_odom_wheels_pose = None
@@ -1322,7 +1335,108 @@ class ROS2TaskNode(Node):
         # self.get_logger().info(f"Feedback: {feedback}")
 
 
+    # Adjust omni Navigation Action Client
+    def adjust_omni_navigation_client_goal_response_callback(self, future):
+        self.adjust_omni_navigation_handle_:ClientGoalHandle = future.result()
+        if self.adjust_omni_navigation_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.adjust_omni_navigation_handle_.get_result_async().add_done_callback(self.adjust_omni_navigation_client_goal_result_callback)
+            self.adjust_omni_navigation_accepted = True
+        else:
+            self.adjust_omni_navigation_accepted = False
+            self.adjust_omni_navigation_handle_ = None
+            self.get_logger().warn("Goal rejected.")
 
+    def adjust_omni_navigation_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.adjust_omni_navigation_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.adjust_omni_navigation_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.adjust_omni_navigation_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.adjust_omni_navigation_status = status
+            self.get_logger().warn(f"Finished with status={status}")
+            
+        # When goal is finished, clear the handle
+        self.adjust_omni_navigation_handle_ = None
+            
+        # self.get_logger().info(f"Result: {result.reached_number}")
+    def adjust_omni_navigation_client_cancel_goal(self):
+        if self.adjust_omni_navigation_handle_ is None:
+            self.get_logger().warn("No active Adjust omni Navigation goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to adjust_omni_navigation...")
+        self.adjust_omni_navigation_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.adjust_omni_navigation_handle_ = None
+        
+    def adjust_omni_navigation_client_goal_feedback_callback(self, feedback_msg):
+        self.adjust_omni_navigation_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
+
+
+    # Adjust obstacle Navigation Action Client
+    def adjust_obstacle_navigation_client_goal_response_callback(self, future):
+        self.adjust_obstacle_navigation_handle_:ClientGoalHandle = future.result()
+        if self.adjust_obstacle_navigation_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.adjust_obstacle_navigation_handle_.get_result_async().add_done_callback(self.adjust_obstacle_navigation_client_goal_result_callback)
+            self.adjust_obstacle_navigation_accepted = True
+        else:
+            self.adjust_obstacle_navigation_accepted = False
+            self.adjust_obstacle_navigation_handle_ = None
+            self.get_logger().warn("Goal rejected.")
+
+    def adjust_obstacle_navigation_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.adjust_obstacle_navigation_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.adjust_obstacle_navigation_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.adjust_obstacle_navigation_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.adjust_obstacle_navigation_status = status
+            self.get_logger().warn(f"Finished with status={status}")
+            
+        # When goal is finished, clear the handle
+        self.adjust_obstacle_navigation_handle_ = None
+            
+        # self.get_logger().info(f"Result: {result.reached_number}")
+    def adjust_obstacle_navigation_client_cancel_goal(self):
+        if self.adjust_obstacle_navigation_handle_ is None:
+            self.get_logger().warn("No active Adjust obstacle Navigation goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to adjust_obstacle_navigation...")
+        self.adjust_obstacle_navigation_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.adjust_obstacle_navigation_handle_ = None
+        
+    def adjust_obstacle_navigation_client_goal_feedback_callback(self, feedback_msg):
+        self.adjust_obstacle_navigation_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
 
 
 #############################################################################################################################
@@ -2527,9 +2641,88 @@ class RobotStdFunctions():
         return overall
 
     
-    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, wait_for_end_of=True):
+    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
 
-        ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
+        # Create a goal
+        adjust_msg = AdjustNavigationOmnidirectional.Goal()
+        adjust_msg.dx =                         float(dx)
+        adjust_msg.dy =                         float(dy)
+        adjust_msg.ang_obstacle_check =         float(ang_obstacle_check)
+        adjust_msg.safety =                     bool(safety)
+        adjust_msg.max_speed =                  float(max_speed)
+        adjust_msg.tolerance =                  float(tolerance)
+        adjust_msg.kp =                         float(kp)
+        adjust_msg.enter_house_special_case =   bool(enter_house_special_case)
+        adjust_msg.use_wheel_odometry =         bool(use_wheel_odometry)
+        adjust_msg.timeout =                    float(timeout)
+
+        self.node.get_logger().info("Waiting for adjust navigation server...")
+        self.node.adjust_navigation_omni_client.wait_for_server()
+        self.node.get_logger().info("Adjust Navigation server is ON...")
+
+        self.node.adjust_omni_navigation_handle_ = None
+        self.node.adjust_omni_navigation_accepted = None
+        self.node.adjust_omni_navigation_status = GoalStatus.STATUS_UNKNOWN
+        self.node.adjust_omni_navigation_feedback = None
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.adjust_navigation_omni_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_omni_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_omni_navigation_client_goal_response_callback)
+        self.node.get_logger().info("Adjust Navigation Goal Sent")
+
+        self.set_rgb(BLUE+BACK_AND_FORTH_8)
+
+        while self.node.adjust_omni_navigation_accepted is None:
+            time.sleep(0.05)
+        
+        success = self.node.adjust_omni_navigation_accepted
+        message = ""
+
+        self.set_rgb(CYAN+BACK_AND_FORTH_8)
+
+        if wait_for_end_of:
+
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.adjust_omni_navigation_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.adjust_omni_navigation_feedback
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+                        # self.node.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.adjust_omni_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+                self.set_rgb(GREEN+BACK_AND_FORTH_8)
+                self.node.get_logger().info("ADJUST OMNI RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            elif self.node.adjust_omni_navigation_status == GoalStatus.STATUS_ABORTED:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
+                self.node.get_logger().info("ADJUST OMNI RESULT: ABORTED.")
+                success = False
+                message = "Canceled moved to position"
+            elif self.node.adjust_omni_navigation_status == GoalStatus.STATUS_CANCELED:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
+                self.node.get_logger().info("ADJUST OMNI RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            return success, message
+        
+        else:
+            success = True
+            message = "Sent Command to Adjust Omni, not waiting for end of"
+            return success, message
+        
+
+        """ ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
         ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
         ### ALL THE CODE IS READY. JUST REPLACE:
         ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
@@ -2634,11 +2827,98 @@ class RobotStdFunctions():
 
         success = True
         message = "Omnidirectional Adjustment Complete."
-        return success, message
+        return success, message """
+    
+    def adjust_omnidirectional_position_cancel(self):
+        if self.node.adjust_omni_navigation_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.adjust_omni_navigation_client_cancel_goal()
 
-    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5, wait_for_end_of=True):
+    def adjust_omnidirectional_position_is_done(self):
+        if self.node.adjust_omni_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
 
-        success = False
+    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+
+        # Create a goal
+        adjust_msg = AdjustNavigationObstacles.Goal()
+        adjust_msg.distance =           float(distance)
+        adjust_msg.direction =          float(direction)
+        adjust_msg.ang_obstacle_check = float(ang_obstacle_check)
+        adjust_msg.max_speed =          float(max_speed)
+        adjust_msg.tolerance =          float(tolerance)
+        adjust_msg.kp =                 float(kp)
+        adjust_msg.timeout =            float(timeout)
+
+        self.node.get_logger().info("Waiting for adjust navigation server...")
+        self.node.adjust_navigation_obstacle_client.wait_for_server()
+        self.node.get_logger().info("Adjust Navigation server is ON...")
+
+        self.node.adjust_obstacle_navigation_handle_ = None
+        self.node.adjust_obstacle_navigation_accepted = None
+        self.node.adjust_obstacle_navigation_status = GoalStatus.STATUS_UNKNOWN
+        self.node.adjust_obstacle_navigation_feedback = None
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.adjust_navigation_obstacle_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_obstacle_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_obstacle_navigation_client_goal_response_callback)
+        self.node.get_logger().info("Adjust Navigation Goal Sent")
+
+        self.set_rgb(BLUE+BACK_AND_FORTH_8)
+
+        while self.node.adjust_obstacle_navigation_accepted is None:
+            time.sleep(0.05)
+        
+        success = self.node.adjust_obstacle_navigation_accepted
+        message = ""
+
+        self.set_rgb(CYAN+BACK_AND_FORTH_8)
+
+        if wait_for_end_of:
+
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.adjust_obstacle_navigation_feedback
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+                        # self.node.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+                self.set_rgb(GREEN+BACK_AND_FORTH_8)
+                self.node.get_logger().info("ADJUST OBSTACLE RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            elif self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_ABORTED:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
+                self.node.get_logger().info("ADJUST OBSTACLE RESULT: ABORTED.")
+                success = False
+                message = "Canceled moved to position"
+            elif self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_CANCELED:
+                self.set_rgb(RED+BACK_AND_FORTH_8)
+                self.node.get_logger().info("ADJUST OBSTACLE RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            return success, message
+        
+        else:
+            success = True
+            message = "Sent Command to Adjust Obstacle, not waiting for end of"
+            return success, message
+        
+
+        """ success = False
         message = ""
 
         distance_to_adjust = 0.0
@@ -2667,7 +2947,18 @@ class RobotStdFunctions():
 
             success = True
             message = "Obstacle Adjustment Complete."
-            return success, message
+            return success, message """
+    
+    def adjust_obstacle_cancel(self):
+        if self.node.adjust_obstacle_navigation_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.adjust_obstacle_navigation_client_cancel_goal()
+
+    def adjust_obstacle_is_done(self):
+        if self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
 
     def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1.0, kp=1.3, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
 
@@ -2677,7 +2968,7 @@ class RobotStdFunctions():
         adjust_msg.max_angular_speed =  float(max_angular_speed)
         adjust_msg.tolerance =          float(tolerance)
         adjust_msg.kp =                 float(kp)
-        adjust_msg.use_wheel_odometry = use_wheel_odometry
+        adjust_msg.use_wheel_odometry = bool(use_wheel_odometry)
         adjust_msg.timeout =            float(timeout)
 
         self.node.get_logger().info("Waiting for adjust navigation server...")

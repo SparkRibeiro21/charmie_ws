@@ -14,7 +14,7 @@ from nav_msgs.msg import Odometry
 from builtin_interfaces.msg import Duration
 from charmie_interfaces.msg import RadarData
 from charmie_interfaces.srv import SetRGB, Trigger, GetMinRadarDistance
-from charmie_interfaces.action import AdjustNavigationAngle
+from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationObstacles, AdjustNavigationOmnidirectional
 
 import time
 import threading
@@ -70,10 +70,20 @@ class ROS2NavigationNode(Node):
         self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10, callback_group=self.cb_group)
         
         # Clients/Servers (optional)
-        self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
+        self.set_rgb_client = self.create_client(SetRGB, "rgb_mode", callback_group=self.cb_group)
+        self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance", callback_group=self.cb_group)
         #self.get_minimum_radar_distance_server = self.create_service(GetMinRadarDistance, "get_min_radar_distance", self.get_min_radar_dist,  callback_group=self.cb_group)
         
-        # 3) Action server
+
+        while not self.set_rgb_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Low Level ...")
+    
+        while not self.get_minimum_radar_distance_client.wait_for_service(1.0):
+            self.get_logger().warn("Waiting for Server Radar ...")
+
+
+
+        # 3) Action servers
         self.adjust_navigation_angle_server = ActionServer(
             self,
             AdjustNavigationAngle,
@@ -83,6 +93,32 @@ class ROS2NavigationNode(Node):
             execute_callback=self._adjust_nav_angle_execute_cb,
             callback_group=self.cb_group,
         )
+
+        self.adjust_navigation_omni_server = ActionServer(
+            self,
+            AdjustNavigationOmnidirectional,
+            "adjust_navigation_omni",
+            goal_callback=self._adjust_nav_omni_goal_cb,
+            cancel_callback=self._adjust_nav_omni_cancel_cb,
+            execute_callback=self._adjust_nav_omni_execute_cb,
+            callback_group=self.cb_group,
+        )
+
+        self.adjust_navigation_obstacles_server = ActionServer(
+            self,
+            AdjustNavigationObstacles,
+            "adjust_navigation_obstacle",
+            goal_callback=self._adjust_nav_obst_goal_cb,
+            cancel_callback=self._adjust_nav_obst_cancel_cb,
+            execute_callback=self._adjust_nav_obst_execute_cb,
+            callback_group=self.cb_group,
+        )
+
+        # self.timer = self.create_timer(5.0, self.timer_callback)
+
+    # def timer_callback(self):
+    #     ok, msg, d = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45.0, timeout_s=2.0)
+    #     self.get_logger().info(f"RadarMinEdge ok={ok} msg='{msg}' dist={d}")
 
     def odom_callback(self, msg: Odometry):
         with self._lock:
@@ -147,6 +183,44 @@ class ROS2NavigationNode(Node):
         response.min_radar_distance_to_robot_edge = 0.0
         return response
  """
+    
+    def get_minimum_radar_distance(self, direction: float = 0.0, ang_obstacle_check: float = 45.0, timeout_s: float = 1.0):
+        
+        # quick availability check (non-blocking if already up)
+        if not self.get_minimum_radar_distance_client.wait_for_service(timeout_sec=0.0):
+            msg = "get_min_radar_distance service not available"
+            self.get_logger().warn(msg)
+            return False, msg, None
+
+        # build request
+        req = GetMinRadarDistance.Request()
+        req.direction = float(direction)
+        req.ang_obstacle_check = float(ang_obstacle_check)
+
+        # async call + cooperative wait with timeout
+        future = self.get_minimum_radar_distance_client.call_async(req)
+        start = time.monotonic()
+        while rclpy.ok() and not future.done():
+            if timeout_s > 0.0 and (time.monotonic() - start) >= timeout_s:
+                self.get_logger().warn("get_min_radar_distance timed out")
+                return False, "Timeout", None
+            time.sleep(0.01)
+
+        if not future.done():
+            # node shutting down, etc.
+            return False, "Canceled", None
+
+        try:
+            resp = future.result()
+        except Exception as e:
+            self.get_logger().error(f"get_min_radar_distance call failed: {e}")
+            return False, "Exception", None
+
+        if not resp.success:
+            # Service returned a logical failure (e.g., no obstacles)
+            return False, resp.message, None
+
+        return True, resp.message, float(resp.min_radar_distance_to_robot_edge)
 
     def _adjust_nav_angle_goal_cb(self, goal: AdjustNavigationAngle.Goal):
         angle_deg       = float(goal.angle)
@@ -378,6 +452,482 @@ class ROS2NavigationNode(Node):
             self.get_logger().exception("Exception in adjust_angle")
             # self._stop_robot()
             return self.ERR_EXCEPTION, "Exception during angle adjustment"
+        
+
+
+
+
+    def _adjust_nav_omni_goal_cb(self, goal: AdjustNavigationOmnidirectional.Goal):
+        dx                 = float(goal.dx)
+        dy                 = float(goal.dy)
+        ang_obstacle_check = float(goal.ang_obstacle_check)
+        safety             = bool(goal.safety)
+        max_speed          = float(goal.max_speed)
+        tolerance          = float(goal.tolerance)
+        kp                 = float(goal.kp)
+        enter_special      = bool(goal.enter_house_special_case)
+        use_wheel_odom     = bool(goal.use_wheel_odometry)
+        timeout_s          = float(goal.timeout)
+
+        # Validation
+        if not (0.0 < ang_obstacle_check <= 360.0):
+            self.get_logger().warn("Reject: ang_obstacle_check must be in (0, 360]")
+            return GoalResponse.REJECT
+        if max_speed <= 0.0:
+            self.get_logger().warn("Reject: max_speed must be > 0 (m/s)")
+            return GoalResponse.REJECT
+        if tolerance <= 0.0:
+            self.get_logger().warn("Reject: tolerance must be > 0 (m)")
+            return GoalResponse.REJECT
+        if kp <= 0.0:
+            self.get_logger().warn("Reject: kp must be > 0")
+            return GoalResponse.REJECT
+        if timeout_s < 0.0:
+            self.get_logger().warn("Reject: timeout must be >= 0 seconds (0 = no timeout)")
+            return GoalResponse.REJECT
+        # You may allow dx=dy=0 (no-op), or reject. Keeping it allowed is fine.
+
+        # Single-active-goal policy (shared with other actions)
+        with self._goal_lock:
+            if self._active_goal is not None and self._active_goal.is_active:
+                self.get_logger().warn("Reject: another navigation goal is active.")
+                return GoalResponse.REJECT
+
+        self.get_logger().info(
+            f"Accept AdjustNavigationOmnidirectional: dx={dx:.3f} m, dy={dy:.3f} m, "
+            f"win={ang_obstacle_check:.1f}°, safety={safety}, vmax={max_speed:.2f} m/s, "
+            f"tol={tolerance:.3f} m, kp={kp:.2f}, house={enter_special}, "
+            f"wheel_odom={use_wheel_odom}, timeout={timeout_s:.2f}s"
+        )
+        return GoalResponse.ACCEPT
+
+
+    def _adjust_nav_omni_cancel_cb(self, goal_handle):
+        self.get_logger().info("Cancel requested for AdjustNavigationOmnidirectional.")
+        return CancelResponse.ACCEPT
+
+
+    def _adjust_nav_omni_execute_cb(self, goal_handle):
+        with self._goal_lock:
+            self._active_goal = goal_handle
+
+        fb = AdjustNavigationOmnidirectional.Feedback()
+        res = AdjustNavigationOmnidirectional.Result()
+
+        g = goal_handle.request
+        dx                 = float(g.dx)
+        dy                 = float(g.dy)
+        ang_obstacle_check = float(g.ang_obstacle_check)
+        safety             = bool(g.safety)
+        max_speed          = float(g.max_speed)
+        tolerance          = float(g.tolerance)
+        kp                 = float(g.kp)
+        enter_special      = bool(g.enter_house_special_case)
+        use_wheel_odom     = bool(g.use_wheel_odometry)
+        timeout_s          = float(g.timeout)
+
+        start_clock = self.get_clock().now()
+        t0 = time.monotonic()
+
+        def should_stop_fn():
+            if not rclpy.ok() or not goal_handle.is_active:
+                return True
+            if goal_handle.is_cancel_requested:
+                return True
+            if timeout_s > 0.0:
+                elapsed = (self.get_clock().now() - start_clock).nanoseconds * 1e-9
+                if elapsed >= timeout_s:
+                    return True
+            return False
+
+        def feedback_fn(elapsed_s: float, remaining_m: float):
+            fb.navigation_time = Duration()
+            fb.navigation_time.sec = int(elapsed_s)
+            fb.navigation_time.nanosec = int((elapsed_s - int(elapsed_s)) * 1e9)
+            fb.distance_remaining = float(remaining_m)
+            goal_handle.publish_feedback(fb)
+
+        try:
+            err_code, msg = self.adjust_omnidirectional(
+                dx=dx, dy=dy,
+                ang_obstacle_check=ang_obstacle_check,
+                safety=safety,
+                max_speed=max_speed,
+                tolerance=tolerance,
+                kp=kp,
+                enter_house_special_case=enter_special,
+                use_wheel_odometry=use_wheel_odom,
+                should_stop_fn=should_stop_fn,
+                feedback_fn=feedback_fn,
+                timeout_s=timeout_s,
+            )
+
+            if err_code == self.ERR_SUCCESS:
+                self._stop_robot()
+                if goal_handle.is_active:
+                    goal_handle.succeed()
+                res.error_code = self.ERR_SUCCESS
+            elif err_code == self.ERR_CANCELED:
+                self._stop_robot()
+                goal_handle.canceled()
+                res.error_code = self.ERR_CANCELED
+            elif err_code == self.ERR_TIMEOUT:
+                self._stop_robot()
+                if goal_handle.is_active:
+                    goal_handle.abort()
+                res.error_code = self.ERR_TIMEOUT
+            elif err_code == self.ERR_NO_ODOM:
+                self._stop_robot()
+                if goal_handle.is_active:
+                    goal_handle.abort()
+                res.error_code = self.ERR_NO_ODOM
+            else:
+                self._stop_robot()
+                if goal_handle.is_active:
+                    goal_handle.abort()
+                res.error_code = self.ERR_EXCEPTION
+
+            return res
+
+        except Exception:
+            self.get_logger().exception("Exception in _adjust_nav_omni_execute_cb")
+            self._stop_robot()
+            if goal_handle.is_active:
+                goal_handle.abort()
+            res.error_code = self.ERR_EXCEPTION
+            return res
+
+        finally:
+            self._clear_active_goal(goal_handle)
+
+
+    def adjust_omnidirectional(self, dx, dy, ang_obstacle_check=45.0, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, should_stop_fn=None, feedback_fn=None, timeout_s=0.0):
+
+        SAFETY_DISTANCE_FROM_ROBOT_EDGE = 0.02  # m
+
+        # Wait for odom (cooperatively)
+        t0 = time.monotonic()
+        src = None
+        while src is None:
+            if should_stop_fn and should_stop_fn():
+                if timeout_s > 0.0 and (time.monotonic() - t0) >= timeout_s:
+                    return self.ERR_TIMEOUT, "Timeout before odometry available"
+                return self.ERR_CANCELED, "Canceled before start"
+            with self._lock:
+                src = self.current_odom_wheels_pose if use_wheel_odometry else self.current_odom_pose
+            time.sleep(0.01)
+
+        # Optional safety check (front-only, as in your legacy code)
+        if safety and dx > 0.0:
+            ok, msg, min_edge = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=ang_obstacle_check, timeout_s=0.5)
+            if not ok:
+                self.get_logger().warn(f"Safety check failed: {msg}")
+                return self.ERR_EXCEPTION, msg if msg else "Radar safety query failed"
+            if (min_edge - SAFETY_DISTANCE_FROM_ROBOT_EDGE) < dx:
+                warn = ("Not enough space in front of the robot to perform the adjustment "
+                        f"(wanted dx={dx:.2f} m, free ~{(min_edge - SAFETY_DISTANCE_FROM_ROBOT_EDGE):.2f} m)")
+                self.get_logger().warn(warn)
+                return self.ERR_EXCEPTION, warn
+
+        # Snapshot initial pose & yaw
+        with self._lock:
+            src = self.current_odom_wheels_pose if use_wheel_odometry else self.current_odom_pose
+            q = src.pose.orientation
+            start_x = src.pose.position.x
+            start_y = src.pose.position.y
+        yaw0 = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
+
+        # Nudge toward the target by tolerance (your legacy behavior)
+        dx_adj = dx + (tolerance if dx > 0 else (-tolerance if dx < 0 else 0.0))
+        dy_adj = dy + (tolerance if dy > 0 else (-tolerance if dy < 0 else 0.0))
+
+        # Compute target in odom frame using current yaw
+        target_x = start_x + math.cos(yaw0) * dx_adj - math.sin(yaw0) * dy_adj
+        target_y = start_y + math.sin(yaw0) * dx_adj + math.cos(yaw0) * dy_adj
+
+        rate_hz = 20.0
+        dt = 1.0 / rate_hz
+        tstart = time.monotonic()
+
+        while True:
+            if should_stop_fn and should_stop_fn():
+                if timeout_s > 0.0 and (time.monotonic() - tstart) >= timeout_s:
+                    return self.ERR_TIMEOUT, "Timeout"
+                return self.ERR_CANCELED, "Canceled"
+
+            with self._lock:
+                src = self.current_odom_wheels_pose if use_wheel_odometry else self.current_odom_pose
+                if src is None:
+                    return self.ERR_NO_ODOM, "Lost odometry"
+                pose = src.pose
+                q = pose.orientation
+                curr_x = pose.position.x
+                curr_y = pose.position.y
+                # Optionally keep updating yaw if you want body-axis alignment to be exact
+                yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
+
+            # Position error in odom
+            ex = target_x - curr_x
+            ey = target_y - curr_y
+            dist_error = math.hypot(ex, ey)
+
+            # feedback
+            if feedback_fn:
+                feedback_fn(time.monotonic() - tstart, dist_error)
+
+            # Done?
+            if dist_error < tolerance:
+                break
+
+            # Convert error from odom to base frame using current yaw
+            vx =  math.cos(-yaw) * ex - math.sin(-yaw) * ey
+            vy =  math.sin(-yaw) * ex + math.cos(-yaw) * ey
+
+            twist = Twist()
+            twist.linear.x = max(-max_speed, min(max_speed, kp * vx))
+            twist.linear.y = max(-max_speed, min(max_speed, kp * vy))
+            twist.angular.z = 0.0
+            self.cmd_vel_publisher.publish(twist)
+
+            time.sleep(dt)
+
+        # Stop the robot unless special-case
+        if not enter_house_special_case:
+            self._stop_robot()
+
+        self.get_logger().info("Omnidirectional Adjustment Complete.")
+        return self.ERR_SUCCESS, "Omnidirectional Adjustment Complete."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def _adjust_nav_obst_goal_cb(self, goal: AdjustNavigationObstacles.Goal):
+        distance            = float(goal.distance)
+        direction_deg       = float(goal.direction)
+        ang_obstacle_check  = float(goal.ang_obstacle_check)
+        max_speed           = float(goal.max_speed)
+        tolerance           = float(goal.tolerance)
+        kp                  = float(goal.kp)
+        timeout_s           = float(goal.timeout)
+
+        # Basic validation (mirror your earlier style)
+        if distance <= 0.0:
+            self.get_logger().warn("Reject: distance must be > 0 (m)")
+            return GoalResponse.REJECT
+        if not (-100.0 <= direction_deg <= 100.0):
+            self.get_logger().warn("Reject: direction must be in [-100, 100] deg")
+            return GoalResponse.REJECT
+        if not (0.0 < ang_obstacle_check <= 360.0):
+            self.get_logger().warn("Reject: ang_obstacle_check must be in (0, 360]")
+            return GoalResponse.REJECT
+        if max_speed <= 0.0:
+            self.get_logger().warn("Reject: max_speed must be > 0 (m/s)")
+            return GoalResponse.REJECT
+        if tolerance <= 0.0:
+            self.get_logger().warn("Reject: tolerance must be > 0 (m)")
+            return GoalResponse.REJECT
+        if kp <= 0.0:
+            self.get_logger().warn("Reject: kp must be > 0")
+            return GoalResponse.REJECT
+        if timeout_s < 0.0:
+            self.get_logger().warn("Reject: timeout must be >= 0 seconds (0 = no timeout)")
+            return GoalResponse.REJECT
+
+        # Enforce single active goal (share same guard with angle action)
+        with self._goal_lock:
+            if self._active_goal is not None and self._active_goal.is_active:
+                self.get_logger().warn("Reject: another navigation goal is active.")
+                return GoalResponse.REJECT
+
+        self.get_logger().info(
+            f"Accept AdjustNavigationObstacles: dist={distance:.3f} m, dir={direction_deg:.1f}°, "
+            f"win={ang_obstacle_check:.1f}°, vmax={max_speed:.2f} m/s, tol={tolerance:.3f} m, "
+            f"kp={kp:.2f}, timeout={timeout_s:.2f}s"
+        )
+        return GoalResponse.ACCEPT
+
+
+    def _adjust_nav_obst_cancel_cb(self, goal_handle):
+        self.get_logger().info("Cancel requested for AdjustNavigationObstacles.")
+        return CancelResponse.ACCEPT
+
+
+    def _adjust_nav_obst_execute_cb(self, goal_handle):
+        # mark active
+        with self._goal_lock:
+            self._active_goal = goal_handle
+
+        fb = AdjustNavigationObstacles.Feedback()
+        res = AdjustNavigationObstacles.Result()
+
+        g = goal_handle.request
+        distance           = float(g.distance)
+        direction_deg      = float(g.direction)
+        ang_check_deg      = float(g.ang_obstacle_check)
+        max_speed          = float(g.max_speed)
+        tolerance          = float(g.tolerance)
+        kp                 = float(g.kp)
+        timeout_s          = float(g.timeout)
+
+        start_clock = self.get_clock().now()
+        start_mono  = time.monotonic()
+
+        def should_stop_fn():
+            if not rclpy.ok() or not goal_handle.is_active:
+                return True
+            if goal_handle.is_cancel_requested:
+                return True
+            if timeout_s > 0.0:
+                elapsed = (self.get_clock().now() - start_clock).nanoseconds * 1e-9
+                if elapsed >= timeout_s:
+                    return True
+            return False
+
+        def feedback_fn(elapsed_s: float, remaining_m: float):
+            fb.navigation_time = Duration()
+            fb.navigation_time.sec = int(elapsed_s)
+            fb.navigation_time.nanosec = int((elapsed_s - int(elapsed_s)) * 1e9)
+            fb.distance_remaining = float(remaining_m)
+            goal_handle.publish_feedback(fb)
+
+        try:
+            err_code, msg = self.adjust_obstacles(
+                distance=distance,
+                direction=direction_deg,
+                ang_obstacle_check=ang_check_deg,
+                max_speed=max_speed,
+                tolerance=tolerance,
+                kp=kp,
+                should_stop_fn=should_stop_fn,
+                feedback_fn=feedback_fn,
+                timeout_s=timeout_s,
+            )
+
+            if err_code == self.ERR_SUCCESS:
+                self._stop_robot()
+                if goal_handle.is_active:
+                    goal_handle.succeed()
+                res.error_code = self.ERR_SUCCESS
+            elif err_code == self.ERR_CANCELED:
+                self._stop_robot()
+                goal_handle.canceled()
+                res.error_code = self.ERR_CANCELED
+            elif err_code == self.ERR_TIMEOUT:
+                self._stop_robot()
+                if goal_handle.is_active:
+                    goal_handle.abort()
+                res.error_code = self.ERR_TIMEOUT
+            elif err_code == self.ERR_NO_ODOM:
+                # not used here, but keep mapping consistent
+                self._stop_robot()
+                if goal_handle.is_active:
+                    goal_handle.abort()
+                res.error_code = self.ERR_NO_ODOM
+            else:
+                self._stop_robot()
+                if goal_handle.is_active:
+                    goal_handle.abort()
+                res.error_code = self.ERR_EXCEPTION
+
+            return res
+
+        except Exception:
+            self.get_logger().exception("Exception in _adjust_nav_obst_execute_cb")
+            self._stop_robot()
+            if goal_handle.is_active:
+                goal_handle.abort()
+            res.error_code = self.ERR_EXCEPTION
+            return res
+
+        finally:
+            self._clear_active_goal(goal_handle)
+
+
+    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5, \
+                         should_stop_fn=None, feedback_fn=None, timeout_s=0.0):
+
+        # Cooperative pre-check
+        if should_stop_fn and should_stop_fn():
+            if timeout_s > 0.0:
+                return self.ERR_TIMEOUT, "Timeout"
+            return self.ERR_CANCELED, "Canceled"
+
+        # Normalize direction to [-180, 180]
+        while direction > 180.0:
+            direction -= 360.0
+        while direction < -180.0:
+            direction += 360.0
+
+        # Query radar (give it a bounded slice of our timeout if provided)
+        srv_timeout = 0.5 if timeout_s == 0.0 else min(max(0.2, 0.5 * timeout_s), 2.0)
+        ok, msg, min_edge = self.get_minimum_radar_distance(
+            direction=direction,
+            ang_obstacle_check=ang_obstacle_check,
+            timeout_s=srv_timeout,
+        )
+
+        if not ok:
+            # Map service outcomes to error codes
+            if msg and msg.lower().startswith("timeout"):
+                return self.ERR_TIMEOUT, "Radar query timeout"
+            if msg and "No obstacles detected" in msg:
+                # If there are no obstacles, the distance is effectively "infinite"; in this case,
+                # move forward until we reach the target 'distance' (i.e., distance_to_adjust = +inf).
+                # But we’ll be conservative and just say nothing to do.
+                return self.ERR_SUCCESS, "No obstacles in window; nothing to adjust"
+            return self.ERR_EXCEPTION, (msg if msg else "Radar query failed")
+
+        # How much we need to change the clearance (positive => move toward obstacle)
+        distance_to_adjust = float(min_edge) - float(distance)
+
+        # Early exit if within tolerance
+        if abs(distance_to_adjust) < float(tolerance):
+            self.get_logger().info(
+                f"Obstacle clearance already within tolerance (err={distance_to_adjust:.3f} m)."
+            )
+            return self.ERR_SUCCESS, "Already within tolerance"
+
+        self.get_logger().info(
+            f"Adjusting obstacle clearance by {distance_to_adjust:.3f} m at dir {direction:.1f}° "
+            f"(min_edge={min_edge:.3f} m → target={distance:.3f} m)."
+        )
+
+        # Convert scalar motion along 'direction' (robot frame) into (dx, dy) in robot frame
+        rad = math.radians(direction)
+        dx = distance_to_adjust * math.cos(rad)
+        dy = distance_to_adjust * math.sin(rad)
+
+        # Delegate motion to omnidirectional adjust (no safety here—it’s a deliberate approach)
+        return self.adjust_omnidirectional(
+            dx=dx,
+            dy=dy,
+            ang_obstacle_check=ang_obstacle_check,  # unused when safety=False, but keep interface consistent
+            safety=False,
+            max_speed=max_speed,
+            tolerance=tolerance,
+            kp=kp,
+            enter_house_special_case=False,
+            use_wheel_odometry=False,
+            should_stop_fn=should_stop_fn,
+            feedback_fn=feedback_fn,  # passes through distance_remaining feedback
+            timeout_s=timeout_s,
+        )
 
     def _stop_robot(self):
         self.cmd_vel_publisher.publish(Twist())
