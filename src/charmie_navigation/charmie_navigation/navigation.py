@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
 
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.action import ActionServer, GoalResponse, CancelResponse
 from rclpy.action.server import ServerGoalHandle
+from rclpy.action.client import ClientGoalHandle
 
-# import variables from standard libraries and both messages and services from custom charmie_interfaces
 from geometry_msgs.msg import Twist
 from realsense2_camera_msgs.msg import RGBD
 from nav_msgs.msg import Odometry
 from nav2_msgs.srv import ClearEntireCostmap
+from nav2_msgs.action import NavigateToPose, FollowWaypoints
+from action_msgs.msg import GoalStatus
 from builtin_interfaces.msg import Duration
 from charmie_interfaces.msg import RadarData
 from charmie_interfaces.srv import SetRGB, Trigger, GetMinRadarDistance
@@ -25,12 +28,6 @@ import math
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
-
-### PASSAR UM DOS ADJUSTS, PODE SER O DO ANGULO QUE E O MAIS SIMPLES PARA AQUI COMO ACAO SERVER E TESTAR
-
-### Do adjusts structures in std_functions
-### inspection nav here
-### Do the same with the nav2 related stuff ???
 
 class ROS2NavigationNode(Node):
 
@@ -51,6 +48,12 @@ class ROS2NavigationNode(Node):
         self.current_odom_wheels_pose = None
         self.radar = RadarData()
         self.is_radar_initialized = False
+
+        self.goal_handle_ = None                 # active Nav2 ClientGoalHandle (or None)
+        self._active_charmie_goal = None         # active ServerGoalHandle for our wrapper
+        self.nav2_feedback = None
+        self.nav2_goal_accepted = False
+        self.nav2_status = GoalStatus.STATUS_UNKNOWN
 
         # Error codes for AdjustNavigationAngle.Result
         self.ERR_SUCCESS  = 0
@@ -81,6 +84,9 @@ class ROS2NavigationNode(Node):
         self.clear_entire_global_costmap_client = self.create_client(
             ClearEntireCostmap, "/global_costmap/clear_entirely_global_costmap", callback_group=self.cb_group
         )
+
+        self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
+        self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
 
         while not self.set_rgb_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Low Level ...")
@@ -122,6 +128,16 @@ class ROS2NavigationNode(Node):
             goal_callback=self._adjust_nav_obst_goal_cb,
             cancel_callback=self._adjust_nav_obst_cancel_cb,
             execute_callback=self._adjust_nav_obst_execute_cb,
+            callback_group=self.cb_group,
+        )
+
+        self.charmie_nav_server = ActionServer(
+            self,
+            NavigateToPose,
+            "charmie_navigate_to_pose",
+            goal_callback=self._charmie_nav_goal_cb,
+            cancel_callback=self._charmie_nav_cancel_cb,
+            execute_callback=self._charmie_nav_execute_cb,
             callback_group=self.cb_group,
         )
 
@@ -179,6 +195,11 @@ class ROS2NavigationNode(Node):
 
     ### SERVICES ###
     
+    def set_rgb(self, command=0, wait_for_end_of=True):
+        request = SetRGB.Request()
+        request.colour = int(command)
+        self.set_rgb_client.call_async(request)
+        return True, ""
 
     """ def get_min_radar_dist(self, request, response):
         # Type of service received: 
@@ -197,8 +218,7 @@ class ROS2NavigationNode(Node):
     
     def _clear_nav_costmaps_cb(self, request, response):
         try:
-            self.clear_entire_local_costmap_client.call_async(ClearEntireCostmap.Request())
-            self.clear_entire_global_costmap_client.call_async(ClearEntireCostmap.Request())
+            self.clear_costmaps()
             self.get_logger().info("Sent costmap clear requests (local + global).")
             response.success = True
             response.message = "Clear requests sent (local + global)."
@@ -207,6 +227,10 @@ class ROS2NavigationNode(Node):
             response.success = False
             response.message = f"Failed to send clear requests: {e}"
         return response
+    
+    def clear_costmaps(self):
+        self.clear_entire_local_costmap_client.call_async(ClearEntireCostmap.Request())
+        self.clear_entire_global_costmap_client.call_async(ClearEntireCostmap.Request())
     
     def get_minimum_radar_distance(self, direction: float = 0.0, ang_obstacle_check: float = 45.0, timeout_s: float = 1.0):
         
@@ -720,29 +744,8 @@ class ROS2NavigationNode(Node):
 
             time.sleep(dt)
 
-        # Stop the robot unless special-case
-        if not enter_house_special_case:
-            self._stop_robot()
-
         self.get_logger().info("Omnidirectional Adjustment Complete.")
         return self.ERR_SUCCESS, "Omnidirectional Adjustment Complete."
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -969,6 +972,274 @@ class ROS2NavigationNode(Node):
         with self._goal_lock:
             if self._active_goal is goal_handle:
                 self._active_goal = None
+
+
+
+
+
+
+
+
+
+
+    def _charmie_nav_goal_cb(self, goal: NavigateToPose.Goal):
+        # If we already have a Charmie goal running, mark it as CANCELED (preemption)
+        if self._active_charmie_goal and self._active_charmie_goal.is_active:
+            try:
+                self.get_logger().info("Preempt: canceling previous Charmie goal (marking CANCELED).")
+                self._active_charmie_goal.canceled()
+            except Exception as e:
+                self.get_logger().warn(f"Could not mark previous Charmie goal canceled: {e}")
+
+        # Also cancel the underlying Nav2 goal so the robot stops moving
+        if self.goal_handle_ is not None:
+            self.get_logger().info("Preempt: canceling current Nav2 NavigateToPose.")
+            try:
+                self.nav2_client_cancel_goal()
+            except Exception as e:
+                self.get_logger().warn(f"Preempt: Nav2 cancel request failed/ignored: {e}")
+
+        return GoalResponse.ACCEPT
+
+
+    def _charmie_nav_cancel_cb(self, goal_handle):
+        # We’ll forward a cancel to Nav2 when we detect it in execute()
+        return CancelResponse.ACCEPT
+
+    def _charmie_nav_execute_cb(self, goal_handle):
+        # ---- ADD: record this as the active Charmie goal
+        self._active_charmie_goal = goal_handle
+        try:
+            goal: NavigateToPose.Goal = goal_handle.request
+            pose = goal.pose.pose
+
+            x = float(pose.position.x)
+            y = float(pose.position.y)
+            theta_deg = math.degrees(self.get_yaw_from_quaternion(
+                pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w
+            ))
+            move_coords = [x, y, theta_deg]
+
+            ok, msg = self.move_to_position(
+                move_coords=move_coords,
+                print_feedback=True,
+                feedback_freq=10.0,
+                clear_costmaps=True,
+                inspection_safety_nav=False,
+                wait_for_end_of=True,
+                goal_handle=goal_handle,
+            )
+
+            result = NavigateToPose.Result()
+
+            # ---- ADD: if this goal was already marked canceled (by preemption), exit quietly
+            if not goal_handle.is_active:
+                return result
+
+            # Your existing logic:
+            if goal_handle.is_cancel_requested:
+                goal_handle.canceled()
+                return result
+
+            if ok:
+                goal_handle.succeed()
+            else:
+                goal_handle.abort()
+            return result
+
+        finally:
+            # ---- ADD: clear the pointer when we leave execute
+            self._active_charmie_goal = None
+
+
+
+    # FUNCTIONS TO CALL NAV2 ACTION SERVER
+    def nav2_client_goal_response_callback(self, future):
+        self.goal_handle_:ClientGoalHandle = future.result()
+        if self.goal_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.goal_handle_.get_result_async().add_done_callback(self.nav2_client_goal_result_callback)
+            self.nav2_goal_accepted = True
+        else:
+            self.nav2_goal_accepted = False
+            self.get_logger().warn("Goal rejected.")
+
+    def nav2_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.nav2_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.nav2_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.nav2_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        
+        self.goal_handle_ = None
+            
+        # self.get_logger().info(f"Result: {result.reached_number}")
+    def nav2_client_cancel_goal(self):
+        if self.goal_handle_ is None:
+            self.get_logger().warn("No active NavigateToPose goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_handle_ = None
+
+    def nav2_client_goal_feedback_callback(self, feedback_msg):
+        self.nav2_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+        # current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+        # current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+        # no_recoveries = str(feedback.number_of_recoveries)
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
+
+
+
+
+    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=10.0, clear_costmaps=True, inspection_safety_nav=False, wait_for_end_of=True, goal_handle=None):
+
+        # Whether the nav2 goal has been successfully completed until the end
+        nav2_goal_completed = False
+
+        # Create a goal
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose.header.frame_id = "map"
+        goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
+        goal_msg.pose.pose.position.x = float(move_coords[0])
+        goal_msg.pose.pose.position.y = float(move_coords[1])
+        goal_msg.pose.pose.position.z = float(0.0)
+        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(move_coords[2]))        
+        goal_msg.pose.pose.orientation.x = q_x
+        goal_msg.pose.pose.orientation.y = q_y
+        goal_msg.pose.pose.orientation.z = q_z
+        goal_msg.pose.pose.orientation.w = q_w
+
+        success = True
+        message = ""
+        
+        self.set_rgb(BLUE+BACK_AND_FORTH_8)
+
+        while not nav2_goal_completed:
+
+            # Clear costmaps before sending a new goal
+            # Helps clearing cluttered costmaps that may cause navigation problems
+            if clear_costmaps:
+                self.clear_costmaps()
+                time.sleep(0.5) # wait a bit for costmaps to be cleared
+                
+            self.nav2_goal_accepted = False
+            self.nav2_status = GoalStatus.STATUS_UNKNOWN
+
+            # Makes sure goal is accepted, and if not attempts to resend it
+            while not self.nav2_goal_accepted:
+                
+                self.get_logger().info("Waiting for nav2 server...")
+                self.nav2_client_.wait_for_server()
+                self.get_logger().info("Nav2 server is ON...")
+
+                # Send the goal
+                self.get_logger().info("Sending goal...")
+                self.nav2_client_.send_goal_async(goal_msg, feedback_callback=self.nav2_client_goal_feedback_callback).add_done_callback(self.nav2_client_goal_response_callback)
+                self.get_logger().info("Goal Sent")
+
+                time.sleep(0.5)
+
+
+            if wait_for_end_of:
+
+                feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                feedback_start_time = time.time()
+
+                # is_canceled = False
+
+                self.set_rgb(CYAN+BACK_AND_FORTH_8)
+
+                while self.nav2_status == GoalStatus.STATUS_UNKNOWN:
+                    
+                    if goal_handle is not None and goal_handle.is_cancel_requested:
+                        self.nav2_client_cancel_goal()
+                        self.set_rgb(RED + BACK_AND_FORTH_8)
+                        return False, "Canceled by client"
+
+                    # Checks conditions to cancel safety navigation (used in inspection task)
+                    # if inspection_safety_nav and not self.check_conditions_to_stop_safety_navigation(move_coords) and not is_canceled:
+                    #     self.nav2_client_cancel_goal()
+                    #     is_canceled = True
+                    
+                    if print_feedback:
+
+                        if time.time() - feedback_start_time > feedback_timer_period:
+
+                            # prints de feedback
+                            feedback = self.nav2_feedback
+                            current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                            current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                            current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+                            navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                            estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                            no_recoveries = str(feedback.number_of_recoveries)
+                            distance_remaining = str(round(feedback.distance_remaining, 2))
+                            print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                            # self.get_logger().info(f"Feedback: {feedback}")
+                            
+                            if goal_handle is not None:
+                                # nav2_feedback is already NavigateToPose.Feedback – publish directly
+                                goal_handle.publish_feedback(self.nav2_feedback)
+                            
+                            feedback_start_time = time.time()
+
+                
+                if self.nav2_status == GoalStatus.STATUS_SUCCEEDED:
+                    self.set_rgb(GREEN+BACK_AND_FORTH_8)
+                    self.get_logger().info("NAV2 RESULT: SUCCEEDED.")
+                    nav2_goal_completed = True
+                    success = True
+                    message = "Successfully moved to position"
+                    return success, message
+                elif self.nav2_status == GoalStatus.STATUS_ABORTED:
+                    self.set_rgb(RED+BACK_AND_FORTH_8)
+                    self.get_logger().info("NAV2 RESULT: ABORTED.")
+                    self.get_logger().info("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE.")
+                elif self.nav2_status == GoalStatus.STATUS_CANCELED:
+                    self.set_rgb(RED+BACK_AND_FORTH_8)
+                    self.get_logger().info("NAV2 RESULT: CANCELED.")
+                    success = False
+                    message = "Aborted moved to position due to safety measures"
+                    return success, message
+
+
+       
+    def get_quaternion_from_euler(self, roll, pitch, yaw):
+        """
+		Convert an Euler angle to a quaternion.
+		
+		Input
+			:param roll: The roll (rotation around x-axis) angle in radians.
+			:param pitch: The pitch (rotation around y-axis) angle in radians.
+			:param yaw: The yaw (rotation around z-axis) angle in radians.
+		
+		Output
+			:return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+		"""
+        qx = math.sin(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) - math.cos(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+        qy = math.cos(roll/2) * math.sin(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.cos(pitch/2) * math.sin(yaw/2)
+        qz = math.cos(roll/2) * math.cos(pitch/2) * math.sin(yaw/2) - math.sin(roll/2) * math.sin(pitch/2) * math.cos(yaw/2)
+        qw = math.cos(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
+		
+        #print(qx,qy,qz,qw)
+  
+        return [qx, qy, qz, qw]
 
     def get_yaw_from_quaternion(self, x, y, z, w):
         # Convert quaternion (x, y, z, w) to Yaw (rotation around Z-axis).
