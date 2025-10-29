@@ -168,7 +168,7 @@ class ROS2TaskNode(Node):
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
-        # Navigation
+        # Radar
         self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance")
         # NAV2
         self.clear_entire_local_costmap_client  = self.create_client(ClearEntireCostmap, "/local_costmap/clear_entirely_local_costmap")
@@ -189,7 +189,6 @@ class ROS2TaskNode(Node):
         # Task State Demo 
         self.set_task_state_demo_client = self.create_client(SetInt, "task_state_demo")
         self.get_task_state_demo_server = self.create_service(SetInt, "task_state_demo", self.callback_get_task_state_demo) 
-
 
         ### Actions (Clients) ###
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
@@ -253,8 +252,6 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for Server Low Level ...")
 
         if self.ros2_modules["charmie_navigation"]:
-            while not self.get_minimum_radar_distance_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
             while not self.adjust_navigation_angle_client.wait_for_server(1.0):
                 self.get_logger().warn("Waiting for Action Server Adjust Angle Command...")
 
@@ -275,6 +272,10 @@ class ROS2TaskNode(Node):
             while not self.neck_track_object_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         
+        if self.ros2_modules["charmie_radar"]:
+            while not self.get_minimum_radar_distance_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Get Minimum Radar Distance Command...")
+
         if self.ros2_modules["charmie_sound_classification"]:
             while not self.get_sound_classification_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Sound Classification Command...")
@@ -330,6 +331,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
+        self.waited_for_end_of_get_minimum_radar_distance = False
 
         self.br = CvBridge()
         self.rgb_head_img = Image()
@@ -358,6 +360,7 @@ class ROS2TaskNode(Node):
         self.amcl_pose = PoseWithCovarianceStamped()
         self.new_amcl_pose_msg = False
         self.selected_list_options_touchscreen_menu = []
+        self.get_minimum_radar_distance_value = GetMinRadarDistance.Response()
 
         # robot localization
         self.robot_pose = Pose2D()
@@ -1132,6 +1135,24 @@ class ROS2TaskNode(Node):
         print(response.message)
 
         return response
+    
+    def call_get_minimum_radar_distance_server(self, request=GetMinRadarDistance.Request()):
+        
+        future = self.get_minimum_radar_distance_client.call_async(request)
+        future.add_done_callback(self.callback_call_get_minimum_radar_distance_command)
+        
+    def callback_call_get_minimum_radar_distance_command(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_minimum_radar_distance_value = response
+            self.get_logger().info("Received Min Radar Dist: %s" %(str(response.min_radar_distance_to_robot_edge)))
+            self.waited_for_end_of_get_minimum_radar_distance = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
     
     def call_clear_entire_local_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
         
@@ -2826,7 +2847,29 @@ class RobotStdFunctions():
 
     def get_minimum_radar_distance(self, direction=0.0, ang_obstacle_check=45):
 
-        success = False
+        # success = False
+        # message = ""
+        # min_radar_distance_to_robot_edge = None
+
+        request = GetMinRadarDistance.Request()
+        request.direction = float(direction)
+        request.ang_obstacle_check = float(ang_obstacle_check)
+        self.node.call_get_minimum_radar_distance_server(request=request)
+
+        while not self.node.waited_for_end_of_get_minimum_radar_distance:
+            pass
+        self.node.waited_for_end_of_get_minimum_radar_distance = False
+
+        success = self.node.get_minimum_radar_distance_value.success
+        message = self.node.get_minimum_radar_distance_value.message
+        min_radar_distance_to_robot_edge = self.node.get_minimum_radar_distance_value.min_radar_distance_to_robot_edge
+        print(success, message, min_radar_distance_to_robot_edge)
+        
+        return success, message, min_radar_distance_to_robot_edge
+
+
+
+        """ success = False
         message = ""
         min_radar_distance_to_robot_edge = None
 
@@ -2885,7 +2928,7 @@ class RobotStdFunctions():
             success = False
             message = "Radar not initialized"
             self.node.get_logger().warn("Radar not initialized")
-            return success, message, min_radar_distance_to_robot_edge
+            return success, message, min_radar_distance_to_robot_edge """
     
     def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
@@ -3423,7 +3466,6 @@ class RobotStdFunctions():
                 depth_img = self.node.depth_base_img
         
         self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_img, camera=camera, bbox=None)
-        pass
 
     def get_robot_localization(self):
 
