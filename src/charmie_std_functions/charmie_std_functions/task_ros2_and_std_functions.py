@@ -173,6 +173,8 @@ class ROS2TaskNode(Node):
         # NAV2
         self.clear_entire_local_costmap_client  = self.create_client(ClearEntireCostmap, "/local_costmap/clear_entirely_local_costmap")
         self.clear_entire_global_costmap_client = self.create_client(ClearEntireCostmap, "/global_costmap/clear_entirely_global_costmap")
+        # Navigation
+        self.clear_nav2_costmaps_client = self.create_client(Trigger, "clear_nav_costmaps")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
@@ -1166,8 +1168,13 @@ class ROS2TaskNode(Node):
             self.waited_for_end_of_get_minimum_radar_distance = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
+
+    def call_clear_nav2_costmaps(self, request=Trigger.Request(), wait_for_end_of=True):
+        
+        self.clear_nav2_costmaps_client.call_async(request)
+
     
-    def call_clear_entire_local_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
+    """ def call_clear_entire_local_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
         
         self.clear_entire_local_costmap_client.call_async(request)
 
@@ -1179,7 +1186,7 @@ class ROS2TaskNode(Node):
         self.clear_entire_global_costmap_client.call_async(request)
         
         self.clear_global_costmap_success = True
-        self.clear_global_costmap_message = "Clear Global Costmap Sucessfully Sent"
+        self.clear_global_costmap_message = "Clear Global Costmap Sucessfully Sent" """
 
     ### Nav2 Action Client ###
     # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
@@ -1685,15 +1692,13 @@ class RobotStdFunctions():
 
         # Clear costmaps before sending a new goal
         # Helps clearing cluttered costmaps that may cause navigation problems
-        self.node.call_clear_entire_local_costmap_server()
-        self.node.call_clear_entire_global_costmap_server()
+        self.clear_navigation_costmaps()
             
         self.adjust_omnidirectional_position(dx=distance+position_threshold, dy=0.0, safety=False, max_speed=speed, tolerance=position_threshold, kp=3.0, enter_house_special_case=True, use_wheel_odometry=False)
         
         # Clear costmaps before sending a new goal
         # Helps clearing cluttered costmaps that may cause navigation problems
-        self.node.call_clear_entire_local_costmap_server()
-        self.node.call_clear_entire_global_costmap_server()
+        self.clear_navigation_costmaps()
 
         self.set_initial_position([distance+position_threshold/2, 0.0, 0.0]) #  set initial position to be inside the house, the position_threshold/2 is because the robot is already moving
 
@@ -2349,8 +2354,7 @@ class RobotStdFunctions():
             # Clear costmaps before sending a new goal
             # Helps clearing cluttered costmaps that may cause navigation problems
             if clear_costmaps:
-                self.node.call_clear_entire_local_costmap_server()
-                self.node.call_clear_entire_global_costmap_server()
+                self.clear_navigation_costmaps()
                 time.sleep(0.5) # wait a bit for costmaps to be cleared
                 
             self.node.nav2_goal_accepted = False
@@ -2463,8 +2467,7 @@ class RobotStdFunctions():
                 # Clear costmaps before sending a new goal
                 # Helps clearing cluttered costmaps that may cause navigation problems
                 if clear_costmaps:
-                    self.node.call_clear_entire_local_costmap_server()
-                    self.node.call_clear_entire_global_costmap_server()
+                    self.clear_navigation_costmaps()
                     time.sleep(0.5) # wait a bit for costmaps to be cleared
                     
                         
@@ -2526,6 +2529,9 @@ class RobotStdFunctions():
         move_coords_copy = move_coords.copy()
         move_coords_copy[2]+=45.0
         return move_coords_copy
+
+    def clear_navigation_costmaps(self):
+        self.node.call_clear_nav2_costmaps()
 
     def move_to_position_with_safety_navigation(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, wait_for_end_of=True):
 
