@@ -17,7 +17,7 @@ from nav2_msgs.srv import ClearEntireCostmap
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from action_msgs.msg import GoalStatus
 from builtin_interfaces.msg import Duration
-from charmie_interfaces.msg import RadarData
+from charmie_interfaces.msg import RadarData, ListOfDetectedPerson
 from charmie_interfaces.srv import SetRGB, Trigger, GetMinRadarDistance
 from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationObstacles, AdjustNavigationOmnidirectional
 
@@ -46,6 +46,7 @@ class ROS2NavigationNode(Node):
         self._lock = threading.Lock()
         self._goal_lock = threading.Lock()
         self._img_lock = threading.Lock()
+        self._yolo_lock = threading.Lock()
         
         # Variables
         self._active_goal = None
@@ -66,11 +67,14 @@ class ROS2NavigationNode(Node):
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
+        # For Inspection
         self.br = CvBridge()
         self.depth_head_img = Image()
         self.first_depth_head_image_received = False
         self.CAM_IMAGE_WIDTH = 848
         self.CAM_IMAGE_HEIGHT = 480
+        self.detected_people = ListOfDetectedPerson()
+        self.cmd_vel = Twist()
         
         # Error codes for AdjustNavigationAngle.Result
         self.ERR_SUCCESS  = 0
@@ -89,6 +93,7 @@ class ROS2NavigationNode(Node):
         self.odom_wheels_subscriber = self.create_subscription(Odometry, "/wheel_encoders", self.odom_wheels_callback, 10, callback_group=self.cb_group)
         self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10, callback_group=self.cb_group)
         self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10, callback_group=self.cb_group)
+        self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10, callback_group=self.cb_group)
         
         # Clients/Servers (optional)
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode", callback_group=self.cb_group)
@@ -161,17 +166,29 @@ class ROS2NavigationNode(Node):
         self.charmie_nav_follow_waypoints_server = ActionServer(
             self,
             FollowWaypoints,
-            "charmie_follow_waypoints",
+            "charmie_navigate_follow_waypoints",
             goal_callback=self._charmie_nav_follow_waypoints_goal_cb,
             cancel_callback=self._charmie_nav_follow_waypoints_cancel_cb,
             execute_callback=self._charmie_nav_follow_waypoints_execute_cb,
             callback_group=self.cb_group,
         )
 
-        self.timer = self.create_timer(0.1, self.timer_callback)
+        self.charmie_nav_safety_server = ActionServer(
+            self,
+            NavigateToPose,
+            "charmie_navigate_to_pose_safety",
+            goal_callback=self._charmie_nav_safety_goal_cb,
+            cancel_callback=self._charmie_nav_safety_cancel_cb,
+            execute_callback=self._charmie_nav_safety_execute_cb,
+            callback_group=self.cb_group,
+        )
+
+
+        # self.timer = self.create_timer(0.1, self.timer_callback)
 
     def timer_callback(self):
-        print(self.safety_navigation_check_depth_head_camera())
+        self.check_conditions_to_stop_safety_navigation()
+        # print(self.safety_navigation_check_depth_head_camera())
         
     def odom_callback(self, msg: Odometry):
         with self._lock:
@@ -208,6 +225,14 @@ class ROS2NavigationNode(Node):
             self.depth_head_img = rgbd.depth
             self.first_depth_head_image_received = True
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
+
+    def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
+        with self._yolo_lock:
+            self.detected_people = det_people
+        # print(len(self.detected_people.persons))
+
+    def cmd_vel_callback(self, msg: Twist):
+        self.cmd_vel = msg
 
     ### SERVICES ###
     
@@ -1202,7 +1227,7 @@ class ROS2NavigationNode(Node):
                 feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
                 feedback_start_time = time.time()
 
-                # is_canceled = False
+                is_canceled = False
 
                 self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
@@ -1214,9 +1239,9 @@ class ROS2NavigationNode(Node):
                         return False, "Canceled by client"
 
                     # Checks conditions to cancel safety navigation (used in inspection task)
-                    # if inspection_safety_nav and not self.check_conditions_to_stop_safety_navigation(move_coords) and not is_canceled:
-                    #     self.nav2_client_cancel_goal()
-                    #     is_canceled = True
+                    if inspection_safety_nav and not self.check_conditions_to_stop_safety_navigation(move_coords) and not is_canceled:
+                        self.nav2_client_cancel_goal()
+                        is_canceled = True
                     
                     if print_feedback:
 
@@ -1306,12 +1331,10 @@ class ROS2NavigationNode(Node):
             ))
             move_coords = [x, y, theta_deg]
 
-            ok, msg = self.move_to_position(
+            ok, msg = self.move_to_position_follow_waypoints(
                 move_coords=move_coords,
                 print_feedback=True,
                 feedback_freq=10.0,
-                clear_costmaps=True,
-                inspection_safety_nav=False,
                 wait_for_end_of=True,
                 goal_handle=goal_handle,
             )
@@ -1395,7 +1418,7 @@ class ROS2NavigationNode(Node):
         # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
     
-    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True, goal_handle=None):
 
         # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
@@ -1451,7 +1474,12 @@ class ROS2NavigationNode(Node):
                     self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
                     while self.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
-                        
+
+                        if goal_handle is not None and goal_handle.is_cancel_requested:
+                            self.nav2_follow_waypoints_client_cancel_goal()
+                            self.set_rgb(RED + BACK_AND_FORTH_8)
+                            return False, "Canceled by client"
+                            
                         if print_feedback:
 
                             if time.time() - feedback_start_time > feedback_timer_period:
@@ -1480,7 +1508,24 @@ class ROS2NavigationNode(Node):
                         print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
 
 
+    def check_conditions_to_stop_safety_navigation(self, move_coords):
 
+        dist_from_goal = math.sqrt( (move_coords[0] - self.nav2_feedback.current_pose.pose.position.x)**2 + (move_coords[1] - self.nav2_feedback.current_pose.pose.position.y)**2 )
+        linear_speed = math.sqrt( self.cmd_vel.linear.x**2 + self.cmd_vel.linear.y**2 )
+        # If you want to edit the location of the persons detected for safety stop, you must got o charmie_yolo_pose and change the thresholds for person_right_in_front:
+        # ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD AND ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD
+        # we could have the coordinates condition here and read all the persons detected and see if any of them is in front of the robot however
+        # if we do so, when we show the detections on the face, it will show all persons detected, and not just the ones he is avoiding, which may be confusing for the user
+        depth_safety = self.safety_navigation_check_depth_head_camera()
+        # print(len(self.node.detected_people.persons), dist_from_goal, linear_speed, depth_safety)
+        
+        # if i dont see anyone or i am just rotating near the goal, i dont need to use safety navigation
+        if (len(self.detected_people.persons) == 0 and not depth_safety) or \
+            (linear_speed < 0.01 and dist_from_goal < 0.3):
+            return True
+        else:
+            return False
+        
     def get_head_depth_image(self):
 
 
