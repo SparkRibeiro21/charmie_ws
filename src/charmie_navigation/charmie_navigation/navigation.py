@@ -9,7 +9,7 @@ from rclpy.action import ActionServer, GoalResponse, CancelResponse
 from rclpy.action.server import ServerGoalHandle
 from rclpy.action.client import ClientGoalHandle
 
-from geometry_msgs.msg import Twist, PoseStamped
+from geometry_msgs.msg import Twist, PoseStamped, Pose2D
 from realsense2_camera_msgs.msg import RGBD
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
@@ -37,7 +37,7 @@ class ROS2NavigationNode(Node):
 
     def __init__(self):
         super().__init__("ROS2CHARMIENavigation")
-        self.get_logger().info("Initialised CHARMIE Navigation Node")
+        # self.get_logger().info("Initialised CHARMIE Navigation Node")
 
         # Reentrant group so action + subs can overlap
         self.cb_group = ReentrantCallbackGroup()
@@ -67,6 +67,8 @@ class ROS2NavigationNode(Node):
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
+        self._active_charmie_goal_safety = None
+
         # For Inspection
         self.br = CvBridge()
         self.depth_head_img = Image()
@@ -75,6 +77,7 @@ class ROS2NavigationNode(Node):
         self.CAM_IMAGE_HEIGHT = 480
         self.detected_people = ListOfDetectedPerson()
         self.cmd_vel = Twist()
+        self.robot_pose = Pose2D()
         
         # Error codes for AdjustNavigationAngle.Result
         self.ERR_SUCCESS  = 0
@@ -94,6 +97,7 @@ class ROS2NavigationNode(Node):
         self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10, callback_group=self.cb_group)
         self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10, callback_group=self.cb_group)
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10, callback_group=self.cb_group)
+        self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10, callback_group=self.cb_group)
         
         # Clients/Servers (optional)
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode", callback_group=self.cb_group)
@@ -110,14 +114,14 @@ class ROS2NavigationNode(Node):
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
 
-        """ while not self.set_rgb_client.wait_for_service(1.0):
+        while not self.set_rgb_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Low Level ...")
         while not self.get_minimum_radar_distance_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Radar ...")
         while not self.clear_entire_local_costmap_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for /local_costmap/clear_entirely_local_costmap ...")
         while not self.clear_entire_global_costmap_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for /global_costmap/clear_entirely_global_costmap ...") """
+            self.get_logger().warn("Waiting for /global_costmap/clear_entirely_global_costmap ...")
 
         # Service to clear both nav2 costmaps
         self.clear_nav_costmaps_server = self.create_service(Trigger, "clear_nav_costmaps", self._clear_nav_costmaps_cb, callback_group=self.cb_group)
@@ -183,7 +187,7 @@ class ROS2NavigationNode(Node):
             callback_group=self.cb_group,
         )
 
-
+        self.get_logger().info("Successfully Initialised CHARMIE Navigation Node")
         # self.timer = self.create_timer(0.1, self.timer_callback)
 
     def timer_callback(self):
@@ -197,6 +201,10 @@ class ROS2NavigationNode(Node):
     def odom_wheels_callback(self, msg: Odometry):
         with self._lock:
             self.current_odom_wheels_pose = msg.pose
+
+    def robot_localisation_callback(self, pose: Pose2D):
+        with self._lock:
+            self.robot_pose = pose
 
     def radar_data_callback(self, radar: RadarData):
         with self._lock:
@@ -232,7 +240,8 @@ class ROS2NavigationNode(Node):
         # print(len(self.detected_people.persons))
 
     def cmd_vel_callback(self, msg: Twist):
-        self.cmd_vel = msg
+        with self._lock:
+            self.cmd_vel = msg
 
     ### SERVICES ###
     
@@ -1510,8 +1519,12 @@ class ROS2NavigationNode(Node):
 
     def check_conditions_to_stop_safety_navigation(self, move_coords):
 
-        dist_from_goal = math.sqrt( (move_coords[0] - self.nav2_feedback.current_pose.pose.position.x)**2 + (move_coords[1] - self.nav2_feedback.current_pose.pose.position.y)**2 )
-        linear_speed = math.sqrt( self.cmd_vel.linear.x**2 + self.cmd_vel.linear.y**2 )
+        with self._lock:
+            robot_pose = self.robot_pose
+            cmd_vel = self.cmd_vel
+
+        dist_from_goal = math.sqrt( (move_coords[0] - robot_pose.x)**2 + (move_coords[1] - robot_pose.y)**2 )
+        linear_speed = math.sqrt( cmd_vel.linear.x**2 + cmd_vel.linear.y**2 )
         # If you want to edit the location of the persons detected for safety stop, you must got o charmie_yolo_pose and change the thresholds for person_right_in_front:
         # ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD AND ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD
         # we could have the coordinates condition here and read all the persons detected and see if any of them is in front of the robot however
@@ -1610,7 +1623,88 @@ class ROS2NavigationNode(Node):
 
 
 
+    def _charmie_nav_safety_goal_cb(self, goal: NavigateToPose.Goal):
+        # If we already have a Safety goal running, mark it as CANCELED (preemption)
+        if self._active_charmie_goal_safety and self._active_charmie_goal_safety.is_active:
+            try:
+                self.get_logger().info("Preempt (safety): canceling previous safety goal (marking CANCELED).")
+                self._active_charmie_goal_safety.canceled()
+            except Exception as e:
+                self.get_logger().warn(f"Could not mark previous safety goal canceled: {e}")
 
+        # Also cancel the underlying Nav2 goal so the robot stops ASAP
+        if self.goal_handle_ is not None:
+            self.get_logger().info("Preempt (safety): canceling current Nav2 NavigateToPose.")
+            try:
+                self.nav2_client_cancel_goal()
+            except Exception as e:
+                self.get_logger().warn(f"Preempt (safety): Nav2 cancel request failed/ignored: {e}")
+
+        return GoalResponse.ACCEPT
+
+
+    def _charmie_nav_safety_cancel_cb(self, goal_handle):
+        # Will be handled cooperatively in execute()
+        return CancelResponse.ACCEPT
+
+
+    def _charmie_nav_safety_execute_cb(self, goal_handle):
+        # Track this as the active Safety goal
+        self._active_charmie_goal_safety = goal_handle
+        try:
+            goal: NavigateToPose.Goal = goal_handle.request
+            pose = goal.pose.pose
+
+            x = float(pose.position.x)
+            y = float(pose.position.y)
+            theta_deg = math.degrees(self.get_yaw_from_quaternion(
+                pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w
+            ))
+            move_coords = [x, y, theta_deg]
+
+            success = False
+
+            # here is the logic that let's nav be canceled when a person is detected 
+            # and reset the navigation when person has passed  
+            while not success:
+
+                if self.check_conditions_to_stop_safety_navigation(move_coords):
+
+                    success, message = self.move_to_position(
+                        move_coords=move_coords,
+                        print_feedback=True,
+                        feedback_freq=10.0,
+                        clear_costmaps=True,
+                        inspection_safety_nav=True,   # Set to true
+                        wait_for_end_of=True,
+                        goal_handle=goal_handle,
+                    )
+
+                    if not success:
+                        ### self.set_speech(filename="inspection/please_move_aside", wait_for_end_of=False)
+                        while not self.check_conditions_to_stop_safety_navigation(move_coords):
+                            pass
+                        time.sleep(1.0) # wait a bit before retrying
+
+            result = NavigateToPose.Result()
+
+            # If preempted and already marked canceled, just return
+            if not goal_handle.is_active:
+                return result
+
+            if goal_handle.is_cancel_requested:
+                goal_handle.canceled()
+                return result
+
+            if success:
+                goal_handle.succeed()
+            else:
+                goal_handle.abort()
+            return result
+
+        finally:
+            # Clear pointer when done
+            self._active_charmie_goal_safety = None
 
 
 

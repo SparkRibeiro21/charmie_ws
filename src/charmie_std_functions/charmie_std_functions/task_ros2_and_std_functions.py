@@ -460,6 +460,11 @@ class ROS2TaskNode(Node):
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
+        self.goal_safety_handle_ = None
+        self.nav2_safety_goal_accepted = None
+        self.nav2_safety_feedback = NavigateToPose.Feedback()
+        self.nav2_safety_status = GoalStatus.STATUS_UNKNOWN
+
         self.adjust_angle_navigation_handle_ = None
         self.adjust_angle_navigation_accepted = None
         self.adjust_angle_navigation_feedback = AdjustNavigationAngle.Feedback()
@@ -1340,6 +1345,60 @@ class ROS2TaskNode(Node):
         # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
         # distance_remaining = str(round(feedback.distance_remaining, 2))
         # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
+
+    def nav2_safety_client_goal_response_callback(self, future):
+        self.goal_safety_handle_:ClientGoalHandle = future.result()
+        if self.goal_safety_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.goal_safety_handle_.get_result_async().add_done_callback(self.nav2_safety_client_goal_result_callback)
+            self.nav2_safety_goal_accepted = True
+        else:
+            self.nav2_safety_goal_accepted = False
+            self.goal_safety_handle_ = None
+            self.get_logger().warn("Goal rejected.")
+
+    def nav2_safety_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.nav2_safety_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.nav2_safety_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.nav2_safety_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.nav2_safety_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}")
+        
+        # When goal is finished, clear the handle
+        self.goal_safety_handle_ = None
+    
+    def nav2_safety_client_cancel_goal(self):
+        if self.goal_safety_handle_ is None:
+            self.get_logger().warn("No active NavigateToPose goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_safety_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_safety_handle_ = None
+
+    def nav2_safety_client_goal_feedback_callback(self, feedback_msg):
+        self.nav2_safety_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+        # current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+        # current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+        # no_recoveries = str(feedback.number_of_recoveries)
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
 
 
@@ -2381,12 +2440,17 @@ class RobotStdFunctions():
 
                     if time.time() - feedback_start_time > feedback_timer_period:
                         feedback = self.node.nav2_feedback
+                        current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                        current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                        current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
                         navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                        no_recoveries = str(feedback.number_of_recoveries)
                         distance_remaining = str(round(feedback.distance_remaining, 2))
-                        print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
-                        # self.node.get_logger().info(f"Feedback: {feedback}")
+                        print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                        # self.get_logger().info(f"Feedback: {feedback}")
                         feedback_start_time = time.time()
-            
+                        
             if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
                 self.node.get_logger().info("CHARMIE NAV2 RESULT: SUCCEEDED.")
                 success = True
@@ -2576,12 +2640,17 @@ class RobotStdFunctions():
 
                         if time.time() - feedback_start_time > feedback_timer_period:
                             feedback = self.node.nav2_follow_waypoints_feedback
+                            current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                            current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                            current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
                             navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                            estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                            no_recoveries = str(feedback.number_of_recoveries)
                             distance_remaining = str(round(feedback.distance_remaining, 2))
-                            print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
-                            # self.node.get_logger().info(f"Feedback: {feedback}")
+                            print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                            # self.get_logger().info(f"Feedback: {feedback}")
                             feedback_start_time = time.time()
-                
+                        
                 if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
                     self.node.get_logger().info("CHARMIE NAV2 FOLLOW WAYPOINTS RESULT: SUCCEEDED.")
                     success = True
@@ -2713,44 +2782,107 @@ class RobotStdFunctions():
     def clear_navigation_costmaps(self):
         self.node.call_clear_nav2_costmaps()
 
-    def move_to_position_with_safety_navigation(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, wait_for_end_of=True):
-
-        success = False
-        message = ""
+    def move_to_position_with_safety_navigation(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
         self.set_face(camera="head", show_detections=True)
+
+        # Create a goal
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose.header.frame_id = "map"
+        goal_msg.pose.header.stamp = self.node.get_clock().now().to_msg()
+        goal_msg.pose.pose.position.x = float(move_coords[0])
+        goal_msg.pose.pose.position.y = float(move_coords[1])
+        goal_msg.pose.pose.position.z = float(0.0)
+        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(move_coords[2]))        
+        goal_msg.pose.pose.orientation.x = q_x
+        goal_msg.pose.pose.orientation.y = q_y
+        goal_msg.pose.pose.orientation.z = q_z
+        goal_msg.pose.pose.orientation.w = q_w
+
+        self.node.get_logger().info("Waiting for CHARMIE Nav2 Safety server...")
+        self.node.charmie_nav2_safety_client.wait_for_server()
+        self.node.get_logger().info("CHARMIE Nav2 Safety server is ON...")
+
+        self.node.goal_safety_handle_ = None
+        self.node.nav2_safety_goal_accepted = None
+        self.node.nav2_safety_feedback = NavigateToPose.Feedback()
+        self.node.nav2_safety_status = GoalStatus.STATUS_UNKNOWN 
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.charmie_nav2_safety_client.send_goal_async(goal_msg, feedback_callback=self.node.nav2_safety_client_goal_feedback_callback).add_done_callback(self.node.nav2_safety_client_goal_response_callback)
+        self.node.get_logger().info("CHARMIE Nav2 Safety Goal Sent")
+
+        while self.node.nav2_safety_goal_accepted is None:
+            time.sleep(0.05)
         
-        while not success:
+        success = self.node.nav2_safety_goal_accepted
+        message = ""
 
-            if self.check_conditions_to_stop_safety_navigation(move_coords):
+        if wait_for_end_of:
 
-                success, message = self.move_to_position(move_coords=move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, clear_costmaps=clear_costmaps, inspection_safety_nav=True, wait_for_end_of=wait_for_end_of)
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.nav2_safety_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.nav2_safety_feedback
+                        current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                        current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                        current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                        no_recoveries = str(feedback.number_of_recoveries)
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                        # self.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.nav2_safety_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("CHARMIE NAV2 SAFETY RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            # elif self.node.nav2_safety_status == GoalStatus.STATUS_ABORTED:
+            #     self.set_rgb(RED+BACK_AND_FORTH_8)
+            #     self.node.get_logger().info("CHARMIE SAFETY NAV2 RESULT: ABORTED.")
+            #     success = False
+            #     message = "Canceled moved to position"
+            elif self.node.nav2_safety_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("CHARMIEN NAV2 SAFETY RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            self.set_face("charmie_face")
+            self.activate_yolo_pose(activate=False)
+
+            return success, message
         
-                if not success:
-                    self.set_speech(filename="inspection/please_move_aside", wait_for_end_of=False)
-                    while not self.check_conditions_to_stop_safety_navigation(move_coords):
-                        pass
-                    time.sleep(1.0) # wait a bit before retrying
-
-        self.set_face("charmie_face")
-        self.activate_yolo_pose(activate=False)
-
-        return success, message
+        else:
+            success = True
+            message = "Sent Command to CHARMIE Nav2 Safety, not waiting for end of"
+            return success, message
     
-    def move_to_position_with_safety_navigation_cancel(self):
-        ###if self.node.goal_follow_waypoints_handle_ is not None:
-        ###    self.set_rgb(RED+BACK_AND_FORTH_8)
-        ###self.node.nav2_client_cancel_goal()
-        pass
+    # move_to_position_with_safety_navigation_cancel can not be used because the way we stop when detect person/obbstacle for safety nav inspection is that we cancel the nav2 navigation.
+    # If we run this std_function, the cancel will be interpreted the same way as if a person was in front of the robot
+    # def move_to_position_with_safety_navigation_cancel(self):
+    #     if self.node.goal_safety_handle_ is not None:
+    #         self.set_rgb(RED+BACK_AND_FORTH_8)
+    #     self.node.nav2_safety_client_cancel_goal()
+    #     self.set_face("charmie_face")
+    #     self.activate_yolo_pose(activate=False)
 
     def move_to_position_with_safety_navigation_is_done(self):
-        ###if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
-        ###    return True
-        ###else:
-        ###    return False
-        pass
-        
+        if self.node.nav2_safety_status == GoalStatus.STATUS_SUCCEEDED:
+            self.set_face("charmie_face")
+            self.activate_yolo_pose(activate=False)
+            return True
+        else:
+            return False        
 
     ### THIS FUNCTION IS HERE BUT IS NOT USED, NOW IS IN CHARMIE_NAVIGATION ###
     ### HOWEVER, DUE TO THE THREADING SYSTEM, THE DEBUG MODE DOES NOT WORK IN CHARMIE_NAVIGATION ###
