@@ -11,6 +11,7 @@ from rclpy.action.client import ClientGoalHandle
 
 from geometry_msgs.msg import Twist, PoseStamped
 from realsense2_camera_msgs.msg import RGBD
+from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from nav2_msgs.srv import ClearEntireCostmap
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
@@ -23,6 +24,9 @@ from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationObs
 import time
 import threading
 import math
+import numpy as np
+import cv2 
+from cv_bridge import CvBridge
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -41,6 +45,7 @@ class ROS2NavigationNode(Node):
         # Lock
         self._lock = threading.Lock()
         self._goal_lock = threading.Lock()
+        self._img_lock = threading.Lock()
         
         # Variables
         self._active_goal = None
@@ -60,6 +65,12 @@ class ROS2NavigationNode(Node):
         self.nav2_follow_waypoints_goal_accepted = None
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+
+        self.br = CvBridge()
+        self.depth_head_img = Image()
+        self.first_depth_head_image_received = False
+        self.CAM_IMAGE_WIDTH = 848
+        self.CAM_IMAGE_HEIGHT = 480
         
         # Error codes for AdjustNavigationAngle.Result
         self.ERR_SUCCESS  = 0
@@ -94,14 +105,14 @@ class ROS2NavigationNode(Node):
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
 
-        while not self.set_rgb_client.wait_for_service(1.0):
+        """ while not self.set_rgb_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Low Level ...")
         while not self.get_minimum_radar_distance_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Radar ...")
         while not self.clear_entire_local_costmap_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for /local_costmap/clear_entirely_local_costmap ...")
         while not self.clear_entire_global_costmap_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for /global_costmap/clear_entirely_global_costmap ...")
+            self.get_logger().warn("Waiting for /global_costmap/clear_entirely_global_costmap ...") """
 
         # Service to clear both nav2 costmaps
         self.clear_nav_costmaps_server = self.create_service(Trigger, "clear_nav_costmaps", self._clear_nav_costmaps_cb, callback_group=self.cb_group)
@@ -147,7 +158,7 @@ class ROS2NavigationNode(Node):
             callback_group=self.cb_group,
         )
 
-        self.charmie_nav_server = ActionServer(
+        self.charmie_nav_follow_waypoints_server = ActionServer(
             self,
             FollowWaypoints,
             "charmie_follow_waypoints",
@@ -157,12 +168,11 @@ class ROS2NavigationNode(Node):
             callback_group=self.cb_group,
         )
 
-        # self.timer = self.create_timer(5.0, self.timer_callback)
+        self.timer = self.create_timer(0.1, self.timer_callback)
 
-    # def timer_callback(self):
-    #     ok, msg, d = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45.0, timeout_s=2.0)
-    #     self.get_logger().info(f"RadarMinEdge ok={ok} msg='{msg}' dist={d}")
-
+    def timer_callback(self):
+        print(self.safety_navigation_check_depth_head_camera())
+        
     def odom_callback(self, msg: Odometry):
         with self._lock:
             self.current_odom_pose = msg.pose
@@ -192,22 +202,12 @@ class ROS2NavigationNode(Node):
             #     i += 1    
 
     def get_rgbd_head_callback(self, rgbd: RGBD):
-        self.rgb_head_img = rgbd.rgb
-        self.first_rgb_head_image_received = True
-        self.depth_head_img = rgbd.depth
-        self.first_depth_head_image_received = True
+        # self.rgb_head_img = rgbd.rgb
+        # self.first_rgb_head_image_received = True
+        with self._img_lock:
+            self.depth_head_img = rgbd.depth
+            self.first_depth_head_image_received = True
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
-
-    """ 
-    def get_head_depth_image(self):
-
-        if self.node.first_depth_head_image_received:
-            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
-        else:
-            current_frame_depth_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
-        
-        return self.node.first_depth_head_image_received, current_frame_depth_head
-  """
 
     ### SERVICES ###
     
@@ -1481,7 +1481,87 @@ class ROS2NavigationNode(Node):
 
 
 
+    def get_head_depth_image(self):
 
+
+        with self._img_lock:
+            if self.first_depth_head_image_received:
+                current_frame_depth_head = self.br.imgmsg_to_cv2(self.depth_head_img, desired_encoding="passthrough")
+            else:
+                current_frame_depth_head = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH), dtype=np.uint8)
+        
+        return self.first_depth_head_image_received, current_frame_depth_head
+    
+
+    def safety_navigation_check_depth_head_camera(self, half_image_zero_or_near_percentage=0.6, full_image_near_percentage=0.3, near_max_dist=0.8):
+
+        overall = False
+        DEBUG = False
+
+        depth_head_image_received, current_frame_depth_head = self.get_head_depth_image()
+        
+        if depth_head_image_received:
+            
+            height, width = current_frame_depth_head.shape
+            current_frame_depth_head_half = current_frame_depth_head[height//2:height,:]
+            
+            # FOR THE FULL IMAGE
+            tot_pixeis = height*width 
+            mask_zero = (current_frame_depth_head == 0)
+            mask_near = (current_frame_depth_head > 0) & (current_frame_depth_head <= near_max_dist*1000)
+            
+            if DEBUG:
+                mask_remaining = (current_frame_depth_head > near_max_dist*1000) # just for debug
+                blank_image = np.zeros((height,width,3), np.uint8)
+                blank_image[mask_zero] = [255,255,255]
+                blank_image[mask_near] = [255,0,0]
+                blank_image[mask_remaining] = [0,0,255]
+
+            pixel_count_zeros = np.count_nonzero(mask_zero)
+            pixel_count_near = np.count_nonzero(mask_near)
+
+            # FOR THE BOTTOM HALF OF THE IMAGE
+            mask_zero_half = (current_frame_depth_head_half == 0)
+            mask_near_half = (current_frame_depth_head_half > 0) & (current_frame_depth_head_half <= near_max_dist*1000)
+            
+            if DEBUG:
+                mask_remaining_half = (current_frame_depth_head_half > near_max_dist*1000) # just for debug
+                blank_image_half = np.zeros((height//2,width,3), np.uint8)
+                blank_image_half[mask_zero_half] = [255,255,255]
+                blank_image_half[mask_near_half] = [255,0,0]
+                blank_image_half[mask_remaining_half] = [0,0,255]
+                    
+            pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
+            pixel_count_near_half = np.count_nonzero(mask_near_half)
+            
+            if DEBUG:
+                cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
+                cv2.imshow("New Img Distance Inspection", blank_image)
+                cv2.waitKey(10)
+
+            half_image_zero_or_near = False
+            half_image_zero_or_near_err = 0.0
+            
+            full_image_near = False
+            full_image_near_err = 0.0
+
+
+            half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
+            if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
+                half_image_zero_or_near = True
+                # print("BOTTOM HALF DEPTH IMAGE STOP!")
+            
+            full_image_near_err = pixel_count_near/tot_pixeis # zeros not used here as they can be data very far away and not just too close to the camera
+            if full_image_near_err >= full_image_near_percentage:
+                full_image_near = True
+                # print("FULL DEPTH IMAGE STOP!")
+            
+            if half_image_zero_or_near or full_image_near:
+                overall = True
+
+            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
+
+        return overall
 
 
 

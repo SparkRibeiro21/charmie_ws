@@ -2754,12 +2754,18 @@ class RobotStdFunctions():
             return True
         else:
             return False
+        
 
+        
+
+    ### THIS FUNCTION IS HERE BUT IS NOT USED, NOW IS IN CHARMIE_NAVIGATION ###
+    ### HOWEVER, DUE TO THE THREADING SYSTEM, THE DEBUG MODE DOES NOT WORK IN CHARMIE_NAVIGATION ###
+    ### SO WE LEAVE THIS HERE JUST FOR DEBUGGING PURPOSES - USE DEBUG_INSPECTION_PERSON_DETECTION ###
     def safety_navigation_check_depth_head_camera(self, half_image_zero_or_near_percentage=0.6, full_image_near_percentage=0.3, near_max_dist=0.8):
 
-        overall = False
-        DEBUG = False
+        DEBUG = True
 
+        overall = False
         depth_head_image_received, current_frame_depth_head = self.get_head_depth_image()
         
         if depth_head_image_received:
@@ -2824,14 +2830,6 @@ class RobotStdFunctions():
             # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
 
         return overall
-
-
-
-
-
-
-
-
     
     def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
 
