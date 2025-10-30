@@ -30,7 +30,6 @@ ros2_modules = {
     "charmie_neck":             True,
     "charmie_radar":            True,
     "charmie_sound_classification": False,
-    "charmie_obstacles":        False,
     "charmie_speakers":         True,
     "charmie_tracking":         False,
     "charmie_yolo_objects":     True,
@@ -123,6 +122,9 @@ class TaskMain():
             if self.state == self.task_states["Waiting_for_task_start"]:
         
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
+
+                self.robot.set_torso_position(legs=0.10, torso=10, wait_for_end_of=True) 
+                #self.robot.wait_until_camera_stable(timeout=120, check_interval=0.3, stable_duration=0.3, get_gripper=False)
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
@@ -262,15 +264,11 @@ class TaskMain():
                 #self.object_name = "Pringles"
 
                 # All neck positions
-                if self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "horizontal":
-                    if self.object_mode == "top":
-                        #self.tetas = [[-90, -40], [-45, -45], [0, -40]]
-                        self.tetas = [[-40, -45], [0, -45], [40, -45]]
-                    if self.object_mode == "front":
-                        self.tetas = [[-40, -45], [0, -45], [40, -45]]
+                if self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "horizontal":
+                    self.tetas = [[0, -45], [-40, -45], [40, -45]]
 
-                elif self.robot.get_look_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
-                    self.tetas = [[0, 15], [0, 0], [0, -35]]
+                elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
+                    self.tetas = [[0, 0], [0, 15], [0, -35]]
 
                 self.state = self.task_states["Move_to_Location"]
 
@@ -304,7 +302,10 @@ class TaskMain():
 
             elif self.state == self.task_states["Pick_Object"]:
 
-                picked_height, asked_help = self.robot.pick_obj(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
+                if self.object_name == "Bowl":
+                    picked_height, asked_help = self.robot.pick_obj(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas, return_arm_to_initial_position=False)
+                else:
+                    picked_height, asked_help = self.robot.pick_obj(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.state = self.task_states["Move_to_place"]
@@ -318,7 +319,7 @@ class TaskMain():
                     
                 if not object_in_gripper:
 
-                    self.robot.ask_help_pick_fallen_object(selected_object = self.object_name)
+                    pass # Add proper ask for help
 
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/" + self.place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
@@ -328,8 +329,8 @@ class TaskMain():
                     self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(self.place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
 
                 if self.object_mode == "top":
-                    rotate_coordinates_furniture = self.robot.add_rotation_to_pick_position(move_coords=(self.robot.get_navigation_coords_from_furniture(self.place_furniture.replace(" ","_").lower())))
-                    self.robot.move_to_position(move_coords=rotate_coordinates_furniture, wait_for_end_of=True)
+                    self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(self.place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
+                    self.robot.adjust_angle(45)
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/" + self.place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
@@ -338,7 +339,7 @@ class TaskMain():
                     
                 if not object_in_gripper:
 
-                    self.robot.ask_help_pick_fallen_object(selected_object = self.object_name)
+                    pass # Add proper ask for help
 
                 # next state
                 self.state = self.task_states["Place_object"]
@@ -365,7 +366,7 @@ class TaskMain():
                     print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
                     
                     if final_z > 450:
-                        final_z=450
+                        final_z = 450
 
                     self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
                     self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
@@ -373,7 +374,7 @@ class TaskMain():
                     self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
                     
                     top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
-                    bottom_furniture_points = self.robot.get_bot_coords_from_furniture(self.place_furniture)
+                    bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
 
                     x_min = min(top_furniture_points[0], bottom_furniture_points[0])
                     x_max = max(top_furniture_points[0], bottom_furniture_points[0])
@@ -431,12 +432,13 @@ class TaskMain():
                     #final_x = (1.075 - self.furniture_z - (self.object_z/1.5)) * 1000  
 
                     #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_start_position, wait_for_end_of=True)
-                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
-                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
-                    self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+                    if self.object_name != "Bowl":
+                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
                     top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
-                    bottom_furniture_points = self.robot.get_bot_coords_from_furniture(self.place_furniture)
+                    bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
 
                     gripper_place_position = self.robot.get_gripper_localization()
 
@@ -472,7 +474,7 @@ class TaskMain():
                     #dx = 0.3
 
                     print("Distance x:", dx)
-                    dx = (abs(dx) + 0.05)*0.707
+                    dx = (abs(dx) + 0.05) * math.cos(math.radians(45))
                     dy = -dx
 
                     print("Adjust Movement x:", dx," || y:", dy)
@@ -481,6 +483,7 @@ class TaskMain():
                     #MAKE SPECIAL CASE MORE IN LINE WITH REST OF CODE LATER:
 
                     if self.object_name == "Bowl":
+                        self.robot.set_height_furniture_for_arm_manual_movements(self.selected_height) #####
 
                         self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
                         self.robot.set_arm(command="arm_go_rest", wait_for_end_of=True)

@@ -1,0 +1,18 @@
+# Goal
+float32 dx
+float32 dy
+float32 ang_obstacle_check
+bool safety
+float32 max_speed
+float32 tolerance
+float32 kp
+bool enter_house_special_case
+bool use_wheel_odometry
+float32 timeout
+---
+# Result
+uint16 error_code
+---
+# Feedback
+builtin_interfaces/Duration navigation_time
+float32 distance_remaining

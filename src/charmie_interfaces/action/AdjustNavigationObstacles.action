@@ -1,0 +1,15 @@
+# Goal
+float32 distance
+float32 direction
+float32 ang_obstacle_check
+float32 max_speed
+float32 tolerance
+float32 kp
+float32 timeout
+---
+# Result
+uint16 error_code
+---
+# Feedback
+builtin_interfaces/Duration navigation_time
+float32 distance_remaining

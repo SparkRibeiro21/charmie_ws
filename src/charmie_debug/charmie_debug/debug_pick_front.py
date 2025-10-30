@@ -54,6 +54,7 @@ def ThreadMainTask(robot: RobotStdFunctions):
     main = TaskMain(robot)
     main.main()
 
+# OLD DEBUG ROUTINE, most likely will not have all current functions, make sure all is updated to have the features you want to debug before running !!!
 class TaskMain():
 
     def __init__(self, robot: RobotStdFunctions):

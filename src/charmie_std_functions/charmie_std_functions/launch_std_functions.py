@@ -32,6 +32,12 @@ class LaunchStdFunctions():
             remappings=[('/joint_states','/xarm/joint_states')] # Comment this line if you just want to use charmie.display
         )
 
+        self.robot_state_publisher_real_node_without_remappings = Node(
+            package="robot_state_publisher",
+            executable="robot_state_publisher",
+            parameters=[{'robot_description': robot_description_real}]
+            )
+
         urdf_path_gazebo = os.path.join(get_package_share_path('charmie_description'), 
                              'urdf', 'charmie_gazebo.urdf.xacro')
         robot_description_gazebo = ParameterValue(Command(['xacro ', urdf_path_gazebo]), value_type=str)
@@ -423,7 +429,7 @@ class LaunchStdFunctions():
                     'freq' : 10.0}],
                 )
         
-        self.navigation = Node(package='charmie_navigation_sdnl',
+        self.charmie_navigation = Node(package='charmie_navigation',
                     executable='navigation',
                     name='navigation',
                     emulate_tty=True

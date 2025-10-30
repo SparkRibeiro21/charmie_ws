@@ -49,6 +49,7 @@ def ThreadMainTask(robot: RobotStdFunctions):
     main = TaskMain(robot)
     main.main()
 
+# OLD DEBUG ROUTINE, most likely will not have all current functions, make sure all is updated to have the features you want to debug before running !!!
 class TaskMain():
 
     def __init__(self, robot: RobotStdFunctions):
@@ -238,7 +239,7 @@ class TaskMain():
                 #MOVE TO SEARCH TABLE
                 self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
                 #MOVE ARM TO INITIAL POSITION
-                self.robot.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=True)
+                self.robot.set_arm(command="search_table_to_initial_pose_top", wait_for_end_of=True)
                 print(f"Bring object to initial pose")
             else:
                 # self.robot.set_arm(command="search_table_front_to_initial_pose", wait_for_end_of=True)

@@ -9,6 +9,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped, Pose2D, Vector3, Point,
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
+from nav2_msgs.srv import ClearEntireCostmap
 from realsense2_camera_msgs.msg import RGBD
 from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
     ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
@@ -17,7 +18,8 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, SetFloat, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
-    GetSoundClassificationContinuous
+    GetSoundClassificationContinuous, GetMinRadarDistance
+from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
@@ -116,6 +118,7 @@ class ROS2TaskNode(Node):
         self.torso_movement_publisher = self.create_publisher(Pose2D, "torso_move" , 10) # used only for gamepad controller
         self.omni_move_publisher = self.create_publisher(Vector3, "omni_move", 10) # used only for gamepad controller
         self.cmd_vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
+        self.cmd_vel_subscriber = self.create_subscription(Twist, "cmd_vel", self.cmd_vel_callback, 10)
         self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", self.torso_low_level_callback, 10)
@@ -132,7 +135,7 @@ class ROS2TaskNode(Node):
         self.odom_subscriber = self.create_subscription(Odometry, "/odometry/filtered", self.odom_callback, 10)
         self.odom_wheels_subscriber = self.create_subscription(Odometry, "/wheel_encoders", self.odom_wheels_callback, 10)
         # Radar
-        self.radar_dara_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
+        self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
         
 
         ### Services (Clients) ###
@@ -165,8 +168,13 @@ class ROS2TaskNode(Node):
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
+        # Radar
+        self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance")
+        # NAV2
+        self.clear_entire_local_costmap_client  = self.create_client(ClearEntireCostmap, "/local_costmap/clear_entirely_local_costmap")
+        self.clear_entire_global_costmap_client = self.create_client(ClearEntireCostmap, "/global_costmap/clear_entirely_global_costmap")
         # Navigation
-        self.nav_trigger_client = self.create_client(Trigger, "nav_trigger")
+        self.clear_nav2_costmaps_client = self.create_client(Trigger, "clear_nav_costmaps")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
@@ -184,10 +192,18 @@ class ROS2TaskNode(Node):
         self.set_task_state_demo_client = self.create_client(SetInt, "task_state_demo")
         self.get_task_state_demo_server = self.create_service(SetInt, "task_state_demo", self.callback_get_task_state_demo) 
 
-
         ### Actions (Clients) ###
+        # From NAV2
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
+        # From CHARMIE Navigation
+        self.charmie_nav2_client_ = ActionClient(self, NavigateToPose, "charmie_navigate_to_pose")
+        self.charmie_nav2_follow_waypoints_client_ = ActionClient(self, FollowWaypoints, "charmie_navigate_follow_waypoints")
+        self.charmie_nav2_safety_client = ActionClient(self, NavigateToPose, "charmie_navigate_to_pose_safety")
+
+        self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
+        self.adjust_navigation_omni_client = ActionClient(self, AdjustNavigationOmnidirectional, "adjust_navigation_omni")
+        self.adjust_navigation_obstacle_client = ActionClient(self, AdjustNavigationObstacles, "adjust_navigation_obstacle")
     
 
         self.send_node_used_to_gui()
@@ -245,8 +261,9 @@ class ROS2TaskNode(Node):
                 self.get_logger().warn("Waiting for Server Low Level ...")
 
         if self.ros2_modules["charmie_navigation"]:
-            while not self.nav_trigger_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Navigation Trigger Command...")
+            while not self.adjust_navigation_angle_client.server_is_ready():
+                self.get_logger().warn("Waiting for Action Server Adjust Angle Command...")
+                time.sleep(1.0)
 
         if self.ros2_modules["charmie_nav2"]:
             while not self.nav2_client_.server_is_ready():
@@ -265,9 +282,13 @@ class ROS2TaskNode(Node):
             while not self.neck_track_object_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Set Neck Track Object Command...")
         
-        # if self.ros2_modules["charmie_sound_classification"]:
-        #     while not self.get_sound_classification_client.wait_for_service(1.0):
-        #         self.get_logger().warn("Waiting for Server Sound Classification Command...")
+        if self.ros2_modules["charmie_radar"]:
+            while not self.get_minimum_radar_distance_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Get Minimum Radar Distance Command...")
+
+        if self.ros2_modules["charmie_sound_classification"]:
+            while not self.get_sound_classification_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Sound Classification Command...")
             
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
@@ -320,6 +341,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
+        self.waited_for_end_of_get_minimum_radar_distance = False
 
         self.br = CvBridge()
         self.rgb_head_img = Image()
@@ -348,6 +370,7 @@ class ROS2TaskNode(Node):
         self.amcl_pose = PoseWithCovarianceStamped()
         self.new_amcl_pose_msg = False
         self.selected_list_options_touchscreen_menu = []
+        self.get_minimum_radar_distance_value = GetMinRadarDistance.Response()
 
         # robot localization
         self.robot_pose = Pose2D()
@@ -424,14 +447,33 @@ class ROS2TaskNode(Node):
         self.llm_gpsr_response = ListOfStrings()
         self.received_demo_tsi = TaskStatesInfo()
         self.radar = RadarData()
+        self.cmd_vel = Twist()
         self.is_radar_initialized = False
 
-        self.nav2_goal_accepted = False
+        self.goal_handle_ = None
+        self.nav2_goal_accepted = None
         self.nav2_feedback = NavigateToPose.Feedback()
         self.nav2_status = GoalStatus.STATUS_UNKNOWN
-        self.nav2_follow_waypoints_goal_accepted = False
+
+        self.goal_follow_waypoints_handle_ = None
+        self.nav2_follow_waypoints_goal_accepted = None
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+
+        self.adjust_angle_navigation_handle_ = None
+        self.adjust_angle_navigation_accepted = None
+        self.adjust_angle_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_angle_navigation_status = GoalStatus.STATUS_UNKNOWN
+
+        self.adjust_omni_navigation_handle_ = None
+        self.adjust_omni_navigation_accepted = None
+        self.adjust_omni_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_omni_navigation_status = GoalStatus.STATUS_UNKNOWN
+
+        self.adjust_obstacle_navigation_handle_ = None
+        self.adjust_obstacle_navigation_accepted = None
+        self.adjust_obstacle_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_obstacle_navigation_status = GoalStatus.STATUS_UNKNOWN
 
         self.current_odom_pose = None
         self.current_odom_wheels_pose = None
@@ -563,9 +605,32 @@ class ROS2TaskNode(Node):
 
     def torso_low_level_callback(self, torso: TorsoPosition):
         self.torso_position = torso
+        # print("Received Torso Position:", torso) 
 
     def orientation_callback(self, orientation: Float32):
         self.orientation_yaw = orientation.data
+
+    def cmd_vel_callback(self, msg: Twist):
+        self.cmd_vel = msg
+
+    def radar_data_callback(self, radar: RadarData):
+        self.radar = radar
+        self.is_radar_initialized = True
+
+        # DEBUG PRINTS
+        # nos     = self.radar.number_of_sectors
+        # sar     = self.radar.sector_ang_range
+        # sectors = self.radar.sectors
+        # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
+        # i = 0
+        # for s in sectors:
+        #     sa = s.start_angle
+        #     ea = s.end_angle
+        #     md = s.min_distance
+        #     p  = s.point
+        #     hp = s.has_point
+        #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}, Point: ({round(p.x,2)}, {round(p.y,2)}, {round(p.z,2)})")
+        #     i += 1    
 
     ### SERVICES ###
 
@@ -1090,6 +1155,28 @@ class ROS2TaskNode(Node):
         print(response.message)
 
         return response
+    
+    def call_get_minimum_radar_distance_server(self, request=GetMinRadarDistance.Request()):
+        
+        future = self.get_minimum_radar_distance_client.call_async(request)
+        future.add_done_callback(self.callback_call_get_minimum_radar_distance_command)
+        
+    def callback_call_get_minimum_radar_distance_command(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_minimum_radar_distance_value = response
+            self.get_logger().info("Received Min Radar Dist: %s" %(str(response.min_radar_distance_to_robot_edge)))
+            self.waited_for_end_of_get_minimum_radar_distance = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))   
+
+    def call_clear_nav2_costmaps(self, request=Trigger.Request(), wait_for_end_of=True):
+        
+        self.clear_nav2_costmaps_client.call_async(request)
 
     ### Nav2 Action Client ###
     # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
@@ -1101,13 +1188,9 @@ class ROS2TaskNode(Node):
             self.goal_handle_.get_result_async().add_done_callback(self.nav2_client_goal_result_callback)
             self.nav2_goal_accepted = True
         else:
+            self.nav2_goal_accepted = False
+            self.goal_handle_ = None
             self.get_logger().warn("Goal rejected.")
-
-    def nav2_client_cancel_goal(self):
-        self.get_logger().info("Canceling goal...")
-        # Not implemented yet
-        # self.goal_handle_.cancel_goal_async() # Not ideal, but just to test, goal_handle_ is only defined in goal_response_callback
-        # self.timer_.cancel()
 
     def nav2_client_goal_result_callback(self, future):
         status = future.result().status
@@ -1122,8 +1205,22 @@ class ROS2TaskNode(Node):
         elif status == GoalStatus.STATUS_CANCELED:
             self.nav2_status = GoalStatus.STATUS_CANCELED
             self.get_logger().warn("CANCELED.")
-            
-        # self.get_logger().info(f"Result: {result.reached_number}")
+        else:
+            self.nav2_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}")
+        
+        # When goal is finished, clear the handle
+        self.goal_handle_ = None
+    
+    def nav2_client_cancel_goal(self):
+        if self.goal_handle_ is None:
+            self.get_logger().warn("No active NavigateToPose goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_handle_ = None
 
     def nav2_client_goal_feedback_callback(self, feedback_msg):
         self.nav2_feedback = feedback_msg.feedback
@@ -1147,13 +1244,19 @@ class ROS2TaskNode(Node):
             self.goal_follow_waypoints_handle_.get_result_async().add_done_callback(self.nav2_follow_waypoints_client_goal_result_callback)
             self.nav2_follow_waypoints_goal_accepted = True
         else:
+            self.nav2_follow_waypoints_goal_accepted = False
+            self.goal_follow_waypoints_handle_ = None
             self.get_logger().warn("Goal rejected.")
 
     def nav2_follow_waypoints_client_cancel_goal(self):
-        self.get_logger().info("Canceling goal...")
-        # Not implemented yet
-        # self.goal_follow_waypoints_handle_.cancel_goal_async() # Not ideal, but just to test, goal_follow_waypoints_handle_ is only defined in goal_response_callback
-        # self.timer_.cancel()
+        if self.goal_follow_waypoints_handle_ is None:
+            self.get_logger().warn("No active NavigateToPoseFollowWaypoints goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_follow_waypoints_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_follow_waypoints_handle_ = None
 
     def nav2_follow_waypoints_client_goal_result_callback(self, future):
         status = future.result().status
@@ -1168,8 +1271,12 @@ class ROS2TaskNode(Node):
         elif status == GoalStatus.STATUS_CANCELED:
             self.nav2_follow_waypoints_status = GoalStatus.STATUS_CANCELED
             self.get_logger().warn("CANCELED.")
+        else:
+            self.nav2_follow_waypoints_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}")
             
-        # self.get_logger().info(f"Result: {result.reached_number}")
+        # When goal is finished, clear the handle
+        self.goal_follow_waypoints_handle_ = None
 
     def nav2_follow_waypoints_client_goal_feedback_callback(self, feedback_msg):
         self.nav2_follow_waypoints_feedback = feedback_msg.feedback
@@ -1183,28 +1290,159 @@ class ROS2TaskNode(Node):
         # distance_remaining = str(round(feedback.distance_remaining, 2))
         # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
+    
 
-    def radar_data_callback(self, radar: RadarData):
-        self.radar = radar
-        self.is_radar_initialized = True
+    # Adjust Angle Navigation Action Client
+    def adjust_angle_navigation_client_goal_response_callback(self, future):
+        self.adjust_angle_navigation_handle_:ClientGoalHandle = future.result()
+        if self.adjust_angle_navigation_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.adjust_angle_navigation_handle_.get_result_async().add_done_callback(self.adjust_angle_navigation_client_goal_result_callback)
+            self.adjust_angle_navigation_accepted = True
+        else:
+            self.adjust_angle_navigation_accepted = False
+            self.adjust_angle_navigation_handle_ = None
+            self.get_logger().warn("Goal rejected.")
 
-        # DEBUG PRINTS
-        # nos     = self.radar.number_of_sectors
-        # sar     = self.radar.sector_ang_range
-        # sectors = self.radar.sectors
-        # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
-        # i = 0
-        # for s in sectors:
-        #     sa = s.start_angle
-        #     ea = s.end_angle
-        #     md = s.min_distance
-        #     p  = s.point
-        #     hp = s.has_point
-        #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}, Point: ({round(p.x,2)}, {round(p.y,2)}, {round(p.z,2)})")
-        #     i += 1    
+    def adjust_angle_navigation_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.adjust_angle_navigation_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.adjust_angle_navigation_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.adjust_angle_navigation_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.adjust_angle_navigation_status = status
+            self.get_logger().warn(f"Finished with status={status}")
             
-            
+        # When goal is finished, clear the handle
+        self.adjust_angle_navigation_handle_ = None
+        
+    def adjust_angle_navigation_client_cancel_goal(self):
+        if self.adjust_angle_navigation_handle_ is None:
+            self.get_logger().warn("No active Adjust Angle Navigation goal handle to cancel.")
+            return
 
+        self.get_logger().info("Sending cancel request to adjust_angle_navigation...")
+        self.adjust_angle_navigation_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.adjust_angle_navigation_handle_ = None
+        
+    def adjust_angle_navigation_client_goal_feedback_callback(self, feedback_msg):
+        self.adjust_angle_navigation_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
+
+
+    # Adjust omni Navigation Action Client
+    def adjust_omni_navigation_client_goal_response_callback(self, future):
+        self.adjust_omni_navigation_handle_:ClientGoalHandle = future.result()
+        if self.adjust_omni_navigation_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.adjust_omni_navigation_handle_.get_result_async().add_done_callback(self.adjust_omni_navigation_client_goal_result_callback)
+            self.adjust_omni_navigation_accepted = True
+        else:
+            self.adjust_omni_navigation_accepted = False
+            self.adjust_omni_navigation_handle_ = None
+            self.get_logger().warn("Goal rejected.")
+
+    def adjust_omni_navigation_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.adjust_omni_navigation_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.adjust_omni_navigation_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.adjust_omni_navigation_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.adjust_omni_navigation_status = status
+            self.get_logger().warn(f"Finished with status={status}")
+            
+        # When goal is finished, clear the handle
+        self.adjust_omni_navigation_handle_ = None
+            
+    def adjust_omni_navigation_client_cancel_goal(self):
+        if self.adjust_omni_navigation_handle_ is None:
+            self.get_logger().warn("No active Adjust omni Navigation goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to adjust_omni_navigation...")
+        self.adjust_omni_navigation_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.adjust_omni_navigation_handle_ = None
+        
+    def adjust_omni_navigation_client_goal_feedback_callback(self, feedback_msg):
+        self.adjust_omni_navigation_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
+
+
+    # Adjust obstacle Navigation Action Client
+    def adjust_obstacle_navigation_client_goal_response_callback(self, future):
+        self.adjust_obstacle_navigation_handle_:ClientGoalHandle = future.result()
+        if self.adjust_obstacle_navigation_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.adjust_obstacle_navigation_handle_.get_result_async().add_done_callback(self.adjust_obstacle_navigation_client_goal_result_callback)
+            self.adjust_obstacle_navigation_accepted = True
+        else:
+            self.adjust_obstacle_navigation_accepted = False
+            self.adjust_obstacle_navigation_handle_ = None
+            self.get_logger().warn("Goal rejected.")
+
+    def adjust_obstacle_navigation_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.adjust_obstacle_navigation_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.adjust_obstacle_navigation_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.adjust_obstacle_navigation_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.adjust_obstacle_navigation_status = status
+            self.get_logger().warn(f"Finished with status={status}")
+            
+        # When goal is finished, clear the handle
+        self.adjust_obstacle_navigation_handle_ = None
+            
+    def adjust_obstacle_navigation_client_cancel_goal(self):
+        if self.adjust_obstacle_navigation_handle_ is None:
+            self.get_logger().warn("No active Adjust obstacle Navigation goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to adjust_obstacle_navigation...")
+        self.adjust_obstacle_navigation_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.adjust_obstacle_navigation_handle_ = None
+        
+    def adjust_obstacle_navigation_client_goal_feedback_callback(self, feedback_msg):
+        self.adjust_obstacle_navigation_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
 
 
 #############################################################################################################################
@@ -1388,11 +1626,13 @@ class RobotStdFunctions():
     def wait_for_start_button(self):
         
         self.set_speech(filename="generic/waiting_start_button", wait_for_end_of=False)
+        self.set_rgb(WHITE+ALTERNATE_QUARTERS)
         
         print("Waiting for Start Button...")
         while not self.node.buttons_low_level.start_button:
             time.sleep(0.05)
         print("Start Button Pressed")
+        self.set_rgb(GREEN+ALTERNATE_QUARTERS)
 
     def get_orientation_yaw(self, wait_for_end_of=True):
 
@@ -1442,37 +1682,89 @@ class RobotStdFunctions():
             success = False
             message = "Radar not initialized or wrong distance parameter"
             return success, message
+
+    def enter_house_after_door_opening(self, distance=0.5, speed=0.3):
+
+        position_threshold = 0.5 # meters
+
+        self.set_speech(filename="generic/entering_house", wait_for_end_of=False)
+
+        # Clear costmaps before sending a new goal
+        # Helps clearing cluttered costmaps that may cause navigation problems
+        self.clear_navigation_costmaps()
             
+        self.adjust_omnidirectional_position(dx=distance+position_threshold, dy=0.0, safety=False, max_speed=speed, tolerance=position_threshold, kp=3.0, enter_house_special_case=True, use_wheel_odometry=False)
+        
+        # Clear costmaps before sending a new goal
+        # Helps clearing cluttered costmaps that may cause navigation problems
+        self.clear_navigation_costmaps()
+
+        self.set_initial_position([distance+position_threshold/2, 0.0, 0.0]) #  set initial position to be inside the house, the position_threshold/2 is because the robot is already moving
+
     def set_torso_position(self, legs=0.0, torso=0.0, wait_for_end_of=True):
+        # legs from 0.0 (minimum height) to 0.14 (maximum height)
+        # torso from 8 degrees (vertical torso) to 64 (horizontal torso)
         
-        request = SetTorso.Request()
-        request.legs = int(legs)
-        request.torso = int(torso)
+        success = False
+        message = ""
 
+        MAX_ERROR_LEGS_READING = 0.003
         MAX_ERROR_TORSO_READING = 3
-        MAX_ERROR_LEGS_READING = 3
 
-        self.node.call_set_torso_position_server(request=request)
+        MIN_POSSIBLE_LEGS =  0.00 - (MAX_ERROR_LEGS_READING/2)
+        MAX_POSSIBLE_LEGS =  0.14 + (MAX_ERROR_LEGS_READING/2)
+        MIN_POSSIBLE_TORSO =  8.0 - (MAX_ERROR_TORSO_READING/2)
+        MAX_POSSIBLE_TORSO = 64.0 + (MAX_ERROR_TORSO_READING/2)
 
-        if wait_for_end_of:
-            # must check the position until it has arrived 
-            while not self.node.waited_for_end_of_set_torso_position:
-                
-                l, t = self.get_torso_position()
-                error_l = abs(request.legs - l)
-                error_t = abs(request.torso - t)
-                # print(l, t, error_l, error_t)
+        legs_valid = False
+        if MIN_POSSIBLE_LEGS <= legs <= MAX_POSSIBLE_LEGS:
+            legs_valid = True
 
-                if error_l <= MAX_ERROR_LEGS_READING and error_t<=MAX_ERROR_TORSO_READING:
-                    self.node.waited_for_end_of_set_torso_position = True
-                else:
-                    time.sleep(0.25)
+        torso_valid = False
+        if MIN_POSSIBLE_TORSO <= torso <= MAX_POSSIBLE_TORSO:
+            torso_valid = True
         
-            # time.sleep(0.5) # the max error may make robot think it has reached before it has acutally reached
+        if legs_valid and torso_valid:
+        
+            request = SetTorso.Request()
+            request.legs = float(legs)
+            request.torso = float(torso)
 
-        self.node.waited_for_end_of_set_torso_position = False
+            self.node.call_set_torso_position_server(request=request)
 
-        return self.node.torso_success, self.node.torso_message
+            if wait_for_end_of:
+                # must check the position until it has arrived 
+                while not self.node.waited_for_end_of_set_torso_position:
+                    
+                    l, t = self.get_torso_position()
+                    error_l = abs(request.legs - l)
+                    error_t = abs(request.torso - t)
+                    # print(l, t, error_l, error_t)
+
+                    if error_l <= MAX_ERROR_LEGS_READING and error_t <= MAX_ERROR_TORSO_READING:
+                        self.node.waited_for_end_of_set_torso_position = True
+                    else:
+                        time.sleep(0.25)
+            
+                # time.sleep(0.5) # the max error may make robot think it has reached before it has acutally reached
+
+            self.node.waited_for_end_of_set_torso_position = False
+
+            success = self.node.torso_success
+            message = self.node.torso_message
+        
+        else:
+            if legs_valid and not torso_valid:
+                message = "Invalid Torso Value, please select a value from " + str(round(MIN_POSSIBLE_TORSO,2)) + " to " +  str(round(MAX_POSSIBLE_TORSO,2)) + "!"
+            if not legs_valid and torso_valid:
+                message = "Invalid Legs Value, please select a value from " + str(round(MIN_POSSIBLE_LEGS,2)) + " to " +  str(round(MAX_POSSIBLE_LEGS,2)) + "!"
+            if not legs_valid and not torso_valid:
+                message = "Invalid Legs AND Torso Value. For legs please select a value from " + str(round(MIN_POSSIBLE_LEGS,2)) + " to " +  str(round(MAX_POSSIBLE_LEGS,2)) + "!" + \
+                        " And for torso, please select a value from " + str(round(MIN_POSSIBLE_TORSO,2)) + " to " +  str(round(MIN_POSSIBLE_TORSO,2)) + "!"
+
+            self.node.get_logger().error(message)
+
+        return success, message
     
     def get_torso_position(self,  wait_for_end_of=True):
 
@@ -1963,7 +2255,7 @@ class RobotStdFunctions():
 
         return self.node.navigation_success, self.node.navigation_message   
 
-    def set_initial_position(self, initial_position):
+    def set_initial_position(self, initial_position, clear_costmaps=True):
 
         if initial_position is not None:
 
@@ -2033,9 +2325,92 @@ class RobotStdFunctions():
 
             print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
+
+
+
+
+
+
+
+
+
     def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
-        # Whether the nav2 goal has been successfully completed until the end
+        # Create a goal
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose.header.frame_id = "map"
+        goal_msg.pose.header.stamp = self.node.get_clock().now().to_msg()
+        goal_msg.pose.pose.position.x = float(move_coords[0])
+        goal_msg.pose.pose.position.y = float(move_coords[1])
+        goal_msg.pose.pose.position.z = float(0.0)
+        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(move_coords[2]))        
+        goal_msg.pose.pose.orientation.x = q_x
+        goal_msg.pose.pose.orientation.y = q_y
+        goal_msg.pose.pose.orientation.z = q_z
+        goal_msg.pose.pose.orientation.w = q_w
+
+        self.node.get_logger().info("Waiting for CHARMIE Nav2 server...")
+        self.node.charmie_nav2_client_.wait_for_server()
+        self.node.get_logger().info("CHARMIE Nav2 server is ON...")
+
+        self.node.goal_handle_ = None
+        self.node.nav2_goal_accepted = None
+        self.node.nav2_status = GoalStatus.STATUS_UNKNOWN
+        self.node.nav2_feedback = NavigateToPose.Feedback()
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.charmie_nav2_client_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_client_goal_feedback_callback).add_done_callback(self.node.nav2_client_goal_response_callback)
+        self.node.get_logger().info("CHARMIE Nav2 Goal Sent")
+
+        while self.node.nav2_goal_accepted is None:
+            time.sleep(0.05)
+        
+        success = self.node.nav2_goal_accepted
+        message = ""
+
+        if wait_for_end_of:
+
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.nav2_feedback
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+                        # self.node.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("CHARMIE NAV2 RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            # elif self.node.nav2_status == GoalStatus.STATUS_ABORTED:
+            #     self.set_rgb(RED+BACK_AND_FORTH_8)
+            #     self.node.get_logger().info("CHARMIE NAV2 RESULT: ABORTED.")
+            #     success = False
+            #     message = "Canceled moved to position"
+            elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("CHARMIEN NAV2 RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            return success, message
+        
+        else:
+            success = True
+            message = "Sent Command to CHARMIE Nav2, not waiting for end of"
+            return success, message
+        
+
+
+        """ # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
 
         # Create a goal
@@ -2050,10 +2425,19 @@ class RobotStdFunctions():
         goal_msg.pose.pose.orientation.y = q_y
         goal_msg.pose.pose.orientation.z = q_z
         goal_msg.pose.pose.orientation.w = q_w
+
+        success = True
+        message = ""
         
         self.set_rgb(BLUE+BACK_AND_FORTH_8)
 
         while not nav2_goal_completed:
+
+            # Clear costmaps before sending a new goal
+            # Helps clearing cluttered costmaps that may cause navigation problems
+            if clear_costmaps:
+                self.clear_navigation_costmaps()
+                time.sleep(0.5) # wait a bit for costmaps to be cleared
                 
             self.node.nav2_goal_accepted = False
             self.node.nav2_status = GoalStatus.STATUS_UNKNOWN
@@ -2075,16 +2459,23 @@ class RobotStdFunctions():
 
             if wait_for_end_of:
 
-                timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
-                start_time = time.time()
+                feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                feedback_start_time = time.time()
+
+                is_canceled = False
 
                 self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
                 while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
+
+                    # Checks conditions to cancel safety navigation (used in inspection task)
+                    if inspection_safety_nav and not self.check_conditions_to_stop_safety_navigation(move_coords) and not is_canceled:
+                        self.node.nav2_client_cancel_goal()
+                        is_canceled = True
                     
                     if print_feedback:
 
-                        if time.time() - start_time > timer_period:
+                        if time.time() - feedback_start_time > feedback_timer_period:
 
                             # prints de feedback
                             feedback = self.node.nav2_feedback
@@ -2096,27 +2487,125 @@ class RobotStdFunctions():
                             no_recoveries = str(feedback.number_of_recoveries)
                             distance_remaining = str(round(feedback.distance_remaining, 2))
                             print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
-                            # self.get_logger().info(f"Feedback: {feedback}")
+                            # self.node.get_logger().info(f"Feedback: {feedback}")
                             
-                            start_time = time.time()
+                            feedback_start_time = time.time()
 
                 
                 if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
                     self.set_rgb(GREEN+BACK_AND_FORTH_8)
-                    print("FINISHED TR SUCCEEDED")
-                    nav2_goal_completed = True                
+                    self.node.get_logger().info("NAV2 RESULT: SUCCEEDED.")
+                    nav2_goal_completed = True
+                    success = True
+                    message = "Successfully moved to position"
+                    return success, message
                 elif self.node.nav2_status == GoalStatus.STATUS_ABORTED:
                     self.set_rgb(RED+BACK_AND_FORTH_8)
-                    print("FINISHED TR ABORTED")
-                    print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                    self.node.get_logger().info("NAV2 RESULT: ABORTED.")
+                    self.node.get_logger().info("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE.")
                 elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
                     self.set_rgb(RED+BACK_AND_FORTH_8)
-                    print("FINISHED TR CANCELED")
-                    print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                    self.node.get_logger().info("NAV2 RESULT: CANCELED.")
+                    success = False
+                    message = "Aborted moved to position due to safety measures"
+                    return success, message """
 
+    def move_to_position_cancel(self):
+        if self.node.goal_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.nav2_client_cancel_goal()
+
+    def move_to_position_is_done(self):
+        if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
+        
     def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
-        # Whether the nav2 goal has been successfully completed until the end
+        if move_coords:
+
+            goal_msg = FollowWaypoints.Goal()
+            goal_msg.poses = []
+
+            for x, y, yaw in move_coords: 
+                
+                pose = PoseStamped()
+                pose.header.frame_id = "map"
+                pose.header.stamp = self.node.get_clock().now().to_msg()
+                pose.pose.position.x = float(x)
+                pose.pose.position.y = float(y)
+                pose.pose.position.z = float(0.0)
+                q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(yaw)) # math.radians(initial_position[2]))        
+                pose.pose.orientation.x = q_x
+                pose.pose.orientation.y = q_y
+                pose.pose.orientation.z = q_z
+                pose.pose.orientation.w = q_w
+                
+                goal_msg.poses.append(pose)
+
+            self.node.get_logger().info("Waiting for CHARMIE Nav2 Follow Waypoints server...")
+            self.node.charmie_nav2_follow_waypoints_client_.wait_for_server()
+            self.node.get_logger().info("CHARMIE Nav2 Follow Waypoints server is ON...")
+
+            self.node.goal_follow_waypoints_handle_ = None
+            self.node.nav2_follow_waypoints_goal_accepted = None
+            self.node.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+            self.node.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
+
+            # Send the goal
+            # self.node.get_logger().info("Sending goal...")
+            self.node.charmie_nav2_follow_waypoints_client_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_follow_waypoints_client_goal_feedback_callback).add_done_callback(self.node.nav2_follow_waypoints_client_goal_response_callback)
+            self.node.get_logger().info("CHARMIE Nav2 Follow Waypoints Goal Sent")
+
+            while self.node.nav2_follow_waypoints_goal_accepted is None:
+                time.sleep(0.05)
+            
+            success = self.node.nav2_follow_waypoints_goal_accepted
+            message = ""
+
+            if wait_for_end_of:
+
+                feedback_freq = 1.0
+                feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                feedback_start_time = time.time()
+
+                while self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
+
+                    if print_feedback:
+
+                        if time.time() - feedback_start_time > feedback_timer_period:
+                            feedback = self.node.nav2_follow_waypoints_feedback
+                            navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                            distance_remaining = str(round(feedback.distance_remaining, 2))
+                            print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+                            # self.node.get_logger().info(f"Feedback: {feedback}")
+                            feedback_start_time = time.time()
+                
+                if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+                    self.node.get_logger().info("CHARMIE NAV2 FOLLOW WAYPOINTS RESULT: SUCCEEDED.")
+                    success = True
+                    message = "Successfully moved to position"
+                # elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_ABORTED:
+                #     self.set_rgb(RED+BACK_AND_FORTH_8)
+                #     self.node.get_logger().info("CHARMIE NAV2 RESULT: ABORTED.")
+                #     success = False
+                #     message = "Canceled moved to position"
+                elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
+                    self.node.get_logger().info("CHARMIEN NAV2 FOLLOW WAYPOINTS RESULT: CANCELED.")
+                    success = False
+                    message = "Canceled moved to position"
+
+                return success, message
+            
+            else:
+                success = True
+                message = "Sent Command to CHARMIE Nav2 Follow Waypoints, not waiting for end of"
+                return success, message
+            
+
+
+        """ # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
 
         if move_coords:
@@ -2143,7 +2632,14 @@ class RobotStdFunctions():
             self.set_rgb(BLUE+BACK_AND_FORTH_8)
                     
             while not nav2_goal_completed:
+
+                # Clear costmaps before sending a new goal
+                # Helps clearing cluttered costmaps that may cause navigation problems
+                if clear_costmaps:
+                    self.clear_navigation_costmaps()
+                    time.sleep(0.5) # wait a bit for costmaps to be cleared
                     
+                        
                 self.node.nav2_follow_waypoints_goal_accepted = False
                 self.node.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
@@ -2164,8 +2660,8 @@ class RobotStdFunctions():
 
                 if wait_for_end_of:
 
-                    timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
-                    start_time = time.time()
+                    feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                    feedback_start_time = time.time()
 
                     self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
@@ -2173,7 +2669,7 @@ class RobotStdFunctions():
                         
                         if print_feedback:
 
-                            if time.time() - start_time > timer_period:
+                            if time.time() - feedback_start_time > feedback_timer_period:
 
                                 # prints de feedback
                                 feedback = self.node.nav2_follow_waypoints_feedback
@@ -2182,7 +2678,7 @@ class RobotStdFunctions():
                                 self.node.get_logger().info(f"Current Waypoint: {current_waypoint}")
                                 # self.node.get_logger().info(f"Feedback: {feedback}")
                                 
-                                start_time = time.time()
+                                feedback_start_time = time.time()
 
                     
                     if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
@@ -2196,299 +2692,405 @@ class RobotStdFunctions():
                     elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
                         self.set_rgb(RED+BACK_AND_FORTH_8)
                         print("FINISHED TR CANCELED")
-                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE") """
 
+    def move_to_position_follow_waypoints_cancel(self):
+        if self.node.goal_follow_waypoints_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.nav2_follow_waypoints_client_cancel_goal()
+
+    def move_to_position_follow_waypoints_is_done(self):
+        if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
+        
     def add_rotation_to_pick_position(self, move_coords):
         move_coords_copy = move_coords.copy()
         move_coords_copy[2]+=45.0
         return move_coords_copy
-    
-    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
 
-        ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
-        ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
-        ### ALL THE CODE IS READY. JUST REPLACE:
-        ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
-        ### THE FUNCTION PARAMETER use_wheel_odometry SHOULD BE USED
-        ### if use_wheel_odometry:
-        ###     USE: self.node.current_odom_wheels_pose
-        ### else:
-        ###     USE: self.node.current_odom_pose
+    def clear_navigation_costmaps(self):
+        self.node.call_clear_nav2_costmaps()
+
+    def move_to_position_with_safety_navigation(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, wait_for_end_of=True):
 
         success = False
         message = ""
 
-        if safety:
-            SAFETY_DISTANCE_FROM_ROBOT_EDGE = 0.02 # from robot edge to obstacle
-
-            s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=ang_obstacle_check)
-            if not s:
-                success = False
-                message = m
-                return success, message
-            elif min_radar_distance_to_robot_edge - SAFETY_DISTANCE_FROM_ROBOT_EDGE < dx and dx > 0:
-                success = False
-                message = "Not enough space in front of the robot to perform the adjustment"
-                self.node.get_logger().warn("Not enough space in front of the robot to perform the adjustment")
-                print("Wanted to move forward:", round(dx,2), "meters. But minimum distance to obstacle in front of robot is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
-                return success, message
-            
-            print("GOOD! Want to move forward:", round(dx,2), "meters. Minimum distance to obstacle in front is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
+        self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
+        self.set_face(camera="head", show_detections=True)
         
-        # Wait until odom is received
-        while self.node.current_odom_pose is None:
-            self.node.get_logger().warning("Waiting for odom pose...") 
-            time.sleep(0.01)
+        while not success:
 
-        # Initial pose and orientation
-        pose = self.node.current_odom_pose.pose
-        start_x = pose.position.x
-        start_y = pose.position.y
-        q = pose.orientation
-        yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
+            if self.check_conditions_to_stop_safety_navigation(move_coords):
 
-        print("Adjusting Omnidirectional Position:", round(dx,2), round(dy,2), "meters")
-
-        # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
-        # fixed bug where dx = 0 or dy = 0 still moved the robot
-        if dx > 0:
-            dx = dx + tolerance
-        elif dx < 0:
-            dx = dx - tolerance
+                success, message = self.move_to_position(move_coords=move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, clear_costmaps=clear_costmaps, inspection_safety_nav=True, wait_for_end_of=wait_for_end_of)
         
-        if dy > 0:
-            dy = dy + tolerance
-        elif dy < 0:
-            dy = dy - tolerance
+                if not success:
+                    self.set_speech(filename="inspection/please_move_aside", wait_for_end_of=False)
+                    while not self.check_conditions_to_stop_safety_navigation(move_coords):
+                        pass
+                    time.sleep(1.0) # wait a bit before retrying
 
-        # Compute target in odom frame
-        target_x = start_x + math.cos(yaw) * dx - math.sin(yaw) * dy
-        target_y = start_y + math.sin(yaw) * dx + math.cos(yaw) * dy
-        # print("TARGETS", target_x, target_y)
+        self.set_face("charmie_face")
+        self.activate_yolo_pose(activate=False)
 
-        rate_hz = 20  # Hz
-        rate = 1.0 / rate_hz
-
-        while True:
-            pose = self.node.current_odom_pose.pose
-            curr_x = pose.position.x
-            curr_y = pose.position.y
-
-            error_x = target_x - curr_x
-            error_y = target_y - curr_y
-            dist_error = math.sqrt(error_x**2 + error_y**2)
-            # print("ERRORS", error_x, error_y, dist_error)
-            # print("TOLERANCE", tolerance)
-
-            if dist_error < tolerance:
-                break
-
-            # Convert error from odom frame to base_footprint frame
-            vx = math.cos(-yaw) * error_x - math.sin(-yaw) * error_y
-            vy = math.sin(-yaw) * error_x + math.cos(-yaw) * error_y
-            # print("X Speed", max(-max_speed, min(max_speed, vx * kp)))
-            # print("Y Speed", max(-max_speed, min(max_speed, vy * kp)))
-
-            twist = Twist()
-            twist.linear.x = max(-max_speed, min(max_speed, vx * kp))
-            twist.linear.y = max(-max_speed, min(max_speed, vy * kp))
-            twist.angular.z = 0.0
-
-            self.node.cmd_vel_publisher.publish(twist)
-            time.sleep(rate)
-
-        # Stop the robot
-        # Dirty, but had to do this way because of some commands to low_level being lost
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())  
-        self.node.get_logger().info("Omnidirectional Adjustment Complete.")
-
-        success = True
-        message = "Omnidirectional Adjustment Complete."
         return success, message
+    
+    def move_to_position_with_safety_navigation_cancel(self):
+        ###if self.node.goal_follow_waypoints_handle_ is not None:
+        ###    self.set_rgb(RED+BACK_AND_FORTH_8)
+        ###self.node.nav2_client_cancel_goal()
+        pass
 
-    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5):
+    def move_to_position_with_safety_navigation_is_done(self):
+        ###if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+        ###    return True
+        ###else:
+        ###    return False
+        pass
+        
 
-        success = False
+    ### THIS FUNCTION IS HERE BUT IS NOT USED, NOW IS IN CHARMIE_NAVIGATION ###
+    ### HOWEVER, DUE TO THE THREADING SYSTEM, THE DEBUG MODE DOES NOT WORK IN CHARMIE_NAVIGATION ###
+    ### SO WE LEAVE THIS HERE JUST FOR DEBUGGING PURPOSES - USE DEBUG_INSPECTION_PERSON_DETECTION ###
+    def safety_navigation_check_depth_head_camera(self, half_image_zero_or_near_percentage=0.6, full_image_near_percentage=0.3, near_max_dist=0.8):
+
+        DEBUG = True
+
+        overall = False
+        depth_head_image_received, current_frame_depth_head = self.get_head_depth_image()
+        
+        if depth_head_image_received:
+            
+            height, width = current_frame_depth_head.shape
+            current_frame_depth_head_half = current_frame_depth_head[height//2:height,:]
+            
+            # FOR THE FULL IMAGE
+            tot_pixeis = height*width 
+            mask_zero = (current_frame_depth_head == 0)
+            mask_near = (current_frame_depth_head > 0) & (current_frame_depth_head <= near_max_dist*1000)
+            
+            if DEBUG:
+                mask_remaining = (current_frame_depth_head > near_max_dist*1000) # just for debug
+                blank_image = np.zeros((height,width,3), np.uint8)
+                blank_image[mask_zero] = [255,255,255]
+                blank_image[mask_near] = [255,0,0]
+                blank_image[mask_remaining] = [0,0,255]
+
+            pixel_count_zeros = np.count_nonzero(mask_zero)
+            pixel_count_near = np.count_nonzero(mask_near)
+
+            # FOR THE BOTTOM HALF OF THE IMAGE
+            mask_zero_half = (current_frame_depth_head_half == 0)
+            mask_near_half = (current_frame_depth_head_half > 0) & (current_frame_depth_head_half <= near_max_dist*1000)
+            
+            if DEBUG:
+                mask_remaining_half = (current_frame_depth_head_half > near_max_dist*1000) # just for debug
+                blank_image_half = np.zeros((height//2,width,3), np.uint8)
+                blank_image_half[mask_zero_half] = [255,255,255]
+                blank_image_half[mask_near_half] = [255,0,0]
+                blank_image_half[mask_remaining_half] = [0,0,255]
+                    
+            pixel_count_zeros_half = np.count_nonzero(mask_zero_half)
+            pixel_count_near_half = np.count_nonzero(mask_near_half)
+            
+            if DEBUG:
+                cv2.line(blank_image, (0, height//2), (width, height//2), (0,0,0), 3)
+                cv2.imshow("New Img Distance Inspection", blank_image)
+                cv2.waitKey(10)
+
+            half_image_zero_or_near = False
+            half_image_zero_or_near_err = 0.0
+            
+            full_image_near = False
+            full_image_near_err = 0.0
+
+
+            half_image_zero_or_near_err = (pixel_count_zeros_half+pixel_count_near_half)/(tot_pixeis//2)
+            if half_image_zero_or_near_err >= half_image_zero_or_near_percentage:
+                half_image_zero_or_near = True
+                # print("BOTTOM HALF DEPTH IMAGE STOP!")
+            
+            full_image_near_err = pixel_count_near/tot_pixeis # zeros not used here as they can be data very far away and not just too close to the camera
+            if full_image_near_err >= full_image_near_percentage:
+                full_image_near = True
+                # print("FULL DEPTH IMAGE STOP!")
+            
+            if half_image_zero_or_near or full_image_near:
+                overall = True
+
+            # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
+
+        return overall
+    
+    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+
+        # Create a goal
+        adjust_msg = AdjustNavigationOmnidirectional.Goal()
+        adjust_msg.dx =                         float(dx)
+        adjust_msg.dy =                         float(dy)
+        adjust_msg.ang_obstacle_check =         float(ang_obstacle_check)
+        adjust_msg.safety =                     bool(safety)
+        adjust_msg.max_speed =                  float(max_speed)
+        adjust_msg.tolerance =                  float(tolerance)
+        adjust_msg.kp =                         float(kp)
+        adjust_msg.enter_house_special_case =   bool(enter_house_special_case)
+        adjust_msg.use_wheel_odometry =         bool(use_wheel_odometry)
+        adjust_msg.timeout =                    float(timeout)
+
+        self.node.get_logger().info("Waiting for adjust navigation server...")
+        self.node.adjust_navigation_omni_client.wait_for_server()
+        self.node.get_logger().info("Adjust Navigation server is ON...")
+
+        self.node.adjust_omni_navigation_handle_ = None
+        self.node.adjust_omni_navigation_accepted = None
+        self.node.adjust_omni_navigation_status = GoalStatus.STATUS_UNKNOWN
+        self.node.adjust_omni_navigation_feedback = None
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.adjust_navigation_omni_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_omni_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_omni_navigation_client_goal_response_callback)
+        self.node.get_logger().info("Adjust Navigation Goal Sent")
+
+        while self.node.adjust_omni_navigation_accepted is None:
+            time.sleep(0.05)
+        
+        success = self.node.adjust_omni_navigation_accepted
         message = ""
 
-        distance_to_adjust = 0.0
+        if wait_for_end_of:
 
-        # normalize direction to be between -180 and 180 (how radar handles angles)
-        while direction > 180:
-            direction -= 360
-        while direction < -180:
-            direction += 360
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
 
-        s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=direction, ang_obstacle_check=ang_obstacle_check)
+            while self.node.adjust_omni_navigation_status == GoalStatus.STATUS_UNKNOWN:
 
-        if not s:
-            success = False
-            message = m
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.adjust_omni_navigation_feedback
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+                        # self.node.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.adjust_omni_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("ADJUST OMNI RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            elif self.node.adjust_omni_navigation_status == GoalStatus.STATUS_ABORTED:
+                self.node.get_logger().info("ADJUST OMNI RESULT: ABORTED.")
+                success = False
+                message = "Canceled moved to position"
+            elif self.node.adjust_omni_navigation_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("ADJUST OMNI RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
             return success, message
+        
         else:
-            distance_to_adjust = min_radar_distance_to_robot_edge - distance
-            print("DISTANCE TO ADJUST (positive means move forward):", round(distance_to_adjust,2))
-
-            # Copilot suggestion
-            dx = distance_to_adjust * math.cos(math.radians(direction))
-            dy = distance_to_adjust * math.sin(math.radians(direction))
-            
-            self.adjust_omnidirectional_position(dx=dx, dy=dy, max_speed=max_speed, safety=False, tolerance=tolerance, kp=kp)
-
             success = True
-            message = "Obstacle Adjustment Complete."
+            message = "Sent Command to Adjust Omni, not waiting for end of"
             return success, message
     
-    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1, kp=1.3, use_wheel_odometry=False):
+    def adjust_omnidirectional_position_cancel(self):
+        if self.node.adjust_omni_navigation_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.adjust_omni_navigation_client_cancel_goal()
 
-        # def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, use_wheel_odometry=False):
+    def adjust_omnidirectional_position_is_done(self):
+        if self.node.adjust_omni_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
 
-        ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
-        ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
-        ### ALL THE CODE IS READY. JUST REPLACE:
-        ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
-        ### THE FUNCTION PARAMETER use_wheel_odometry SHOULD BE USED
-        ### if use_wheel_odometry:
-        ###     USE: self.node.current_odom_wheels_pose
-        ### else:
-        ###     USE: self.node.current_odom_pose
+    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5, timeout=0.0, print_feedback=True, wait_for_end_of=True):
 
-        success = False
+        # Create a goal
+        adjust_msg = AdjustNavigationObstacles.Goal()
+        adjust_msg.distance =           float(distance)
+        adjust_msg.direction =          float(direction)
+        adjust_msg.ang_obstacle_check = float(ang_obstacle_check)
+        adjust_msg.max_speed =          float(max_speed)
+        adjust_msg.tolerance =          float(tolerance)
+        adjust_msg.kp =                 float(kp)
+        adjust_msg.timeout =            float(timeout)
+
+        self.node.get_logger().info("Waiting for adjust navigation server...")
+        self.node.adjust_navigation_obstacle_client.wait_for_server()
+        self.node.get_logger().info("Adjust Navigation server is ON...")
+
+        self.node.adjust_obstacle_navigation_handle_ = None
+        self.node.adjust_obstacle_navigation_accepted = None
+        self.node.adjust_obstacle_navigation_status = GoalStatus.STATUS_UNKNOWN
+        self.node.adjust_obstacle_navigation_feedback = None
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.adjust_navigation_obstacle_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_obstacle_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_obstacle_navigation_client_goal_response_callback)
+        self.node.get_logger().info("Adjust Navigation Goal Sent")
+
+        while self.node.adjust_obstacle_navigation_accepted is None:
+            time.sleep(0.05)
+        
+        success = self.node.adjust_obstacle_navigation_accepted
         message = ""
 
-        # normalize direction to be between -180 and 180
-        while angle > 180:
-            angle -= 360
-        while angle < -180:
-            angle += 360
+        if wait_for_end_of:
 
-        # Wait until odom is received
-        while self.node.current_odom_pose is None:
-            self.node.get_logger().warning("Waiting for odom pose...") 
-            time.sleep(0.01)
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
 
-        # Initial pose and orientation
-        pose = self.node.current_odom_pose.pose
-        q = pose.orientation
-        yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
+            while self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_UNKNOWN:
 
-        # print("Adjusting Angle Position:", round(angle,2), "degrees")
+                if print_feedback:
 
-        # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
-        # fixed bug where dx = 0 or dy = 0 still moved the robot
-        if angle > 0:
-            angle = angle + tolerance
-        elif angle < 0:
-            angle = angle - tolerance
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.adjust_obstacle_navigation_feedback
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+                        # self.node.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("ADJUST OBSTACLE RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            elif self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_ABORTED:
+                self.node.get_logger().info("ADJUST OBSTACLE RESULT: ABORTED.")
+                success = False
+                message = "Canceled moved to position"
+            elif self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("ADJUST OBSTACLE RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
 
-        # Compute target in odom frame
-        target_angle = yaw + math.radians(angle)
-        tolerance_rad = math.radians(tolerance)
-        # print("TARGETS", math.degrees(target_angle))
+            return success, message
+        
+        else:
+            success = True
+            message = "Sent Command to Adjust Obstacle, not waiting for end of"
+            return success, message
+            
+    def adjust_obstacle_cancel(self):
+        if self.node.adjust_obstacle_navigation_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.adjust_obstacle_navigation_client_cancel_goal()
 
-        rate_hz = 20  # Hz
-        rate = 1.0 / rate_hz
+    def adjust_obstacle_is_done(self):
+        if self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
 
-        while True:
-            pose = self.node.current_odom_pose.pose
-            q = pose.orientation
-            curr_yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
-            # print("CURR YAW:", math.degrees(curr_yaw))
+    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1.0, kp=1.3, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
 
-            error_angle = target_angle - curr_yaw
-            # print("ERROR:", math.degrees(error_angle))
-            # print("TOLERANCE", math.degrees(tolerance_rad))
+        # Create a goal
+        adjust_msg = AdjustNavigationAngle.Goal()
+        adjust_msg.angle =              float(angle)
+        adjust_msg.max_angular_speed =  float(max_angular_speed)
+        adjust_msg.tolerance =          float(tolerance)
+        adjust_msg.kp =                 float(kp)
+        adjust_msg.use_wheel_odometry = bool(use_wheel_odometry)
+        adjust_msg.timeout =            float(timeout)
 
-            if abs(error_angle) < tolerance_rad:
-                break
+        self.node.get_logger().info("Waiting for adjust navigation server...")
+        self.node.adjust_navigation_angle_client.wait_for_server()
+        self.node.get_logger().info("Adjust Navigation server is ON...")
 
-            twist = Twist()
-            twist.linear.x  = 0.0 
-            twist.linear.y  = 0.0
-            twist.angular.z = max(-max_angular_speed, min(max_angular_speed, error_angle * kp))
+        self.node.adjust_angle_navigation_handle_ = None
+        self.node.adjust_angle_navigation_accepted = None
+        self.node.adjust_angle_navigation_status = GoalStatus.STATUS_UNKNOWN
+        self.node.adjust_angle_navigation_feedback = None
 
-            self.node.cmd_vel_publisher.publish(twist)
-            time.sleep(rate)
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.adjust_navigation_angle_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_angle_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_angle_navigation_client_goal_response_callback)
+        self.node.get_logger().info("Adjust Navigation Goal Sent")
 
-        # Stop the robot
-        # Dirty, but had to do this way because of some commands to low_level being lost
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())  
-        self.node.get_logger().info("Angle Adjustment Complete.")
+        while self.node.adjust_angle_navigation_accepted is None:
+            time.sleep(0.05)
+        
+        success = self.node.adjust_angle_navigation_accepted
+        message = ""
 
-        success = True
-        message = "Angle Adjustment Complete."
-        return success, message
+        if wait_for_end_of:
+
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.adjust_angle_navigation_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.adjust_angle_navigation_feedback
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+                        # self.node.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.adjust_angle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("ADJUST ANGLE RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            elif self.node.adjust_angle_navigation_status == GoalStatus.STATUS_ABORTED:
+                self.node.get_logger().info("ADJUST ANGLE RESULT: ABORTED.")
+                success = False
+                message = "Canceled moved to position"
+            elif self.node.adjust_angle_navigation_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("ADJUST ANGLE RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            return success, message
+        
+        else:
+            success = True
+            message = "Sent Command to Adjust Angle, not waiting for end of"
+            return success, message
+    
+    def adjust_angle_cancel(self):
+        if self.node.adjust_angle_navigation_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.adjust_angle_navigation_client_cancel_goal()
+
+    def adjust_angle_is_done(self):
+        if self.node.adjust_angle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
 
     def get_minimum_radar_distance(self, direction=0.0, ang_obstacle_check=45):
 
-        success = False
-        message = ""
-        min_radar_distance_to_robot_edge = None
+        # success = False
+        # message = ""
+        # min_radar_distance_to_robot_edge = None
 
-        if self.node.is_radar_initialized:
-            if -100 <= direction <= 100 and 0 < ang_obstacle_check <= 360:
-                radar = self.node.radar
-                used_sectors = []
-                min_distance = None
+        request = GetMinRadarDistance.Request()
+        request.direction = float(direction)
+        request.ang_obstacle_check = float(ang_obstacle_check)
+        self.node.call_get_minimum_radar_distance_server(request=request)
 
-                # DEBUG PRINTS
-                # nos     = radar.number_of_sectors
-                # sar     = radar.sector_ang_range
-                # sectors = radar.sectors
-                # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
-                # i = 0
-                # for s in sectors:
-                #     sa = s.start_angle
-                #     ea = s.end_angle
-                #     md = s.min_distance
-                #     p  = s.point
-                #     hp = s.has_point
-                #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}")
-                #     i += 1    
+        while not self.node.waited_for_end_of_get_minimum_radar_distance:
+            pass
+        self.node.waited_for_end_of_get_minimum_radar_distance = False
 
-                # print("USED SECTORS:")
-                for s in radar.sectors:
-                    if  -math.radians(ang_obstacle_check/2) <= s.start_angle - math.radians(direction) <= math.radians(ang_obstacle_check/2) and \
-                        -math.radians(ang_obstacle_check/2) <= s.end_angle   - math.radians(direction) <= math.radians(ang_obstacle_check/2):
-                        used_sectors.append(s)
-                        # print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
-            
-                        if s.has_point:
-                            if min_distance is None:
-                                min_distance = s.min_distance
-                            elif s.min_distance < min_distance:
-                                min_distance = s.min_distance
-                
-                if min_distance is not None:
-                    # print("MIN DISTANCE IN USED SECTORS:", round(min_distance,2))
-                    min_radar_distance_to_robot_edge = min_distance - self.ROBOT_RADIUS
-                    # print("MIN DISTANCE TO ROBOT EDGE IN USED SECTORS:", round(min_radar_distance_to_robot_edge,2))
-                    success = True
-                    message = ""
-                    return success, message, min_radar_distance_to_robot_edge
-                else:
-                    success = False
-                    message = "No obstacles detected in the selected direction"
-                    self.node.get_logger().warn("No obstacles detected in the selected direction")
-                    return success, message, min_radar_distance_to_robot_edge
-            else:
-                success = False
-                message = "Wrong parameter definition"
-                self.node.get_logger().warn("Wrong parameter definition")
-                return success, message, min_radar_distance_to_robot_edge
-        else:
-            success = False
-            message = "Radar not initialized"
-            self.node.get_logger().warn("Radar not initialized")
-            return success, message, min_radar_distance_to_robot_edge
+        success = self.node.get_minimum_radar_distance_value.success
+        message = self.node.get_minimum_radar_distance_value.message
+        min_radar_distance_to_robot_edge = self.node.get_minimum_radar_distance_value.min_radar_distance_to_robot_edge
+        print(success, message, min_radar_distance_to_robot_edge)
+        
+        return success, message, min_radar_distance_to_robot_edge
     
     def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
@@ -2768,7 +3370,7 @@ class RobotStdFunctions():
                         for m_object in merged_lists:
                             is_in_mandatory_list = False
                             
-                            # checks for previous tetas
+                            # checks for previou
                             for frame in range(len(total_objects_detected)):
                                 for object in range(len(total_objects_detected[frame])):
                                     
@@ -2958,6 +3560,8 @@ class RobotStdFunctions():
         self.set_neck(position=[0, 0], wait_for_end_of=False)
         self.set_rgb(YELLOW+HALF_ROTATE)
 
+        self.set_speech(filename="sound_effects/ai_preto", wait_for_end_of=False)
+
         # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
         # for obj in final_objects:
@@ -3024,7 +3628,6 @@ class RobotStdFunctions():
                 depth_img = self.node.depth_base_img
         
         self.node.point_cloud.convert_bbox_to_3d_point(depth_img=depth_img, camera=camera, bbox=None)
-        pass
 
     def get_robot_localization(self):
 
@@ -3359,8 +3962,6 @@ class RobotStdFunctions():
 
         self.set_face("charmie_face")
 
-        self.set_neck([0.0, 0.0],wait_for_end_of=False)
-
         return object_in_gripper
 
     def ask_help_pick_object_tray(self, object_d=DetectedObject(), look_judge=[45, 0], first_help_request=False, wait_time_show_detection=0.0, wait_time_show_help_face=0.0, bb_color=(0, 255, 0), audio_confirmation=False):
@@ -3408,76 +4009,6 @@ class RobotStdFunctions():
 
         return confirmation
     
-    def ask_help_pick_fallen_object(self, selected_object = "", look_judge=[45, 0], search_tetas=[[45, 0]], wait_time_detect_object=12.0, wait_time_show_detection=1.5, attempts_at_receiving=2, show_detection=True, alternative_help_pick_face = "", bb_color=(0, 255, 0)):
-
-        selected_object_files = selected_object.replace(" ","_").lower()
-        print('SELECTED OBJECT:', selected_object)
-
-        self.set_neck(position=look_judge, wait_for_end_of=False)
-
-        self.set_speech(filename="generic/ask_help_pick_fallen_object_first", wait_for_end_of=False)
-        self.set_speech(filename="objects_names/"+selected_object_files, wait_for_end_of=False)
-        self.set_speech(filename="generic/ask_help_pick_fallen_object_second", wait_for_end_of=False)
-
-        self.search_for_objects(tetas = search_tetas, time_in_each_frame=wait_time_detect_object, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
-
-        self.set_neck([45.0, 0.0],wait_for_end_of=False)
-
-        if show_detection:
-            self.set_speech(filename="generic/found_the", wait_for_end_of=False)
-            self.set_speech(filename="objects_names/"+selected_object_files, wait_for_end_of=False)
-            
-            self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
-
-        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-
-        if show_detection:
-            # 3.0 is the amount of time necessary for previous speak to end, so 3 will always exist even if dont use sleep, 
-            # this way is more natural, since it only opens the gripper before asking to receive object
-            time.sleep(3.0 + wait_time_show_detection) 
-        
-        self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-        self.set_speech(filename="generic/check_face_put_object_hand_p1", wait_for_end_of=True)
-        self.set_speech(filename="objects_names/"+selected_object_files, wait_for_end_of=True)
-        self.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
-        
-        if not alternative_help_pick_face:
-            self.set_face("help_pick_"+selected_object_files)
-        else:
-            self.set_face(alternative_help_pick_face)
-
-        time.sleep(wait_time_show_detection)
-    
-        object_in_gripper = False
-        gripper_ctr = 0
-        while not object_in_gripper and gripper_ctr < attempts_at_receiving:
-            
-            gripper_ctr += 1
-            
-            self.set_speech(filename="arm/arm_close_gripper", wait_for_end_of=True)
-
-            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-            
-            if not object_in_gripper:
-        
-                if gripper_ctr < attempts_at_receiving:
-
-                    self.set_speech(filename="arm/arm_error_receive_object_quick", wait_for_end_of=True)
-                
-                self.set_arm(command="open_gripper", wait_for_end_of=False)
-
-        if object_in_gripper:
-        #and gripper_ctr >= attempts_at_receiving:
-
-            self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-
-        self.set_face("charmie_face")
-
-        self.set_neck([0.0, 0.0],wait_for_end_of=False)
-
-        return object_in_gripper
-
     def place_object(self, arm_command="", speak_before=False, speak_after=False, verb="", object_name="", preposition="", furniture_name=""):
         
         object_name_for_files = object_name.replace(" ","_").lower()
@@ -3630,25 +4161,7 @@ class RobotStdFunctions():
                 return obj['top_left_coords'].copy()
         return None  # Return None if the object is not found
     
-    def get_bot_coords_from_furniture(self, furniture):
-
-        # Iterate through the list of dictionaries
-        for obj in self.node.furniture:
-            # To make sure there are no errors due to spaces/underscores and upper/lower cases
-            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['bot_right_coords'].copy()
-        return None  # Return None if the object is not found
-    
-    def get_top_coords_from_furniture(self, furniture):
-
-        # Iterate through the list of dictionaries
-        for obj in self.node.furniture:
-            # To make sure there are no errors due to spaces/underscores and upper/lower cases
-            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['top_left_coords'].copy()
-        return None  # Return None if the object is not found
-    
-    def get_bot_coords_from_furniture(self, furniture):
+    def get_bottom_coords_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
         for obj in self.node.furniture:
@@ -3666,7 +4179,7 @@ class RobotStdFunctions():
                 return obj['height'].copy() # Return the height
         return None  # Return None if the object is not found
 
-    def get_look_from_furniture(self, furniture):
+    def get_look_orientation_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
         for obj in self.node.furniture:
@@ -3675,14 +4188,6 @@ class RobotStdFunctions():
                 return obj['look'] # Return the look
         return None  # Return None if the object is not found
 
-    def get_look_from_furniture(self, furniture):
-
-        # Iterate through the list of dictionaries
-        for obj in self.node.furniture:
-            # To make sure there are no errors due to spaces/underscores and upper/lower cases
-            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['look'] # Return the look
-        return None  # Return None if the object is not found
 
     def set_continuous_tracking_with_coordinates(self):
 
@@ -4017,48 +4522,6 @@ class RobotStdFunctions():
         else:
             self.node.get_logger().warn("Image path does not exist.")
             return "error", 0.0
-
-        image = face_recognition.load_image_file(image)
-        encoding_entry = face_recognition.face_encodings(image)
-
-        if len(encoding_entry) > 0:
-
-            self.node.face_recognition_encoding.append(encoding_entry[0])
-            self.node.face_recognition_names.append(name)
-            # print(self.node.face_recognition_encoding)
-            # print(self.node.face_recognition_names)
-        else:
-            print("No face found in the image. Please try again.")
-
-    def recognize_face_from_face_recognition(self, person=DetectedPerson(), image="", tolerance=40):
-        
-        # TODO: add DetectedPerson option to save image from the camera directly
-        # TODO: Test if bad image is added (no face in the image)
-        
-        if not self.node.face_recognition_encoding:
-            print("RECOGNIZED: Unknown 0.0")
-            return "unknown", 0.0
-        
-        image = face_recognition.load_image_file(image)
-        encoding_entry = face_recognition.face_encodings(image)
-        if len(encoding_entry) == 0:
-            print("RECOGNIZED: Unknown 0.0")
-            return "unknown", 0.0
-        encoding_entry = encoding_entry[0]  
-
-        all_percentages = []
-        for enc in self.node.face_recognition_encoding:
-        
-            distance = face_recognition.face_distance([enc], encoding_entry)[0]
-            confidence = (1 - distance) * 100
-            all_percentages.append(confidence)
-
-        name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
-        if biggest_conf_recognized < tolerance:
-            name_recognized = "unknown"
-        # print("RECOGNIZED:", name_recognized, biggest_conf_recognized, all_percentages)
-
-        return name_recognized.lower(), biggest_conf_recognized
             
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
@@ -4091,24 +4554,71 @@ class RobotStdFunctions():
     # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
 
-    def pick_obj(self, selected_object="", pick_mode="", first_search_tetas=[], navigation = True, is_object_in_furniture_check = True, search_with_head_camera = True):
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", navigation = True, search_with_head_camera = True, return_arm_to_initial_position = True):
 
+        ###########
+        # Inputs:
+        #
+        # selected_object -> object name to grab
+        # pick_mode -> if the robot should pick from the front or top, should be only "top" or "front"
+        # first_search_tetas -> only relevant for using the head camera, will define what angles the head camera looks at to look for object
+        # navigation -> if True the robot will use navigation to get closer to the object, should be left at True unless testing purposes or special cases
+        # is_object_in_furniture_check -> if True will verify and ONLY PICK UP OBJECTS IN THEIR OBJECT CLASS' USUAL LOCATION, turn False only if dealing with objects on the ground or expected objects outside furniture, otherwise there can be false positives
+        # search_with_head_camera -> if True the robot will use the head camera to locate objects, otherwise it will use base camera, turn to False if dealing with objects on floor. IF FALSE ALSO TURN PREVIOUS FLAG TO FALSE AS OBJECTS ON FLOOR WILL NEVER BE IN EXACT FURNITURE
+        # return_arm_to_initial_position -> if True will return arm to initial position at the end, otherwise will leave gripper at ask_for_object position
+        #
+        # Outputs, in order of output:
+        #
+        # picked_height -> at which height the gripper picked the object at, ONLY CORRECT IF is_object_in_furniture_check AND ROBOT DIDNT RETURN asked_help TRUE
+        # asked_help -> if robot asked for help anytime during the routine, IF TRUE picked_height WILL BE INCORRECT AS THERE WAS NOT A PICKED HEIGHT, ROBOT WAS HANDED THE OBJECT
+        #
+        ############
+        
         # 1) Detect if the selected object is around and filter out additionals of the same in case of multiple being detected 
 
         valid_detected_object = DetectedObject()
         not_validated = True
+        is_object_in_furniture_check = False
+        selected_object = selected_object.replace(" ","_").lower()
+
+        MIN_OBJECT_DISTANCE_X = 0.05
+        MAX_OBJECT_DISTANCE_X = 2
+        MIN_OBJECT_DISTANCE_Y = -1
+        MAX_OBJECT_DISTANCE_Y = 1
+
+
+        if furniture != "":
+                is_object_in_furniture_check = True
+        
+        if first_search_tetas == []:
+
+            if self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "horizontal":
+                first_search_tetas = [[0, -45], [-40, -45], [40, -45]]
+
+            elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
+                first_search_tetas = [[0, -15], [0, -35], [0, 15]]
+
+        if pick_mode == "":
+            pick_mode = self.get_standard_pick_from_object(selected_object)
+
+
+        pick_mode = pick_mode.lower()
+        furniture = furniture.replace(" ","_").lower()
+
 
         ### While cycle to get a valid detected object ###
         while not_validated:
 
             # If search_with_head_camera is true the first object detection will be made with the head camera, otherwise the robot will use the base camera instead
             if search_with_head_camera:
+                self.set_face(camera="head", show_detections=True)
                 objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
             else:
                 objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
         
         
             print("LIST OF DETECTED OBJECTS:")
+
 
             for obj in objects_found:
                 self.asked_help = False
@@ -4124,24 +4634,32 @@ class RobotStdFunctions():
 
                 # In case the robot finds an object, if it is outside the designated furniture (verified if is_object_in_furniture_check = True) 
                 # , it will try to reverse the order in which it searches for the object so as to hopefully not always see the unwanted object first 
-                if (obj.object_name == selected_object \
-                    and object_location != self.get_furniture_from_object_class(self.get_object_class_from_object(obj.object_name)) \
-                    and is_object_in_furniture_check):
+
+                if selected_object == "" and obj.confidence >= 0.5 and cam_z_ < 0.4:
+                        valid_detected_object = obj
+                        not_validated = False
+
+
+                if  obj.object_name == selected_object \
+                    and object_location != furniture \
+                    and is_object_in_furniture_check:
+
                     self.set_speech(filename="generic/Object_may_not_be_on_furniture.wav", wait_for_end_of=True)
 
                     first_search_tetas.reverse()
                         
 
-                if obj.object_name == selected_object \
-                    and (object_location == self.get_furniture_from_object_class(self.get_object_class_from_object(obj.object_name))) \
-                    and is_object_in_furniture_check:
+                if obj.object_name == selected_object and MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y :
                     
-                    if not_validated == False and (valid_detected_object.confidence < obj.confidence):
-                        valid_detected_object = obj
-                    elif not_validated == True:
-                        valid_detected_object = obj
+                    if  (object_location == furniture and is_object_in_furniture_check) \
+                        or is_object_in_furniture_check == False: 
 
-                    not_validated = False
+                        if not_validated == False and (valid_detected_object.confidence < obj.confidence):
+                            valid_detected_object = obj
+                        elif not_validated == True:
+                            valid_detected_object = obj
+
+                        not_validated = False
 
         # 2) DEPENDING ON DETECTED OBJECT LOCATION, MOVE TOWARDS OBJECT (IF NAVIGATION = TRUE) AND POSITON ARM DEPENDING ON OBJECT HEIGHT
             
@@ -4155,8 +4673,9 @@ class RobotStdFunctions():
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
             DISTANCE_IN_FRONT_X     = 0.6 
-            DISTANCE_IN_TOP_X       = 0.55
             DISTANCE_IN_FRONT_Y     = 0.3 
+            DISTANCE_IN_TOP_X       = 0.58
+            DISTANCE_IN_TOP_Y       = 0.15
             MINIMUM_FRONT_HEIGHT    = 0.55
             MAXIMUM_FRONT_HEIGHT    = 1.70
             HALFWAY_FRONT_HEIGHT    = 1.2 
@@ -4179,21 +4698,21 @@ class RobotStdFunctions():
 
                 # ADJUST ROBOT POSITION IN RELATION TO THE OBJECT
                 if navigation:
-                    self.adjust_x_ = valid_detected_object.position_relative.x - DISTANCE_IN_FRONT_X
+                    self.adjust_x_      = valid_detected_object.position_relative.x - DISTANCE_IN_FRONT_X
 
-                    if self.adjust_x_ > MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_x_ = MAXIMUM_ADJUST_DISTANCE
+                    if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
+                        self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE
 
                     elif self.adjust_x_ < -MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_x_ = -MAXIMUM_ADJUST_DISTANCE
+                        self.adjust_x_  = -MAXIMUM_ADJUST_DISTANCE
 
-                    self.adjust_y_ = valid_detected_object.position_relative.y + DISTANCE_IN_FRONT_Y
+                    self.adjust_y_      = valid_detected_object.position_relative.y + DISTANCE_IN_FRONT_Y
 
-                    if self.adjust_y_ > MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_y_ = MAXIMUM_ADJUST_DISTANCE
+                    if self.adjust_y_   > MAXIMUM_ADJUST_DISTANCE:
+                        self.adjust_y_  = MAXIMUM_ADJUST_DISTANCE
 
                     elif self.adjust_y_ < -MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_y_ = -MAXIMUM_ADJUST_DISTANCE
+                        self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
 
                     print("FINAL ADJUST:", self.adjust_x_, self.adjust_y_)
 
@@ -4228,7 +4747,7 @@ class RobotStdFunctions():
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [high_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
 
                 # BEGIN HAND SEARCH AND OBJECT GRAB, AND RETURN THE PICKED HEIGHT OR IF IT ASKED FOR HELP
-                return self.hand_search(selected_object, pick_mode, navigation)
+                return self.hand_search(selected_object, pick_mode, navigation, return_arm_to_initial_position)
 
             #BEGIN PICK TOP IF SELECTED
             elif pick_mode == "top":
@@ -4241,51 +4760,63 @@ class RobotStdFunctions():
                 elif HALFWAY_TOP_HEIGHT > valid_detected_object.position_relative.z:
 
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
+                    self.set_torso_position(legs=80, torso=8, wait_for_end_of=False) 
+                    self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
 
-                    #FOLLOWING CODE NEEDS TO BE MADE INTO ARM.PY ROUTINE AFTER TESTING 
-                    #search_table_top_low = [-183.9, 21, -69.7, -95.4, 87, 83.3]
-                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_low, wait_for_end_of=True)
-                    #self.set_torso_position(legs=80, torso=8) 
-
-                elif MAXIMUM_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
+                elif HALFWAY_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
 
                 # ADJUST ROBOT POSITION IN RELATION TO THE OBJECT
                 if navigation:
-                    self.adjust_x_ = valid_detected_object.position_relative.x - DISTANCE_IN_TOP_X
+                    self.adjust_x_      = valid_detected_object.position_relative.x - DISTANCE_IN_TOP_X
 
-                    if self.adjust_x_ > MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_x_ = MAXIMUM_ADJUST_DISTANCE
+                    if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
+                        self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE
 
                     elif self.adjust_x_ < -MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_x_ = -MAXIMUM_ADJUST_DISTANCE
+                        self.adjust_x_  = -MAXIMUM_ADJUST_DISTANCE
 
-                    self.adjust_y_ = valid_detected_object.position_relative.y
+                    self.adjust_y_      = valid_detected_object.position_relative.y - DISTANCE_IN_TOP_Y
 
-                    if self.adjust_y_ > MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_y_ = MAXIMUM_ADJUST_DISTANCE
+                    if self.adjust_y_   > MAXIMUM_ADJUST_DISTANCE:
+                        self.adjust_y_  = MAXIMUM_ADJUST_DISTANCE
 
                     elif self.adjust_y_ < -MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_y_ = -MAXIMUM_ADJUST_DISTANCE
+                        self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
 
-                    self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
+
+                    print("Front X:", self.adjust_x_, " Front y:", self.adjust_y_)
+
+                    # IF ADJUST IS NOT POSSIBLE DUE TO OBSTACLES ASK FOR HELP
+                    if not s:
+                        self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
+                        self.ask_help_pick_object_gripper(object_d=objects_found[0])
+                        self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                        picked_height = 0.0
+                        self.asked_help = True
+                        return picked_height, self.asked_help
+                
                     _, _ = self.adjust_angle(45)
                     #rotate_coordinates = self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(o.object_name))))
                     #self.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
 
 
                 # BEGIN HAND SEARCH AND OBJECT GRAB, AND RETURN THE PICKED HEIGHT OR IF IT ASKED FOR HELP
-                return self.hand_search(selected_object, pick_mode, navigation)
+                return self.hand_search(selected_object, pick_mode, navigation, return_arm_to_initial_position)
 
             else:
                     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
 
             #self.set_rgb(CYAN+HALF_ROTATE))
     
-    def hand_search(self, selected_object, pick_mode, navigation):
+    def hand_search(self, selected_object, pick_mode, navigation, return_arm_to_initial_position):
 
         # 1) SEARCH FOR OBJECTS USING HAND CAMERA
+        self.set_face(camera="hand", show_detections=True)
         table_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+        self.set_face(camera="hand", show_detections=True)
+
         #self.set_face(camera="hand",show_detections=True, wait_for_end_of=False)
 
         # print("LIST OF DETECTED OBJECTS:")
@@ -4326,14 +4857,14 @@ class RobotStdFunctions():
             elif pick_mode == "front":
                 object_position = [correct_z, -correct_y, correct_x, 0.0, 0.0, 0.0]
 
-            security_position_front = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
-            security_position_top = [0.00, 0.0, -200.0, 0.0, 0.0, 0.0]
-            object_reajust = [0.0, 0.0, 0.0, 0.0, 0.0, -correct_rotation]
-            initial_position_joints = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
-            safe_top_second_joints =  [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
+            security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+            security_position_top     = [0.00, 0.0, -200.0, 0.0, 0.0, 0.0]
+            object_reajust            = [0.0, 0.0, 0.0, 0.0, 0.0, -correct_rotation]
+            initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
+            safe_top_second_joints    = [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
             
-            search_table_top_joints =  [-152.2, 59.4, -129.4, -85.2, 116.7, 66.7]
-            search_table_front_joints =  [-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
+            search_table_top_joints   = [-152.2, 59.4, -129.4, -85.2, 116.7, 66.7]
+            search_table_front_joints = [-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
             
             #IF OBJECT FOUND
             if obj.object_name == selected_object:
@@ -4343,16 +4874,18 @@ class RobotStdFunctions():
 
                 #MOVE ARM IN THAT DIRECTION
                 self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
-                self.wait_until_stable() # Temporary measure, while wait_for_end_of is not working for adjust_move finish
+                self.wait_until_camera_stable() # Temporary measure, while wait_for_end_of is not working for adjust_move finish
                 
                 #CALIBRATE GRIPPER BEFORE GRABBING
                 final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+                self.set_face(camera="hand", show_detections=True)
+
                 #self.set_face(camera="hand",show_detections=True,wait_for_end_of=False)
                 for obj in final_objects:
                     conf = f"{obj.confidence * 100:.0f}%"
-                    hand_y_grab = f"{obj.position_cam.y:5.2f}"
-                    hand_z_grab = f"{obj.position_cam.z:5.2f}"
-                    hand_x_grab = f"{obj.position_cam.z:5.2f}"
+                    hand_y_grab    = f"{obj.position_cam.y:5.2f}"
+                    hand_z_grab    = f"{obj.position_cam.z:5.2f}"
+                    hand_x_grab    = f"{obj.position_cam.z:5.2f}"
                     correct_y_grab = (obj.position_cam.y - tf_y)*1000
                     correct_z_grab = (obj.position_cam.z - tf_z)*1000
                     if pick_mode == "front":
@@ -4361,9 +4894,12 @@ class RobotStdFunctions():
 
                     if pick_mode == "top":
                         correct_x_grab = (obj.position_cam.x + oh/1.5 - tf_x)*1000
-                        # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established
-                        if correct_x_grab > 245:
-                            correct_x_grab = 245
+                        
+                        # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established. DO NOT CHANGE UNLESS TESTED
+
+                        MAX_MOVE_LIMIT = 245
+                        if correct_x_grab > MAX_MOVE_LIMIT:
+                            correct_x_grab = MAX_MOVE_LIMIT
                     
                     print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab})")
                     
@@ -4373,9 +4909,9 @@ class RobotStdFunctions():
                     if pick_mode == "top":
 
                         # THE FOLLOWING ARE SPECIAL CASES WHERE DIFFERENT MANUAL INFORMATION IS USED TO PICK THEM, DO NOT CHANGE UNLESS NECESSARY !!!!
-                        if obj.object_name == "Bowl":
+                        if obj.object_name == "bowl":
                             correct_y_grab += 90
-                        if obj.object_name == "Cup":
+                        if obj.object_name == "cup":
                             correct_y_grab += 40
                             correct_x_grab = 210
 
@@ -4385,7 +4921,6 @@ class RobotStdFunctions():
                 self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
 
                 #MOVE ARM TO FINAL POSITION
-                #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = final_position, wait_for_end_of=True)
 
                 current_gripper_height = self.get_gripper_localization()
                 height_furniture = self.get_shelf_from_height( object_height = current_gripper_height.z, furniture = self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))
@@ -4411,6 +4946,8 @@ class RobotStdFunctions():
 
                 if pick_mode == "front":
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
+                    self.set_face("charmie_face", wait_for_end_of=False)
+
                     
                     if navigation:
                         self.adjust_x_ = - self.adjust_x_
@@ -4426,20 +4963,31 @@ class RobotStdFunctions():
                         self.set_neck([0.0,0.0],wait_for_end_of=False)
 
                     #MOVE ARM TO INITIAL POSITION
-                    self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                    if return_arm_to_initial_position:
+                        self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                    else:
+                        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
 
                 elif pick_mode == "top":
 
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_top, wait_for_end_of=True)
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
+                    #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
                     #self.set_torso_position(legs=140, torso=8) 
 
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
+                    self.set_face("charmie_face", wait_for_end_of=False)
+
 
                     if navigation:
-                        self.adjust_x_ = - self.adjust_x_ * 0.707107 - self.adjust_x_ * 0.99608783514
-                        self.adjust_y_ = self.adjust_y_ * 0.707107 + self.adjust_y_ * 0.0883686861
+
+                        dx = self.adjust_x_
+                        dy = self.adjust_y_
+                        self.adjust_x_  = (- dx ) * math.cos(-math.radians(45)) - (- dy) * math.sin(-math.radians(45))
+                        self.adjust_y_  = (- dx ) * math.sin(-math.radians(45)) + (- dy) * math.cos(-math.radians(45))
+
+                        print("Reverse X:", self.adjust_x_, " Reverse y:", self.adjust_y_)
+
                         self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_)
 
 
@@ -4448,11 +4996,14 @@ class RobotStdFunctions():
                         self.ask_help_pick_object_gripper(object_d=final_objects[0])
                         self.set_neck([0.0,0.0],wait_for_end_of=False)
                     
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = safe_top_second_joints, wait_for_end_of=True)
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
+                    if return_arm_to_initial_position:
+                        self.set_arm(command="adjust_joint_motion", joint_motion_values = safe_top_second_joints, wait_for_end_of=True)
+                        self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
+                    else:
+                        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
                     
-                    #MOVE ARM TO INITIAL POSITION
-                    #self.set_arm(command="search_table_to_initial_pose_Tiago", wait_for_end_of=True                    
+                    #self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
+                    #self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)            
                 
                 print(f"Bring object to initial pose")
 
@@ -4465,45 +5016,52 @@ class RobotStdFunctions():
                 self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Could not bring object to initial pose")
 
-
-    def is_stable(self, threshold = 0.88):
-
-        #CONVERT IMG TO GRAYSCALE TO REDUCE LIGHT EFFECT
-        prev_gray = cv2.cvtColor(self.prev_frame, cv2.COLOR_BGR2GRAY)
-        curr_gray = cv2.cvtColor(self.curr_frame, cv2.COLOR_BGR2GRAY)
-
-        #CALCULATE DIFFERENCE SCORE FROM LAST TO CURRENT FRAME
-        score, _ = ssim(prev_gray, curr_gray, full=True)
-        print("Score", score)
-
-        #RETURN BOOLEAN ON IF SCORE IS ABOVE THRESHOLD
-        return score >= threshold
-
-    def wait_until_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1):
+    def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
 
         #INITIATE VARIABLES REPRESENTING TIMER
         image_time_out = 0.0
         stable_image = 0.0
+        threshold = 0.88
 
         #STAY IN WHILE LOOP UNTIL CALIBRATION
         while (stable_image <= stable_duration) and (image_time_out < timeout):
 
             #GET FIRST FRAME
-            _, self.prev_frame = self.get_hand_rgb_image()
+            if get_gripper:
+                _, prev_frame = self.get_hand_rgb_image()
+            else:
+                _, prev_frame = self.get_head_rgb_image()
             print("Waiting for camera to stabilize...", image_time_out, stable_image)
 
             #WAIT INTERVAL
             time.sleep(check_interval)
 
             #GET SECOND FRAME TO COMPARE
-            _, self.curr_frame = self.get_hand_rgb_image()
+            if get_gripper:
+                _, curr_frame = self.get_hand_rgb_image()
+            else:
+                _, curr_frame = self.get_head_rgb_image()
+                
+            is_stable = False
+
+            #CONVERT IMG TO GRAYSCALE TO REDUCE LIGHT EFFECT
+            prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+            curr_gray = cv2.cvtColor(curr_frame, cv2.COLOR_BGR2GRAY)
+
+            #CALCULATE DIFFERENCE SCORE FROM LAST TO CURRENT FRAME
+            score, _ = ssim(prev_gray, curr_gray, full=True)
+            print("Score", score)
+
+            #RETURN BOOLEAN ON IF SCORE IS ABOVE THRESHOLD
+            if score >= threshold:
+                is_stable = True
 
             #IF IMAGES ARE CLOSE BASED ON THRESHOLD ADD TO STABLE TIMER, IF NOT RESET STABLE TIMER 
-            if (self.is_stable()) and (image_time_out >= 0.7) :
-                stable_image += 0.1
+            if (is_stable) and (image_time_out >= ( 7 * check_interval) ):
+                stable_image += check_interval
             else:
                 stable_image = 0.0
-            image_time_out += 0.1
+            image_time_out += check_interval
 
     def get_shelf_from_height(self, object_height = 0, furniture = ""):
 

@@ -1,0 +1,14 @@
+# Goal
+float32 angle
+float32 max_angular_speed
+float32 tolerance
+float32 kp
+bool use_wheel_odometry
+float32 timeout
+---
+# Result
+uint16 error_code
+---
+# Feedback
+builtin_interfaces/Duration navigation_time
+float32 distance_remaining

@@ -57,7 +57,7 @@ This folder contains a set of ROS packages developed for the CHARMIE robot, cove
 - **[charmie_low_level](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_low_level)**  
   Low-level control for the robot's motors, sensors, and other hardware components.
 
-- **[charmie_navigation_sdnl](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_navigation_sdnl)**  
+- **[charmie_navigation](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_navigation)**  
   Navigation algorithms that include path planning and obstacle avoidance.
 
 - **[charmie_neck_dynamixel](https://github.com/SparkRibeiro21/charmie_ws/tree/main/src/charmie_neck_dynamixel)**  

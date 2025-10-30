@@ -24,6 +24,9 @@ find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "action/AdjustNavigationAngle.action"
+  "action/AdjustNavigationObstacles.action"
+  "action/AdjustNavigationOmnidirectional.action"
   "action/CountUntil.action"
   "msg/ArmController.msg"
   "msg/BoundingBox.msg"
@@ -49,6 +52,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RadarData.msg"
   "msg/RadarSector.msg"
   "msg/RGB.msg"
+  "msg/SuccessMessage.msg"
   "msg/TarNavSDNL.msg"
   "msg/TaskStatesInfo.msg"
   "msg/TorsoPosition.msg"
@@ -67,6 +71,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetLLMDemo.srv"
   "srv/GetLLMGPSR.srv"
   "srv/GetLowLevelButtons.srv"
+  "srv/GetMinRadarDistance.srv"
   "srv/GetNeckPosition.srv"
   "srv/GetPointCloudBB.srv"
   "srv/GetPointCloudMask.srv"
