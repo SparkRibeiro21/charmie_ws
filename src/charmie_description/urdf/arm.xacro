@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- Add argument for hardware selection -->
-  <xacro:arg name="use_real_hardware" default="true"/>
+  <xacro:arg name="use_real_hardware" default="false"/>
   <!-- Set required flags used by xarm_description flags -->
   <xacro:property name="is_ros2" value="true"/>
   <xacro:property name="use_xacro_load_yaml" value="true"/>

@@ -17,6 +17,7 @@
         <joint name="xarm_joint5"/>
         <joint name="xarm_joint6"/>
         <!-- <joint name="xarm_mount_joint"/> -->
+        <!--<chain base_link="xarm_link_base" tip_link="xarm_gripper_link_tcp"/>-->
     </group>
     <group name="xarm_gripper">
         <joint name="hand_camera_support_joint"/>

@@ -19,7 +19,7 @@ Visualization Manager:
       Planning Request:
         Query Goal State: true
         Query Start State: true
-        Interactive Marker Size: 0.15
+        Interactive Marker Size: 0
       Planned Path:
         Loop Animation: false
         State Display Time: 0.05 s
