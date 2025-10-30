@@ -18,7 +18,7 @@ from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from action_msgs.msg import GoalStatus
 from builtin_interfaces.msg import Duration
 from charmie_interfaces.msg import RadarData, ListOfDetectedPerson
-from charmie_interfaces.srv import SetRGB, Trigger, GetMinRadarDistance
+from charmie_interfaces.srv import SetRGB, Trigger, GetMinRadarDistance, SpeechCommand
 from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationObstacles, AdjustNavigationOmnidirectional
 
 import time
@@ -102,7 +102,8 @@ class ROS2NavigationNode(Node):
         # Clients/Servers (optional)
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode", callback_group=self.cb_group)
         self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance", callback_group=self.cb_group)
-        #self.get_minimum_radar_distance_server = self.create_service(GetMinRadarDistance, "get_min_radar_distance", self.get_min_radar_dist,  callback_group=self.cb_group)
+        self.speech_command_client = self.create_client(SpeechCommand, "speech_command", callback_group=self.cb_group)
+        
                 # Nav2 costmap clear clients
         self.clear_entire_local_costmap_client = self.create_client(
             ClearEntireCostmap, "/local_costmap/clear_entirely_local_costmap", callback_group=self.cb_group
@@ -250,21 +251,6 @@ class ROS2NavigationNode(Node):
         request.colour = int(command)
         self.set_rgb_client.call_async(request)
         return True, ""
-
-    """ def get_min_radar_dist(self, request, response):
-        # Type of service received: 
-        # float32 direction
-        # float32 ang_obstacle_check
-        # ---
-        # bool success   # indicate successful run of triggered service
-        # string message # informational, e.g. for error messages.
-        # float32 min_radar_distance_to_robot_edge  # minimum distance from radar to robot edge in meters
-
-        response.success = True
-        response.message = "Nav Trigger"
-        response.min_radar_distance_to_robot_edge = 0.0
-        return response
- """
     
     def _clear_nav_costmaps_cb(self, request, response):
         try:
@@ -1681,7 +1667,7 @@ class ROS2NavigationNode(Node):
                     )
 
                     if not success:
-                        ### self.set_speech(filename="inspection/please_move_aside", wait_for_end_of=False)
+                        self.set_speech(filename="inspection/please_move_aside", wait_for_end_of=False)
                         while not self.check_conditions_to_stop_safety_navigation(move_coords):
                             pass
                         time.sleep(1.0) # wait a bit before retrying
@@ -1707,22 +1693,40 @@ class ROS2NavigationNode(Node):
             self._active_charmie_goal_safety = None
 
 
+    def set_speech(self, filename="", command="", quick_voice=False, show_in_face=False, long_pause_show_in_face=False, breakable_play=False, break_play=False, wait_for_end_of=True):
 
+        request = SpeechCommand.Request()
+        request.filename = filename
+        request.command = command
+        request.quick_voice = quick_voice
+        request.show_in_face = show_in_face
+        request.long_pause_show_in_face = long_pause_show_in_face
+        request.breakable_play = breakable_play
+        request.break_play = break_play
 
+        self.speech_command_client.call_async(request)
+        # self.call_speech_command_server(request=request, wait_for_end_of=wait_for_end_of)
+        
+        # if wait_for_end_of:
+        #   while not self.node.waited_for_end_of_speaking:
+        #     pass
+        # self.waited_for_end_of_speaking = False
+        # return self.speech_success, self.speech_message
+    
 
        
     def get_quaternion_from_euler(self, roll, pitch, yaw):
-        """
-		Convert an Euler angle to a quaternion.
+        
+        # Convert an Euler angle to a quaternion.
+		# 
+		# Input
+		# 	:param roll: The roll (rotation around x-axis) angle in radians.
+		# 	:param pitch: The pitch (rotation around y-axis) angle in radians.
+		# 	:param yaw: The yaw (rotation around z-axis) angle in radians.
+		# 
+		# Output
+		# 	:return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
 		
-		Input
-			:param roll: The roll (rotation around x-axis) angle in radians.
-			:param pitch: The pitch (rotation around y-axis) angle in radians.
-			:param yaw: The yaw (rotation around z-axis) angle in radians.
-		
-		Output
-			:return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
-		"""
         qx = math.sin(roll/2) * math.cos(pitch/2) * math.cos(yaw/2) - math.cos(roll/2) * math.sin(pitch/2) * math.sin(yaw/2)
         qy = math.cos(roll/2) * math.sin(pitch/2) * math.cos(yaw/2) + math.sin(roll/2) * math.cos(pitch/2) * math.sin(yaw/2)
         qz = math.cos(roll/2) * math.cos(pitch/2) * math.sin(yaw/2) - math.sin(roll/2) * math.sin(pitch/2) * math.cos(yaw/2)
