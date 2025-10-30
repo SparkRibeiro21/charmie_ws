@@ -198,7 +198,8 @@ class ROS2TaskNode(Node):
         self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
         # From CHARMIE Navigation
         self.charmie_nav2_client_ = ActionClient(self, NavigateToPose, "charmie_navigate_to_pose")
-        self.charmie_nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "charmie_follow_waypoints")
+        self.charmie_nav2_follow_waypoints_client_ = ActionClient(self, FollowWaypoints, "charmie_navigate_follow_waypoints")
+        self.charmie_nav2_safety_client = ActionClient(self, NavigateToPose, "charmie_navigate_to_pose_safety")
 
         self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
         self.adjust_navigation_omni_client = ActionClient(self, AdjustNavigationOmnidirectional, "adjust_navigation_omni")
@@ -2544,7 +2545,7 @@ class RobotStdFunctions():
                 goal_msg.poses.append(pose)
 
             self.node.get_logger().info("Waiting for CHARMIE Nav2 Follow Waypoints server...")
-            self.node.nav2_client_follow_waypoints_.wait_for_server()
+            self.node.charmie_nav2_follow_waypoints_client_.wait_for_server()
             self.node.get_logger().info("CHARMIE Nav2 Follow Waypoints server is ON...")
 
             self.node.goal_follow_waypoints_handle_ = None
@@ -2554,7 +2555,7 @@ class RobotStdFunctions():
 
             # Send the goal
             # self.node.get_logger().info("Sending goal...")
-            self.node.nav2_client_follow_waypoints_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_follow_waypoints_client_goal_feedback_callback).add_done_callback(self.node.nav2_follow_waypoints_client_goal_response_callback)
+            self.node.charmie_nav2_follow_waypoints_client_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_follow_waypoints_client_goal_feedback_callback).add_done_callback(self.node.nav2_follow_waypoints_client_goal_response_callback)
             self.node.get_logger().info("CHARMIE Nav2 Follow Waypoints Goal Sent")
 
             while self.node.nav2_follow_waypoints_goal_accepted is None:
@@ -2696,7 +2697,7 @@ class RobotStdFunctions():
     def move_to_position_follow_waypoints_cancel(self):
         if self.node.goal_follow_waypoints_handle_ is not None:
             self.set_rgb(RED+BACK_AND_FORTH_8)
-        self.node.nav2_client_cancel_goal()
+        self.node.nav2_follow_waypoints_client_cancel_goal()
 
     def move_to_position_follow_waypoints_is_done(self):
         if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
@@ -2737,25 +2738,18 @@ class RobotStdFunctions():
 
         return success, message
     
-    def check_conditions_to_stop_safety_navigation(self, move_coords):
+    def move_to_position_with_safety_navigation_cancel(self):
+        ###if self.node.goal_follow_waypoints_handle_ is not None:
+        ###    self.set_rgb(RED+BACK_AND_FORTH_8)
+        ###self.node.nav2_client_cancel_goal()
+        pass
 
-        dist_from_goal = math.sqrt( (move_coords[0] - self.node.nav2_feedback.current_pose.pose.position.x)**2 + (move_coords[1] - self.node.nav2_feedback.current_pose.pose.position.y)**2 )
-        linear_speed = math.sqrt( self.node.cmd_vel.linear.x**2 + self.node.cmd_vel.linear.y**2 )
-        # If you want to edit the location of the persons detected for safety stop, you must got o charmie_yolo_pose and change the thresholds for person_right_in_front:
-        # ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD AND ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD
-        # we could have the coordinates condition here and read all the persons detected and see if any of them is in front of the robot however
-        # if we do so, when we show the detections on the face, it will show all persons detected, and not just the ones he is avoiding, which may be confusing for the user
-        depth_safety = self.safety_navigation_check_depth_head_camera()
-        # print(len(self.node.detected_people.persons), dist_from_goal, linear_speed, depth_safety)
-        
-        # if i dont see anyone or i am just rotating near the goal, i dont need to use safety navigation
-        if (len(self.node.detected_people.persons) == 0 and not depth_safety) or \
-            (linear_speed < 0.01 and dist_from_goal < 0.3):
-            return True
-        else:
-            return False
-        
-
+    def move_to_position_with_safety_navigation_is_done(self):
+        ###if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+        ###    return True
+        ###else:
+        ###    return False
+        pass
         
 
     ### THIS FUNCTION IS HERE BUT IS NOT USED, NOW IS IN CHARMIE_NAVIGATION ###
