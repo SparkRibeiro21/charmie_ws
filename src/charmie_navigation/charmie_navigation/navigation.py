@@ -68,6 +68,7 @@ class ROS2NavigationNode(Node):
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
         self._active_charmie_goal_safety = None
+        self.canceled_by_upper_level = False
 
         # For Inspection
         self.br = CvBridge()
@@ -1631,6 +1632,7 @@ class ROS2NavigationNode(Node):
 
     def _charmie_nav_safety_cancel_cb(self, goal_handle):
         # Will be handled cooperatively in execute()
+        self.canceled_by_upper_level = True
         return CancelResponse.ACCEPT
 
 
@@ -1652,7 +1654,7 @@ class ROS2NavigationNode(Node):
 
             # here is the logic that let's nav be canceled when a person is detected 
             # and reset the navigation when person has passed  
-            while not success:
+            while not success and not self.canceled_by_upper_level:
 
                 if self.check_conditions_to_stop_safety_navigation(move_coords):
 
@@ -1666,13 +1668,18 @@ class ROS2NavigationNode(Node):
                         goal_handle=goal_handle,
                     )
 
-                    if not success:
+                    if not success and not self.canceled_by_upper_level:
                         self.set_speech(filename="inspection/please_move_aside", wait_for_end_of=False)
                         while not self.check_conditions_to_stop_safety_navigation(move_coords):
                             pass
                         time.sleep(1.0) # wait a bit before retrying
 
             result = NavigateToPose.Result()
+
+            if self.canceled_by_upper_level:
+                self.canceled_by_upper_level = False
+                goal_handle.canceled()
+                return result
 
             # If preempted and already marked canceled, just return
             if not goal_handle.is_active:

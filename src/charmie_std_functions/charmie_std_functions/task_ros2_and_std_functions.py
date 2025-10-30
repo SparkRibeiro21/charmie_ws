@@ -2867,14 +2867,12 @@ class RobotStdFunctions():
             message = "Sent Command to CHARMIE Nav2 Safety, not waiting for end of"
             return success, message
     
-    # move_to_position_with_safety_navigation_cancel can not be used because the way we stop when detect person/obbstacle for safety nav inspection is that we cancel the nav2 navigation.
-    # If we run this std_function, the cancel will be interpreted the same way as if a person was in front of the robot
-    # def move_to_position_with_safety_navigation_cancel(self):
-    #     if self.node.goal_safety_handle_ is not None:
-    #         self.set_rgb(RED+BACK_AND_FORTH_8)
-    #     self.node.nav2_safety_client_cancel_goal()
-    #     self.set_face("charmie_face")
-    #     self.activate_yolo_pose(activate=False)
+    def move_to_position_with_safety_navigation_cancel(self):
+        if self.node.goal_safety_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.nav2_safety_client_cancel_goal()
+        self.set_face("charmie_face")
+        self.activate_yolo_pose(activate=False)
 
     def move_to_position_with_safety_navigation_is_done(self):
         if self.node.nav2_safety_status == GoalStatus.STATUS_SUCCEEDED:
