@@ -65,6 +65,7 @@ class TaskMain():
         # self.initial_position = [2.6, -3.60, 45.0] # temp (near Tiago desk for testing)
         # self.initial_position = [0.0, 0.0, 0.0] # temp (near Tiago desk for testing)
         self.NAVIGATION_TARGET = "couch"
+        self.NAVIGATION_TARGET2 = "desk"
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -81,6 +82,59 @@ class TaskMain():
                 self.robot.set_initial_position(self.initial_position)
 
                 self.robot.wait_for_start_button()
+
+                self.robot.adjust_omnidirectional_position(dx=1.0, dy=0.0, )
+
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=False)
+
+                # must be removed after the update to minimize as much as possivle the final orientation error 
+                move_coords = self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET)                
+                # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
+                self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=False)
+
+                # time.sleep(5.0)
+                # self.robot.move_to_position_cancel()
+
+                while not self.robot.move_to_position_is_done():
+                    print("Waiting...")
+                    time.sleep(0.5)
+                    pass
+                
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=True)
+
+                time.sleep(3.0)
+
+                self.robot.wait_for_start_button()
+
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET2, wait_for_end_of=False)
+
+                # must be removed after the update to minimize as much as possivle the final orientation error 
+                move_coords = self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET2)                
+                # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
+                self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=False)
+
+                # time.sleep(5.0)
+                # self.robot.move_to_position_cancel()
+
+                while not self.robot.move_to_position_is_done():
+                    print("Waiting...")
+                    time.sleep(0.5)
+                    pass
+
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET2, wait_for_end_of=True)
+
+                time.sleep(3.0)
+
+                while True:
+                    pass
+
+
 
                 self.robot.adjust_angle(angle=30.0, wait_for_end_of=False)
                 

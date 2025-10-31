@@ -173,6 +173,8 @@ class ROS2TaskNode(Node):
         # NAV2
         self.clear_entire_local_costmap_client  = self.create_client(ClearEntireCostmap, "/local_costmap/clear_entirely_local_costmap")
         self.clear_entire_global_costmap_client = self.create_client(ClearEntireCostmap, "/global_costmap/clear_entirely_global_costmap")
+        # Navigation
+        self.clear_nav2_costmaps_client = self.create_client(Trigger, "clear_nav_costmaps")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
@@ -191,8 +193,13 @@ class ROS2TaskNode(Node):
         self.get_task_state_demo_server = self.create_service(SetInt, "task_state_demo", self.callback_get_task_state_demo) 
 
         ### Actions (Clients) ###
+        # From NAV2
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
+        # From CHARMIE Navigation
+        self.charmie_nav2_client_ = ActionClient(self, NavigateToPose, "charmie_navigate_to_pose")
+        self.charmie_nav2_follow_waypoints_client_ = ActionClient(self, FollowWaypoints, "charmie_navigate_follow_waypoints")
+        self.charmie_nav2_safety_client = ActionClient(self, NavigateToPose, "charmie_navigate_to_pose_safety")
 
         self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
         self.adjust_navigation_omni_client = ActionClient(self, AdjustNavigationOmnidirectional, "adjust_navigation_omni")
@@ -452,6 +459,11 @@ class ROS2TaskNode(Node):
         self.nav2_follow_waypoints_goal_accepted = None
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+
+        self.goal_safety_handle_ = None
+        self.nav2_safety_goal_accepted = None
+        self.nav2_safety_feedback = NavigateToPose.Feedback()
+        self.nav2_safety_status = GoalStatus.STATUS_UNKNOWN
 
         self.adjust_angle_navigation_handle_ = None
         self.adjust_angle_navigation_accepted = None
@@ -1166,20 +1178,10 @@ class ROS2TaskNode(Node):
             self.waited_for_end_of_get_minimum_radar_distance = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))   
-    
-    def call_clear_entire_local_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
-        
-        self.clear_entire_local_costmap_client.call_async(request)
 
-        self.clear_local_costmap_success = True
-        self.clear_local_costmap_message = "Clear Local Costmap Sucessfully Sent"
-
-    def call_clear_entire_global_costmap_server(self, request=ClearEntireCostmap.Request(), wait_for_end_of=True):
+    def call_clear_nav2_costmaps(self, request=Trigger.Request(), wait_for_end_of=True):
         
-        self.clear_entire_global_costmap_client.call_async(request)
-        
-        self.clear_global_costmap_success = True
-        self.clear_global_costmap_message = "Clear Global Costmap Sucessfully Sent"
+        self.clear_nav2_costmaps_client.call_async(request)
 
     ### Nav2 Action Client ###
     # ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 1.0, z: 0.0}, orientation: {w: 1.0}}}}"
@@ -1192,6 +1194,7 @@ class ROS2TaskNode(Node):
             self.nav2_goal_accepted = True
         else:
             self.nav2_goal_accepted = False
+            self.goal_handle_ = None
             self.get_logger().warn("Goal rejected.")
 
     def nav2_client_goal_result_callback(self, future):
@@ -1207,8 +1210,13 @@ class ROS2TaskNode(Node):
         elif status == GoalStatus.STATUS_CANCELED:
             self.nav2_status = GoalStatus.STATUS_CANCELED
             self.get_logger().warn("CANCELED.")
-            
-        # self.get_logger().info(f"Result: {result.reached_number}")
+        else:
+            self.nav2_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}")
+        
+        # When goal is finished, clear the handle
+        self.goal_handle_ = None
+    
     def nav2_client_cancel_goal(self):
         if self.goal_handle_ is None:
             self.get_logger().warn("No active NavigateToPose goal handle to cancel.")
@@ -1232,6 +1240,7 @@ class ROS2TaskNode(Node):
         # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
 
+
     # Navigate through poses
     def nav2_follow_waypoints_client_goal_response_callback(self, future):
         self.goal_follow_waypoints_handle_:ClientGoalHandle = future.result()
@@ -1241,6 +1250,7 @@ class ROS2TaskNode(Node):
             self.nav2_follow_waypoints_goal_accepted = True
         else:
             self.nav2_follow_waypoints_goal_accepted = False
+            self.goal_follow_waypoints_handle_ = None
             self.get_logger().warn("Goal rejected.")
 
     def nav2_follow_waypoints_client_cancel_goal(self):
@@ -1266,8 +1276,12 @@ class ROS2TaskNode(Node):
         elif status == GoalStatus.STATUS_CANCELED:
             self.nav2_follow_waypoints_status = GoalStatus.STATUS_CANCELED
             self.get_logger().warn("CANCELED.")
+        else:
+            self.nav2_follow_waypoints_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}")
             
-        # self.get_logger().info(f"Result: {result.reached_number}")
+        # When goal is finished, clear the handle
+        self.goal_follow_waypoints_handle_ = None
 
     def nav2_follow_waypoints_client_goal_feedback_callback(self, feedback_msg):
         self.nav2_follow_waypoints_feedback = feedback_msg.feedback
@@ -1314,8 +1328,7 @@ class ROS2TaskNode(Node):
             
         # When goal is finished, clear the handle
         self.adjust_angle_navigation_handle_ = None
-            
-        # self.get_logger().info(f"Result: {result.reached_number}")
+        
     def adjust_angle_navigation_client_cancel_goal(self):
         if self.adjust_angle_navigation_handle_ is None:
             self.get_logger().warn("No active Adjust Angle Navigation goal handle to cancel.")
@@ -1332,6 +1345,60 @@ class ROS2TaskNode(Node):
         # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
         # distance_remaining = str(round(feedback.distance_remaining, 2))
         # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
+
+    def nav2_safety_client_goal_response_callback(self, future):
+        self.goal_safety_handle_:ClientGoalHandle = future.result()
+        if self.goal_safety_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.goal_safety_handle_.get_result_async().add_done_callback(self.nav2_safety_client_goal_result_callback)
+            self.nav2_safety_goal_accepted = True
+        else:
+            self.nav2_safety_goal_accepted = False
+            self.goal_safety_handle_ = None
+            self.get_logger().warn("Goal rejected.")
+
+    def nav2_safety_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.nav2_safety_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.nav2_safety_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.nav2_safety_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.nav2_safety_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}")
+        
+        # When goal is finished, clear the handle
+        self.goal_safety_handle_ = None
+    
+    def nav2_safety_client_cancel_goal(self):
+        if self.goal_safety_handle_ is None:
+            self.get_logger().warn("No active NavigateToPose goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_safety_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_safety_handle_ = None
+
+    def nav2_safety_client_goal_feedback_callback(self, feedback_msg):
+        self.nav2_safety_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+        # current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+        # current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+        # no_recoveries = str(feedback.number_of_recoveries)
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
 
 
@@ -1367,7 +1434,6 @@ class ROS2TaskNode(Node):
         # When goal is finished, clear the handle
         self.adjust_omni_navigation_handle_ = None
             
-        # self.get_logger().info(f"Result: {result.reached_number}")
     def adjust_omni_navigation_client_cancel_goal(self):
         if self.adjust_omni_navigation_handle_ is None:
             self.get_logger().warn("No active Adjust omni Navigation goal handle to cancel.")
@@ -1419,7 +1485,6 @@ class ROS2TaskNode(Node):
         # When goal is finished, clear the handle
         self.adjust_obstacle_navigation_handle_ = None
             
-        # self.get_logger().info(f"Result: {result.reached_number}")
     def adjust_obstacle_navigation_client_cancel_goal(self):
         if self.adjust_obstacle_navigation_handle_ is None:
             self.get_logger().warn("No active Adjust obstacle Navigation goal handle to cancel.")
@@ -1685,15 +1750,13 @@ class RobotStdFunctions():
 
         # Clear costmaps before sending a new goal
         # Helps clearing cluttered costmaps that may cause navigation problems
-        self.node.call_clear_entire_local_costmap_server()
-        self.node.call_clear_entire_global_costmap_server()
+        self.clear_navigation_costmaps()
             
         self.adjust_omnidirectional_position(dx=distance+position_threshold, dy=0.0, safety=False, max_speed=speed, tolerance=position_threshold, kp=3.0, enter_house_special_case=True, use_wheel_odometry=False)
         
         # Clear costmaps before sending a new goal
         # Helps clearing cluttered costmaps that may cause navigation problems
-        self.node.call_clear_entire_local_costmap_server()
-        self.node.call_clear_entire_global_costmap_server()
+        self.clear_navigation_costmaps()
 
         self.set_initial_position([distance+position_threshold/2, 0.0, 0.0]) #  set initial position to be inside the house, the position_threshold/2 is because the robot is already moving
 
@@ -2321,9 +2384,97 @@ class RobotStdFunctions():
 
             print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
-    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, inspection_safety_nav=False, wait_for_end_of=True):
 
-        # Whether the nav2 goal has been successfully completed until the end
+
+
+
+
+
+
+
+
+    def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        # Create a goal
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose.header.frame_id = "map"
+        goal_msg.pose.header.stamp = self.node.get_clock().now().to_msg()
+        goal_msg.pose.pose.position.x = float(move_coords[0])
+        goal_msg.pose.pose.position.y = float(move_coords[1])
+        goal_msg.pose.pose.position.z = float(0.0)
+        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(move_coords[2]))        
+        goal_msg.pose.pose.orientation.x = q_x
+        goal_msg.pose.pose.orientation.y = q_y
+        goal_msg.pose.pose.orientation.z = q_z
+        goal_msg.pose.pose.orientation.w = q_w
+
+        self.node.get_logger().info("Waiting for CHARMIE Nav2 server...")
+        self.node.charmie_nav2_client_.wait_for_server()
+        self.node.get_logger().info("CHARMIE Nav2 server is ON...")
+
+        self.node.goal_handle_ = None
+        self.node.nav2_goal_accepted = None
+        self.node.nav2_status = GoalStatus.STATUS_UNKNOWN
+        self.node.nav2_feedback = NavigateToPose.Feedback()
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.charmie_nav2_client_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_client_goal_feedback_callback).add_done_callback(self.node.nav2_client_goal_response_callback)
+        self.node.get_logger().info("CHARMIE Nav2 Goal Sent")
+
+        while self.node.nav2_goal_accepted is None:
+            time.sleep(0.05)
+        
+        success = self.node.nav2_goal_accepted
+        message = ""
+
+        if wait_for_end_of:
+
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.nav2_feedback
+                        current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                        current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                        current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                        no_recoveries = str(feedback.number_of_recoveries)
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                        # self.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+                        
+            if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("CHARMIE NAV2 RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            # elif self.node.nav2_status == GoalStatus.STATUS_ABORTED:
+            #     self.set_rgb(RED+BACK_AND_FORTH_8)
+            #     self.node.get_logger().info("CHARMIE NAV2 RESULT: ABORTED.")
+            #     success = False
+            #     message = "Canceled moved to position"
+            elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("CHARMIEN NAV2 RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            return success, message
+        
+        else:
+            success = True
+            message = "Sent Command to CHARMIE Nav2, not waiting for end of"
+            return success, message
+        
+
+
+        """ # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
 
         # Create a goal
@@ -2349,8 +2500,7 @@ class RobotStdFunctions():
             # Clear costmaps before sending a new goal
             # Helps clearing cluttered costmaps that may cause navigation problems
             if clear_costmaps:
-                self.node.call_clear_entire_local_costmap_server()
-                self.node.call_clear_entire_global_costmap_server()
+                self.clear_navigation_costmaps()
                 time.sleep(0.5) # wait a bit for costmaps to be cleared
                 
             self.node.nav2_goal_accepted = False
@@ -2422,17 +2572,109 @@ class RobotStdFunctions():
                     self.node.get_logger().info("NAV2 RESULT: CANCELED.")
                     success = False
                     message = "Aborted moved to position due to safety measures"
-                    return success, message
+                    return success, message """
 
-    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, clear_costmaps=True, inspection_safety_nav=False, wait_for_end_of=True):
+    def move_to_position_cancel(self):
+        if self.node.goal_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.nav2_client_cancel_goal()
+
+    def move_to_position_is_done(self):
+        if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
+        
+    def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        if move_coords:
+
+            goal_msg = FollowWaypoints.Goal()
+            goal_msg.poses = []
+
+            for x, y, yaw in move_coords: 
+                
+                pose = PoseStamped()
+                pose.header.frame_id = "map"
+                pose.header.stamp = self.node.get_clock().now().to_msg()
+                pose.pose.position.x = float(x)
+                pose.pose.position.y = float(y)
+                pose.pose.position.z = float(0.0)
+                q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(yaw)) # math.radians(initial_position[2]))        
+                pose.pose.orientation.x = q_x
+                pose.pose.orientation.y = q_y
+                pose.pose.orientation.z = q_z
+                pose.pose.orientation.w = q_w
+                
+                goal_msg.poses.append(pose)
+
+            self.node.get_logger().info("Waiting for CHARMIE Nav2 Follow Waypoints server...")
+            self.node.charmie_nav2_follow_waypoints_client_.wait_for_server()
+            self.node.get_logger().info("CHARMIE Nav2 Follow Waypoints server is ON...")
+
+            self.node.goal_follow_waypoints_handle_ = None
+            self.node.nav2_follow_waypoints_goal_accepted = None
+            self.node.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
+            self.node.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
+
+            # Send the goal
+            # self.node.get_logger().info("Sending goal...")
+            self.node.charmie_nav2_follow_waypoints_client_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_follow_waypoints_client_goal_feedback_callback).add_done_callback(self.node.nav2_follow_waypoints_client_goal_response_callback)
+            self.node.get_logger().info("CHARMIE Nav2 Follow Waypoints Goal Sent")
+
+            while self.node.nav2_follow_waypoints_goal_accepted is None:
+                time.sleep(0.05)
+            
+            success = self.node.nav2_follow_waypoints_goal_accepted
+            message = ""
+
+            if wait_for_end_of:
+
+                feedback_freq = 1.0
+                feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+                feedback_start_time = time.time()
+
+                while self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
+
+                    if print_feedback:
+
+                        if time.time() - feedback_start_time > feedback_timer_period:
+                            feedback = self.node.nav2_follow_waypoints_feedback
+                            current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                            current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                            current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+                            navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                            estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                            no_recoveries = str(feedback.number_of_recoveries)
+                            distance_remaining = str(round(feedback.distance_remaining, 2))
+                            print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                            # self.get_logger().info(f"Feedback: {feedback}")
+                            feedback_start_time = time.time()
+                        
+                if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+                    self.node.get_logger().info("CHARMIE NAV2 FOLLOW WAYPOINTS RESULT: SUCCEEDED.")
+                    success = True
+                    message = "Successfully moved to position"
+                # elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_ABORTED:
+                #     self.set_rgb(RED+BACK_AND_FORTH_8)
+                #     self.node.get_logger().info("CHARMIE NAV2 RESULT: ABORTED.")
+                #     success = False
+                #     message = "Canceled moved to position"
+                elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
+                    self.node.get_logger().info("CHARMIEN NAV2 FOLLOW WAYPOINTS RESULT: CANCELED.")
+                    success = False
+                    message = "Canceled moved to position"
+
+                return success, message
+            
+            else:
+                success = True
+                message = "Sent Command to CHARMIE Nav2 Follow Waypoints, not waiting for end of"
+                return success, message
+            
 
 
-        ### NA FUNCAO DO NAV2
-        ### ADD CANCEL AND IS DONE
-        ### Updates aos callbacks do nav2
-
-
-        # Whether the nav2 goal has been successfully completed until the end
+        """ # Whether the nav2 goal has been successfully completed until the end
         nav2_goal_completed = False
 
         if move_coords:
@@ -2463,8 +2705,7 @@ class RobotStdFunctions():
                 # Clear costmaps before sending a new goal
                 # Helps clearing cluttered costmaps that may cause navigation problems
                 if clear_costmaps:
-                    self.node.call_clear_entire_local_costmap_server()
-                    self.node.call_clear_entire_global_costmap_server()
+                    self.clear_navigation_costmaps()
                     time.sleep(0.5) # wait a bit for costmaps to be cleared
                     
                         
@@ -2520,61 +2761,135 @@ class RobotStdFunctions():
                     elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
                         self.set_rgb(RED+BACK_AND_FORTH_8)
                         print("FINISHED TR CANCELED")
-                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
+                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE") """
 
+    def move_to_position_follow_waypoints_cancel(self):
+        if self.node.goal_follow_waypoints_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.nav2_follow_waypoints_client_cancel_goal()
+
+    def move_to_position_follow_waypoints_is_done(self):
+        if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
+        
     def add_rotation_to_pick_position(self, move_coords):
         move_coords_copy = move_coords.copy()
         move_coords_copy[2]+=45.0
         return move_coords_copy
 
-    def move_to_position_with_safety_navigation(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, wait_for_end_of=True):
+    def clear_navigation_costmaps(self):
+        self.node.call_clear_nav2_costmaps()
 
-        success = False
-        message = ""
+    def move_to_position_with_safety_navigation(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
         self.set_face(camera="head", show_detections=True)
+
+        # Create a goal
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose.header.frame_id = "map"
+        goal_msg.pose.header.stamp = self.node.get_clock().now().to_msg()
+        goal_msg.pose.pose.position.x = float(move_coords[0])
+        goal_msg.pose.pose.position.y = float(move_coords[1])
+        goal_msg.pose.pose.position.z = float(0.0)
+        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(move_coords[2]))        
+        goal_msg.pose.pose.orientation.x = q_x
+        goal_msg.pose.pose.orientation.y = q_y
+        goal_msg.pose.pose.orientation.z = q_z
+        goal_msg.pose.pose.orientation.w = q_w
+
+        self.node.get_logger().info("Waiting for CHARMIE Nav2 Safety server...")
+        self.node.charmie_nav2_safety_client.wait_for_server()
+        self.node.get_logger().info("CHARMIE Nav2 Safety server is ON...")
+
+        self.node.goal_safety_handle_ = None
+        self.node.nav2_safety_goal_accepted = None
+        self.node.nav2_safety_feedback = NavigateToPose.Feedback()
+        self.node.nav2_safety_status = GoalStatus.STATUS_UNKNOWN 
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.charmie_nav2_safety_client.send_goal_async(goal_msg, feedback_callback=self.node.nav2_safety_client_goal_feedback_callback).add_done_callback(self.node.nav2_safety_client_goal_response_callback)
+        self.node.get_logger().info("CHARMIE Nav2 Safety Goal Sent")
+
+        while self.node.nav2_safety_goal_accepted is None:
+            time.sleep(0.05)
         
-        while not success:
+        success = self.node.nav2_safety_goal_accepted
+        message = ""
 
-            if self.check_conditions_to_stop_safety_navigation(move_coords):
+        if wait_for_end_of:
 
-                success, message = self.move_to_position(move_coords=move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, clear_costmaps=clear_costmaps, inspection_safety_nav=True, wait_for_end_of=wait_for_end_of)
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.nav2_safety_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.nav2_safety_feedback
+                        current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                        current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                        current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                        no_recoveries = str(feedback.number_of_recoveries)
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                        # self.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.nav2_safety_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("CHARMIE NAV2 SAFETY RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            # elif self.node.nav2_safety_status == GoalStatus.STATUS_ABORTED:
+            #     self.set_rgb(RED+BACK_AND_FORTH_8)
+            #     self.node.get_logger().info("CHARMIE SAFETY NAV2 RESULT: ABORTED.")
+            #     success = False
+            #     message = "Canceled moved to position"
+            elif self.node.nav2_safety_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("CHARMIEN NAV2 SAFETY RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            self.set_face("charmie_face")
+            self.activate_yolo_pose(activate=False)
+
+            return success, message
         
-                if not success:
-                    self.set_speech(filename="inspection/please_move_aside", wait_for_end_of=False)
-                    while not self.check_conditions_to_stop_safety_navigation(move_coords):
-                        pass
-                    time.sleep(1.0) # wait a bit before retrying
-
+        else:
+            success = True
+            message = "Sent Command to CHARMIE Nav2 Safety, not waiting for end of"
+            return success, message
+    
+    def move_to_position_with_safety_navigation_cancel(self):
+        if self.node.goal_safety_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.nav2_safety_client_cancel_goal()
         self.set_face("charmie_face")
         self.activate_yolo_pose(activate=False)
 
-        return success, message
-    
-    def check_conditions_to_stop_safety_navigation(self, move_coords):
-
-        dist_from_goal = math.sqrt( (move_coords[0] - self.node.nav2_feedback.current_pose.pose.position.x)**2 + (move_coords[1] - self.node.nav2_feedback.current_pose.pose.position.y)**2 )
-        linear_speed = math.sqrt( self.node.cmd_vel.linear.x**2 + self.node.cmd_vel.linear.y**2 )
-        # If you want to edit the location of the persons detected for safety stop, you must got o charmie_yolo_pose and change the thresholds for person_right_in_front:
-        # ONLY_DETECT_PERSON_RIGHT_IN_FRONT_X_THRESHOLD AND ONLY_DETECT_PERSON_RIGHT_IN_FRONT_Y_THRESHOLD
-        # we could have the coordinates condition here and read all the persons detected and see if any of them is in front of the robot however
-        # if we do so, when we show the detections on the face, it will show all persons detected, and not just the ones he is avoiding, which may be confusing for the user
-        depth_safety = self.safety_navigation_check_depth_head_camera()
-        # print(len(self.node.detected_people.persons), dist_from_goal, linear_speed, depth_safety)
-        
-        # if i dont see anyone or i am just rotating near the goal, i dont need to use safety navigation
-        if (len(self.node.detected_people.persons) == 0 and not depth_safety) or \
-            (linear_speed < 0.01 and dist_from_goal < 0.3):
+    def move_to_position_with_safety_navigation_is_done(self):
+        if self.node.nav2_safety_status == GoalStatus.STATUS_SUCCEEDED:
+            self.set_face("charmie_face")
+            self.activate_yolo_pose(activate=False)
             return True
         else:
-            return False
+            return False        
 
+    ### THIS FUNCTION IS HERE BUT IS NOT USED, NOW IS IN CHARMIE_NAVIGATION ###
+    ### HOWEVER, DUE TO THE THREADING SYSTEM, THE DEBUG MODE DOES NOT WORK IN CHARMIE_NAVIGATION ###
+    ### SO WE LEAVE THIS HERE JUST FOR DEBUGGING PURPOSES - USE DEBUG_INSPECTION_PERSON_DETECTION ###
     def safety_navigation_check_depth_head_camera(self, half_image_zero_or_near_percentage=0.6, full_image_near_percentage=0.3, near_max_dist=0.8):
 
-        overall = False
-        DEBUG = False
+        DEBUG = True
 
+        overall = False
         depth_head_image_received, current_frame_depth_head = self.get_head_depth_image()
         
         if depth_head_image_received:
@@ -2639,7 +2954,6 @@ class RobotStdFunctions():
             # print(overall, half_image_zero_or_near, half_image_zero_or_near_err, full_image_near, full_image_near_err)
 
         return overall
-
     
     def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
 
@@ -2670,15 +2984,11 @@ class RobotStdFunctions():
         self.node.adjust_navigation_omni_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_omni_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_omni_navigation_client_goal_response_callback)
         self.node.get_logger().info("Adjust Navigation Goal Sent")
 
-        self.set_rgb(BLUE+BACK_AND_FORTH_8)
-
         while self.node.adjust_omni_navigation_accepted is None:
             time.sleep(0.05)
         
         success = self.node.adjust_omni_navigation_accepted
         message = ""
-
-        self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
         if wait_for_end_of:
 
@@ -2699,17 +3009,14 @@ class RobotStdFunctions():
                         feedback_start_time = time.time()
             
             if self.node.adjust_omni_navigation_status == GoalStatus.STATUS_SUCCEEDED:
-                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OMNI RESULT: SUCCEEDED.")
                 success = True
                 message = "Successfully moved to position"
             elif self.node.adjust_omni_navigation_status == GoalStatus.STATUS_ABORTED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OMNI RESULT: ABORTED.")
                 success = False
                 message = "Canceled moved to position"
             elif self.node.adjust_omni_navigation_status == GoalStatus.STATUS_CANCELED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OMNI RESULT: CANCELED.")
                 success = False
                 message = "Canceled moved to position"
@@ -2720,114 +3027,6 @@ class RobotStdFunctions():
             success = True
             message = "Sent Command to Adjust Omni, not waiting for end of"
             return success, message
-        
-
-        """ ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
-        ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
-        ### ALL THE CODE IS READY. JUST REPLACE:
-        ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
-        ### THE FUNCTION PARAMETER use_wheel_odometry SHOULD BE USED
-        ### if use_wheel_odometry:
-        ###     USE: self.node.current_odom_wheels_pose
-        ### else:
-        ###     USE: self.node.current_odom_pose
-
-        success = False
-        message = ""
-
-        if safety:
-            SAFETY_DISTANCE_FROM_ROBOT_EDGE = 0.02 # from robot edge to obstacle
-
-            s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=ang_obstacle_check)
-            if not s:
-                success = False
-                message = m
-                return success, message
-            elif min_radar_distance_to_robot_edge - SAFETY_DISTANCE_FROM_ROBOT_EDGE < dx and dx > 0:
-                success = False
-                message = "Not enough space in front of the robot to perform the adjustment"
-                self.node.get_logger().warn("Not enough space in front of the robot to perform the adjustment")
-                print("Wanted to move forward:", round(dx,2), "meters. But minimum distance to obstacle in front of robot is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
-                return success, message
-            
-            print("GOOD! Want to move forward:", round(dx,2), "meters. Minimum distance to obstacle in front is:", round(min_radar_distance_to_robot_edge- SAFETY_DISTANCE_FROM_ROBOT_EDGE,2), "meters.")
-        
-        # Wait until odom is received
-        while self.node.current_odom_pose is None:
-            self.node.get_logger().warning("Waiting for odom pose...") 
-            time.sleep(0.01)
-
-        # Initial pose and orientation
-        pose = self.node.current_odom_pose.pose
-        start_x = pose.position.x
-        start_y = pose.position.y
-        q = pose.orientation
-        yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
-
-        print("Adjusting Omnidirectional Position:", round(dx,2), round(dy,2), "meters")
-
-        # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
-        # fixed bug where dx = 0 or dy = 0 still moved the robot
-        if dx > 0:
-            dx = dx + tolerance
-        elif dx < 0:
-            dx = dx - tolerance
-        
-        if dy > 0:
-            dy = dy + tolerance
-        elif dy < 0:
-            dy = dy - tolerance
-
-        # Compute target in odom frame
-        target_x = start_x + math.cos(yaw) * dx - math.sin(yaw) * dy
-        target_y = start_y + math.sin(yaw) * dx + math.cos(yaw) * dy
-        # print("TARGETS", target_x, target_y)
-
-        rate_hz = 20  # Hz
-        rate = 1.0 / rate_hz
-
-        while True:
-            pose = self.node.current_odom_pose.pose
-            curr_x = pose.position.x
-            curr_y = pose.position.y
-
-            error_x = target_x - curr_x
-            error_y = target_y - curr_y
-            dist_error = math.sqrt(error_x**2 + error_y**2)
-            # print("ERRORS", error_x, error_y, dist_error)
-            # print("TOLERANCE", tolerance)
-
-            if dist_error < tolerance:
-                break
-
-            # Convert error from odom frame to base_footprint frame
-            vx = math.cos(-yaw) * error_x - math.sin(-yaw) * error_y
-            vy = math.sin(-yaw) * error_x + math.cos(-yaw) * error_y
-            # print("X Speed", max(-max_speed, min(max_speed, vx * kp)))
-            # print("Y Speed", max(-max_speed, min(max_speed, vy * kp)))
-
-            twist = Twist()
-            twist.linear.x = max(-max_speed, min(max_speed, vx * kp))
-            twist.linear.y = max(-max_speed, min(max_speed, vy * kp))
-            twist.angular.z = 0.0
-
-            self.node.cmd_vel_publisher.publish(twist)
-            time.sleep(rate)
-
-        if not enter_house_special_case:
-            # Stop the robot
-            # Dirty, but had to do this way because of some commands to low_level being lost
-            self.node.cmd_vel_publisher.publish(Twist())
-            time.sleep(0.1)  # wait for the cmd_vel to be published
-            self.node.cmd_vel_publisher.publish(Twist())
-            time.sleep(0.1)  # wait for the cmd_vel to be published
-            self.node.cmd_vel_publisher.publish(Twist())  
-
-        self.node.get_logger().info("Omnidirectional Adjustment Complete.")
-
-        success = True
-        message = "Omnidirectional Adjustment Complete."
-        return success, message """
     
     def adjust_omnidirectional_position_cancel(self):
         if self.node.adjust_omni_navigation_handle_ is not None:
@@ -2866,15 +3065,11 @@ class RobotStdFunctions():
         self.node.adjust_navigation_obstacle_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_obstacle_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_obstacle_navigation_client_goal_response_callback)
         self.node.get_logger().info("Adjust Navigation Goal Sent")
 
-        self.set_rgb(BLUE+BACK_AND_FORTH_8)
-
         while self.node.adjust_obstacle_navigation_accepted is None:
             time.sleep(0.05)
         
         success = self.node.adjust_obstacle_navigation_accepted
         message = ""
-
-        self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
         if wait_for_end_of:
 
@@ -2895,17 +3090,14 @@ class RobotStdFunctions():
                         feedback_start_time = time.time()
             
             if self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
-                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OBSTACLE RESULT: SUCCEEDED.")
                 success = True
                 message = "Successfully moved to position"
             elif self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_ABORTED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OBSTACLE RESULT: ABORTED.")
                 success = False
                 message = "Canceled moved to position"
             elif self.node.adjust_obstacle_navigation_status == GoalStatus.STATUS_CANCELED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST OBSTACLE RESULT: CANCELED.")
                 success = False
                 message = "Canceled moved to position"
@@ -2916,39 +3108,7 @@ class RobotStdFunctions():
             success = True
             message = "Sent Command to Adjust Obstacle, not waiting for end of"
             return success, message
-        
-
-        """ success = False
-        message = ""
-
-        distance_to_adjust = 0.0
-
-        # normalize direction to be between -180 and 180 (how radar handles angles)
-        while direction > 180:
-            direction -= 360
-        while direction < -180:
-            direction += 360
-
-        s, m, min_radar_distance_to_robot_edge = self.get_minimum_radar_distance(direction=direction, ang_obstacle_check=ang_obstacle_check)
-
-        if not s:
-            success = False
-            message = m
-            return success, message
-        else:
-            distance_to_adjust = min_radar_distance_to_robot_edge - distance
-            print("DISTANCE TO ADJUST (positive means move forward):", round(distance_to_adjust,2))
-
-            # Copilot suggestion
-            dx = distance_to_adjust * math.cos(math.radians(direction))
-            dy = distance_to_adjust * math.sin(math.radians(direction))
             
-            self.adjust_omnidirectional_position(dx=dx, dy=dy, max_speed=max_speed, safety=False, tolerance=tolerance, kp=kp)
-
-            success = True
-            message = "Obstacle Adjustment Complete."
-            return success, message """
-    
     def adjust_obstacle_cancel(self):
         if self.node.adjust_obstacle_navigation_handle_ is not None:
             self.set_rgb(RED+BACK_AND_FORTH_8)
@@ -2985,15 +3145,11 @@ class RobotStdFunctions():
         self.node.adjust_navigation_angle_client.send_goal_async(adjust_msg, feedback_callback=self.node.adjust_angle_navigation_client_goal_feedback_callback).add_done_callback(self.node.adjust_angle_navigation_client_goal_response_callback)
         self.node.get_logger().info("Adjust Navigation Goal Sent")
 
-        self.set_rgb(BLUE+BACK_AND_FORTH_8)
-
         while self.node.adjust_angle_navigation_accepted is None:
             time.sleep(0.05)
         
         success = self.node.adjust_angle_navigation_accepted
         message = ""
-
-        self.set_rgb(CYAN+BACK_AND_FORTH_8)
 
         if wait_for_end_of:
 
@@ -3014,17 +3170,14 @@ class RobotStdFunctions():
                         feedback_start_time = time.time()
             
             if self.node.adjust_angle_navigation_status == GoalStatus.STATUS_SUCCEEDED:
-                self.set_rgb(GREEN+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST ANGLE RESULT: SUCCEEDED.")
                 success = True
                 message = "Successfully moved to position"
             elif self.node.adjust_angle_navigation_status == GoalStatus.STATUS_ABORTED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST ANGLE RESULT: ABORTED.")
                 success = False
                 message = "Canceled moved to position"
             elif self.node.adjust_angle_navigation_status == GoalStatus.STATUS_CANCELED:
-                self.set_rgb(RED+BACK_AND_FORTH_8)
                 self.node.get_logger().info("ADJUST ANGLE RESULT: CANCELED.")
                 success = False
                 message = "Canceled moved to position"
@@ -3035,95 +3188,6 @@ class RobotStdFunctions():
             success = True
             message = "Sent Command to Adjust Angle, not waiting for end of"
             return success, message
-
-
-        """ ### FOR NOW WE ARE USING THER MERGED ODOMETRY WITH ALL THE SENSORS, 
-        ### BUT IN THE FUTURE WE MAY WANT TO USE JUST THE WHEEL ODOMETRY INSTEAD
-        ### ALL THE CODE IS READY. JUST REPLACE:
-        ### self.node.current_odom_pose -> self.node.current_odom_wheels_pose
-        ### THE FUNCTION PARAMETER use_wheel_odometry SHOULD BE USED
-        ### if use_wheel_odometry:
-        ###     USE: self.node.current_odom_wheels_pose
-        ### else:
-        ###     USE: self.node.current_odom_pose
-
-        success = False
-        message = ""
-
-        # normalize direction to be between -180 and 180
-        while angle > 180:
-            angle -= 360
-        while angle < -180:
-            angle += 360
-
-        # Wait until odom is received
-        while self.node.current_odom_pose is None:
-            self.node.get_logger().warning("Waiting for odom pose...") 
-            time.sleep(0.01)
-
-        # Initial pose and orientation
-        pose = self.node.current_odom_pose.pose
-        q = pose.orientation
-        yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
-
-        # print("Adjusting Angle Position:", round(angle,2), "degrees")
-
-        # Update the robot's distance to match the tolerance, this way the robot will actually aim for the correct spot
-        # fixed bug where dx = 0 or dy = 0 still moved the robot
-        if angle > 0:
-            angle = angle + tolerance
-        elif angle < 0:
-            angle = angle - tolerance
-
-        # Compute target in odom frame
-        target_angle = yaw + math.radians(angle)
-        tolerance_rad = math.radians(tolerance)
-        # print("TARGETS", math.degrees(target_angle))
-
-        rate_hz = 20  # Hz
-        rate = 1.0 / rate_hz
-
-        while True:
-            pose = self.node.current_odom_pose.pose
-            q = pose.orientation
-            curr_yaw = self.get_yaw_from_quaternion(q.x, q.y, q.z, q.w)
-            # print("CURR YAW:", math.degrees(curr_yaw))
-
-            error_angle = target_angle - curr_yaw
-            # error circular correction due to angle circularity
-            if error_angle >= 2*math.pi:
-                error_angle -= 2*math.pi
-            elif error_angle <= -2*math.pi:
-                error_angle += 2*math.pi
-
-            # print("ERROR:", math.degrees(error_angle))
-            # print("TOLERANCE", math.degrees(tolerance_rad))
-
-            # print("target", math.degrees(target_angle), "curr_yaw", math.degrees(curr_yaw), "error", math.degrees(error_angle), "tol", math.degrees(tolerance_rad))
-
-            if abs(error_angle) < tolerance_rad:
-                break
-
-            twist = Twist()
-            twist.linear.x  = 0.0 
-            twist.linear.y  = 0.0
-            twist.angular.z = max(-max_angular_speed, min(max_angular_speed, error_angle * kp))
-
-            self.node.cmd_vel_publisher.publish(twist)
-            time.sleep(rate)
-
-        # Stop the robot
-        # Dirty, but had to do this way because of some commands to low_level being lost
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())
-        time.sleep(0.1)  # wait for the cmd_vel to be published
-        self.node.cmd_vel_publisher.publish(Twist())  
-        self.node.get_logger().info("Angle Adjustment Complete.")
-
-        success = True
-        message = "Angle Adjustment Complete."
-        return success, message """
     
     def adjust_angle_cancel(self):
         if self.node.adjust_angle_navigation_handle_ is not None:
@@ -3157,69 +3221,6 @@ class RobotStdFunctions():
         print(success, message, min_radar_distance_to_robot_edge)
         
         return success, message, min_radar_distance_to_robot_edge
-
-
-
-        """ success = False
-        message = ""
-        min_radar_distance_to_robot_edge = None
-
-        if self.node.is_radar_initialized:
-            if -100 <= direction <= 100 and 0 < ang_obstacle_check <= 360:
-                radar = self.node.radar
-                used_sectors = []
-                min_distance = None
-
-                # DEBUG PRINTS
-                # nos     = radar.number_of_sectors
-                # sar     = radar.sector_ang_range
-                # sectors = radar.sectors
-                # print(f"Radar Data: Number of Sectors: {nos}, Sector Angle Range (deg): {round(math.degrees(sar),1)}")
-                # i = 0
-                # for s in sectors:
-                #     sa = s.start_angle
-                #     ea = s.end_angle
-                #     md = s.min_distance
-                #     p  = s.point
-                #     hp = s.has_point
-                #     print(f"Sector {i}: Start Angle: {round(math.degrees(sa),1)}, End Angle: {round(math.degrees(ea),1)}, Min Distance: {round(md,2)}, Has Point: {hp}")
-                #     i += 1    
-
-                # print("USED SECTORS:")
-                for s in radar.sectors:
-                    if  -math.radians(ang_obstacle_check/2) <= s.start_angle - math.radians(direction) <= math.radians(ang_obstacle_check/2) and \
-                        -math.radians(ang_obstacle_check/2) <= s.end_angle   - math.radians(direction) <= math.radians(ang_obstacle_check/2):
-                        used_sectors.append(s)
-                        # print(f"Start Angle: {round(math.degrees(s.start_angle),1)}, End Angle: {round(math.degrees(s.end_angle),1)}, Min Distance: {round(s.min_distance,2)}, Has Point: {s.has_point}")
-            
-                        if s.has_point:
-                            if min_distance is None:
-                                min_distance = s.min_distance
-                            elif s.min_distance < min_distance:
-                                min_distance = s.min_distance
-                
-                if min_distance is not None:
-                    # print("MIN DISTANCE IN USED SECTORS:", round(min_distance,2))
-                    min_radar_distance_to_robot_edge = min_distance - self.ROBOT_RADIUS
-                    # print("MIN DISTANCE TO ROBOT EDGE IN USED SECTORS:", round(min_radar_distance_to_robot_edge,2))
-                    success = True
-                    message = ""
-                    return success, message, min_radar_distance_to_robot_edge
-                else:
-                    success = False
-                    message = "No obstacles detected in the selected direction"
-                    self.node.get_logger().warn("No obstacles detected in the selected direction")
-                    return success, message, min_radar_distance_to_robot_edge
-            else:
-                success = False
-                message = "Wrong parameter definition"
-                self.node.get_logger().warn("Wrong parameter definition")
-                return success, message, min_radar_distance_to_robot_edge
-        else:
-            success = False
-            message = "Radar not initialized"
-            self.node.get_logger().warn("Radar not initialized")
-            return success, message, min_radar_distance_to_robot_edge """
     
     def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
