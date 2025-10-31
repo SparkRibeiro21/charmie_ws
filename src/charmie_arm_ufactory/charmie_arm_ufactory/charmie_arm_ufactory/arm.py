@@ -204,11 +204,12 @@ class ArmUfactory(Node):
 
 		### PICK OBJECT FRONT JOINT VARIABLES###
 		self.initial_position_joints_pick =									[-225.0,  83.0, -65.0, -1.0, 75.0, 270.0]
-		self.safe_risky_begin_joints =                                      [-216.1, 75.2, -65.0, -1.0, 75.0, 271.0]
+		self.safe_risky_begin_joints =                                      [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
 		self.initial_position_to_search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
 		#self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
 		self.search_front_max_z_joints =									[-145, -33, -35.7, -122.9, 44.8, 33.2]
+		self.search_front_risky_joints =									[-207.1, -9.9, -38.8, 144.4, 47.2, 112.3]
 
 		# PLACE OBJECT FRONT VARIABLES
 		self.initial_position_to_safe_joints = 								[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
@@ -776,6 +777,13 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
+	def search_front_risky(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_front_risky_joints, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
 	### PLACE OBJECT FRONT###
 	def initial_pose_to_place_front(self):
 		match self.estado_tr:
@@ -823,11 +831,22 @@ class ArmUfactory(Node):
 			# case 1:
 			# 	self.set_gripper_position_(pos=0, wait=True)
 			case 0:
-				self.set_joint_values_(angles=self.safe_risky_begin_joints, speed=25, wait=True)
+				self.set_joint_values_(angles=self.safe_risky_begin_joints, speed=40, wait=True)
 			case 1:
-				self.set_joint_values_(angles=self.search_table_top_risky_joints, speed=25, wait=False)
+				self.set_joint_values_(angles=self.search_table_top_risky_joints, speed=25, wait=True)
 			case 2:
-				self.finish_arm_movement_()			
+				self.finish_arm_movement_()	
+
+	def search_table_top_risky_to_initial_pose(self):
+		match self.estado.tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_table_top_risky_joints, speed=25, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.safe_risky_begin_joints, speed=40, wait=True)	
+			case 2:
+				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=40, wait=True)
+			case 3:
+				self.finish_arm_movement_()	
 
 	def search_table_to_initial_pose_top(self):
 		match self.estado_tr:
@@ -1256,6 +1275,8 @@ class ArmUfactory(Node):
 				self.search_front_min_z()
 			case "search_front_max_z":
 				self.search_front_max_z()
+			case "search_front_risky":
+				self.search_front_risky()
 
 			#PLACE OBJECT FRONT
 			case "initial_pose_to_place_front":
@@ -1268,6 +1289,10 @@ class ArmUfactory(Node):
 				self.initial_pose_to_search_table_top()
 			case "search_table_to_initial_pose_top":
 				self.search_table_to_initial_pose_top()
+			case "initial_pose_to_search_table_top_risky":
+				self.initial_pose_to_search_table_top_risky()
+			case "search_table_top_risky_to_initial_pose":
+				self.search_table_top_risky_to_initial_pose()
 			
 			# if there is an error regarding a movement
 			case _:

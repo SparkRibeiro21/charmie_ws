@@ -76,7 +76,7 @@ class TaskMain():
 
 
         #self.place_furniture = "Office Table"
-        self.home_furniture = "Entrance"        
+        self.home_furniture = "Shelf"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
@@ -146,16 +146,18 @@ class TaskMain():
                     # print(selected_category)
 
 
-                    selected_option = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_object", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
-                    print(selected_option)
+                    # selected_option = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_object", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
+                    # print(selected_option)
 
-                    self.object_name = selected_option
+                    # self.object_name = selected_option
+
+                    self.object_name = "Milk"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
 
-                    selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
-                    print(selected_furniture)
+                    # selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
+                    # print(selected_furniture)
 
                     self.place_furniture = "Shelf"
 
@@ -187,11 +189,10 @@ class TaskMain():
                         if self.object_mode == "top":
                             if obj["name"] not in self.unreachable_room_top:
                                 rooms.append(obj["name"])
-                                print("ROOMS", rooms)
                         elif self.object_mode == "front":
                             if obj["name"] not in self.unreachable_room_front:
                                 rooms.append(obj["name"])
-                                print("ROOMS", rooms)
+                    # print("ROOMS", rooms)
 
                     selected_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                     print(selected_room[0])
@@ -207,11 +208,10 @@ class TaskMain():
                         if self.object_mode == "top":
                             if obj["name"] not in self.unreachable_furniture_top and obj["room"] in selected_room[0]:
                                 furniture.append(obj["name"])
-                                print("ROOMS", furniture)
                         elif self.object_mode == "front":
                             if obj["name"] not in self.unreachable_furniture_front and obj["room"] in selected_room[0]:
                                 furniture.append(obj["name"])
-                                print("ROOMS", furniture)
+                    # print("ROOMS", furniture)
 
                     selected_furniture = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=furniture, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_furniture")
                     print(selected_furniture[0])
