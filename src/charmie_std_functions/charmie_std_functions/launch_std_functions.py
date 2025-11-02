@@ -537,6 +537,13 @@ class LaunchStdFunctions():
                     ]
         )
 
+        self.nav2_navigation_safety_inspection = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(get_package_share_path('charmie_description'), 'launch', 'navigation_inspection_launch.py')]),
+                launch_arguments=[
+                    ('use_sim_time', 'false')
+                    ]
+        )
+
         ### robot_localization node ###
         robot_localization_ekf_config_path = os.path.join(get_package_share_path('charmie_description'), 
                                 'config', 'ekf.yaml')
