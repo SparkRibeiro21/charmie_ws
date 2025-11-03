@@ -171,7 +171,7 @@ class TaskMain():
 
                 if self.GET_MILK:
 
-                    self.robot.pick_object(selected_object="Milk", return_arm_to_initial_position=False)
+                    self.robot.pick_object_risky(selected_object="Milk", return_arm_to_initial_position=False)
                         
                     """ object_in_gripper = False
                     while not object_in_gripper:
@@ -206,7 +206,7 @@ class TaskMain():
 
                 if self.GET_CORNFLAKES:
 
-                    self.robot.pick_object(selected_object="Cornflakes", return_arm_to_initial_position=False)
+                    self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position=False)
 
                     """ object_in_gripper = False
                     while not object_in_gripper:
@@ -246,7 +246,7 @@ class TaskMain():
 
                 if self.GET_DISHES:
 
-                    _,_ = self.robot.pick_object(selected_object="Spoon")
+                    _,_ = self.robot.pick_object_risky(selected_object="Spoon")
                     
                     time.sleep(0.5)
                     self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
@@ -256,7 +256,7 @@ class TaskMain():
                     self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl"))), wait_for_end_of=True)
 
 
-                    _,_ = self.robot.pick_object(selected_object="Bowl")
+                    _,_ = self.robot.pick_object_risky(selected_object="Bowl")
                     
                     """ object_in_gripper = False
                     correct_object_bowl = DetectedObject()
