@@ -83,7 +83,7 @@ class TaskMain():
 
                 self.robot.wait_for_start_button()
 
-                self.robot.adjust_omnidirectional_position(dx=1.0, dy=0.0, )
+                # self.robot.adjust_omnidirectional_position(dx=1.0, dy=0.0)
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)

@@ -58,6 +58,9 @@ def generate_launch_description():
                   ('/tf_static', 'tf_static')]
     
     ### TR PARAM SUBSTITUTIONS ###
+    
+    # behaviour tree (not in params_substitutions because RewrittenYaml does not replace params that do not exist in the yaml)
+    bt_xml = os.path.join(bringup_dir, 'config', 'navigate_to_pose_w_replanning_and_recovery_adjusted_tr_recovery.xml')
 
     # velocity smoother (not in params_substitutions because RewrittenYaml supposedly does not work very well with lists)
     velocity_smoother_max_vel = [0.2, 0.0, 0.5]
@@ -174,7 +177,10 @@ def generate_launch_description():
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[configured_params],
+                parameters=[
+                    configured_params,
+                    {'default_nav_to_pose_bt_xml': bt_xml}
+                ],
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings),
             Node(
@@ -248,7 +254,10 @@ def generate_launch_description():
                 package='nav2_bt_navigator',
                 plugin='nav2_bt_navigator::BtNavigator',
                 name='bt_navigator',
-                parameters=[configured_params],
+                parameters=[
+                    configured_params,
+                    {'default_nav_to_pose_bt_xml': bt_xml}
+                ],
                 remappings=remappings),
             ComposableNode(
                 package='nav2_waypoint_follower',
