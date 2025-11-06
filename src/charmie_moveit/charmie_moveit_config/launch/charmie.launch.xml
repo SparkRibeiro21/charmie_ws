@@ -1,10 +1,15 @@
 <launch>
+
+    <!-- Launch Arguments -->
+    <arg name="use_real_hardware" default="false"/>
+    
+    <!-- Paths and parameters -->
     <let name = "urdf_path"
         value = "$(find-pkg-share charmie_description)/urdf/charmie_real.urdf.xacro" />
     <let name = "rviz_config_path"
         value = "$(find-pkg-share charmie_description)/rviz/moveit.rviz" />
     <let name = "robot_description_param"
-        value = "$(command 'xacro $(var urdf_path)')" />
+        value = "$(command 'xacro $(var urdf_path) use_real_hardware:=$(var use_real_hardware)')" />
     <let name="kinematics_config"
         value="$(find-pkg-share charmie_moveit_config)/config/kinematics.yaml" />
     
