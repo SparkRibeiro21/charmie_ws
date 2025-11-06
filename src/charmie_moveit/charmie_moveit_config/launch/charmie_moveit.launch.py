@@ -4,6 +4,7 @@ from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitut
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from moveit_configs_utils import MoveItConfigsBuilder
 
 
 def generate_launch_description():
@@ -20,6 +21,10 @@ def generate_launch_description():
     # Get package paths
     charmie_description_share = FindPackageShare('charmie_description')
     charmie_moveit_config_share = FindPackageShare('charmie_moveit_config')
+
+    # Build MoveIt config
+    moveit_config = MoveItConfigsBuilder("charmie", package_name="charmie_moveit_config").to_moveit_configs()
+    
     
     # Define file paths
     urdf_path = PathJoinSubstitution([
@@ -104,6 +109,7 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         arguments=['-d', rviz_config_path],
+        parameters=[moveit_config.robot_description_kinematics,],
         output='screen'
     )
     
