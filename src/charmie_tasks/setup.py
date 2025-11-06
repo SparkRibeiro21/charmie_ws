@@ -24,8 +24,10 @@ setup(
     entry_points={
         'console_scripts': [
 
+        "clean_the_table = charmie_tasks.clean_table:main",
 		"inspection      = charmie_tasks.inspection:main",
 		"receptionist    = charmie_tasks.receptionist:main",
+		"restaurant      = charmie_tasks.restaurant:main",
 		"serve_breakfast = charmie_tasks.serve_breakfast:main",
 		
         ],
