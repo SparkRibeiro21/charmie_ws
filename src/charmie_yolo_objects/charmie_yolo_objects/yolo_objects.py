@@ -24,7 +24,7 @@ from charmie_point_cloud.point_cloud_class import PointCloud
 # objects_filename = "epoch20.pt"
 # objects_filename = "new_best.pt"
 # objects_filename = "new_best_2.pt"
-objects_filename = "24_25_october_v1_LAR_seg.pt"
+objects_filename = "24_25_october_v1_LAR_seg.engine"
 # objects_filename = "detect_hands_2.pt"
 # objects_filename = "50_epochs.pt"
 # objects_filename = "slender_ycb_03_07_2024_v1.pt"
