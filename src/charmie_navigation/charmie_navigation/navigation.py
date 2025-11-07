@@ -192,9 +192,9 @@ class ROS2NavigationNode(Node):
         self.get_logger().info("Successfully Initialised CHARMIE Navigation Node")
         # self.timer = self.create_timer(0.1, self.timer_callback)
 
-    def timer_callback(self):
-        self.check_conditions_to_stop_safety_navigation()
-        # print(self.safety_navigation_check_depth_head_camera())
+    # def timer_callback(self):
+    #     self.check_conditions_to_stop_safety_navigation()
+    #     # print(self.safety_navigation_check_depth_head_camera())
         
     def odom_callback(self, msg: Odometry):
         with self._lock:

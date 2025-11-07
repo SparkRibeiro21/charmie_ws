@@ -57,15 +57,29 @@ def generate_launch_description():
     remappings = [('/tf', 'tf'),
                   ('/tf_static', 'tf_static')]
     
-    ### TR PARAM SUBSTITUTIONS ###    
+    ### TR PARAM SUBSTITUTIONS ###
     
     # behaviour tree (not in params_substitutions because RewrittenYaml does not replace params that do not exist in the yaml)
     bt_xml = os.path.join(bringup_dir, 'config', 'navigate_to_pose_w_replanning_and_recovery_adjusted_tr_recovery.xml')
+
+    # velocity smoother (not in params_substitutions because RewrittenYaml supposedly does not work very well with lists)
+    velocity_smoother_max_vel = [0.2, 0.0, 0.5]
+    velocity_smoother_min_vel = [0.0, 0.0, -0.5]  # clamp reverse x to not allow backwards movements from NAV2
+
+    # controller_server
+    max_vel_x       = "0.2"
+    max_vel_theta   = "0.5"
+    max_speed_xy    = "0.2"
 
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {
         'use_sim_time': use_sim_time,
         'autostart': autostart,
+
+        # controller server
+        'controller_server.ros__parameters.FollowPath.max_vel_x': max_vel_x,
+        'controller_server.ros__parameters.FollowPath.max_vel_theta': max_vel_theta,
+        'controller_server.ros__parameters.FollowPath.max_speed_xy': max_speed_xy,
     }
 
     configured_params = ParameterFile(
@@ -186,7 +200,13 @@ def generate_launch_description():
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[configured_params],
+                parameters=[
+                    configured_params,
+                    {
+                        # override for inspection lower velocity
+                        'max_velocity': velocity_smoother_max_vel,
+                        'min_velocity': velocity_smoother_min_vel,  # no reverse x
+                    }],
                 arguments=['--ros-args', '--log-level', log_level],
                 remappings=remappings +
                         [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel')]),
@@ -249,7 +269,14 @@ def generate_launch_description():
                 package='nav2_velocity_smoother',
                 plugin='nav2_velocity_smoother::VelocitySmoother',
                 name='velocity_smoother',
-                parameters=[configured_params],
+                parameters=[
+                    configured_params,
+                    {
+                        # override for inspection lower velocity
+                        'max_velocity': velocity_smoother_max_vel,
+                        'min_velocity': velocity_smoother_min_vel,  # no reverse x
+                    }
+                ],
                 remappings=remappings +
                            [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel')]),
             ComposableNode(
