@@ -5331,7 +5331,6 @@ class RobotStdFunctions():
                     
                 #MOVE TO SAFE POSITION DEPENDING ON MODE SELECTED
                 if pick_mode == "front":
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=False)
                     self.set_face("charmie_face", wait_for_end_of=False)
                     
                     if navigation:
@@ -5341,6 +5340,8 @@ class RobotStdFunctions():
 
                     #MOVE TO SEARCH TABLE
                     #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_front_joints, wait_for_end_of=True)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
 
                     if not object_in_gripper:
                         self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))))
