@@ -3237,24 +3237,15 @@ class RobotStdFunctions():
                 self.set_face(camera="base", show_detections=True)
                 
             # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
-
-            print("1")
             
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
             for t in tetas:
                 rgb_found_list_of_objects = False
-                print("2")
                 self.set_rgb(RED+SET_COLOUR)
-                print("3")
                 self.set_neck(position=t, wait_for_end_of=True)
-                print("4")
                 time.sleep(time_wait_neck_move_pre_each_frame)
-                print("5")
                 self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
-                print("6")
                 self.set_rgb(WHITE+SET_COLOUR)
-
-                print("A")
 
                 start_time = time.time()
                 while (time.time() - start_time) < time_in_each_frame:      
@@ -3496,8 +3487,6 @@ class RobotStdFunctions():
         self.set_face("charmie_face")    
         self.set_neck(position=[0, 0], wait_for_end_of=False)
         self.set_rgb(YELLOW+HALF_ROTATE)
-
-        # self.set_speech(filename="sound_effects/ai_preto", wait_for_end_of=False)
 
         # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
