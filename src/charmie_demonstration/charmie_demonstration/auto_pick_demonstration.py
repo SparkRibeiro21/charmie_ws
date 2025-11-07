@@ -76,11 +76,11 @@ class TaskMain():
 
 
         #self.place_furniture = "Office Table"
-        self.home_furniture = "Dishwasher"        
+        self.home_furniture = "Entrance"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
-        self.GET_HEAR = True
+        self.GET_HEAR = False
 
         #Furniture which we cannot place with place_front
 
@@ -151,7 +151,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "Bowl"
+                    self.object_name = "7Up"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
@@ -159,9 +159,11 @@ class TaskMain():
                     # selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_furniture)
 
-                    self.place_furniture = "Dishwasher"
+                    self.place_furniture = "Coffee Table"
 
                     self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
+
+                    self.selected_height = self.robot.get_height_from_furniture(self.place_furniture)[0]
 
 
 

@@ -3439,15 +3439,24 @@ class RobotStdFunctions():
                 self.set_face(camera="base", show_detections=True)
                 
             # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+
+            print("1")
             
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
             for t in tetas:
                 rgb_found_list_of_objects = False
+                print("2")
                 self.set_rgb(RED+SET_COLOUR)
+                print("3")
                 self.set_neck(position=t, wait_for_end_of=True)
+                print("4")
                 time.sleep(time_wait_neck_move_pre_each_frame)
+                print("5")
                 self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+                print("6")
                 self.set_rgb(WHITE+SET_COLOUR)
+
+                print("A")
 
                 start_time = time.time()
                 while (time.time() - start_time) < time_in_each_frame:      
@@ -5298,19 +5307,19 @@ class RobotStdFunctions():
                 if navigation:
                     self.adjust_x_      = valid_detected_object.position_relative.x - DISTANCE_IN_FRONT_X
 
-                    if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE
+                    # if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
+                    #     self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE
 
-                    elif self.adjust_x_ < -MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_x_  = -MAXIMUM_ADJUST_DISTANCE
+                    # elif self.adjust_x_ < -MAXIMUM_ADJUST_DISTANCE:
+                    #     self.adjust_x_  = -MAXIMUM_ADJUST_DISTANCE
 
                     self.adjust_y_      = valid_detected_object.position_relative.y + DISTANCE_IN_FRONT_Y
 
-                    if self.adjust_y_   > MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_y_  = MAXIMUM_ADJUST_DISTANCE
+                    # if self.adjust_y_   > MAXIMUM_ADJUST_DISTANCE:
+                    #     self.adjust_y_  = MAXIMUM_ADJUST_DISTANCE
 
-                    elif self.adjust_y_ < -MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
+                    # elif self.adjust_y_ < -MAXIMUM_ADJUST_DISTANCE:
+                    #     self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
 
                     print("FINAL ADJUST:", self.adjust_x_, self.adjust_y_)
 
@@ -5327,33 +5336,22 @@ class RobotStdFunctions():
                 # self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
 
                 # ADJUST ARM POSITION DEPENDING ON OBJECT HEIGHT
-                if MINIMUM_FRONT_HEIGHT <= valid_detected_object.position_relative.z <= HALFWAY_FRONT_HEIGHT:
+                if MINIMUM_FRONT_HEIGHT <= valid_detected_object.position_relative.z <= MAXIMUM_FRONT_HEIGHT:
 
                     self.set_arm(command="search_front_risky", wait_for_end_of=True)
 
                     gripper_search_height = self.get_gripper_localization().z
                     height_furniture = self.get_shelf_from_height(object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
                     object_height = self.get_object_height_from_object(valid_detected_object.object_name)
-                    low_z = (height_furniture + (object_height/2) - gripper_search_height)*1000
+                    adjust_z = (height_furniture + (object_height/2) - gripper_search_height)*1000
 
                     print("GRIPPER HEIGHT",gripper_search_height)
                     print("FURNITURE HEIGHT",height_furniture)
                     print("OBJECT HEIGHT",object_height)
-                    print("LOW", low_z)
+                    print("ADJUST Z", adjust_z)
 
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [low_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [adjust_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
                     
-                    
-                elif HALFWAY_FRONT_HEIGHT < valid_detected_object.position_relative.z <= MAXIMUM_FRONT_HEIGHT:
-
-                    self.set_arm(command="search_front_max_z", wait_for_end_of=True)
-
-                    gripper_search_height = self.get_gripper_localization().z
-                    high_z = (valid_detected_object.position_relative.z - gripper_search_height)*100
-                    print("HIGH", high_z)
-
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [high_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
-
 
             #BEGIN PICK TOP IF SELECTED
             elif pick_mode == "top":
@@ -5512,6 +5510,12 @@ class RobotStdFunctions():
                         if obj.object_name == "cup":
                             correct_y_grab += 40
                             correct_x_grab = 210
+                        #if obj.object_name == "plate":
+                            #correct_z_grab -= 130
+                            #correct_rotation = -90.0
+                            #correct_x_grab = furniture height + 20 test first without
+                            #navigation = gripper pos -  lowest y
+
 
                         object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
 
