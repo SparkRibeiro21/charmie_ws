@@ -131,8 +131,8 @@ class TaskMain():
 
                 self.robot.set_initial_position(self.initial_position)
                 
-                print("SET INITIAL POSITION")
-                print("GET_MILK:", self.GET_MILK, "GET_CORNFLAKES:", self.GET_CORNFLAKES, "GET_DISHES:", self.GET_DISHES)
+                # print("SET INITIAL POSITION")
+                # print("GET_MILK:", self.GET_MILK, "GET_CORNFLAKES:", self.GET_CORNFLAKES, "GET_DISHES:", self.GET_DISHES)
         
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
@@ -181,6 +181,7 @@ class TaskMain():
                             self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True) """
 
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
+                    ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 self.state = self.task_states["Move_cornflakes_location"]
@@ -221,6 +222,7 @@ class TaskMain():
                             self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True) """
 
                     self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
+                    ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 self.state = self.task_states["Move_dishes_location"]
@@ -255,6 +257,8 @@ class TaskMain():
 
                     self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl"))), wait_for_end_of=True)
 
+                    ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
+                    ### missing place spoon on tray arm movements
 
                     _,_ = self.robot.pick_object_risky(selected_object="Bowl")
                     
@@ -299,7 +303,7 @@ class TaskMain():
                 move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))                
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
 
-                self.robot.adjust_obstacles(distance=0.3, direction=-45.0)
+                self.robot.adjust_obstacles(distance=0.3, direction=-45.0, max_speed=0.1, wait_for_end_of=False)
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
