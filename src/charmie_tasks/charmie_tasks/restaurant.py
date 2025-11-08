@@ -110,6 +110,9 @@ class TaskMain():
         # # Set the height of the table where breakfast is served, so that the manual arm movements are adapted to this height (placing and pouring)
         # self.robot.set_height_furniture_for_arm_manual_movements(self.SB_TABLE_HEIGHT) #####
         
+        self.BARMAN_COORDS = [0.0, 0.0, 0.0]
+        self.CUSTOMER_COORDS = [3.0, 3.0, 0.0]
+
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
@@ -129,8 +132,16 @@ class TaskMain():
             if self.state == self.task_states["Waiting_for_task_start"]:
 
                 self.robot.set_initial_position(self.initial_position)
-                
-                # code here ...
+
+                self.robot.set_face("charmie_face", wait_for_end_of=False)
+
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                self.robot.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
+
+                self.robot.wait_for_start_button()
+
+                time.sleep(3.0) # time for person who pressen start button leave to not be shown in qualif video
 
                 self.state = self.task_states["Looking_for_barman"]
                 
@@ -151,8 +162,15 @@ class TaskMain():
 
             elif self.state == self.task_states["Approach_customer"]:
 
-                # code here ...
-                                    
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
+
+                self.robot.move_to_position(move_coords=self.CUSTOMER_COORDS, wait_for_end_of=True)
+                
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
+                        
                 self.state = self.task_states["Receive_order"]
 
 
@@ -165,8 +183,15 @@ class TaskMain():
 
             elif self.state == self.task_states["Go_back_to_barman_with_order"]:
 
-                # code here ...
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
 
+                self.robot.move_to_position(move_coords=self.BARMAN_COORDS, wait_for_end_of=True)
+                
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
+                        
                 self.state = self.task_states["Collect_order_from_barman"]
 
 
@@ -179,8 +204,15 @@ class TaskMain():
 
             elif self.state == self.task_states["Approch_customer_with_order"]:
 
-                # code here ...
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
+
+                self.robot.move_to_position(move_coords=self.CUSTOMER_COORDS, wait_for_end_of=True)
                 
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
+                        
                 self.state = self.task_states["Deliver_order"]
 
 
@@ -193,8 +225,15 @@ class TaskMain():
 
             elif self.state == self.task_states["Move_to_barman_after_delivery"]:
 
-                # code here ...
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
 
+                self.robot.move_to_position(move_coords=self.BARMAN_COORDS, wait_for_end_of=True)
+                
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
+                        
                 self.state = self.task_states["Detecting_waving_customers"]
 
 
