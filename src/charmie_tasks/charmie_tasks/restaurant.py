@@ -110,8 +110,13 @@ class TaskMain():
         # # Set the height of the table where breakfast is served, so that the manual arm movements are adapted to this height (placing and pouring)
         # self.robot.set_height_furniture_for_arm_manual_movements(self.SB_TABLE_HEIGHT) #####
         
-        self.BARMAN_COORDS = [0.0, 0.0, 0.0]
-        self.CUSTOMER_COORDS = [3.0, 3.0, 0.0]
+        self.BARMAN_NAV_COORDS = [0.0, 0.0, 0.0] # x, y, theta
+        self.CUSTOMER_NAV_COORDS = [3.0, 3.0, 0.0] # x, y, theta
+
+        self.BARMAN_COORDS = [0.0, 0.0, 0.0] # x, y, z
+        self.CUSTOMER_COORDS = [] # x, y, z
+
+        self.all_orders = []
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -147,15 +152,103 @@ class TaskMain():
                 
 
             elif self.state == self.task_states["Looking_for_barman"]:
-                                        
-                # code here ...
+               
+                tetas = [[180, 0], [90, 0], [-90, 0]]
+                barman = []
+
+                # Check for people BACK, LEFT and RIGHT, to figure out who is the barman
+                while not barman:
+                    self.robot.set_speech(filename="restaurant/search_barman", wait_for_end_of=True)
+                    
+                    people_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True, only_detect_person_right_in_front=True)
+
+                    print("FOUND:", len(people_found)) 
+                    for p in people_found.people:
+                        barman.append(p)
+                        
+                        # all below can be commented
+                        self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
+                        print("ID:", p.index)
+                        print('Barman position', p.position_relative)
+                        time.sleep(2.0)
+
+                    # this 'for' can be merged with the previous 'for'
+                    for b in barman:
+                        self.robot.set_neck_coords(position=[b.position_absolute.x, b.position_absolute.y, b.position_absolute.z], wait_for_end_of=True)
+
+                        self.robot.set_speech(filename="confirm_barman_touchscreen", wait_for_end_of=True)
+                        answer = self.robot.set_face_touchscreen_menu(custom_options=["yes", "no"], timeout=10, instruction="Are you the barman?", speak_results=True, wait_for_end_of=True)
+
+                        if answer == "yes":
+                            ### calculate barman angle and position to me 
+                            self.BARMAN_NAV_COORDS[2] = 0.0 ### CALCULATE ANGLE TO BARMAN, SO WHEN WE COME BACK WE ARE ALREADY FACING THE BARMAN
+                            self.BARMAN_COORDS = [b.position_absolute.x, b.position_absolute.y, b.position_absolute.z]
+
+                            ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
+                            self.robot.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
+
+                            ##### SPEAK : I am going to turn around and search for possible customers. See you soon
+                            self.robot.set_speech(filename="restaurant/go_search", wait_for_end_of=True)
+
+                            break
+
                 
                 self.state = self.task_states["Detecting_waving_customers"]
 
 
             elif self.state == self.task_states["Detecting_waving_customers"]:
 
-                # code here ...
+                tetas = [[-60, 0], [0, 0], [60, 0]]
+                customers_list = []
+            
+                while not customers_list:
+
+                    customers_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
+
+                    print("FOUND:", len(customers_found)) 
+                    for p in customers_found.people:
+                        # customers_list.append(p)
+                        
+                        # all below can be commented
+                        self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
+                        print("ID:", p.index)
+                        print('Customer position', p.position_relative)
+
+
+                    ### REORDER BY DISTANCE ###
+
+
+                    print('Nr of detected customers waving: ', len(customers_list))
+
+                    if len(customers_found) > 0:
+                        # moves back to barman and looks at barman
+                        self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True) 
+                        self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
+
+                        # SPEAK: i have found some customers, lets confirm these are customers
+                        # for customers
+                        #   SPEAK: i have found the following customer.
+                        #   SPEAK: please check my face to see the detected customer
+                        #   CARA: mostra customer
+                        #   SPEAK: Is this a customer, please press my face "yes" or "no"
+                        #   FACE: TOUCHSCREEEN
+                        #   if "yes"
+                        #       add to customers_list = []
+                        #   aqui posso por um contador, para se ele detetar 20 pessoas, não ir a todas, pôr um maximo de 2 ou 3 
+
+                        # Confirm, while looking at barman.
+                        # SPEAK: I confirm I have the following customers
+                        # FOR
+                        #   FACE: mostrar caras de todos os que foram ditos que sim
+                        #   
+
+                        # set self.CUSTOMER_COORDS.append() customer_list[0] ,...
+                        # set self.CUSTOMER_NAV_COORDS = customer_list[0]
+
+                    else:
+                        # if no customer is found, moves a little bit forward, with safety radar ON
+                        self.robot.set_speech(filename="restaurant/no_customers", wait_for_end_of=False)
+                        self.robot.adjust_omnidirectional_position(dx=0.5, dy=0.0, wait_for_end_of=True)
 
                 self.state = self.task_states["Approach_customer"]
 
@@ -166,7 +259,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.CUSTOMER_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
@@ -176,9 +269,109 @@ class TaskMain():
 
             elif self.state == self.task_states["Receive_order"]:
 
-                # code here ...
+                ### pergunta sim ou nao se tem um pedido
+                    ### se nao, incrementa o CUSTOMER_NAV_COORDS e vai para o approach customer table
+                        ### caso o CUSTOMER_NAV_COORDS tenha chegado ao fim, volta para o estado: Detecting_waving_customers
+                    ### se conter > 5, incrementa o CUSTOMER_NAV_COORDS e vai para o approach customer table
+                        ### caso o CUSTOMER_NAV_COORDS tenha chegado ao fim, volta para o estado: Detecting_waving_customers
+                    ### se sim continua
+                     
+                ### faz a pergunta do pedido
+                    ### se counter > 5, passa para a cara e tenta duas vezes
+                        ### caso exceda as duas vezes da cara, incrementa o CUSTOMER_NAV_COORDS e vai para o approach customer table
+                    ### se sim vai para pergunta de confrirmacao
 
-                self.state = self.task_states["Go_back_to_barman_with_order"]
+                ### pergunta de confirmacao
+                    ### se sim, avança para o proximo estado 
+                    ### se nao volta a fazer o pedido     
+                     
+                      
+                # order_collected = False
+                # while not order_collected:
+
+                self.robot.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
+                self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+
+                customer_has_order = False
+                customer_has_order_ctr = 0
+                max_asks_customer_has_order = 5
+                while not customer_has_order:
+                    customer_has_order_ctr+= 1
+
+                    # "Do you have an order?"
+                    confirmation = self.robot.get_audio(yes_or_no=True, question="restaurant/have_an_order", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+
+                    if confirmation == "yes":
+                        customer_has_order = True
+                    elif confirmation == "no" or customer_has_order_ctr >= max_asks_customer_has_order:
+                        customer_has_order = True
+                        ### incrementa o CUSTOMER_NAV_COORDS e vai para o approach customer table
+                            ### caso o CUSTOMER_NAV_COORDS tenha chegado ao fim, volta para o estado: Detecting_waving_customers
+                        self.state = self.task_states["Approach_customer"]
+
+
+                if self.state == self.task_states["Receive_order"]:
+
+                    order_received = False
+                    order_received_ctr = 0
+                    max_asks_audio_order_received = 5
+                    max_asks_touchscreen_order_received = 2
+                    while not order_received:
+                        order_received_ctr+=1
+
+                        if order_received_ctr <= max_asks_audio_order_received:
+                
+                            ##### AUDIO: Listen the order and repeat for confirmation
+                            command = self.robot.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
+                            print("Finished:", command)
+                            keyword_list = command.split(" ")
+                            self.robot.set_speech(filename="restaurant/order_consists_of", wait_for_end_of=True)
+                            for kw in keyword_list:
+                                print(kw)
+                                self.robot.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+
+
+                            ##### AUDIO: Listen "YES" OR "NO"
+                            ##### "Please say yes or no to confirm the order"
+                            confirmation = self.robot.get_audio(yes_or_no=True, question="restaurant/yes_no_question", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                            print("Finished:", confirmation)
+
+                            ##### Verifica a resposta recebida
+                            if confirmation.lower() == "yes":
+                                self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                                self.robot.set_rgb(command=GREEN+BLINK_LONG)
+
+                                self.robot.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                                for kw in keyword_list:
+                                    print(kw)
+                                    self.robot.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                                ##### SPEAK: Thank you
+                                # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                                order_received = True  # Sai do loop se a confirmação for "yes"
+                                self.state = self.task_states["Go_back_to_barman_with_order"]
+
+                            elif confirmation.lower() == "no":
+                                self.robot.set_rgb(command=RED+BLINK_LONG)
+                                ##### SPEAK: Sorry, TRY AGAIN
+                                self.robot.set_speech(filename="restaurant/no_order", wait_for_end_of=True)
+                            
+                            else:
+                                self.robot.set_rgb(command=YELLOW+BLINK_LONG)
+                                ##### ERROR
+                                print("ERROR")
+
+                        elif order_received_ctr <= max_asks_audio_order_received + max_asks_touchscreen_order_received:
+                            
+                            pass
+                            ### pedido com touchscreen
+
+                        else:
+                            order_received = True
+                            ### incrementa o CUSTOMER_NAV_COORDS e vai para o approach customer table
+                                ### caso o CUSTOMER_NAV_COORDS tenha chegado ao fim, volta para o estado: Detecting_waving_customers
+                            self.state = self.task_states["Approach_customer"]
+                            
 
 
             elif self.state == self.task_states["Go_back_to_barman_with_order"]:
@@ -187,7 +380,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.BARMAN_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
@@ -196,6 +389,31 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Collect_order_from_barman"]:
+
+                self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
+
+                ##### SPEAK: Barman, please give me the following items:
+                self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
+
+                current_order = []
+                for pedido in self.all_orders:
+                    for elemento in pedido:
+                        # Define o nome do arquivo correspondente ao elemento
+                        filename = "objects_names/" + elemento.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
+                        
+                        current_order.append(elemento.lower().replace(" ", "_"))
+
+                        # SPEAK: Diz o elemento do pedido
+                        self.robot.set_speech(filename=filename, wait_for_end_of=True)
+
+                #### SPEAK: please place these object on the bar counter
+
+                time.sleep(10.0)
+
+                tetas = [[0, -45], [-40, -45], [40, -45]]
+                for o in current_order:
+                    self.robot.pick_object(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position=False)
+
 
                 # code here ...
 
@@ -208,7 +426,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.CUSTOMER_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
@@ -218,7 +436,8 @@ class TaskMain():
 
             elif self.state == self.task_states["Deliver_order"]:
 
-                # code here ...
+                ### INVERT LIST ORDER
+                ### PLACE OBJECTS ON TABLE - FROM AUTO PICK DEMONSTRATION
 
                 self.state = self.task_states["Move_to_barman_after_delivery"] 
             
@@ -229,7 +448,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.BARMAN_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
