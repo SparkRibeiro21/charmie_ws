@@ -11,28 +11,28 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
+    "charmie_arm":                  False,
     "charmie_audio":                True,
     "charmie_face":                 True,
-    "charmie_head_camera":          True,
-    "charmie_hand_camera":          True,
+    "charmie_head_camera":          False,
+    "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
-    "charmie_lidar_livox":          True,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         True,
-    "charmie_low_level":            True,
-    "charmie_navigation":           True,
-    "charmie_nav2":                 True,
-    "charmie_neck":                 True,
-    "charmie_radar":                True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
+    "charmie_neck":                 False,
+    "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
-    "charmie_tracking":             True,
-    "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            True,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -125,7 +125,8 @@ class TaskMain():
         self.look_table_objects = [-45, -45]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
-        self.state = self.task_states["Waiting_for_task_start"]
+        # self.state = self.task_states["Waiting_for_task_start"]
+        self.state = self.task_states["Receive_order"]        
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -305,7 +306,9 @@ class TaskMain():
                     if confirmation == "yes":
                         customer_has_order = True
                     elif confirmation == "no" or customer_has_order_ctr >= max_asks_customer_has_order:
+
                         customer_has_order = True
+                        self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
                         ### incrementa o CUSTOMER_NAV_COORDS e vai para o approach customer table
                             ### caso o CUSTOMER_NAV_COORDS tenha chegado ao fim, volta para o estado: Detecting_waving_customers
                         self.state = self.task_states["Approach_customer"]
@@ -315,7 +318,7 @@ class TaskMain():
 
                     order_received = False
                     order_received_ctr = 0
-                    max_asks_audio_order_received = 5
+                    max_asks_audio_order_received = 1
                     max_asks_touchscreen_order_received = 2
                     while not order_received:
                         order_received_ctr+=1
@@ -341,13 +344,13 @@ class TaskMain():
                             if confirmation.lower() == "yes":
                                 self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
                                 self.robot.set_rgb(command=GREEN+BLINK_LONG)
+                                # print(self.all_orders)
 
                                 self.robot.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
                                 for kw in keyword_list:
                                     print(kw)
                                     self.robot.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
-                                ##### SPEAK: Thank you
-                                # self.set_speech(filename="restaurant/yes_order", wait_for_end_of=True)
+                                
                                 order_received = True  # Sai do loop se a confirmação for "yes"
                                 self.state = self.task_states["Go_back_to_barman_with_order"]
 
@@ -363,16 +366,43 @@ class TaskMain():
 
                         elif order_received_ctr <= max_asks_audio_order_received + max_asks_touchscreen_order_received:
                             
-                            pass
-                            ### pedido com touchscreen
+                            self.robot.set_speech(filename="restaurant/have_an_order", wait_for_end_of=True)
+                            answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], speak_results=False)
+                            
+                            print("ANSWER:", answer)
 
+                            if answer == ["no"]:
+                                order_received = True
+                                self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
+                                ### incrementa o CUSTOMER_NAV_COORDS e vai para o approach customer table
+                                    ### caso o CUSTOMER_NAV_COORDS tenha chegado ao fim, volta para o estado: Detecting_waving_customers
+                                self.state = self.task_states["Approach_customer"]
+                            else:
+                                self.robot.set_speech(filename="restaurant/what_is_your_order", wait_for_end_of=True)
+                                keyword_list = self.robot.set_face_touchscreen_menu(["foods", "drinks", "snacks", "fruits"], timeout=20, mode="multi")
+                                self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                                
+                                # print(self.all_orders)
+                                self.robot.set_rgb(command=GREEN+BLINK_LONG)
+                                # print(self.all_orders)
+
+                                self.robot.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                                for kw in keyword_list:
+                                    print(kw)
+                                    self.robot.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                                
+                                order_received = True  # Sai do loop se a confirmação for "yes"
+                                self.state = self.task_states["Go_back_to_barman_with_order"]
                         else:
+
+                            ### SPEAK: Unfortunetely there was a problem with my understanding of your order. I am sorry for this. I have to move on to other customers.
+                            self.robot.set_speech(filename="restaurant/could_not_understand_order_fatal", wait_for_end_of=True)
+
                             order_received = True
                             ### incrementa o CUSTOMER_NAV_COORDS e vai para o approach customer table
                                 ### caso o CUSTOMER_NAV_COORDS tenha chegado ao fim, volta para o estado: Detecting_waving_customers
                             self.state = self.task_states["Approach_customer"]
                             
-
 
             elif self.state == self.task_states["Go_back_to_barman_with_order"]:
 
@@ -407,6 +437,7 @@ class TaskMain():
                         self.robot.set_speech(filename=filename, wait_for_end_of=True)
 
                 #### SPEAK: please place these object on the bar counter
+                self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table", wait_for_end_of=True)
 
                 time.sleep(10.0)
 
