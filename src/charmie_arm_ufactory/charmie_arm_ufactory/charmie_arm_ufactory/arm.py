@@ -342,6 +342,14 @@ class ArmUfactory(Node):
 		self.place_spoon_in_table_funilocopo_v2_facing_other_side =     	[ -591.5, 308.7+height_adjust, 648.8, math.radians(-82.2), math.radians(49.1), math.radians(3.8)]
 		self.step_away_from_table_funilocopo_v2_facing_other_side =     	[ -648.7, 20.0, 677.4, math.radians(-40.5), math.radians(0.0), math.radians(90.0)]
 		
+		# funilocopo v4
+		self.joints_above_funilocopov4 = 				[-196.2,   73.6,  -59.1,  -73.7,   85.5,   286.2]
+		self.linear_above_funilocopov4_for_place = 		[-102.7,  293.1, -115.1, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_above_funilocopov4_for_pick = 		[-119.3,  407.1, -114.4, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_above_funilocopov4_for_pick_aux = 	[-275.1,  407.1, -114.4, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_at_funilocopov4_for_place = 		[-102.7,  425.0, -115.1, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_at_funilocopov4_for_pick = 			[-125.2,  444.1, -114.5, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		
 	def setup_arm_movement_services(self):
 
 		########### EXPLANATION OF EACH MODE: ########### 
@@ -866,7 +874,7 @@ class ArmUfactory(Node):
 	def search_table_to_initial_pose_top(self):
 		match self.estado_tr:
 			case 0:
-				self.set_joint_values_(angles=self.safe_top_second_joints, speed=25, wait_for_end_of=True)
+				self.set_joint_values_(angles=self.safe_top_second_joints, speed=25, wait=True)
 			case 1:
 				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
 			case 2:
@@ -893,6 +901,25 @@ class ArmUfactory(Node):
 			case 7:
 				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=200, wait=True)
 			case 8:
+				self.finish_arm_movement_()
+
+	def collect_spoon_to_tray_funilocopo_v4(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.joints_above_funilocopov4, speed=25, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.linear_at_funilocopov4_for_place, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=400, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.linear_above_funilocopov4_for_place, speed=120, wait=True)
+			case 5:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 6:
+				self.set_joint_values_(angles=self.initial_position_joints, speed=40, wait=True)
+			case 7:
 				self.finish_arm_movement_()
 
 	def collect_milk_to_tray(self):
@@ -1193,6 +1220,35 @@ class ArmUfactory(Node):
 			case 11:
 				self.finish_arm_movement_()
 
+	def place_spoon_table_funilocopo_v4(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.joints_above_funilocopov4, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.linear_at_funilocopov4_for_pick, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.linear_above_funilocopov4_for_pick, speed=120, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.linear_above_funilocopov4_for_pick_aux, speed=120, wait=True)
+			case 6:
+				self.set_joint_values_(angles=self.joints_pre_place_table_funilocopo_v2, speed=50, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.place_spoon_in_table_funilocopo_v2, speed=120, wait=True)
+			case 8:
+				self.set_gripper_position_(pos=300, wait=True)
+			case 9:
+				self.set_position_values_(pose=self.step_away_from_table_funilocopo_v2, speed=120, wait=True)
+			case 10:
+				self.set_gripper_speed_(speed=5000)
+			case 11:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 12:
+				self.finish_arm_movement_()
+
 	def arm_go_rest(self):
 		match self.estado_tr:
 			case 0:
@@ -1266,8 +1322,12 @@ class ArmUfactory(Node):
 				self.place_spoon_table_funilocopo_v2()
 			case "place_spoon_table_funilocopo_v2_facing_other_side":
 				self.place_spoon_table_funilocopo_v2_facing_other_side()
+			case "place_spoon_table_funilocopo_v4":
+				self.place_spoon_table_funilocopo_v4()
 			case "collect_spoon_to_tray":
 				self.collect_spoon_to_tray()
+			case "collect_spoon_to_tray_funilocopo_v4":
+				self.collect_spoon_to_tray_funilocopo_v4()
 			case "collect_milk_to_tray":
 				self.collect_milk_to_tray()
 			case "collect_cornflakes_to_tray":
