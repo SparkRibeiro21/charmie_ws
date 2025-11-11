@@ -2,6 +2,7 @@
 import rclpy
 import threading
 import time
+import math
 from charmie_interfaces.msg import DetectedObject
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
@@ -116,6 +117,8 @@ class TaskMain():
         self.BARMAN_COORDS = [0.0, 0.0, 0.0] # x, y, z
         self.CUSTOMER_COORDS = [] # x, y, z
 
+        self.detected_customers = []
+        self.DETECTED_CUSTOMER_INDEX = 0
         self.all_orders = []
 
         # Neck Positions
@@ -154,6 +157,10 @@ class TaskMain():
 
             elif self.state == self.task_states["Looking_for_barman"]:
                
+                ### TO DO:
+                ### AFTER X AMOUNT OF TIMES, SHOULD HAVE A LPAN B THAT WORKS 100% OF THE TIMES, EITHER BY DEFAULT OR ASK BARMAN TO PRESS SOMETHING ON THE SCREEN
+
+
                 tetas = [[180, 0], [90, 0], [-90, 0]]
                 barman = []
 
@@ -199,21 +206,31 @@ class TaskMain():
 
             elif self.state == self.task_states["Detecting_waving_customers"]:
 
+                ### TO DO:
+                ### SHOULD ONLY DETECT PERSON UNDER THE DETECTABLE DISTSANCE, BUT WE CAN SAVE THE ANGLE PERSON WAS DETECTED AND MOVE IN THAT DIRECTION AND SEARCH AGAIN
+
+
                 tetas = [[-60, 0], [0, 0], [60, 0]]
                 customers_list = []
+                self.detected_customers.clear()
+                NUMBER_OF_CUSTOMERS = 2
             
-                while not customers_list:
+                while not self.detected_customers:
 
                     customers_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
 
                     print("FOUND:", len(customers_found)) 
                     for p in customers_found.people:
-                        # customers_list.append(p)
-                        
-                        # all below can be commented
-                        self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
-                        print("ID:", p.index)
-                        print('Customer position', p.position_relative)
+
+                        dist_to_robot = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
+                        if 0.5 <= dist_to_robot <= 6.0: # this filters some errors from very far away customers
+
+                            customers_list.append(p)
+                            
+                            # all below can be commented
+                            self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
+                            print("ID:", p.index)
+                            print('Customer position', p.position_relative)
 
 
                     ### REORDER BY DISTANCE ###
@@ -221,37 +238,60 @@ class TaskMain():
 
                     print('Nr of detected customers waving: ', len(customers_list))
 
-                    if len(customers_found) > 0:
+                    if len(customers_list) > 0:
                         # moves back to barman and looks at barman
                         self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True) 
                         self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
 
-                        # SPEAK: i have found some customers, lets confirm these are customers
-                        # for customers
-                        #   SPEAK: i have found the following customer.
-                        #   SPEAK: please check my face to see the detected customer
-                        #   CARA: mostra customer
-                        #   SPEAK: Is this a customer, please press my face "yes" or "no"
-                        #   FACE: TOUCHSCREEEN
-                        #   if "yes"
-                        #       add to customers_list = []
-                        #   aqui posso por um contador, para se ele detetar 20 pessoas, não ir a todas, pôr um maximo de 2 ou 3 
+                        self.robot.set_speech(filename="restaurant/barman_help_confirm_customers", wait_for_end_of=True)
 
-                        # Confirm, while looking at barman.
-                        # SPEAK: I confirm I have the following customers
-                        # FOR
-                        #   FACE: mostrar caras de todos os que foram ditos que sim
-                        #   
+                        for p in customers_list:
 
-                        # set self.CUSTOMER_COORDS.append() customer_list[0] ,...
-                        # set self.CUSTOMER_NAV_COORDS = customer_list[0]
+                            self.robot.detected_person_to_face_path(person=p, send_to_face=True)
+                            self.robot.set_speech(filename="restaurant/found_customer_check_face", wait_for_end_of=True)
+                            time.sleep(3.0)
+                            self.robot.set_speech(filename="restaurant/is_person_customer", wait_for_end_of=True)
+                            answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], speak_results=False)
+                            print("ANSWER:", answer)
+                            if answer == ["yes"]:
+                                self.robot.set_speech(filename="restaurant/added_person_as_customer", wait_for_end_of=True)
+                                self.detected_customers.append(p)
+                            else:
+                                self.robot.set_speech(filename="restaurant/not_added_person_as_customer", wait_for_end_of=True)
 
+                            if len(self.detected_customers) >= NUMBER_OF_CUSTOMERS:
+                                break
+
+
+                        if self.detected_customers:
+                            
+                            
+                            # final customer confirmation
+                            self.robot.set_speech(filename="restaurant/final_check_saved_customers", wait_for_end_of=True)
+                            for p in self.detected_customers:
+                                self.robot.detected_person_to_face_path(person=p, send_to_face=True)
+                                time.sleep(3.0)
+                                                        
+                            # jumps to next customer in list (if available)
+                            self.state = self.task_states["Approach_customer"]
+                            if self.DETECTED_CUSTOMER_INDEX < len(self.detected_customers):
+                                self.CUSTOMER_NAV_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
+                                                            self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.y,
+                                                            0.0 ] ### should be changed later
+                                self.CUSTOMER_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
+                                                        self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.y,
+                                                        self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.z ] ### should be changed later
+                                self.DETECTED_CUSTOMER_INDEX += 1
+                            else:
+                                self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
+                        else:
+                            self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
+                        
                     else:
                         # if no customer is found, moves a little bit forward, with safety radar ON
+                        ### THIS CAN BE IMPROVED TO FORCE THE ROBOT TO MOVE TO THE SIDES OR SOMETHING LIKE THAT
                         self.robot.set_speech(filename="restaurant/no_customers", wait_for_end_of=False)
                         self.robot.adjust_omnidirectional_position(dx=0.5, dy=0.0, wait_for_end_of=True)
-
-                self.state = self.task_states["Approach_customer"]
 
 
             elif self.state == self.task_states["Approach_customer"]:
@@ -291,6 +331,7 @@ class TaskMain():
                 # while not order_collected:
 
                 self.robot.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
+                self.robot.set_neck_coords(position=self.CUSTOMER_COORDS, wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
 
                 customer_has_order = False
@@ -309,9 +350,19 @@ class TaskMain():
 
                         customer_has_order = True
                         self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
-                        ### incrementa o CUSTOMER_NAV_COORDS e vai para o approach customer table
-                            ### caso o CUSTOMER_NAV_COORDS tenha chegado ao fim, volta para o estado: Detecting_waving_customers
+
+                        # jumps to next customer in list (if available)
                         self.state = self.task_states["Approach_customer"]
+                        if self.DETECTED_CUSTOMER_INDEX < len(self.detected_customers):
+                            self.CUSTOMER_NAV_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
+                                                        self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.y,
+                                                        0.0 ] ### should be changed later
+                            self.CUSTOMER_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
+                                                    self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.y,
+                                                    self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.z ] ### should be changed later
+                            self.DETECTED_CUSTOMER_INDEX += 1
+                        else:
+                            self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
 
 
                 if self.state == self.task_states["Receive_order"]:
