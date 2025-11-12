@@ -109,6 +109,7 @@ class ROS2TaskNode(Node):
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         self.robot_gripper_localisation_subscriber = self.create_subscription(Point, "robot_gripper_localisation", self.robot_gripper_localisation_callback, 10)
+        self.robot_base_gripper_localisation_subscriber = self.create_subscription(Point, "robot_base_gripper_localisation", self.robot_base_gripper_localisation_callback, 10)
         # Search for person and object 
         self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
@@ -3562,6 +3563,11 @@ class RobotStdFunctions():
     def get_gripper_localization(self):
 
         return self.node.gripper_point
+    
+    def get_base_gripper_localization(self):
+
+        return self.node.base_gripper_point
+
 
     def get_head_rgb_image(self):
 
