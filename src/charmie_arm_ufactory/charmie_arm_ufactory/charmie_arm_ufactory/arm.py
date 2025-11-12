@@ -223,6 +223,11 @@ class ArmUfactory(Node):
 		self.search_table_top_safe_position =		    [-194.9, 69.4, -106.4, 23.2, 71.5, 264.8]
 		self.safe_top_second_joints =                   [-197.5, 85.4, -103.3, 28.7, 109.1, 279.5]
 		self.risky_move_tool =							[0.0, 0.0, -70.0, 0.0, 0.0, 0.0]
+
+		self.plate_grab_first = [0.0, 30.0, -70.0, 0.0, 0.0, 0.0]
+		self.plate_grab_second = [0.0, 50.0, 50.0, -80.0, 0.0, 0.0]
+		self.plate_grab_third = [0.0, 0.0, 74.0, 0.0, 0.0, 0.0]
+		self.plate_grab_fourth = [0.0, -270.0, 20.0, math.radians(-10.0), 0.0, 0.0]
 		### SERVE THE BREAKFAST VARIABLES: ###
 		# height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
 		#Cprint("height_adjust:", height_adjust)
@@ -641,6 +646,13 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
+	def initial_position_to_ask_for_objects_slow(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
 	def search_for_objects_to_ask_for_objects(self):
 		match self.estado_tr:
 			case 0:
@@ -796,16 +808,12 @@ class ArmUfactory(Node):
 	def initial_pose_to_place_front(self):
 		match self.estado_tr:
 			case 0:
-				self.set_gripper_speed_(speed=5000)
-			case 1:
-				self.set_gripper_position_(pos=0, wait=True)
-			case 2:
 				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
-			case 3:
+			case 1:
 				self.set_joint_values_(angles=self.initial_position_to_safe_joints, speed=25, wait=True) 
-			case 4:
+			case 2:
 				self.set_position_values_(pose=self.safe_to_placing_linear, speed=100, wait=True)
-			case 5:
+			case 3:
 				self.finish_arm_movement_()
 			
 	def place_front_to_initial_pose(self):
@@ -866,11 +874,29 @@ class ArmUfactory(Node):
 	def search_table_to_initial_pose_top(self):
 		match self.estado_tr:
 			case 0:
-				self.set_joint_values_(angles=self.safe_top_second_joints, speed=25, wait_for_end_of=True)
+				self.set_joint_values_(angles=self.safe_top_second_joints, speed=25, wait=True)
 			case 1:
 				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
 			case 2:
 				self.finish_arm_movement_()
+
+	def pick_plate_top(self):
+		match self.estado_tr:
+			case 0:	
+				self.set_tool_position_values_(pose = self.plate_grab_first, speed = 60, wait=True)
+			case 1:
+				self.set_tool_position_values_(pose = self.plate_grab_second, speed = 60, wait=True)
+			case 2:
+				self.set_gripper_position_(pos=900, wait=True)     
+			case 3:
+				self.set_tool_position_values_(pose = self.plate_grab_third, speed = 60, wait=True)
+			case 4:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 5:
+				self.set_tool_position_values_(pose = self.plate_grab_fourth, speed = 60, wait=True)
+			case 6:
+				self.finish_arm_movement_()
+
 
 	### SERVE THE BREAKFAST ARM MOVEMENTS ###
 
@@ -1217,6 +1243,8 @@ class ArmUfactory(Node):
 
 			case "initial_position_to_ask_for_objects":
 				self.initial_position_to_ask_for_objects()
+			case "initial_position_to_ask_for_objects_slow":
+				self.initial_position_to_ask_for_objects_slow()
 			case "ask_for_objects_to_initial_position":
 				self.ask_for_objects_to_initial_position()
 			case "initial_position_to_search_for_objects":
@@ -1312,6 +1340,8 @@ class ArmUfactory(Node):
 				self.initial_pose_to_search_table_top_risky()
 			case "search_table_top_risky_to_initial_pose":
 				self.search_table_top_risky_to_initial_pose()
+			case "pick_plate_top":
+				self.pick_plate_top()
 			
 			# if there is an error regarding a movement
 			case _:

@@ -444,10 +444,24 @@ class TaskMain():
                     #final_x = (1.075 - self.furniture_z - (self.object_z/1.5)) * 1000  
 
                     #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_start_position, wait_for_end_of=True)
-                    if self.object_name != "Bowl":
+                    if self.object_name == "Plate":
+                        _ , _ , furniture_plate_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+                        
+                        plate_place_first = [-194.3, 82.8, -86.6, 29.6, 69, 272.4]
+                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)
+                        plate_place_second = [-199.1, 34.3, -49.3, 159.7, 72.4, 180.8]
+                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_second, wait_for_end_of=True)
+
+                    elif self.object_name != "Bowl":
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+
+                    
+
+                        #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                        #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
                     top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
                     bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
@@ -455,7 +469,9 @@ class TaskMain():
                     gripper_place_position = self.robot.get_gripper_localization()
 
                     _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
-                    dx = furniture_distance - 0.15
+                    dx = furniture_distance - 0.05
+                    if self.object_name == "Plate":
+                        dx = furniture_plate_distance - 0.03
                     dy = 0.0
                     
 
@@ -506,7 +522,24 @@ class TaskMain():
                         self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
                         self.robot.set_arm(command="arm_go_rest", wait_for_end_of=True)
 
-                        
+                    elif self.object_name == "Plate":
+                            final_x = (gripper_place_position.z - self.selected_height - 0.10)*1000
+                            rise_x = - final_x - 50 
+
+                            self.safe_place_final = [0.0 , final_x , 20.0 , 0.0 , 0.0 , 0.0]
+                            self.safe_rise_gripper = [0.0 , rise_x , -50.0 , -70.0 , -50.0 , -50.0]  
+
+                            self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=False)
+
+                            time.sleep(0.5)
+                            self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                            time.sleep(0.5)
+
+                            self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+
+                            self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
+                            self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)
+                            self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)  
 
                     else:
                         final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
