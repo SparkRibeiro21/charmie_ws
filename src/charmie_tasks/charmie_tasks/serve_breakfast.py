@@ -118,7 +118,7 @@ class TaskMain():
         self.look_table_objects = [-45, -45]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
-        self.state = self.task_states["Waiting_for_task_start"]
+        self.state = self.task_states["Move_dishes_location"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -131,8 +131,8 @@ class TaskMain():
 
                 self.robot.set_initial_position(self.initial_position)
                 
-                print("SET INITIAL POSITION")
-                print("GET_MILK:", self.GET_MILK, "GET_CORNFLAKES:", self.GET_CORNFLAKES, "GET_DISHES:", self.GET_DISHES)
+                # print("SET INITIAL POSITION")
+                # print("GET_MILK:", self.GET_MILK, "GET_CORNFLAKES:", self.GET_CORNFLAKES, "GET_DISHES:", self.GET_DISHES)
         
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
@@ -181,6 +181,7 @@ class TaskMain():
                             self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True) """
 
                     self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
+                    ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 self.state = self.task_states["Move_cornflakes_location"]
@@ -221,6 +222,7 @@ class TaskMain():
                             self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True) """
 
                     self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
+                    ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 self.state = self.task_states["Move_dishes_location"]
@@ -246,15 +248,12 @@ class TaskMain():
 
                 if self.GET_DISHES:
 
-                    _,_ = self.robot.pick_object_risky(selected_object="Spoon")
+                    _,_ = self.robot.pick_object_risky(selected_object="Spoon", return_arm_to_initial_position=False)
                     
-                    time.sleep(0.5)
-                    self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
-                    time.sleep(0.5)
-                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                    self.robot.set_arm(command="collect_spoon_to_tray_funilocopo_v4", wait_for_end_of=True)
 
+                    # just for safety, robot will propably never use this
                     self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl"))), wait_for_end_of=True)
-
 
                     _,_ = self.robot.pick_object_risky(selected_object="Bowl")
                     
@@ -295,11 +294,10 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
 
-                # must be removed after the update to minimize as much as possivle the final orientation error 
                 move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))                
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
 
-                self.robot.adjust_obstacles(distance=0.3, direction=-45.0)
+                self.robot.adjust_obstacles(distance=0.3, direction=-45.0, wait_for_end_of=False)
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
@@ -345,7 +343,7 @@ class TaskMain():
             elif self.state == self.task_states["Placing_spoon"]:
 
                 if self.GET_DISHES:
-                    self.robot.place_object(arm_command="place_spoon_table_funilocopo_v2", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                    self.robot.place_object(arm_command="place_spoon_table_funilocopo_v4", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                 
                 self.state = self.task_states["Final_State"]
 
