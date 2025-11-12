@@ -345,8 +345,8 @@ class ArmUfactory(Node):
 		# funilocopo v4
 		self.joints_above_funilocopov4 = 				[-196.2,   73.6,  -59.1,  -73.7,   85.5,   286.2]
 		self.linear_above_funilocopov4_for_place = 		[-102.7,  293.1, -115.1, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
-		self.linear_above_funilocopov4_for_pick = 		[-119.3,  407.1, -114.4, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
-		self.linear_above_funilocopov4_for_pick_aux = 	[-275.1,  407.1, -114.4, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_above_funilocopov4_for_pick = 		[-119.3,  387.1, -114.4, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_above_funilocopov4_for_pick_aux = 	[-275.1,  387.1, -114.4, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
 		self.linear_at_funilocopov4_for_place = 		[-102.7,  425.0, -115.1, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
 		self.linear_at_funilocopov4_for_pick = 			[-125.2,  444.1, -114.5, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
 		
