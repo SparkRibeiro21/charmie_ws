@@ -76,11 +76,11 @@ class TaskMain():
 
 
         #self.place_furniture = "Office Table"
-        self.home_furniture = "Entrance"        
+        self.home_furniture = "Pantry"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
-        self.GET_HEAR = False
+        self.GET_HEAR = True
 
         #Furniture which we cannot place with place_front
 
@@ -151,7 +151,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "7Up"
+                    self.object_name = "Plate"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
@@ -159,7 +159,7 @@ class TaskMain():
                     # selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_furniture)
 
-                    self.place_furniture = "Coffee Table"
+                    self.place_furniture = "Dinner Table"
 
                     self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
 
@@ -471,7 +471,7 @@ class TaskMain():
                     _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
                     dx = furniture_distance - 0.05
                     if self.object_name == "Plate":
-                        dx = furniture_plate_distance - 0.03
+                        dx = furniture_plate_distance - 0.06
                     dy = 0.0
                     
 
@@ -527,7 +527,8 @@ class TaskMain():
                             rise_x = - final_x - 50 
 
                             self.safe_place_final = [0.0 , final_x , 20.0 , 0.0 , 0.0 , 0.0]
-                            self.safe_rise_gripper = [0.0 , rise_x , -50.0 , -70.0 , -50.0 , -50.0]  
+                            self.safe_rise_gripper = [0.0 , -10.0 , 0.0 , -80.0 , 0.0 , 0.0]  
+                            self.safe_pull_gripper = [0.0 , 0.0 , -40.0 , 0.0 , 0.0 , 0.0]  
 
                             self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=False)
 
@@ -536,6 +537,7 @@ class TaskMain():
                             time.sleep(0.5)
 
                             self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                            self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_pull_gripper, wait_for_end_of=True)
 
                             self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
                             self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)

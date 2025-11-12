@@ -4953,7 +4953,7 @@ class RobotStdFunctions():
                 self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Could not bring object to initial pose")
 
-    def pick_object_risky(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", navigation = True, search_with_head_camera = True, return_arm_to_initial_position = True):
+    def pick_object_risky(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", navigation = True, search_with_head_camera = True, return_arm_to_initial_position = ""):
 
         ###########
         # Inputs:
@@ -5368,10 +5368,12 @@ class RobotStdFunctions():
                         self.set_neck([0.0,0.0],wait_for_end_of=False)
 
                     #MOVE ARM TO INITIAL POSITION
-                    if return_arm_to_initial_position:
+                    if return_arm_to_initial_position == "":
                         self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
                     else:
-                        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                        if obj.object_name != "plate":    
+                            self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
 
                 elif pick_mode == "top":
                     if obj.object_name != "plate":
@@ -5384,7 +5386,7 @@ class RobotStdFunctions():
 
                             time.sleep(1.2)
                             plate_x_ = self.get_base_gripper_localization()
-                            plate_adjust_x_ = 0.27 - plate_x_.x
+                            plate_adjust_x_ = 0.295 - plate_x_.x
 
                             print("Reverse X:", plate_adjust_x_, " Reverse y: 0.0", )
                             self.adjust_omnidirectional_position(dx = plate_adjust_x_, dy = 0.0, wait_for_end_of=True)
@@ -5437,7 +5439,7 @@ class RobotStdFunctions():
                         self.ask_help_pick_object_gripper(object_d=final_objects[0])
                         self.set_neck([0.0,0.0],wait_for_end_of=False)
                     
-                    if return_arm_to_initial_position:
+                    if return_arm_to_initial_position == "":
                         self.set_arm(command="search_table_top_risky_to_initial_pose", wait_for_end_of=True)
                         #self.set_arm(command="adjust_joint_motion", joint_motion_values = safe_top_second_joints, wait_for_end_of=True)
                         #self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
@@ -5445,10 +5447,17 @@ class RobotStdFunctions():
                             pass
 
                     else:
-                        self.set_arm(command="initial_position_to_ask_for_objects_slow", wait_for_end_of=True)
-                        while not self.adjust_omnidirectional_position_is_done():
-                            pass
-                    
+                        if obj.object_name == "spoon" or obj.object_name == "knife" or obj.object_name == "fork":    
+                            ###
+                            self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
+                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            while not self.adjust_omnidirectional_position_is_done():
+                                pass
+                        else:
+                            self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            while not self.adjust_omnidirectional_position_is_done():
+                                pass
                     #self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
                     #self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)            
                 

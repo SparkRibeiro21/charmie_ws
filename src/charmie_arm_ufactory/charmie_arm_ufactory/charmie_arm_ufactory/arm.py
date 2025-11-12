@@ -854,11 +854,11 @@ class ArmUfactory(Node):
 			# 	self.set_gripper_speed_(speed=5000)
 			# case 1:
 			# 	self.set_gripper_position_(pos=0, wait=True)
+			#case 0:
+				#self.set_joint_values_(angles=self.safe_risky_begin_joints, speed=30, wait=True)
 			case 0:
-				self.set_joint_values_(angles=self.safe_risky_begin_joints, speed=30, wait=True)
-			case 1:
 				self.set_joint_values_(angles=self.search_table_top_risky_joints, speed=30, wait=True)
-			case 2:
+			case 1:
 				self.finish_arm_movement_()	
 
 	def search_table_top_risky(self):
@@ -932,19 +932,19 @@ class ArmUfactory(Node):
 	def collect_spoon_to_tray_funilocopo_v4(self):
 		match self.estado_tr:
 			case 0:
-				self.set_joint_values_(angles=self.joints_above_funilocopov4, speed=25, wait=True)
+				self.set_joint_values_(angles=self.joints_above_funilocopov4, speed=60, wait=True)
 			case 1:
-				self.set_position_values_(pose=self.linear_at_funilocopov4_for_place, speed=120, wait=True)
+				self.set_position_values_(pose=self.linear_at_funilocopov4_for_place, speed=150, wait=True)
 			case 2:
 				self.set_gripper_speed_(speed=1000)
 			case 3:
 				self.set_gripper_position_(pos=400, wait=True)
 			case 4:
-				self.set_position_values_(pose=self.linear_above_funilocopov4_for_place, speed=120, wait=True)
+				self.set_position_values_(pose=self.linear_above_funilocopov4_for_place, speed=150, wait=True)
 			case 5:
 				self.set_gripper_position_(pos=0, wait=False)
 			case 6:
-				self.set_joint_values_(angles=self.initial_position_joints, speed=40, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints, speed=60, wait=True)
 			case 7:
 				self.finish_arm_movement_()
 
@@ -1249,30 +1249,28 @@ class ArmUfactory(Node):
 	def place_spoon_table_funilocopo_v4(self):
 		match self.estado_tr:
 			case 0:
-				self.set_joint_values_(angles=self.joints_above_funilocopov4, speed=50, wait=True)
+				self.set_joint_values_(angles=self.joints_above_funilocopov4, speed=60, wait=True)
 			case 1:
-				self.set_position_values_(pose=self.linear_at_funilocopov4_for_pick, speed=120, wait=True)
+				self.set_position_values_(pose=self.linear_at_funilocopov4_for_pick, speed=200, wait=True)
 			case 2:
-				self.set_gripper_speed_(speed=1000)
+				self.set_gripper_speed_(speed=5000)
 			case 3:
 				self.set_gripper_position_(pos=0, wait=True)
 			case 4:
-				self.set_position_values_(pose=self.linear_above_funilocopov4_for_pick, speed=120, wait=True)
+				self.set_position_values_(pose=self.linear_above_funilocopov4_for_pick, speed=200, wait=True)
 			case 5:
-				self.set_position_values_(pose=self.linear_above_funilocopov4_for_pick_aux, speed=120, wait=True)
+				self.set_position_values_(pose=self.linear_above_funilocopov4_for_pick_aux, speed=200, wait=True)
 			case 6:
-				self.set_joint_values_(angles=self.joints_pre_place_table_funilocopo_v2, speed=50, wait=True)
+				self.set_joint_values_(angles=self.joints_pre_place_table_funilocopo_v2, speed=60, wait=True)
 			case 7:
-				self.set_position_values_(pose=self.place_spoon_in_table_funilocopo_v2, speed=120, wait=True)
+				self.set_position_values_(pose=self.place_spoon_in_table_funilocopo_v2, speed=200, wait=True)
 			case 8:
 				self.set_gripper_position_(pos=300, wait=True)
 			case 9:
-				self.set_position_values_(pose=self.step_away_from_table_funilocopo_v2, speed=120, wait=True)
+				self.set_position_values_(pose=self.step_away_from_table_funilocopo_v2, speed=200, wait=True)
 			case 10:
-				self.set_gripper_speed_(speed=5000)
-			case 11:
 				self.set_gripper_position_(pos=0, wait=False)
-			case 12:
+			case 11:
 				self.finish_arm_movement_()
 
 	def arm_go_rest(self):
