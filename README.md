@@ -10,6 +10,7 @@
 * [Project Description :book:](#book-project-description)
 * [Requirements :rocket:](#rocket-requirements)
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
+  * [RoboCup@Home 2026 :kr:](#robocuphome-2026-kr)
   * [RoboCup@Home 2025 :brazil:](#robocuphome-2025-brazil)
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
@@ -51,11 +52,11 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ## :robot: RoboCup@Home Qualification Videos
 
-### RoboCup@Home 2026 :brazil:
+### RoboCup@Home 2026 :kr:
 
 [![Video Title](https://img.youtube.com/vi/tgTzuuzeos8/0.jpg)](https://www.youtube.com/watch?v=tgTzuuzeos8)
 
-[Youtube Link for 2025 Qualification Video](https://m.youtube.com/watch?v=tgTzuuzeos8)
+[Youtube Link for 2026 Qualification Video](https://m.youtube.com/watch?v=tgTzuuzeos8)
 
 ### RoboCup@Home 2025 :brazil:
 
@@ -175,6 +176,10 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ## :bookmark_tabs: Team Description Papers
 
+  ### LAR@Home 2026 Team Description Paper
+  
+  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15178542.svg)](https://doi.org/10.5281/zenodo.15178542)
+  
   ### LAR@Home 2025 Team Description Paper
   
   [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15178542.svg)](https://doi.org/10.5281/zenodo.15178542)

@@ -474,12 +474,12 @@ class ROS2TaskNode(Node):
 
         self.adjust_omni_navigation_handle_ = None
         self.adjust_omni_navigation_accepted = None
-        self.adjust_omni_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_omni_navigation_feedback = AdjustNavigationOmnidirectional.Feedback()
         self.adjust_omni_navigation_status = GoalStatus.STATUS_UNKNOWN
 
         self.adjust_obstacle_navigation_handle_ = None
         self.adjust_obstacle_navigation_accepted = None
-        self.adjust_obstacle_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_obstacle_navigation_feedback = AdjustNavigationObstacles.Feedback()
         self.adjust_obstacle_navigation_status = GoalStatus.STATUS_UNKNOWN
 
         self.current_odom_pose = None
