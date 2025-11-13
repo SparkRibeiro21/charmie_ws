@@ -124,7 +124,8 @@ class TaskMain():
         self.detected_customers = []
         self.DETECTED_CUSTOMER_INDEX = 0
         #try self.all_orders = []
-        self.all_orders = ["Mustard","7up", "Apple"]
+        self.all_orders = ["Sugar","7Up", "Strawberry"]
+        # self.all_orders = ["Mustard","Cola", "Pringles"]
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -516,6 +517,7 @@ class TaskMain():
                 #try
                 counter = len(self.all_orders) - 1
                 #try for o in current_order:
+                list_of_objects_detected_as = [[]]  
                 for o in self.all_orders:
                     #try self.robot.pick_object(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position=False)
 
@@ -523,10 +525,14 @@ class TaskMain():
                         case 0:
                             picked_height_0,asked_help_0 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
                         case 1:
-                            picked_height_1,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position="collect_milk_to_tray")
+                            #if o == "7up":
+                                #list_of_objects_detected_as = [["Tuna"]]  
+                            picked_height_1,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position="collect_milk_to_tray",list_of_objects_detected_as=list_of_objects_detected_as)
                             self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                         case 2:
-                            picked_height_2,asked_help_2 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position="collect_cornflakes_to_tray")
+                            if o == "Sugar":
+                                list_of_objects_detected_as = [["Strawberry Jello"]]
+                            picked_height_2,asked_help_2 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position="collect_cornflakes_to_tray", list_of_objects_detected_as=list_of_objects_detected_as)
                             self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                     counter-=1
@@ -561,20 +567,34 @@ class TaskMain():
                 print("LIST: ", self.all_orders)
 
                 for o in self.all_orders:
+
                     match counter:
                         case 0:
                             self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_0,asked_help=asked_help_0)
                         case 1:
-                            # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
-                            self.robot.set_arm(command="milk_tray_location_grab", wait_for_end_of=True)
-                            self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=0.13,asked_help=asked_help_1)
+                            if o == "7up":
+                                # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
+                                self.robot.set_arm(command="milk_tray_location_grab", wait_for_end_of=True)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=0.0,asked_help=asked_help_1)
+                            else:
+                                # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
+                                self.robot.set_arm(command="milk_tray_location_grab", wait_for_end_of=True)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=-0.12,asked_help=asked_help_1)
+                    
                         case 2:
-                            # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
-                            self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
-                            self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = 0.26,asked_help=asked_help_2)
+                            if o == "Sugar":
+                                # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
+                                self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = -0.12,asked_help=asked_help_2)
+                            else:
+                                # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
+                                self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = -0.24,asked_help=asked_help_2)
                             
 
                     counter+=1
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
 
                 ### INVERT LIST ORDER
                 ### PLACE OBJECTS ON TABLE - FROM AUTO PICK DEMONSTRATION
