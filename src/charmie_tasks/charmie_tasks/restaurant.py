@@ -134,8 +134,7 @@ class TaskMain():
         self.look_table_objects = [-45, -45]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
-        self.state = self.task_states["Collect_order_from_barman"]
-        # self.state = self.task_states["Receive_order"]        
+        self.state = self.task_states["Waiting_for_task_start"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -168,7 +167,8 @@ class TaskMain():
                 ### AFTER X AMOUNT OF TIMES, SHOULD HAVE A LPAN B THAT WORKS 100% OF THE TIMES, EITHER BY DEFAULT OR ASK BARMAN TO PRESS SOMETHING ON THE SCREEN
 
 
-                tetas = [[180, 0], [90, 0], [-90, 0]]
+                # tetas = [[180, 0], [90, 0], [-90, 0]]
+                tetas = [[90, 0], [-90, 0]]
                 barman = []
 
                 # Check for people BACK, LEFT and RIGHT, to figure out who is the barman
@@ -252,7 +252,8 @@ class TaskMain():
                     if len(customers_list) > 0:
                         # moves back to barman and looks at barman
                         # try self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True) 
-                        self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(pick_furniture.replace(" ","_").lower()), wait_for_end_of=True)
+                        
+                        ###self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(pick_furniture.replace(" ","_").lower()), wait_for_end_of=True)
 
                         self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
 
@@ -265,6 +266,7 @@ class TaskMain():
                             time.sleep(3.0)
                             self.robot.set_speech(filename="restaurant/is_person_customer", wait_for_end_of=True)
                             answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], speak_results=False)
+                            self.robot.set_face("charmie_face", wait_for_end_of=False)
                             print("ANSWER:", answer)
                             if answer == ["yes"]:
                                 self.robot.set_speech(filename="restaurant/added_person_as_customer", wait_for_end_of=True)
