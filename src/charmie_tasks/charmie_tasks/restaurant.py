@@ -63,7 +63,6 @@ class TaskMain():
         self.task_states ={
             "Waiting_for_task_start":           0,
             "Looking_for_barman":               1,
-
             "Detecting_waving_customers":       2,
             "Approach_customer":                3,
             "Receive_order":                    4,
@@ -72,7 +71,6 @@ class TaskMain():
             "Approch_customer_with_order":      7,
             "Deliver_order":                    8,
             "Move_to_barman_after_delivery":    9,
-
             "Final_State":                      10,
         }
 
@@ -89,8 +87,8 @@ class TaskMain():
 
         # Initial Position
 
-        #try self.initial_position = [0.0, 0.0, 0.0]
-        self.initial_position = [ 5.70,  3.62, 270.0]
+        self.initial_position = [0.0, 0.0, 0.0]
+        # self.initial_position = [ 5.70,  3.62, 270.0]
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         print(self.initial_position)
         
@@ -135,8 +133,8 @@ class TaskMain():
         self.look_table_objects = [-45, -45]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
-        # self.state = self.task_states["Waiting_for_task_start"]
-        self.state = self.task_states["Waiting_for_task_start"]        
+        self.state = self.task_states["Collect_order_from_barman"]
+        # self.state = self.task_states["Receive_order"]        
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -160,7 +158,7 @@ class TaskMain():
                 time.sleep(3.0) # time for person who pressen start button leave to not be shown in qualif video
 
                 #try
-                self.state = self.task_states["Collect_order_from_barman"]
+                self.state = self.task_states["Looking_for_barman"]
                 
 
             elif self.state == self.task_states["Looking_for_barman"]:
@@ -176,26 +174,30 @@ class TaskMain():
                 while not barman:
                     self.robot.set_speech(filename="restaurant/search_barman", wait_for_end_of=True)
                     
-                    people_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True, only_detect_person_right_in_front=True)
+                    people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True) ### , only_detect_person_right_in_front=True)
 
                     print("FOUND:", len(people_found)) 
-                    for p in people_found.people:
-                        barman.append(p)
+                    for p in people_found:
+
+                        dist_to_robot = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
+                        if 0.1 <= dist_to_robot <= 2.0: # this filters for nearby people
+                            print("DIST:", dist_to_robot)
+                            barman.append(p)
                         
-                        # all below can be commented
-                        self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
-                        print("ID:", p.index)
-                        print('Barman position', p.position_relative)
-                        time.sleep(2.0)
+                            # all below can be commented
+                            self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
+                            print("ID:", p.index)
+                            print('Barman position', p.position_relative)
+                            # time.sleep(2.0)
 
                     # this 'for' can be merged with the previous 'for'
                     for b in barman:
                         self.robot.set_neck_coords(position=[b.position_absolute.x, b.position_absolute.y, b.position_absolute.z], wait_for_end_of=True)
 
-                        self.robot.set_speech(filename="confirm_barman_touchscreen", wait_for_end_of=True)
-                        answer = self.robot.set_face_touchscreen_menu(custom_options=["yes", "no"], timeout=10, instruction="Are you the barman?", speak_results=True, wait_for_end_of=True)
+                        self.robot.set_speech(filename="restaurant/confirm_barman_touchscreen", wait_for_end_of=True)
+                        answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], timeout=10, instruction="Are you the barman?", speak_results=False, wait_for_end_of=True)
 
-                        if answer == "yes":
+                        if answer == ["yes"]:
                             ### calculate barman angle and position to me 
                             self.BARMAN_NAV_COORDS[2] = 0.0 ### CALCULATE ANGLE TO BARMAN, SO WHEN WE COME BACK WE ARE ALREADY FACING THE BARMAN
                             self.BARMAN_COORDS = [b.position_absolute.x, b.position_absolute.y, b.position_absolute.z]
@@ -225,10 +227,10 @@ class TaskMain():
             
                 while not self.detected_customers:
 
-                    customers_found = self.robot.search_for_person(tetas=tetas, delta_t=2.0, only_detect_person_arm_raised=True)
+                    customers_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
 
                     print("FOUND:", len(customers_found)) 
-                    for p in customers_found.people:
+                    for p in customers_found:
 
                         dist_to_robot = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
                         if 0.5 <= dist_to_robot <= 6.0: # this filters some errors from very far away customers
@@ -344,12 +346,15 @@ class TaskMain():
                 self.robot.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
                 self.robot.set_neck_coords(position=self.CUSTOMER_COORDS, wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/please_answer_robot_yes_no", wait_for_end_of=True)
 
                 customer_has_order = False
                 customer_has_order_ctr = 0
                 max_asks_customer_has_order = 5
                 while not customer_has_order:
                     customer_has_order_ctr+= 1
+
+                    ##### ADD TOUCHSCREEN LOGIC TO CHECK IF CUSTOMER HAS ORDER
 
                     # "Do you have an order?"
                     confirmation = self.robot.get_audio(yes_or_no=True, question="restaurant/have_an_order", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
@@ -380,7 +385,7 @@ class TaskMain():
 
                     order_received = False
                     order_received_ctr = 0
-                    max_asks_audio_order_received = 1
+                    max_asks_audio_order_received = 5
                     max_asks_touchscreen_order_received = 2
                     while not order_received:
                         order_received_ctr+=1
@@ -483,24 +488,27 @@ class TaskMain():
 
             elif self.state == self.task_states["Collect_order_from_barman"]:
 
-                self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
+                # self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
 
                 ##### SPEAK: Barman, please give me the following items:
                 self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
 
                 current_order = []
                 for pedido in self.all_orders:
-                    for elemento in pedido:
-                        # Define o nome do arquivo correspondente ao elemento
-                        filename = "objects_names/" + elemento.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
-                        
-                        current_order.append(elemento.lower().replace(" ", "_"))
 
-                        # SPEAK: Diz o elemento do pedido
-                        self.robot.set_speech(filename=filename, wait_for_end_of=True)
+                    # Define o nome do arquivo correspondente ao elemento
+                    filename = "objects_names/" + pedido.lower().replace(" ", "_")  # Supondo que os arquivos estejam na pasta "restaurant" e tenham o mesmo nome que os elementos em minúsculas
+                    
+                    current_order.append(pedido.lower().replace(" ", "_"))
 
+                    # SPEAK: Diz o pedido
+                    self.robot.set_speech(filename=filename, wait_for_end_of=True)
+
+                time.sleep(1.0)
                 #### SPEAK: please place these object on the bar counter
                 self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table", wait_for_end_of=True)
+                time.sleep(1.0)
+                self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table_how_to", wait_for_end_of=True)
 
                 # try time.sleep(10.0)
 
