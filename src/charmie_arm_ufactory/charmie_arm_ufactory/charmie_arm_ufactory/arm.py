@@ -815,13 +815,13 @@ class ArmUfactory(Node):
 	### PLACE OBJECT FRONT###
 	def initial_pose_to_place_front(self):
 		match self.estado_tr:
+			# case 0:
+				# self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
 			case 0:
-				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
-			case 1:
 				self.set_joint_values_(angles=self.initial_position_to_safe_joints, speed=25, wait=True) 
-			case 2:
+			case 1:
 				self.set_position_values_(pose=self.safe_to_placing_linear, speed=100, wait=True)
-			case 3:
+			case 2:
 				self.finish_arm_movement_()
 			
 	def place_front_to_initial_pose(self):
@@ -1128,6 +1128,41 @@ class ArmUfactory(Node):
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
 			case 6:
 				self.finish_arm_movement_()
+	
+	def milk_tray_location_grab(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.pre_pick_milk_tray_joints, speed=50, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=120, wait=True)
+			case 3:
+				self.set_gripper_speed_(speed=1000)
+			case 4:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.pos_picking_milk_tray, speed=90, wait=True)
+			case 6:
+				self.finish_arm_movement_()
+
+	def cereal_tray_location_grab(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.pre_pick_cereals_tray_joints, speed=60, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.pick_cereals_tray, speed=120, wait=True)
+			case 3:
+				self.set_gripper_speed_(speed=1000)
+			case 4:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.pos_pick_cereals_tray, speed=120, wait=True)
+			case 6:
+				self.finish_arm_movement_()
+
 
 	def pour_milk_bowl(self):
 		match self.estado_tr:
@@ -1386,6 +1421,10 @@ class ArmUfactory(Node):
 				self.initial_pose_to_place_front()
 			case "place_front_to_initial_pose":
 				self.place_front_to_initial_pose()
+			case "milk_tray_location_grab":
+				self.milk_tray_location_grab()
+			case "cereal_tray_location_grab":
+				self.cereal_tray_location_grab()
 
 			# SEARCH FOR OBJECT ON TABLE TOP
 			case "initial_pose_to_search_table_top":
