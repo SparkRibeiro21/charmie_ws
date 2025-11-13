@@ -24,7 +24,7 @@ def generate_launch_description():
         ######################################################################
         # Actuators                                                          #
         ######################################################################
-        # LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
+        LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
         std_lf.arm,
         std_lf.speakers,
         std_lf.neck,

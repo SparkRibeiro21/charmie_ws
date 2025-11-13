@@ -32,8 +32,8 @@ ros2_modules = {
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
     "charmie_tracking":             False,
-    "charmie_yolo_objects":         False,
-    "charmie_yolo_pose":            False,
+    "charmie_yolo_objects":         True,
+    "charmie_yolo_pose":            True,
 }
 
 # main function that already creates the thread for the task state machine
@@ -88,7 +88,9 @@ class TaskMain():
         # self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
 
         # Initial Position
-        self.initial_position = [0.0, 0.0, 0.0]
+
+        #try self.initial_position = [0.0, 0.0, 0.0]
+        self.initial_position = [ 5.70,  3.62, 270.0]
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         print(self.initial_position)
         
@@ -110,6 +112,10 @@ class TaskMain():
         # print("Table Height =", self.SB_TABLE_HEIGHT)
         # # Set the height of the table where breakfast is served, so that the manual arm movements are adapted to this height (placing and pouring)
         # self.robot.set_height_furniture_for_arm_manual_movements(self.SB_TABLE_HEIGHT) #####
+
+        ####ADDED_VARIABLES######
+        place_furniture = "Dishwasher"
+        pick_furniture = "Dinner Table"
         
         self.BARMAN_NAV_COORDS = [0.0, 0.0, 0.0] # x, y, theta
         self.CUSTOMER_NAV_COORDS = [3.0, 3.0, 0.0] # x, y, theta
@@ -119,7 +125,8 @@ class TaskMain():
 
         self.detected_customers = []
         self.DETECTED_CUSTOMER_INDEX = 0
-        self.all_orders = []
+        #try self.all_orders = []
+        self.all_orders = ["Mustard","7up", "Apple"]
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -129,7 +136,7 @@ class TaskMain():
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
         # self.state = self.task_states["Waiting_for_task_start"]
-        self.state = self.task_states["Receive_order"]        
+        self.state = self.task_states["Waiting_for_task_start"]        
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -152,7 +159,8 @@ class TaskMain():
 
                 time.sleep(3.0) # time for person who pressen start button leave to not be shown in qualif video
 
-                self.state = self.task_states["Looking_for_barman"]
+                #try
+                self.state = self.task_states["Collect_order_from_barman"]
                 
 
             elif self.state == self.task_states["Looking_for_barman"]:
@@ -240,7 +248,9 @@ class TaskMain():
 
                     if len(customers_list) > 0:
                         # moves back to barman and looks at barman
-                        self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True) 
+                        # try self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True) 
+                        self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(pick_furniture.replace(" ","_").lower()), wait_for_end_of=True)
+
                         self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
 
                         self.robot.set_speech(filename="restaurant/barman_help_confirm_customers", wait_for_end_of=True)
@@ -300,7 +310,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, wait_for_end_of=True)
+                #try self.robot.move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
@@ -461,7 +472,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True)
+                #try self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(pick_furniture.replace(" ","_").lower()), wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
@@ -490,11 +502,26 @@ class TaskMain():
                 #### SPEAK: please place these object on the bar counter
                 self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table", wait_for_end_of=True)
 
-                time.sleep(10.0)
+                # try time.sleep(10.0)
 
                 tetas = [[0, -45], [-40, -45], [40, -45]]
-                for o in current_order:
-                    self.robot.pick_object(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position=False)
+                #try
+                counter = len(self.all_orders) - 1
+                #try for o in current_order:
+                for o in self.all_orders:
+                    #try self.robot.pick_object(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position=False)
+
+                    match counter:
+                        case 0:
+                            picked_height_0,asked_help_0 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+                        case 1:
+                            picked_height_1,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position="collect_milk_to_tray")
+                            self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                        case 2:
+                            picked_height_2,asked_help_2 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position="collect_cornflakes_to_tray")
+                            self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
+                    counter-=1
 
 
                 # code here ...
@@ -508,7 +535,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, wait_for_end_of=True)
+                #try self.robot.move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
@@ -517,6 +545,28 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Deliver_order"]:
+
+                #try
+
+                counter = 0
+                self.all_orders.reverse()
+                print("LIST: ", self.all_orders)
+
+                for o in self.all_orders:
+                    match counter:
+                        case 0:
+                            self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_0,asked_help=asked_help_0)
+                        case 1:
+                            # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
+                            self.robot.set_arm(command="milk_tray_location_grab", wait_for_end_of=True)
+                            self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=0.13,asked_help=asked_help_1)
+                        case 2:
+                            # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
+                            self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
+                            self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = 0.26,asked_help=asked_help_2)
+                            
+
+                    counter+=1
 
                 ### INVERT LIST ORDER
                 ### PLACE OBJECTS ON TABLE - FROM AUTO PICK DEMONSTRATION
@@ -530,7 +580,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True)
+                #try self.robot.move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(pick_furniture.replace(" ","_").lower()), wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)

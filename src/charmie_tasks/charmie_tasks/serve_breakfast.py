@@ -118,7 +118,7 @@ class TaskMain():
         self.look_table_objects = [-45, -45]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
-        self.state = self.task_states["Move_dishes_location"]
+        self.state = self.task_states["Waiting_for_task_start"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -171,7 +171,7 @@ class TaskMain():
 
                 if self.GET_MILK:
 
-                    self.robot.pick_object_risky(selected_object="Milk", return_arm_to_initial_position=False)
+                    self.robot.pick_object_risky(selected_object="Milk", return_arm_to_initial_position="collect_milk_to_tray")
                         
                     """ object_in_gripper = False
                     while not object_in_gripper:
@@ -180,7 +180,7 @@ class TaskMain():
                         if not object_in_gripper:
                             self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True) """
 
-                    self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
+                    # self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
                     ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
@@ -207,7 +207,7 @@ class TaskMain():
 
                 if self.GET_CORNFLAKES:
 
-                    self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position=False)
+                    self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position="collect_cornflakes_to_tray")
 
                     """ object_in_gripper = False
                     while not object_in_gripper:
@@ -221,7 +221,7 @@ class TaskMain():
                         if not object_in_gripper:
                             self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True) """
 
-                    self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
+                    # self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
                     ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
@@ -248,9 +248,9 @@ class TaskMain():
 
                 if self.GET_DISHES:
 
-                    _,_ = self.robot.pick_object_risky(selected_object="Spoon", return_arm_to_initial_position=False)
+                    _,_ = self.robot.pick_object_risky(selected_object="Spoon", return_arm_to_initial_position="collect_spoon_to_tray_funilocopo_v4")
                     
-                    self.robot.set_arm(command="collect_spoon_to_tray_funilocopo_v4", wait_for_end_of=True)
+                    # self.robot.set_arm(command="collect_spoon_to_tray_funilocopo_v4", wait_for_end_of=True)
 
                     # just for safety, robot will propably never use this
                     self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl"))), wait_for_end_of=True)
@@ -258,7 +258,8 @@ class TaskMain():
                     _,_ = self.robot.pick_object_risky(selected_object="Bowl")
                     
                     """ object_in_gripper = False
-                    correct_object_bowl = DetectedObject()
+                    correct_object_
+bowl = DetectedObject()
                     correct_object_spoon = DetectedObject()
                     while not object_in_gripper:
 

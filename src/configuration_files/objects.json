@@ -43,7 +43,7 @@
 {"name": "Cheezit", 		"class": "Snacks",		"width": 0.245, "length": 0.065, "height": 0.126, "shape": "cuboid", "can_pick": "both", "std_pick": "front"},
 
 {"name": "Spoon", 		    "class": "Dishes",		"width": 0.018, "length": 0.192, "height": 0.018, "shape": "cylinder", "can_pick": "top", "std_pick": "top"},
-{"name": "Plate", 		    "class": "Dishes",		"width": 0.257, "length": 0.257, "height": 0.028, "shape": "cylinder", "can_pick": "front", "std_pick": "front"},
+{"name": "Plate", 		    "class": "Dishes",		"width": 0.257, "length": 0.257, "height": 0.028, "shape": "cylinder", "can_pick": "top", "std_pick": "top"},
 {"name": "Cup", 		    "class": "Dishes",		"width": 0.081, "length": 0.081, "height": 0.058, "shape": "special", "can_pick": "both", "std_pick": "top"},
 {"name": "Fork", 		    "class": "Dishes",		"width": 0.018, "length": 0.195, "height": 0.013, "shape": "cylinder", "can_pick": "top", "std_pick": "top"},
 {"name": "Bowl", 		    "class": "Dishes",		"width": 0.160, "length": 0.160, "height": 0.048, "shape": "special", "can_pick": "top", "std_pick": "top"},
