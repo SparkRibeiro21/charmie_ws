@@ -1132,35 +1132,39 @@ class ArmUfactory(Node):
 	def milk_tray_location_grab(self):
 		match self.estado_tr:
 			case 0:
-				self.set_gripper_position_(pos=900, wait=True)
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
 			case 1:
-				self.set_joint_values_(angles=self.pre_pick_milk_tray_joints, speed=50, wait=True)
+				self.set_gripper_position_(pos=900, wait=True)
 			case 2:
-				self.set_position_values_(pose=self.place_milk_in_tray, speed=120, wait=True)
+				self.set_joint_values_(angles=self.pre_pick_milk_tray_joints, speed=50, wait=True)
 			case 3:
-				self.set_gripper_speed_(speed=1000)
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=120, wait=True)
 			case 4:
-				self.set_gripper_position_(pos=0, wait=True)
+				self.set_gripper_speed_(speed=1000)
 			case 5:
-				self.set_position_values_(pose=self.pos_picking_milk_tray, speed=90, wait=True)
+				self.set_gripper_position_(pos=0, wait=True)
 			case 6:
+				self.set_position_values_(pose=self.pos_picking_milk_tray, speed=90, wait=True)
+			case 7:
 				self.finish_arm_movement_()
 
 	def cereal_tray_location_grab(self):
 		match self.estado_tr:
 			case 0:
-				self.set_gripper_position_(pos=900, wait=True)
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
 			case 1:
-				self.set_joint_values_(angles=self.pre_pick_cereals_tray_joints, speed=60, wait=True)
+				self.set_gripper_position_(pos=900, wait=True)
 			case 2:
-				self.set_position_values_(pose=self.pick_cereals_tray, speed=120, wait=True)
+				self.set_joint_values_(angles=self.pre_pick_cereals_tray_joints, speed=60, wait=True)
 			case 3:
-				self.set_gripper_speed_(speed=1000)
+				self.set_position_values_(pose=self.pick_cereals_tray, speed=120, wait=True)
 			case 4:
-				self.set_gripper_position_(pos=0, wait=True)
+				self.set_gripper_speed_(speed=1000)
 			case 5:
-				self.set_position_values_(pose=self.pos_pick_cereals_tray, speed=120, wait=True)
+				self.set_gripper_position_(pos=0, wait=True)
 			case 6:
+				self.set_position_values_(pose=self.pos_pick_cereals_tray, speed=120, wait=True)
+			case 7:
 				self.finish_arm_movement_()
 
 
