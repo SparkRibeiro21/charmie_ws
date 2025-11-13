@@ -176,6 +176,10 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ## :bookmark_tabs: Team Description Papers
 
+  ### LAR@Home 2026 Team Description Paper
+  
+  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15178542.svg)](https://doi.org/10.5281/zenodo.15178542)
+  
   ### LAR@Home 2025 Team Description Paper
   
   [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15178542.svg)](https://doi.org/10.5281/zenodo.15178542)
