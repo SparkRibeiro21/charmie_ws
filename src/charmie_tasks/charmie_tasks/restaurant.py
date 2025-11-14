@@ -124,8 +124,8 @@ class TaskMain():
         self.detected_customers = []
         self.DETECTED_CUSTOMER_INDEX = 0
         #try self.all_orders = []
-        # self.all_orders = ["Sugar","7Up", "Strawberry"]
-        self.all_orders = ["Mustard","Cola", "Pringles"]
+        self.all_orders = ["7Up", "Strawberry"]
+        # self.all_orders = ["Mustard","Cola", "Pringles"]
 
         # Neck Positions
         self.look_forward = [0, 0]

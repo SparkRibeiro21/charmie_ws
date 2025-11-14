@@ -4860,7 +4860,8 @@ class RobotStdFunctions():
                 #MOVE ARM TO FINAL POSITION
 
                 current_gripper_height = self.get_gripper_localization()
-                height_furniture = self.get_shelf_from_height( object_height = current_gripper_height.z, furniture = self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))
+                height_furniture = 0.87
+                #height_furniture = self.get_shelf_from_height( object_height = current_gripper_height.z, furniture = self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))
                 if (height_furniture >= 0):                                                  
                     picked_height = current_gripper_height.z - height_furniture
                 else:
@@ -5138,7 +5139,8 @@ class RobotStdFunctions():
                     self.set_arm(command="search_front_risky", wait_for_end_of=True)
 
                     gripper_search_height = self.get_gripper_localization().z
-                    height_furniture = self.get_shelf_from_height(object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
+                    height_furniture = 0.87
+                    #height_furniture = self.get_shelf_from_height(object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
                     object_height = self.get_object_height_from_object(valid_detected_object.object_name)
                     adjust_z = (height_furniture + (object_height/2) - gripper_search_height)*1000
 
@@ -5155,7 +5157,7 @@ class RobotStdFunctions():
 
                 if navigation:
                     _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
-                    self.adjust_x_      = furniture_distance - 0.04 
+                    self.adjust_x_      = furniture_distance - 0.15 
 
                     if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
                         self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE   
@@ -5194,7 +5196,8 @@ class RobotStdFunctions():
 
 
                     gripper_position = self.get_gripper_localization()
-                    height_furniture = self.get_shelf_from_height( object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
+                    height_furniture = 0.87
+                    #height_furniture = self.get_shelf_from_height( object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
                     correct_x = (gripper_position.z - tf_x - oh - height_furniture)*1000 - 210
                     print("Gripper Position z: ",gripper_position.z," || Tf_X: ", tf_x, " || OH : ", oh, " || height_furniture", height_furniture, " || Correct_X: ", correct_x )
                     object_position = [0.0, 0.0, correct_x, 0.0, 0.0, 0.0]
@@ -5266,7 +5269,7 @@ class RobotStdFunctions():
 
                 #CALIBRATE GRIPPER BEFORE GRABBING
                 # self.wait_for_start_button()
-                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False, list_of_objects_detected_as=list_of_objects_detected_as)
+                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False, list_of_objects_detected_as=list_of_objects_detected_as)
                 self.set_face(camera="hand", show_detections=True)
                 #self.set_face(camera="hand",show_detections=True,wait_for_end_of=False)
                 
@@ -5329,7 +5332,8 @@ class RobotStdFunctions():
                 #MOVE ARM TO FINAL POSITION
                 current_gripper_height = self.get_gripper_localization()
 
-                height_furniture = self.get_shelf_from_height( object_height = current_gripper_height.z, furniture = self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))
+                height_furniture = 0.87
+                #height_furniture = self.get_shelf_from_height( object_height = current_gripper_height.z, furniture = self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))
                 if (height_furniture >= 0):                              
 
                     picked_height = current_gripper_height.z - height_furniture
