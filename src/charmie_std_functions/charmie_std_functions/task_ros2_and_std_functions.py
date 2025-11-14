@@ -5540,7 +5540,7 @@ class RobotStdFunctions():
 
         if furniture_distance == -1:
 
-            front_base_adjust_x = 0.15
+            front_base_adjust_x = 0.13
             front_base_adjust_y = base_adjust_y
 
             top_base_adjust_x = 0.08

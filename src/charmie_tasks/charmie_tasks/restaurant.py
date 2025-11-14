@@ -116,9 +116,8 @@ class TaskMain():
         pick_furniture = "Dinner Table"
         
         self.BARMAN_NAV_COORDS = [0.0, 0.0, 180.0] # x, y, theta
-        self.CUSTOMER_NAV_COORDS = [0.5, 2.5, 45.0] # x, y, theta
-        self.CUSTOMER2_NAV_COORDS = [2.6, 1.2, 45.0] # x, y, theta
-
+        self.CUSTOMER_NAV_COORDS = [0.0, 3.0, 45.0] # x, y, theta
+        self.CUSTOMER2_NAV_COORDS = [2.5, 1.3, 45.0] # x, y, theta
 
         self.BARMAN_COORDS = [] # x, y, z
         self.CUSTOMER_COORDS = [] # x, y, z
@@ -156,9 +155,12 @@ class TaskMain():
 
                 self.robot.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
 
+                print(self.robot.get_gripper_localization())
+
+
                 self.robot.wait_for_start_button()
 
-                #time.sleep(3.0) # time for person who pressen start button leave to not be shown in qualif video
+                time.sleep(5.0) # time for person who pressen start button leave to not be shown in qualif video
 
                 #try
                 self.state = self.task_states["Looking_for_barman"]
@@ -351,7 +353,9 @@ class TaskMain():
                 # while not order_collected:
 
                 self.robot.set_rgb(command=BLUE+ALTERNATE_QUARTERS)
-                self.robot.set_neck_coords(position=self.CUSTOMER_COORDS, wait_for_end_of=True)
+                # self.robot.set_neck_coords(position=self.CUSTOMER_COORDS, wait_for_end_of=True)
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/please_answer_robot_yes_no", wait_for_end_of=True)
 
@@ -556,6 +560,8 @@ class TaskMain():
 
             elif self.state == self.task_states["Approch_customer_with_order"]:
 
+                self.CUSTOMER_NAV_COORDS[2] = 0.0
+
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
@@ -571,7 +577,6 @@ class TaskMain():
 
             elif self.state == self.task_states["Deliver_order"]:
 
-                #try
 
                 counter = 0
                 self.all_orders.reverse()
@@ -590,17 +595,17 @@ class TaskMain():
                             else:
                                 # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
                                 self.robot.set_arm(command="milk_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=-0.12,asked_help=asked_help_1)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=0.10,asked_help=asked_help_1)
                     
                         case 2:
                             if o == "Sugar":
                                 # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
                                 self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = -0.12,asked_help=asked_help_2)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = -0.10,asked_help=asked_help_2)
                             else:
                                 # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
                                 self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = -0.24,asked_help=asked_help_2)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = 0.20,asked_help=asked_help_2)
                             
 
                     counter+=1
@@ -615,7 +620,7 @@ class TaskMain():
 
             elif self.state == self.task_states["Move_to_barman_after_delivery"]:
 
-                cycle = 1
+                cycle += 1
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
@@ -630,12 +635,15 @@ class TaskMain():
 
                 self.CUSTOMER_NAV_COORDS = self.CUSTOMER2_NAV_COORDS
                         
-                self.state = self.task_states["Detecting_waving_customers"]
-
+                if cycle < 2:
+                    self.state = self.task_states["Approach_customer"]
+                else:
+                    self.state = self.task_states["Final_State"]   
 
             elif self.state == self.task_states["Final_State"]:
 
                 # code here ...
+                self.robot.set_speech(filename="restaurant/finish_restaurant", wait_for_end_of=True)
                 
                 while True:
                     pass

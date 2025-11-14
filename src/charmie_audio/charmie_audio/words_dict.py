@@ -28,7 +28,7 @@ drinks_dict = {
                        "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
                        "peck", "druspek", "drip spec", "juicy pek", "juice but", "respect", " juspe ", "jeez park"],
     "Cola":           ["cola", "coke", "coca", "kola", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold",\
-                        "kohler", "kala", "gola", "kohla"],
+                        "kohler", "kala", "gola", "kohla", "koa"],
     "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
     "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
 	"Iced_Tea":       [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
