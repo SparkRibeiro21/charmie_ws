@@ -123,6 +123,7 @@ class TaskMain():
 
         self.detected_customers = []
         self.DETECTED_CUSTOMER_INDEX = 0
+        cycle = 0
         #try self.all_orders = []
         self.all_orders = ["7Up", "Strawberry"]
         # self.all_orders = ["Mustard","Cola", "Pringles"]
@@ -158,7 +159,7 @@ class TaskMain():
                 time.sleep(3.0) # time for person who pressen start button leave to not be shown in qualif video
 
                 #try
-                self.state = self.task_states["Collect_order_from_barman"]
+                self.state = self.task_states["Looking_for_barman"]
                 
 
             elif self.state == self.task_states["Looking_for_barman"]:
@@ -515,6 +516,10 @@ class TaskMain():
                 # try time.sleep(10.0)
 
                 tetas = [[0, -45], [-40, -45], [40, -45]]
+                if cycle == 0:
+                    self.all_orders = ["7Up", "Strawberry"]
+                else:
+                    self.all_orders = ["Mustard","Cola", "Pringles"]
                 #try
                 counter = len(self.all_orders) - 1
                 #try for o in current_order:
@@ -604,6 +609,8 @@ class TaskMain():
             
 
             elif self.state == self.task_states["Move_to_barman_after_delivery"]:
+
+                cycle = 1
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)

@@ -5157,7 +5157,7 @@ class RobotStdFunctions():
 
                 if navigation:
                     _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
-                    self.adjust_x_      = furniture_distance - 0.15 
+                    self.adjust_x_      = furniture_distance - 0.19 
 
                     if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
                         self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE   
@@ -5518,20 +5518,21 @@ class RobotStdFunctions():
         if place_mode == "":
             place_mode = self.get_standard_pick_from_object(selected_object)
             print("Place 2:", place_mode)
-        furniture_height = self.get_height_from_furniture(furniture)
+        #furniture_height = self.get_height_from_furniture(furniture)
+        furniture_height = 0.77
 
-        if shelf_number < 0:
-            furniture_height =  furniture_height[0]
-
-        elif shelf_number <= len(furniture_height) - 1:
-            furniture_height = furniture_height[shelf_number]
-
-        elif shelf_number > len(furniture_height) -1:
-            furniture_height = furniture_height[len(furniture_height)-1]
-
-        if place_height < 0.0:
-            asked_help = True
-
+        #if shelf_number < 0:
+         #   furniture_height =  furniture_height[0]
+#
+#        elif shelf_number <= len(furniture_height) - 1:
+#            furniture_height = furniture_height[shelf_number]
+#
+#        elif shelf_number > len(furniture_height) -1:
+#            furniture_height = furniture_height[len(furniture_height)-1]
+#
+#        if place_height < 0.0:
+#            asked_help = True
+#
         #### CONSTANTS ####
 
         TOLERANCE_ERROR = 0.02
