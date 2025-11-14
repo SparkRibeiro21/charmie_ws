@@ -87,8 +87,8 @@ class TaskMain():
 
         # Initial Position
 
-        self.initial_position = [0.0, 0.0, 0.0]
-        # self.initial_position = [ 5.70,  3.62, 270.0]
+        # self.initial_position = [0.0, 0.0, 0.0]
+        self.initial_position = [ 5.70,  3.62, 270.0]
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         print(self.initial_position)
         
@@ -112,7 +112,7 @@ class TaskMain():
         # self.robot.set_height_furniture_for_arm_manual_movements(self.SB_TABLE_HEIGHT) #####
 
         ####ADDED_VARIABLES######
-        place_furniture = "Dishwasher"
+        place_furniture = "Dinner Table"
         pick_furniture = "Dinner Table"
         
         self.BARMAN_NAV_COORDS = [0.0, 0.0, 0.0] # x, y, theta
@@ -124,8 +124,8 @@ class TaskMain():
         self.detected_customers = []
         self.DETECTED_CUSTOMER_INDEX = 0
         #try self.all_orders = []
-        self.all_orders = ["Sugar","7Up", "Strawberry"]
-        # self.all_orders = ["Mustard","Cola", "Pringles"]
+        # self.all_orders = ["Sugar","7Up", "Strawberry"]
+        self.all_orders = ["Mustard","Cola", "Pringles"]
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -158,7 +158,7 @@ class TaskMain():
                 time.sleep(3.0) # time for person who pressen start button leave to not be shown in qualif video
 
                 #try
-                self.state = self.task_states["Looking_for_barman"]
+                self.state = self.task_states["Collect_order_from_barman"]
                 
 
             elif self.state == self.task_states["Looking_for_barman"]:
@@ -266,7 +266,6 @@ class TaskMain():
                             time.sleep(3.0)
                             self.robot.set_speech(filename="restaurant/is_person_customer", wait_for_end_of=True)
                             answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], speak_results=False)
-                            self.robot.set_face("charmie_face", wait_for_end_of=False)
                             print("ANSWER:", answer)
                             if answer == ["yes"]:
                                 self.robot.set_speech(filename="restaurant/added_person_as_customer", wait_for_end_of=True)

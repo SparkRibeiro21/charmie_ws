@@ -76,7 +76,7 @@ class TaskMain():
 
 
         #self.place_furniture = "Office Table"
-        self.home_furniture = "Pantry"        
+        self.home_furniture = "Dinner Table"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
@@ -151,7 +151,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "Plate"
+                    self.object_name = "Strawberry"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
@@ -277,7 +277,7 @@ class TaskMain():
                 elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
                     self.tetas = [[0, 0], [0, 15], [0, -35]]
 
-                self.state = self.task_states["Move_to_Location"]
+                self.state = self.task_states["Place_object"]
 
 
 
@@ -310,9 +310,9 @@ class TaskMain():
             elif self.state == self.task_states["Pick_Object"]:
 
                 if self.object_name == "Bowl":
-                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas, return_arm_to_initial_position=False)
+                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas, return_arm_to_initial_position=False, asked_help = True)
                 else:
-                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
+                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas, asked_help = True)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.state = self.task_states["Move_to_place"]
@@ -358,6 +358,8 @@ class TaskMain():
 
                 #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
+
+                asked_help = True
 
                 if self.object_mode == "front":
 
@@ -545,7 +547,7 @@ class TaskMain():
 
                     else:
                         final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
-                        print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
+                        # print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
                         self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
                         self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
 
