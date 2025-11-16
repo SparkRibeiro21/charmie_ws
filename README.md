@@ -54,7 +54,7 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ### RoboCup@Home 2026 :kr:
 
-[![Video Title](https://img.youtube.com/vi/tgTzuuzeos8/0.jpg)](https://www.youtube.com/watch?v=tgTzuuzeos8)
+[![Video Title](https://img.youtube.com/vi/F16jvQuo_jQ/0.jpg)](https://www.youtube.com/watch?v=F16jvQuo_jQ)
 
 [Youtube Link for 2026 Qualification Video](https://m.youtube.com/watch?v=tgTzuuzeos8)
 
