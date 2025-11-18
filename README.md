@@ -78,6 +78,18 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ## :gear: Videos from Previous Events 
 
+### Qualification for RoboCup 2026 :portugal:
+<details>
+  <summary>Click to expand</summary>
+
+  ## Receptionist (RoboCup 2023)
+
+  [![Video Title](https://img.youtube.com/vi/rYzFhlLRpxc/0.jpg)](https://www.youtube.com/watch?v=rYzFhlLRpxc)
+
+  [Youtube Link for Receptionist Task from RoboCup 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
+  
+</details>
+
 ### RoboCup 2024 :netherlands:
 <details>
   <summary>Click to expand</summary>
