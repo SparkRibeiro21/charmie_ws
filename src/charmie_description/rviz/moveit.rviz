@@ -18,7 +18,7 @@ Visualization Manager:
       Name: MotionPlanning
       Planning Request:
         Query Goal State: true
-        Query Start State: true
+        Query Start State: false
         Interactive Marker Size: 0
       Planned Path:
         Loop Animation: false

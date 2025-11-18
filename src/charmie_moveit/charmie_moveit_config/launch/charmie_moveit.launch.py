@@ -109,7 +109,11 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         arguments=['-d', rviz_config_path],
-        parameters=[moveit_config.robot_description_kinematics,],
+        parameters=[
+            moveit_config.robot_description_kinematics,
+            moveit_config.planning_pipelines,
+            moveit_config.sensors_3d,
+        ],
         output='screen'
     )
     
