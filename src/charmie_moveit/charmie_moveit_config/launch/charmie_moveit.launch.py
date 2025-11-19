@@ -23,7 +23,9 @@ def generate_launch_description():
     charmie_moveit_config_share = FindPackageShare('charmie_moveit_config')
 
     # Build MoveIt config
-    moveit_config = MoveItConfigsBuilder("charmie", package_name="charmie_moveit_config").to_moveit_configs()
+    moveit_config = (MoveItConfigsBuilder("charmie", package_name="charmie_moveit_config")
+                     .planning_pipelines("ompl")
+                     .to_moveit_configs())
     
     
     # Define file paths
