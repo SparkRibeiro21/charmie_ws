@@ -15,6 +15,7 @@
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
 * [Videos from Pevious Events :gear:](#gear-videos-from-previous-events)
+  * [Qualification for RoboCup 2026 :portugal:](#qualification-for-robocup-2026-portugal)
   * [RoboCup 2024 :netherlands:](#robocup-2024-netherlands)
   * [RoboCup Portugal Open 2024 :portugal:](#robocup-portugal-open-2024-portugal)
   * [RoboCup 2023 :fr:](#robocup-2023-fr)
