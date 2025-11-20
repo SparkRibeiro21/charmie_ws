@@ -83,11 +83,11 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 <details>
   <summary>Click to expand</summary>
 
-  ## Receptionist (RoboCup 2023)
+  ## Object Manipulation (LAR)
 
-  [![Video Title](https://img.youtube.com/vi/rYzFhlLRpxc/0.jpg)](https://www.youtube.com/watch?v=rYzFhlLRpxc)
+  [![Video Title](https://img.youtube.com/vi/4eXqqikATwc/0.jpg)](https://www.youtube.com/watch?v=4eXqqikATwc)
 
-  [Youtube Link for Receptionist Task from RoboCup 2023](https://m.youtube.com/watch?v=rYzFhlLRpxc)
+  [Youtube Link for CHARMIE Robot Object Manipulation](https://m.youtube.com/watch?v=4eXqqikATwc)
   
 </details>
 
