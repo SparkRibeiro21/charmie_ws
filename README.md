@@ -83,6 +83,12 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 <details>
   <summary>Click to expand</summary>
 
+  ## Restaurant (Desgraça Food and Drinks Restaurant)
+
+  [![Video Title](https://img.youtube.com/vi/eR3xqZmpUa4/0.jpg)](https://www.youtube.com/watch?v=eR3xqZmpUa4)
+
+  [Youtube Link for CHARMIE Robot Works at 'Desgraça Food & Drinks' Restaurant](https://m.youtube.com/watch?v=eR3xqZmpUa4)
+
   ## Serve Breakfast (LAR)
 
   [![Video Title](https://img.youtube.com/vi/sVjJE4G-TqI/0.jpg)](https://www.youtube.com/watch?v=sVjJE4G-TqI)
