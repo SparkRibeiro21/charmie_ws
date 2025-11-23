@@ -246,11 +246,13 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 |RoboCup Portugal Open 2023|-|-|400|-|-|-|400|-|-|-|-|0|400|
 
 
-## :technologist: Contributors:
+## :technologist: Contributors
 
 <a href="https://github.com/SparkRibeiro21/charmie_ws"> 
   <img src="https://contrib.rocks/image?repo=SparkRibeiro21/charmie_ws" alt="contrib.rocks image" />
 </a>
+
+## :pray: Sponsors
 
 
 ## :handshake: Connect with us
