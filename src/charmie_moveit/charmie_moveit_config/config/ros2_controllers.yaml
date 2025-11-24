@@ -8,7 +8,7 @@ controller_manager:
 
 
     xarm_gripper_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+      type: position_controllers/GripperActionController
 
 
     joint_state_broadcaster:
@@ -27,13 +27,13 @@ xarm6_controller:
       - position
     state_interfaces:
       - position
-    allow_nonzero_velocity_at_trajectory_end: true
+    allow_nonzero_velocity_at_trajectory_end: false
 xarm_gripper_controller:
   ros__parameters:
-    joints:
-      - xarm_gripper_drive_joint
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-    allow_nonzero_velocity_at_trajectory_end: true
+    joint: xarm_gripper_drive_joint
+    action_monitor_rate: 20.0
+    goal_tolerance: 0.01
+    max_effort: 100.0
+    allow_stalling: false
+    stall_velocity_threshold: 0.001
+    stall_timeout: 1.0

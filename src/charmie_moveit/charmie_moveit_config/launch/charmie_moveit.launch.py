@@ -5,9 +5,13 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from moveit_configs_utils import MoveItConfigsBuilder
+from charmie_std_functions.launch_std_functions import LaunchStdFunctions
 
 
 def generate_launch_description():
+
+    std_lf = LaunchStdFunctions()
+
     # Declare launch arguments
     use_real_hardware_arg = DeclareLaunchArgument(
         'use_real_hardware',
@@ -105,6 +109,23 @@ def generate_launch_description():
             ])
         ])
     )
+
+    d405_hand_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 
+                'hand_camera_link', 'D405_hand_link'],
+        output='screen'
+    )
+
+    # Connect D455 head camera to the robot's head camera link  
+    d455_head_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 
+                'head_camera_link', 'D455_head_link'],
+        output='screen'
+    )
     
     # RViz
     rviz_node = Node(
@@ -114,7 +135,6 @@ def generate_launch_description():
         parameters=[
             moveit_config.robot_description_kinematics,
             moveit_config.planning_pipelines,
-            moveit_config.sensors_3d,
         ],
         output='screen'
     )
@@ -127,5 +147,9 @@ def generate_launch_description():
         xarm6_controller_spawner,
         xarm_gripper_controller_spawner,
         move_group_launch,
-        rviz_node
+        d405_hand_tf,
+        d455_head_tf,
+        rviz_node,
+        std_lf.charmie_multi_camera_launch_description,
+        std_lf.static_transforms_launch,
     ])

@@ -363,7 +363,7 @@ class LaunchStdFunctions():
                             name='lidar_hokuyo_bottom',
                             emulate_tty=True
                             )
-        
+        '''
         ################### user configure livox parameters for ros2 start ###################
         xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
         multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
@@ -414,7 +414,7 @@ class LaunchStdFunctions():
                             name='radar',
                             emulate_tty=True
                             )
-        
+        '''
         self.odometry_lidar = Node(package='rf2o_laser_odometry',
                 executable='rf2o_laser_odometry_node',
                 name='rf2o_laser_odometry',
@@ -437,7 +437,7 @@ class LaunchStdFunctions():
         
         ### JOY & GAMEPAD CONTROLLER
         # Compute config file path using LaunchConfiguration and TextSubstitution
-        self.config_filepath = LaunchConfiguration('config_filepath', default=[
+        '''self.config_filepath = LaunchConfiguration('config_filepath', default=[
             TextSubstitution(text=os.path.join(
                 get_package_share_directory('charmie_gamepad'), 'config', 'ps4')),
             TextSubstitution(text='.config.yaml')
@@ -473,7 +473,7 @@ class LaunchStdFunctions():
                 name='task_demonstration',
                 emulate_tty=True
                 )
-        
+        '''
         self.llm = Node(package='charmie_llm',
                     executable='llm',
                     name='llm',

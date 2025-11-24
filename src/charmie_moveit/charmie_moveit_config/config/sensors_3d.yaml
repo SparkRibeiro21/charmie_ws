@@ -1,40 +1,35 @@
-sensors:
-  # - sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
-  #   point_cloud_topic: /CHARMIE/D455_head/depth/color/points
-  #   max_range: 3.0
-  #   point_subsample: 1
-  #   padding_offset: 0.01
-  #   padding_scale: 1.0
-  #   filtered_cloud_topic: filtered_cloud
-  #   max_update_rate: 5.0
-  #   observation_sources: head_camera_sensor
+sensors: ['hand_camera']
+octomap_frame: hand_camera_link  # Change this to your robot's base frame
+octomap_resolution: 0.05
+hand_camera.sensor_plugin: occupancy_map_monitor::PointCloudOctomapUpdater
+hand_camera.point_cloud_topic: /CHARMIE/D455_hand/depth/color/points
+hand_camera.max_range: 2.0
+hand_camera.point_subsample: 1
+hand_camera.padding_offset: 0.01
+hand_camera.padding_scale: 1.0
+hand_camera.filtered_cloud_topic: filtered_cloud_hand
+hand_camera.max_update_rate: 5.0
 
-  #   head_camera_sensor:
-  #     sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
-  #     point_cloud_topic: /CHARMIE/D455_head/depth/color/points
-  #     max_range: 3.0
-  #     point_subsample: 1
-  #     data_type: PointCloud2
-  #     frame_subsample: 1
-  #     skip_octomap_update: false
-  #     enabled: true
 
-    - sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
-      point_cloud_topic: /CHARMIE/D455_head/depth/color/points
-      max_range: 3.0
-      point_subsample: 1
-      padding_offset: 0.01
-      padding_scale: 1.0
-      filtered_cloud_topic: filtered_cloud_head
-      max_update_rate: 5.0
-      ns: head_camera_sensor
 
-    - sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
-      point_cloud_topic: /CHARMIE/D455_hand/depth/color/points
-      max_range: 2.0
-      point_subsample: 1
-      padding_offset: 0.01
-      padding_scale: 1.0
-      filtered_cloud_topic: filtered_cloud_hand
-      max_update_rate: 5.0
-      ns: hand_camera_sensor
+##########################################################CORRECTED YAML BELOW##########################################################
+    # - sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+    #   point_cloud_topic: /CHARMIE/D455_head/depth/color/points
+    #   max_range: 3.0
+    #   point_subsample: 1
+    #   padding_offset: 0.01
+    #   padding_scale: 1.0
+    #   filtered_cloud_topic: filtered_cloud_head
+    #   max_update_rate: 5.0
+    #   ns: head_camera_sensor
+
+    # - sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+    #   point_cloud_topic: /CHARMIE/D455_hand/depth/color/points
+    #   max_range: 2.0
+    #   point_subsample: 1
+    #   padding_offset: 0.01
+    #   padding_scale: 1.0
+    #   filtered_cloud_topic: filtered_cloud_hand
+    #   max_update_rate: 5.0
+    #   ns: hand_camera_sensor
+#####################################################################################################################################
