@@ -586,26 +586,26 @@ class TaskMain():
 
                     match counter:
                         case 0:
-                            self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_0,asked_help=asked_help_0)
+                            self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, picked_height=picked_height_0,asked_help=asked_help_0)
                         case 1:
                             if o == "7up":
                                 # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
                                 self.robot.set_arm(command="milk_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=0.0,asked_help=asked_help_1)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, picked_height=picked_height_1, base_adjust_y=0.0,asked_help=asked_help_1)
                             else:
                                 # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
                                 self.robot.set_arm(command="milk_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=0.10,asked_help=asked_help_1)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, picked_height=picked_height_1, base_adjust_y=0.10,asked_help=asked_help_1)
                     
                         case 2:
                             if o == "Sugar":
                                 # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
                                 self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = -0.10,asked_help=asked_help_2)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, picked_height=picked_height_2, base_adjust_y = -0.10,asked_help=asked_help_2)
                             else:
                                 # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
                                 self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = 0.20,asked_help=asked_help_2)
+                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, picked_height=picked_height_2, base_adjust_y = 0.20,asked_help=asked_help_2)
                             
 
                     counter+=1

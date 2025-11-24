@@ -1,9 +1,9 @@
 [
-{"name": "Cleaning Supplies",   "location": "Dinner Table"},
-{"name": "Drinks", 		"location": "Dinner Table"},
-{"name": "Foods",   		"location": "Dinner Table"},
-{"name": "Fruits", 		"location": "Dinner Table"},
-{"name": "Toys",   		"location": "Dinner Table"},
-{"name": "Snacks", 		"location": "Dinner Table"},
-{"name": "Dishes",   		"location": "Dinner Table"}
+{"name": "Cleaning Supplies",   "location": "Workshop Desk"},
+{"name": "Drinks", 		"location": "Shelf"},
+{"name": "Foods",   		"location": "Kitchen Cabinet"},
+{"name": "Fruits", 		"location": "Coffee Table"},
+{"name": "Toys",   		"location": "Night Stand"},
+{"name": "Snacks", 		"location": "Pantry"},
+{"name": "Dishes",   		"location": "Dishwasher"}
 ]
