@@ -15,10 +15,20 @@ Visualization Manager:
       Value: true
     - Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
+      MoveIt_Workspace:
+          Center:
+            X: 0
+            Y: 0
+            Z: 1
+          Size:
+            X: 2
+            Y: 2
+            Z: 2
       Name: MotionPlanning
       Planning Request:
         Query Goal State: true
         Query Start State: false
+        Show Workspace: false
         Interactive Marker Size: 0
       Planned Path:
         Loop Animation: false
