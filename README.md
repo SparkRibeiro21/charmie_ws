@@ -23,6 +23,7 @@
 * [Results :trophy:](#trophy-results)
 * [Extended Scores :chart_with_upwards_trend:](#chart_with_upwards_trend-extended-scores)
 * [Contributors :technologist:](#technologist-contributors)
+* [Sponsors :pray:](#pray-sponsors)
 * [Social Media :handshake:](#handshake-connect-with-us)
 
 ## :book: Project Description
