@@ -70,8 +70,10 @@ def generate_launch_description():
     ros2_control_node = Node(
         package='controller_manager',
         executable='ros2_control_node',
-        parameters=[ros2_controllers_path],
-        remappings=[('~/robot_description', '/robot_description')],
+        parameters=[
+            {'robot_description': robot_description},
+            ros2_controllers_path],
+        # remappings=[('~/robot_description', '/robot_description')],
         output='screen'
     )
     
@@ -150,6 +152,6 @@ def generate_launch_description():
         d405_hand_tf,
         d455_head_tf,
         rviz_node,
-        std_lf.charmie_multi_camera_launch_description,
-        std_lf.static_transforms_launch,
+        # std_lf.charmie_multi_camera_launch_description,
+        # std_lf.static_transforms_launch,
     ])
