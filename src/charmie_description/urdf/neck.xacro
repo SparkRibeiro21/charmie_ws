@@ -96,7 +96,28 @@
         <xacro:inertial_box mass="0.5" x="${neck_tilt_shaft_length}" y="${neck_tilt_shaft_width}" z="${neck_tilt_shaft_height}" >
             <origin xyz="${neck_tilt_shaft_length/2} 0 0" rpy="0 0 0"/>
         </xacro:inertial_box>
-
     </link>
+
+    <ros2_control name="neck_system" type="system">
+        <hardware>
+            <plugin>mock_components/GenericSystem</plugin>
+        </hardware>
+        <joint name="neck_pan_joint">
+            <command_interface name="position">
+                <param name="min">${-pi}</param>
+                <param name="max">${pi}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+        <joint name="neck_tilt_joint">
+            <command_interface name="position">
+                <param name="min">${-pi/3}</param>
+                <param name="max">${pi/3}</param>
+            </command_interface>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+        </joint>
+    </ros2_control>
 
 </robot>

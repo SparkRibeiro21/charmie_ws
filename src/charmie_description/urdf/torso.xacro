@@ -80,7 +80,7 @@
     <link name="top_torso_link">
     </link>
 
-    <ros2_control name="charmie_system" type="system">
+    <ros2_control name="torso_system" type="system">
         <hardware>
                 <plugin>mock_components/GenericSystem</plugin>
         </hardware>
