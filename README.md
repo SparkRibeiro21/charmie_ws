@@ -255,6 +255,7 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ## :pray: Sponsors
 
+<img src="src/configuration_files/docs/sponsors.png" width="720">
 
 ## :handshake: Connect with us
 
