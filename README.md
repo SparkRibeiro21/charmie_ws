@@ -92,9 +92,9 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
   ## Serve Breakfast (LAR)
 
-  [![Video Title](https://img.youtube.com/vi/sVjJE4G-TqI/0.jpg)](https://www.youtube.com/watch?v=sVjJE4G-TqI)
+  [![Video Title](https://img.youtube.com/vi/vENbHFMInME/0.jpg)](https://www.youtube.com/watch?v=vENbHFMInME)
 
-  [Youtube Link for CHARMIE Robot Serves Breakfast](https://m.youtube.com/watch?v=sVjJE4G-TqI)
+  [Youtube Link for CHARMIE Robot Serves Breakfast](https://m.youtube.com/watch?v=vENbHFMInME)
 
   ## Object Manipulation (LAR)
 
