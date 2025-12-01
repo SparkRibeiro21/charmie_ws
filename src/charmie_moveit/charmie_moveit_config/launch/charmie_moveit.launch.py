@@ -153,5 +153,5 @@ def generate_launch_description():
         d455_head_tf,
         rviz_node,
         # std_lf.charmie_multi_camera_launch_description,
-        # std_lf.static_transforms_launch,
+        std_lf.static_transforms_launch,
     ])
