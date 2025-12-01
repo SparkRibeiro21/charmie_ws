@@ -5075,7 +5075,7 @@ class RobotStdFunctions():
             if furniture_height == -1 and furniture == "":
                 furniture = valid_detected_object.furniture_location
                 if furniture is not None:
-                    furniture_height = self.get_shelf_from_height(object_height= valid_detected_object.z, furniture= valid_detected_object.furniture_location)
+                    furniture_height = self.get_shelf_from_height(object_height= valid_detected_object.position_relative.z, furniture= valid_detected_object.furniture_location)
                 else:
                     asked_help = True
 
@@ -5087,7 +5087,7 @@ class RobotStdFunctions():
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
             DISTANCE_IN_FRONT_X     = 0.6 
-            DISTANCE_IN_FRONT_Y     = 0.3 
+            DISTANCE_IN_FRONT_Y     = 0.31 
             DISTANCE_IN_TOP_X       = 0.58
             DISTANCE_IN_TOP_Y       = -0.05
             MINIMUM_FRONT_HEIGHT    = 0.55
@@ -5156,7 +5156,7 @@ class RobotStdFunctions():
 
                 if navigation:
                     _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
-                    self.adjust_x_      = furniture_distance - 0.5 
+                    self.adjust_x_      = furniture_distance - 0.03 
 
                     self.adjust_y_      = valid_detected_object.position_relative.y - DISTANCE_IN_TOP_Y 
 

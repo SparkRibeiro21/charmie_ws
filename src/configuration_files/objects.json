@@ -26,7 +26,7 @@
 {"name": "Pear", 		    "class": "Fruits",		"width": 0.071, "length": 0.075, "height": 0.100, "shape": "sphere", "can_pick": "front", "std_pick": "top"},
 {"name": "Plum", 		    "class": "Fruits",		"width": 0.065, "length": 0.061, "height": 0.057, "shape": "sphere", "can_pick": "both", "std_pick": "top"},
 {"name": "Peach", 		    "class": "Fruits",		"width": 0.081, "length": 0.073, "height": 0.070, "shape": "sphere", "can_pick": "both", "std_pick": "top"},
-{"name": "Lemon", 		    "class": "Fruits",		"width": 0.060, "length": 0.088, "height": 0.060, "shape": "sphere", "can_pick": "both", "std_pick": "top"},
+{"name": "Lemon", 		    "class": "Fruits",		"width": 0.060, "length": 0.088, "height": 0.060, "shape": "cylinder", "can_pick": "both", "std_pick": "top"},
 {"name": "Orange", 		    "class": "Fruits",		"width": 0.075, "length": 0.075, "height": 0.057, "shape": "sphere", "can_pick": "both", "std_pick": "top"},
 {"name": "Strawberry", 		"class": "Fruits",		"width": 0.033, "length": 0.033, "height": 0.035, "shape": "sphere", "can_pick": "both", "std_pick": "top"},
 {"name": "Banana", 		    "class": "Fruits",		"width": 0.030, "length": 0.185, "height": 0.040, "shape": "cylinder", "can_pick": "both", "std_pick": "top"},
