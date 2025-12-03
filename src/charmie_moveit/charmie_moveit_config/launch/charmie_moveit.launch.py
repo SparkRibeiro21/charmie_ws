@@ -111,23 +111,6 @@ def generate_launch_description():
             ])
         ])
     )
-
-    d405_hand_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '1.5708', '-1.5708', '3.14159', 
-                'hand_camera_link', 'D405_hand_link'],
-        output='screen'
-    )
-
-    # Connect D455 head camera to the robot's head camera link  
-    d455_head_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 
-                'head_camera_link', 'D455_head_link'],
-        output='screen'
-    )
     
     # RViz
     rviz_node = Node(
@@ -148,8 +131,6 @@ def generate_launch_description():
         joint_state_broadcaster_spawner,
         xarm6_controller_spawner,
         xarm_gripper_controller_spawner,
-        d405_hand_tf,
-        d455_head_tf,
         move_group_launch,
         rviz_node,
         # std_lf.charmie_multi_camera_launch_description,

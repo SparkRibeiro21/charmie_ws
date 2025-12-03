@@ -74,7 +74,7 @@
     baud_checkset="true"
     default_gripper_baud="2000000" /> -->
 
-  <xacro:xarm_gripper_transmission prefix="xarm_gripper_" hard_interface="PositionJointInterface" />
+  <xacro:xarm_gripper_transmission prefix="xarm_gripper_" />
   
   <!-- <xacro:xarm_gripper_ros2_control 
     prefix="xarm_gripper_" 
