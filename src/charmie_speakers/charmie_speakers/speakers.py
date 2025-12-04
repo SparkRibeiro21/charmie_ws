@@ -2,6 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, SetTextFace
+from charmie_interfaces.msg import ButtonsLowLevel
 
 # from TTS.utils.manage import ModelManager
 # from TTS.utils.synthesizer import Synthesizer
@@ -199,6 +200,7 @@ class SpeakerNode(Node):
 
         # initialize robot speech class with acess to node variables
         self.charmie_speech = RobotSpeak(self)
+        self.low_level_buttons = ButtonsLowLevel()
 
         # SERVICES:
         # Main receive commads 
@@ -207,6 +209,9 @@ class SpeakerNode(Node):
         # To publish the received strings to the face node
         self.speech_to_face_command = self.create_client(SetTextFace, "display_speech_face")
         self.get_logger().info("Speech Servers have been started")
+
+        # TOPICS:
+        self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
 
         # Get Information regarding which speakers are being used 
         # print("\nOutput Sound Devices:")
@@ -319,6 +324,10 @@ class SpeakerNode(Node):
         response.success = success
         response.message = message
         return response
+
+    def buttons_low_level_callback(self, ll_buttons):
+        self.low_level_buttons = ll_buttons
+        # print(self.low_level_buttons)
 
 
 # Standard ROS2 main function
