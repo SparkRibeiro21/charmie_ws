@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 from charmie_interfaces.srv import SetFace, SetTextFace, SetFaceTouchscreenMenu, GetFaceTouchscreenMenu
-from charmie_interfaces.msg import ListOfDetectedPerson, ListOfDetectedObject, TrackingMask
+from charmie_interfaces.msg import ListOfDetectedPerson, ListOfDetectedObject, TrackingMask, ButtonsLowLevel
 from sensor_msgs.msg import Image as Image_ ### HAD TO CHANGE IMAGE TO IMAGE_ because of: from PIL import Image
 from realsense2_camera_msgs.msg import RGBD
 
@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 
 
-DEBUG_WITHOUT_DISPLAY = False
+DEBUG_WITHOUT_DISPLAY = True
 
 # ROS2 Face Node
 class FaceNode(Node):
@@ -33,6 +33,8 @@ class FaceNode(Node):
         self.declare_parameter("show_speech", True) 
         self.declare_parameter("initial_face", "charmie_face") 
         # self.declare_parameter("initial_face", "charmie_face_old_tablet") 
+
+        self.low_level_buttons = ButtonsLowLevel()
         
         self.home = str(Path.home())
         midpath_faces = "/charmie_ws/src/charmie_face/charmie_face/"
@@ -45,6 +47,8 @@ class FaceNode(Node):
         # Orbbec Camera (Base)
         self.color_image_base_subscriber = self.create_subscription(Image_, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
         self.aligned_depth_image_base_subscriber = self.create_subscription(Image_, "/camera/depth/image_raw", self.get_depth_base_image_callback, 10)
+        # Low level
+        self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
@@ -228,6 +232,11 @@ class FaceNode(Node):
         
     def get_depth_base_image_callback(self, img: Image):
         self.base_depth = self.get_cv2_cvtColor_from_depth_image(img, "base")
+
+    # LOW LEVEL
+    def buttons_low_level_callback(self, ll_buttons):
+        self.low_level_buttons = ll_buttons
+        print(self.low_level_buttons)
     
     # DETECTIONS
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
