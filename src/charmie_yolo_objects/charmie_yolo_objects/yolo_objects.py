@@ -20,19 +20,6 @@ import math
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
-# objects_filename = "segmentation_M_size_model_600_epochs.pt"
-# objects_filename = "epoch20.pt"
-# objects_filename = "new_best.pt"
-# objects_filename = "new_best_2.pt"
-objects_filename = "24_25_october_v1_LAR_seg.engine"
-# objects_filename = "detect_hands_2.pt"
-# objects_filename = "50_epochs.pt"
-# objects_filename = "slender_ycb_03_07_2024_v1.pt"
-# objects_filename = "lar_dataset_post_fnr2024.pt"
-shoes_filename = "shoes_socks_v1.pt"
-furniture_filename = "door_bruno_2.pt"
-# furniture_filename = "furniture_robocup.pt"
-
 MIN_OBJECT_CONF_VALUE = 0.5
 MIN_SHOES_CONF_VALUE = 0.5
 MIN_FURNITURE_CONF_VALUE = 0.5
@@ -80,6 +67,9 @@ class Yolo_obj(Node):
         midpath_configuration_files = "charmie_ws/src/configuration_files"
         self.complete_path_configuration_files = self.home+'/'+midpath_configuration_files+'/'
 
+        midpath_select_yolo_models = "charmie_ws/src/charmie_yolo_objects/charmie_yolo_objects"
+        self.complete_path_select_yolo_models = self.home+'/'+midpath_select_yolo_models+'/'
+
         # Opens files with objects names and categories
         try:
             with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
@@ -98,6 +88,24 @@ class Yolo_obj(Node):
         except:
             self.get_logger().error("Could NOT import data from json configuration files. (objects, rooms, furniture and detected_furniture)")
 
+        try:
+            with open(self.complete_path_select_yolo_models + 'select_models.json', encoding='utf-8') as json_file:
+                
+                temp_json = json.load(json_file)
+                print(temp_json)
+
+                self.objects_model_filename   = temp_json["objects_model_filename"]
+                self.furniture_model_filename = temp_json["furniture_model_filename"]
+                self.shoes_model_filename     = temp_json["shoes_model_filename"]
+        except:
+            print("")
+            print("ERROR: Could NOT import name of models json files. (select_models)")
+            print("I will continue with the default filenames for the yolo models.")
+        
+            self.objects_model_filename   = "24_25_october_v1_LAR_seg.pt"
+            self.furniture_model_filename = "door_bruno_2.pt"
+            self.shoes_model_filename     = "shoes_socks_v1.pt"
+                    
         # gets list of detected objects from objects.json and alphabetically orders it to match YOLO detections 
         self.objects_class_names = [item["name"] for item in self.objects_file]
         self.objects_class_names.sort()
@@ -141,26 +149,26 @@ class Yolo_obj(Node):
         # whether the activate furniture flag starts as ON or OFF 
         self.ACTIVATE_YOLO_FURNITURE_BASE = self.get_parameter("activate_furniture_base").value
 
-        # print(self.home+'/'+objects_filename)
+        # print(self.home+'/'+objects_model_filename)
         yolo_models_sucessful_imported = False
 
         while not yolo_models_sucessful_imported:
             
             try: 
                 # Import the models, one for each category
-                self.object_model = YOLO(self.complete_path_yolo_models + objects_filename, task="segment")
-                # self.shoes_model = YOLO(self.complete_path_yolo_models + shoes_filename)
-                self.furniture_model = YOLO(self.complete_path_yolo_models + furniture_filename, task="detect")
+                self.object_model = YOLO(self.complete_path_yolo_models + self.objects_model_filename, task="segment")
+                # self.shoes_model = YOLO(self.complete_path_yolo_models + self.shoes_model_filename)
+                self.furniture_model = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="detect")
 
                 # it needs to have a different model because of the track parameter, otherwise it is always creating new track ids
-                self.object_model_hand = YOLO(self.complete_path_yolo_models + objects_filename, task="segment")
-                # self.shoes_model_hand = YOLO(self.complete_path_yolo_models + shoes_filename)
-                self.furniture_model_hand = YOLO(self.complete_path_yolo_models + furniture_filename, task="detect")
+                self.object_model_hand = YOLO(self.complete_path_yolo_models + self.objects_model_filename, task="segment")
+                # self.shoes_model_hand = YOLO(self.complete_path_yolo_models + self.shoes_model_filename)
+                self.furniture_model_hand = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="detect")
 
                 # it needs to have a different model because of the track parameter, otherwise it is always creating new track ids
-                self.object_model_base = YOLO(self.complete_path_yolo_models + objects_filename, task="segment")
-                # self.shoes_model_base = YOLO(self.complete_path_yolo_models + shoes_filename)
-                self.furniture_model_base = YOLO(self.complete_path_yolo_models + furniture_filename, task="detect")
+                self.object_model_base = YOLO(self.complete_path_yolo_models + self.objects_model_filename, task="segment")
+                # self.shoes_model_base = YOLO(self.complete_path_yolo_models + self.shoes_model_filename)
+                self.furniture_model_base = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="detect")
 
                 self.get_logger().info("Successfully imported YOLO models (objects, furniture, shoes)")
 
