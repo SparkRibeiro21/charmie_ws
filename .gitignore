@@ -4,9 +4,10 @@ log/
 Log/
 **/__pycache__/
 **/.vscode/
+src/configuration_files/save_speaker/save_speaker_files.json
 src/charmie_yolo_pose/charmie_yolo_pose/characteristics_models/modelo_gender.h5
 src/charmie_yolo_pose/charmie_yolo_pose/characteristics_models/modelo_raca.h5
-src/configuration_files/save_speaker/save_speaker_files.json
 src/charmie_yolo_objects/charmie_yolo_objects/yolo_models/
-src/charmie_llm/charmie_llm/api_key/
 src/charmie_yolo_objects/charmie_yolo_objects/select_models.json
+src/charmie_llm/charmie_llm/api_key/
+
