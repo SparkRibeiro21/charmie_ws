@@ -56,6 +56,14 @@
         <joint name="xarm_joint5" value="1.309"/>
         <joint name="xarm_joint6" value="4.712"/>
     </group_state>
+    <group_state name="pick_front" group="xarm6">
+        <joint name="xarm_joint1" value="-3.7524"/>
+        <joint name="xarm_joint2" value="-1.2217"/>
+        <joint name="xarm_joint3" value="-0.2793"/>
+        <joint name="xarm_joint4" value="1.3963"/>
+        <joint name="xarm_joint5" value="0.5236"/>
+        <joint name="xarm_joint6" value="3.1765"/>
+    </group_state>
     <group_state name="gripper_open" group="xarm_gripper">
         <joint name="xarm_gripper_drive_joint" value="0"/>
     </group_state>
