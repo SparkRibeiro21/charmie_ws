@@ -35,7 +35,8 @@ class FaceNode(Node):
         # self.declare_parameter("initial_face", "charmie_face_old_tablet") 
 
         self.low_level_buttons = ButtonsLowLevel()
-        
+        self.previous_low_level_buttons = ButtonsLowLevel()
+
         self.home = str(Path.home())
         midpath_faces = "/charmie_ws/src/charmie_face/charmie_face/"
         self.media_faces_path = self.home + midpath_faces + "list_of_media_faces/"
@@ -76,6 +77,7 @@ class FaceNode(Node):
 
         self.new_face_received = False
         self.new_face_received_name = ""
+        self.last_face_command = ""
 
         self.new_text_received = False
         self.new_text_received_name = ""
@@ -235,9 +237,19 @@ class FaceNode(Node):
 
     # LOW LEVEL
     def buttons_low_level_callback(self, ll_buttons):
-        self.low_level_buttons = ll_buttons
-        print(self.low_level_buttons)
     
+        self.previous_low_level_buttons = self.low_level_buttons
+        self.low_level_buttons = ll_buttons
+        # print(self.low_level_buttons)
+
+        # FACE CHANGES FOR MF MODE
+        if self.last_face_command == "charmie_face"         and     self.low_level_buttons.debug_button2 and not self.previous_low_level_buttons.debug_button2:
+            self.image_to_face("charmie_face_angry")
+            print("DEBUG BUTTON 2 PRESSED - ANGRY FACE")
+        elif self.last_face_command == "charmie_face_angry" and not self.low_level_buttons.debug_button2 and     self.previous_low_level_buttons.debug_button2:
+            self.image_to_face("charmie_face")
+            print("DEBUG BUTTON 2 RELEASED - NORMAL FACE")
+        
     # DETECTIONS
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
@@ -282,6 +294,13 @@ class FaceNode(Node):
     def image_to_face(self, command):
         # self.get_logger().info("init image to face")
         # since the extension is not known, a system to check all filenames disregarding the extension had to be created
+
+        # FACE CHANGES FOR MF MODE
+        if command == "charmie_face" and self.low_level_buttons.debug_button2:
+            command = "charmie_face_angry"
+        # elif command == "charmie_face_angry" and not self.low_level_buttons.debug_button2:
+        #     command = "charmie_face"
+
         file_exists = False
         files = os.listdir(self.media_faces_path)
         correct_extension = ""
@@ -291,6 +310,7 @@ class FaceNode(Node):
             if file_name == command:
                 correct_extension = file_extension
                 file_exists = True
+                self.last_face_command = command
         
         if file_exists:
             self.get_logger().info("FACE received (standard) - %s" %command)
