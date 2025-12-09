@@ -5074,10 +5074,8 @@ class RobotStdFunctions():
 
             if furniture_height == -1 and furniture == "":
                 furniture = valid_detected_object.furniture_location
-                if furniture is not None:
+                if furniture != "None":
                     furniture_height = self.get_shelf_from_height(object_height= valid_detected_object.position_relative.z, furniture= valid_detected_object.furniture_location)
-                else:
-                    asked_help = True
 
             # ANNOUNCE THE FOUND OBJECT
             self.set_speech(filename="generic/found_following_items", wait_for_end_of=False)
@@ -5141,7 +5139,10 @@ class RobotStdFunctions():
 
                     gripper_search_height = self.get_gripper_localization().z
                     object_height = self.get_object_height_from_object(valid_detected_object.object_name)
-                    adjust_z = (furniture_height + (object_height/2) - gripper_search_height)*1000
+                    if furniture_height < 0:
+                        adjust_z = (valid_detected_object.position_relative.z - (object_height/2) - gripper_search_height)*1000
+                    else:
+                        adjust_z = (furniture_height + (object_height/2) - gripper_search_height)*1000
 
                     print("GRIPPER HEIGHT",gripper_search_height)
                     print("FURNITURE HEIGHT",furniture_height)
@@ -5205,19 +5206,6 @@ class RobotStdFunctions():
 
             if not asked_help:
 
-                #CORRECT ROTATION CALCULATIONS
-                if self.get_object_shape_from_object(valid_detected_object.object_name) == "sphere":
-                    correct_rotation = 0.0
-                else:
-                    if valid_detected_object.orientation < 0.0:
-                        correct_rotation = valid_detected_object.orientation +90.0
-                    else:
-                        correct_rotation = valid_detected_object.orientation -90.0
-                
-                security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
-                initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
-                safe_top_second_joints    = [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
-                search_table_front_joints = [-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
                 
                 #OPEN GRIPPER
                 if obj.object_name != "plate":
@@ -5242,6 +5230,23 @@ class RobotStdFunctions():
                     if o.confidence > best_conf:
                         best_conf = o.confidence
                         obj = o
+
+                #CORRECT ROTATION CALCULATIONS
+                print("OBJ BOX CENTER:", obj.box_center_y,"  Cam Y:", obj.position_cam.y)
+                if self.get_object_shape_from_object(obj.object_name) == "sphere":
+                    correct_rotation = 0.0
+                else:
+                    if obj.orientation < 0.0:
+                        correct_rotation = obj.orientation +90.0
+                    else:
+                        correct_rotation = obj.orientation -90.0
+                    if (selected_object == "spoon" or selected_object == "fork" or selected_object == "knife") and obj.box_center_y > obj.position_cam.y:
+                        correct_rotation = correct_rotation + 180
+
+                    security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+                    initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
+                    safe_top_second_joints    = [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
+                    search_table_front_joints = [-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 
 
                 if pick_mode == "front":
@@ -5646,12 +5651,13 @@ class RobotStdFunctions():
         print("FURNITURE:", furniture)
         print("FURNITURE HEIGHTS:", furniture_height)
 
-        for h in furniture_height:
-            print("HEIGHT COMPARATION:", h)
-            if h < object_height:
-                print("Object height:", object_height)
-                print("Shelf height:", h)
-                return float(h)
+        if furniture_height is not None:
+            for h in furniture_height:
+                print("HEIGHT COMPARATION:", h)
+                if h < object_height:
+                    print("Object height:", object_height)
+                    print("Shelf height:", h)
+                    return float(h)
             
         print("Cannot get height from shelf")
         return False
