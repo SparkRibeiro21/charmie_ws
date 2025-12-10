@@ -272,6 +272,8 @@ class SpeakerNode(Node):
         
         else:
 
+            request.filename = request.filename.lower()
+            
             if self.low_level_buttons.debug_button3 and self.low_level_buttons.debug_button2:
                 request.filename += "__mm__"
             elif self.low_level_buttons.debug_button3:
@@ -311,6 +313,7 @@ class SpeakerNode(Node):
         any_empty_command = False
         commands = {}
         for i in range(len(request.filename)):
+            request.filename[i] = request.filename[i].lower()
             commands[request.filename[i]] = request.command[i]
 
         for filename, command in commands.items():

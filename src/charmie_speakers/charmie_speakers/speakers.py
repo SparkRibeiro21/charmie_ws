@@ -254,6 +254,8 @@ class SpeakerNode(Node):
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
 
+        request.filename = request.filename.lower()
+
         if self.low_level_buttons.debug_button3 and self.low_level_buttons.debug_button2:
             request.filename += "__mm__"
         elif self.low_level_buttons.debug_button3:
