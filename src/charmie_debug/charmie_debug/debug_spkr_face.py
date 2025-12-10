@@ -78,7 +78,11 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
-                self.robot.set_speech(filename="serve_breakfast/sB_finished", wait_for_end_of=False)
+                self.robot.set_speech(filename="serve_breakfast/sB_finished", wait_for_end_of=True)
+                
+                time.sleep(2.0)
+
+                self.robot.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=True)
 
                 while True:
                     pass

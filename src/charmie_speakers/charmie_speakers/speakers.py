@@ -85,10 +85,9 @@ class RobotSpeak():
 
     # function for pre recorded commands 
     def play_command(self, filename, show_in_face=False, long_pause=False, breakable_play=False, break_play=False):
-                
+        
         # if there is an audio
         if os.path.isfile(self.complete_path+filename+".wav"):
-
         
             if show_in_face:
                 # if there is a txt file corresponding to the audio
@@ -255,14 +254,21 @@ class SpeakerNode(Node):
         # string message # informational, e.g. for error messages.
 
         request.filename = request.filename.lower()
-
+        
+        temp_filename = ""
         if self.low_level_buttons.debug_button3 and self.low_level_buttons.debug_button2:
-            request.filename += "__mm__"
+            temp_filename = request.filename + "__mm__"
         elif self.low_level_buttons.debug_button3:
-            request.filename += "__pt__"
+            temp_filename = request.filename + "__pt__"
         elif self.low_level_buttons.debug_button2:
-            request.filename += "__mf__"
+            temp_filename = request.filename + "__mf__"
 
+        # if the modified file exist, use it, otherwise use the normal one
+        if os.path.isfile(self.charmie_speech.complete_path+temp_filename+".wav"):
+            request.filename = temp_filename
+
+        self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
+        
         # speakers mode where received filename must be played
         success, message = self.charmie_speech.play_command(filename=request.filename, show_in_face=request.show_in_face, \
                                                             long_pause=request.long_pause_show_in_face, \
@@ -274,7 +280,7 @@ class SpeakerNode(Node):
                 self.get_logger().error("Command is not valid. Using the wrong ROS2 speakers node. Pleace check if using -speakers- or -speakers_with_save- node.")
                 message = "Command is not valid. Using the wrong ROS2 speakers node. Pleace check if using -speakers- or -speakers_with_save- node."
         else:
-            self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
+            self.get_logger().info("SPEAKERS finished (file) - %s" %request.filename)
 
         # returns whether the message was played and some informations regarding status
         response.success = success
