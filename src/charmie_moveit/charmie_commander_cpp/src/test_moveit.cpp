@@ -16,17 +16,17 @@ int main(int argc, char** argv)
     arm.setMaxAccelerationScalingFactor(0.5);
     arm.setEndEffectorLink("xarm_link6");
 
-    // // Named goal
+    // Named goal
 
-    // arm.setStartStateToCurrentState();
-    // arm.setNamedTarget("pick_front");
+    arm.setStartStateToCurrentState();
+    arm.setNamedTarget("pick_front");
 
-    // moveit::planning_interface::MoveGroupInterface::Plan plan1;
-    // bool success1 = (arm.plan(plan1) == moveit::core::MoveItErrorCode::SUCCESS);
-    // if (success1)
-    // {
-    //     arm.execute(plan1);
-    // }
+    moveit::planning_interface::MoveGroupInterface::Plan plan1;
+    bool success1 = (arm.plan(plan1) == moveit::core::MoveItErrorCode::SUCCESS);
+    if (success1)
+    {
+        arm.execute(plan1);
+    }
 
     // arm.setStartStateToCurrentState();
     // arm.setNamedTarget("home");
@@ -65,22 +65,17 @@ int main(int argc, char** argv)
     // );
     // q.normalize();
 
-    // q.setRPY(0, 0, 0);
-    // q.normalize();
 
     geometry_msgs::msg::PoseStamped target_pose;
     target_pose.header.frame_id = arm.getPlanningFrame();
-    target_pose.pose.position.x = 0.2638; 
-    target_pose.pose.position.y = -0.4165;
-    target_pose.pose.position.z = 0.7812;
-    // target_pose.pose.orientation.x = q.getX();
-    // target_pose.pose.orientation.y = q.getY();
-    // target_pose.pose.orientation.z = q.getZ();
-    // target_pose.pose.orientation.w = q.getW();
-    target_pose.pose.orientation.x = -0.677;
-    target_pose.pose.orientation.y = -0.268;
-    target_pose.pose.orientation.z = -0.276;
-    target_pose.pose.orientation.w = 0.627;
+    target_pose.pose.position.x = 0.079; 
+    target_pose.pose.position.y = 0.2304;
+    target_pose.pose.position.z = 0.9157;
+
+    target_pose.pose.orientation.x = 0.0257;
+    target_pose.pose.orientation.y = -0.3905;
+    target_pose.pose.orientation.z = 0.0078;
+    target_pose.pose.orientation.w = 0.9202;
 
     arm.setStartStateToCurrentState();
     arm.setPoseTarget(target_pose);
@@ -124,16 +119,16 @@ int main(int argc, char** argv)
     //     arm.execute(trajectory);
     // }
 
-    arm.setStartStateToCurrentState();
-    arm.setNamedTarget("home");
+    // arm.setStartStateToCurrentState();
+    // arm.setNamedTarget("home");
 
-    moveit::planning_interface::MoveGroupInterface::Plan plan2;
-    bool success2 = (arm.plan(plan2) == moveit::core::MoveItErrorCode::SUCCESS);
+    // moveit::planning_interface::MoveGroupInterface::Plan plan2;
+    // bool success2 = (arm.plan(plan2) == moveit::core::MoveItErrorCode::SUCCESS);
 
-    if (success2)
-    {
-        arm.execute(plan2);
-    }
+    // if (success2)
+    // {
+    //     arm.execute(plan2);
+    // }
 
 
     rclcpp::shutdown();
