@@ -190,7 +190,6 @@ class TaskMain():
                                 self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
 
                         self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
-                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
     
                 self.state = self.task_states["Move_cornflakes_location"]
 
@@ -234,7 +233,7 @@ class TaskMain():
                                 self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
 
                             self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
-                            self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                            time.sleep(1.0) # the final arms movements have wfeo as False, so we need a small delay here to make sure the arm is inside the robot before it starts moving while the arm is still going to the initial position
 
                 self.state = self.task_states["Move_dishes_location"]
 

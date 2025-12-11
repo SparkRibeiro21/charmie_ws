@@ -255,11 +255,11 @@ class ArmUfactory(Node):
 		self.above_milk_place_spot = 					[ -230.0,  380.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		# self.place_milk_in_tray =						[ -230.0,  430.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_milk_in_tray =						[ -230.0,  445.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		self.step_away_from_milk_in_tray =				[ -230.0,  300.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.step_away_from_milk_in_tray =				[ -230.0,  200.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		
 		self.above_cornflakes_place_spot = 				[ -198.0,  350.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_cornflakes_in_tray =					[ -198.0,  420.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
-		self.step_away_from_cornflakes_in_tray =		[ -198.0,  300.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
+		self.step_away_from_cornflakes_in_tray =		[ -286.0,  128.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 			
 		### ALTERNATIVE ###
 		self.above_cornflakes_place_spot_alternative = 			[-232.7, -13.0, -37.8, -2.9, 51.8, 219.7]
@@ -965,7 +965,7 @@ class ArmUfactory(Node):
 			case 6:
 				self.set_gripper_position_(pos=0, wait=False)
 			case 7:
-				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=150, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints, speed=40, wait=False)
 			case 8:
 				self.finish_arm_movement_()
 
@@ -986,7 +986,7 @@ class ArmUfactory(Node):
 			case 6:
 				self.set_gripper_position_(pos=0, wait=False)
 			case 7:
-				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=200, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints, speed=30, wait=False)
 			case 8:
 				self.finish_arm_movement_()
 
