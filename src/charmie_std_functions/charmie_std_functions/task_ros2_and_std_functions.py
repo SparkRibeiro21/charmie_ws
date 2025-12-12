@@ -5241,19 +5241,12 @@ class RobotStdFunctions():
                     else:
                         correct_rotation = obj.orientation -90.0
                     if (selected_object == "spoon" or selected_object == "fork" or selected_object == "knife"):
-                        mask = obj.mask
-                        if mask is not None:
-                            for p, p_n in zip(mask.xy[0], mask.xyn[0]):
-                            
-                                points_mask = Point()
-                                points_mask.x = float(p[0])
-                                points_mask.y = float(p[1])
-
-                                points_mask_norm = Point()
-                                points_mask_norm.x = float(p_n[0])
-                                points_mask_norm.y = float(p_n[1])
-                                points_mask_norm.z = 0.0
-                        print("Mask x: ", points_mask.x, "  Mask y:  ",points_mask.y,"  Mask norm x:  ", points_mask_norm.x, "  Mask norm y:  ",points_mask_norm.y, "  Obj x:  ", obj.position_cam.x)
+                        mask = obj.mask_norm
+                        px = [p.x for p in mask.point]
+                        py = [p.y for p in mask.point]
+                        px = sum(px)/len(px)
+                        py = sum(py)/len(py)
+                        print("Mask x: ", px, "  Mask y:  ",py,"  Mask norm x:  ", "  Obj x:  ", obj.position_cam.x)
 
                     security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
                     initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
