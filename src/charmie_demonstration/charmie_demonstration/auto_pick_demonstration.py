@@ -151,7 +151,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "Fork"
+                    self.object_name = "Spoon"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
