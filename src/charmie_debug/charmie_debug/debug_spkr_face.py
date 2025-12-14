@@ -84,6 +84,8 @@ class TaskMain():
 
                 # self.robot.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=True)
 
+                self.robot.set_speech(filename="serve_breakfast/sb_ready_start", show_in_face=True, wait_for_end_of=True)
+                self.robot.set_speech(filename="serve_breakfast/sb_finished", show_in_face=True, wait_for_end_of=True)
 
                 self.robot.set_speech(filename="generic/moving", show_in_face=True, wait_for_end_of=True)
                 self.robot.set_speech(filename="furniture/dinner_table", show_in_face=True, wait_for_end_of=True)
