@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 
 
-DEBUG_WITHOUT_DISPLAY = False
+DEBUG_WITHOUT_DISPLAY = True
 
 # ROS2 Face Node
 class FaceNode(Node):
