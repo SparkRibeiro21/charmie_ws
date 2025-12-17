@@ -258,7 +258,7 @@ class TaskMain():
 
                 if self.GET_DISHES:
 
-                    if self.HELP_PICK_SPOON:
+                    if not self.HELP_PICK_SPOON:
                         self.robot.pick_object_risky(selected_object="Spoon", return_arm_to_initial_position="collect_spoon_to_tray_funilocopo_v4")
 
                     else:
@@ -273,7 +273,7 @@ class TaskMain():
 
                         self.robot.set_arm(command="collect_spoon_to_tray_funilocopo_v4", wait_for_end_of=True)
                     
-                    if self.HELP_PICK_SPOON:
+                    if not self.HELP_PICK_BOWL:
                         self.robot.pick_object_risky(selected_object="Bowl")
                         
                     else:
