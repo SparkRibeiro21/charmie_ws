@@ -78,12 +78,12 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
-                # self.robot.set_speech(filename="serve_breakfast/sB_finished", wait_for_end_of=True)
+                self.robot.set_speech(filename="serve_breakfast/sB_finished", wait_for_end_of=True)
                 
                 # time.sleep(2.0)
 
                 # self.robot.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=True)
-
+                """ 
                 self.robot.set_speech(filename="rooms/office", show_in_face=True, wait_for_end_of=True)
                 time.sleep(1.0)
                 self.robot.set_speech(filename="serve_breakfast/sb_ready_start", show_in_face=True, wait_for_end_of=True)
@@ -95,7 +95,7 @@ class TaskMain():
                 # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk"))), wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", show_in_face=True, wait_for_end_of=True)
-                self.robot.set_speech(filename="furniture/dinner_table", show_in_face=True, wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/dinner_table", show_in_face=True, wait_for_end_of=True) """
 
 
                 while True:
