@@ -14,11 +14,15 @@ find_package(example_interfaces REQUIRED)
 add_executable(test_moveit src/test_moveit.cpp)
 ament_target_dependencies(test_moveit rclcpp moveit_ros_planning_interface)
 
+add_executable(test_pick_and_place_moveit src/test_pick_and_place_moveit.cpp)
+ament_target_dependencies(test_pick_and_place_moveit rclcpp moveit_ros_planning_interface)
+
 add_executable(commander src/commander_template.cpp)
 ament_target_dependencies(commander rclcpp moveit_ros_planning_interface example_interfaces)
 
 install(TARGETS
   test_moveit
+  test_pick_and_place_moveit
   commander
   DESTINATION lib/${PROJECT_NAME}/
 )
