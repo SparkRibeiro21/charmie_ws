@@ -36,6 +36,7 @@ import json
 import face_recognition
 from skimage.metrics import structural_similarity as ssim
 
+
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
 SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -4980,6 +4981,8 @@ class RobotStdFunctions():
         not_validated = True
         is_object_in_furniture_check = False
         selected_object = selected_object.replace(" ","_").lower()
+        pick_mode = pick_mode.lower()
+        furniture = furniture.replace(" ","_").lower()
 
         MIN_OBJECT_DISTANCE_X = 0.05
         MAX_OBJECT_DISTANCE_X = 2
@@ -4987,10 +4990,12 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_Y = 1
 
 
+
+
         if furniture != "":
                 is_object_in_furniture_check = True
         
-        if first_search_tetas == []:
+        if first_search_tetas == [] and search_with_head_camera:
 
             if self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "horizontal":
                 first_search_tetas = [[0, -45], [-40, -45], [40, -45]]
@@ -4998,7 +5003,7 @@ class RobotStdFunctions():
             elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
                 first_search_tetas = [[0, -15], [0, -35], [0, 15]]
 
-        if pick_mode == "":
+        if pick_mode == "" and search_with_head_camera:
             pick_mode = self.get_standard_pick_from_object(selected_object)
 
         if furniture_height == -1 and furniture != "":
@@ -5007,10 +5012,6 @@ class RobotStdFunctions():
                 print("PICK FURNITURE DOES NOT EXIST OR HAS NO HEIGHT")
         elif furniture_height < 0:
             print("PICK FURNITURE HEIGHT IS NEGATIVE")
-
-
-        pick_mode = pick_mode.lower()
-        furniture = furniture.replace(" ","_").lower()
 
 
         ### While cycle to get a valid detected object ###
@@ -5042,7 +5043,7 @@ class RobotStdFunctions():
                 # In case the robot finds an object, if it is outside the designated furniture (verified if is_object_in_furniture_check = True) 
                 # , it will try to reverse the order in which it searches for the object so as to hopefully not always see the unwanted object first 
 
-                if selected_object == "" and obj.confidence >= 0.5 and cam_z_ < 0.4:
+                if selected_object == "" and obj.confidence >= 0.5 and (cam_z_ > 0.4 or search_with_head_camera == False):
                         valid_detected_object = obj
                         not_validated = False
 
@@ -5074,8 +5075,10 @@ class RobotStdFunctions():
 
             if furniture_height == -1 and furniture == "":
                 furniture = valid_detected_object.furniture_location
+                print ("FURNITURE TEST :", furniture)
                 if furniture != "None":
                     furniture_height = self.get_shelf_from_height(object_height= valid_detected_object.position_relative.z, furniture= valid_detected_object.furniture_location)
+                    furniture_height = 0.85
 
             # ANNOUNCE THE FOUND OBJECT
             self.set_speech(filename="generic/found_following_items", wait_for_end_of=False)
@@ -5085,7 +5088,7 @@ class RobotStdFunctions():
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
             DISTANCE_IN_FRONT_X     = 0.6 
-            DISTANCE_IN_FRONT_Y     = 0.31 
+            DISTANCE_IN_FRONT_Y     = 0.31
             DISTANCE_IN_TOP_X       = 0.58
             DISTANCE_IN_TOP_Y       = -0.05
             MINIMUM_FRONT_HEIGHT    = 0.55
@@ -5161,7 +5164,7 @@ class RobotStdFunctions():
 
                     self.adjust_y_      = valid_detected_object.position_relative.y - DISTANCE_IN_TOP_Y 
 
-                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False)
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False, safety=False)
 
                 # ADJUST TORSO AND ARM DEPENDING ON OBJECT HEIGHT
                 if FLOOR_TOP_HEIGHT >= valid_detected_object.position_relative.z:
@@ -5172,7 +5175,7 @@ class RobotStdFunctions():
 
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=False)
                     self.set_torso_position(legs=80, torso=8, wait_for_end_of=False) 
-                    self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
+                    self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False, safety = False)
 
                 elif HALFWAY_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
 
@@ -5232,7 +5235,7 @@ class RobotStdFunctions():
                         obj = o
 
                 #CORRECT ROTATION CALCULATIONS
-                print("OBJ BOX CENTER:", obj.box_center_y,"  Cam Y:", obj.position_cam.y)
+
                 if self.get_object_shape_from_object(obj.object_name) == "sphere":
                     correct_rotation = 0.0
                 else:
@@ -5241,12 +5244,56 @@ class RobotStdFunctions():
                     else:
                         correct_rotation = obj.orientation -90.0
                     if (selected_object == "spoon" or selected_object == "fork" or selected_object == "knife"):
-                        mask = obj.mask_norm
-                        px = [p.x for p in mask.point]
-                        py = [p.y for p in mask.point]
-                        px = sum(px)/len(px)
-                        py = sum(py)/len(py)
-                        print("Mask x: ", px, "  Mask y:  ",py,"  Mask norm x:  ", "  Obj x:  ", obj.position_cam.x)
+
+                        _, frame = self.get_hand_rgb_image()
+                        curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                        h, w = curr_frame.shape[:2]
+                        yolo_mask = np.zeros((h, w),dtype=np.uint8)
+                        pts = np.array([[p.x, p.y] for p in obj.mask.point],dtype=np.int32)
+                        #yolo_mask = np.zeros((obj.box_width, obj.box_height), dtype=np.int16)
+                        #pts = ([p.x, p.y] for p in obj.mask.point)
+                        yolo_mask = cv2.fillConvexPoly(yolo_mask, pts, 255)
+                        curr_frame = cv2.bitwise_and(curr_frame, curr_frame, mask=yolo_mask)
+
+                        lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+                        lab = cv2.bitwise_and(lab, lab, mask=yolo_mask)
+
+                        #Otsu threshold -> A-channel 
+
+                        crop_img = curr_frame[obj.box_top_left_y:obj.box_top_left_y+obj.box_height, obj.box_top_left_x:obj.box_top_left_x+obj.box_width]
+                        crop_lab = lab[obj.box_top_left_y:obj.box_top_left_y+obj.box_height, obj.box_top_left_x:obj.box_top_left_x+obj.box_width]
+                        th = cv2.threshold(crop_lab[:,:,1], 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+
+                        lower_red = np.array([0,50,50])
+                        upper_red = np.array([10,255,255])
+
+                        red = cv2.inRange(crop_img, lower_red, upper_red)
+                        
+                        cv2.imshow('hsv', crop_img)
+                        cv2.imshow('yolo', yolo_mask)
+                        cv2.imshow('red', red)
+                        cv2.imshow('otsu', th)
+                        cv2.imshow('lab', crop_lab)
+                        cv2.imshow('lab_red', crop_lab[:,:,1])
+                        cv2.waitKey(0)
+                        self.wait_for_start_button()
+
+                        Y, X = np.mgrid[0:red.shape[0]:1, 0:red.shape[1]:1]
+
+                        if np.count_nonzero(red):
+                            centroid_x = int(float(np.sum(cv2.bitwise_and(X, X, mask=red)))/np.count_nonzero(red))
+                            centroid_y = int(float(np.sum(cv2.bitwise_and(Y, Y, mask=red)))/np.count_nonzero(red))
+                        print("Centroid x: ", centroid_x, " Centroid y: ", centroid_y, " Center y: ", obj.box_height/2)
+
+                        self.wait_for_start_button()
+                        print("Rotation", correct_rotation)
+
+                        if centroid_y < obj.box_height/2 and correct_rotation < 90:
+                            correct_rotation =correct_rotation - 180
+                        elif centroid_y > obj.box_height/2 and correct_rotation > 90:
+                            correct_rotation =correct_rotation - 180
+
+                        print("Rotation", correct_rotation)
 
                     security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
                     initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 

@@ -64,7 +64,7 @@ class TaskMain():
         self.task_states ={
             "Waiting_for_task_start": 0,  
             #"Hear_Object":           0,
-            "Select_object_to_pick":  1,
+            "Select_room_to_pick":  1,
             "Move_to_Location":       2,
             "Pick_Object":            3,
             "Move_to_place":          4,
@@ -75,8 +75,7 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
 
-        #self.place_furniture = "Office Table"
-        self.home_furniture = "Dishwasher"        
+        self.home_furniture = "Office Table"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
@@ -84,13 +83,13 @@ class TaskMain():
 
         #Furniture which we cannot place with place_front
 
-        self.unreachable_furniture_front = ["Right Lounge Chair", "Left Lounge Chair", "Reading Chair", "Bed", "TV Table", "Workbench", "Tool Cabinet", "Drill Press"]
-        self.unreachable_room_front = ["Hallway"]
+        #self.unreachable_furniture_front = ["Right Lounge Chair", "Left Lounge Chair", "Reading Chair", "Bed", "TV Table", "Workbench", "Tool Cabinet", "Drill Press"]
+        #self.unreachable_room_front = ["Hallway"]
 
         #Furniture which we cannot place with place_top
 
-        self.unreachable_furniture_top = ["Right Lounge Chair", "Left Lounge Chair", "Shelf", "Pantry", "Kitchen Counter", "Kitchen Cabinet", "Reading Chair", "Bed", "TV Table", "Workbench", "Tool Cabinet", "Drill Press"]
-        self.unreachable_room_top = ["Hallway"]
+        #self.unreachable_furniture_top = ["Right Lounge Chair", "Left Lounge Chair", "Shelf", "Pantry", "Kitchen Counter", "Kitchen Cabinet", "Reading Chair", "Bed", "TV Table", "Workbench", "Tool Cabinet", "Drill Press"]
+        #self.unreachable_room_top = ["Hallway"]
 
         # self.initial_position = [2.8, -4.80, 90.0] # temp (near CHARMIE desk for testing)
     
@@ -136,9 +135,9 @@ class TaskMain():
                 
                 print("SET INITIAL POSITION")
 
-                self.state = self.task_states["Select_object_to_pick"]
+                self.state = self.task_states["Select_room_to_pick"]
             
-            if self.state == self.task_states["Select_object_to_pick"]:
+            if self.state == self.task_states["Select_room_to_pick"]:
 
                 if self.GET_HEAR:
 
@@ -169,49 +168,46 @@ class TaskMain():
 
                 else:
 
-                    while True:
-                        selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                        print(selected_category[0])
-                        if selected_category[0] != "TIMEOUT" and self.robot.get_furniture_from_object_class(selected_category[0]) != "NONE": #THINK ABOUT REPEAT LIMIT
-                            break
+                    rooms = []
+                    for obj in self.robot.node.rooms:
+                        if self.object_mode == "top":
+                            rooms.append(obj["name"])
+                        elif self.object_mode == "front":
+                            rooms.append(obj["name"])
+                    # print("ROOMS", rooms)
 
-                    selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                    print(selected_option[0])
+                    selected_pick_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                    print(selected_pick_room [0])
+                    self.robot.set_speech(filename="rooms/"+selected_pick_room[0].replace(" ","_").lower())
 
-                    while selected_option[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                        selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                        print(selected_option[0])
-
-                    self.object_name = selected_option[0]
-
-                    self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
+                    while selected_pick_room [0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                        selected_pick_room  = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                        print(selected_pick_room[0])
+                        self.robot.set_speech(filename="rooms/"+selected_pick_room[0].replace(" ","_").lower())
 
                     rooms = []
                     for obj in self.robot.node.rooms:
                         if self.object_mode == "top":
-                            if obj["name"] not in self.unreachable_room_top:
-                                rooms.append(obj["name"])
+                            rooms.append(obj["name"])
                         elif self.object_mode == "front":
-                            if obj["name"] not in self.unreachable_room_front:
-                                rooms.append(obj["name"])
+                            rooms.append(obj["name"])
                     # print("ROOMS", rooms)
+                    self.selected_place_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                    print(selected_place_room[0])
+                    self.robot.set_speech(filename="rooms/"+selected_place_room[0].replace(" ","_").lower())
 
-                    selected_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                    print(selected_room[0])
-                    self.robot.set_speech(filename="rooms/"+selected_room[0].replace(" ","_").lower())
-
-                    while selected_room[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                        selected_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
-                        print(selected_room[0])
-                        self.robot.set_speech(filename="rooms/"+selected_room[0].replace(" ","_").lower())
+                    while selected_place_room[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                        selected_place_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                        print(selected_place_room[0])
+                        self.robot.set_speech(filename="rooms/"+selected_place_room[0].replace(" ","_").lower())
 
                     furniture = []
                     for obj in self.robot.node.furniture:
                         if self.object_mode == "top":
-                            if obj["name"] not in self.unreachable_furniture_top and obj["room"] in selected_room[0]:
+                            if obj["name"] not in self.unreachable_furniture_top and obj["room"] in selected_place_room[0]:
                                 furniture.append(obj["name"])
                         elif self.object_mode == "front":
-                            if obj["name"] not in self.unreachable_furniture_front and obj["room"] in selected_room[0]:
+                            if obj["name"] not in self.unreachable_furniture_front and obj["room"] in selected_place_room[0]:
                                 furniture.append(obj["name"])
                     # print("ROOMS", furniture)
 
@@ -283,25 +279,17 @@ class TaskMain():
 
             if self.state == self.task_states["Move_to_Location"]:
 
-                # After the robot has heard what is the object, the next start button press will start the task, enabling CHARMIE to move to location
                 print("START ROUTINE NEXT START")
 
                 self.robot.set_speech(filename="generic/careful", wait_for_end_of=True)                
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
+                self.robot.set_speech(filename="rooms/"+self.selected_pick_room.replace(" ","_").lower(), wait_for_end_of=False)
 
-                #As of now, we are going to make CHARMIE move to a location 
-                if self.object_mode == "front":
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))), wait_for_end_of=True)
-               
-                if self.object_mode == "top":
-                    #rotate_coordinates = self.robot.add_rotation_to_pick_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))))
-                    #self.robot.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))), wait_for_end_of=True)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(self.selected_pick_room.replace(" ","_").lower()), wait_for_end_of=True)
 
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
+                self.robot.set_speech(filename="rooms/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
 
 
                 self.state = self.task_states["Pick_Object"]
