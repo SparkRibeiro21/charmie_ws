@@ -1,23 +1,23 @@
-sensors: ['hand_camera']
-octomap_frame: hand_camera_link
-octomap_resolution: 0.05
-hand_camera.sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
-hand_camera.point_cloud_topic: /CHARMIE/D405_hand/depth/color/points
-hand_camera.max_range: 0.8
-hand_camera.point_subsample: 2
-hand_camera.padding_offset: 0.005
-hand_camera.padding_scale: 1.0
-hand_camera.filtered_cloud_topic: filtered_cloud_hand
-hand_camera.max_update_rate: 10.0
-
-# sensors: ['head_camera']
-# octomap_frame: head_camera_link
+# sensors: ['hand_camera']
+# octomap_frame: hand_camera_link
 # octomap_resolution: 0.05
 # hand_camera.sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
-# hand_camera.point_cloud_topic: /CHARMIE/D455_head/depth/color/points
-# hand_camera.max_range: 2.0
-# hand_camera.point_subsample: 1
-# hand_camera.padding_offset: 0.01
+# hand_camera.point_cloud_topic: /CHARMIE/D405_hand/depth/color/points
+# hand_camera.max_range: 0.8
+# hand_camera.point_subsample: 2
+# hand_camera.padding_offset: 0.005
 # hand_camera.padding_scale: 1.0
 # hand_camera.filtered_cloud_topic: filtered_cloud_hand
-# hand_camera.max_update_rate: 5.0
+# hand_camera.max_update_rate: 10.0
+
+sensors: ['head_camera']
+octomap_frame: head_camera_link
+octomap_resolution: 0.05
+head_camera.sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+head_camera.point_cloud_topic: /CHARMIE/D455_head/depth/color/points
+head_camera.max_range: 2.0
+head_camera.point_subsample: 1
+head_camera.padding_offset: 0.01
+head_camera.padding_scale: 1.0
+head_camera.filtered_cloud_topic: filtered_cloud_hand
+head_camera.max_update_rate: 5.0
