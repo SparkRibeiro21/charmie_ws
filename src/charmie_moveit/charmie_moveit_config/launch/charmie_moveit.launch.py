@@ -1,6 +1,7 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution, FindExecutable
+from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution, FindExecutable, PythonExpression
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -135,6 +136,22 @@ def generate_launch_description():
             moveit_config.planning_pipelines,
         ],
     )
+
+    neck_node = Node(
+        package='charmie_neck_dynamixel',
+        executable='neck_dynamixel',
+        name='neck_dynamixel',
+        emulate_tty=True,
+        condition=IfCondition(use_real_hardware),
+    )
+    
+    low_level_node = Node(
+        package='charmie_low_level',
+        executable='low_level_stream',
+        name='low_level_stream',
+        emulate_tty=True,
+        condition=IfCondition(use_real_hardware),
+    )
     
     return LaunchDescription([
         use_real_hardware_arg,
@@ -149,4 +166,6 @@ def generate_launch_description():
         std_lf.static_transforms_launch,
         commander_node,
         std_lf.marker_arrays_debug,
+        neck_node,
+        low_level_node,
     ])
