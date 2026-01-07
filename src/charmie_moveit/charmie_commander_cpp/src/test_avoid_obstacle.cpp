@@ -6,7 +6,7 @@ int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
 
-    auto node = std::make_shared<rclcpp::Node>("test_moveit_node");
+    auto node = std::make_shared<rclcpp::Node>("test_moveit_pillar_node");
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(node);
     auto spinner = std::thread([&executor]() { executor.spin(); });
@@ -38,8 +38,8 @@ int main(int argc, char** argv)
     table1_primitive.dimensions[table1_primitive.BOX_Z] = 0.8; // z size
 
     geometry_msgs::msg::Pose table1_pose;
-    table1_pose.position.x = 0.8;
-    table1_pose.position.y = 0.4;
+    table1_pose.position.x = 0.75;
+    table1_pose.position.y = 0.0;
     table1_pose.position.z = 0.0;
     table1_pose.orientation.w = 1.0;
 
@@ -49,34 +49,30 @@ int main(int argc, char** argv)
 
     collision_objects.push_back(table1);
 
-    // Create a second table obstacle
-    moveit_msgs::msg::CollisionObject table2;
-    table2.header.frame_id = arm.getPlanningFrame();
-    table2.id = "table2";
+    // Create a vertical pillar obstacle in the middle of the table
+    moveit_msgs::msg::CollisionObject pillar;
+    pillar.header.frame_id = arm.getPlanningFrame();
+    pillar.id = "pillar";
 
-    shape_msgs::msg::SolidPrimitive table2_primitive;
-    table2_primitive.type = table2_primitive.BOX;
-    table2_primitive.dimensions.resize(3);
-    table2_primitive.dimensions[table2_primitive.BOX_X] = 0.8; // x size
-    table2_primitive.dimensions[table2_primitive.BOX_Y] = 1.2; // y size
-    table2_primitive.dimensions[table2_primitive.BOX_Z] = 0.8; // z size
+    shape_msgs::msg::SolidPrimitive pillar_primitive;
+    pillar_primitive.type = pillar_primitive.CYLINDER;
+    pillar_primitive.dimensions.resize(2);
+    pillar_primitive.dimensions[pillar_primitive.CYLINDER_HEIGHT] = 1.0; // height
+    pillar_primitive.dimensions[pillar_primitive.CYLINDER_RADIUS] = 0.08; // radius
 
-    geometry_msgs::msg::Pose table2_pose;
-    table2_pose.position.x = 0.0;
-    table2_pose.position.y = -0.7;
-    table2_pose.position.z = 0.0;
+    geometry_msgs::msg::Pose pillar_pose;
+    pillar_pose.position.x = 0.6;
+    pillar_pose.position.y = 0.0;
+    pillar_pose.position.z = table1_pose.position.z + table1_primitive.dimensions[table1_primitive.BOX_Z]/2 + pillar_primitive.dimensions[pillar_primitive.CYLINDER_HEIGHT]/2;
+    pillar_pose.orientation.w = 1.0;
 
-    // Orientation as a quaternion (90 degrees around Z axis)
-    table2_pose.orientation.z = 0.7071;
-    table2_pose.orientation.w = 0.7071;
+    pillar.primitives.push_back(pillar_primitive);
+    pillar.primitive_poses.push_back(pillar_pose);
+    pillar.operation = pillar.ADD;
 
-    table2.primitives.push_back(table2_primitive);
-    table2.primitive_poses.push_back(table2_pose);
-    table2.operation = table2.ADD;
+    collision_objects.push_back(pillar);
 
-    collision_objects.push_back(table2);
-
-    // Object to grasp
+    // Object to grasp (positioned to the left of the pillar)
     moveit_msgs::msg::CollisionObject object;
     object.header.frame_id = arm.getPlanningFrame();
     object.id = "target";
@@ -86,12 +82,12 @@ int main(int argc, char** argv)
     object_primitive.dimensions.resize(3);
     object_primitive.dimensions[object_primitive.BOX_X] = 0.05; // x size
     object_primitive.dimensions[object_primitive.BOX_Y] = 0.05; // y size
-    object_primitive.dimensions[object_primitive.BOX_Z] = 0.5; // z size
+    object_primitive.dimensions[object_primitive.BOX_Z] = 0.15; // z size
 
     geometry_msgs::msg::Pose object_pose;
-    object_pose.position.x = 0.6;
-    object_pose.position.y = 0.0;
-    object_pose.position.z = 0.7;
+    object_pose.position.x = 0.4;
+    object_pose.position.y = 0.2; // Left side of table
+    object_pose.position.z = table1_pose.position.z + table1_primitive.dimensions[table1_primitive.BOX_Z]/2 + object_primitive.dimensions[object_primitive.BOX_Z]/2;
     object_pose.orientation.w = 1.0;
 
     object.primitives.push_back(object_primitive);
@@ -101,20 +97,26 @@ int main(int argc, char** argv)
 
     // Add the collision objects to the planning scene
     planning_scene.addCollisionObjects(collision_objects);
-    RCLCPP_DEBUG(node->get_logger(), "Added collision objects to the planning scene.");
+    RCLCPP_INFO(node->get_logger(), "Added collision objects to the planning scene (table, pillar, and target object).");
 
-    // Target planning
+    // Target planning - approach from above
 
     geometry_msgs::msg::PoseStamped target_pose;
     target_pose.header.frame_id = arm.getPlanningFrame();
-    target_pose.pose.position.x = object_pose.position.x - 0.2;
+    target_pose.pose.position.x = object_pose.position.x;
     target_pose.pose.position.y = object_pose.position.y;
-    target_pose.pose.position.z = object_pose.position.z;
+    target_pose.pose.position.z = object_pose.position.z + object_primitive.dimensions[object_primitive.BOX_Z] + 0.2; // Above the object
 
-    target_pose.pose.orientation.x = 0.0;
-    target_pose.pose.orientation.y = 0.7071;
+    RCLCPP_INFO(node->get_logger(), "Target pose set to x: %.2f, y: %.2f, z: %.2f",
+                target_pose.pose.position.x,
+                target_pose.pose.position.y,
+                target_pose.pose.position.z);
+
+    // Gripper pointing down
+    target_pose.pose.orientation.x = 1.0;
+    target_pose.pose.orientation.y = 0.0;
     target_pose.pose.orientation.z = 0.0;
-    target_pose.pose.orientation.w = 0.7071;
+    target_pose.pose.orientation.w = 0.0;
 
     arm.setStartStateToCurrentState();
     arm.setPoseTarget(target_pose);
@@ -123,18 +125,18 @@ int main(int argc, char** argv)
     bool success = (arm.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
     if (success)
     {
-        RCLCPP_INFO(node->get_logger(), "Planning to target pose successful. Executing...");
+        RCLCPP_INFO(node->get_logger(), "Planning to pre-grasp pose successful. Executing...");
         arm.execute(plan);
     }
     else
     {
-        RCLCPP_WARN(node->get_logger(), "Planning to target pose failed.");
+        RCLCPP_WARN(node->get_logger(), "Planning to pre-grasp pose failed.");
     }
 
-    // Move forward to grasp the object
+    // Move down to grasp the object
     std::vector<geometry_msgs::msg::Pose> waypoints;
     geometry_msgs::msg::Pose grasp_pose = arm.getCurrentPose().pose;
-    grasp_pose.position.x += 0.2;
+    grasp_pose.position.z -= 0.15;
 
     waypoints.push_back(grasp_pose);
 
@@ -142,14 +144,14 @@ int main(int argc, char** argv)
     const double jump_threshold = 2*M_PI;
     const double eef_step = 0.01;
     double fraction = arm.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-    if (fraction > 0.2)
+    if (fraction > 0.8)
     {
         RCLCPP_INFO(node->get_logger(), "Computed Cartesian path to grasp pose. Executing...");
         arm.execute(trajectory);
     }
     else
     {
-        RCLCPP_WARN(node->get_logger(), "Could not compute a valid Cartesian path to the grasp pose.");
+        RCLCPP_WARN(node->get_logger(), "Could not compute a valid Cartesian path to the grasp pose. Fraction: %.2f", fraction);
     }
 
     // Close gripper
@@ -178,34 +180,35 @@ int main(int argc, char** argv)
 
     arm.attachObject("target", "xarm_link6", touch_links);
 
-    // Lift the object slightly
+    // Lift the object
     waypoints.clear();
     geometry_msgs::msg::Pose lift_pose = arm.getCurrentPose().pose;
-    lift_pose.position.z += 0.1;
+    lift_pose.position.z += 0.2;
     waypoints.push_back(lift_pose);
 
     fraction = arm.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-    if (fraction > 0.2)
+    if (fraction > 0.8)
     {
         RCLCPP_INFO(node->get_logger(), "Computed Cartesian path to lift object. Executing...");
         arm.execute(trajectory);
     }
     else
     {
-        RCLCPP_WARN(node->get_logger(), "Could not compute a valid Cartesian path to lift the object.");
+        RCLCPP_WARN(node->get_logger(), "Could not compute a valid Cartesian path to lift the object. Fraction: %.2f", fraction);
     }
 
-    // Place planning
+    // Place planning - move to the right side of the table (opposite side of pillar)
     geometry_msgs::msg::PoseStamped place_pose;
     place_pose.header.frame_id = arm.getPlanningFrame();
-    place_pose.pose.position.x = table2_pose.position.x;
-    place_pose.pose.position.y = table2_pose.position.y;
-    place_pose.pose.position.z = table2_pose.position.z + table2_primitive.dimensions[table2_primitive.BOX_Z] + 0.2;
+    place_pose.pose.position.x = 0.4;
+    place_pose.pose.position.y = -0.2; // Left side of table (opposite from pick location)
+    place_pose.pose.position.z = target_pose.pose.position.z; // Above final placement
 
-    place_pose.pose.orientation.x = 0.0;
-    place_pose.pose.orientation.y = 0.7071;
+    // Gripper pointing down
+    place_pose.pose.orientation.x = 1.0;
+    place_pose.pose.orientation.y = 0.0;
     place_pose.pose.orientation.z = 0.0;
-    place_pose.pose.orientation.w = 0.7071;
+    place_pose.pose.orientation.w = 0.0;
 
     RCLCPP_INFO(node->get_logger(), "Place pose set to x: %.2f, y: %.2f, z: %.2f",
                 place_pose.pose.position.x,
@@ -219,7 +222,7 @@ int main(int argc, char** argv)
     bool success3 = (arm.plan(plan3) == moveit::core::MoveItErrorCode::SUCCESS);
     if (success3)
     {
-        RCLCPP_INFO(node->get_logger(), "Planning to place pose successful. Executing...");
+        RCLCPP_INFO(node->get_logger(), "Planning to place pose successful (avoiding pillar). Executing...");
         arm.execute(plan3);
     }
     else
@@ -230,7 +233,7 @@ int main(int argc, char** argv)
     // Lower the object
     waypoints.clear();
     geometry_msgs::msg::Pose lower_pose = arm.getCurrentPose().pose;
-    lower_pose.position.z -= 0.2;
+    lower_pose.position.z -= 0.4;
     waypoints.push_back(lower_pose);
 
     fraction = arm.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
@@ -241,7 +244,7 @@ int main(int argc, char** argv)
     }
     else
     {
-        RCLCPP_WARN(node->get_logger(), "Could not compute a valid Cartesian path to lower the object.");
+        RCLCPP_WARN(node->get_logger(), "Could not compute a valid Cartesian path to lower the object. Fraction: %.2f", fraction);
     }
 
     // Open gripper
@@ -262,23 +265,22 @@ int main(int argc, char** argv)
     arm.detachObject("target");
 
     // Lift the gripper after placing the object
-
     waypoints.clear();
     geometry_msgs::msg::Pose retreat_pose = arm.getCurrentPose().pose;
-    retreat_pose.position.z += 0.1;
+    retreat_pose.position.z += 0.15;
     waypoints.push_back(retreat_pose);
     fraction = arm.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-    if (fraction > 0.2)
+    if (fraction > 0.8)
     {
         RCLCPP_INFO(node->get_logger(), "Computed Cartesian path to retreat after placing object. Executing...");
         arm.execute(trajectory);
     }
     else
     {
-        RCLCPP_WARN(node->get_logger(), "Could not compute a valid Cartesian path to retreat after placing the object.");
+        RCLCPP_WARN(node->get_logger(), "Could not compute a valid Cartesian path to retreat. Fraction: %.2f", fraction);
     }
 
-    // Retreat after placing the object
+    // Return to home position
     arm.setStartStateToCurrentState();
     arm.setNamedTarget("home");
 
@@ -287,16 +289,16 @@ int main(int argc, char** argv)
 
     if (success2)
     {
-        RCLCPP_INFO(node->get_logger(), "Retreat planning successful. Executing...");
+        RCLCPP_INFO(node->get_logger(), "Retreat to home planning successful. Executing...");
         arm.execute(plan2);
     }
     else
     {
-        RCLCPP_WARN(node->get_logger(), "Retreat planning failed.");
+        RCLCPP_WARN(node->get_logger(), "Retreat to home planning failed.");
     }
 
     // Remove obstacles
-    planning_scene.removeCollisionObjects({"table1", "table2", "target"});
+    planning_scene.removeCollisionObjects({"table1", "pillar", "target"});
 
     rclcpp::shutdown();
     spinner.join();
