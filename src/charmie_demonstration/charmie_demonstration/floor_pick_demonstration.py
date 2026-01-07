@@ -64,7 +64,7 @@ class TaskMain():
         self.task_states ={
             "Waiting_for_task_start": 0,  
             #"Hear_Object":           0,
-            "Select_room_to_pick":  1,
+            "Select_room_to_pick":    1,
             "Move_to_Location":       2,
             "Pick_Object":            3,
             "Move_to_place":          4,

@@ -310,7 +310,7 @@ class TaskMain():
             elif self.state == self.task_states["Pick_Object"]:
 
                 if self.object_name == "Bowl":
-                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas, return_arm_to_initial_position=False)
+                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, search_with_head_camera = True, pick_mode=self.object_mode, first_search_tetas=self.tetas, return_arm_to_initial_position=False)
                 else:
                     picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
