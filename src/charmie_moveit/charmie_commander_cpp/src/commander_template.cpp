@@ -1,9 +1,13 @@
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <example_interfaces/msg/bool.hpp>
+#include <charmie_interfaces/msg/detected_object.hpp>
+#include <charmie_interfaces/msg/list_of_detected_object.hpp>
 
 using MoveGroupInterface = moveit::planning_interface::MoveGroupInterface;
 using Bool = example_interfaces::msg::Bool;
+using DetectedObject = charmie_interfaces::msg::DetectedObject;
+using ListOfDetectedObjects = charmie_interfaces::msg::ListOfDetectedObject;
 using namespace std::placeholders;
 
 class Commander
@@ -20,6 +24,11 @@ class Commander
             open_gripper_sub_ = node_ ->create_subscription<Bool>(
                 "open_gripper", 10,
                 std::bind(&Commander::OpenGripperCallback, this, _1)
+            );
+
+            detected_objects_sub_ = node_ ->create_subscription<ListOfDetectedObjects>(
+                "objects_all_detected_filtered", 10,
+                std::bind(&Commander::DetectedObjectsCallback, this, _1)
             );
         }
 
@@ -122,11 +131,40 @@ class Commander
                 
         }
 
+        void DetectedObjectsCallback(const ListOfDetectedObjects::SharedPtr msg)
+        {
+            if(msg->objects.empty())
+            {
+                RCLCPP_WARN(node_->get_logger(), "No objects detected");
+                return;
+            }
+
+            RCLCPP_INFO(node_->get_logger(),"Detected %ld objects", msg->objects.size());
+
+            for (const auto &obj : msg->objects)
+            {
+                RCLCPP_INFO(
+                    node_->get_logger(),
+                    "ID: %d | %s | conf: %.2f | rel:(%f %f %f) | cam:(%f %f %f)",
+                    obj.index,
+                    obj.object_name.c_str(),
+                    obj.confidence,
+                    obj.position_relative.x,
+                    obj.position_relative.y,
+                    obj.position_relative.z,
+                    obj.position_cam.x,
+                    obj.position_cam.y,
+                    obj.position_cam.z
+                );
+            }
+        }
+
         std::shared_ptr<rclcpp::Node> node_;
         std::shared_ptr<MoveGroupInterface> xarm_;
         std::shared_ptr<MoveGroupInterface> xarm_gripper_;
 
         rclcpp::Subscription<Bool>::SharedPtr open_gripper_sub_;
+        rclcpp::Subscription<ListOfDetectedObjects>::SharedPtr detected_objects_sub_;
 };
 
 int main(int argc, char** argv)

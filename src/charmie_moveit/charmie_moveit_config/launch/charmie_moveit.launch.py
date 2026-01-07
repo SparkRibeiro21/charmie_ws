@@ -123,6 +123,18 @@ def generate_launch_description():
         ],
         output='screen'
     )
+
+    commander_node = Node(
+        package='charmie_commander_cpp',
+        executable='commander',
+        output='screen',
+        parameters=[
+            moveit_config.robot_description,
+            moveit_config.robot_description_semantic,
+            moveit_config.robot_description_kinematics,
+            moveit_config.planning_pipelines,
+        ],
+    )
     
     return LaunchDescription([
         use_real_hardware_arg,
@@ -135,4 +147,6 @@ def generate_launch_description():
         rviz_node,
         # std_lf.charmie_multi_camera_launch_description,
         std_lf.static_transforms_launch,
+        commander_node,
+        std_lf.marker_arrays_debug,
     ])
