@@ -10,10 +10,12 @@
 * [Project Description :book:](#book-project-description)
 * [Requirements :rocket:](#rocket-requirements)
 * [RoboCup@Home Qualification Videos :robot:](#robot-robocuphome-qualification-videos)
+  * [RoboCup@Home 2026 :kr:](#robocuphome-2026-kr)
   * [RoboCup@Home 2025 :brazil:](#robocuphome-2025-brazil)
   * [RoboCup@Home 2024 :netherlands:](#robocuphome-2024-netherlands)
   * [RoboCup@Home 2023 :fr:](#robocuphome-2023-fr)
 * [Videos from Pevious Events :gear:](#gear-videos-from-previous-events)
+  * [Qualification for RoboCup 2026 :portugal:](#qualification-for-robocup-2026-portugal)
   * [RoboCup 2024 :netherlands:](#robocup-2024-netherlands)
   * [RoboCup Portugal Open 2024 :portugal:](#robocup-portugal-open-2024-portugal)
   * [RoboCup 2023 :fr:](#robocup-2023-fr)
@@ -21,6 +23,7 @@
 * [Results :trophy:](#trophy-results)
 * [Extended Scores :chart_with_upwards_trend:](#chart_with_upwards_trend-extended-scores)
 * [Contributors :technologist:](#technologist-contributors)
+* [Sponsors :pray:](#pray-sponsors)
 * [Social Media :handshake:](#handshake-connect-with-us)
 
 ## :book: Project Description
@@ -51,11 +54,11 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ## :robot: RoboCup@Home Qualification Videos
 
-### RoboCup@Home 2026 :brazil:
+### RoboCup@Home 2026 :kr:
 
-[![Video Title](https://img.youtube.com/vi/tgTzuuzeos8/0.jpg)](https://www.youtube.com/watch?v=tgTzuuzeos8)
+[![Video Title](https://img.youtube.com/vi/F16jvQuo_jQ/0.jpg)](https://www.youtube.com/watch?v=F16jvQuo_jQ)
 
-[Youtube Link for 2025 Qualification Video](https://m.youtube.com/watch?v=tgTzuuzeos8)
+[Youtube Link for 2026 Qualification Video](https://m.youtube.com/watch?v=tgTzuuzeos8)
 
 ### RoboCup@Home 2025 :brazil:
 
@@ -76,6 +79,30 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 [Youtube Link for 2023 Qualification Video](https://m.youtube.com/watch?v=gNx9OYljlcw)
 
 ## :gear: Videos from Previous Events 
+
+### Qualification for RoboCup 2026 :portugal:
+<details>
+  <summary>Click to expand</summary>
+
+  ## Restaurant (Desgraça Food and Drinks Restaurant)
+
+  [![Video Title](https://img.youtube.com/vi/eR3xqZmpUa4/0.jpg)](https://www.youtube.com/watch?v=eR3xqZmpUa4)
+
+  [Youtube Link for CHARMIE Robot Works at 'Desgraça Food & Drinks' Restaurant](https://m.youtube.com/watch?v=eR3xqZmpUa4)
+
+  ## Serve Breakfast (LAR)
+
+  [![Video Title](https://img.youtube.com/vi/vENbHFMInME/0.jpg)](https://www.youtube.com/watch?v=vENbHFMInME)
+
+  [Youtube Link for CHARMIE Robot Serves Breakfast](https://m.youtube.com/watch?v=vENbHFMInME)
+
+  ## Object Manipulation (LAR)
+
+  [![Video Title](https://img.youtube.com/vi/4eXqqikATwc/0.jpg)](https://www.youtube.com/watch?v=4eXqqikATwc)
+
+  [Youtube Link for CHARMIE Robot Object Manipulation](https://m.youtube.com/watch?v=4eXqqikATwc)
+  
+</details>
 
 ### RoboCup 2024 :netherlands:
 <details>
@@ -175,6 +202,10 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ## :bookmark_tabs: Team Description Papers
 
+  ### LAR@Home 2026 Team Description Paper
+  
+  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17788967.svg)](https://doi.org/10.5281/zenodo.17788967)
+  
   ### LAR@Home 2025 Team Description Paper
   
   [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15178542.svg)](https://doi.org/10.5281/zenodo.15178542)
@@ -216,12 +247,15 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 |RoboCup Portugal Open 2023|-|-|400|-|-|-|400|-|-|-|-|0|400|
 
 
-## :technologist: Contributors:
+## :technologist: Contributors
 
 <a href="https://github.com/SparkRibeiro21/charmie_ws"> 
   <img src="https://contrib.rocks/image?repo=SparkRibeiro21/charmie_ws" alt="contrib.rocks image" />
 </a>
 
+## :pray: Sponsors
+
+<img src="src/configuration_files/docs/sponsors.png" width="720">
 
 ## :handshake: Connect with us
 

@@ -43,6 +43,19 @@ class LocalisationNode(Node):
         # Timer to update the point at 20Hz
         self.timer = self.create_timer(0.05, self.publish_robot_gripper)
 
+        # PUBLISH GRIPPER FROM BASE
+
+        # TF2 Buffer and Listener
+        # self.tf_buffer = Buffer()
+        self.tf_buffer_base_gripper = Buffer(cache_time=Duration(seconds=1.0))
+        self.tf_listener_base_gripper = TransformListener(self.tf_buffer_base_gripper, self)
+
+        # Create a publisher for the gripper point
+        self.point_base_publisher = self.create_publisher(Point, "robot_base_gripper_localisation", 10)
+
+        # Timer to update the point at 20Hz
+        self.timer = self.create_timer(0.05, self.publish_robot_base_gripper)
+
 
     def publish_robot_pose(self):
         try:
@@ -139,6 +152,41 @@ class LocalisationNode(Node):
             except Exception as e:
                 print(f"Could not get transform: {str(e)}")
                 # self.get_logger().warn(f"Could not get transform: {str(e)}")
+
+    def publish_robot_base_gripper(self):
+        try:
+            requested_time = rclpy.time.Time()
+            if self.tf_buffer_base_gripper.can_transform("base_link", "xarm_link6", requested_time):
+                # Get robot point in map frame
+                transform = self.tf_buffer_base_gripper.lookup_transform("base_link", "xarm_link6", requested_time)
+                
+                # Check if the transform is recent (less than 0.5s old)
+                tf_time = rclpy.time.Time.from_msg(transform.header.stamp)
+                now = self.get_clock().now()
+                age = now - tf_time
+                if age.nanoseconds > 500_000_000:  # 0.5 seconds
+                    print(f"⚠️ Transform is too old! Age: {age.nanoseconds / 1e9:.2f}s")
+                    # self.get_logger().warn(f"⚠️ Transform is too old! Age: {age.nanoseconds / 1e9:.2f}s")
+                    return  # Skip publishing
+                # Extract position
+                x = transform.transform.translation.x
+                y = transform.transform.translation.y
+                z = transform.transform.translation.z
+                # Publish Point message
+                point_base_msg = Point()
+                point_base_msg.x = x
+                point_base_msg.y = y
+                point_base_msg.z = z
+                self.point_base_publisher.publish(point_base_msg)
+                print(f"Published Gripper to Base Point: x={x:.2f}, y={y:.2f}, z={z:.2f}")
+            
+            else:
+                print("2 Could not get transform: Base -> gripper base")
+                # self.get_logger().warn("222 Could not get transform: map -> base_link")
+                pass
+        except Exception as e:
+            print(f"Could not get transform: {str(e)}")
+            # self.get_logger().warn(f"Could not get transform: {str(e)}")
 
 def main(args=None):
     rclpy.init(args=args)

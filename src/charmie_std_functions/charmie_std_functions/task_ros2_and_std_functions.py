@@ -109,6 +109,7 @@ class ROS2TaskNode(Node):
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         self.robot_gripper_localisation_subscriber = self.create_subscription(Point, "robot_gripper_localisation", self.robot_gripper_localisation_callback, 10)
+        self.robot_base_gripper_localisation_subscriber = self.create_subscription(Point, "robot_base_gripper_localisation", self.robot_base_gripper_localisation_callback, 10)
         # Search for person and object 
         self.search_for_person_detections_publisher = self.create_publisher(ListOfDetectedPerson, "search_for_person_detections", 10)
         self.search_for_object_detections_publisher = self.create_publisher(ListOfDetectedObject, "search_for_object_detections", 10)
@@ -375,6 +376,7 @@ class ROS2TaskNode(Node):
         # robot localization
         self.robot_pose = Pose2D()
         self.gripper_point = Point()
+        self.base_gripper_point = Point()
 
         # Success and Message confirmations for all set_(something) CHARMIE functions
         self.speech_success = True
@@ -460,6 +462,11 @@ class ROS2TaskNode(Node):
         self.nav2_follow_waypoints_feedback = NavigateToPose.Feedback()
         self.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
 
+        self.goal_safety_handle_ = None
+        self.nav2_safety_goal_accepted = None
+        self.nav2_safety_feedback = NavigateToPose.Feedback()
+        self.nav2_safety_status = GoalStatus.STATUS_UNKNOWN
+
         self.adjust_angle_navigation_handle_ = None
         self.adjust_angle_navigation_accepted = None
         self.adjust_angle_navigation_feedback = AdjustNavigationAngle.Feedback()
@@ -467,12 +474,12 @@ class ROS2TaskNode(Node):
 
         self.adjust_omni_navigation_handle_ = None
         self.adjust_omni_navigation_accepted = None
-        self.adjust_omni_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_omni_navigation_feedback = AdjustNavigationOmnidirectional.Feedback()
         self.adjust_omni_navigation_status = GoalStatus.STATUS_UNKNOWN
 
         self.adjust_obstacle_navigation_handle_ = None
         self.adjust_obstacle_navigation_accepted = None
-        self.adjust_obstacle_navigation_feedback = AdjustNavigationAngle.Feedback()
+        self.adjust_obstacle_navigation_feedback = AdjustNavigationObstacles.Feedback()
         self.adjust_obstacle_navigation_status = GoalStatus.STATUS_UNKNOWN
 
         self.current_odom_pose = None
@@ -560,6 +567,9 @@ class ROS2TaskNode(Node):
 
     def robot_gripper_localisation_callback(self, point: Point):
         self.gripper_point = point
+
+    def robot_base_gripper_localisation_callback(self, point: Point):
+        self.base_gripper_point = point
 
     def arm_finished_movement_callback(self, flag: Bool):
         # self.get_logger().info("Received response from arm finishing movement")
@@ -1340,6 +1350,60 @@ class ROS2TaskNode(Node):
         # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
         # distance_remaining = str(round(feedback.distance_remaining, 2))
         # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
+        # self.get_logger().info(f"Feedback: {feedback}")
+
+    def nav2_safety_client_goal_response_callback(self, future):
+        self.goal_safety_handle_:ClientGoalHandle = future.result()
+        if self.goal_safety_handle_.accepted:
+            self.get_logger().info("Goal accepted.")
+            self.goal_safety_handle_.get_result_async().add_done_callback(self.nav2_safety_client_goal_result_callback)
+            self.nav2_safety_goal_accepted = True
+        else:
+            self.nav2_safety_goal_accepted = False
+            self.goal_safety_handle_ = None
+            self.get_logger().warn("Goal rejected.")
+
+    def nav2_safety_client_goal_result_callback(self, future):
+        status = future.result().status
+        # result = future.result().result
+
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.nav2_safety_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info("SUCCEEDED.")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.nav2_safety_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().error("ABORTED.")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.nav2_safety_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().warn("CANCELED.")
+        else:
+            self.nav2_safety_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}")
+        
+        # When goal is finished, clear the handle
+        self.goal_safety_handle_ = None
+    
+    def nav2_safety_client_cancel_goal(self):
+        if self.goal_safety_handle_ is None:
+            self.get_logger().warn("No active NavigateToPose goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to Nav2...")
+        self.goal_safety_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.goal_safety_handle_ = None
+
+    def nav2_safety_client_goal_feedback_callback(self, feedback_msg):
+        self.nav2_safety_feedback = feedback_msg.feedback
+        # print(type(feedback))   
+        # current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+        # current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+        # current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+        # navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+        # estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+        # no_recoveries = str(feedback.number_of_recoveries)
+        # distance_remaining = str(round(feedback.distance_remaining, 2))
+        # print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
 
 
@@ -2325,15 +2389,6 @@ class RobotStdFunctions():
 
             print(" --- ERROR WITH RECEIVED INITIAL POSITION --- ")
 
-
-
-
-
-
-
-
-
-
     def move_to_position(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
@@ -2381,12 +2436,17 @@ class RobotStdFunctions():
 
                     if time.time() - feedback_start_time > feedback_timer_period:
                         feedback = self.node.nav2_feedback
+                        current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                        current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                        current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
                         navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                        no_recoveries = str(feedback.number_of_recoveries)
                         distance_remaining = str(round(feedback.distance_remaining, 2))
-                        print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
-                        # self.node.get_logger().info(f"Feedback: {feedback}")
+                        print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                        # self.get_logger().info(f"Feedback: {feedback}")
                         feedback_start_time = time.time()
-            
+                        
             if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
                 self.node.get_logger().info("CHARMIE NAV2 RESULT: SUCCEEDED.")
                 success = True
@@ -2407,108 +2467,6 @@ class RobotStdFunctions():
             success = True
             message = "Sent Command to CHARMIE Nav2, not waiting for end of"
             return success, message
-        
-
-
-        """ # Whether the nav2 goal has been successfully completed until the end
-        nav2_goal_completed = False
-
-        # Create a goal
-        goal_msg = NavigateToPose.Goal()
-        goal_msg.pose.header.frame_id = "map"
-        goal_msg.pose.header.stamp = self.node.get_clock().now().to_msg()
-        goal_msg.pose.pose.position.x = float(move_coords[0])
-        goal_msg.pose.pose.position.y = float(move_coords[1])
-        goal_msg.pose.pose.position.z = float(0.0)
-        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(move_coords[2]))        
-        goal_msg.pose.pose.orientation.x = q_x
-        goal_msg.pose.pose.orientation.y = q_y
-        goal_msg.pose.pose.orientation.z = q_z
-        goal_msg.pose.pose.orientation.w = q_w
-
-        success = True
-        message = ""
-        
-        self.set_rgb(BLUE+BACK_AND_FORTH_8)
-
-        while not nav2_goal_completed:
-
-            # Clear costmaps before sending a new goal
-            # Helps clearing cluttered costmaps that may cause navigation problems
-            if clear_costmaps:
-                self.clear_navigation_costmaps()
-                time.sleep(0.5) # wait a bit for costmaps to be cleared
-                
-            self.node.nav2_goal_accepted = False
-            self.node.nav2_status = GoalStatus.STATUS_UNKNOWN
-
-            # Makes sure goal is accepted, and if not attempts to resend it
-            while not self.node.nav2_goal_accepted:
-                
-                self.node.get_logger().info("Waiting for nav2 server...")
-                self.node.nav2_client_.wait_for_server()
-                self.node.get_logger().info("Nav2 server is ON...")
-
-                # Send the goal
-                self.node.get_logger().info("Sending goal...")
-                self.node.nav2_client_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_client_goal_feedback_callback).add_done_callback(self.node.nav2_client_goal_response_callback)
-                self.node.get_logger().info("Goal Sent")
-
-                time.sleep(0.5)
-
-
-            if wait_for_end_of:
-
-                feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
-                feedback_start_time = time.time()
-
-                is_canceled = False
-
-                self.set_rgb(CYAN+BACK_AND_FORTH_8)
-
-                while self.node.nav2_status == GoalStatus.STATUS_UNKNOWN:
-
-                    # Checks conditions to cancel safety navigation (used in inspection task)
-                    if inspection_safety_nav and not self.check_conditions_to_stop_safety_navigation(move_coords) and not is_canceled:
-                        self.node.nav2_client_cancel_goal()
-                        is_canceled = True
-                    
-                    if print_feedback:
-
-                        if time.time() - feedback_start_time > feedback_timer_period:
-
-                            # prints de feedback
-                            feedback = self.node.nav2_feedback
-                            current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
-                            current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
-                            current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
-                            navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
-                            estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
-                            no_recoveries = str(feedback.number_of_recoveries)
-                            distance_remaining = str(round(feedback.distance_remaining, 2))
-                            print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
-                            # self.node.get_logger().info(f"Feedback: {feedback}")
-                            
-                            feedback_start_time = time.time()
-
-                
-                if self.node.nav2_status == GoalStatus.STATUS_SUCCEEDED:
-                    self.set_rgb(GREEN+BACK_AND_FORTH_8)
-                    self.node.get_logger().info("NAV2 RESULT: SUCCEEDED.")
-                    nav2_goal_completed = True
-                    success = True
-                    message = "Successfully moved to position"
-                    return success, message
-                elif self.node.nav2_status == GoalStatus.STATUS_ABORTED:
-                    self.set_rgb(RED+BACK_AND_FORTH_8)
-                    self.node.get_logger().info("NAV2 RESULT: ABORTED.")
-                    self.node.get_logger().info("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE.")
-                elif self.node.nav2_status == GoalStatus.STATUS_CANCELED:
-                    self.set_rgb(RED+BACK_AND_FORTH_8)
-                    self.node.get_logger().info("NAV2 RESULT: CANCELED.")
-                    success = False
-                    message = "Aborted moved to position due to safety measures"
-                    return success, message """
 
     def move_to_position_cancel(self):
         if self.node.goal_handle_ is not None:
@@ -2576,12 +2534,17 @@ class RobotStdFunctions():
 
                         if time.time() - feedback_start_time > feedback_timer_period:
                             feedback = self.node.nav2_follow_waypoints_feedback
+                            current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                            current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                            current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
                             navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                            estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                            no_recoveries = str(feedback.number_of_recoveries)
                             distance_remaining = str(round(feedback.distance_remaining, 2))
-                            print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
-                            # self.node.get_logger().info(f"Feedback: {feedback}")
+                            print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                            # self.get_logger().info(f"Feedback: {feedback}")
                             feedback_start_time = time.time()
-                
+                        
                 if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
                     self.node.get_logger().info("CHARMIE NAV2 FOLLOW WAYPOINTS RESULT: SUCCEEDED.")
                     success = True
@@ -2602,97 +2565,6 @@ class RobotStdFunctions():
                 success = True
                 message = "Sent Command to CHARMIE Nav2 Follow Waypoints, not waiting for end of"
                 return success, message
-            
-
-
-        """ # Whether the nav2 goal has been successfully completed until the end
-        nav2_goal_completed = False
-
-        if move_coords:
-
-            goal_msg = FollowWaypoints.Goal()
-            goal_msg.poses = []
-
-            for x, y, yaw in move_coords: 
-                
-                pose = PoseStamped()
-                pose.header.frame_id = "map"
-                pose.header.stamp = self.node.get_clock().now().to_msg()
-                pose.pose.position.x = float(x)
-                pose.pose.position.y = float(y)
-                pose.pose.position.z = float(0.0)
-                q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(yaw)) # math.radians(initial_position[2]))        
-                pose.pose.orientation.x = q_x
-                pose.pose.orientation.y = q_y
-                pose.pose.orientation.z = q_z
-                pose.pose.orientation.w = q_w
-                
-                goal_msg.poses.append(pose)
-
-            self.set_rgb(BLUE+BACK_AND_FORTH_8)
-                    
-            while not nav2_goal_completed:
-
-                # Clear costmaps before sending a new goal
-                # Helps clearing cluttered costmaps that may cause navigation problems
-                if clear_costmaps:
-                    self.clear_navigation_costmaps()
-                    time.sleep(0.5) # wait a bit for costmaps to be cleared
-                    
-                        
-                self.node.nav2_follow_waypoints_goal_accepted = False
-                self.node.nav2_follow_waypoints_status = GoalStatus.STATUS_UNKNOWN
-
-                # Makes sure goal is accepted, and if not attempts to resend it
-                while not self.node.nav2_follow_waypoints_goal_accepted:
-                    
-                    self.node.get_logger().info("Waiting for nav2 server...")
-                    self.node.nav2_client_follow_waypoints_.wait_for_server()
-                    self.node.get_logger().info("Nav2 server is ON...")
-
-                    # Send the goal
-                    self.node.get_logger().info("Sending goal...")
-                    self.node.nav2_client_follow_waypoints_.send_goal_async(goal_msg, feedback_callback=self.node.nav2_follow_waypoints_client_goal_feedback_callback).add_done_callback(self.node.nav2_follow_waypoints_client_goal_response_callback)
-                    self.node.get_logger().info("Goal Sent")
-
-                    time.sleep(0.5)
-
-
-                if wait_for_end_of:
-
-                    feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
-                    feedback_start_time = time.time()
-
-                    self.set_rgb(CYAN+BACK_AND_FORTH_8)
-
-                    while self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_UNKNOWN:
-                        
-                        if print_feedback:
-
-                            if time.time() - feedback_start_time > feedback_timer_period:
-
-                                # prints de feedback
-                                feedback = self.node.nav2_follow_waypoints_feedback
-                                current_waypoint = str(feedback.current_waypoint)
-                                
-                                self.node.get_logger().info(f"Current Waypoint: {current_waypoint}")
-                                # self.node.get_logger().info(f"Feedback: {feedback}")
-                                
-                                feedback_start_time = time.time()
-
-                    
-                    if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
-                        self.set_rgb(GREEN+BACK_AND_FORTH_8)
-                        print("FINISHED TR SUCCEEDED")
-                        nav2_goal_completed = True                
-                    elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_ABORTED:
-                        self.set_rgb(RED+BACK_AND_FORTH_8)
-                        print("FINISHED TR ABORTED")
-                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE")
-                    elif self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_CANCELED:
-                        self.set_rgb(RED+BACK_AND_FORTH_8)
-                        print("FINISHED TR CANCELED")
-                        print("ATTEMPING TO RETRY MOVEMENT TO GOAL POSE") """
 
     def move_to_position_follow_waypoints_cancel(self):
         if self.node.goal_follow_waypoints_handle_ is not None:
@@ -2713,44 +2585,105 @@ class RobotStdFunctions():
     def clear_navigation_costmaps(self):
         self.node.call_clear_nav2_costmaps()
 
-    def move_to_position_with_safety_navigation(self, move_coords, print_feedback=True, feedback_freq=1.0, clear_costmaps=True, wait_for_end_of=True):
-
-        success = False
-        message = ""
+    def move_to_position_with_safety_navigation(self, move_coords, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         self.activate_yolo_pose(activate=True, only_detect_person_right_in_front=True)
         self.set_face(camera="head", show_detections=True)
+
+        # Create a goal
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose.header.frame_id = "map"
+        goal_msg.pose.header.stamp = self.node.get_clock().now().to_msg()
+        goal_msg.pose.pose.position.x = float(move_coords[0])
+        goal_msg.pose.pose.position.y = float(move_coords[1])
+        goal_msg.pose.pose.position.z = float(0.0)
+        q_x, q_y, q_z, q_w = self.get_quaternion_from_euler(0.0, 0.0, math.radians(move_coords[2]))        
+        goal_msg.pose.pose.orientation.x = q_x
+        goal_msg.pose.pose.orientation.y = q_y
+        goal_msg.pose.pose.orientation.z = q_z
+        goal_msg.pose.pose.orientation.w = q_w
+
+        self.node.get_logger().info("Waiting for CHARMIE Nav2 Safety server...")
+        self.node.charmie_nav2_safety_client.wait_for_server()
+        self.node.get_logger().info("CHARMIE Nav2 Safety server is ON...")
+
+        self.node.goal_safety_handle_ = None
+        self.node.nav2_safety_goal_accepted = None
+        self.node.nav2_safety_feedback = NavigateToPose.Feedback()
+        self.node.nav2_safety_status = GoalStatus.STATUS_UNKNOWN 
+
+        # Send the goal
+        # self.node.get_logger().info("Sending goal...")
+        self.node.charmie_nav2_safety_client.send_goal_async(goal_msg, feedback_callback=self.node.nav2_safety_client_goal_feedback_callback).add_done_callback(self.node.nav2_safety_client_goal_response_callback)
+        self.node.get_logger().info("CHARMIE Nav2 Safety Goal Sent")
+
+        while self.node.nav2_safety_goal_accepted is None:
+            time.sleep(0.05)
         
-        while not success:
+        success = self.node.nav2_safety_goal_accepted
+        message = ""
 
-            if self.check_conditions_to_stop_safety_navigation(move_coords):
+        if wait_for_end_of:
 
-                success, message = self.move_to_position(move_coords=move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, clear_costmaps=clear_costmaps, inspection_safety_nav=True, wait_for_end_of=wait_for_end_of)
+            feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.nav2_safety_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+                        feedback = self.node.nav2_safety_feedback
+                        current_pose_x = str(round(feedback.current_pose.pose.position.x, 2))
+                        current_pose_y = str(round(feedback.current_pose.pose.position.y, 2))
+                        current_pose_theta = str(round(math.degrees(self.get_yaw_from_quaternion(feedback.current_pose.pose.orientation.x, feedback.current_pose.pose.orientation.y, feedback.current_pose.pose.orientation.z, feedback.current_pose.pose.orientation.w)),2))
+                        navigation_time = str(round(feedback.navigation_time.sec + feedback.navigation_time.nanosec * 1e-9, 2))
+                        estimated_time_remaining = str(round(feedback.estimated_time_remaining.sec + feedback.estimated_time_remaining.nanosec * 1e-9, 2))
+                        no_recoveries = str(feedback.number_of_recoveries)
+                        distance_remaining = str(round(feedback.distance_remaining, 2))
+                        print("Current Pose: (" + current_pose_x + ", " + current_pose_y + ", " + current_pose_theta + ")" + " Times (nav, remain): (" + navigation_time + ", " + estimated_time_remaining + ")" + " Recoveries: " + no_recoveries + " Distance Left:" + distance_remaining)
+                        # self.get_logger().info(f"Feedback: {feedback}")
+                        feedback_start_time = time.time()
+            
+            if self.node.nav2_safety_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("CHARMIE NAV2 SAFETY RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            # elif self.node.nav2_safety_status == GoalStatus.STATUS_ABORTED:
+            #     self.set_rgb(RED+BACK_AND_FORTH_8)
+            #     self.node.get_logger().info("CHARMIE SAFETY NAV2 RESULT: ABORTED.")
+            #     success = False
+            #     message = "Canceled moved to position"
+            elif self.node.nav2_safety_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("CHARMIEN NAV2 SAFETY RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            self.set_face("charmie_face")
+            self.activate_yolo_pose(activate=False)
+
+            return success, message
         
-                if not success:
-                    self.set_speech(filename="inspection/please_move_aside", wait_for_end_of=False)
-                    while not self.check_conditions_to_stop_safety_navigation(move_coords):
-                        pass
-                    time.sleep(1.0) # wait a bit before retrying
-
+        else:
+            success = True
+            message = "Sent Command to CHARMIE Nav2 Safety, not waiting for end of"
+            return success, message
+    
+    def move_to_position_with_safety_navigation_cancel(self):
+        if self.node.goal_safety_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.nav2_safety_client_cancel_goal()
         self.set_face("charmie_face")
         self.activate_yolo_pose(activate=False)
 
-        return success, message
-    
-    def move_to_position_with_safety_navigation_cancel(self):
-        ###if self.node.goal_follow_waypoints_handle_ is not None:
-        ###    self.set_rgb(RED+BACK_AND_FORTH_8)
-        ###self.node.nav2_client_cancel_goal()
-        pass
-
     def move_to_position_with_safety_navigation_is_done(self):
-        ###if self.node.nav2_follow_waypoints_status == GoalStatus.STATUS_SUCCEEDED:
-        ###    return True
-        ###else:
-        ###    return False
-        pass
-        
+        if self.node.nav2_safety_status == GoalStatus.STATUS_SUCCEEDED:
+            self.set_face("charmie_face")
+            self.activate_yolo_pose(activate=False)
+            return True
+        else:
+            return False        
 
     ### THIS FUNCTION IS HERE BUT IS NOT USED, NOW IS IN CHARMIE_NAVIGATION ###
     ### HOWEVER, DUE TO THE THREADING SYSTEM, THE DEBUG MODE DOES NOT WORK IN CHARMIE_NAVIGATION ###
@@ -3560,8 +3493,6 @@ class RobotStdFunctions():
         self.set_neck(position=[0, 0], wait_for_end_of=False)
         self.set_rgb(YELLOW+HALF_ROTATE)
 
-        self.set_speech(filename="sound_effects/ai_preto", wait_for_end_of=False)
-
         # Debug Speak
         # self.set_speech(filename="generic/found_following_items")
         # for obj in final_objects:
@@ -3636,6 +3567,11 @@ class RobotStdFunctions():
     def get_gripper_localization(self):
 
         return self.node.gripper_point
+    
+    def get_base_gripper_localization(self):
+
+        return self.node.base_gripper_point
+
 
     def get_head_rgb_image(self):
 
@@ -4696,6 +4632,8 @@ class RobotStdFunctions():
                     self.asked_help = True
                     return picked_height, self.asked_help
 
+                self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=False)
+
                 # ADJUST ROBOT POSITION IN RELATION TO THE OBJECT
                 if navigation:
                     self.adjust_x_      = valid_detected_object.position_relative.x - DISTANCE_IN_FRONT_X
@@ -4727,7 +4665,6 @@ class RobotStdFunctions():
                     self.asked_help = True
                     return picked_height, self.asked_help
 
-                self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
 
                 # ADJUST ARM POSITION DEPENDING ON OBJECT HEIGHT
                 if MINIMUM_FRONT_HEIGHT <= valid_detected_object.position_relative.z <= HALFWAY_FRONT_HEIGHT:
@@ -4759,12 +4696,12 @@ class RobotStdFunctions():
 
                 elif HALFWAY_TOP_HEIGHT > valid_detected_object.position_relative.z:
 
-                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
+                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=False)
                     self.set_torso_position(legs=80, torso=8, wait_for_end_of=False) 
                     self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
 
                 elif HALFWAY_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
-                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=True)
+                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=False)
 
                 # ADJUST ROBOT POSITION IN RELATION TO THE OBJECT
                 if navigation:
@@ -4945,7 +4882,7 @@ class RobotStdFunctions():
                 #MOVE TO SAFE POSITION DEPENDING ON MODE SELECTED
 
                 if pick_mode == "front":
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=False)
                     self.set_face("charmie_face", wait_for_end_of=False)
 
                     
@@ -4975,7 +4912,7 @@ class RobotStdFunctions():
                     #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
                     #self.set_torso_position(legs=140, torso=8) 
 
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_joints, wait_for_end_of=False)
                     self.set_face("charmie_face", wait_for_end_of=False)
 
 
@@ -5015,6 +4952,680 @@ class RobotStdFunctions():
             else:
                 self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Could not bring object to initial pose")
+
+    def pick_object_risky(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", navigation = True, search_with_head_camera = True, return_arm_to_initial_position = "", list_of_objects_detected_as = []):
+
+        ###########
+        # Inputs:
+        #
+        # selected_object -> object name to grab
+        # pick_mode -> if the robot should pick from the front or top, should be only "top" or "front"
+        # first_search_tetas -> only relevant for using the head camera, will define what angles the head camera looks at to look for object
+        # navigation -> if True the robot will use navigation to get closer to the object, should be left at True unless testing purposes or special cases
+        # is_object_in_furniture_check -> if True will verify and ONLY PICK UP OBJECTS IN THEIR OBJECT CLASS' USUAL LOCATION, turn False only if dealing with objects on the ground or expected objects outside furniture, otherwise there can be false positives
+        # search_with_head_camera -> if True the robot will use the head camera to locate objects, otherwise it will use base camera, turn to False if dealing with objects on floor. IF FALSE ALSO TURN PREVIOUS FLAG TO FALSE AS OBJECTS ON FLOOR WILL NEVER BE IN EXACT FURNITURE
+        # return_arm_to_initial_position -> if True will return arm to initial position at the end, otherwise will leave gripper at ask_for_object position
+        #
+        # Outputs, in order of output:
+        #
+        # picked_height -> at which height the gripper picked the object at, ONLY CORRECT IF is_object_in_furniture_check AND ROBOT DIDNT RETURN asked_help TRUE
+        # asked_help -> if robot asked for help anytime during the routine, IF TRUE picked_height WILL BE INCORRECT AS THERE WAS NOT A PICKED HEIGHT, ROBOT WAS HANDED THE OBJECT
+        #
+        ############
+        
+        # 1) Detect if the selected object is around and filter out additionals of the same in case of multiple being detected 
+
+        valid_detected_object = DetectedObject()
+        not_validated = True
+        is_object_in_furniture_check = False
+        selected_object = selected_object.replace(" ","_").lower()
+
+        MIN_OBJECT_DISTANCE_X = 0.05
+        MAX_OBJECT_DISTANCE_X = 2
+        MIN_OBJECT_DISTANCE_Y = -1
+        MAX_OBJECT_DISTANCE_Y = 1
+
+
+        if furniture != "":
+                is_object_in_furniture_check = True
+        
+        if first_search_tetas == []:
+
+            if self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "horizontal":
+                first_search_tetas = [[0, -45], [-40, -45], [40, -45]]
+
+            elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
+                first_search_tetas = [[0, -15], [0, -35], [0, 15]]
+
+        if pick_mode == "":
+            pick_mode = self.get_standard_pick_from_object(selected_object)
+
+
+        pick_mode = pick_mode.lower()
+        furniture = furniture.replace(" ","_").lower()
+
+
+        ### While cycle to get a valid detected object ###
+        while not_validated:
+
+            # If search_with_head_camera is true the first object detection will be made with the head camera, otherwise the robot will use the base camera instead
+            if search_with_head_camera:
+                self.set_face(camera="head", show_detections=True)
+                objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+            else:
+                objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
+        
+        
+            print("LIST OF DETECTED OBJECTS:")
+
+
+            for obj in objects_found:
+                asked_help = False
+                conf   = f"{obj.confidence * 100:.0f}%"
+                cam_x_ = f"{obj.position_relative.x:5.2f}"
+                cam_y_ = f"{obj.position_relative.y:5.2f}"
+                cam_z_ = f"{obj.position_relative.z:5.2f}"
+
+                print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
+
+
+                object_location = (obj.furniture_location).replace(" ","_").lower()
+
+                # In case the robot finds an object, if it is outside the designated furniture (verified if is_object_in_furniture_check = True) 
+                # , it will try to reverse the order in which it searches for the object so as to hopefully not always see the unwanted object first 
+
+                if selected_object == "" and obj.confidence >= 0.5 and cam_z_ < 0.4:
+                        valid_detected_object = obj
+                        not_validated = False
+
+
+                if  obj.object_name == selected_object \
+                    and object_location != furniture \
+                    and is_object_in_furniture_check:
+
+                    self.set_speech(filename="generic/Object_may_not_be_on_furniture.wav", wait_for_end_of=True)
+
+                    first_search_tetas.reverse()
+                        
+
+                if obj.object_name == selected_object and MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y :
+                    
+                    if  (object_location == furniture and is_object_in_furniture_check) \
+                        or is_object_in_furniture_check == False: 
+
+                        if not_validated == False and (valid_detected_object.confidence < obj.confidence):
+                            valid_detected_object = obj
+                        elif not_validated == True:
+                            valid_detected_object = obj
+
+                        not_validated = False
+
+        # 2) DEPENDING ON DETECTED OBJECT LOCATION, MOVE TOWARDS OBJECT (IF NAVIGATION = TRUE) AND POSITON ARM DEPENDING ON OBJECT HEIGHT
+            
+        if not_validated == False:
+
+            # ANNOUNCE THE FOUND OBJECT
+            self.set_speech(filename="generic/found_following_items", wait_for_end_of=False)
+            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+            print(f"Initial pose to search for objects")
+
+            # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
+            MAXIMUM_ADJUST_DISTANCE = 0.5 
+            DISTANCE_IN_FRONT_X     = 0.6 
+            DISTANCE_IN_FRONT_Y     = 0.3 
+            DISTANCE_IN_TOP_X       = 0.58
+            DISTANCE_IN_TOP_Y       = -0.05
+            MINIMUM_FRONT_HEIGHT    = 0.55
+            MAXIMUM_FRONT_HEIGHT    = 1.70
+            HALFWAY_FRONT_HEIGHT    = 1.2 
+            FLOOR_TOP_HEIGHT        = 0.3 
+            HALFWAY_TOP_HEIGHT      = 0.6 
+            MAXIMUM_TOP_HEIGHT      = 1.10
+
+            tf_x = 0.145
+            tf_y = -0.006
+            tf_z = -0.075
+            ow = self.get_object_width_from_object(valid_detected_object.object_name)
+            oh = self.get_object_height_from_object(valid_detected_object.object_name)
+            
+            if pick_mode == "front":
+
+                print("OBJECT_HEIGHT", valid_detected_object.position_relative.z)
+
+                # ASK FOR HELP IF OBJECT IS OUT OF ROBOT'S ARM RANGE
+                if MINIMUM_FRONT_HEIGHT > valid_detected_object.position_relative.z or valid_detected_object.position_relative.z > MAXIMUM_FRONT_HEIGHT:
+                    self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
+                    self.ask_help_pick_object_gripper(object_d=objects_found[0])
+                    self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                    picked_height = 0.0
+                    asked_help = True
+
+                # ADJUST ROBOT POSITION IN RELATION TO THE OBJECT
+                if navigation:
+                    self.adjust_x_      = valid_detected_object.position_relative.x - DISTANCE_IN_FRONT_X
+
+                    # if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
+                    #     self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE
+
+                    # elif self.adjust_x_ < -MAXIMUM_ADJUST_DISTANCE:
+                    #     self.adjust_x_  = -MAXIMUM_ADJUST_DISTANCE
+
+                    self.adjust_y_      = valid_detected_object.position_relative.y + DISTANCE_IN_FRONT_Y
+
+                    # if self.adjust_y_   > MAXIMUM_ADJUST_DISTANCE:
+                    #     self.adjust_y_  = MAXIMUM_ADJUST_DISTANCE
+
+                    # elif self.adjust_y_ < -MAXIMUM_ADJUST_DISTANCE:
+                    #     self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
+
+                    print("FINAL ADJUST:", self.adjust_x_, self.adjust_y_)
+
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False)
+
+                # IF ADJUST IS NOT POSSIBLE DUE TO OBSTACLES ASK FOR HELP
+                if not s:
+                    self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
+                    self.ask_help_pick_object_gripper(object_d=objects_found[0])
+                    self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                    picked_height = 0.0
+                    asked_help = True
+
+                # self.set_arm(command="initial_pose_to_search_table_front", wait_for_end_of=True)
+
+                # ADJUST ARM POSITION DEPENDING ON OBJECT HEIGHT
+                if MINIMUM_FRONT_HEIGHT <= valid_detected_object.position_relative.z <= MAXIMUM_FRONT_HEIGHT:
+
+                    self.set_arm(command="search_front_risky", wait_for_end_of=True)
+
+                    gripper_search_height = self.get_gripper_localization().z
+                    height_furniture = self.get_shelf_from_height(object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
+                    object_height = self.get_object_height_from_object(valid_detected_object.object_name)
+                    adjust_z = (height_furniture + (object_height/2) - gripper_search_height)*1000
+
+                    print("GRIPPER HEIGHT",gripper_search_height)
+                    print("FURNITURE HEIGHT",height_furniture)
+                    print("OBJECT HEIGHT",object_height)
+                    print("ADJUST Z", adjust_z)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [adjust_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
+                    
+
+            #BEGIN PICK TOP IF SELECTED
+            elif pick_mode == "top":
+
+                if navigation:
+                    _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                    self.adjust_x_      = furniture_distance - 0.04 
+
+                    if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
+                        self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE   
+
+                    elif self.adjust_x_ < -MAXIMUM_ADJUST_DISTANCE:
+                        self.adjust_x_  = -MAXIMUM_ADJUST_DISTANCE  
+
+                    self.adjust_y_      = valid_detected_object.position_relative.y - DISTANCE_IN_TOP_Y 
+
+                    if self.adjust_y_   > MAXIMUM_ADJUST_DISTANCE:
+                        self.adjust_y_  = MAXIMUM_ADJUST_DISTANCE   
+
+                    elif self.adjust_y_ < -MAXIMUM_ADJUST_DISTANCE:
+                        self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
+
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False)
+
+                # ADJUST TORSO AND ARM DEPENDING ON OBJECT HEIGHT
+                if FLOOR_TOP_HEIGHT >= valid_detected_object.position_relative.z:
+
+                    self.set_torso_position(legs=0, torso=61)
+
+                elif HALFWAY_TOP_HEIGHT > valid_detected_object.position_relative.z:
+
+                    self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=False)
+                    self.set_torso_position(legs=80, torso=8, wait_for_end_of=False) 
+                    self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
+
+                elif HALFWAY_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
+                    search_table_top_risky_joints =			[-146.5, 55.7, -88, -61.3, 109.5, 64.2]
+                    safe_top_second_joints    = [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
+
+                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = safe_top_second_joints, wait_for_end_of=True)
+                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_risky_joints, wait_for_end_of=True)
+                    self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
+
+
+                    gripper_position = self.get_gripper_localization()
+                    height_furniture = self.get_shelf_from_height( object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
+                    correct_x = (gripper_position.z - tf_x - oh - height_furniture)*1000 - 210
+                    print("Gripper Position z: ",gripper_position.z," || Tf_X: ", tf_x, " || OH : ", oh, " || height_furniture", height_furniture, " || Correct_X: ", correct_x )
+                    object_position = [0.0, 0.0, correct_x, 0.0, 0.0, 0.0]
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
+                    
+                    while not self.adjust_omnidirectional_position_is_done():
+                        pass
+
+                # ADJUST ROBOT POSITION IN RELATION TO THE OBJECT
+
+                    print("Front X:", self.adjust_x_, " Front y:", self.adjust_y_)
+
+                    # IF ADJUST IS NOT POSSIBLE DUE TO OBSTACLES ASK FOR HELP
+                    if not s:
+                        self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
+                        self.ask_help_pick_object_gripper(object_d=objects_found[0])
+                        self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                        picked_height = 0.0
+                        asked_help = True
+                
+                    #_, _ = self.adjust_angle(45)
+                    #rotate_coordinates = self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(o.object_name))))
+                    #self.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
+
+
+                # BEGIN HAND SEARCH AND OBJECT GRAB, AND RETURN THE PICKED HEIGHT OR IF IT ASKED FOR HELP
+                # return self.hand_search(selected_object, pick_mode, navigation, return_arm_to_initial_position)
+
+            else:
+                    self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+
+            if not asked_help:
+
+                # if pick_mode == "front":
+                #     correct_x = ((obj.position_cam.x - tf_x)*1000) - 200
+                #     correct_z = tf_z*1000
+                    #if ((correct_x + 200) / 1000) <= self.get_height_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object))):
+                        #correct_x = ( (1.012 - (self.get_height_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))) + tf_x ) * 1000) - 200
+                
+                #CORRECT ROTATION CALCULATIONS
+                if valid_detected_object.orientation < 0.0:
+                    correct_rotation = valid_detected_object.orientation +90.0
+                else:
+                    correct_rotation = valid_detected_object.orientation -90.0
+
+                #DEFINE AND CALCULATE KEY ARM POSITIONS
+                #if pick_mode == "top":
+                # elif pick_mode == "front":
+                #     object_position = [correct_z, 0.0, 0.0, 0.0, 0.0, 0.0]
+                
+                security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+                security_position_top     = [0.00, 0.0, -200.0, 0.0, 0.0, 0.0]
+                object_reajust            = [0.0, 0.0, 0.0, 0.0, 0.0, -correct_rotation]
+                initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
+                safe_top_second_joints    = [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
+                
+                search_table_top_joints   = [-151.5, 75, -123.2, -72.4, 110.8, 41.7]
+                search_table_front_joints = [-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
+                
+                #OPEN GRIPPER
+                if obj.object_name != "plate":
+                    self.set_arm(command="open_gripper", wait_for_end_of=True)
+                #MOVE ARM IN THAT DIRECTION
+                #if pick_mode = "top":
+                #self.wait_until_camera_stable(timeout = 0.75, stable_duration = 0.03, check_interval= 0.01, get_gripper = True) # Temporary measure, while wait_for_end_of is not working for adjust_move finish
+                
+                while not self.adjust_omnidirectional_position_is_done():
+                    pass
+
+                #CALIBRATE GRIPPER BEFORE GRABBING
+                # self.wait_for_start_button()
+                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False, list_of_objects_detected_as=list_of_objects_detected_as)
+                self.set_face(camera="hand", show_detections=True)
+                #self.set_face(camera="hand",show_detections=True,wait_for_end_of=False)
+                
+                for obj in final_objects:
+
+                    conf = f"{obj.confidence * 100:.0f}%"
+                    hand_y_grab    = f"{obj.position_cam.y:5.2f}"
+                    hand_z_grab    = f"{obj.position_cam.z:5.2f}"
+                    hand_x_grab    = f"{obj.position_cam.z:5.2f}"
+                    correct_y_grab = (obj.position_cam.y - tf_y)*1000
+                    correct_z_grab = (obj.position_cam.z - tf_z)*1000
+
+                    if pick_mode == "front":
+                        correct_x_grab = (obj.position_cam.x + ow/1.5 - tf_x)*1000
+                        print("OBJECT WIDTH:", ow)
+                    if pick_mode == "top":
+                        correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
+                        
+                        # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established. DO NOT CHANGE UNLESS TESTED
+                        if pick_mode == "front":
+                            MAX_MOVE_LIMIT = 245
+                            if correct_x_grab > MAX_MOVE_LIMIT:
+                                correct_x_grab = MAX_MOVE_LIMIT
+                        if pick_mode == "top":
+                            MAX_MOVE_LIMIT = 235
+                            if correct_x_grab > MAX_MOVE_LIMIT:
+                                correct_x_grab = MAX_MOVE_LIMIT
+                    
+                    print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab})")
+                    
+                    if pick_mode == "front":
+                        object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
+
+                    if pick_mode == "top":
+                        # THE FOLLOWING ARE SPECIAL CASES WHERE DIFFERENT MANUAL INFORMATION IS USED TO PICK THEM, DO NOT CHANGE UNLESS NECESSARY !!!!
+                        if obj.object_name == "bowl":
+                            correct_y_grab += 90
+                            correct_rotation = 0.0
+                        if obj.object_name == "cup":
+                            correct_y_grab += 45
+                            correct_x_grab = 210
+                        if obj.object_name == "plate":
+                            correct_z_grab -= 20
+                            correct_rotation = 90.0
+                            correct_x_grab -= 19
+                            #navigation = gripper pos -  lowest y
+
+
+                        object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
+
+                #APPLY ADJUSTEMENT BEFORE GRABBING
+                if obj.object_name != "cup":
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                else:
+                    object_position_grab = [correct_z_grab, -correct_y_grab, 0.0, 0.0, 0.0, correct_rotation]
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                    object_position_grab = [0.0, 0.0, correct_x_grab, 0.0, 0.0, 0.0]
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                
+                #MOVE ARM TO FINAL POSITION
+                current_gripper_height = self.get_gripper_localization()
+
+                height_furniture = self.get_shelf_from_height( object_height = current_gripper_height.z, furniture = self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))
+                if (height_furniture >= 0):                              
+
+                    picked_height = current_gripper_height.z - height_furniture
+                else:
+                    asked_help = True
+
+                print("HEIGHT FURNITURE:", height_furniture)
+                print("Picked Height: ", picked_height)
+                #CHECK CLOSE GRIPPER
+                
+                if obj.object_name != "plate":
+                    object_in_gripper = False
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+
+                    if not object_in_gripper:
+
+                        self.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+                    
+                #MOVE TO SAFE POSITION DEPENDING ON MODE SELECTED
+                if pick_mode == "front":
+                    self.set_face("charmie_face", wait_for_end_of=False)
+                    
+                    if navigation:
+                        self.adjust_x_ = - self.adjust_x_
+                        self.adjust_y_ = - self.adjust_y_
+                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_,wait_for_end_of=False)
+
+                    #MOVE TO SEARCH TABLE
+                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_front_joints, wait_for_end_of=True)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
+
+                    if not object_in_gripper:
+                        self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))))
+                        self.ask_help_pick_object_gripper(object_d=final_objects[0])
+                        self.set_neck([0.0,0.0],wait_for_end_of=False)
+
+                    #MOVE ARM TO INITIAL POSITION
+                    if return_arm_to_initial_position == "":
+                        self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
+                    else:
+                        if obj.object_name != "plate":    
+                            self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+
+                    while not self.adjust_omnidirectional_position_is_done():
+                        pass
+
+                elif pick_mode == "top":
+                    if obj.object_name != "plate":
+                        print("OBJ NAME:", obj.object_name)
+                        self.set_arm(command="search_table_top_risky", wait_for_end_of=True)
+                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_risky_joints, wait_for_end_of=True)
+
+                    if navigation:
+                        if obj.object_name == "plate":
+
+                            time.sleep(1.2)
+                            plate_x_ = self.get_base_gripper_localization()
+                            plate_adjust_x_ = 0.295 - plate_x_.x
+
+                            print("Reverse X:", plate_adjust_x_, " Reverse y: 0.0", )
+                            self.adjust_omnidirectional_position(dx = plate_adjust_x_, dy = 0.0, wait_for_end_of=True)
+
+                            self.set_arm(command="pick_plate_top", wait_for_end_of=True)
+
+                            _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                            self.adjust_x_ = - 0.59 + furniture_distance
+                            self.adjust_y_ = - self.adjust_y_
+
+                            plate_grab_fifth = [0.0, 0.0, 0.0, 00.0, -30.0, 120.0]
+                            self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_,wait_for_end_of=False)
+                            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = plate_grab_fifth, wait_for_end_of=True)
+                            plate_grab_sixth = [-176.5, 78.3, -98.2, -34.5, 92.2, 265.3]
+                            self.set_arm(command="adjust_joint_motion", joint_motion_values = plate_grab_sixth, wait_for_end_of=True)
+                            self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
+                            #self.wait_for_start_button()
+
+                            #self.wait_for_start_button()
+
+                            while not self.adjust_omnidirectional_position_is_done():
+                                pass
+
+                            #plate_grab_final = [-190.0, 69.3, -70.5, 31.5, 64.1, 271]
+                            #self.set_arm(command="adjust_joint_motion", joint_motion_values = plate_grab_final, wait_for_end_of=True)
+                            object_in_gripper = True
+                            #self.wait_for_start_button()
+
+                            #self.wait_for_start_button()
+
+                            return picked_height, asked_help
+                            
+
+                        else:
+                            #dx = self.adjust_x_
+                            #dy = self.adjust_y_
+                            #self.adjust_x_  = (- dx ) * math.cos(-math.radians(0)) - (- dy) * math.sin(-math.radians(0))
+                            #self.adjust_y_  = (- dx ) * math.sin(-math.radians(0)) + (- dy) * math.cos(-math.radians(0))
+                            self.adjust_x_ = - self.adjust_x_
+                            self.adjust_y_ = - self.adjust_y_
+                            print("Reverse X:", self.adjust_x_, " Reverse y:", self.adjust_y_)
+                            self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False)
+
+                    #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
+                    #self.set_torso_position(legs=140, torso=8) 
+                    self.set_face("charmie_face", wait_for_end_of=False)
+
+                    if not object_in_gripper and obj.object_name != "plate" :
+                        self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))))
+                        self.ask_help_pick_object_gripper(object_d=final_objects[0])
+                        self.set_neck([0.0,0.0],wait_for_end_of=False)
+                    
+                    if return_arm_to_initial_position == "":
+                        self.set_arm(command="search_table_top_risky_to_initial_pose", wait_for_end_of=True)
+                        #self.set_arm(command="adjust_joint_motion", joint_motion_values = safe_top_second_joints, wait_for_end_of=True)
+                        #self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
+                        while not self.adjust_omnidirectional_position_is_done():
+                            pass
+
+                    else:
+                        if obj.object_name == "spoon" or obj.object_name == "knife" or obj.object_name == "fork":    
+                            ###
+                            self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
+                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            while not self.adjust_omnidirectional_position_is_done():
+                                pass
+                        else:
+                            self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            while not self.adjust_omnidirectional_position_is_done():
+                                pass
+                    #self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
+                    #self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)            
+                
+                print(f"Bring object to initial pose")
+                # Return the distance which the gripper was at in relation to the furniture
+            
+                return picked_height, asked_help
+
+                #IF AN OBJECT WAS NOT FOUND
+            else:
+                self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+                print(f"Could not bring object to initial pose")
+            #SEARCH FOR OBJECT
+
+    
+    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0):
+
+        # CHECK OBJECT NAME FOR SPECIAL CASES
+        # CHECK PICK/PLACE MODE
+        # CHECK DISTANCE TO FURNITURE
+        # MOVE ARM TO PLACE POSITION
+        # ADJUST BASE IN RELATION TO THE FURNITURE
+        # PLACE OBJECT
+        # MOVE ARM TO SAFE POSITION
+
+        selected_object = selected_object.replace(" ","_").lower()
+
+        #### PLACE ARM POSITIONS ####
+
+        self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
+        self.arm_safe_first = [ -177.2, 72.8, -112.8, -47.3, 105.7, 258.5]
+        self.arm_safe_second = [-151.5, 75, -123.2, -72.4, 110.8, 41.7]
+
+
+        #### VARIABLES ####
+
+        if furniture == "":
+            print(" YOU NEED TO DEFINE THE FURNITURE WHERE THE ROBOT IS GOING TO PLACE THE OBJECT !!!!!!!!!!")
+            return
+        
+        else:
+            verified = False
+            for furn in self.node.furniture:
+                if str(furn["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():
+                    verified = True
+            if not verified:
+                print("THAT FURNITURE DOES NOT EXIST, UNABLE TO PLACE OBJECT !!!")
+                return
+            
+        print("Place 1:", place_mode)
+        if place_mode == "":
+            place_mode = self.get_standard_pick_from_object(selected_object)
+            print("Place 2:", place_mode)
+        furniture_height = self.get_height_from_furniture(furniture)
+
+        if shelf_number < 0:
+            furniture_height =  furniture_height[0]
+
+        elif shelf_number <= len(furniture_height) - 1:
+            furniture_height = furniture_height[shelf_number]
+
+        elif shelf_number > len(furniture_height) -1:
+            furniture_height = furniture_height[len(furniture_height)-1]
+
+        if place_height < 0.0:
+            asked_help = True
+
+        #### CONSTANTS ####
+
+        TOLERANCE_ERROR = 0.02
+        FRONT_Z_ADJUST_LIMIT = 450
+
+        if furniture_distance == -1:
+
+            front_base_adjust_x = 0.15
+            front_base_adjust_y = base_adjust_y
+
+            top_base_adjust_x = 0.08
+            top_base_adjust_y = base_adjust_y
+
+        else:
+
+            front_base_adjust_x = furniture_distance
+            front_base_adjust_y = base_adjust_y
+
+            top_base_adjust_x = furniture_distance
+            top_base_adjust_y = base_adjust_y
+
+        #### FUNCTION ####
+
+        _ , _ , furniture_gap = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+
+        if place_mode == "front":
+
+            self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+
+            gripper_place_position = self.get_gripper_localization()
+
+            if asked_help:
+                final_z = (gripper_place_position.z - furniture_height - (self.get_object_height_from_object(selected_object)/1.25) - TOLERANCE_ERROR)*1000
+            else:
+                final_z = (gripper_place_position.z - furniture_height - place_height - TOLERANCE_ERROR)*1000
+
+            print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", furniture_height, " picked height : ", place_height)
+
+
+            if final_z > FRONT_Z_ADJUST_LIMIT:
+                final_z = FRONT_Z_ADJUST_LIMIT
+
+            self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+            self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+            dx = furniture_gap - front_base_adjust_x
+            dy = front_base_adjust_y 
+            self.adjust_omnidirectional_position(dx=0.0,dy=dy, safety=True)
+            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=True)  
+
+            time.sleep(0.5)
+            self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+            time.sleep(0.5)
+
+            self.adjust_omnidirectional_position(dx=-dx,dy=0.0)
+            self.adjust_omnidirectional_position(dx=0.0,dy=-dy) 
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+
+            #self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
+        elif place_mode == "top":
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+
+            gripper_place_position = self.get_gripper_localization()                                                                    
+
+            dx = furniture_gap - top_base_adjust_x
+            dy = top_base_adjust_y                                                                                                            
+
+            self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=True)     
+            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=False)                                                     
+
+            final_x = (gripper_place_position.z - furniture_height - place_height - 0.02)*1000                                     
+
+            self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]                                                         
+            self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]                                                       
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)        
+
+            time.sleep(0.5)                                                                                                     
+            self.set_arm(command="slow_open_gripper", wait_for_end_of=True)                                                     
+            time.sleep(0.5)                                                                                                  
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)    
+
+            self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)                                                                     
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+
+            #self.set_arm(command="close_gripper", wait_for_end_of=True)
+        
 
     def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
 

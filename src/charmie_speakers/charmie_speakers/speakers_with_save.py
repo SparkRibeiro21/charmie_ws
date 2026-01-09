@@ -2,6 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, SetTextFace
+from charmie_interfaces.msg import ButtonsLowLevel
 
 from TTS.utils.manage import ModelManager
 from TTS.utils.synthesizer import Synthesizer
@@ -198,6 +199,7 @@ class SpeakerNode(Node):
 
         # initialize robot speech class with acess to node variables
         self.charmie_speech = RobotSpeak(self)
+        self.low_level_buttons = ButtonsLowLevel()
 
         # SERVICES:
         # Main receive commads 
@@ -206,6 +208,9 @@ class SpeakerNode(Node):
         # To publish the received strings to the face node
         self.speech_to_face_command = self.create_client(SetTextFace, "display_speech_face")
         self.get_logger().info("Speech Servers have been started")
+
+        # TOPICS:
+        self.buttons_low_level_subscriber = self.create_subscription(ButtonsLowLevel, "buttons_low_level", self.buttons_low_level_callback, 10)
 
         # Get Information regarding which speakers are being used 
         # print("\nOutput Sound Devices:")
@@ -266,6 +271,23 @@ class SpeakerNode(Node):
                 message = ""
         
         else:
+
+            request.filename = request.filename.lower()
+
+            temp_filename = ""
+            if self.low_level_buttons.debug_button3 and self.low_level_buttons.debug_button2:
+                temp_filename = request.filename + "__mm__"
+            elif self.low_level_buttons.debug_button3:
+                temp_filename = request.filename + "__pt__"
+            elif self.low_level_buttons.debug_button2:
+                temp_filename = request.filename + "__mf__"
+            
+            # if the modified file exist, use it, otherwise use the normal one
+            if os.path.isfile(self.charmie_speech.complete_path+temp_filename+".wav"):
+                request.filename = temp_filename
+
+            self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
+
             # speakers mode where received filename must be played
             success, message = self.charmie_speech.play_command(filename=request.filename, show_in_face=request.show_in_face, \
                                                                 long_pause=request.long_pause_show_in_face, \
@@ -273,7 +295,7 @@ class SpeakerNode(Node):
             if success == False:
                 self.get_logger().error("SPEAKERS received (file) does not exist! - %s" %request.filename)
             else:
-                self.get_logger().info("SPEAKERS received (file) - %s" %request.filename)
+                self.get_logger().info("SPEAKERS fineshed (file) - %s" %request.filename)
 
         # returns whether the message was played and some informations regarding status
         response.success = success
@@ -298,6 +320,7 @@ class SpeakerNode(Node):
         any_empty_command = False
         commands = {}
         for i in range(len(request.filename)):
+            request.filename[i] = request.filename[i].lower()
             commands[request.filename[i]] = request.command[i]
 
         for filename, command in commands.items():
@@ -327,6 +350,10 @@ class SpeakerNode(Node):
         response.success = success
         response.message = message
         return response
+
+    def buttons_low_level_callback(self, ll_buttons):
+        self.low_level_buttons = ll_buttons
+        # print(self.low_level_buttons)
 
 
 # Standard ROS2 main function

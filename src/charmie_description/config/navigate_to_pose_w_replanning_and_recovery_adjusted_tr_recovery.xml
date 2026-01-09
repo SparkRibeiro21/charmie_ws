@@ -1,0 +1,60 @@
+
+<!--
+  This Behavior Tree replans the global path periodically at 1 Hz and it also has
+  recovery actions specific to planning / control as well as general system issues.
+  This will be continuous if a kinematically valid planner is selected.
+-->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="3" name="NavigateRecovery">
+      <PipelineSequence name="NavigateWithReplanning">
+        <RateController hz="1.0">
+          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </RecoveryNode>
+        </RateController>
+        <RecoveryNode number_of_retries="1" name="FollowPath">
+          <FollowPath path="{path}" controller_id="FollowPath"/>
+          <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+        </RecoveryNode>
+      </PipelineSequence>
+      <ReactiveFallback name="RecoveryFallback">
+        <GoalUpdated/>
+        <RoundRobin name="RecoveryActions">
+          
+          <!-- 1) Clear + spin right + wait -->
+          <Sequence name="ClearAndSpinRight">
+            <ClearEntireCostmap name="ClearLocalCostmap-Right"
+                                service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Right"
+                                service_name="global_costmap/clear_entirely_global_costmap"/>
+            <Spin spin_dist="-0.785"/>    <!-- -45° -->
+            <!-- <Wait wait_duration="5"/> -->
+          </Sequence>
+
+          <!-- 2) Clear + spin left + wait
+          <Sequence name="ClearAndSpinLeft">
+            <ClearEntireCostmap name="ClearLocalCostmap-Left"
+                                service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Left"
+                                service_name="global_costmap/clear_entirely_global_costmap"/>
+            <Spin spin_dist="1.571"/>
+            <Wait wait_duration="8"/>
+          </Sequence>
+          
+          3) Clear + spin right again + wait (back toward original heading)
+          <Sequence name="ClearAndSpinRight2">
+            <ClearEntireCostmap name="ClearLocalCostmap-Right2"
+                                service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Right2"
+                                service_name="global_costmap/clear_entirely_global_costmap"/>
+            <Spin spin_dist="-0.785"/>
+            <Wait wait_duration="5"/>
+          </Sequence> -->
+
+        </RoundRobin>
+      </ReactiveFallback>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>
