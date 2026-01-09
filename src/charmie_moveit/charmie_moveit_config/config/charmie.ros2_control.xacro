@@ -51,6 +51,41 @@
                 </state_interface>
             </joint>
 
+            <joint name="neck_pan_joint">
+                <command_interface name="position">
+                    <param name="min">${-pi}</param>
+                    <param name="max">${pi}</param>
+                </command_interface>
+                <state_interface name="position"/>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="neck_tilt_joint">
+                <command_interface name="position">
+                    <param name="min">${-pi/3}</param>
+                    <param name="max">${pi/3}</param>
+                </command_interface>
+                <state_interface name="position"/>
+                <state_interface name="velocity"/>
+            </joint>
+
+            <joint name="legs_joint">
+                <command_interface name="position">
+                    <param name="min">0.0</param>
+                    <param name="max">0.14</param>
+                </command_interface>
+                <state_interface name="position"/>
+                <state_interface name="velocity"/>
+            </joint>
+
+            <joint name="torso_joint">
+                <command_interface name="position">
+                    <param name="min">0.0</param>
+                    <param name="max">1.22173</param>
+                </command_interface>
+                <state_interface name="position"/>
+                <state_interface name="velocity"/>
+            </joint>
+
         </ros2_control>
     </xacro:macro>
 </robot>

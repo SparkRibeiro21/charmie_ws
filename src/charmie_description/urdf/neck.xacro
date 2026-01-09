@@ -98,7 +98,7 @@
         </xacro:inertial_box>
     </link>
 
-    <ros2_control name="neck_system" type="system">
+    <!-- <ros2_control name="neck_system" type="system">
         <hardware>
             <plugin>mock_components/GenericSystem</plugin>
         </hardware>
@@ -118,6 +118,6 @@
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
-    </ros2_control>
+    </ros2_control> -->
 
 </robot>

@@ -155,11 +155,11 @@ def generate_launch_description():
     
     return LaunchDescription([
         use_real_hardware_arg,
-        robot_state_publisher_node,
+        std_lf.robot_state_publisher_real_node,
         ros2_control_node,
         joint_state_broadcaster_spawner,
         xarm6_controller_spawner,
-        xarm_gripper_controller_spawner,
+        # xarm_gripper_controller_spawner,
         move_group_launch,
         rviz_node,
         # std_lf.charmie_multi_camera_launch_description,
@@ -168,4 +168,5 @@ def generate_launch_description():
         std_lf.marker_arrays_debug,
         neck_node,
         low_level_node,
+        LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
     ])

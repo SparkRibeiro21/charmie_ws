@@ -80,7 +80,7 @@
     <link name="top_torso_link">
     </link>
 
-    <ros2_control name="torso_system" type="system">
+    <!-- <ros2_control name="torso_system" type="system">
         <hardware>
                 <plugin>mock_components/GenericSystem</plugin>
         </hardware>
@@ -102,6 +102,6 @@
             <state_interface name="position"/>
             <state_interface name="velocity"/>
         </joint>
-    </ros2_control>
+    </ros2_control> -->
 
 </robot>
