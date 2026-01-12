@@ -18,7 +18,7 @@ ros2_modules = {
     "charmie_gamepad":          False,
     "charmie_head_camera":      True,
     "charmie_hand_camera":      True,
-    "charmie_base_camera":      False,
+    "charmie_base_camera":      True,
     "charmie_lidar":            True,
     "charmie_lidar_bottom":     True,
     "charmie_lidar_livox":      True,
@@ -129,13 +129,15 @@ class TaskMain():
 
                 self.robot.set_initial_position(self.initial_position)
 
+                self.robot.set_torso_position(legs=0.14, torso=8) 
+
                 self.robot.wait_for_start_button()
                 
                 self.robot.set_initial_position(self.initial_position)
                 
                 print("SET INITIAL POSITION")
 
-                self.state = self.task_states["Select_room_to_pick"]
+                self.state = self.task_states["Pick_Object"]
             
             if self.state == self.task_states["Select_room_to_pick"]:
 
@@ -296,12 +298,9 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Pick_Object"]:
-
-                if self.object_name == "Bowl":
-                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas, return_arm_to_initial_position=False)
-                else:
-                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
+                self.robot.floor_pick()
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
+                self.robot.wait_for_start_button()
 
                 self.state = self.task_states["Move_to_place"]
 
