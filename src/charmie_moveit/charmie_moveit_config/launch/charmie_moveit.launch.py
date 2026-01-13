@@ -154,19 +154,56 @@ def generate_launch_description():
     )
     
     return LaunchDescription([
-        use_real_hardware_arg,
+
+        #####################################################################
+        # Robot State and Static Transforms                                 #
+        #####################################################################
         std_lf.robot_state_publisher_real_node,
+        std_lf.static_transforms_launch,
+        use_real_hardware_arg,
+
+        #####################################################################
+        # Visualization and Debugging                                       # 
+        #####################################################################
+        rviz_node,
+        # std_lf.rviz2_nav2_node,
+        std_lf.gui,
+        std_lf.marker_arrays_debug,
+
+        ######################################################################
+        # Actuators                                                          #
+        ######################################################################
+        LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
+        neck_node,
+        low_level_node,
+
+        #####################################################################
+        # Localization                                                      # 
+        #####################################################################
+        # std_lf.odometry_lidar,
+        std_lf.robot_localization,
+        std_lf.charmie_localisation,
+
+        #####################################################################
+        # Navigation                                                        # 
+        #####################################################################
+        std_lf.manual_obstacles_map_server,
+        std_lf.delayed_nav2_localization,        
+        std_lf.nav2_navigation,
+        std_lf.charmie_navigation,
+
+        #####################################################################
+        # Cameras                                                           # 
+        #####################################################################
+        # std_lf.charmie_multi_camera_launch_description,
+
+        #####################################################################
+        # MoveIt                                                            # 
+        #####################################################################
         ros2_control_node,
         joint_state_broadcaster_spawner,
         xarm6_controller_spawner,
         # xarm_gripper_controller_spawner,
         move_group_launch,
-        rviz_node,
-        # std_lf.charmie_multi_camera_launch_description,
-        std_lf.static_transforms_launch,
         commander_node,
-        std_lf.marker_arrays_debug,
-        neck_node,
-        low_level_node,
-        LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
     ])
