@@ -27,7 +27,7 @@ ros2_modules = {
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
     "charmie_localisation":         False,
-    "charmie_low_level":            True,
+    "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
     "charmie_neck":                 False,
@@ -94,7 +94,20 @@ class TaskMain():
 
                 while True:
 
-                    self.robot.wait_for_start_button()
+                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                    
+                    time.sleep(3.0)
+                    
+                    self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
+                    
+                    time.sleep(1.0)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+
+                    time.sleep(3.0)
+
+                    pass
+                    
+                    """ self.robot.wait_for_start_button()
 
                     self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Workshop Desk"
                     # self.SB_TABLE_HEIGHT = self.robot.get_height_from_furniture("Dinner Table")[0]
@@ -104,7 +117,7 @@ class TaskMain():
 
                     self.robot.place_object(arm_command="place_bowl_table", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True) """
 
                 """ pose_adjust_pre = [100, 150, 200, 0, 0, 0]
                 pose_adjust_pos = [-100, -150, -200, 0, 0, 0]

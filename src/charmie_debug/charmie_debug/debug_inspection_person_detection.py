@@ -56,6 +56,10 @@ class TaskMain():
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
 
+        # Neck Positions
+        self.look_forward = [0, 0]
+        self.look_navigation = [0, -10]
+
     def main(self):
         Waiting_for_start_button = 0
         Inspection_detect_people_with_inspection_camera = 1
@@ -80,6 +84,7 @@ class TaskMain():
             elif self.state == Inspection_detect_people_with_inspection_camera:
                 #print('State 1 = Inspection_detect_people_with_inspection_camera')
 
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False) # if we need to check in the real neck position (copied from inspection task)
                 overall = self.robot.safety_navigation_check_depth_head_camera() # half_image_zero_or_near_percentage=0.6, full_image_near_percentage=0.3, near_max_dist=0.8
                       
                 if overall:

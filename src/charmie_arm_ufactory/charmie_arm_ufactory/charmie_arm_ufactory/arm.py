@@ -204,10 +204,12 @@ class ArmUfactory(Node):
 
 		### PICK OBJECT FRONT JOINT VARIABLES###
 		self.initial_position_joints_pick =									[-225.0,  83.0, -65.0, -1.0, 75.0, 270.0]
+		self.safe_risky_begin_joints =                                      [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
 		self.initial_position_to_search_table_front_joints =				[-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
 		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
 		#self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
 		self.search_front_max_z_joints =									[-145, -33, -35.7, -122.9, 44.8, 33.2]
+		self.search_front_risky_joints =									[-207.1, -9.9, -38.8, 144.4, 47.2, 112.3]
 
 		# PLACE OBJECT FRONT VARIABLES
 		self.initial_position_to_safe_joints = 								[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
@@ -217,8 +219,15 @@ class ArmUfactory(Node):
 
 		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
 		self.search_table_top_joints =					[-147.5, 40.4, -91.8, -70.9, 114.9, 84.7]
+		self.search_table_top_risky_joints =			[-146.5, 55.7, -88, -61.3, 109.5, 64.2]
 		self.search_table_top_safe_position =		    [-194.9, 69.4, -106.4, 23.2, 71.5, 264.8]
 		self.safe_top_second_joints =                   [-197.5, 85.4, -103.3, 28.7, 109.1, 279.5]
+		self.risky_move_tool =							[0.0, 0.0, -70.0, 0.0, 0.0, 0.0]
+
+		self.plate_grab_first = [0.0, 30.0, -70.0, 0.0, 0.0, 0.0]
+		self.plate_grab_second = [0.0, 50.0, 50.0, -80.0, 0.0, 0.0]
+		self.plate_grab_third = [0.0, 0.0, 74.0, 0.0, 0.0, 0.0]
+		self.plate_grab_fourth = [0.0, -270.0, 20.0, math.radians(-10.0), 0.0, 0.0]
 		### SERVE THE BREAKFAST VARIABLES: ###
 		# height_adjust = float(-(self.HEIGHT_TABLE_PLACE_OBJECTS-75.0)*10) #76.0
 		#Cprint("height_adjust:", height_adjust)
@@ -246,11 +255,11 @@ class ArmUfactory(Node):
 		self.above_milk_place_spot = 					[ -230.0,  380.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		# self.place_milk_in_tray =						[ -230.0,  430.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_milk_in_tray =						[ -230.0,  445.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		self.step_away_from_milk_in_tray =				[ -230.0,  300.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.step_away_from_milk_in_tray =				[ -230.0,  200.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		
 		self.above_cornflakes_place_spot = 				[ -198.0,  350.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_cornflakes_in_tray =					[ -198.0,  420.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
-		self.step_away_from_cornflakes_in_tray =		[ -198.0,  300.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
+		self.step_away_from_cornflakes_in_tray =		[ -286.0,  128.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 			
 		### ALTERNATIVE ###
 		self.above_cornflakes_place_spot_alternative = 			[-232.7, -13.0, -37.8, -2.9, 51.8, 219.7]
@@ -337,6 +346,14 @@ class ArmUfactory(Node):
 		self.joints_pre_place_table_funilocopo_v2_facing_other_side =		[ -181.9,    5.1,  -77.5,  177.2,   66.0,   269.2] 
 		self.place_spoon_in_table_funilocopo_v2_facing_other_side =     	[ -591.5, 308.7+height_adjust, 648.8, math.radians(-82.2), math.radians(49.1), math.radians(3.8)]
 		self.step_away_from_table_funilocopo_v2_facing_other_side =     	[ -648.7, 20.0, 677.4, math.radians(-40.5), math.radians(0.0), math.radians(90.0)]
+		
+		# funilocopo v4
+		self.joints_above_funilocopov4 = 				[-196.2,   73.6,  -59.1,  -73.7,   85.5,   286.2]
+		self.linear_above_funilocopov4_for_place = 		[-102.7,  293.1, -115.1, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_above_funilocopov4_for_pick = 		[-119.3,  387.1, -114.4, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_above_funilocopov4_for_pick_aux = 	[-275.1,  387.1, -114.4, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_at_funilocopov4_for_place = 		[-102.7,  425.0, -115.1, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+		self.linear_at_funilocopov4_for_pick = 			[-125.2,  444.1, -114.5, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
 		
 	def setup_arm_movement_services(self):
 
@@ -637,6 +654,13 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
+	def initial_position_to_ask_for_objects_slow(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
 	def search_for_objects_to_ask_for_objects(self):
 		match self.estado_tr:
 			case 0:
@@ -774,20 +798,30 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
+	def search_front_risky(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_front_risky_joints, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def search_front_risky_to_initial_pose(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()	
+
 	### PLACE OBJECT FRONT###
 	def initial_pose_to_place_front(self):
 		match self.estado_tr:
+			# case 0:
+				# self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
 			case 0:
-				self.set_gripper_speed_(speed=5000)
-			case 1:
-				self.set_gripper_position_(pos=0, wait=True)
-			case 2:
-				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
-			case 3:
 				self.set_joint_values_(angles=self.initial_position_to_safe_joints, speed=25, wait=True) 
-			case 4:
+			case 1:
 				self.set_position_values_(pose=self.safe_to_placing_linear, speed=100, wait=True)
-			case 5:
+			case 2:
 				self.finish_arm_movement_()
 			
 	def place_front_to_initial_pose(self):
@@ -814,14 +848,63 @@ class ArmUfactory(Node):
 			case 2:
 				self.finish_arm_movement_()
 
+	def initial_pose_to_search_table_top_risky(self):
+		match self.estado_tr:
+			# case 0:
+			# 	self.set_gripper_speed_(speed=5000)
+			# case 1:
+			# 	self.set_gripper_position_(pos=0, wait=True)
+			#case 0:
+				#self.set_joint_values_(angles=self.safe_risky_begin_joints, speed=30, wait=True)
+			case 0:
+				self.set_joint_values_(angles=self.search_table_top_risky_joints, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()	
+
+	def search_table_top_risky(self):
+		match self.estado_tr:
+			case 0:
+				self.set_tool_position_values_(pose = self.risky_move_tool, speed=45, wait=True)
+			case 1:
+				self.finish_arm_movement_()	
+
+	def search_table_top_risky_to_initial_pose(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.search_table_top_risky_joints, speed=30, wait=True)
+			case 1:
+				self.set_joint_values_(angles=self.safe_risky_begin_joints, speed=35, wait=True)	
+			case 2:
+				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=30, wait=True)
+			case 3:
+				self.finish_arm_movement_()	
+
 	def search_table_to_initial_pose_top(self):
 		match self.estado_tr:
 			case 0:
-				self.set_joint_values_(angles=self.safe_top_second_joints, speed=25, wait_for_end_of=True)
+				self.set_joint_values_(angles=self.safe_top_second_joints, speed=25, wait=True)
 			case 1:
 				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
 			case 2:
 				self.finish_arm_movement_()
+
+	def pick_plate_top(self):
+		match self.estado_tr:
+			case 0:	
+				self.set_tool_position_values_(pose = self.plate_grab_first, speed = 60, wait=True)
+			case 1:
+				self.set_tool_position_values_(pose = self.plate_grab_second, speed = 60, wait=True)
+			case 2:
+				self.set_gripper_position_(pos=900, wait=True)     
+			case 3:
+				self.set_tool_position_values_(pose = self.plate_grab_third, speed = 60, wait=True)
+			case 4:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 5:
+				self.set_tool_position_values_(pose = self.plate_grab_fourth, speed = 60, wait=True)
+			case 6:
+				self.finish_arm_movement_()
+
 
 	### SERVE THE BREAKFAST ARM MOVEMENTS ###
 
@@ -846,6 +929,25 @@ class ArmUfactory(Node):
 			case 8:
 				self.finish_arm_movement_()
 
+	def collect_spoon_to_tray_funilocopo_v4(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.joints_above_funilocopov4, speed=60, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.linear_at_funilocopov4_for_place, speed=150, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=400, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.linear_above_funilocopov4_for_place, speed=150, wait=True)
+			case 5:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 6:
+				self.set_joint_values_(angles=self.initial_position_joints, speed=60, wait=True)
+			case 7:
+				self.finish_arm_movement_()
+
 	def collect_milk_to_tray(self):
 		match self.estado_tr:
 			case 0:
@@ -863,7 +965,7 @@ class ArmUfactory(Node):
 			case 6:
 				self.set_gripper_position_(pos=0, wait=False)
 			case 7:
-				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=150, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints, speed=40, wait=False)
 			case 8:
 				self.finish_arm_movement_()
 
@@ -884,7 +986,7 @@ class ArmUfactory(Node):
 			case 6:
 				self.set_gripper_position_(pos=0, wait=False)
 			case 7:
-				self.set_position_values_(pose=self.get_lower_order_position_linear, speed=200, wait=True)
+				self.set_joint_values_(angles=self.initial_position_joints, speed=30, wait=False)
 			case 8:
 				self.finish_arm_movement_()
 
@@ -1026,6 +1128,45 @@ class ArmUfactory(Node):
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
 			case 6:
 				self.finish_arm_movement_()
+	
+	def milk_tray_location_grab(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 1:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 2:
+				self.set_joint_values_(angles=self.pre_pick_milk_tray_joints, speed=50, wait=True)
+			case 3:
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=120, wait=True)
+			case 4:
+				self.set_gripper_speed_(speed=1000)
+			case 5:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.pos_picking_milk_tray, speed=90, wait=True)
+			case 7:
+				self.finish_arm_movement_()
+
+	def cereal_tray_location_grab(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 1:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 2:
+				self.set_joint_values_(angles=self.pre_pick_cereals_tray_joints, speed=60, wait=True)
+			case 3:
+				self.set_position_values_(pose=self.pick_cereals_tray, speed=120, wait=True)
+			case 4:
+				self.set_gripper_speed_(speed=1000)
+			case 5:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.pos_pick_cereals_tray, speed=120, wait=True)
+			case 7:
+				self.finish_arm_movement_()
+
 
 	def pour_milk_bowl(self):
 		match self.estado_tr:
@@ -1144,6 +1285,33 @@ class ArmUfactory(Node):
 			case 11:
 				self.finish_arm_movement_()
 
+	def place_spoon_table_funilocopo_v4(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.joints_above_funilocopov4, speed=60, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.linear_at_funilocopov4_for_pick, speed=200, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=5000)
+			case 3:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.linear_above_funilocopov4_for_pick, speed=200, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.linear_above_funilocopov4_for_pick_aux, speed=200, wait=True)
+			case 6:
+				self.set_joint_values_(angles=self.joints_pre_place_table_funilocopo_v2, speed=60, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.place_spoon_in_table_funilocopo_v2, speed=200, wait=True)
+			case 8:
+				self.set_gripper_position_(pos=300, wait=True)
+			case 9:
+				self.set_position_values_(pose=self.step_away_from_table_funilocopo_v2, speed=200, wait=True)
+			case 10:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 11:
+				self.finish_arm_movement_()
+
 	def arm_go_rest(self):
 		match self.estado_tr:
 			case 0:
@@ -1168,6 +1336,8 @@ class ArmUfactory(Node):
 
 			case "initial_position_to_ask_for_objects":
 				self.initial_position_to_ask_for_objects()
+			case "initial_position_to_ask_for_objects_slow":
+				self.initial_position_to_ask_for_objects_slow()
 			case "ask_for_objects_to_initial_position":
 				self.ask_for_objects_to_initial_position()
 			case "initial_position_to_search_for_objects":
@@ -1217,8 +1387,12 @@ class ArmUfactory(Node):
 				self.place_spoon_table_funilocopo_v2()
 			case "place_spoon_table_funilocopo_v2_facing_other_side":
 				self.place_spoon_table_funilocopo_v2_facing_other_side()
+			case "place_spoon_table_funilocopo_v4":
+				self.place_spoon_table_funilocopo_v4()
 			case "collect_spoon_to_tray":
 				self.collect_spoon_to_tray()
+			case "collect_spoon_to_tray_funilocopo_v4":
+				self.collect_spoon_to_tray_funilocopo_v4()
 			case "collect_milk_to_tray":
 				self.collect_milk_to_tray()
 			case "collect_cornflakes_to_tray":
@@ -1241,18 +1415,34 @@ class ArmUfactory(Node):
 				self.search_front_min_z()
 			case "search_front_max_z":
 				self.search_front_max_z()
+			case "search_front_risky":
+				self.search_front_risky()
+			case "search_front_risky_to_initial_pose":
+				self.search_front_risky_to_initial_pose()
 
 			#PLACE OBJECT FRONT
 			case "initial_pose_to_place_front":
 				self.initial_pose_to_place_front()
 			case "place_front_to_initial_pose":
 				self.place_front_to_initial_pose()
+			case "milk_tray_location_grab":
+				self.milk_tray_location_grab()
+			case "cereal_tray_location_grab":
+				self.cereal_tray_location_grab()
 
 			# SEARCH FOR OBJECT ON TABLE TOP
 			case "initial_pose_to_search_table_top":
 				self.initial_pose_to_search_table_top()
+			case  "search_table_top_risky":
+				self.search_table_top_risky()
 			case "search_table_to_initial_pose_top":
 				self.search_table_to_initial_pose_top()
+			case "initial_pose_to_search_table_top_risky":
+				self.initial_pose_to_search_table_top_risky()
+			case "search_table_top_risky_to_initial_pose":
+				self.search_table_top_risky_to_initial_pose()
+			case "pick_plate_top":
+				self.pick_plate_top()
 			
 			# if there is an error regarding a movement
 			case _:

@@ -17,18 +17,18 @@ ros2_modules = {
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         True,
+    "charmie_localisation":         False,
     "charmie_low_level":            True,
     "charmie_navigation":           False,
-    "charmie_nav2":                 True,
+    "charmie_nav2":                 False,
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
@@ -74,6 +74,11 @@ class TaskMain():
         # VARS ...
         self.state = Waiting_for_start_button
 
+        self.robot.set_rgb(RED+BACK_AND_FORTH_8)
+
+        while True:
+            pass
+
         while True:
 
             if self.state == Waiting_for_start_button:
@@ -83,7 +88,7 @@ class TaskMain():
 
                 self.robot.wait_for_start_button()
 
-                self.robot.adjust_omnidirectional_position(dx=1.0, dy=0.0, )
+                # self.robot.adjust_omnidirectional_position(dx=1.0, dy=0.0)
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
