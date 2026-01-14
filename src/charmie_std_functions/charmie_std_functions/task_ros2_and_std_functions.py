@@ -5745,7 +5745,7 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_Y = 0.5
 
         ### While cycle to get a valid detected object ###
-        objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=5.0, list_of_objects=["milk"], detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
+        objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=5.0, list_of_objects=["banana"], detect_objects_hand=False, detect_objects_base=True)
 
 
         for obj in objects_found:
@@ -5772,16 +5772,8 @@ class RobotStdFunctions():
 
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
-            DISTANCE_IN_FRONT_X     = 0.6 
-            DISTANCE_IN_FRONT_Y     = 0.31
-            DISTANCE_IN_TOP_X       = 0.58
-            DISTANCE_IN_TOP_Y       = -0.05
-            MINIMUM_FRONT_HEIGHT    = 0.55
-            MAXIMUM_FRONT_HEIGHT    = 1.70
-            HALFWAY_FRONT_HEIGHT    = 1.2 
-            FLOOR_TOP_HEIGHT        = 0.3 
-            HALFWAY_TOP_HEIGHT      = 0.6 
-            MAXIMUM_TOP_HEIGHT      = 1.10
+            DISTANCE_X       = 0.60
+            DISTANCE_Y       = - 0.15
 
             tf_x = 0.145
             tf_y = -0.006
@@ -5791,9 +5783,17 @@ class RobotStdFunctions():
 
             security_position_top   = [-154.3,63,-74,-63.2,92.9,263.5] #Rise the gripper in table orientation
             pick_position = [-151.8, 39.1, -56.5, -107.2, 91.6, 77.3]
+            final_pick_position = [-162.4, 30.8, -37.9, -117, 93.2, 87.8]
             initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
 
+            self.adjust_x_      = valid_detected_object.position_relative.x - DISTANCE_X 
+            self.adjust_y_      = valid_detected_object.position_relative.y - DISTANCE_Y 
+
+            s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=True, safety=True)
+
             self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_position, wait_for_end_of=True)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = final_pick_position, wait_for_end_of=True)
 
             self.set_torso_position(legs=0.015, torso=50) 
 
@@ -5841,8 +5841,13 @@ class RobotStdFunctions():
 
                 valid_detected_object = o
 
+            HEIGHT = 0.03
 
-            correct_x_grab = (valid_detected_object.position_cam.x + oh/1.4 - tf_x)*1000
+            if oh <= 0.044:
+                HEIGHT = oh/1.4 
+
+
+            correct_x_grab = (valid_detected_object.position_cam.x + HEIGHT - tf_x)*1000
             #MAX_MOVE_LIMIT = 235
             #if correct_x_grab > MAX_MOVE_LIMIT:
             #    correct_x_grab = MAX_MOVE_LIMIT
@@ -5878,10 +5883,13 @@ class RobotStdFunctions():
                 
             self.set_arm(command="close_gripper", wait_for_end_of=True)
 
-            self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_position, wait_for_end_of=True)
-            self.set_arm(command="adjust_joint_motion", joint_motion_values = security_position_top, wait_for_end_of=True)
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = final_pick_position, wait_for_end_of=True)
+
+            #self.set_arm(command="adjust_joint_motion", joint_motion_values = security_position_top, wait_for_end_of=True)
 
             self.set_torso_position(legs=0.14, torso=8) 
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_position, wait_for_end_of=True)
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
 
