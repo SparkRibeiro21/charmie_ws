@@ -1,5 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <example_interfaces/msg/bool.hpp>
 #include <charmie_interfaces/msg/detected_object.hpp>
 #include <charmie_interfaces/msg/list_of_detected_object.hpp>
@@ -20,6 +21,7 @@ class Commander
             xarm_->setMaxVelocityScalingFactor(0.5);
             xarm_ ->setMaxAccelerationScalingFactor(0.5);
             xarm_gripper_ = std::make_shared<MoveGroupInterface>(node_, "xarm_gripper");
+            planning_scene_interface_ = std::make_shared<moveit::planning_interface::PlanningSceneInterface>();
 
             open_gripper_sub_ = node_ ->create_subscription<Bool>(
                 "open_gripper", 10,
@@ -104,6 +106,68 @@ class Commander
             planAndExecute(xarm_gripper_);
         }
 
+        void addDetectedObjectsToScene(const ListOfDetectedObjects::SharedPtr msg)
+        {
+            clearDetectedObjects();
+            
+            std::vector<moveit_msgs::msg::CollisionObject> collision_objects;
+
+            for (const auto &obj : msg->objects)
+            {
+                if (obj.index <= 0) continue;
+
+                moveit_msgs::msg::CollisionObject detected_object;
+                detected_object.header.frame_id = xarm_->getPlanningFrame();
+                detected_object.id = "detected_" + std::to_string(obj.index);
+
+                shape_msgs::msg::SolidPrimitive shape;
+                shape.type = shape.CYLINDER;
+                shape.dimensions.resize(2);
+                shape.dimensions[0] = 0.15; //height
+                shape.dimensions[1] = 0.05; //radius
+
+                //Set pose
+                geometry_msgs::msg::Pose pose;
+                pose.position.x = obj.position_absolute.x;
+                pose.position.y = obj.position_absolute.y;
+                pose.position.z = obj.position_absolute.z;
+                pose.orientation.w = 1.0;
+
+                detected_object.primitives.push_back(shape);
+                detected_object.primitive_poses.push_back(pose);
+                detected_object.operation = detected_object.ADD;
+
+                collision_objects.push_back(detected_object);
+            }
+
+            planning_scene_interface_ -> addCollisionObjects(collision_objects);
+            RCLCPP_INFO(node_ ->get_logger(),"Added %ld objects to planning scene", collision_objects.size());
+        }
+
+        void clearDetectedObjects()
+        {
+            std::vector<std::string> all_objects =planning_scene_interface_->getKnownObjectNames();
+            std::vector<std::string> detected_objects;
+
+            for (const auto& name : all_objects)
+            {
+                if(name.find("detected_")==0)
+                {
+                    detected_objects.push_back(name);
+                }
+            }
+
+            if (!detected_objects.empty())
+            {
+                planning_scene_interface_->removeCollisionObjects(detected_objects);
+            }
+        }
+
+        void clearPlanningScene()
+        {
+            std::vector<std::string> object_ids = planning_scene_interface_->getKnownObjectNames();
+            planning_scene_interface_ ->removeCollisionObjects(object_ids);
+        }
 
     
     private:
@@ -136,6 +200,7 @@ class Commander
             if(msg->objects.empty())
             {
                 RCLCPP_WARN(node_->get_logger(), "No objects detected");
+                clearDetectedObjects();
                 return;
             }
 
@@ -157,11 +222,14 @@ class Commander
                     obj.position_cam.z
                 );
             }
+
+            addDetectedObjectsToScene(msg);
         }
 
         std::shared_ptr<rclcpp::Node> node_;
         std::shared_ptr<MoveGroupInterface> xarm_;
         std::shared_ptr<MoveGroupInterface> xarm_gripper_;
+        std::shared_ptr<moveit::planning_interface::PlanningSceneInterface> planning_scene_interface_;
 
         rclcpp::Subscription<Bool>::SharedPtr open_gripper_sub_;
         rclcpp::Subscription<ListOfDetectedObjects>::SharedPtr detected_objects_sub_;

@@ -152,6 +152,22 @@ def generate_launch_description():
         emulate_tty=True,
         condition=IfCondition(use_real_hardware),
     )
+
+    map_tf = Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='static_transform_base_camera',
+            arguments=[
+                '0',  # x
+                '0',  # y
+                '0',  # z
+                '0',  # roll
+                '0',  # pitch
+                '0',  # yaw
+                'map',  # parent frame
+                'odom'  # child frame
+            ]
+        )
     
     return LaunchDescription([
 
@@ -161,6 +177,7 @@ def generate_launch_description():
         std_lf.robot_state_publisher_real_node,
         std_lf.static_transforms_launch,
         use_real_hardware_arg,
+        map_tf, #Temporary
 
         #####################################################################
         # Visualization and Debugging                                       # 
@@ -180,7 +197,7 @@ def generate_launch_description():
         #####################################################################
         # Localization                                                      # 
         #####################################################################
-        # std_lf.odometry_lidar,
+        std_lf.odometry_lidar,
         std_lf.robot_localization,
         std_lf.charmie_localisation,
 
@@ -196,6 +213,11 @@ def generate_launch_description():
         # Cameras                                                           # 
         #####################################################################
         # std_lf.charmie_multi_camera_launch_description,
+
+        #####################################################################
+        # Detections                                                        # 
+        #####################################################################
+        std_lf.yolo_objects,
 
         #####################################################################
         # MoveIt                                                            # 
