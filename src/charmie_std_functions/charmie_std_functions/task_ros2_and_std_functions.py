@@ -5745,20 +5745,26 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_Y = 0.5
 
         ### While cycle to get a valid detected object ###
-        objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=5.0, list_of_objects=["banana"], detect_objects_hand=False, detect_objects_base=True)
+
+        while not_validated:
+            objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=5.0, list_of_objects=[], detect_objects_hand=False, detect_objects_base=True)
 
 
-        for obj in objects_found:
-            conf   = f"{obj.confidence * 100:.0f}%"
-            cam_x_ = f"{obj.position_relative.x:5.2f}"
-            cam_y_ = f"{obj.position_relative.y:5.2f}"
-            cam_z_ = f"{obj.position_relative.z:5.2f}"
+            for obj in objects_found:
+                conf   = f"{obj.confidence * 100:.0f}%"
+                cam_x_ = f"{obj.position_relative.x:5.2f}"
+                cam_y_ = f"{obj.position_relative.y:5.2f}"
+                cam_z_ = f"{obj.position_relative.z:5.2f}"
 
-            print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
+                print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
 
-            if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y :
-                valid_detected_object = obj
-                not_validated = False
+                if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y:
+                    if not_validated == False:
+                        if valid_detected_object.position_relative.x > obj.position_relative.x:
+                            valid_detected_object = obj
+                    else:
+                        valid_detected_object = obj
+                        not_validated = False
 
 
         # 2) DEPENDING ON DETECTED OBJECT LOCATION, MOVE TOWARDS OBJECT (IF NAVIGATION = TRUE) AND POSITON ARM DEPENDING ON OBJECT HEIGHT
@@ -5772,8 +5778,8 @@ class RobotStdFunctions():
 
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
-            DISTANCE_X       = 0.60
-            DISTANCE_Y       = - 0.15
+            DISTANCE_X       = 0.5
+            DISTANCE_Y       = - 0.16
 
             tf_x = 0.145
             tf_y = -0.006
@@ -5800,7 +5806,7 @@ class RobotStdFunctions():
 
             self.set_arm(command="open_gripper", wait_for_end_of=True)
 
-            final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[obj.object_name], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+            final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[valid_detected_object.object_name], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
 
             self.set_face(camera="hand", show_detections=True)
                 
@@ -5828,7 +5834,25 @@ class RobotStdFunctions():
                     correct_rotation = obj.orientation +90.0
                 else:
                     correct_rotation = obj.orientation -90.0
-            security_position_top   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+
+            for o in final_objects:
+
+                conf = f"{o.confidence * 100:.0f}%"
+                hand_y_grab    = f"{o.position_cam.y:5.2f}"
+                hand_z_grab    = f"{o.position_cam.z:5.2f}"
+                hand_x_grab    = f"{o.position_cam.z:5.2f}"
+                correct_y_grab = (o.position_cam.y - tf_y)*1000
+                correct_z_grab = (o.position_cam.z - tf_z)*1000
+
+                valid_detected_object = o
+
+            correct_x_grab = (valid_detected_object.position_cam.x - tf_x)*1000 - 200
+
+            object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+
+            final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[valid_detected_object.object_name], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
 
             for o in final_objects:
 
@@ -5844,13 +5868,14 @@ class RobotStdFunctions():
             HEIGHT = 0.03
 
             if oh <= 0.044:
-                HEIGHT = oh/1.4 
+                HEIGHT = oh/1.5 
 
 
             correct_x_grab = (valid_detected_object.position_cam.x + HEIGHT - tf_x)*1000
-            #MAX_MOVE_LIMIT = 235
-            #if correct_x_grab > MAX_MOVE_LIMIT:
-            #    correct_x_grab = MAX_MOVE_LIMIT
+
+            MAX_MOVE_LIMIT = 235
+            if correct_x_grab > MAX_MOVE_LIMIT:
+                correct_x_grab = MAX_MOVE_LIMIT
 
             if obj.object_name == "bowl":
                 correct_y_grab += 90
@@ -5863,7 +5888,7 @@ class RobotStdFunctions():
                 correct_rotation = 90.0
                 correct_x_grab -= 19
 
-            object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
+            object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
 
             if obj.object_name != "cup":
                 self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
@@ -5887,9 +5912,14 @@ class RobotStdFunctions():
 
             #self.set_arm(command="adjust_joint_motion", joint_motion_values = security_position_top, wait_for_end_of=True)
 
-            self.set_torso_position(legs=0.14, torso=8) 
+            self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=False) 
 
-            self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_position, wait_for_end_of=True)
+            time.sleep(4)
+
+            plate_grab_sixth = [-176.5, 78.3, -98.2, -34.5, 92.2, 265.3]
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = plate_grab_sixth, wait_for_end_of=True)
+
+            time.sleep(4)
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
 
