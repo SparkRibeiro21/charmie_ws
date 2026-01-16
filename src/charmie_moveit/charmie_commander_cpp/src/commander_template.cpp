@@ -206,6 +206,8 @@ class Commander
 
             RCLCPP_INFO(node_->get_logger(),"Detected %ld objects", msg->objects.size());
 
+            addDetectedObjectsToScene(msg);
+
             for (const auto &obj : msg->objects)
             {
                 RCLCPP_INFO(
@@ -221,10 +223,83 @@ class Commander
                     obj.position_cam.y,
                     obj.position_cam.z
                 );
-            }
 
-            addDetectedObjectsToScene(msg);
+                calculatePreGraspPose(obj, "top");
+                calculatePreGraspPose(obj, "front");
+            }
         }
+
+        //Calculate pre-grasp pose and print it
+        void calculatePreGraspPose(
+            const DetectedObject &obj,
+            const std::string &approach)
+            {
+                geometry_msgs::msg::PoseStamped pre_grasp_pose;
+                pre_grasp_pose.header.frame_id = xarm_->getPlanningFrame();
+                pre_grasp_pose.pose.position.x = obj.position_absolute.x;
+                pre_grasp_pose.pose.position.y = obj.position_absolute.y;
+                pre_grasp_pose.pose.position.z = obj.position_absolute.z;
+
+                if (approach == "top")
+                {
+                    pre_grasp_pose.pose.position.z += 0.2;
+                    pre_grasp_pose.pose.orientation.x = 1.0;
+                    pre_grasp_pose.pose.orientation.y = 0.0;
+                    pre_grasp_pose.pose.orientation.z = 0.0;
+                    pre_grasp_pose.pose.orientation.w = 0.0;
+                }
+                else if (approach == "front")
+                {
+                    pre_grasp_pose.pose.position.x -= 0.2;
+                    pre_grasp_pose.pose.orientation.x = 0.0;
+                    pre_grasp_pose.pose.orientation.y = 0.7071;
+                    pre_grasp_pose.pose.orientation.z = 0.0;
+                    pre_grasp_pose.pose.orientation.w = 0.7071;
+                }
+                else
+                {
+                    RCLCPP_WARN(node_->get_logger(), "Unknown approach direction: %s", approach.c_str());
+                }
+                
+                RCLCPP_INFO(
+                    node_->get_logger(),
+                    "\033[34mPre-grasp pose (%s) for %s: x=%f, y=%f, z=%f\033[0m",
+                    approach.c_str(),
+                    obj.object_name.c_str(),
+                    pre_grasp_pose.pose.position.x,
+                    pre_grasp_pose.pose.position.y,
+                    pre_grasp_pose.pose.position.z
+                );
+
+                // Plan to the pre-grasp pose
+                xarm_->setStartStateToCurrentState();
+                xarm_->setPoseTarget(pre_grasp_pose);
+                
+                MoveGroupInterface::Plan plan;
+                bool success = (xarm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+                
+                if (success)
+                {
+                    RCLCPP_INFO(
+                        node_->get_logger(),
+                        "\033[32mSuccessfully planned %s approach for %s (planning time: %.2f s)\033[0m",
+                        approach.c_str(),
+                        obj.object_name.c_str(),
+                        plan.planning_time_
+                    );
+                }
+                else
+                {
+                    RCLCPP_WARN(
+                        node_->get_logger(),
+                        "\033[31mFailed to plan %s approach for %s\033[0m",
+                        approach.c_str(),
+                        obj.object_name.c_str()
+                    );
+                }
+
+                return ;
+            };
 
         std::shared_ptr<rclcpp::Node> node_;
         std::shared_ptr<MoveGroupInterface> xarm_;
