@@ -28,3 +28,11 @@ string camera
 float32 orientation # not implemented yet (should be 6D pose)
 
 sensor_msgs/Image image_rgb_frame
+
+# Added data from configuration_files objects.json
+float32 cf_width
+float32 cf_length
+float32 cf_height
+string cf_shape
+string cf_can_pick
+string cf_std_pick
