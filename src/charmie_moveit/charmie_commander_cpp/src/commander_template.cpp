@@ -123,10 +123,39 @@ class Commander_Template
                 detected_object.id = "detected_" + std::to_string(obj.index);
 
                 shape_msgs::msg::SolidPrimitive shape;
-                shape.type = shape.CYLINDER;
-                shape.dimensions.resize(2);
-                shape.dimensions[0] = 0.15; //height
-                shape.dimensions[1] = 0.05; //radius
+
+                std::string shape_type = obj.cf_shape;
+
+                if (shape_type == "cylinder")
+                {
+                    shape.type = shape.CYLINDER;
+                    shape.dimensions.resize(2);
+                    shape.dimensions[shape_msgs::msg::SolidPrimitive::CYLINDER_HEIGHT] = obj.cf_height;
+                    shape.dimensions[shape_msgs::msg::SolidPrimitive::CYLINDER_RADIUS] = obj.cf_width/2.0;
+                }
+                else if (shape_type == "cuboid")
+                {
+                    shape.type = shape.BOX;
+                    shape.dimensions.resize(3);
+                    shape.dimensions[shape_msgs::msg::SolidPrimitive::BOX_X] = obj.cf_length;
+                    shape.dimensions[shape_msgs::msg::SolidPrimitive::BOX_Y] = obj.cf_width;
+                    shape.dimensions[shape_msgs::msg::SolidPrimitive::BOX_Z] = obj.cf_height;
+                }
+                else if (shape_type == "sphere")
+                {
+                    shape_type = shape.SPHERE;
+                    shape.dimensions.resize(1);
+                    shape.dimensions[shape_msgs::msg::SolidPrimitive::SPHERE_RADIUS] = obj.cf_width;
+                }
+                else
+                {
+                    RCLCPP_WARN(node_ ->get_logger(),"Unknown shape %s for object %s", shape_type.c_str(), obj.object_name.c_str());
+                    shape.type = shape.CYLINDER;
+                    shape.dimensions.resize(2);
+                    shape.dimensions[0] = 0.15; //height
+                    shape.dimensions[1] = 0.05; //radius
+                }
+
 
                 //Set pose
                 geometry_msgs::msg::Pose pose;
