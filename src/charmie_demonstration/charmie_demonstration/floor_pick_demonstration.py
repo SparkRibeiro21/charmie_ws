@@ -75,7 +75,7 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
 
-        self.home_furniture = "Entrance"        
+        self.home_furniture = "Exit"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
@@ -168,12 +168,12 @@ class TaskMain():
                     for obj in self.robot.node.rooms:
                         rooms.append(obj["name"])
 
-                    self.selected_pick_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                    self.selected_pick_room = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/room_menu_floor", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                     print(self.selected_pick_room [0])
                     self.robot.set_speech(filename="rooms/"+self.selected_pick_room[0].replace(" ","_").lower())
 
                     while self.selected_pick_room [0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
-                        self.selected_pick_room  = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_room", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                        self.selected_pick_room  = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=rooms, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/room_menu_floor", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                         print(self.selected_pick_room[0])
                         self.robot.set_speech(filename="rooms/"+self.selected_pick_room[0].replace(" ","_").lower())
 
