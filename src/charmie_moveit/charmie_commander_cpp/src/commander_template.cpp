@@ -18,8 +18,10 @@ class Commander
         {
             node_ = node;
             xarm_ = std::make_shared<MoveGroupInterface>(node_, "xarm6");
-            xarm_->setMaxVelocityScalingFactor(0.5);
-            xarm_ ->setMaxAccelerationScalingFactor(0.5);
+            xarm_ ->setMaxVelocityScalingFactor(0.3);
+            xarm_ ->setMaxAccelerationScalingFactor(0.1);
+            xarm_ ->setNumPlanningAttempts(20);
+            xarm_ ->setPlanningTime(3.0);
             xarm_gripper_ = std::make_shared<MoveGroupInterface>(node_, "xarm_gripper");
             planning_scene_interface_ = std::make_shared<moveit::planning_interface::PlanningSceneInterface>();
 
@@ -224,7 +226,7 @@ class Commander
                     obj.position_cam.z
                 );
 
-                calculatePreGraspPose(obj, "top");
+                // calculatePreGraspPose(obj, "top");
                 calculatePreGraspPose(obj, "front");
             }
         }
