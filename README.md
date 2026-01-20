@@ -221,12 +221,12 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ## :trophy: Results
 
-|Event|Ranking|Points|
-| ------------- | ------------- | ------------- |
-|RoboCup 2024|5/17|2819|
-|RoboCup Portugal Open 2024|1/3|3140|
-|RoboCup 2023|7/15|932|
-|RoboCup Portugal Open 2023|3/3|400|
+|Event|League Ranking (OPL)|Overall Ranking|Points|
+| ------------- | ------------- | ------------- | ------------- |
+|RoboCup 2024|5/17|10/29|2819|
+|RoboCup Portugal Open 2024|-|1/3|3140|
+|RoboCup 2023|7/15|15/30|932|
+|RoboCup Portugal Open 2023|-|3/3|400|
 
 
 

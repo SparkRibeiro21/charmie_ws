@@ -96,7 +96,7 @@ class Yolo_obj(Node):
             # print(self.house_furniture)
             with open(self.complete_path_configuration_files + 'detected_furniture.json', encoding='utf-8') as json_file:
                 self.detected_furniture_file = json.load(json_file)
-            # print(self.objects_file)
+            # print(self.detected_furniture_file)
             self.get_logger().info("Successfully Imported data from json configuration files. (objects, rooms, furniture and detected_furniture)")
         except:
             self.get_logger().error("Could NOT import data from json configuration files. (objects, rooms, furniture and detected_furniture)")
@@ -123,9 +123,33 @@ class Yolo_obj(Node):
         self.objects_class_names = [item["name"] for item in self.objects_file]
         self.objects_class_names.sort()
         
-        # gets objects_classes from objetcs.json
+        # gets objects_classes from objects.json
         self.objects_class_names_dict = {}
         self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
+
+        # gets objects width from objects.json
+        self.objects_width_dict = {}
+        self.objects_width_dict = {item["name"]: item["width"] for item in self.objects_file}
+
+        # gets objects length from objects.json
+        self.objects_length_dict = {}
+        self.objects_length_dict = {item["name"]: item["length"] for item in self.objects_file}
+
+        # gets objects height from objects.json
+        self.objects_height_dict = {}
+        self.objects_height_dict = {item["name"]: item["height"] for item in self.objects_file}
+
+        # gets objects shape from objects.json
+        self.objects_shape_dict = {}
+        self.objects_shape_dict = {item["name"]: item["shape"] for item in self.objects_file}
+
+        # gets objects can_pick from objects.json
+        self.objects_can_pick_dict = {}
+        self.objects_can_pick_dict = {item["name"]: item["can_pick"] for item in self.objects_file}
+
+        # gets objects std_pick from objects.json
+        self.objects_std_pick_dict = {}
+        self.objects_std_pick_dict = {item["name"]: item["std_pick"] for item in self.objects_file}
 
         # gets list of detected furniture from detected_furniture.json and alphabetically orders it to match YOLO detections 
         self.furniture_class_names = [item["name"] for item in self.detected_furniture_file]
@@ -338,7 +362,7 @@ class Yolo_obj(Node):
             self.base_depth_cv2_frame = self.br.imgmsg_to_cv2(img, "passthrough")
         self.new_base_depth = True
 
-    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, object_coords_to_cam, object_coords_to_base, object_coords_to_map, object_2d_orientation, camera, current_img, mask=None):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, object_coords_to_cam, object_coords_to_base, object_coords_to_map, object_2d_orientation, camera, current_img, mask=None, cf_width=0.0, cf_length=0.0, cf_height=0.0, cf_shape="", cf_can_pick="", cf_std_pick=""):
 
         object_id = boxes_id.id
         if boxes_id.id == None:
@@ -394,7 +418,14 @@ class Yolo_obj(Node):
         new_object.camera = camera
         new_object.orientation = object_2d_orientation # object 2D angle so gripper can adjust to correctly pick up the object
         new_object.image_rgb_frame = current_img
-            
+
+        new_object.cf_width = cf_width
+        new_object.cf_length = cf_length
+        new_object.cf_height = cf_height
+        new_object.cf_shape = cf_shape
+        new_object.cf_can_pick = cf_can_pick
+        new_object.cf_std_pick = cf_std_pick
+
         return new_object
 
     def position_to_house_rooms_and_furniture(self, person_pos):
@@ -679,9 +710,23 @@ class YoloObjectsMain():
                         # mask.xy[0] = np.array([], dtype=np.float32) # used to test the bug prevented on the next line
                         if len(mask.xy[0]) >= 3: # this prevents a BUG where sometimes the mask had less than 3 points, which caused PC (if empty) and GUI (if less than 3 points) to crash
 
+                            # Adds empty values for the object configuration files properties
+                            cf_object_width = 0.0
+                            cf_object_length = 0.0
+                            cf_object_height = 0.0
+                            cf_object_shape = ""
+                            cf_object_can_pick = ""
+                            cf_object_std_pick = ""
+
                             if model == "objects":
                                 object_name = self.node.objects_class_names[int(box.cls[0])]
                                 object_class = self.node.objects_class_names_dict[object_name]
+                                cf_object_width = self.node.objects_width_dict[object_name]
+                                cf_object_length = self.node.objects_length_dict[object_name]
+                                cf_object_height = self.node.objects_height_dict[object_name]
+                                cf_object_shape = self.node.objects_shape_dict[object_name]
+                                cf_object_can_pick = self.node.objects_can_pick_dict[object_name]
+                                cf_object_std_pick = self.node.objects_std_pick_dict[object_name]
                             elif model == "shoes":  
                                 object_name = self.node.shoes_class_names[int(box.cls[0])]
                                 object_class = "Footwear"
@@ -731,7 +776,9 @@ class YoloObjectsMain():
                                 new_object = DetectedObject()
                                 new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
                                                                                         object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
-                                                                                        object_2d_orientation=object_2d_orientation, camera=camera, current_img=rgb_img, mask=mask)
+                                                                                        object_2d_orientation=object_2d_orientation, camera=camera, current_img=rgb_img, mask=mask, \
+                                                                                        cf_width=cf_object_width, cf_length=cf_object_length, cf_height=cf_object_height, cf_shape=cf_object_shape, \
+                                                                                        cf_can_pick=cf_object_can_pick, cf_std_pick=cf_object_std_pick)
                                 # print(new_object.object_name, "ID:", new_object.index, str(round(new_object.confidence*100,0)) + "%", round(new_object.position_cam.x, 2), round(new_object.position_cam.y, 2), round(new_object.position_cam.z, 2) )
                                 
                                 conf = f"{new_object.confidence * 100:.0f}%"
@@ -793,7 +840,9 @@ class YoloObjectsMain():
                             new_object = DetectedObject()
                             new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
                                                                                     object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
-                                                                                    object_2d_orientation=object_2d_orientation, camera=camera, current_img=rgb_img)
+                                                                                    object_2d_orientation=object_2d_orientation, camera=camera, current_img=rgb_img, \
+                                                                                    cf_width=cf_object_width, cf_length=cf_object_length, cf_height=cf_object_height, cf_shape=cf_object_shape, \
+                                                                                    cf_can_pick=cf_object_can_pick, cf_std_pick=cf_object_std_pick)
                             yolov8_obj_filtered.objects.append(new_object)
 
         # self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
