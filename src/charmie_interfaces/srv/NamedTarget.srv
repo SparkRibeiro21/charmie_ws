@@ -1,0 +1,6 @@
+# Service to set a named target for moveit
+
+string target_name
+---
+bool success
+string message
