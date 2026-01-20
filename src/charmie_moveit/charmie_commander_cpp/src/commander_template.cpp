@@ -11,10 +11,10 @@ using DetectedObject = charmie_interfaces::msg::DetectedObject;
 using ListOfDetectedObjects = charmie_interfaces::msg::ListOfDetectedObject;
 using namespace std::placeholders;
 
-class Commander
+class Commander_Template
 {
     public:
-        Commander(std::shared_ptr<rclcpp::Node> node)
+        Commander_Template(std::shared_ptr<rclcpp::Node> node)
         {
             node_ = node;
             xarm_ = std::make_shared<MoveGroupInterface>(node_, "xarm6");
@@ -27,12 +27,12 @@ class Commander
 
             open_gripper_sub_ = node_ ->create_subscription<Bool>(
                 "open_gripper", 10,
-                std::bind(&Commander::OpenGripperCallback, this, _1)
+                std::bind(&Commander_Template::OpenGripperCallback, this, _1)
             );
 
             detected_objects_sub_ = node_ ->create_subscription<ListOfDetectedObjects>(
                 "objects_all_detected_filtered", 10,
-                std::bind(&Commander::DetectedObjectsCallback, this, _1)
+                std::bind(&Commander_Template::DetectedObjectsCallback, this, _1)
             );
         }
 
@@ -315,8 +315,8 @@ class Commander
 int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<rclcpp::Node>("commander_node");
-    auto commander = Commander(node);
+    auto node = std::make_shared<rclcpp::Node>("commander_template_node");
+    auto commander_template = Commander_Template(node);
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

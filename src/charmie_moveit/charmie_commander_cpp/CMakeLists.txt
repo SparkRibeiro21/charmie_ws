@@ -21,14 +21,18 @@ ament_target_dependencies(test_avoid_obstacle rclcpp moveit_ros_planning_interfa
 add_executable(test_pick_and_place_moveit src/test_pick_and_place_moveit.cpp)
 ament_target_dependencies(test_pick_and_place_moveit rclcpp moveit_ros_planning_interface)
 
-add_executable(commander src/commander_template.cpp)
-ament_target_dependencies(commander rclcpp moveit_ros_planning_interface example_interfaces charmie_interfaces)
+add_executable(commander_template src/commander_template.cpp)
+ament_target_dependencies(commander_template rclcpp moveit_ros_planning_interface example_interfaces charmie_interfaces)
+
+add_executable(moveit_commander src/moveit_commander.cpp)
+ament_target_dependencies(moveit_commander rclcpp moveit_ros_planning_interface example_interfaces charmie_interfaces)
 
 install(TARGETS
   test_moveit
   test_avoid_obstacle
   test_pick_and_place_moveit
-  commander
+  commander_template
+  moveit_commander
   DESTINATION lib/${PROJECT_NAME}/
 )
 
