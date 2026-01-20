@@ -5245,7 +5245,7 @@ class RobotStdFunctions():
                     if (selected_object == "spoon" or selected_object == "fork" or selected_object == "knife"):
 
                         _, frame = self.get_hand_rgb_image()
-                        curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                        curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
                         h, w = curr_frame.shape[:2]
                         yolo_mask = np.zeros((h, w),dtype=np.uint8)
                         pts = np.array([[p.x, p.y] for p in obj.mask.point],dtype=np.int32)
@@ -5261,7 +5261,7 @@ class RobotStdFunctions():
 
                         crop_img = curr_frame[obj.box_top_left_y:obj.box_top_left_y+obj.box_height, obj.box_top_left_x:obj.box_top_left_x+obj.box_width]
                         crop_lab = lab[obj.box_top_left_y:obj.box_top_left_y+obj.box_height, obj.box_top_left_x:obj.box_top_left_x+obj.box_width]
-                        th = cv2.threshold(crop_lab[:,:,1], 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+                        th = cv2.threshold(crop_lab[:,:,1], 127, 255, cv2.THRESH_BINARY)[1]
 
                         lower_red = np.array([0,50,50])
                         upper_red = np.array([10,255,255])
@@ -5787,6 +5787,15 @@ class RobotStdFunctions():
             ow = self.get_object_width_from_object(valid_detected_object.object_name)
             oh = self.get_object_height_from_object(valid_detected_object.object_name)
 
+            if valid_detected_object.position_absolute.z * 2 - 0.005 > 0:
+                picked_height = valid_detected_object.position_absolute.z * 2 + 0.2 - 0.05
+            else:
+                picked_height = 0.0
+
+            print("Relative z ", valid_detected_object.position_relative.z," || Absolute z ",valid_detected_object.position_absolute.z , " || Cam z ",valid_detected_object.position_cam.z)
+
+            #self.wait_for_start_button()
+
             security_position_top   = [-154.3,63,-74,-63.2,92.9,263.5] #Rise the gripper in table orientation
             pick_position = [-151.8, 39.1, -56.5, -107.2, 91.6, 77.3]
             final_pick_position = [-162.4, 30.8, -37.9, -117, 93.2, 87.8]
@@ -5841,12 +5850,12 @@ class RobotStdFunctions():
                 hand_y_grab    = f"{o.position_cam.y:5.2f}"
                 hand_z_grab    = f"{o.position_cam.z:5.2f}"
                 hand_x_grab    = f"{o.position_cam.z:5.2f}"
-                correct_y_grab = (o.position_cam.y - tf_y)*1000
-                correct_z_grab = (o.position_cam.z - tf_z)*1000
+                correct_y_grab = (o.position_cam.y + 0.04 - tf_y)*1000
+                correct_z_grab = (o.position_cam.z - 0.05 - tf_z)*1000
 
                 valid_detected_object = o
 
-            correct_x_grab = (valid_detected_object.position_cam.x - tf_x)*1000 - 200
+            correct_x_grab = (valid_detected_object.position_cam.x - tf_x)*1000 - 220
 
             object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
 
@@ -5865,7 +5874,7 @@ class RobotStdFunctions():
 
                 valid_detected_object = o
 
-            HEIGHT = 0.03
+            HEIGHT = 0.04
 
             if oh <= 0.044:
                 HEIGHT = oh/1.5 
@@ -5873,7 +5882,7 @@ class RobotStdFunctions():
 
             correct_x_grab = (valid_detected_object.position_cam.x + HEIGHT - tf_x)*1000
 
-            MAX_MOVE_LIMIT = 235
+            MAX_MOVE_LIMIT = 260
             if correct_x_grab > MAX_MOVE_LIMIT:
                 correct_x_grab = MAX_MOVE_LIMIT
 
@@ -5899,9 +5908,6 @@ class RobotStdFunctions():
                 self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
                 
                 #MOVE ARM TO FINAL POSITION
-            current_gripper_height = self.get_gripper_localization()
-
-            picked_height = current_gripper_height.z
 
             print("Picked Height: ", picked_height)
                 #CHECK CLOSE GRIPPER
@@ -5937,7 +5943,7 @@ class RobotStdFunctions():
             #    print(f"Bring object to initial pose")
                 # Return the distance which the gripper was at in relation to the furniture
             
-            return
+            return valid_detected_object.object_name, picked_height
 
                 #IF AN OBJECT WAS NOT FOUND
         else:

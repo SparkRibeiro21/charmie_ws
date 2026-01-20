@@ -4,5 +4,5 @@
 {"name": "Hallway",     "nav_coords": [  3.10, -0.56, 180.0], "top_left_coords": [ 3.82, 0.61], "bot_right_coords": [ 0.61,-2.09]},
 {"name": "Office",      "nav_coords": [  3.10, -2.22, 245.0], "top_left_coords": [ 3.82,-2.09], "bot_right_coords": [ 0.61,-6.90]},
 {"name": "Bedroom",     "nav_coords": [  4.22, -3.00, 315.0], "top_left_coords": [ 6.30,-2.46], "bot_right_coords": [ 3.82,-6.90]},
-{"name": "Workshop",    "nav_coords": [ -0.10, -1.75, 135.0], "top_left_coords": [ 0.61, 5.60], "bot_right_coords": [-2.80,-3.24]}
+{"name": "Workshop",    "nav_coords": [ -0.15, -1.55, 135.0], "top_left_coords": [ 0.61, 5.60], "bot_right_coords": [-2.80,-3.24]}
 ]

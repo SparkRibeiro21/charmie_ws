@@ -258,20 +258,20 @@ class TaskMain():
 
                 self.robot.set_speech(filename="generic/careful", wait_for_end_of=True)                
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                #self.robot.set_speech(filename="rooms/"+selected_pick_room.replace(" ","_").lower(), wait_for_end_of=False)
+                self.robot.set_speech(filename="rooms/"+self.selected_pick_room[0].replace(" ","_").lower(), wait_for_end_of=False)
 
                 self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(self.selected_pick_room[0].replace(" ","_").lower()), wait_for_end_of=True)
 
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                #self.robot.set_speech(filename="rooms/"+selected_pick_room.replace(" ","_").lower(), wait_for_end_of=False)
+                self.robot.set_speech(filename="rooms/"+self.selected_pick_room[0].replace(" ","_").lower(), wait_for_end_of=False)
 
 
                 self.state = self.task_states["Pick_Object"]
 
 
             elif self.state == self.task_states["Pick_Object"]:
-                self.robot.floor_pick()
+                self.object_name, picked_height = self.robot.floor_pick()
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
                 self.robot.wait_for_start_button()
 
@@ -292,11 +292,8 @@ class TaskMain():
                 self.robot.set_speech(filename="furniture/" + self.place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
                 # Return to initial position
-                if self.object_mode == "front":
-                    self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(self.place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
 
-                if self.object_mode == "top":
-                    self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(self.place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
+                self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(self.place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
                     #self.robot.adjust_angle(45)
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
@@ -409,7 +406,7 @@ class TaskMain():
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)  
                 else:
-                    final_x = (gripper_place_position.z - self.selected_height - 0.02)*1000
+                    final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.012)*1000
                     # print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
                     self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
                     self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
