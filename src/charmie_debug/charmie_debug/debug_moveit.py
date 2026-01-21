@@ -5,16 +5,17 @@ from rclpy.node import Node
 
 import time
 
-from charmie_interfaces.srv import NamedTarget, JointTarget, PoseTarget
+from charmie_interfaces.srv import SetNamedTarget, SetJointTarget, SetPoseTarget
 
 class CommanderClient(Node):
     def __init__(self):
         super().__init__('commander_client_node')
         
         # Create service clients
-        self.named_target_client = self.create_client(NamedTarget, 'set_named_target')
-        self.joint_target_client = self.create_client(JointTarget, 'set_joint_target')
-        self.pose_target_client = self.create_client(PoseTarget, 'set_pose_target')
+        self.named_target_client = self.create_client(SetNamedTarget, 'set_named_target')
+        self.joint_target_client = self.create_client(SetJointTarget, 'set_joint_target')
+        self.pose_target_client = self.create_client(SetPoseTarget, 'set_pose_target')
+        self.move_tool_client = self.create_client(SetPoseTarget, 'move_tool_target')
         
         self.get_logger().info('Commander Client Node initialized')
     
@@ -32,7 +33,7 @@ class CommanderClient(Node):
             self.get_logger().error('Named target service not available')
             return False
         
-        request = NamedTarget.Request()
+        request = SetNamedTarget.Request()
         request.target_name = target_name
         
         self.get_logger().info(f'Sending named target request: {target_name}')
@@ -63,7 +64,7 @@ class CommanderClient(Node):
             self.get_logger().error('Joint target service not available')
             return False
         
-        request = JointTarget.Request()
+        request = SetJointTarget.Request()
         request.joint_positions = joint_positions
         
         self.get_logger().info(f'Sending joint target request with {len(joint_positions)} positions')
@@ -96,7 +97,7 @@ class CommanderClient(Node):
             self.get_logger().error('Pose target service not available')
             return False
         
-        request = PoseTarget.Request()
+        request = SetPoseTarget.Request()
         request.x = x
         request.y = y
         request.z = z
@@ -122,6 +123,47 @@ class CommanderClient(Node):
         else:
             self.get_logger().error('Failed to call pose target service')
             return False
+        
+    def send_move_tool(self, x, y, z, roll, pitch, yaw):
+        """
+        Send a move tool target request
+        
+        Args:
+            x, y, z (float): Position in meters
+            roll, pitch, yaw (float): Orientation in radians
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not self.move_tool_client.wait_for_service(timeout_sec=5.0):
+            self.get_logger().error('Move tool service not available')
+            return False
+        
+        request = SetPoseTarget.Request()
+        request.x = x
+        request.y = y
+        request.z = z
+        request.roll = roll
+        request.pitch = pitch
+        request.yaw = yaw
+        request.cartesian = True  # Always use cartesian for tool movement
+        
+        self.get_logger().info(
+            f'Sending move tool target: pos({x:f}, {y:f}, {z:f}), '
+            f'orient({roll:f}, {pitch:f}, {yaw:f})'
+        )
+        
+        future = self.move_tool_client.call_async(request)
+        rclpy.spin_until_future_complete(self, future)
+        
+        if future.result() is not None:
+            response = future.result()
+            status = 'SUCCESS' if response.success else 'FAILED'
+            self.get_logger().info(f'Response: {status} - {response.message}')
+            return response.success
+        else:
+            self.get_logger().error('Failed to call move tool service')
+            return False
 
 
 def main(args=None):
@@ -134,7 +176,7 @@ def main(args=None):
 
     time.sleep(3.0)
 
-    client_node.send_pose_target(0.05, 0.0, 0.0, 0.0, 0.0, 0.0, cartesian=True)
+    client_node.send_move_tool(0.05, 0.0, 0.0, 0.0, 0.0, 0.0)
 
     time.sleep(3.0)
     

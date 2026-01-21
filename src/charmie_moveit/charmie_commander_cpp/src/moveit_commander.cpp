@@ -2,13 +2,15 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
+
+
 #include <example_interfaces/msg/bool.hpp>
 #include <charmie_interfaces/msg/detected_object.hpp>
 #include <charmie_interfaces/msg/list_of_detected_object.hpp>
 
-#include <charmie_interfaces/srv/named_target.hpp>
-#include <charmie_interfaces/srv/joint_target.hpp>
-#include <charmie_interfaces/srv/pose_target.hpp>
+#include <charmie_interfaces/srv/set_named_target.hpp>
+#include <charmie_interfaces/srv/set_joint_target.hpp>
+#include <charmie_interfaces/srv/set_pose_target.hpp>
 
 
 using MoveGroupInterface = moveit::planning_interface::MoveGroupInterface;
@@ -20,9 +22,9 @@ using ListOfDetectedObjects = charmie_interfaces::msg::ListOfDetectedObject;
 
 using namespace std::placeholders;
 
-using NamedTargetSrv = charmie_interfaces::srv::NamedTarget;
-using JointTargetSrv = charmie_interfaces::srv::JointTarget;
-using PoseTargetSrv = charmie_interfaces::srv::PoseTarget;
+using NamedTargetSrv = charmie_interfaces::srv::SetNamedTarget;
+using JointTargetSrv = charmie_interfaces::srv::SetJointTarget;
+using PoseTargetSrv = charmie_interfaces::srv::SetPoseTarget;
 
 class Commander
 {
@@ -49,19 +51,24 @@ class Commander
             );
 
             // Services
-            named_target_srv_ = node_ ->create_service<NamedTargetSrv>(
+            set_named_target_srv_ = node_ ->create_service<NamedTargetSrv>(
                 "set_named_target",
                 std::bind(&Commander::NamedTargetService, this, _1, _2)
             );
 
-            joint_target_srv_ = node_ ->create_service<JointTargetSrv>(
+            set_joint_target_srv_ = node_ ->create_service<JointTargetSrv>(
                 "set_joint_target",
                 std::bind(&Commander::JointTargetService, this, _1, _2)
             );
 
-            pose_target_srv_ = node_ ->create_service<PoseTargetSrv>(
+            set_pose_target_srv_ = node_ ->create_service<PoseTargetSrv>(
                 "set_pose_target",
                 std::bind(&Commander::PoseTargetService, this, _1, _2)
+            );
+
+            set_move_tool_srv_ = node_ ->create_service<PoseTargetSrv>(
+                "set_move_tool",
+                std::bind(&Commander::MoveToolService, this, _1, _2)
             );
         }
 
@@ -295,11 +302,11 @@ class Commander
 
                 moveit_msgs::msg::RobotTrajectory trajectory;
                 double resolution = 0.01;
-                double jump_threshold = 2*M_PI;
+                double jump_threshold = 0.0;
 
                 double fraction = xarm_->computeCartesianPath(waypoints, resolution, jump_threshold, trajectory);
 
-                if (fraction > 0.5){
+                if (fraction == 1.0){
                     xarm_->execute(trajectory);
                     response->success = true;
                     response->message = "Cartesian pose target executed successfully.";
@@ -309,6 +316,55 @@ class Commander
                     response->success = false;
                     response->message = "Failed to compute Cartesian path for the pose target.";
                 }
+            }
+        }
+
+        void MoveToolService(
+            const std::shared_ptr<PoseTargetSrv::Request> request,
+            std::shared_ptr<PoseTargetSrv::Response> response)
+
+        {
+            RCLCPP_INFO(
+                node_->get_logger(),
+                "Received MoveToolService request: position(%f, %f, %f), orientation(%f, %f, %f)",
+                request->x, request->y, request->z,
+                request->roll, request->pitch, request->yaw
+            );
+
+            tf2::Quaternion q;
+            q.setRPY(request->roll, request->pitch, request->yaw);
+            q.normalize();
+
+            geometry_msgs::msg::PoseStamped target_pose;
+            target_pose.header.frame_id = xarm_->getPlanningFrame();
+            target_pose.pose.position.x = request->x;
+            target_pose.pose.position.y = request->y;
+            target_pose.pose.position.z = request->z;
+            target_pose.pose.orientation.x = q.x();
+            target_pose.pose.orientation.y = q.y();
+            target_pose.pose.orientation.z = q.z();
+            target_pose.pose.orientation.w = q.w();
+
+            xarm_->setStartStateToCurrentState();
+            
+            std::vector<geometry_msgs::msg::Pose> waypoints;
+            waypoints.push_back(target_pose.pose);
+
+            moveit_msgs::msg::RobotTrajectory trajectory;
+            double resolution = 0.01;
+            double jump_threshold = 2*M_PI;
+
+            double fraction = xarm_->computeCartesianPath(waypoints, resolution, jump_threshold, trajectory);
+
+            if (fraction > 0.5){
+                xarm_->execute(trajectory);
+                response->success = true;
+                response->message = "Tool movement executed successfully.";
+            }
+            else
+            {
+                response->success = false;
+                response->message = "Failed to compute Cartesian path for the tool movement.";
             }
         }
 
@@ -347,9 +403,10 @@ class Commander
         rclcpp::Subscription<Bool>::SharedPtr open_gripper_sub_;
         rclcpp::Subscription<ListOfDetectedObjects>::SharedPtr detected_objects_sub_;
 
-        rclcpp::Service<charmie_interfaces::srv::NamedTarget>::SharedPtr named_target_srv_;
-        rclcpp::Service<charmie_interfaces::srv::JointTarget>::SharedPtr joint_target_srv_;
-        rclcpp::Service<charmie_interfaces::srv::PoseTarget>::SharedPtr pose_target_srv_;
+        rclcpp::Service<charmie_interfaces::srv::SetNamedTarget>::SharedPtr set_named_target_srv_;
+        rclcpp::Service<charmie_interfaces::srv::SetJointTarget>::SharedPtr set_joint_target_srv_;
+        rclcpp::Service<charmie_interfaces::srv::SetPoseTarget>::SharedPtr set_pose_target_srv_;
+        rclcpp::Service<charmie_interfaces::srv::SetPoseTarget>::SharedPtr set_move_tool_srv_;
 };
 
 int main(int argc, char** argv)
