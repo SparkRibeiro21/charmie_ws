@@ -247,7 +247,7 @@ class Commander
         {
             RCLCPP_INFO(
                 node_->get_logger(),
-                "Received PoseTargetService request: position(%f, %f, %f), orientation(%f, %f, %f), cartesian=%s",
+                "Received PoseTargetService request: position(%f, %f, %f), orientation(%f, %f, %f), cartesian=%d",
                 request->x, request->y, request->z,
                 request->roll, request->pitch, request->yaw,
                 request->cartesian
