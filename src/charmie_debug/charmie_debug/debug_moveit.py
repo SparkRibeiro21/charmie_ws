@@ -134,21 +134,12 @@ def main(args=None):
 
     time.sleep(3.0)
 
-    client_node.send_pose_target(0.1, 0.0, 0.0, 0.0, 0.0, 0.0, cartesian=True)
-
-    time.sleep(1.0)
-
-    client_node.send_pose_target(0.0, 0.1, 0.0, 0.0, 0.0, 0.0, cartesian=True)
-
-    time.sleep(1.0)
-
-    client_node.send_pose_target(0.0, 0.0, 0.1, 0.0, 0.0, 0.0, cartesian=True)
+    client_node.send_pose_target(0.05, 0.0, 0.0, 0.0, 0.0, 0.0, cartesian=True)
 
     time.sleep(3.0)
     
     client_node.send_named_target('home')
 
-    rclpy.spin()
     rclpy.shutdown()
 
 

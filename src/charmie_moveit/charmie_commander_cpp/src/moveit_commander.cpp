@@ -294,12 +294,12 @@ class Commander
                 waypoints.push_back(target_pose.pose);
 
                 moveit_msgs::msg::RobotTrajectory trajectory;
-                double resolution = 0.01; // 1cm
-                double jump_threshold = 0.0; // disable jump threshold checking
+                double resolution = 0.01;
+                double jump_threshold = 2*M_PI;
 
                 double fraction = xarm_->computeCartesianPath(waypoints, resolution, jump_threshold, trajectory);
 
-                if (fraction == 1){
+                if (fraction > 0.5){
                     xarm_->execute(trajectory);
                     response->success = true;
                     response->message = "Cartesian pose target executed successfully.";
