@@ -15,7 +15,7 @@ class CommanderClient(Node):
         self.named_target_client = self.create_client(SetNamedTarget, 'set_named_target')
         self.joint_target_client = self.create_client(SetJointTarget, 'set_joint_target')
         self.pose_target_client = self.create_client(SetPoseTarget, 'set_pose_target')
-        self.move_tool_client = self.create_client(SetPoseTarget, 'move_tool_target')
+        self.move_tool_client = self.create_client(SetPoseTarget, 'set_move_tool_target')
         
         self.get_logger().info('Commander Client Node initialized')
     

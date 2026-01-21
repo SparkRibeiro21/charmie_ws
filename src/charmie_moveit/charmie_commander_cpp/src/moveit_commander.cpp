@@ -2,7 +2,7 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
-
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <example_interfaces/msg/bool.hpp>
 #include <charmie_interfaces/msg/detected_object.hpp>
@@ -67,7 +67,7 @@ class Commander
             );
 
             set_move_tool_srv_ = node_ ->create_service<PoseTargetSrv>(
-                "set_move_tool",
+                "set_move_tool_target",
                 std::bind(&Commander::MoveToolService, this, _1, _2)
             );
         }
@@ -331,32 +331,37 @@ class Commander
                 request->roll, request->pitch, request->yaw
             );
 
-            tf2::Quaternion q;
-            q.setRPY(request->roll, request->pitch, request->yaw);
-            q.normalize();
+            geometry_msgs::msg::PoseStamped current_pose = xarm_->getCurrentPose();
 
-            geometry_msgs::msg::PoseStamped target_pose;
-            target_pose.header.frame_id = xarm_->getPlanningFrame();
-            target_pose.pose.position.x = request->x;
-            target_pose.pose.position.y = request->y;
-            target_pose.pose.position.z = request->z;
-            target_pose.pose.orientation.x = q.x();
-            target_pose.pose.orientation.y = q.y();
-            target_pose.pose.orientation.z = q.z();
-            target_pose.pose.orientation.w = q.w();
+            geometry_msgs::msg::Pose target_pose = current_pose.pose;
+            target_pose.position.x += request->x;
+            target_pose.position.y += request->y;
+            target_pose.position.z += request->z;
+
+            tf2::Quaternion current_orientation;
+            tf2::fromMsg(current_pose.pose.orientation, current_orientation);
+
+            tf2::Quaternion delta_rotation;
+            delta_rotation.setRPY(request->roll, request->pitch, request->yaw);
+
+            tf2::Quaternion new_orientation = current_orientation * delta_rotation;
+            new_orientation.normalize();
+
+            target_pose.orientation = tf2::toMsg(new_orientation);
 
             xarm_->setStartStateToCurrentState();
             
             std::vector<geometry_msgs::msg::Pose> waypoints;
-            waypoints.push_back(target_pose.pose);
+            waypoints.push_back(current_pose.pose);
+            waypoints.push_back(target_pose);
 
             moveit_msgs::msg::RobotTrajectory trajectory;
-            double resolution = 0.01;
-            double jump_threshold = 2*M_PI;
+            double resolution = 0.005;
+            double jump_threshold = 0.0;
 
             double fraction = xarm_->computeCartesianPath(waypoints, resolution, jump_threshold, trajectory);
 
-            if (fraction > 0.5){
+            if (fraction > 0.7){
                 xarm_->execute(trajectory);
                 response->success = true;
                 response->message = "Tool movement executed successfully.";
@@ -366,6 +371,9 @@ class Commander
                 response->success = false;
                 response->message = "Failed to compute Cartesian path for the tool movement.";
             }
+
+            RCLCPP_INFO(node_->get_logger(),"Current Pose:%f %f %f",current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z);
+            RCLCPP_INFO(node_->get_logger(),"Desired Pose:%f %f %f",target_pose.position.x, target_pose.position.y,target_pose.position.z);
         }
 
         void OpenGripperCallback(const Bool &msg)
