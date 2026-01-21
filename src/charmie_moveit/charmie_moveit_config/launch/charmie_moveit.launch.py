@@ -127,7 +127,7 @@ def generate_launch_description():
 
     commander_node = Node(
         package='charmie_commander_cpp',
-        executable='commander',
+        executable='moveit_commander',
         output='screen',
         parameters=[
             moveit_config.robot_description,

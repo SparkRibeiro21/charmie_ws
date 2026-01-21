@@ -3,6 +3,8 @@
 import rclpy
 from rclpy.node import Node
 
+import time
+
 from charmie_interfaces.srv import NamedTarget, JointTarget, PoseTarget
 
 class CommanderClient(Node):
@@ -126,8 +128,27 @@ def main(args=None):
     rclpy.init(args=args)
     client_node = CommanderClient()
         
-    client_node.send_named_target('pick_front')
+    front_pick_joints = [-3.7524, -1.2217, -0.2793, 1.3963, 0.5236, 3.1765]
+
+    client_node.send_joint_target(front_pick_joints)
+
+    time.sleep(3.0)
+
+    client_node.send_pose_target(0.1, 0.0, 0.0, 0.0, 0.0, 0.0, cartesian=True)
+
+    time.sleep(1.0)
+
+    client_node.send_pose_target(0.0, 0.1, 0.0, 0.0, 0.0, 0.0, cartesian=True)
+
+    time.sleep(1.0)
+
+    client_node.send_pose_target(0.0, 0.0, 0.1, 0.0, 0.0, 0.0, cartesian=True)
+
+    time.sleep(3.0)
     
+    client_node.send_named_target('home')
+
+    rclpy.spin()
     rclpy.shutdown()
 
 
