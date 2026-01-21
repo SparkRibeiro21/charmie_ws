@@ -143,7 +143,7 @@ class Commander_Template
                 }
                 else if (shape_type == "sphere")
                 {
-                    shape_type = shape.SPHERE;
+                    shape.type = shape.SPHERE;
                     shape.dimensions.resize(1);
                     shape.dimensions[shape_msgs::msg::SolidPrimitive::SPHERE_RADIUS] = obj.cf_width;
                 }
