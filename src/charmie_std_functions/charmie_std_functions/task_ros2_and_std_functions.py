@@ -5738,6 +5738,8 @@ class RobotStdFunctions():
 
         valid_detected_object = DetectedObject()
         not_validated = True
+        cycle = 1
+        more_objects = False
 
         MIN_OBJECT_DISTANCE_X = 0.05
         MAX_OBJECT_DISTANCE_X = 1.5
@@ -5747,27 +5749,52 @@ class RobotStdFunctions():
         ### While cycle to get a valid detected object ###
 
         while not_validated:
-            objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=5.0, list_of_objects=[], detect_objects_hand=False, detect_objects_base=True)
+            objects_found = self.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=5.0, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
 
+            if objects_found:
 
-            for obj in objects_found:
-                conf   = f"{obj.confidence * 100:.0f}%"
-                cam_x_ = f"{obj.position_relative.x:5.2f}"
-                cam_y_ = f"{obj.position_relative.y:5.2f}"
-                cam_z_ = f"{obj.position_relative.z:5.2f}"
+                for obj in objects_found:
+                    conf   = f"{obj.confidence * 100:.0f}%"
+                    cam_x_ = f"{obj.position_relative.x:5.2f}"
+                    cam_y_ = f"{obj.position_relative.y:5.2f}"
+                    cam_z_ = f"{obj.position_relative.z:5.2f}"
 
-                print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
+                    print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
 
-                if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y:
-                    if not_validated == False:
-                        if valid_detected_object.position_relative.x > obj.position_relative.x:
+                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y:
+                        if not_validated == False:
+                            if valid_detected_object.position_relative.x > obj.position_relative.x or (abs(valid_detected_object.position_relative.x - obj.position_relative.x) < 0.2  and (valid_detected_object.position_relative.y - obj.position_relative.y) < 0.2 and obj.camera == "base"):
+                                if valid_detected_object.object_name != obj.object_name:
+                                    more_objects = True
+                                valid_detected_object = obj
+
+                        else:
                             valid_detected_object = obj
-                    else:
-                        valid_detected_object = obj
-                        not_validated = False
+                            not_validated = False
+
+            if not_validated:
+                match cycle:
+
+                    case 1: 
+                        self.adjust_angle(15)
+                        cycle+=1
+                    case 2: 
+                        self.adjust_angle(-30)
+                        cycle+=1
+                    case 3: 
+                        self.adjust_angle(60)
+                        cycle+=1
+                    case 4: 
+                        self.adjust_angle(-90)
+                        cycle+=1
+                    case 5:
+                        self.adjust_angle(90)
+                        cycle=1
 
 
         # 2) DEPENDING ON DETECTED OBJECT LOCATION, MOVE TOWARDS OBJECT (IF NAVIGATION = TRUE) AND POSITON ARM DEPENDING ON OBJECT HEIGHT
+
+        print("MORE OBJECTS:", more_objects)
             
         if not_validated == False:
 
@@ -5943,7 +5970,7 @@ class RobotStdFunctions():
             #    print(f"Bring object to initial pose")
                 # Return the distance which the gripper was at in relation to the furniture
             
-            return valid_detected_object.object_name, picked_height
+            return valid_detected_object.object_name, picked_height, more_objects
 
                 #IF AN OBJECT WAS NOT FOUND
         else:

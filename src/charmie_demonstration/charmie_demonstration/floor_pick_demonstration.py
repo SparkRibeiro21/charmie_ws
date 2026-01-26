@@ -137,7 +137,7 @@ class TaskMain():
                 
                 print("SET INITIAL POSITION")
 
-                self.state = self.task_states["Select_room_to_pick"]
+                self.state = self.task_states["Pick_Object"]
             
             if self.state == self.task_states["Select_room_to_pick"]:
 
