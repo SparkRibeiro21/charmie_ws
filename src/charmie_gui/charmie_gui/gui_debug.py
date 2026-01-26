@@ -1095,16 +1095,16 @@ class DebugVisualMain():
         self.MAP_SCALE += self.MAP_ZOOM_INC
 
     def button_shift_up_function(self):
-        self.MAP_ADJUST_Y -= self.MAP_SHIFT_INC
+        self.MAP_ADJUST_Y += self.MAP_SHIFT_INC
     
     def button_shift_down_function(self):
-        self.MAP_ADJUST_Y += self.MAP_SHIFT_INC
+        self.MAP_ADJUST_Y -= self.MAP_SHIFT_INC
 
     def button_shift_left_function(self):
-        self.MAP_ADJUST_X -= self.MAP_SHIFT_INC
+        self.MAP_ADJUST_X += self.MAP_SHIFT_INC
 
     def button_shift_right_function(self):
-        self.MAP_ADJUST_X += self.MAP_SHIFT_INC
+        self.MAP_ADJUST_X -= self.MAP_SHIFT_INC
 
     def set_camera_visualization(self, camera_id, rgb_or_depth, top_or_bottom):
         print(camera_id, rgb_or_depth, top_or_bottom)
