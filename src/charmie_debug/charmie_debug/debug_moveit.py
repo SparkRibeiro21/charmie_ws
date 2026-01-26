@@ -66,7 +66,7 @@ class TaskMain():
     # main state-machine function
     def main(self):
 
-        self.configurables(self)
+        self.configurables()
         
         # States in DebugMoveit Task
         self.Waiting_for_task_start = 0
@@ -104,9 +104,9 @@ class TaskMain():
                     if o.object_name == self.SELECTED_OBJECT:
 
                         self.robot.set_pose_target_arm(
-                            o.position_relative.x,
-                            o.position_relative.y,
-                            o.position_relative.z,
+                            o.position_absolute.x,
+                            o.position_absolute.y,
+                            o.position_absolute.z,
                             0.0,
                             0.0,
                             0.0,
