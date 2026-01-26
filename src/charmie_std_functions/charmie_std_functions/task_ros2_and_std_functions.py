@@ -5749,7 +5749,7 @@ class RobotStdFunctions():
         ### While cycle to get a valid detected object ###
 
         while not_validated:
-            objects_found = self.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=5.0, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
+            objects_found = self.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
 
             if objects_found:
 
@@ -5761,7 +5761,7 @@ class RobotStdFunctions():
 
                     print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
 
-                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y:
+                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and obj.position_absolute.z < self.get_object_height_from_object(obj.object_name) * 1.2:
                         if not_validated == False:
                             if valid_detected_object.position_relative.x > obj.position_relative.x or (abs(valid_detected_object.position_relative.x - obj.position_relative.x) < 0.2  and (valid_detected_object.position_relative.y - obj.position_relative.y) < 0.2 and obj.camera == "base"):
                                 if valid_detected_object.object_name != obj.object_name:
@@ -5776,15 +5776,17 @@ class RobotStdFunctions():
                 match cycle:
 
                     case 1: 
-                        self.adjust_angle(15)
+                        self.adjust_angle(45)
                         cycle+=1
                     case 2: 
-                        self.adjust_angle(-30)
+                        self.adjust_angle(-90)
                         cycle+=1
                     case 3: 
-                        self.adjust_angle(60)
+                        self.adjust_angle(90)
+                        self.adjust_angle(90)
                         cycle+=1
                     case 4: 
+                        self.adjust_angle(-90)
                         self.adjust_angle(-90)
                         cycle+=1
                     case 5:
@@ -5814,7 +5816,9 @@ class RobotStdFunctions():
             ow = self.get_object_width_from_object(valid_detected_object.object_name)
             oh = self.get_object_height_from_object(valid_detected_object.object_name)
 
-            if valid_detected_object.position_absolute.z * 2 - 0.005 > 0:
+            if valid_detected_object.position_absolute.z - 0.005 > 0 and valid_detected_object.camera == "head":
+                picked_height = valid_detected_object.position_absolute.z + 0.2 - 0.05
+            elif valid_detected_object.position_absolute.z * 2 - 0.005 > 0 and valid_detected_object.camera == "base":
                 picked_height = valid_detected_object.position_absolute.z * 2 + 0.2 - 0.05
             else:
                 picked_height = 0.0
