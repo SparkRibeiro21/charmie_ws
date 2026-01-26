@@ -5923,6 +5923,8 @@ class RobotStdFunctions():
                 correct_z_grab -= 20
                 correct_rotation = 90.0
                 correct_x_grab -= 19
+            if obj.object_name == "rubiks cube":
+                correct_x_grab -= 45
 
             object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
 
