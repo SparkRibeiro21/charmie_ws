@@ -340,6 +340,9 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_track_object = False
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
+        self.waited_for_end_of_set_named_target_arm = False
+        self.waited_for_end_of_set_joint_target_arm = False
+        self.waited_for_end_of_set_pose_target_arm = False
         self.waited_for_end_of_face = False
         self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
@@ -2334,14 +2337,14 @@ class RobotStdFunctions():
 
         return self.node.set_named_target_arm_success, self.node.set_named_target_arm_message
 
-    def set_joint_target_arm(self, joint_values=[], wait_for_end_of=True):
+    def set_joint_target_arm(self, joint_positions=[], wait_for_end_of=True):
 
-        if len(joint_values) != 6:
+        if len(joint_positions) != 6:
             self.node.get_logger().error("Joint_values list must have 6 values for the 6 arm joints.")
             return False, "Invalid number of joint positions."
         
         request = SetJointTarget.Request()
-        request.joint_values = [float(j) for j in joint_values]
+        request.joint_positions = [float(j) for j in joint_positions]
 
         self.node.call_set_joint_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)
 
