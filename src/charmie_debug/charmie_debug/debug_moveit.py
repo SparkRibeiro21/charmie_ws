@@ -1,189 +1,105 @@
 #!/usr/bin/env python3
 
 import rclpy
-from rclpy.node import Node
-
+import threading
 import time
+from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
-from charmie_interfaces.srv import SetNamedTarget, SetJointTarget, SetPoseTarget
-
-class CommanderClient(Node):
-    def __init__(self):
-        super().__init__('commander_client_node')
-        
-        # Create service clients
-        self.named_target_client = self.create_client(SetNamedTarget, 'set_named_target')
-        self.joint_target_client = self.create_client(SetJointTarget, 'set_joint_target')
-        self.pose_target_client = self.create_client(SetPoseTarget, 'set_pose_target')
-        self.move_tool_client = self.create_client(SetPoseTarget, 'set_move_tool_target')
-        
-        self.get_logger().info('Commander Client Node initialized')
-    
-    def send_named_target(self, target_name):
-        """
-        Send a named target request (e.g., 'home', 'rest')
-        
-        Args:
-            target_name (str): Name of the target pose
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        if not self.named_target_client.wait_for_service(timeout_sec=5.0):
-            self.get_logger().error('Named target service not available')
-            return False
-        
-        request = SetNamedTarget.Request()
-        request.target_name = target_name
-        
-        self.get_logger().info(f'Sending named target request: {target_name}')
-        
-        future = self.named_target_client.call_async(request)
-        rclpy.spin_until_future_complete(self, future)
-        
-        if future.result() is not None:
-            response = future.result()
-            status = 'SUCCESS' if response.success else 'FAILED'
-            self.get_logger().info(f'Response: {status} - {response.message}')
-            return response.success
-        else:
-            self.get_logger().error('Failed to call named target service')
-            return False
-    
-    def send_joint_target(self, joint_positions):
-        """
-        Send a joint target request
-        
-        Args:
-            joint_positions (list): List of joint angles in radians
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        if not self.joint_target_client.wait_for_service(timeout_sec=5.0):
-            self.get_logger().error('Joint target service not available')
-            return False
-        
-        request = SetJointTarget.Request()
-        request.joint_positions = joint_positions
-        
-        self.get_logger().info(f'Sending joint target request with {len(joint_positions)} positions')
-        
-        future = self.joint_target_client.call_async(request)
-        rclpy.spin_until_future_complete(self, future)
-        
-        if future.result() is not None:
-            response = future.result()
-            status = 'SUCCESS' if response.success else 'FAILED'
-            self.get_logger().info(f'Response: {status} - {response.message}')
-            return response.success
-        else:
-            self.get_logger().error('Failed to call joint target service')
-            return False
-    
-    def send_pose_target(self, x, y, z, roll, pitch, yaw, cartesian=False):
-        """
-        Send a pose target request
-        
-        Args:
-            x, y, z (float): Position in meters
-            roll, pitch, yaw (float): Orientation in radians
-            cartesian (bool): If True, use cartesian path planning
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        if not self.pose_target_client.wait_for_service(timeout_sec=5.0):
-            self.get_logger().error('Pose target service not available')
-            return False
-        
-        request = SetPoseTarget.Request()
-        request.x = x
-        request.y = y
-        request.z = z
-        request.roll = roll
-        request.pitch = pitch
-        request.yaw = yaw
-        request.cartesian = cartesian
-        
-        self.get_logger().info(
-            f'Sending pose target: pos({x:f}, {y:f}, {z:f}), '
-            f'orient({roll:f}, {pitch:f}, {yaw:f}), '
-            f'cartesian={cartesian}'
-        )
-        
-        future = self.pose_target_client.call_async(request)
-        rclpy.spin_until_future_complete(self, future)
-        
-        if future.result() is not None:
-            response = future.result()
-            status = 'SUCCESS' if response.success else 'FAILED'
-            self.get_logger().info(f'Response: {status} - {response.message}')
-            return response.success
-        else:
-            self.get_logger().error('Failed to call pose target service')
-            return False
-        
-    def send_move_tool(self, x, y, z, roll, pitch, yaw):
-        """
-        Send a move tool target request
-        
-        Args:
-            x, y, z (float): Position in meters
-            roll, pitch, yaw (float): Orientation in radians
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        if not self.move_tool_client.wait_for_service(timeout_sec=5.0):
-            self.get_logger().error('Move tool service not available')
-            return False
-        
-        request = SetPoseTarget.Request()
-        request.x = x
-        request.y = y
-        request.z = z
-        request.roll = roll
-        request.pitch = pitch
-        request.yaw = yaw
-        request.cartesian = True  # Always use cartesian for tool movement
-        
-        self.get_logger().info(
-            f'Sending move tool target: pos({x:f}, {y:f}, {z:f}), '
-            f'orient({roll:f}, {pitch:f}, {yaw:f})'
-        )
-        
-        future = self.move_tool_client.call_async(request)
-        rclpy.spin_until_future_complete(self, future)
-        
-        if future.result() is not None:
-            response = future.result()
-            status = 'SUCCESS' if response.success else 'FAILED'
-            self.get_logger().info(f'Response: {status} - {response.message}')
-            return response.success
-        else:
-            self.get_logger().error('Failed to call move tool service')
-            return False
+# Constant Variables to ease RGB_MODE coding
+RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
+SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_ROTATE, MOON, BACK_AND_FORTH_4, BACK_AND_FORTH_8  = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 
+
+ros2_modules = {
+    "charmie_arm":                  True,
+    "charmie_audio":                False,
+    "charmie_face":                 False,
+    "charmie_head_camera":          True,
+    "charmie_hand_camera":          True,
+    "charmie_base_camera":          False,
+    "charmie_gamepad":              False,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
+    "charmie_llm":                  False,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
+    "charmie_neck":                 True,
+    "charmie_radar":                False,
+    "charmie_sound_classification": False,
+    "charmie_speakers":             False,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            False,
+}
+
+
+
+# main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
-    client_node = CommanderClient()
-        
-    front_pick_joints = [-3.7524, -1.2217, -0.2793, 1.3963, 0.5236, 3.1765]
-
-    client_node.send_joint_target(front_pick_joints)
-
-    time.sleep(3.0)
-
-    client_node.send_move_tool(0.05, 0.0, 0.0, 0.0, 0.0, 0.0)
-
-    time.sleep(3.0)
-    
-    client_node.send_named_target('home')
-
+    node = ROS2TaskNode(ros2_modules)
+    robot = RobotStdFunctions(node)
+    th_main = threading.Thread(target=ThreadMainTask, args=(robot,), daemon=True)
+    th_main.start()
+    rclpy.spin(node)
     rclpy.shutdown()
 
+def ThreadMainTask(robot: RobotStdFunctions):
+    main = TaskMain(robot)
+    main.main()
 
-if __name__ == '__main__':
-    main()
+class TaskMain():
+
+    def __init__(self, robot: RobotStdFunctions):
+        # create a robot instance so use all standard CHARMIE functions
+        self.robot = robot
+
+    # main state-machine function
+    def main(self):
+        
+        # States in DebugMoveit Task
+        self.Waiting_for_task_start = 0
+        self.test_state_1 = 1
+        self.Final_State = 2
+
+        # State the robot starts at, when testing it may help to change to the state it is intended to be tested
+        self.state = self.Waiting_for_task_start
+
+
+        # debug print to know we are on the main start of the task
+        print("In DebugMoveit Main...")
+
+        while True:
+
+            if self.state == self.Waiting_for_task_start:
+                print("State:", self.state, "- Waiting_for_task_start")
+
+                while True:
+
+                    front_pick_joints = [-3.7524, -1.2217, -0.2793, 1.3963, 0.5236, 3.1765]
+
+                    self.robot.set_joint_target_arm(front_pick_joints, wait_for_end_of=True)
+
+                    time.sleep(2.0)
+
+                    self.robot.set_named_target_arm("home", wait_for_end_of=True)
+
+                    pass
+                    
+                    
+
+            elif self.state == self.Final_State:
+                
+                print("State:", self.state, "- Final_State")
+
+                # Lock after finishing task
+                while True:
+                    pass
+
+            else:
+                pass

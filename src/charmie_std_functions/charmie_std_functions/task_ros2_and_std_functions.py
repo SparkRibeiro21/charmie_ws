@@ -18,7 +18,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, SetFloat, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
-    GetSoundClassificationContinuous, GetMinRadarDistance
+    GetSoundClassificationContinuous, GetMinRadarDistance, SetNamedTarget, SetJointTarget, SetPoseTarget
 from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles
 
 from charmie_point_cloud.point_cloud_class import PointCloud
@@ -142,6 +142,10 @@ class ROS2TaskNode(Node):
         ### Services (Clients) ###
         # Arm
         self.set_height_furniture_for_arm_manual_movement_client = self.create_client(SetFloat, "set_table_height")
+        # MoveIt!
+        self.set_named_target_client = self.create_client(SetNamedTarget, 'set_named_target')
+        self.set_joint_target_client = self.create_client(SetJointTarget, 'set_joint_target')
+        self.set_pose_target_client = self.create_client(SetPoseTarget, 'set_pose_target')
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
@@ -667,6 +671,69 @@ class ROS2TaskNode(Node):
 
         self.set_height_furniture_for_arm_manual_movement_client.call_async(request)
 
+    ### MOVEIT! TARGET SERVERS FUNCTIONS ###
+    def call_set_named_target_arm_server(self, request=SetNamedTarget.Request(), wait_for_end_of=True):
+
+        future = self.set_named_target_client.call_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_set_named_target_arm_server)
+        else:
+            self.set_named_target_arm_success = True
+            self.set_named_target_arm_message = "Wait for answer not needed"
+
+    def callback_call_set_named_target_arm_server(self, future):
+
+        try:
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.set_named_target_arm_success = response.success
+            self.set_named_target_arm_message = response.message
+            self.waited_for_end_of_set_named_target_arm = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    def call_set_joint_target_arm_server(self, request=SetJointTarget.Request(), wait_for_end_of=True):
+
+        future = self.set_joint_target_client.call_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_set_joint_target_arm_server)
+        else:
+            self.set_joint_target_arm_success = True
+            self.set_joint_target_arm_message = "Wait for answer not needed"
+
+    def callback_call_set_joint_target_arm_server(self, future):
+
+        try:
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.set_joint_target_arm_success = response.success
+            self.set_joint_target_arm_message = response.message
+            self.waited_for_end_of_set_joint_target_arm = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    def call_set_pose_target_arm_server(self, request=SetPoseTarget.Request(), wait_for_end_of=True):
+
+        future = self.set_pose_target_client.call_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_set_pose_target_arm_server)
+        else:
+            self.set_pose_target_arm_success = True
+            self.set_pose_target_arm_message = "Wait for answer not needed"
+
+    def callback_call_set_pose_target_arm_server(self, future):
+
+        try:
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.set_pose_target_arm_success = response.success
+            self.set_pose_target_arm_message = response.message
+            self.waited_for_end_of_set_pose_target_arm = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, request=SetFace.Request(), wait_for_end_of=True):
@@ -2252,6 +2319,58 @@ class RobotStdFunctions():
 
         # self.node.get_logger().info("Set Arm Response: %s" %(str(self.arm_success) + " - " + str(self.arm_message)))
         return self.node.arm_success, self.node.arm_message
+
+    def set_named_target_arm(self, target_name="", wait_for_end_of=True):
+
+        request = SetNamedTarget.Request()
+        request.target_name = target_name
+
+        self.node.call_set_named_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_set_named_target_arm:
+            pass
+        self.node.waited_for_end_of_set_named_target_arm = False
+
+        return self.node.set_named_target_arm_success, self.node.set_named_target_arm_message
+
+    def set_joint_target_arm(self, joint_values=[], wait_for_end_of=True):
+
+        if len(joint_values) != 6:
+            self.node.get_logger().error("Joint_values list must have 6 values for the 6 arm joints.")
+            return False, "Invalid number of joint positions."
+        
+        request = SetJointTarget.Request()
+        request.joint_values = [float(j) for j in joint_values]
+
+        self.node.call_set_joint_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_set_joint_target_arm:
+            pass
+        self.node.waited_for_end_of_set_joint_target_arm = False
+
+        return self.node.set_joint_target_arm_success, self.node.set_joint_target_arm_message
+
+    def set_pose_target_arm(self, x=0.0 , y=0.0, z=0.0, roll=0.0, pitch=0.0, yaw=0.0, cartesian=False, wait_for_end_of=True):
+
+        request = SetPoseTarget.Request()
+        request.x = float(x)
+        request.y = float(y)
+        request.z = float(z)
+        request.roll = float(roll)
+        request.pitch = float(pitch)
+        request.yaw = float(yaw)
+        request.cartesian = bool(cartesian)
+
+        self.node.call_set_pose_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_set_pose_target_arm:
+            pass
+        self.node.waited_for_end_of_set_pose_target_arm = False
+
+        return self.node.set_pose_target_arm_success, self.node.set_pose_target_arm_message
     
     def set_height_furniture_for_arm_manual_movements(self, height=0.0, wait_for_end_of=True):        
 
