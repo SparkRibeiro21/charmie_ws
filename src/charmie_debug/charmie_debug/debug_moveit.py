@@ -59,8 +59,14 @@ class TaskMain():
         # create a robot instance so use all standard CHARMIE functions
         self.robot = robot
 
+    def configurables(self):
+        self.tetas = [[0, 20], [0, 0], [0, -35]]
+        self.SELECTED_OBJECT = "Cola"
+
     # main state-machine function
     def main(self):
+
+        self.configurables(self)
         
         # States in DebugMoveit Task
         self.Waiting_for_task_start = 0
@@ -79,17 +85,39 @@ class TaskMain():
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
 
-                while True:
+                # front_pick_joints = [-3.7524, -1.2217, -0.2793, 1.3963, 0.5236, 3.1765]
 
-                    front_pick_joints = [-3.7524, -1.2217, -0.2793, 1.3963, 0.5236, 3.1765]
+                # self.robot.set_joint_target_arm(front_pick_joints, wait_for_end_of=True)
 
-                    self.robot.set_joint_target_arm(front_pick_joints, wait_for_end_of=True)
+                objects_found = self.robot.search_for_objects(tetas=self.tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                
+                print("LIST OF DETECTED OBJECTS:")
+                for o in objects_found:
+                    conf = f"{o.confidence * 100:.0f}%"
+
+                    cam_x_ = f"{o.position_relative.x:5.2f}"
+                    cam_y_ = f"{o.position_relative.y:5.2f}"
+                    cam_z_ = f"{o.position_relative.z:5.2f}"
+
+                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({cam_x_},{cam_y_},{cam_z_})")
+
+                    if o.object_name == self.SELECTED_OBJECT:
+
+                        self.robot.set_pose_target_arm(
+                            o.position_relative.x,
+                            o.position_relative.y,
+                            o.position_relative.z,
+                            0.0,
+                            0.0,
+                            0.0,
+                            cartesian=False,
+                        )
 
                     time.sleep(2.0)
 
                     self.robot.set_named_target_arm("home", wait_for_end_of=True)
 
-                    pass
+                pass
                     
                     
 
