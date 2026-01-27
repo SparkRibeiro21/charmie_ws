@@ -273,7 +273,6 @@ class TaskMain():
             elif self.state == self.task_states["Pick_Object"]:
                 self.object_name, picked_height, more_objects = self.robot.floor_pick()
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
-                self.robot.wait_for_start_button()
 
                 self.state = self.task_states["Move_to_place"]
 

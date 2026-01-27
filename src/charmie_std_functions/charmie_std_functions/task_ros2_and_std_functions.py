@@ -5808,7 +5808,7 @@ class RobotStdFunctions():
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
             DISTANCE_X       = 0.5
-            DISTANCE_Y       = - 0.16
+            DISTANCE_Y       = 0.16
 
             tf_x = 0.145
             tf_y = -0.006
@@ -5829,7 +5829,7 @@ class RobotStdFunctions():
             pick_position = [-151.8, 39.1, -56.5, -107.2, 91.6, 77.3]
             final_pick_position = [-162.4, 30.8, -37.9, -117, 93.2, 87.8]
             initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
-            self.adjust_angle(math.atan(valid_detected_object.position_relative.x/valid_detected_object.position_relative.y) * 180 / math.pi)
+            self.adjust_angle(math.atan(valid_detected_object.position_relative.y/valid_detected_object.position_relative.x) * 180 / math.pi)
 
             self.adjust_x_      = (valid_detected_object.position_relative.x**2 + valid_detected_object.position_relative.y**2)**0.5 - DISTANCE_X 
             self.adjust_y_      = DISTANCE_Y 
