@@ -5777,18 +5777,18 @@ class RobotStdFunctions():
 
                     case 1: 
                         self.adjust_angle(45)
-                        cycle+=1
+                        cycle=2
                     case 2: 
                         self.adjust_angle(-90)
-                        cycle+=1
+                        cycle=3
                     case 3: 
                         self.adjust_angle(90)
                         self.adjust_angle(90)
-                        cycle+=1
+                        cycle=4
                     case 4: 
                         self.adjust_angle(-90)
                         self.adjust_angle(-90)
-                        cycle+=1
+                        cycle=5
                     case 5:
                         self.adjust_angle(90)
                         cycle=1
@@ -5816,14 +5816,12 @@ class RobotStdFunctions():
             ow = self.get_object_width_from_object(valid_detected_object.object_name)
             oh = self.get_object_height_from_object(valid_detected_object.object_name)
 
-            if valid_detected_object.position_absolute.z - 0.005 > 0 and valid_detected_object.camera == "head":
+            if valid_detected_object.position_absolute.z - 0.05 > 0 and valid_detected_object.camera == "head":
                 picked_height = valid_detected_object.position_absolute.z + 0.2 - 0.05
-            elif valid_detected_object.position_absolute.z * 2 - 0.005 > 0 and valid_detected_object.camera == "base":
+            elif valid_detected_object.position_absolute.z * 2 - 0.05 > 0 and valid_detected_object.camera == "base":
                 picked_height = valid_detected_object.position_absolute.z * 2 + 0.2 - 0.05
             else:
-                picked_height = 0.0
-
-            print("Relative z ", valid_detected_object.position_relative.z," || Absolute z ",valid_detected_object.position_absolute.z , " || Cam z ",valid_detected_object.position_cam.z)
+                picked_height = 0.2
 
             #self.wait_for_start_button()
 
@@ -5831,9 +5829,10 @@ class RobotStdFunctions():
             pick_position = [-151.8, 39.1, -56.5, -107.2, 91.6, 77.3]
             final_pick_position = [-162.4, 30.8, -37.9, -117, 93.2, 87.8]
             initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
+            self.adjust_angle(math.atan(valid_detected_object.position_relative.x/valid_detected_object.position_relative.y) * 180 / math.pi)
 
-            self.adjust_x_      = valid_detected_object.position_relative.x - DISTANCE_X 
-            self.adjust_y_      = valid_detected_object.position_relative.y - DISTANCE_Y 
+            self.adjust_x_      = (valid_detected_object.position_relative.x**2 + valid_detected_object.position_relative.y**2)**0.5 - DISTANCE_X 
+            self.adjust_y_      = DISTANCE_Y 
 
             s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=True, safety=True)
 
@@ -5962,6 +5961,12 @@ class RobotStdFunctions():
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
 
+            while True:
+                legs, torso = self.get_torso_position()
+                if legs > 0.13 and torso < 9:
+                    return valid_detected_object.object_name, picked_height, more_objects
+
+
 
             #if not object_in_gripper:
             
@@ -5975,8 +5980,6 @@ class RobotStdFunctions():
                 #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_risky_joints, wait_for_end_of=True)
             #    print(f"Bring object to initial pose")
                 # Return the distance which the gripper was at in relation to the furniture
-            
-            return valid_detected_object.object_name, picked_height, more_objects
 
                 #IF AN OBJECT WAS NOT FOUND
         else:
