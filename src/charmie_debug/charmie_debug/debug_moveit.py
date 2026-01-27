@@ -3,6 +3,7 @@
 import rclpy
 import threading
 import time
+import math
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
@@ -62,11 +63,14 @@ class TaskMain():
     def configurables(self):
         self.tetas = [[0, 20], [0, 0], [0, -35]]
         self.SELECTED_OBJECT = "Cola"
+        self.trys = 3
 
     # main state-machine function
     def main(self):
 
         self.configurables()
+
+        not_validated = True
         
         # States in DebugMoveit Task
         self.Waiting_for_task_start = 0
@@ -89,33 +93,60 @@ class TaskMain():
 
                 # self.robot.set_joint_target_arm(front_pick_joints, wait_for_end_of=True)
 
-                objects_found = self.robot.search_for_objects(tetas=self.tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
-                
-                print("LIST OF DETECTED OBJECTS:")
-                for o in objects_found:
-                    conf = f"{o.confidence * 100:.0f}%"
+                while not_validated:
 
-                    cam_x_ = f"{o.position_relative.x:5.2f}"
-                    cam_y_ = f"{o.position_relative.y:5.2f}"
-                    cam_z_ = f"{o.position_relative.z:5.2f}"
+                    objects_found = self.robot.search_for_objects(tetas=self.tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                    
+                    print("LIST OF DETECTED OBJECTS:")
+                    for o in objects_found:
+                        conf = f"{o.confidence * 100:.0f}%"
 
-                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({cam_x_},{cam_y_},{cam_z_})")
+                        relative_x_ = f"{o.position_relative.x:5.2f}"
+                        relative_y_ = f"{o.position_relative.y:5.2f}"
+                        relative_z_ = f"{o.position_relative.z:5.2f}"
+                        absolute_x_ = f"{o.position_absolute.x:5.2f}"
+                        absolute_y_ = f"{o.position_absolute.y:5.2f}"
+                        absolute_z_ = f"{o.position_absolute.z:5.2f}"
 
-                    if o.object_name == self.SELECTED_OBJECT:
 
-                        self.robot.set_pose_target_arm(
-                            o.position_absolute.x,
-                            o.position_absolute.y,
-                            o.position_absolute.z,
-                            0.0,
-                            0.0,
-                            0.0,
-                            cartesian=False,
-                        )
+                        print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({relative_x_},{relative_y_},{relative_z_}) || ({absolute_x_},{absolute_y_},{absolute_z_})")
 
-                    time.sleep(2.0)
+                        if o.object_name == self.SELECTED_OBJECT:
 
-                    self.robot.set_named_target_arm("home", wait_for_end_of=True)
+                            not_validated = False
+
+                            s,m = self.robot.set_pose_target_arm(
+                                o.position_absolute.x - 0.2,
+                                o.position_absolute.y,
+                                o.position_absolute.z,
+                                0.0,
+                                math.pi/2,
+                                0.0,
+                                cartesian=False,
+                            )
+
+                            if not s:
+                                print("Planning failed...")
+
+                                for i in range(self.trys):
+                                    s,m = self.robot.set_pose_target_arm(
+                                        o.position_absolute.x - 0.2,
+                                        o.position_absolute.y,
+                                        o.position_absolute.z,
+                                        0.0,
+                                        math.pi/2,
+                                        0.0,
+                                        cartesian=False,
+                                    )
+
+                                    if s:
+                                        print(f"Planning succeeded on attempt{i+1}!")
+                                        break
+
+
+                time.sleep(2.0)
+
+                self.robot.set_named_target_arm("home", wait_for_end_of=True)
 
                 pass
                     
