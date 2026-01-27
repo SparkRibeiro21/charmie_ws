@@ -420,13 +420,22 @@ class YoloPoseNode(Node):
 
         furniture_location = "None"
         for furniture in self.house_furniture:
-            min_x = furniture['bot_right_coords'][0]
-            max_x = furniture['top_left_coords'][0]
-            min_y = furniture['bot_right_coords'][1]
-            max_y = furniture['top_left_coords'][1]
-            # print(min_x, max_x, min_y, max_y)
-            if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
-                furniture_location = furniture['name'] 
+
+            if furniture['shape'] == "square":
+                min_x = furniture['bot_right_coords'][0]
+                max_x = furniture['top_left_coords'][0]
+                min_y = furniture['bot_right_coords'][1]
+                max_y = furniture['top_left_coords'][1]
+                # print(min_x, max_x, min_y, max_y)
+                if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
+                    furniture_location = furniture['name'] 
+            else: # if furniture['shape'] == "circle":
+                furniture_x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2
+                furniture_y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2
+                person_dist_to_furniture = math.sqrt((person_pos.x-furniture_x)**2 + (person_pos.y-furniture_y)**2)
+
+                if person_dist_to_furniture < furniture['diameter']/2:
+                    furniture_location = furniture['name'] 
 
         return room_location, furniture_location
 
