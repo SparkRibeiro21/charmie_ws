@@ -39,8 +39,10 @@ joint_limits:
     has_acceleration_limits: true
     max_acceleration: 10.0
   xarm_joint1:
-    min_position: -6.28
-    max_position: 6.28
+    # min_position: -6.28
+    # max_position: 6.28
+    min_position: -4.712          #Changed this to limit the trajectories calculated by moveit  
+    max_position: -2.094          #Changed this to limit the trajectories calculated by moveit
     has_velocity_limits: true
     max_velocity: 2.14
     has_acceleration_limits: true
