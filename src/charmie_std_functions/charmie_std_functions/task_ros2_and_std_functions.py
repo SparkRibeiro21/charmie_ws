@@ -2355,15 +2355,16 @@ class RobotStdFunctions():
 
         return self.node.set_joint_target_arm_success, self.node.set_joint_target_arm_message
 
-    def set_pose_target_arm(self, x=0.0 , y=0.0, z=0.0, roll=0.0, pitch=0.0, yaw=0.0, cartesian=False, wait_for_end_of=True):
+    def set_pose_target_arm(self, x=0.0 , y=0.0, z=0.0, qx=0.0, qy=0.0, qz=0.0, qw=1.0, cartesian=False, wait_for_end_of=True):
 
         request = SetPoseTarget.Request()
         request.x = float(x)
         request.y = float(y)
         request.z = float(z)
-        request.roll = float(roll)
-        request.pitch = float(pitch)
-        request.yaw = float(yaw)
+        request.qx = float(qx)
+        request.qy = float(qy)
+        request.qz = float(qz)
+        request.qw = float(qw)
         request.cartesian = bool(cartesian)
 
         self.node.call_set_pose_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)

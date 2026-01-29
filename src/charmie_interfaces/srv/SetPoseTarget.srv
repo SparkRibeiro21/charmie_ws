@@ -1,11 +1,12 @@
-# Service to set a pose target for moveit
+# Service to set a pose target for moveit (x,y,z in meters and qx,qy,qz,qw in quaternions)
 
 float64 x
 float64 y
 float64 z
-float64 roll
-float64 pitch
-float64 yaw
+float64 qx
+float64 qy
+float64 qz
+float64 qw
 bool cartesian
 ---
 bool success

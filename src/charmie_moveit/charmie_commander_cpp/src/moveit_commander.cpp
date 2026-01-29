@@ -254,25 +254,21 @@ class Commander
         {
             RCLCPP_INFO(
                 node_->get_logger(),
-                "Received PoseTargetService request: position(%f, %f, %f), orientation(%f, %f, %f), cartesian=%d",
+                "Received PoseTargetService request: position(%f, %f, %f), orientation(%f, %f, %f, %f), cartesian=%d",
                 request->x, request->y, request->z,
-                request->roll, request->pitch, request->yaw,
+                request->qx, request->qy, request->qz, request->qw,
                 request->cartesian
             );
-
-            tf2::Quaternion q;
-            q.setRPY(request->roll, request->pitch, request->yaw);
-            q.normalize();
 
             geometry_msgs::msg::PoseStamped target_pose;
             target_pose.header.frame_id = xarm_->getPlanningFrame();
             target_pose.pose.position.x = request->x;
             target_pose.pose.position.y = request->y;
             target_pose.pose.position.z = request->z;
-            target_pose.pose.orientation.x = q.x();
-            target_pose.pose.orientation.y = q.y();
-            target_pose.pose.orientation.z = q.z();
-            target_pose.pose.orientation.w = q.w();
+            target_pose.pose.orientation.x = request->qx;
+            target_pose.pose.orientation.y = request->qy;
+            target_pose.pose.orientation.z = request->qz;
+            target_pose.pose.orientation.w = request->qw;
 
             xarm_->setStartStateToCurrentState();
 
@@ -326,9 +322,9 @@ class Commander
         {
             RCLCPP_INFO(
                 node_->get_logger(),
-                "Received MoveToolService request: position(%f, %f, %f), orientation(%f, %f, %f)",
+                "Received MoveToolService request: position(%f, %f, %f), orientation(%f, %f, %f, %f)",
                 request->x, request->y, request->z,
-                request->roll, request->pitch, request->yaw
+                request->qx, request->qy, request->qz, request->qw
             );
 
             geometry_msgs::msg::PoseStamped current_pose = xarm_->getCurrentPose();
@@ -337,17 +333,11 @@ class Commander
             target_pose.position.x += request->x;
             target_pose.position.y += request->y;
             target_pose.position.z += request->z;
-
-            tf2::Quaternion current_orientation;
-            tf2::fromMsg(current_pose.pose.orientation, current_orientation);
-
-            tf2::Quaternion delta_rotation;
-            delta_rotation.setRPY(request->roll, request->pitch, request->yaw);
-
-            tf2::Quaternion new_orientation = current_orientation * delta_rotation;
-            new_orientation.normalize();
-
-            target_pose.orientation = tf2::toMsg(new_orientation);
+            target_pose.orientation.x = request->qx;
+            target_pose.orientation.y = request->qy;
+            target_pose.orientation.z = request->qz;
+            target_pose.orientation.w = request->qw;
+            
 
             xarm_->setStartStateToCurrentState();
             

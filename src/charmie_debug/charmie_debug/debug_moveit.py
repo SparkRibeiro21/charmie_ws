@@ -119,8 +119,9 @@ class TaskMain():
                                 o.position_absolute.x - 0.2,
                                 o.position_absolute.y,
                                 o.position_absolute.z,
+                                0.7071,
                                 0.0,
-                                math.pi/2,
+                                0.7071,
                                 0.0,
                                 cartesian=False,
                             )
@@ -133,8 +134,9 @@ class TaskMain():
                                         o.position_absolute.x - 0.2,
                                         o.position_absolute.y,
                                         o.position_absolute.z,
+                                        0.7071,
                                         0.0,
-                                        math.pi/2,
+                                        0.7071,
                                         0.0,
                                         cartesian=False,
                                     )
