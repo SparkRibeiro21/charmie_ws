@@ -5750,7 +5750,7 @@ class RobotStdFunctions():
         ### While cycle to get a valid detected object ###
 
         while not_validated:
-            objects_found = self.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
+            objects_found = self.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
 
             if objects_found:
 
@@ -5768,7 +5768,7 @@ class RobotStdFunctions():
                             if (abs(valid_detected_object.position_relative.x - obj.position_relative.x) < 0.2  and (valid_detected_object.position_relative.y - obj.position_relative.y) < 0.2 and obj.camera == "base"):
                                 valid_detected_object = obj
 
-                            if obj.object_name not in names:
+                            if obj.object_name not in names and valid_detected_object.position_relative.x+valid_detected_object.position_relative.y > obj.position_relative.x+obj.position_relative.y:
                                 valid_detected_object = obj
                                 names.append(obj.object_name)
 
@@ -5814,7 +5814,7 @@ class RobotStdFunctions():
 
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
-            DISTANCE_X       = 0.5
+            DISTANCE_X       = 0.55
             DISTANCE_Y       = 0.16
 
             tf_x = 0.145

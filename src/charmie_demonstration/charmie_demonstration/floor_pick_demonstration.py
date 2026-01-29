@@ -371,9 +371,10 @@ class TaskMain():
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)  
                 else:
+                    selected_height = self.robot.get_height_from_furniture(furniture = self.place_furniture.replace(" ","_").lower())
                     if selected_height < 0.4:
                         selected_height = 0.4
-                    final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.012)*1000
+                    final_x = (gripper_place_position.z - selected_height - picked_height - 0.012)*1000
                     # print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
                     self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
                     self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
