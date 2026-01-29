@@ -5740,6 +5740,7 @@ class RobotStdFunctions():
         not_validated = True
         cycle = 1
         more_objects = False
+        names = []
 
         MIN_OBJECT_DISTANCE_X = 0.05
         MAX_OBJECT_DISTANCE_X = 1.5
@@ -5761,38 +5762,44 @@ class RobotStdFunctions():
 
                     print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
 
-                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and obj.position_absolute.z < self.get_object_height_from_object(obj.object_name) * 1.2:
+                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.get_object_height_from_object(obj.object_name) * 1.1 or obj.position_absolute.z < self.get_object_length_from_object(obj.object_name) * 1.1 or obj.position_absolute.z < self.get_object_width_from_object(obj.object_name) * 1.1):
                         if not_validated == False:
-                            if valid_detected_object.position_relative.x > obj.position_relative.x or (abs(valid_detected_object.position_relative.x - obj.position_relative.x) < 0.2  and (valid_detected_object.position_relative.y - obj.position_relative.y) < 0.2 and obj.camera == "base"):
-                                if valid_detected_object.object_name != obj.object_name:
-                                    more_objects = True
+
+                            if (abs(valid_detected_object.position_relative.x - obj.position_relative.x) < 0.2  and (valid_detected_object.position_relative.y - obj.position_relative.y) < 0.2 and obj.camera == "base"):
                                 valid_detected_object = obj
+
+                            if obj.object_name not in names:
+                                valid_detected_object = obj
+                                names.append(obj.object_name)
 
                         else:
                             valid_detected_object = obj
+                            names.append(obj.object_name)
                             not_validated = False
 
             if not_validated:
                 match cycle:
 
                     case 1: 
-                        self.adjust_angle(45)
+                        self.adjust_angle(angle = 45.0, tolerance = 10)
                         cycle=2
                     case 2: 
-                        self.adjust_angle(-90)
+                        self.adjust_angle(angle = -90.0, tolerance = 10)
                         cycle=3
                     case 3: 
-                        self.adjust_angle(90)
-                        self.adjust_angle(90)
+                        self.adjust_angle(angle = 180.0, tolerance = 10)
+                        #self.adjust_angle(90)
                         cycle=4
                     case 4: 
-                        self.adjust_angle(-90)
-                        self.adjust_angle(-90)
+                        self.adjust_angle(angle = -180, tolerance = 10)
+                        #self.adjust_angle(-90)
                         cycle=5
                     case 5:
-                        self.adjust_angle(90)
+                        self.adjust_angle(angle= 90.0, tolerance = 10)
                         cycle=1
 
+        if len(names) > 1:
+            more_objects = True
 
         # 2) DEPENDING ON DETECTED OBJECT LOCATION, MOVE TOWARDS OBJECT (IF NAVIGATION = TRUE) AND POSITON ARM DEPENDING ON OBJECT HEIGHT
 
@@ -5829,7 +5836,8 @@ class RobotStdFunctions():
             pick_position = [-151.8, 39.1, -56.5, -107.2, 91.6, 77.3]
             final_pick_position = [-162.4, 30.8, -37.9, -117, 93.2, 87.8]
             initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
-            self.adjust_angle(math.atan(valid_detected_object.position_relative.y/valid_detected_object.position_relative.x) * 180 / math.pi)
+            object_angle = math.atan2(valid_detected_object.position_relative.y,valid_detected_object.position_relative.x) * 180 / math.pi
+            self.adjust_angle(angle = object_angle, tolerance= 3.0)
 
             self.adjust_x_      = (valid_detected_object.position_relative.x**2 + valid_detected_object.position_relative.y**2)**0.5 - DISTANCE_X 
             self.adjust_y_      = DISTANCE_Y 

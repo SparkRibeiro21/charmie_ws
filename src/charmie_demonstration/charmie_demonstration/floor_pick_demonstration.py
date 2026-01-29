@@ -348,41 +348,7 @@ class TaskMain():
                 if self.object_name == "Plate":
                     dx = furniture_plate_distance - 0.06
                 dy = 0.0
-                
-                #x_min = min(top_furniture_points[0], bottom_furniture_points[0])
-                #x_max = max(top_furniture_points[0], bottom_furniture_points[0])
-                #y_min = min(top_furniture_points[1], bottom_furniture_points[1])
-                #y_max = max(top_furniture_points[1], bottom_furniture_points[1])
 
-                #robot_yaw = self.robot.get_robot_localization()
-                #robot_yaw = math.degrees(robot_yaw.theta)
-
-                #print("ROBOT ANGLE:", robot_yaw)
-
-                #dx = 0
-
-                #if (0 <= robot_yaw <= 90) and gripper_place_position.x < x_min:
-                #    dx = x_min - gripper_place_position.x
-                #    print("X MINIMO: ", x_min)
-                #    print("X FURNITURE:", gripper_place_position.x)
-                #elif (90 < robot_yaw <= 180) and gripper_place_position.y < y_min:
-                #    dx = y_min - gripper_place_position.y
-                #    print("Y MINIMO: ", y_min)
-                #    print("Y FURNITURE:", gripper_place_position.y)
-                #elif (-180 < robot_yaw < -90) and gripper_place_position.x < x_max:
-                #    dx = x_max - gripper_place_position.x
-                #    print("X MAXIMO: ", x_max)
-                #    print("X FURNITURE:", gripper_place_position.x)
-                #elif (-90 <= robot_yaw < 0) and gripper_place_position.y < y_max:
-                #    dx = y_max - gripper_place_position.y
-                #    print("Y MAXIMO: ", y_max)
-                #    print("Y FURNITURE:", gripper_place_position.y)
-
-                ##dx = 0.3
-                #print("Distance x:", dx)
-                #dx = (abs(dx) + 0.05) * math.cos(math.radians(45))
-                #dy = -dx
-                #print("Adjust Movement x:", dx," || y:", dy)
                 self.robot.adjust_omnidirectional_position(dx=dx, dy=dy, safety=False)
                 #MAKE SPECIAL CASE MORE IN LINE WITH REST OF CODE LATER:
                 if self.object_name == "Bowl":
@@ -405,6 +371,8 @@ class TaskMain():
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)
                         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)  
                 else:
+                    if selected_height < 0.4:
+                        selected_height = 0.4
                     final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.012)*1000
                     # print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
                     self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
