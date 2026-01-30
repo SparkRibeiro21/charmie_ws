@@ -1095,16 +1095,16 @@ class DebugVisualMain():
         self.MAP_SCALE += self.MAP_ZOOM_INC
 
     def button_shift_up_function(self):
-        self.MAP_ADJUST_Y -= self.MAP_SHIFT_INC
+        self.MAP_ADJUST_Y += self.MAP_SHIFT_INC
     
     def button_shift_down_function(self):
-        self.MAP_ADJUST_Y += self.MAP_SHIFT_INC
+        self.MAP_ADJUST_Y -= self.MAP_SHIFT_INC
 
     def button_shift_left_function(self):
-        self.MAP_ADJUST_X -= self.MAP_SHIFT_INC
+        self.MAP_ADJUST_X += self.MAP_SHIFT_INC
 
     def button_shift_right_function(self):
-        self.MAP_ADJUST_X += self.MAP_SHIFT_INC
+        self.MAP_ADJUST_X -= self.MAP_SHIFT_INC
 
     def set_camera_visualization(self, camera_id, rgb_or_depth, top_or_bottom):
         print(camera_id, rgb_or_depth, top_or_bottom)
@@ -2232,12 +2232,18 @@ class DebugVisualMain():
     
         ### DRAWS THE HOUSE FURNITURE ###
         for furniture in self.house_furniture:
-            temp_rect = pygame.Rect(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0], \
-                                    self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1], \
-                                    abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[0]), \
-                                    abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[1]))
-            pygame.draw.rect(self.WIN, self.GREY, temp_rect, width=0)
-    
+
+            if furniture['shape'] == "square":
+                temp_rect = pygame.Rect(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0], \
+                                        self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1], \
+                                        abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[0]), \
+                                        abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[1]))
+                pygame.draw.rect(self.WIN, self.GREY, temp_rect, width=0)
+            
+            elif furniture['shape'] == "circle":
+                furniture_center_map_coords = self.coords_to_map((furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2, (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2)
+                pygame.draw.circle(self.WIN, self.GREY, furniture_center_map_coords, radius=self.size_to_map(furniture['diameter']/2), width=0)
+
         ### DRAWS THE HOUSE WALLS ###
         for room in self.house_rooms:
             temp_rect = pygame.Rect(self.coords_to_map(room['top_left_coords'][0], room['top_left_coords'][1])[0], \
