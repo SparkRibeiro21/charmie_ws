@@ -11,23 +11,23 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  False,
+    "charmie_arm":                  False, # True
     "charmie_audio":                True,
     "charmie_face":                 True,
     "charmie_head_camera":          True,
-    "charmie_hand_camera":          False,
+    "charmie_hand_camera":          False, # True
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
-    "charmie_lidar_livox":          False,
-    "charmie_llm":                  False,
+    "charmie_lidar_livox":          True,
+    "charmie_llm":                  False, # True
     "charmie_localisation":         True,
     "charmie_low_level":            True,
-    "charmie_navigation":           False,
+    "charmie_navigation":           True,
     "charmie_nav2":                 True,
     "charmie_neck":                 True,
-    "charmie_radar":                False,
+    "charmie_radar":                False, # True
     "charmie_sound_classification": True,
     "charmie_speakers":             True,
     "charmie_tracking":             True,
@@ -56,7 +56,7 @@ class TaskMain():
         self.robot = robot
 
         # Task Name
-        self.TASK_NAME = "Receptionist"
+        self.TASK_NAME = "HRI Challenge"
 
         # Task States
         self.task_states ={
@@ -77,38 +77,60 @@ class TaskMain():
 
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
+        # Which furniture will guests and host be sitting at, and how many seats these have
+        self.SITTING_FURNITURE = {
+            "Couch":               2,
+            "Left Lounge Chair":   1,
+            "Right Lounge Chair":  1,        
+        }
+
         # Which objects should be acquired
-        self.GET_MILK = True
-        self.GET_CORNFLAKES = True
-        self.GET_DISHES = True
-        self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
+        # self.GET_MILK = True
+        # self.GET_CORNFLAKES = True
+        # self.GET_DISHES = True
+        # self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
 
         # Name of the table where breakfast is served
-        self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
+        # self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
 
         # Initial Position
-        self.initial_position = [0.0, 0.0, 0.0]
+        # self.initial_position = [0.0, 0.0, 0.0]
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        print(self.initial_position)
+        # print(self.initial_position)
         
     def main(self):
 
         self.configurables() # set all the configuration variables
-        
+
         self.robot.set_task_name_and_states(task_name=self.TASK_NAME, task_states=self.task_states) # Necessary to visualize states and task info in GUI
         self.DEMO_MODE = self.robot.get_demo_mode()
         self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
 
-        self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED.lower().replace(" ", "_")
+
+        ### EXTRAIR JA AQUI AS DIFERENTES POSICOES DAS SITTING_FURNITURE > 1
+        # Extract the positions of the sitting furniture with more than 1 seat (top-left and bot-right)
+        # Calculate Left center and Right center
+        # CL = [TLx+BRx/2, TLy]
+        # CR = [TLx+BRx/2, BRy]
+        # calculate person loaction dist to each center point
+        # closer value is side where person is sitting
+        
+        
+        # For choosing where we sit guest
+        # Should consider all person locations and choose the furniture with the furthest, closest person  
+
+
+        # self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED.lower().replace(" ", "_")
         # Checks if there is any error in the furniture variables:
-        if self.robot.get_room_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED) == None:
-            print("ERROR!!! - FURNITURE:", self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, "DOES NOT EXIST IN furniture.json")
-            while True:
-                pass
-        self.SB_TABLE_HEIGHT = self.robot.get_height_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)[0]
-        print("Table Height =", self.SB_TABLE_HEIGHT)
+        # if self.robot.get_room_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED) == None:
+        #     print("ERROR!!! - FURNITURE:", self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, "DOES NOT EXIST IN furniture.json")
+        #     while True:
+        #         pass
+        
+        # self.SB_TABLE_HEIGHT = self.robot.get_height_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)[0]
+        # print("Table Height =", self.SB_TABLE_HEIGHT)
         # Set the height of the table where breakfast is served, so that the manual arm movements are adapted to this height (placing and pouring)
-        self.robot.set_height_furniture_for_arm_manual_movements(self.SB_TABLE_HEIGHT) #####
+        # self.robot.set_height_furniture_for_arm_manual_movements(self.SB_TABLE_HEIGHT) #####
         
         # Neck Positions
         self.look_forward = [0, 0]
