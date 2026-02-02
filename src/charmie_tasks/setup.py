@@ -24,11 +24,15 @@ setup(
     entry_points={
         'console_scripts': [
 
-        "clean_the_table = charmie_tasks.clean_table:main",
-		"inspection      = charmie_tasks.inspection:main",
-		"receptionist    = charmie_tasks.receptionist:main",
-		"restaurant      = charmie_tasks.restaurant:main",
-		"serve_breakfast = charmie_tasks.serve_breakfast:main",
+        "inspection                 = charmie_tasks.inspection:main",
+		"hri_task_2026              = charmie_tasks.hri_task_2026:main",
+        "pick_and_place_task_2026   = charmie_tasks.pick_and_place_task_2026:main",
+        "gpsr_task_2026             = charmie_tasks.gpsr_task_2026:main",
+        "manipulation_task_2026     = charmie_tasks.manipulation_task_2026:main",
+        "restaurant                 = charmie_tasks.restaurant:main",
+		"finals_task_2026           = charmie_tasks.finals_task_2026:main",
+        
+        "serve_breakfast = charmie_tasks.serve_breakfast:main",
 		
         ],
     },
