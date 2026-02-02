@@ -177,7 +177,7 @@ def generate_launch_description():
         std_lf.robot_state_publisher_real_node,
         std_lf.static_transforms_launch,
         use_real_hardware_arg,
-        map_tf, #Temporary
+        std_lf.static_transforms_just_odom_launch, #Temporary
 
         #####################################################################
         # Visualization and Debugging                                       # 

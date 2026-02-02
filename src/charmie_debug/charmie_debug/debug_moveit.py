@@ -142,8 +142,35 @@ class TaskMain():
                                     )
 
                                     if s:
-                                        print(f"Planning succeeded on attempt{i+1}!")
-                                        break
+                                        print(f"Pose planning succeeded on attempt{i+1}!")
+                                        s2,m = self.robot.set_move_tool_target_arm(
+                                            0.02,
+                                            0.0,
+                                            0.0,
+                                            0.7071,
+                                            0.0,
+                                            0.7071,
+                                            0.0,
+                                        )
+
+                                        if s2:
+                                            print(f"Move tool planning succeeded!")
+
+                                        else:
+                                            print("Move tool planning failed")
+                                            s2,m = self.robot.set_move_tool_target_arm(
+                                                0.02,
+                                                0.0,
+                                                0.0,
+                                                0.7071,
+                                                0.0,
+                                                0.7071,
+                                                0.0,
+                                            )
+
+                                            if s2:
+                                                print(f"Move tool planning succeeded on attempt{i+1}!")
+                                                break
 
 
                 time.sleep(2.0)

@@ -352,7 +352,7 @@ class Commander
             double fraction = xarm_->computeCartesianPath(waypoints, resolution, jump_threshold, trajectory);
 
             if (fraction > 0.7){
-                xarm_->execute(trajectory);
+                // xarm_->execute(trajectory);
                 response->success = true;
                 response->message = "Tool movement executed successfully.";
             }

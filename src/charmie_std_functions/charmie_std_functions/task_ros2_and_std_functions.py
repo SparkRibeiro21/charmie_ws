@@ -146,6 +146,7 @@ class ROS2TaskNode(Node):
         self.set_named_target_client = self.create_client(SetNamedTarget, 'set_named_target')
         self.set_joint_target_client = self.create_client(SetJointTarget, 'set_joint_target')
         self.set_pose_target_client = self.create_client(SetPoseTarget, 'set_pose_target')
+        self.set_move_tool_target_client = self.create_client(SetPoseTarget, 'set_move_tool_target')
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
@@ -343,6 +344,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_set_named_target_arm = False
         self.waited_for_end_of_set_joint_target_arm = False
         self.waited_for_end_of_set_pose_target_arm = False
+        self.waited_for_end_of_set_move_tool_target_arm = False
         self.waited_for_end_of_face = False
         self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
@@ -737,6 +739,29 @@ class ROS2TaskNode(Node):
             self.waited_for_end_of_set_pose_target_arm = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
+
+    def call_set_move_tool_target_arm_server(self, request=SetPoseTarget.Request(), wait_for_end_of=True):
+
+        future = self.set_move_tool_target_client.all_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_set_pose_target_arm_server)
+        else:
+            self.set_pose_target_arm_success = True
+            self.set_pose_target_arm_message = "Wait for answer not needed"
+
+    def callback_call_set_move_tool_target_arm_server(self, future):
+
+        try:
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.set_move_tool_target_arm_success = response.success
+            self.set_move_tool_target_arm_message = response.message
+            self.waited_for_end_of_set_move_tool_target_arm = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
 
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, request=SetFace.Request(), wait_for_end_of=True):
@@ -2367,6 +2392,26 @@ class RobotStdFunctions():
         request.qw = float(qw)
         request.cartesian = bool(cartesian)
 
+        self.node.call_set_pose_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_set_pose_target_arm:
+            pass
+        self.node.waited_for_end_of_set_pose_target_arm = False
+
+        return self.node.set_pose_target_arm_success, self.node.set_pose_target_arm_message
+    
+    def set_move_tool_target_arm(self, x=0.0 , y=0.0, z=0.0, qx=0.0, qy=0.0, qz=0.0, qw=1.0, cartesian=True, wait_for_end_of=True):
+
+        request = SetPoseTarget.Request()
+        request.x = float(x)
+        request.y = float(y)
+        request.z = float(z)
+        request.qx = float(qx)
+        request.qy = float(qy)
+        request.qz = float(qz)
+        request.qw = float(qw)
+        
         self.node.call_set_pose_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
