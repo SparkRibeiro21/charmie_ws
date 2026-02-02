@@ -111,10 +111,10 @@ int main(int argc, char** argv)
     target_pose.pose.position.y = object_pose.position.y;
     target_pose.pose.position.z = object_pose.position.z;
 
-    target_pose.pose.orientation.x = 0.0;
-    target_pose.pose.orientation.y = 0.7071;
-    target_pose.pose.orientation.z = 0.0;
-    target_pose.pose.orientation.w = 0.7071;
+    target_pose.pose.orientation.x = 0.7071;
+    target_pose.pose.orientation.y = 0.0;
+    target_pose.pose.orientation.z = 0.7071;
+    target_pose.pose.orientation.w = 0.0;
 
     arm.setStartStateToCurrentState();
     arm.setPoseTarget(target_pose);
@@ -202,10 +202,10 @@ int main(int argc, char** argv)
     place_pose.pose.position.y = table2_pose.position.y;
     place_pose.pose.position.z = table2_pose.position.z + table2_primitive.dimensions[table2_primitive.BOX_Z] + 0.2;
 
-    place_pose.pose.orientation.x = 0.0;
-    place_pose.pose.orientation.y = 0.7071;
-    place_pose.pose.orientation.z = 0.0;
-    place_pose.pose.orientation.w = 0.7071;
+    place_pose.pose.orientation.x = 0.7071;
+    place_pose.pose.orientation.y = 0.0;
+    place_pose.pose.orientation.z = 0.7071;
+    place_pose.pose.orientation.w = 0.0;
 
     RCLCPP_INFO(node->get_logger(), "Place pose set to x: %.2f, y: %.2f, z: %.2f",
                 place_pose.pose.position.x,
