@@ -93,6 +93,9 @@ class TaskMain():
             "Right Lounge Chair":  1,        
         }
 
+        self.ENTRANCE_DOOR_FURNITURE = "entrance"
+        self.SITTING_AREA_ROOM = "living_room"
+
         # Which objects should be acquired
         self.OPEN_DOOR_GUEST1 = True
         self.OPEN_DOOR_GUEST2 = True
@@ -102,9 +105,13 @@ class TaskMain():
         self.initial_position = [2.0, 4.0, 45.0]
         # print(self.initial_position)
         
-        self.start_follow_position = self.initial_position
+        # self.start_follow_position = self.initial_position
         self.start_follow_position = [2.0, 4.0, 90.0] # position to start following host after introducing guests
         # print(self.start_follow_position)
+
+        self.guest_communication_position = self.robot.get_navigation_coords_from_furniture("couch")
+        # self.guest_communication_position = [2.0, 2.5, 0.0] # position to communicate with guests at sitting area
+        # print(self.guest_communication_position)
         
     def main(self):
 
@@ -192,10 +199,14 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Move_to_entrance_door_guest1"]:
-                                        
+                
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                # your code here ...
-
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
+                
                 self.state = self.task_states["Open_door_guest1"]
 
 
@@ -217,8 +228,12 @@ class TaskMain():
 
             elif self.state == self.task_states["Move_guest1_to_sitting_area"]:
                                         
-                pass
-                # your code here ...
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="room/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="room/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
 
                 self.state = self.task_states["Offer_guest1_free_seat"]
 
@@ -232,9 +247,13 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Move_to_initial_position"]:
-                                        
-                pass
-                # your code here ...
+                                    
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="room/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="room/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
 
                 self.state = self.task_states["Wait_for_guest2_to_arrive"]
 
@@ -248,9 +267,13 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Move_to_entrance_door_guest2"]:
-                                        
-                pass
-                # your code here ...
+                                    
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
 
                 self.state = self.task_states["Open_door_guest2"]
 
@@ -280,9 +303,13 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Move_guest2_to_sitting_area"]:
-                                        
-                pass
-                # your code here ...
+                                    
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="room/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="room/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
 
                 self.state = self.task_states["Introduce_the_guests"]
 
@@ -305,8 +332,12 @@ class TaskMain():
 
             elif self.state == self.task_states["Move_to_start_follow_position"]:
                                         
-                pass
-                # your code here ...
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="room/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="room/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
 
                 self.state = self.task_states["Follow_host_to_bag_drop"]
 
