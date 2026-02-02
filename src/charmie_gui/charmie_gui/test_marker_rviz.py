@@ -193,11 +193,17 @@ class MarkerPublisher(Node):
             # Namespace and ID (useful when publishing multiple markers)
             marker.ns = furniture['name']
             marker.id = index  # Each marker must have a unique ID
+            
             # Marker Type (Choose shape)
-            marker.type = Marker.CUBE  # Other options: SPHERE, CYLINDER, ARROW, etc.
+            if furniture['shape'] == "square":
+                marker.type = Marker.CUBE  # Other options: SPHERE, CYLINDER, ARROW, etc.
+            elif furniture['shape'] == "circle":
+                marker.type = Marker.CYLINDER  # Other options: SPHERE, CYLINDER, ARROW, etc.
+            else: # defualt value, might make sense to change in the future
+                marker.type = Marker.CUBE  # Other options: SPHERE, CYLINDER, ARROW, etc.
+
             # Marker Action
             marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
-
 
             marker.pose.position.x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0]) / 2  # Set the X coordinate
             marker.pose.position.y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1]) / 2  # Set the X coordinate
@@ -207,11 +213,20 @@ class MarkerPublisher(Node):
             marker.pose.orientation.y = 0.0
             marker.pose.orientation.z = 0.0
             marker.pose.orientation.w = 1.0  # No rotation
-
-            marker.scale.x = abs(furniture['top_left_coords'][0] - furniture['bot_right_coords'][0]) # + 2*margin_x  # Width
-            marker.scale.y = abs(furniture['top_left_coords'][1] - furniture['bot_right_coords'][1]) # + 2*margin_y # Width
+            
+            # Has to be similar to previous choose shape condition
+            if furniture['shape'] == "square":
+                marker.scale.x = abs(furniture['top_left_coords'][0] - furniture['bot_right_coords'][0]) # + 2*margin_x  # Width
+                marker.scale.y = abs(furniture['top_left_coords'][1] - furniture['bot_right_coords'][1]) # + 2*margin_y # Width
+            elif furniture['shape'] == "circle":
+                marker.scale.x = furniture['diameter'] # Width
+                marker.scale.y = furniture['diameter'] # Width
+            else: # defualt value, might make sense to change in the future
+                marker.scale.x = abs(furniture['top_left_coords'][0] - furniture['bot_right_coords'][0]) # + 2*margin_x  # Width
+                marker.scale.y = abs(furniture['top_left_coords'][1] - furniture['bot_right_coords'][1]) # + 2*margin_y # Width
+            
             marker.scale.z = furniture['height'][0]  # Height
-
+            
             # rgb_v = self.COLOR_LIST[index % len(self.COLOR_LIST)]
             # print(ctr % len(self.COLOR_LIST), rgb_v)
             # Color (RGBA format, values from 0 to 1)
@@ -578,8 +593,6 @@ class MarkerPublisher(Node):
 
         marker_array = MarkerArray()
 
-        object_size = 0.1
-
         delete_marker = Marker()
         delete_marker.header.frame_id = "map"
         delete_marker.header.stamp = self.get_clock().now().to_msg()
@@ -618,8 +631,17 @@ class MarkerPublisher(Node):
                 # Namespace and ID (useful when publishing multiple markers)
                 marker.ns = "Detected_object_B"
                 marker.id = object_.index  # Each marker must have a unique ID
+                
                 # Marker Type (Choose shape)
-                marker.type = Marker.CYLINDER  # Other options: SPHERE, CYLINDER, ARROW, etc.
+                if object_.cf_shape == "cylinder":
+                    marker.type = Marker.CYLINDER  # Other options: SPHERE, CYLINDER, ARROW, etc.
+                elif object_.cf_shape == "cuboid":
+                    marker.type = Marker.CUBE
+                elif object_.cf_shape == "sphere":
+                    marker.type = Marker.SPHERE
+                elif object_.cf_shape == "special": # may change in the future for something clearer
+                    marker.type = Marker.CYLINDER  
+                    
                 # Marker Action
                 marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
 
@@ -632,9 +654,9 @@ class MarkerPublisher(Node):
                 marker.pose.orientation.z = 0.0
                 marker.pose.orientation.w = 1.0  # No rotation
 
-                marker.scale.x = object_size # Width
-                marker.scale.y = object_size # Width
-                marker.scale.z = object_size  # Height
+                marker.scale.x = object_.cf_length # Length
+                marker.scale.y = object_.cf_width  # Width
+                marker.scale.z = object_.cf_height # Height
                 
                 # Color (RGBA format, values from 0 to 1)
                 marker.color.r = 0.0 # 0.0  # Red
