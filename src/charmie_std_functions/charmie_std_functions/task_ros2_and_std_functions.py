@@ -5690,3 +5690,10 @@ class RobotStdFunctions():
             
         print("Cannot get height from shelf")
         return False
+
+    def open_door(push_pull="push", left_right="left", wait_for_end_of=True):
+        # placeholder for door opening std_function
+        pass
+        # arm movements and search for objects for furniture door_handle 
+        # add safety and timeout mechanisms
+        
