@@ -20,7 +20,7 @@ ros2_modules = {
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
-    "charmie_lidar_livox":          True,
+    "charmie_lidar_livox":          False, # True (3D obstacles)
     "charmie_llm":                  False, # True (check name and fav. drink)
     "charmie_localisation":         True,
     "charmie_low_level":            True,
@@ -102,11 +102,11 @@ class TaskMain():
         self.HANDOVER_GUEST2_BAG = False
         
         # Initial Position
-        self.initial_position = [2.0, 4.0, 45.0]
+        self.initial_position = [2.0, 4.0, -45.0]
         # print(self.initial_position)
         
         # self.start_follow_position = self.initial_position
-        self.start_follow_position = [2.0, 4.0, 90.0] # position to start following host after introducing guests
+        self.start_follow_position = [2.0, 4.0, -90.0] # position to start following host after introducing guests
         # print(self.start_follow_position)
 
         self.guest_communication_position = self.robot.get_navigation_coords_from_furniture("couch")
@@ -198,20 +198,22 @@ class TaskMain():
 
             elif self.state == self.task_states["Receive_guest1"]:
 
+                self.robot.wait_for_start_button()
+                
                 time.sleep(1.0) # wait time for robot to stop and do an audio calibration
                 self.robot.calibrate_audio(wait_for_end_of=True)
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
                 self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
                 time.sleep(5.0) # time for person to be in front of robot
 
-                people_found = ListOfDetectedPerson()
-                while len(people_found.persons) == 0:
+                people_found = []
+                while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True)
 
-                print("People found:", len(people_found.persons))
+                print("People found:", len(people_found))
 
-                self.GUEST1 = people_found.persons[0]
+                self.GUEST1 = people_found[0]
                 s, m = self.robot.add_face_to_face_recognition(person=self.GUEST1, name="guest1")
                 print("Added to face recognition:", s, m)
 
@@ -313,16 +315,15 @@ class TaskMain():
                 
                 time.sleep(1.0) # wait time for robot to stop and do an audio calibration
                 self.robot.calibrate_audio(wait_for_end_of=True)
-                self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
-                time.sleep(5.0) # time for person to be in front of robot
-
-                people_found = ListOfDetectedPerson()
-                while len(people_found.persons) == 0:
+                
+                people_found = []
+                while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True)
 
-                print("People found:", len(people_found.persons))
+                print("People found:", len(people_found))
 
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                 command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
@@ -420,7 +421,7 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="rooms/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
-                self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=True)
+                self.robot.move_to_position(move_coords=self.start_follow_position, wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="rooms/"+self.SITTING_AREA_ROOM, wait_for_end_of=False)
                 
