@@ -11,28 +11,28 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  False, # True
-    "charmie_audio":                False, # True
-    "charmie_face":                 False, # True
-    "charmie_head_camera":          False, # True
-    "charmie_hand_camera":          False, # True
+    "charmie_arm":                  False, # True (to pick/place bag)
+    "charmie_audio":                True,
+    "charmie_face":                 True,
+    "charmie_head_camera":          True,
+    "charmie_hand_camera":          False, # True (bag handover)
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                False, # True
-    "charmie_lidar_bottom":         False, # True
-    "charmie_lidar_livox":          False, # True
-    "charmie_llm":                  False, # True
-    "charmie_localisation":         False, # True
-    "charmie_low_level":            False, # True
-    "charmie_navigation":           False, # True
-    "charmie_nav2":                 False, # True
-    "charmie_neck":                 False, # True
-    "charmie_radar":                False, # True
+    "charmie_lidar":                True,
+    "charmie_lidar_bottom":         True,
+    "charmie_lidar_livox":          True,
+    "charmie_llm":                  False, # True (check name and fav. drink)
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
+    "charmie_navigation":           True,
+    "charmie_nav2":                 True,
+    "charmie_neck":                 True,
+    "charmie_radar":                True, 
     "charmie_sound_classification": True,
     "charmie_speakers":             True,
-    "charmie_tracking":             False, # True
+    "charmie_tracking":             False, # True (dynamic neck following)
     "charmie_yolo_objects":         False,
-    "charmie_yolo_pose":            False, # True
+    "charmie_yolo_pose":            True,
 }
 
 # main function that already creates the thread for the task state machine
