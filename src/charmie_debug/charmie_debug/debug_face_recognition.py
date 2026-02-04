@@ -87,8 +87,9 @@ class TaskMain():
                     print("COMPARE ENCODING MODE")
                     for person in det_ppl:
                         # print("ID:", person.index)
-                        pred, pred_perc = self.robot.recognize_face_from_face_recognition(person=person)
+                        pred, pred_perc, conf_table = self.robot.recognize_face_from_face_recognition(person=person)
                         print("COMPARE OUTCOME:", pred, round(pred_perc, 2))
+                        print("CONFIDENCE TABLE:", conf_table)
                 
                 else: # name of person to add
                     print("ADD ENCODING MODE, name:", choice)

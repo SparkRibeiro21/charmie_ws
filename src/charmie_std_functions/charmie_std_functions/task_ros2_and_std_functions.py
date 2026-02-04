@@ -2052,9 +2052,9 @@ class RobotStdFunctions():
 
         # Speak specific for doorbell after starting listening for doorbell if success:
         if success:
-            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_stop", wait_for_end_of=True)
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_stop", wait_for_end_of=False)
         else: # timeout or error
-            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_timeout", wait_for_end_of=True)
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_timeout", wait_for_end_of=False)
 
         return success, message, label, score
 
@@ -4427,14 +4427,14 @@ class RobotStdFunctions():
     
             if not self.node.face_recognition_encoding:
                 self.node.get_logger().warn("Face recognition encoding List is empty.")
-                return "error", 0.0
+                return "error", 0.0, {}
             
             image = face_recognition.load_image_file(image_path)
             encoding_entry = face_recognition.face_encodings(image)
 
             if len(encoding_entry) == 0:
                 self.node.get_logger().warn("No face found in the image. Could not comapre to encodings list.")
-                return "error", 0.0
+                return "error", 0.0, {}
             encoding_entry = encoding_entry[0]  
 
             all_percentages = []
@@ -4444,7 +4444,9 @@ class RobotStdFunctions():
                 confidence = (1 - distance)
                 all_percentages.append(confidence)
 
-            name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
+            confidence_table = {name.lower(): conf for name, conf in zip(self.node.face_recognition_names, all_percentages)}
+
+            name_recognized, biggest_conf_recognized = max(confidence_table.items(), key=lambda x: x[1])
             if biggest_conf_recognized < tolerance:
                 name_recognized = "unknown"
 
@@ -4453,11 +4455,11 @@ class RobotStdFunctions():
                 print(str(round(prob,2))+" -> "+name)
             print("OUTCOME:", name_recognized, str(round(biggest_conf_recognized,2)))
 
-            return name_recognized.lower(), biggest_conf_recognized
+            return name_recognized.lower(), biggest_conf_recognized, confidence_table
 
         else:
             self.node.get_logger().warn("Image path does not exist.")
-            return "error", 0.0
+            return "error", 0.0, {}
             
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
