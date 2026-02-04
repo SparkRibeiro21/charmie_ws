@@ -83,7 +83,7 @@ class Commander
                 planning_scene_monitor_->startSceneMonitor();
                 planning_scene_monitor_->startStateMonitor();
                 planning_scene_monitor_->startWorldGeometryMonitor();
-                // planning_scene_monitor_->startPublishingPlanningScene();
+                planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE);
                 is_monitoring_active_ = true;
                 RCLCPP_INFO(node_->get_logger(), "Monitoring STARTED (octomap active)");
             }
@@ -96,7 +96,7 @@ class Commander
                 planning_scene_monitor_->stopWorldGeometryMonitor();
                 planning_scene_monitor_->stopStateMonitor();
                 planning_scene_monitor_->stopSceneMonitor();
-                // planning_scene_monitor_->stopPublishingPlanningScene();
+                planning_scene_monitor_->stopPublishingPlanningScene();
                 is_monitoring_active_ = false;
                 RCLCPP_INFO(node_->get_logger(), "Monitoring STOPPED (octomap inactive)");
             }

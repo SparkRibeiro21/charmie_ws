@@ -110,7 +110,10 @@ def generate_launch_description():
                 'launch',
                 'move_group.launch.py'
             ])
-        ])
+        ]),
+        launch_arguments={
+            'publish_monitored_planning_scene': 'false',
+        }.items()
     )
     
     # RViz
