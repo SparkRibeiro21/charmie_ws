@@ -464,8 +464,9 @@ class TaskMain():
 
                     self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
 
-                self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
-                                                                       ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
+                ### INITIALLY SAYING THE CHARACTERISTICS WAS HERE. HOWEVER TO IMPROVE TASK EFFICIENCY, THIS IS NOW SAID DURING NAVIGATION TO SITTING AREA
+                # self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
+                #                                                        ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
                         
                 self.state = self.task_states["Get_guest2_bag"]
 
@@ -520,7 +521,15 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
-                self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=True)
+
+                self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=False)
+                self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
+                                                                ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
+                
+                while not self.robot.move_to_position_is_done():
+                    print("Waiting... untill saying characteristics and navigation are done!")
+                    time.sleep(0.1)
+                
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
                 
