@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
+find_package(moveit_ros_planning REQUIRED)
 find_package(example_interfaces REQUIRED)
 find_package(charmie_interfaces REQUIRED)
 
@@ -25,7 +26,7 @@ add_executable(commander_template src/commander_template.cpp)
 ament_target_dependencies(commander_template rclcpp moveit_ros_planning_interface example_interfaces charmie_interfaces)
 
 add_executable(moveit_commander src/moveit_commander.cpp)
-ament_target_dependencies(moveit_commander rclcpp moveit_ros_planning_interface example_interfaces charmie_interfaces)
+ament_target_dependencies(moveit_commander rclcpp moveit_ros_planning_interface moveit_ros_planning example_interfaces charmie_interfaces)
 
 install(TARGETS
   test_moveit

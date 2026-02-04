@@ -1,6 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
@@ -39,6 +40,9 @@ class Commander
             xarm_ ->setPlanningTime(3.0);
             xarm_gripper_ = std::make_shared<MoveGroupInterface>(node_, "xarm_gripper");
             planning_scene_interface_ = std::make_shared<moveit::planning_interface::PlanningSceneInterface>();
+            planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(node_,"robot_description");
+
+            is_monitoring_active_ = false;
 
             open_gripper_sub_ = node_ ->create_subscription<Bool>(
                 "open_gripper", 10,
@@ -70,6 +74,32 @@ class Commander
                 "set_move_tool_target",
                 std::bind(&Commander::MoveToolService, this, _1, _2)
             );
+        }
+
+        void startMonitoring()
+        {
+            if (!is_monitoring_active_)
+            {
+                planning_scene_monitor_->startSceneMonitor();
+                planning_scene_monitor_->startStateMonitor();
+                planning_scene_monitor_->startWorldGeometryMonitor();
+                // planning_scene_monitor_->startPublishingPlanningScene();
+                is_monitoring_active_ = true;
+                RCLCPP_INFO(node_->get_logger(), "Monitoring STARTED (octomap active)");
+            }
+        }
+
+        void stopMonitoring()
+        {
+            if (is_monitoring_active_)
+            {
+                planning_scene_monitor_->stopWorldGeometryMonitor();
+                planning_scene_monitor_->stopStateMonitor();
+                planning_scene_monitor_->stopSceneMonitor();
+                // planning_scene_monitor_->stopPublishingPlanningScene();
+                is_monitoring_active_ = false;
+                RCLCPP_INFO(node_->get_logger(), "Monitoring STOPPED (octomap inactive)");
+            }
         }
 
         void openGripper()
@@ -194,6 +224,11 @@ class Commander
             const std::shared_ptr<NamedTargetSrv::Request> request,
             std::shared_ptr<NamedTargetSrv::Response> response)
         {
+            if (!is_monitoring_active_)
+            {
+                startMonitoring();
+            }
+
             RCLCPP_INFO(
                 node_->get_logger(),
                 "Received NamedTargetService request: %s",
@@ -217,12 +252,20 @@ class Commander
                 response->success = false;
                 response->message = "Failed to plan for the named target.";
             }
+
+            stopMonitoring();
+
         }
 
         void JointTargetService(
             const std::shared_ptr<JointTargetSrv::Request> request,
             std::shared_ptr<JointTargetSrv::Response> response)
         {
+            if (!is_monitoring_active_)
+            {
+                startMonitoring();
+            }
+
             RCLCPP_INFO(
                 node_->get_logger(),
                 "Received JointTargetService request with %ld joint positions.",
@@ -246,12 +289,20 @@ class Commander
                 response->success = false;
                 response->message = "Failed to plan for the joint target.";
             }
+
+            stopMonitoring();
+
         }
 
         void PoseTargetService(
             const std::shared_ptr<PoseTargetSrv::Request> request,
             std::shared_ptr<PoseTargetSrv::Response> response)
         {
+            if (!is_monitoring_active_)
+            {
+                startMonitoring();
+            }
+
             RCLCPP_INFO(
                 node_->get_logger(),
                 "Received PoseTargetService request: position(%f, %f, %f), orientation(%f, %f, %f, %f), cartesian=%d",
@@ -313,6 +364,9 @@ class Commander
                     response->message = "Failed to compute Cartesian path for the pose target.";
                 }
             }
+
+            stopMonitoring();
+
         }
 
         void MoveToolService(
@@ -397,9 +451,12 @@ class Commander
         std::shared_ptr<MoveGroupInterface> xarm_;
         std::shared_ptr<MoveGroupInterface> xarm_gripper_;
         std::shared_ptr<moveit::planning_interface::PlanningSceneInterface> planning_scene_interface_;
+        std::shared_ptr<planning_scene_monitor::PlanningSceneMonitor> planning_scene_monitor_;
 
         rclcpp::Subscription<Bool>::SharedPtr open_gripper_sub_;
         rclcpp::Subscription<ListOfDetectedObjects>::SharedPtr detected_objects_sub_;
+
+        bool is_monitoring_active_;
 
         rclcpp::Service<charmie_interfaces::srv::SetNamedTarget>::SharedPtr set_named_target_srv_;
         rclcpp::Service<charmie_interfaces::srv::SetJointTarget>::SharedPtr set_joint_target_srv_;

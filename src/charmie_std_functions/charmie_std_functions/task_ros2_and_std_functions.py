@@ -2412,14 +2412,14 @@ class RobotStdFunctions():
         request.qz = float(qz)
         request.qw = float(qw)
         
-        self.node.call_set_pose_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)
+        self.node.call_set_move_tool_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
-          while not self.node.waited_for_end_of_set_pose_target_arm:
+          while not self.node.waited_for_end_of_set_move_tool_target_arm:
             pass
-        self.node.waited_for_end_of_set_pose_target_arm = False
+        self.node.waited_for_end_of_set_move_tool_target_arm = False
 
-        return self.node.set_pose_target_arm_success, self.node.set_pose_target_arm_message
+        return self.node.set_move_tool_target_arm_success, self.node.set_move_tool_target_arm_message
     
     def set_height_furniture_for_arm_manual_movements(self, height=0.0, wait_for_end_of=True):        
 

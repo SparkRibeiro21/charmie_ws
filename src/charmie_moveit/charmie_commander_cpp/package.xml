@@ -11,6 +11,7 @@
 
   <depend>rclcpp</depend>
   <depend>moveit_ros_planning_interface</depend>
+  <depend>moveit_ros_planning</depend>
   <depend>example_interfaces</depend>
   <depend>charmie_interfaces</depend>
 
