@@ -99,6 +99,8 @@ class Commander
                 planning_scene_monitor_->stopPublishingPlanningScene();
                 is_monitoring_active_ = false;
                 RCLCPP_INFO(node_->get_logger(), "Monitoring STOPPED (octomap inactive)");
+
+                planning_scene_interface_->removeCollisionObjects({"octomap"});
             }
         }
 

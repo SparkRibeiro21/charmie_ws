@@ -742,7 +742,7 @@ class ROS2TaskNode(Node):
 
     def call_set_move_tool_target_arm_server(self, request=SetPoseTarget.Request(), wait_for_end_of=True):
 
-        future = self.set_move_tool_target_client.all_async(request)
+        future = self.set_move_tool_target_client.call_async(request)
 
         if wait_for_end_of:
             future.add_done_callback(self.callback_call_set_pose_target_arm_server)
