@@ -4450,10 +4450,10 @@ class RobotStdFunctions():
             if biggest_conf_recognized < tolerance:
                 name_recognized = "unknown"
 
-            print("RECOGNITION COMPARE TABLE:")
-            for prob, name in zip(all_percentages, self.node.face_recognition_names):
-                print(str(round(prob,2))+" -> "+name)
-            print("OUTCOME:", name_recognized, str(round(biggest_conf_recognized,2)))
+            # print("RECOGNITION COMPARE TABLE:")
+            # for prob, name in zip(all_percentages, self.node.face_recognition_names):
+            #     print(str(round(prob,2))+" -> "+name)
+            # print("OUTCOME:", name_recognized, str(round(biggest_conf_recognized,2)))
 
             return name_recognized.lower(), biggest_conf_recognized, confidence_table
 
