@@ -36,7 +36,7 @@ def generate_launch_description():
         #####################################################################
         std_lf.lidar,
         std_lf.lidar_bottom,
-        # std_lf.livox_driver,
+        std_lf.livox_driver,
         std_lf.radar,
         std_lf.audio,
         std_lf.sound_classification,

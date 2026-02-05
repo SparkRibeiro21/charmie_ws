@@ -153,8 +153,8 @@ class TaskMain():
                     pass
                 p = self.robot.node.detected_people.persons[0]
                 self.robot.activate_yolo_pose(activate=False) 
-                # self.robot.activate_tracking_mask(track_person=p, mode="face")
-                # self.robot.activate_tracking_mask(track_person=p, mode="head")
+                # self.robot.activate_tracking_mask(track_person=p, mode="face", show_detections_on_face=True)
+                # self.robot.activate_tracking_mask(track_person=p, mode="head", show_detections_on_face=True)
                 self.robot.activate_tracking_mask(track_person=p, mode="body", show_detections_on_face=True)
                 time.sleep(10.0)
                 self.robot.deactivate_tracking_mask()
@@ -172,7 +172,7 @@ class TaskMain():
                     pass
                 o = self.robot.node.detected_objects.objects[0]
                 self.robot.activate_yolo_objects(activate_objects=False) 
-                # self.robot.activate_tracking_mask(track_object=o, mode="object_center")
+                # self.robot.activate_tracking_mask(track_object=o, mode="object_center", show_detections_on_face=True)
                 self.robot.activate_tracking_mask(track_object=o, mode="object_bounding_box", show_detections_on_face=True)
                 time.sleep(10.0)
                 self.robot.deactivate_tracking_mask()

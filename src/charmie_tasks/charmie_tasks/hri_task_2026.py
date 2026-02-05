@@ -21,7 +21,7 @@ ros2_modules = {
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
-    "charmie_lidar_livox":          False, # True (3D obstacles)
+    "charmie_lidar_livox":          True,
     "charmie_llm":                  False, # True (check name and fav. drink)
     "charmie_localisation":         True,
     "charmie_low_level":            True,
@@ -31,7 +31,7 @@ ros2_modules = {
     "charmie_radar":                True, 
     "charmie_sound_classification": True,
     "charmie_speakers":             True,
-    "charmie_tracking":             False, # True (dynamic neck following)
+    "charmie_tracking":             True,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            True,
 }
@@ -257,10 +257,12 @@ class TaskMain():
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True)
 
                 print("People found:", len(people_found))
+                self.GUEST1 = people_found[0]
 
                 #################################################################################### DYNAMICALLY ADJUST NECK !!!!
+                self.robot.activate_tracking_mask(track_person=self.GUEST1, mode="face", show_detections_on_face=True)                
+                ### NECK: ACTIVATE CONTINUOUS MODE
 
-                self.GUEST1 = people_found[0]
                 s, m = self.robot.add_face_to_face_recognition(person=self.GUEST1, name="guest1")
                 print("Added to face recognition:", s, m)
 
@@ -279,7 +281,11 @@ class TaskMain():
 
                     self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
 
-                self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=True)
+                self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=True) 
+                
+                self.robot.deactivate_tracking_mask()
+                ### NECK: DEACTIVATE CONTINUOUS MODE
+
                 self.robot.set_speech(filename="hri/please_follow_me", wait_for_end_of=False)
 
                 self.state = self.task_states["Move_guest1_to_sitting_area"]
@@ -298,15 +304,6 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Offer_guest1_free_seat"]:
-
-                ### TEMP
-                # self.robot.set_initial_position(self.guest_communication_position)
-                # print("SET INITIAL POSITION")
-                # self.robot.set_face("charmie_face", wait_for_end_of=False)
-                # self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                # self.robot.set_speech(filename="hri/start_hri_task", wait_for_end_of=True)
-                # self.robot.wait_for_start_button()
-                ### TEMP END
 
                 if self.SIDE_TO_LOOK.lower() == "right":
                     self.robot.set_neck(position=self.look_right, wait_for_end_of=False)
@@ -439,13 +436,15 @@ class TaskMain():
                 people_found = []
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
-                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True)
+                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True)
 
                 print("People found:", len(people_found))
+                self.GUEST2 = people_found[0]
 
                 #################################################################################### DYNAMICALLY ADJUST NECK !!!!
+                self.robot.activate_tracking_mask(track_person=self.GUEST2, mode="face", show_detections_on_face=True)
+                ### NECK: ACTIVATE CONTINUOUS MODE
 
-                self.GUEST2 = people_found[0]
                 s, m = self.robot.add_face_to_face_recognition(person=self.GUEST2, name="guest2")
                 print("Added to face recognition:", s, m)
 
@@ -482,11 +481,8 @@ class TaskMain():
                     ### self.robot.ask_help_pick_object_gripper(object_d=bag_object, show_detection=False, look_judge=self.look_forward, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                     # I should use the std function. However this is a very specific pick that I do not need to detect, so we added here an optimized version just for this case 
                     
-                    #self.robot.set_neck(position=self.look_navigation, wait_for_end_of=True)
                     self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=False)
                     self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
-                    #time.sleep(1.0) #some time for neck movements to be natural
-                    #self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
                     self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=True)
                     self.robot.set_face("help_pick_bag")
@@ -511,6 +507,10 @@ class TaskMain():
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=True)
+
+                self.robot.deactivate_tracking_mask()
+                ### NECK: DEACTIVATE CONTINUOUS MODE
+
                 self.robot.set_speech(filename="hri/please_follow_me", wait_for_end_of=False)
 
                 self.state = self.task_states["Move_guest2_to_sitting_area"]
@@ -538,8 +538,7 @@ class TaskMain():
 
             elif self.state == self.task_states["Introduce_guests_and_offer_guest2_free_seat"]:
 
-                ### TELL GUEST2 TO WAIT BY THE ROBOT SIDE
-                
+                # Tell guest2 to wait by the robot side
                 if self.SIDE_TO_LOOK.lower() == "right":
                     self.robot.set_neck(position=self.look_right, wait_for_end_of=False)
                     self.robot.set_speech(filename="receptionist/please_stay_on_my_right", wait_for_end_of=True)
@@ -562,10 +561,8 @@ class TaskMain():
                 # print("temp_min_dist_sitting_places_dict:", temp_min_dist_sitting_places_dict)
                 # print("People found for seating:", len(people_found)) 
 
-                ### SEARCH FOR PEOPLE SITTING AND FREE SEATS
-
+                # Search for people and offer free seats
                 p_considered = []
-
                 for p in people_found:
                     print(p.room_location)
                     if p.room_location.replace(" ","_").lower() == self.SITTING_AREA_ROOM.replace(" ","_").lower():
@@ -629,7 +626,7 @@ class TaskMain():
                     print("COULD NOT RECOGNIZE GUEST1 FACE AGAIN")
                     guest1_coords = [self.robot.get_location_coords_from_furniture("couch")[0], self.robot.get_location_coords_from_furniture("couch")[1], 0.9]
 
-                ### INTRODUCE BOTH GUESTS
+                # Introduce both guests
 
                 self.robot.set_speech(filename="hri/introduce_guests", wait_for_end_of=True)
                 self.robot.set_neck_coords(position=guest1_coords, wait_for_end_of=False)
@@ -684,11 +681,11 @@ class TaskMain():
 
             elif self.state == self.task_states["Follow_host_to_bag_drop"]:
 
-                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 # NECK: TO HOST SITTING COORDS WHEN DETECTING PRE INTRODUCTIONS (TODO POST FNR)
-                # FACE: SHOW HOST FACE HERE (DETECTED AND SAVED IN SEARCH_FOR_PERSON BEFORE OFFERING FREE SEAT TO GUEST 1)
+                # FACE: SHOW HOST FACE HERE (DETECTED AND SAVED IN SEARCH_FOR_PERSON BEFORE OFFERING FREE SEAT TO GUEST 1) (TODO POST FNR)
                 self.robot.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
                 self.robot.set_speech(filename="hri/follow_host_initial_instructions", wait_for_end_of=True)
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 
                 selected_option = None
                 while selected_option != ["Yes"]:
@@ -696,28 +693,43 @@ class TaskMain():
                     print("SELECTED OPTION:", selected_option)
                     
                 self.robot.set_speech(filename="hri/follow_host_track_instructions", wait_for_end_of=True)
-                time.sleep(3.0)
-                # TRACK: SET UP TRACK SYSTEM
+
+                ### ACTIVATE TRACK MASK
+                people_found = []
+                while len(people_found) == 0:
+                    # still need to check for timeout, and decide what to do in that case
+                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True)
+
+                print("People found:", len(people_found))
+                HOST_FOR_FOLLOW = people_found[0]
+
+                #################################################################################### DYNAMICALLY ADJUST NECK !!!!
+                self.robot.activate_tracking_mask(track_person=HOST_FOR_FOLLOW, mode="body", show_detections_on_face=True)                
+                ### NECK: ACTIVATE CONTINUOUS MODE
+
                 self.robot.set_speech(filename="hri/follow_host_follow_instructions", wait_for_end_of=True)
                 self.robot.set_speech(filename="hri/ready_to_follow_host", wait_for_end_of=True)
                 
                 # NAVIGATION: FOLLOW HOST + RECOVERY SYSTEMS IF HOST IS LOST
+
                 selected_option = None
                 while selected_option != ["Yes"]:
                     selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     # NAVIGATION: STOP FOLLOWING HOST
 
+                self.robot.deactivate_tracking_mask()
+                ### NECK: DEACTIVATE CONTINUOUS MODE
                 self.robot.set_speech(filename="hri/end_follow_host", wait_for_end_of=True)
                 # ARM: PLACE BAG ON THE FLOOR
                 self.robot.set_speech(filename="hri/bag_dropped", wait_for_end_of=False)
+                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
 
                 self.state = self.task_states["Final_State"]
 
 
             elif self.state == self.task_states["Final_State"]:
                 
-                ### self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="hri/finish_hri_task", wait_for_end_of=False)
 
