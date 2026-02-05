@@ -684,6 +684,7 @@ class TaskMain():
 
             elif self.state == self.task_states["Follow_host_to_bag_drop"]:
 
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 # NECK: TO HOST SITTING COORDS WHEN DETECTING PRE INTRODUCTIONS (TODO POST FNR)
                 # FACE: SHOW HOST FACE HERE (DETECTED AND SAVED IN SEARCH_FOR_PERSON BEFORE OFFERING FREE SEAT TO GUEST 1)
                 self.robot.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
