@@ -714,7 +714,7 @@ class TaskMain():
 
                 selected_option = None
                 while selected_option != ["Yes"]:
-                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, wait_for_end_of=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, speak_timeout=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     # NAVIGATION: STOP FOLLOWING HOST
 
@@ -724,6 +724,8 @@ class TaskMain():
                 # ARM: PLACE BAG ON THE FLOOR
                 self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
                 self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                time.sleep(1.0)
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
                 self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                 self.robot.set_speech(filename="hri/bag_dropped", wait_for_end_of=False)
 

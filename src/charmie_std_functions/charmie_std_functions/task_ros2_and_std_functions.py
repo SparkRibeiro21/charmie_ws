@@ -4300,7 +4300,7 @@ class RobotStdFunctions():
         request.status = False
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
 
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, speak_timeout=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
         options = []
 
@@ -4383,7 +4383,8 @@ class RobotStdFunctions():
                 return ["ERROR"]
             
             elif self.node.selected_list_options_touchscreen_menu[0] == "TIMEOUT":
-                self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
+                if speak_timeout:
+                    self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
                 return self.node.selected_list_options_touchscreen_menu
         
             else:
