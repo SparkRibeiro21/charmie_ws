@@ -65,7 +65,7 @@ class TaskMain():
         Final_State = 7
 
         # VARS ...
-        self.state = Activate_track_mask_custom
+        self.state = Activate_track_mask_person
 
         print("IN NEW MAIN")
 
@@ -155,7 +155,7 @@ class TaskMain():
                 self.robot.activate_yolo_pose(activate=False) 
                 # self.robot.activate_tracking_mask(track_person=p, mode="face")
                 # self.robot.activate_tracking_mask(track_person=p, mode="head")
-                self.robot.activate_tracking_mask(track_person=p, mode="body")
+                self.robot.activate_tracking_mask(track_person=p, mode="body", show_detections_on_face=True)
                 time.sleep(10.0)
                 self.robot.deactivate_tracking_mask()
                 print("Finished tracking person")
@@ -173,7 +173,7 @@ class TaskMain():
                 o = self.robot.node.detected_objects.objects[0]
                 self.robot.activate_yolo_objects(activate_objects=False) 
                 # self.robot.activate_tracking_mask(track_object=o, mode="object_center")
-                self.robot.activate_tracking_mask(track_object=o, mode="object_bounding_box")
+                self.robot.activate_tracking_mask(track_object=o, mode="object_bounding_box", show_detections_on_face=True)
                 time.sleep(10.0)
                 self.robot.deactivate_tracking_mask()
                 print("Finished tracking object")
@@ -189,7 +189,7 @@ class TaskMain():
                     [320.0, 150.0],
                     [322.0, 148.0]
                 ]                
-                self.robot.activate_tracking_mask(custom_points=points, mode="custom")
+                self.robot.activate_tracking_mask(custom_points=points, mode="custom", show_detections_on_face=True)
                 time.sleep(10.0)
                 self.robot.deactivate_tracking_mask()
             

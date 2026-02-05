@@ -4124,7 +4124,7 @@ class RobotStdFunctions():
                 return obj['look'] # Return the look
         return None  # Return None if the object is not found
 
-    def activate_tracking_mask(self, track_person=None, track_object=None, mode="", custom_points=[]):
+    def activate_tracking_mask(self, track_person=None, track_object=None, mode="", custom_points=[], show_detections_on_face=True):
 
         points = ListOfPoints()
         bb = BoundingBox()
@@ -4218,9 +4218,15 @@ class RobotStdFunctions():
 
         self.activate_tracking(activate=True, points=points, bbox=bb)
 
+        if show_detections_on_face:
+            self.set_face(camera="head", show_detections=True)
+
         return True, "Tracking activated successfully"
 
-    def deactivate_tracking_mask(self):
+    def deactivate_tracking_mask(self, reset_face=True):
+
+        if reset_face:
+            self.set_face("charmie_face")
 
         self.activate_tracking(activate=False)
         return True, "Tracking deactivated successfully"
