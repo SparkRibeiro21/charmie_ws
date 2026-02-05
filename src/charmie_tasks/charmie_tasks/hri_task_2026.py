@@ -722,8 +722,10 @@ class TaskMain():
                 ### NECK: DEACTIVATE CONTINUOUS MODE
                 self.robot.set_speech(filename="hri/end_follow_host", wait_for_end_of=True)
                 # ARM: PLACE BAG ON THE FLOOR
-                self.robot.set_speech(filename="hri/bag_dropped", wait_for_end_of=False)
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
                 self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+                self.robot.set_speech(filename="hri/bag_dropped", wait_for_end_of=False)
 
                 self.state = self.task_states["Final_State"]
 
