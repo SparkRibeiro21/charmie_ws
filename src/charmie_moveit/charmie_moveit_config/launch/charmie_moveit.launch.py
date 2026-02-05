@@ -200,7 +200,7 @@ def generate_launch_description():
         #####################################################################
         # Localization                                                      # 
         #####################################################################
-        std_lf.odometry_lidar,
+        # std_lf.odometry_lidar,
         std_lf.robot_localization,
         std_lf.charmie_localisation,
 

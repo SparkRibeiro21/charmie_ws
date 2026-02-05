@@ -100,7 +100,7 @@ class Commander
                 is_monitoring_active_ = false;
                 RCLCPP_INFO(node_->get_logger(), "Monitoring STOPPED (octomap inactive)");
 
-                planning_scene_interface_->removeCollisionObjects({"octomap"});
+                planning_scene_monitor_->clearOctomap();
             }
         }
 
@@ -226,10 +226,10 @@ class Commander
             const std::shared_ptr<NamedTargetSrv::Request> request,
             std::shared_ptr<NamedTargetSrv::Response> response)
         {
-            if (!is_monitoring_active_)
-            {
-                startMonitoring();
-            }
+            // if (!is_monitoring_active_)
+            // {
+            //     startMonitoring();
+            // }
 
             RCLCPP_INFO(
                 node_->get_logger(),
@@ -255,7 +255,7 @@ class Commander
                 response->message = "Failed to plan for the named target.";
             }
 
-            stopMonitoring();
+            // stopMonitoring();
 
         }
 
@@ -263,10 +263,10 @@ class Commander
             const std::shared_ptr<JointTargetSrv::Request> request,
             std::shared_ptr<JointTargetSrv::Response> response)
         {
-            if (!is_monitoring_active_)
-            {
-                startMonitoring();
-            }
+            // if (!is_monitoring_active_)
+            // {
+            //     startMonitoring();
+            // }
 
             RCLCPP_INFO(
                 node_->get_logger(),
@@ -292,7 +292,7 @@ class Commander
                 response->message = "Failed to plan for the joint target.";
             }
 
-            stopMonitoring();
+            // stopMonitoring();
 
         }
 
@@ -300,10 +300,10 @@ class Commander
             const std::shared_ptr<PoseTargetSrv::Request> request,
             std::shared_ptr<PoseTargetSrv::Response> response)
         {
-            if (!is_monitoring_active_)
-            {
-                startMonitoring();
-            }
+            // if (!is_monitoring_active_)
+            // {
+            //     startMonitoring();
+            // }
 
             RCLCPP_INFO(
                 node_->get_logger(),
@@ -367,7 +367,7 @@ class Commander
                 }
             }
 
-            stopMonitoring();
+            // stopMonitoring();
 
         }
 
@@ -376,6 +376,8 @@ class Commander
             std::shared_ptr<PoseTargetSrv::Response> response)
 
         {
+            
+
             RCLCPP_INFO(
                 node_->get_logger(),
                 "Received MoveToolService request: position(%f, %f, %f), orientation(%f, %f, %f, %f)",
