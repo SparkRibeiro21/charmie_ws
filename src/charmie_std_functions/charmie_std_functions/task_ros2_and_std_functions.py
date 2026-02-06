@@ -3366,7 +3366,7 @@ class RobotStdFunctions():
         
         return img_path
 
-    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
+    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False, environment=False):
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -3464,7 +3464,7 @@ class RobotStdFunctions():
                             objects_ctr+=1
 
 
-                    if list_of_objects: #only does this if there are items in the list of mandatory detection objects
+                    if list_of_objects and not environment: #only does this if there are items in the list of mandatory detection objects
                         
                         mandatory_ctr = 0
                         # for m_object in list_of_objects:
@@ -3512,7 +3512,7 @@ class RobotStdFunctions():
                 # print("Total number of objects detected:", len(objects_detected), objects_ctr)
                 objects_detected.clear()   
                 
-                if is_break_list_of_objects: 
+                if is_break_list_of_objects and not environment: 
                     break
 
             self.activate_yolo_objects(activate_objects=False, activate_furniture=False,

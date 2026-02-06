@@ -95,7 +95,7 @@ class TaskMain():
 
                 while not_validated:
 
-                    objects_found = self.robot.search_for_objects(tetas=self.tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                    objects_found = self.robot.search_for_objects(tetas=self.tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, environment=True)
                     
                     print("LIST OF DETECTED OBJECTS:")
                     for o in objects_found:
@@ -126,6 +126,8 @@ class TaskMain():
                                 cartesian=False,
                             )
 
+                            print(m)
+
                             if not s:
                                 print("Planning failed...")
 
@@ -141,9 +143,13 @@ class TaskMain():
                                         cartesian=False,
                                     )
 
+                                    print(m)
+
                                     if s:
                                         print(f"Pose planning succeeded on attempt{i+1}!")
-                                        s2,m = self.robot.set_move_tool_target_arm(
+
+                                        # hand_objects = self.robot.search_for_objects(list_of_objects=[self.SELECTED_OBJECT], )
+                                        s2,m2 = self.robot.set_move_tool_target_arm(
                                             0.02,
                                             0.0,
                                             0.0,
@@ -153,13 +159,15 @@ class TaskMain():
                                             0.0,
                                         )
 
+                                        print(m2)
+
                                         if s2:
                                             print(f"Move tool planning succeeded!")
 
                                         if not s2:
                                             print("Move tool planning failed")
                                             for i in range(self.trys):
-                                                s2,m = self.robot.set_move_tool_target_arm(
+                                                s2,m2 = self.robot.set_move_tool_target_arm(
                                                     0.02,
                                                     0.0,
                                                     0.0,
@@ -168,6 +176,8 @@ class TaskMain():
                                                     0.7071,
                                                     0.0,
                                                 )
+
+                                                print(m2)
 
                                                 if s2:
                                                     print(f"Move tool planning succeeded on attempt{i+1}!")

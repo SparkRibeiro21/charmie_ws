@@ -6,6 +6,7 @@
     <xacro:property name="legs_length" value="0.05" />
     <xacro:property name="legs_width" value="0.19" />
     <xacro:property name="legs_height" value="0.51" />
+    <xacro:property name="legs_static_tf" value="0.105"/> <!-- to_make_obstacles_matrixes_match -->
 
     <xacro:property name="torso_height_from_legs" value="0.25" />
     <xacro:property name="torso_initial_angle_rads" value="0.15708" />
@@ -19,7 +20,7 @@
     <joint name="legs_joint" type="prismatic">
         <parent link="base_link"/>
         <child link="legs_link"/>
-        <origin xyz="0 0 ${base_height+legs_max_height_from_base-legs_range}" rpy="0 0 0"/>
+        <origin xyz="${-legs_static_tf} 0 ${base_height+legs_max_height_from_base-legs_range}" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="0.0" upper="0.14" effort="1000.0" velocity="0.5"/>
     </joint>
