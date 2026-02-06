@@ -13,5 +13,7 @@ def generate_launch_description():
         std_lf.diff_drive_spawner,
         std_lf.joint_broad_spawner,
         std_lf.gazebo,
+        std_lf.radar,
+        std_lf.marker_arrays_debug,
         # std_lf.odometry_lidar,
     ])
