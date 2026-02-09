@@ -71,6 +71,11 @@ class TaskMain():
         self.configurables()
 
         not_validated = True
+
+        SAFE_DISTANCE_X = 0.2
+        TCP_OFFSET_X = 0.145
+        TCP_OFFSET_Y = -0.006
+        TCP_OFFSET_Z = -0.075
         
         # States in DebugMoveit Task
         self.Waiting_for_task_start = 0
@@ -116,9 +121,9 @@ class TaskMain():
                             not_validated = False
 
                             s,m = self.robot.set_pose_target_arm(
-                                o.position_absolute.x - 0.2,
-                                o.position_absolute.y,
-                                o.position_absolute.z,
+                                o.position_absolute.x - TCP_OFFSET_X - SAFE_DISTANCE_X,
+                                o.position_absolute.y + TCP_OFFSET_Y,
+                                o.position_absolute.z + TCP_OFFSET_Z,
                                 0.7071,
                                 0.0,
                                 0.7071,
@@ -133,9 +138,9 @@ class TaskMain():
 
                                 for i in range(self.trys):
                                     s,m = self.robot.set_pose_target_arm(
-                                        o.position_absolute.x - 0.2,
-                                        o.position_absolute.y,
-                                        o.position_absolute.z,
+                                        o.position_absolute.x - TCP_OFFSET_X - SAFE_DISTANCE_X,
+                                        o.position_absolute.y + TCP_OFFSET_Y,
+                                        o.position_absolute.z + TCP_OFFSET_Z,
                                         0.7071,
                                         0.0,
                                         0.7071,
@@ -147,41 +152,93 @@ class TaskMain():
 
                                     if s:
                                         print(f"Pose planning succeeded on attempt{i+1}!")
+                                        break
 
-                                        # hand_objects = self.robot.search_for_objects(list_of_objects=[self.SELECTED_OBJECT], )
-                                        s2,m2 = self.robot.set_move_tool_target_arm(
-                                            0.02,
-                                            0.0,
-                                            0.0,
-                                            0.7071,
-                                            0.0,
-                                            0.7071,
-                                            0.0,
-                                        )
+                            if s:
 
-                                        print(m2)
+                                print("OPEN GRIPPER")
 
-                                        if s2:
-                                            print(f"Move tool planning succeeded!")
+                                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
 
-                                        if not s2:
-                                            print("Move tool planning failed")
-                                            for i in range(self.trys):
-                                                s2,m2 = self.robot.set_move_tool_target_arm(
-                                                    0.02,
-                                                    0.0,
-                                                    0.0,
-                                                    0.7071,
-                                                    0.0,
-                                                    0.7071,
-                                                    0.0,
-                                                )
+                                print("WAIT FOR START BUTTON")
 
-                                                print(m2)
+                                self.robot.wait_for_start_button()
 
-                                                if s2:
-                                                    print(f"Move tool planning succeeded on attempt{i+1}!")
-                                                    break
+                                hand_objects = self.robot.search_for_objects(list_of_objects=[self.SELECTED_OBJECT], detect_objects_hand = True)
+
+                                print("LIST OF DETECTED OBJECTS:")
+                                for o in hand_objects:
+                                    conf = f"{o.confidence * 100:.0f}%"
+
+                                    final_cam_x_ = f"{o.position_cam.x:5.2f}"
+                                    final_cam_y_ = f"{o.position_cam.y:5.2f}"
+                                    final_cam_z_ = f"{o.position_cam.z:5.2f}"
+
+                                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({final_cam_x_},{final_cam_y_},{final_cam_z_})")
+
+                                    if o.object_name == self.SELECTED_OBJECT:
+
+                                        ow = self.robot.get_object_width_from_object(o.object_name)
+
+                                        grab_x = (o.position_cam.x + ow/1.5 - TCP_OFFSET_X)*1000
+                                        grab_y = (o.position_cam.y - TCP_OFFSET_Y)*1000
+                                        grab_z = (o.position_cam.z - TCP_OFFSET_Z)*1000
+
+                                        grab_object_position = [grab_x, grab_y, grab_z, 0.0, 0.0, 0.0]
+
+                                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_object_position, wait_for_end_of=True)
+
+                                        object_in_gripper = False
+
+                                        self.robot.wait_for_start_button()
+
+                                        object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                            
+                                        if not object_in_gripper:
+                                            
+                                            print("OBJECT NOT IN GRIPPER")
+
+                                        self.robot.wait_for_start_button()
+
+                                        safe_position = [-grab_x, -grab_y, -grab_z, 0.0, 0.0, 0.0]
+
+                                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_position, wait_for_end_of=True)
+
+
+
+                                # s2,m2 = self.robot.set_move_tool_target_arm(
+                                #     0.02,
+                                #     0.0,
+                                #     0.0,
+                                #     0.7071,
+                                #     0.0,
+                                #     0.7071,
+                                #     0.0,
+                                # )
+
+                                # print(m2)
+
+                                # if s2:
+                                #     print(f"Move tool planning succeeded!")
+
+                                # if not s2:
+                                #     print("Move tool planning failed")
+                                #     for i in range(self.trys):
+                                #         s2,m2 = self.robot.set_move_tool_target_arm(
+                                #             0.02,
+                                #             0.0,
+                                #             0.0,
+                                #             0.7071,
+                                #             0.0,
+                                #             0.7071,
+                                #             0.0,
+                                #         )
+
+                                #         print(m2)
+
+                                #         if s2:
+                                #             print(f"Move tool planning succeeded on attempt{i+1}!")
+                                #             break
 
 
                 time.sleep(2.0)
