@@ -39,6 +39,7 @@ class Yolo_obj(Node):
          ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("debug_draw", False) 
+        self.declare_parameter("load_prompt_free_model", True) 
         self.declare_parameter("activate_world_pf_head", False)
         self.declare_parameter("activate_world_pf_hand", False)
         self.declare_parameter("activate_world_pf_base", False)
@@ -72,6 +73,8 @@ class Yolo_obj(Node):
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
         self.DEBUG_DRAW = self.get_parameter("debug_draw").value
+
+        self.LOAD_PF_MODEL = self.get_parameter("load_prompt_free_model").value
         
         self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD = self.get_parameter("activate_world_pf_head").value
         self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND = self.get_parameter("activate_world_pf_hand").value
@@ -80,15 +83,19 @@ class Yolo_obj(Node):
         self.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND   = self.get_parameter("activate_world_tv_hand").value
         self.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE   = self.get_parameter("activate_world_tv_base").value
 
-        # print(self.home+'/'+objects_model_filename)
+        if not self.LOAD_PF_MODEL:
+            self.get_logger().info("Prompt-free model disabled (load_prompt_free_model=false). Only TV model will run.")
+        
         yolo_models_sucessful_imported = False
-
         while not yolo_models_sucessful_imported:
             
             try: 
-                # Import the models, one for each category
-                # it needs to have a different model because of the track parameter, otherwise it is always creating new track ids
-                self.world_prompt_free_model = YOLOE(self.complete_path_yolo_models + self.world_prompt_free_model_filename)
+                # Import the models
+                if self.LOAD_PF_MODEL:
+                    self.world_prompt_free_model = YOLOE(self.complete_path_yolo_models + self.world_prompt_free_model_filename)
+                else:
+                    self.world_prompt_free_model = None
+                
                 self.world_tv_prompt_model   = YOLOE(self.complete_path_yolo_models + self.world_text_visual_prompt_model_filename)
                 
                 self.get_logger().info("Successfully imported YOLO models (prompt free and text/visual prompt models)")
@@ -194,6 +201,10 @@ class Yolo_obj(Node):
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
 
+        # returns whether the message was played and some informations regarding status
+        response.success = True
+        response.message = "Activated with selected parameters"
+
         global MIN_PF_CONF_VALUE, MIN_TV_CONF_VALUE
 
         self.get_logger().info("Received Activate Yolo Objects %s" %("("+str(request.activate_prompt_free_head)+", "
@@ -205,20 +216,26 @@ class Yolo_obj(Node):
                                                                         +str(request.minimum_prompt_free_confidence)+", "
                                                                         +str(request.minimum_tv_prompt_confidence)+")"))
 
-        self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD   = request.activate_prompt_free_head
-        self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND   = request.activate_prompt_free_hand
-        self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE   = request.activate_prompt_free_base
+        if not self.LOAD_PF_MODEL:
+            self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD = False
+            self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND = False
+            self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE = False
+        else:
+            self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD = request.activate_prompt_free_head
+            self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND = request.activate_prompt_free_hand
+            self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE = request.activate_prompt_free_base
 
         self.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD = request.activate_tv_prompt_head
         self.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND = request.activate_tv_prompt_hand
         self.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE = request.activate_tv_prompt_base
 
-        MIN_PF_CONF_VALUE = request.minimum_prompt_free_confidence
+        if self.LOAD_PF_MODEL:
+            MIN_PF_CONF_VALUE = request.minimum_prompt_free_confidence
         MIN_TV_CONF_VALUE = request.minimum_tv_prompt_confidence      
+
+        if not self.LOAD_PF_MODEL and (request.activate_prompt_free_head or request.activate_prompt_free_hand or request.activate_prompt_free_base):
+            response.message = "Text/Visual model activated. Prompt Free model ignored because load_prompt_free_model is false."
         
-        # returns whether the message was played and some informations regarding status
-        response.success = True
-        response.message = "Activated with selected parameters"
         return response
     
     def get_rgbd_head_callback(self, rgbd: RGBD):
@@ -432,7 +449,7 @@ class YoloObjectsMain():
 
         ### PROMPT FREE
         
-        if self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD:
+        if self.node.LOAD_PF_MODEL and self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD:
             transform_head, head_link = self.get_transform("head")
             object_results = self.node.world_prompt_free_model.predict(source=head_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
             objects_result_list.append(object_results)
@@ -442,7 +459,7 @@ class YoloObjectsMain():
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HEAD OBJECTS DEBUG", object_results[0].plot())
 
-        if self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND:
+        if self.node.LOAD_PF_MODEL and self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND:
             transform_hand, hand_link = self.get_transform("hand")
             object_results = self.node.world_prompt_free_model.predict(source=hand_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
             objects_result_list.append(object_results)
@@ -452,7 +469,7 @@ class YoloObjectsMain():
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HAND OBJECTS DEBUG", object_results[0].plot())
 
-        if self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE:
+        if self.node.LOAD_PF_MODEL and self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE:
             transform_base, base_link = self.get_transform("base")
             object_results = self.node.world_prompt_free_model.predict(source=base_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
             objects_result_list.append(object_results)
@@ -677,9 +694,16 @@ class YoloObjectsMain():
                 self.node.new_hand_rgb = True 
                 self.node.new_base_rgb = True
 
-                self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD = True
-                self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND = True
-                self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE = True
+                # PF warmup only if PF model is loaded
+                if self.node.LOAD_PF_MODEL:
+                    self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD = True
+                    self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND = True
+                    self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE = True
+                else:
+                    self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD = False
+                    self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND = False
+                    self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE = False
+
                 self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD   = True
                 self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND   = True
                 self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE   = True
@@ -700,12 +724,19 @@ class YoloObjectsMain():
                     hand_image = self.node.hand_rgb
                     base_image = self.node.base_rgb
 
-                if (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD     and self.node.new_head_rgb) or \
-                   (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND     and self.node.new_hand_rgb) or \
-                   (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE     and self.node.new_base_rgb) or \
-                   (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD       and self.node.new_head_rgb) or \
-                   (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND       and self.node.new_hand_rgb) or \
-                   (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE       and self.node.new_base_rgb):
+                pf_should_run = self.node.LOAD_PF_MODEL and (
+                    (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD and self.node.new_head_rgb) or
+                    (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND and self.node.new_hand_rgb) or
+                    (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE and self.node.new_base_rgb)
+                )
+
+                tv_should_run = (
+                    (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD and self.node.new_head_rgb) or
+                    (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND and self.node.new_hand_rgb) or
+                    (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE and self.node.new_base_rgb)
+                )
+
+                if pf_should_run or tv_should_run:
 
                     self.node.new_head_rgb = False
                     self.node.new_hand_rgb = False
@@ -715,7 +746,7 @@ class YoloObjectsMain():
                     if self.node.yolo_models_initialized:
                         self.node.world_objects_filtered_publisher.publish(list_detected_objects)
 
-                    print("TR Time Yolo_Objects: ", time.time() - time_till_done)
+                    print("TR Time Yolo_World: ", time.time() - time_till_done)
 
                     # if self.node.DEBUG_DRAW:
                     #     cv2.putText(current_frame_draw, 'fps:' + self.hand_fps, (0, self.node.CAM_IMAGE_HEIGHT-10), cv2.FONT_HERSHEY_DUPLEX, 1, (100, 255, 0), 1, cv2.LINE_AA)
