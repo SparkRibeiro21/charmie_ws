@@ -88,14 +88,9 @@ class Yolo_obj(Node):
             try: 
                 # Import the models, one for each category
                 # it needs to have a different model because of the track parameter, otherwise it is always creating new track ids
-                self.world_prompt_free_model_head = YOLOE(self.complete_path_yolo_models + self.world_prompt_free_model_filename)
-                self.world_prompt_free_model_hand = YOLOE(self.complete_path_yolo_models + self.world_prompt_free_model_filename)
-                self.world_prompt_free_model_base = YOLOE(self.complete_path_yolo_models + self.world_prompt_free_model_filename)
-
-                self.world_tv_prompt_model_head = YOLOE(self.complete_path_yolo_models + self.world_text_visual_prompt_model_filename)
-                self.world_tv_prompt_model_hand = YOLOE(self.complete_path_yolo_models + self.world_text_visual_prompt_model_filename)
-                self.world_tv_prompt_model_base = YOLOE(self.complete_path_yolo_models + self.world_text_visual_prompt_model_filename)
-
+                self.world_prompt_free_model = YOLOE(self.complete_path_yolo_models + self.world_prompt_free_model_filename)
+                self.world_tv_prompt_model   = YOLOE(self.complete_path_yolo_models + self.world_text_visual_prompt_model_filename)
+                
                 self.get_logger().info("Successfully imported YOLO models (prompt free and text/visual prompt models)")
 
                 yolo_models_sucessful_imported = True
@@ -161,19 +156,9 @@ class Yolo_obj(Node):
         # -------- TEXT PROMPTS (SET ONCE) --------
         self.TEXT_PROMPT_CLASSES = ["chair", "cabinet"]
 
-        self.world_tv_prompt_model_head.set_classes(
+        self.world_tv_prompt_model.set_classes(
             self.TEXT_PROMPT_CLASSES,
-            self.world_tv_prompt_model_head.get_text_pe(self.TEXT_PROMPT_CLASSES)
-        )
-
-        self.world_tv_prompt_model_hand.set_classes(
-            self.TEXT_PROMPT_CLASSES,
-            self.world_tv_prompt_model_hand.get_text_pe(self.TEXT_PROMPT_CLASSES)
-        )
-
-        self.world_tv_prompt_model_base.set_classes(
-            self.TEXT_PROMPT_CLASSES,
-            self.world_tv_prompt_model_base.get_text_pe(self.TEXT_PROMPT_CLASSES)
+            self.world_tv_prompt_model.get_text_pe(self.TEXT_PROMPT_CLASSES)
         )
         # ----------------------------------------
         ###############################################################################################
@@ -449,7 +434,7 @@ class YoloObjectsMain():
         
         if self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD:
             transform_head, head_link = self.get_transform("head")
-            object_results = self.node.world_prompt_free_model_head.predict(source=head_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
+            object_results = self.node.world_prompt_free_model.predict(source=head_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
             objects_result_list.append(object_results)
             models_dict["head_pf"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
@@ -459,7 +444,7 @@ class YoloObjectsMain():
 
         if self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND:
             transform_hand, hand_link = self.get_transform("hand")
-            object_results = self.node.world_prompt_free_model_hand.predict(source=hand_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
+            object_results = self.node.world_prompt_free_model.predict(source=hand_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
             objects_result_list.append(object_results)
             models_dict["hand_pf"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
@@ -469,7 +454,7 @@ class YoloObjectsMain():
 
         if self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE:
             transform_base, base_link = self.get_transform("base")
-            object_results = self.node.world_prompt_free_model_base.predict(source=base_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
+            object_results = self.node.world_prompt_free_model.predict(source=base_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
             objects_result_list.append(object_results)
             models_dict["base_pf"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
@@ -481,7 +466,7 @@ class YoloObjectsMain():
 
         if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD:
             transform_head, head_link = self.get_transform("head")
-            object_results = self.node.world_tv_prompt_model_head.predict(source=head_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
+            object_results = self.node.world_tv_prompt_model.predict(source=head_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
             objects_result_list.append(object_results)
             models_dict["head_tv"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
@@ -491,7 +476,7 @@ class YoloObjectsMain():
 
         if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND:
             transform_hand, hand_link = self.get_transform("hand")
-            object_results = self.node.world_tv_prompt_model_hand.predict(source=hand_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
+            object_results = self.node.world_tv_prompt_model.predict(source=hand_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
             objects_result_list.append(object_results)
             models_dict["hand_tv"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
@@ -501,7 +486,7 @@ class YoloObjectsMain():
 
         if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE:
             transform_base, base_link = self.get_transform("base")
-            object_results = self.node.world_tv_prompt_model_base.predict(source=base_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
+            object_results = self.node.world_tv_prompt_model.predict(source=base_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
             objects_result_list.append(object_results)
             models_dict["base_tv"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
