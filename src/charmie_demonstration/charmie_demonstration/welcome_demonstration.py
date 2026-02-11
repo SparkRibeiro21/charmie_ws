@@ -24,7 +24,7 @@ ros2_modules = {
     "charmie_lidar":                False,
     "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
-    "charmie_llm":                  True,
+    "charmie_llm":                  False,
     "charmie_localisation":         False,
     "charmie_low_level":            True,
     "charmie_navigation":           False,
@@ -72,7 +72,8 @@ class TaskMain():
         self.Audio_receptionist_and_restaurant_demonstration = 7
         self.LLM_demonstration = 8
         self.Open_door = 9
-        self.Final_State = 10
+        self.Dishwasher_demonstration = 10
+        self.Final_State = 11
 
         self.TIMEOUT_FLAG = True
         self.MOTORS_ACTIVE_FLAG = True
@@ -268,6 +269,11 @@ class TaskMain():
                         if ros2_modules["charmie_arm"] and ros2_modules["charmie_speakers"]:
                             if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L2, self.robot.RISING):
                                 self.state = self.Audio_receptionist_and_restaurant_demonstration
+
+                        if ros2_modules["charmie_arm"]:
+                            if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_LOGO, self.robot.RISING):
+                                self.state = self.Dishwasher_demonstration
+
                     else:
                         # Similar to wait_for_end_of_navigation, allows navigation between subparts of task
                         if self.robot.get_gamepad_button_pressed(self.robot.BUTTON_L1, self.robot.ON) and self.robot.get_gamepad_button_pressed(self.robot.BUTTON_R1, self.robot.ON):
@@ -628,7 +634,55 @@ class TaskMain():
 
                 self.state = self.Demo_actuators_with_tasks
 
+            elif self.state == self.Dishwasher_demonstration:
+                
+                temp_active_motors = self.MOTORS_ACTIVE_FLAG
+                self.safety_stop_modules()
+                cycle = 1
 
+                arm_position1 = [-200.2, 58.4, -139.7, 67, 28.3, 358.1]
+                arm_position2 = [-155.9, 59.4, -130.6, 66, 50.5, 358.1]
+
+                while 1:
+                    match cycle:
+
+                        case 0:
+                            self.robot.wait_for_start_button()
+                            cycle = save
+                        case 1:
+                            self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position1, wait_for_end_of=True)
+                            cycle = 0
+                            save = 2
+                        case 2:
+                            self.robot.set_torso_position(legs=0.015, torso=50) 
+                            cycle = 0
+                            save = 3
+                        case 3:
+                            self.robot.adjust_omnidirectional_position(dx=0.42, dy=0.0, safety=False)
+                            cycle = 0
+                            save = 4
+                        case 4:    
+                            self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position2, wait_for_end_of=True)
+                            cycle = 0
+                            save = 5
+                        case 5:
+                            self.robot.set_torso_position(legs=0.050, torso = 25)
+                            cycle = 0
+                            save = 1
+
+                self.robot.wait_for_start_button()
+
+                #self.robot.set_arm(command=)
+
+                self.robot.wait_for_start_button()
+
+                self.robot.set_neck(self.look_forward_down, wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/ready_new_task", wait_for_end_of=True)                    # self.robot.set_speech(filename="generic/how_can_i_help", wait_for_end_of=True)
+
+                self.task_reactivate_after_safety_stop(temp_active_motors)
+
+                self.state = self.Demo_actuators_with_tasks
+            
                 """
             elif self.state == self.Example_demonstration:
                 
