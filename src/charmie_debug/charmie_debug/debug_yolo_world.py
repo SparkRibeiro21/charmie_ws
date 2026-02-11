@@ -57,13 +57,13 @@ class TaskMain():
 
     def main(self):
         
-        Search_for_person = 1
-        Search_for_objects = 2
-        Continuous_tracking = 3
+        Prompt_free_yolo_world = 1
+        # Search_for_objects = 2
+        # Continuous_tracking = 3
         Final_State = 4
 
         # VARS ...
-        self.state = Search_for_person
+        self.state = Prompt_free_yolo_world
 
         print("IN NEW MAIN")
 
@@ -71,11 +71,18 @@ class TaskMain():
 
         while True:
 
-            if self.state == Search_for_person:
+            if self.state == Prompt_free_yolo_world:
 
-                ### SEARCH FOR PERSON EXAMPLE ###
+                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+
+                self.robot.activate_yolo_world(activate_objects=True)
+                print("ACTIVATE TRUE")
+                time.sleep(10.0)
+                self.robot.activate_yolo_world(activate_objects=False)
+                print("ACTIVATE FALSE")
+
                 
-                # self.set_face(command="charmie_face")
+                """ # self.set_face(command="charmie_face")
                 self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 time.sleep(2.0)
@@ -101,59 +108,12 @@ class TaskMain():
                     # self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y], ang=-10, wait_for_end_of=True)
                     # self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
                     self.robot.set_neck_coords(position=[p.position_absolute_head.x, p.position_absolute_head.y, p.position_absolute_head.z], wait_for_end_of=True)
-                    time.sleep(4)
+                    time.sleep(4) """
                                 
                 # next state
                 self.state = Final_State
 
             
-            elif self.state == Search_for_objects:
-                
-                ### SEARCH FOR OBJECTS EXAMPLE ###
-                
-                # self.set_face(command="charmie_face")
-                self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
-
-                time.sleep(2.0)
-
-                # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[-30, -45], [0, -45], [30, -45]]
-                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
-                
-                print("LIST OF DETECTED OBJECTS:")
-                for o in objects_found:
-                    conf = f"{o.confidence * 100:.0f}%"
-                    x_ = f"{o.position_absolute.x:4.2f}"
-                    y_ = f"{o.position_absolute.y:5.2f}"
-                    z_ = f"{o.position_absolute.z:5.2f}"
-                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({x_}, {y_}, {z_})")
-                    
-                self.robot.set_rgb(CYAN+HALF_ROTATE)
-                time.sleep(0.5)
-
-                if objects_found:
-                    self.robot.set_speech(filename="generic/found_the", wait_for_end_of=True)
-                    for o in objects_found:
-                        path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
-                        self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=False)
-                        time.sleep(4)
-                                
-                # next state
-                self.state = Final_State
-
-            
-            elif self.state == Continuous_tracking:
-                
-                ### CONTINUOUS TRACKING EXAMPLE ###
-                
-                # self.robot.set_continuous_tracking_with_coordinates()
-                self.robot.set_follow_person()
-
-                # next state
-                self.state = Final_State
-            
-
             elif self.state == Final_State:
                 
                 self.robot.set_face("charmie_face")

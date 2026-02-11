@@ -417,6 +417,8 @@ class ROS2TaskNode(Node):
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.activate_yolo_world_success = True
+        self.activate_yolo_world_message = ""
         self.arm_success = True
         self.arm_message = ""
         self.navigation_success = True
@@ -660,6 +662,12 @@ class ROS2TaskNode(Node):
     def call_activate_yolo_objects_server(self, request=ActivateYoloObjects.Request()):
 
         self.activate_yolo_objects_client.call_async(request)
+
+
+    ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
+    def call_activate_yolo_world_server(self, request=ActivateYoloWorld.Request()):
+
+        self.activate_yolo_world_client.call_async(request)
 
 
     ### ACTIVATE TRACKING SERVER FUNCTIONS ###
@@ -2167,6 +2175,25 @@ class RobotStdFunctions():
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
+
+    def activate_yolo_world(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5, wait_for_end_of=True):
+        
+        request = ActivateYoloWorld.Request()
+        request.activate_objects             = activate_objects
+        request.activate_furniture           = activate_furniture
+        request.activate_objects_hand        = activate_objects_hand
+        request.activate_furniture_hand      = activate_furniture_hand
+        request.activate_objects_base        = activate_objects_base
+        request.activate_furniture_base      = activate_furniture_base
+        request.minimum_objects_confidence   = float(minimum_objects_confidence)
+        request.minimum_furniture_confidence = float(minimum_furniture_confidence)
+
+        self.node.call_activate_yolo_world_server(request=request)
+
+        self.node.activate_yolo_world_success = True
+        self.node.activate_yolo_world_message = "Activated with selected parameters"
+
+        return self.node.activate_yolo_world_success, self.node.activate_yolo_world_message
 
     def activate_motors(self, activate=True, wait_for_end_of=True):
         
