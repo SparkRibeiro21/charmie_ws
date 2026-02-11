@@ -75,10 +75,16 @@ class TaskMain():
 
                 ### YOLO WORLD PROMPT FREE EXAMPLE ###
 
-                self.robot.activate_yolo_world(activate_prompt_free_head=True)
+                self.robot.activate_yolo_world(activate_tv_prompt_head=True, activate_tv_prompt_hand=True, activate_tv_prompt_base=True, text_prompts=["table", "snack"])
                 print("ACTIVATE TRUE")
                 time.sleep(10.0)
-                self.robot.activate_yolo_world(activate_prompt_free_head=False)
+                self.robot.activate_yolo_world(activate_tv_prompt_head=True, activate_tv_prompt_hand=True, activate_tv_prompt_base=True)
+                print("ACTIVATE TRUE")
+                time.sleep(10.0)
+                self.robot.activate_yolo_world(activate_tv_prompt_head=True, activate_tv_prompt_hand=True, activate_tv_prompt_base=True, text_prompts=["cabinet", "person"])
+                print("ACTIVATE TRUE")
+                time.sleep(10.0)
+                self.robot.activate_yolo_world(activate_prompt_free_head=False, activate_tv_prompt_hand=False, activate_tv_prompt_base=False)
                 print("ACTIVATE FALSE")
 
                 

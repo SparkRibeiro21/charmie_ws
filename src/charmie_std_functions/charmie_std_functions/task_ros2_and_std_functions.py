@@ -2178,7 +2178,7 @@ class RobotStdFunctions():
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
 
-    def activate_yolo_world(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5):
+    def activate_yolo_world(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5, text_prompts=[]):
         request = ActivateYoloWorld.Request()
         request.activate_prompt_free_head       = activate_prompt_free_head
         request.activate_tv_prompt_head         = activate_tv_prompt_head
@@ -2188,6 +2188,7 @@ class RobotStdFunctions():
         request.activate_tv_prompt_base         = activate_tv_prompt_base
         request.minimum_prompt_free_confidence  = float(minimum_prompt_free_confidence)
         request.minimum_tv_prompt_confidence    = float(minimum_tv_prompt_confidence)
+        request.text_prompts = text_prompts
 
         self.node.call_activate_yolo_world_server(request=request)
 

@@ -154,22 +154,18 @@ class Yolo_obj(Node):
 
         self.base_rgb_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_BASE_IMAGE_WIDTH, 3), np.uint8)
         self.base_depth_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_BASE_IMAGE_WIDTH), np.uint8)
+
+        # Default prompts so TV model can warm up immediately
+        self.TEXT_PROMPT_CLASSES = ["chair"]
+        self._tv_prompts_last = None
+
+        # Apply once at startup
+        self.update_tv_text_prompts(self.TEXT_PROMPT_CLASSES)
         
         # this code forces the ROS2 component to wait for the models initialization with an empty frame, so that when turned ON does spend time with initializations and sends detections imediatly 
         # Allocates the memory necessary for each model, this takes some seconds, by doing this in the first frame, everytime one of the models is called instantly responde instead of loading the model
         self.yolo_models_initialized = False
 
-        ###############################################################################################
-        # -------- TEXT PROMPTS (SET ONCE) --------
-        self.TEXT_PROMPT_CLASSES = ["chair", "cabinet"]
-
-        self.world_tv_prompt_model.set_classes(
-            self.TEXT_PROMPT_CLASSES,
-            self.world_tv_prompt_model.get_text_pe(self.TEXT_PROMPT_CLASSES)
-        )
-        # ----------------------------------------
-        ###############################################################################################
-        
         self.timer = self.create_timer(0.1, self.timer_callback)
 
     # This type of structure was done to make sure the YOLO models were initializes and only after the service was created, 
@@ -207,14 +203,17 @@ class Yolo_obj(Node):
 
         global MIN_PF_CONF_VALUE, MIN_TV_CONF_VALUE
 
-        self.get_logger().info("Received Activate Yolo Objects %s" %("("+str(request.activate_prompt_free_head)+", "
-                                                                        +str(request.activate_tv_prompt_head)+", "
-                                                                        +str(request.activate_prompt_free_hand)+", "
-                                                                        +str(request.activate_tv_prompt_hand)+", "
-                                                                        +str(request.activate_prompt_free_base)+", "
-                                                                        +str(request.activate_tv_prompt_base)+", "
-                                                                        +str(request.minimum_prompt_free_confidence)+", "
-                                                                        +str(request.minimum_tv_prompt_confidence)+")"))
+        self.get_logger().info("Received ActivateYoloWorld("
+            f"pf_head={request.activate_prompt_free_head}, "
+            f"tv_head={request.activate_tv_prompt_head}, "
+            f"pf_hand={request.activate_prompt_free_hand}, "
+            f"tv_hand={request.activate_tv_prompt_hand}, "
+            f"pf_base={request.activate_prompt_free_base}, "
+            f"tv_base={request.activate_tv_prompt_base}, "
+            f"min_pf={request.minimum_prompt_free_confidence:.2f}, "
+            f"min_tv={request.minimum_tv_prompt_confidence:.2f}, "
+            f"text_prompts={list(request.text_prompts)})"
+        )
 
         if not self.LOAD_PF_MODEL:
             self.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD = False
@@ -231,12 +230,47 @@ class Yolo_obj(Node):
 
         if self.LOAD_PF_MODEL:
             MIN_PF_CONF_VALUE = request.minimum_prompt_free_confidence
-        MIN_TV_CONF_VALUE = request.minimum_tv_prompt_confidence      
+        MIN_TV_CONF_VALUE = request.minimum_tv_prompt_confidence
+
+        # --- reset prompts state every activation (your "clear cache/start over") ---
+        self.TEXT_PROMPT_CLASSES = []
+        self._tv_prompts_last = None
+
+        # Apply prompts only if user sent some
+        if request.text_prompts and len(request.text_prompts) > 0:
+            ok, msg = self.update_tv_text_prompts(request.text_prompts)
+            response.message += " | " + msg
+        else:
+            response.message += " | No text_prompts provided: TV prompts remain unset."
 
         if not self.LOAD_PF_MODEL and (request.activate_prompt_free_head or request.activate_prompt_free_hand or request.activate_prompt_free_base):
-            response.message = "Text/Visual model activated. Prompt Free model ignored because load_prompt_free_model is false."
+            response.message += " | Text/Visual model activated. Prompt Free model ignored because load_prompt_free_model is false."
         
         return response
+    
+    def update_tv_text_prompts(self, prompts):
+        cleaned = []
+        seen = set()
+
+        for s in prompts:
+            s = s.strip()
+            if not s or s in seen:
+                continue
+            seen.add(s)
+            cleaned.append(s)
+
+        if len(cleaned) == 0:
+            return False, "Ignored empty/invalid text_prompts."
+
+        # Compute text embeddings + set classes
+        text_pe = self.world_tv_prompt_model.get_text_pe(cleaned)
+        self.world_tv_prompt_model.set_classes(cleaned, text_pe)
+
+        self.TEXT_PROMPT_CLASSES = cleaned
+        self._tv_prompts_last = tuple(cleaned)
+
+        self.get_logger().info(f"TV prompts set → {cleaned}")
+        return True, f"TV prompts updated: {cleaned}"
     
     def get_rgbd_head_callback(self, rgbd: RGBD):
         with data_lock: 
@@ -480,8 +514,10 @@ class YoloObjectsMain():
                 cv2.imshow("BASE OBJECTS DEBUG", object_results[0].plot())
 
         ### TEXT AND VISUAL PROMPT
+        # makes sure there are text prompts
+        tv_ready = (self.node._tv_prompts_last is not None) and (len(self.node.TEXT_PROMPT_CLASSES) > 0)
 
-        if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD:
+        if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD and tv_ready:
             transform_head, head_link = self.get_transform("head")
             object_results = self.node.world_tv_prompt_model.predict(source=head_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
             objects_result_list.append(object_results)
@@ -491,7 +527,7 @@ class YoloObjectsMain():
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HEAD TV DEBUG", object_results[0].plot())
 
-        if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND:
+        if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND and tv_ready:
             transform_hand, hand_link = self.get_transform("hand")
             object_results = self.node.world_tv_prompt_model.predict(source=hand_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
             objects_result_list.append(object_results)
@@ -501,7 +537,7 @@ class YoloObjectsMain():
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HAND TV DEBUG", object_results[0].plot())
 
-        if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE:
+        if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE and tv_ready:
             transform_base, base_link = self.get_transform("base")
             object_results = self.node.world_tv_prompt_model.predict(source=base_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
             objects_result_list.append(object_results)
@@ -730,7 +766,9 @@ class YoloObjectsMain():
                     (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE and self.node.new_base_rgb)
                 )
 
-                tv_should_run = (
+                tv_ready = (self.node._tv_prompts_last is not None) and (len(self.node.TEXT_PROMPT_CLASSES) > 0)
+
+                tv_should_run = tv_ready and (
                     (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD and self.node.new_head_rgb) or
                     (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND and self.node.new_hand_rgb) or
                     (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE and self.node.new_base_rgb)
