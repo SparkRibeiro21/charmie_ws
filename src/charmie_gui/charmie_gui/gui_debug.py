@@ -27,6 +27,8 @@ import json
 import os
 import time
 from datetime import datetime
+import colorsys
+import hashlib
 
 import pygame_widgets
 import pygame
@@ -65,6 +67,7 @@ class DebugVisualNode(Node):
         # search for person and object 
         self.search_for_person_subscriber = self.create_subscription(ListOfDetectedPerson, "search_for_person_detections", self.search_for_person_detections_callback, 10)
         self.search_for_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_object_detections", self.search_for_object_detections_callback, 10)
+        self.search_for_world_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_world_object_detections", self.search_for_world_object_detections_callback, 10)
         # Low Level
         # self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10) ### OLD
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
@@ -79,6 +82,8 @@ class DebugVisualNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        # Yolo Objects
+        self.world_objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'world_objects_all_detected_filtered', self.world_object_detected_filtered_callback, 10)
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         # Task States Info
@@ -131,6 +136,7 @@ class DebugVisualNode(Node):
 
         self.is_yolo_pose_comm = False
         self.is_yolo_obj_comm = False
+        self.is_yolo_world_comm = False
 
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
@@ -154,8 +160,10 @@ class DebugVisualNode(Node):
 
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
+        self.detected_world_objects = ListOfDetectedObject()
         self.new_detected_people = False
         self.new_detected_objects = False
+        self.new_detected_world_objects = False
 
         self.vccs = VCCsLowLevel()
         self.robot_pose = Pose2D()
@@ -189,10 +197,12 @@ class DebugVisualNode(Node):
 
         self.head_yp_fps = 0.0
         self.yolo_objects_fps = 0.0
+        self.yolo_world_fps = 0.0
         self.track_fps = 0.0
 
         self.head_yp_fps_ctr = 0
         self.yolo_objects_fps_ctr = 0
+        self.yolo_world_objects_fps_ctr = 0
         self.track_fps_ctr = 0
 
         self.all_pos_x_val = []
@@ -204,8 +214,10 @@ class DebugVisualNode(Node):
         self.radar = RadarData()
         self.search_for_person = ListOfDetectedPerson()
         self.search_for_object = ListOfDetectedObject()
+        self.search_for_world_object = ListOfDetectedObject()
         self.new_search_for_person = False
         self.new_search_for_object = False
+        self.new_search_for_world_object = False
         self.navigation = TarNavSDNL()
         self.is_navigating = False
         self.tracking_mask = TrackingMask()
@@ -243,6 +255,12 @@ class DebugVisualNode(Node):
             self.is_yolo_obj_comm = True
         else:
             self.is_yolo_obj_comm = False
+
+        if self.new_detected_world_objects:
+            self.new_detected_world_objects = False
+            self.is_yolo_world_comm = True
+        else:
+            self.is_yolo_world_comm = False
     
     def check_tracking_timer(self):
 
@@ -255,15 +273,16 @@ class DebugVisualNode(Node):
     def check_cameras_fps_timer(self):
 
         # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
-        self.head_rgb_fps       = self.head_rgb_fps_ctr     /self.time_for_cams_fps_verification
-        self.head_depth_fps     = self.head_depth_fps_ctr   /self.time_for_cams_fps_verification
-        self.hand_rgb_fps       = self.hand_rgb_fps_ctr     /self.time_for_cams_fps_verification
-        self.hand_depth_fps     = self.hand_depth_fps_ctr   /self.time_for_cams_fps_verification
-        self.base_rgb_fps       = self.base_rgb_fps_ctr     /self.time_for_cams_fps_verification
-        self.base_depth_fps     = self.base_depth_fps_ctr   /self.time_for_cams_fps_verification
-        self.head_yp_fps        = self.head_yp_fps_ctr      /self.time_for_cams_fps_verification
-        self.yolo_objects_fps   = self.yolo_objects_fps_ctr /self.time_for_cams_fps_verification
-        self.track_fps          = self.track_fps_ctr        /self.time_for_cams_fps_verification
+        self.head_rgb_fps       = self.head_rgb_fps_ctr             /self.time_for_cams_fps_verification
+        self.head_depth_fps     = self.head_depth_fps_ctr           /self.time_for_cams_fps_verification
+        self.hand_rgb_fps       = self.hand_rgb_fps_ctr             /self.time_for_cams_fps_verification
+        self.hand_depth_fps     = self.hand_depth_fps_ctr           /self.time_for_cams_fps_verification
+        self.base_rgb_fps       = self.base_rgb_fps_ctr             /self.time_for_cams_fps_verification
+        self.base_depth_fps     = self.base_depth_fps_ctr           /self.time_for_cams_fps_verification
+        self.head_yp_fps        = self.head_yp_fps_ctr              /self.time_for_cams_fps_verification
+        self.yolo_objects_fps   = self.yolo_objects_fps_ctr         /self.time_for_cams_fps_verification
+        self.yolo_world_fps     = self.yolo_world_objects_fps_ctr   /self.time_for_cams_fps_verification
+        self.track_fps          = self.track_fps_ctr                /self.time_for_cams_fps_verification
         
         self.head_rgb_fps_ctr = 0
         self.head_depth_fps_ctr = 0
@@ -273,6 +292,7 @@ class DebugVisualNode(Node):
         self.base_depth_fps_ctr = 0
         self.head_yp_fps_ctr = 0
         self.yolo_objects_fps_ctr = 0
+        self.yolo_world_objects_fps_ctr = 0
         self.track_fps_ctr = 0
 
     def nodes_used_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
@@ -400,6 +420,14 @@ class DebugVisualNode(Node):
         # self.head_yo_time = time.time()
         self.yolo_objects_fps_ctr += 1
         # for obj in self.detected_objects.objects:
+        #     print(obj.object_name, "(", obj.position_cam.x, obj.position_cam.y, obj.position_cam.z, ") (", obj.position_relative.x, obj.position_relative.y, obj.position_relative.z, ") (", obj.position_absolute.x, obj.position_absolute.y, obj.position_absolute.z, ")" )
+
+    def world_object_detected_filtered_callback(self, det_world_object: ListOfDetectedObject):
+        self.detected_world_objects = det_world_object
+        self.new_detected_world_objects = True
+        # self.head_yw_time = time.time()
+        self.yolo_world_objects_fps_ctr += 1
+        # for obj in self.detected_world_objects.objects:
         #     print(obj.object_name, "(", obj.position_cam.x, obj.position_cam.y, obj.position_cam.z, ") (", obj.position_relative.x, obj.position_relative.y, obj.position_relative.z, ") (", obj.position_absolute.x, obj.position_absolute.y, obj.position_absolute.z, ")" )
 
     def tracking_mask_callback(self, mask: TrackingMask):
@@ -555,6 +583,10 @@ class DebugVisualNode(Node):
     def search_for_object_detections_callback(self, points: ListOfDetectedObject):
         self.search_for_object = points
         self.new_search_for_object = True
+        
+    def search_for_world_object_detections_callback(self, points: ListOfDetectedObject):
+        self.search_for_world_object = points
+        self.new_search_for_world_object = True
 
     def task_states_info_callback(self, tsi: TaskStatesInfo):
         # print("Received Task States Info")
@@ -1044,6 +1076,9 @@ class DebugVisualMain():
     
         self.curr_detected_objects = ListOfDetectedObject()
         self.last_detected_objects = ListOfDetectedObject()
+
+        self.curr_detected_world_objects = ListOfDetectedObject()
+        self.last_detected_world_objects = ListOfDetectedObject()
 
         self.curr_tracking = TrackingMask()
         self.last_tracking = TrackingMask()
@@ -1597,9 +1632,10 @@ class DebugVisualMain():
         self.draw_text("RGB: "+str(int(self.node.base_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.base_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23)
         self.draw_text("D: "+str(int(self.node.base_depth_fps)), self.text_font, self.fps_to_color(int(self.node.base_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23)
         self.draw_text("Detections (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24)
-        self.draw_text("Y_P: "+str(int(self.node.head_yp_fps)), self.text_font, self.fps_to_color(int(self.node.head_yp_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
-        self.draw_text("Y: "+str(int(self.node.yolo_objects_fps)), self.text_font, self.fps_to_color(int(self.node.yolo_objects_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
-        self.draw_text("T: "+str(int(self.node.track_fps)), self.text_font, self.fps_to_color(int(self.node.track_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("YP: "+str(int(self.node.head_yp_fps)), self.text_font, self.fps_to_color(int(self.node.head_yp_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("YO: "+str(int(self.node.yolo_objects_fps)), self.text_font, self.fps_to_color(int(self.node.yolo_objects_fps)), self.init_pos_w_rect_check_nodes+55+2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("YW: "+str(int(self.node.yolo_world_fps)), self.text_font, self.fps_to_color(int(self.node.yolo_world_fps)), self.init_pos_w_rect_check_nodes+110+4, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("T: "+str(int(self.node.track_fps)), self.text_font, self.fps_to_color(int(self.node.track_fps)), self.init_pos_w_rect_check_nodes+165+6, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
         
         self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.2*self.toggle_h_diff)))
         self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.8*self.toggle_h_diff)))
@@ -1621,11 +1657,11 @@ class DebugVisualMain():
 
         self.draw_text("Activate YOLO Objects: (Head/Gripper/Base)", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, self.cams_initial_height)
         self.draw_text("Activate YOLO Pose:", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+self.cams_initial_height)
-        self.draw_text("Activate Obstacles:", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+self.cams_initial_height)
+        self.draw_text("Activate YOLO World: (Head/Gripper/Base)", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+self.cams_initial_height)
         
         self.draw_text("Objects:     Furniture:   /   Objects:     Furniture:   /   Objects:     Furniture:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 25+self.cams_initial_height)
         self.draw_text("Activate:      Waving:      Front Close:      Legs Visible:      Characteristics:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+25+self.cams_initial_height)
-        self.draw_text("Lidar Top:      Lidar Bottom:      Head Camera:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+25+self.cams_initial_height)
+        self.draw_text("Prompt F:   T/V Prompt: /  Prompt F:   T/V Prompt: /  PromptF:    T/V Prompt:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+25+self.cams_initial_height)
         
         # this is done to make sure that the same value used for checking pressed is the same used to attribute to last toggle
         # YOLO OBJECTS ACTIVATE
@@ -1714,6 +1750,9 @@ class DebugVisualMain():
 
         self.draw_object_detections("top", self.top_camera_id)
         self.draw_object_detections("bottom", self.bottom_camera_id)
+
+        self.draw_world_object_detections("top", self.top_camera_id)
+        self.draw_world_object_detections("bottom", self.bottom_camera_id)
 
     def draw_pose_detections(self, camera_select):
 
@@ -1879,14 +1918,55 @@ class DebugVisualMain():
 
         if self.node.is_yolo_obj_comm:
             if camera_id == "head":
-                self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id)
+                self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id, world_objects=False)
             if camera_id == "gripper":
-                self.draw_object_bounding_boxes(temp_objects_hand, camera_height, camera_id)
+                self.draw_object_bounding_boxes(temp_objects_hand, camera_height, camera_id, world_objects=False)
             if camera_id == "base":
-                self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id)
+                self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id, world_objects=False)
 
+    def draw_world_object_detections(self, camera_select, camera_id):
 
-    def draw_object_bounding_boxes(self, objects, camera_height, camera_id):
+        if camera_select == "top":
+            camera_height = self.cams_initial_height
+        else: # bottom
+            camera_height = self.cam_height_+2*self.cams_initial_height
+
+        self.curr_detected_world_objects = self.node.detected_world_objects
+
+        if self.toggle_pause_cams.getValue():
+            used_detected_objects  = self.last_detected_world_objects
+        else:
+            used_detected_objects  = self.curr_detected_world_objects 
+        self.last_detected_world_objects = used_detected_objects 
+
+        temp_objects_head = ListOfDetectedObject()
+        temp_objects_hand = ListOfDetectedObject()
+        temp_objects_base = ListOfDetectedObject()
+
+        # Divides detections per camera (for visualization)
+        for obj in used_detected_objects.objects:
+            match obj.camera:
+                case "head":
+                    temp_objects_head.objects.append(obj)
+                case "hand":
+                    temp_objects_hand.objects.append(obj)
+                case "base":
+                    temp_objects_base.objects.append(obj)
+        
+        # Check number of detections of each camera
+        # print(len(temp_objects_head.objects), len(temp_objects_hand.objects), len(temp_objects_base.objects))
+
+        if self.node.is_yolo_world_comm:
+            if camera_id == "head":
+                self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id, world_objects=True)
+            if camera_id == "gripper":
+                self.draw_object_bounding_boxes(temp_objects_hand, camera_height, camera_id, world_objects=True)
+            if camera_id == "base":
+                self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id, world_objects=True)
+
+    def draw_object_bounding_boxes(self, objects, camera_height, camera_id, world_objects):
+
+        # world_objects -> creates a visual difference between detections from yolo_objects and yolo_world
 
         if len(objects.objects) > 0:
             # print("DETECTED OBJECTS ("+head_or_hand.lower()+"):")
@@ -1899,7 +1979,10 @@ class DebugVisualMain():
                 # room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
                 # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
                 # print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
-                bb_color = self.object_class_to_bb_color(o.object_class)
+                if not world_objects:
+                    bb_color = self.object_class_to_bb_color(o.object_class)
+                else:
+                    bb_color = self.yolo_color_from_name(o.object_name)
                 if camera_id == "base": # special case for base camera different resolution
                     OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(self.LEFT_PAD+o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), int(o.box_width*self.camera_resize_ratio), int(o.box_height*self.camera_resize_ratio))
                 else:
@@ -1920,40 +2003,48 @@ class DebugVisualMain():
                     temp_mask.append(p_list)
 
                 np_mask = np.array(temp_mask)
-                bb_color = self.object_class_to_bb_color(o.object_class)
+                if not world_objects:
+                    bb_color = self.object_class_to_bb_color(o.object_class)
+                else:
+                    bb_color = self.yolo_color_from_name(o.object_name)
                 pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
                 self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
 
-            ### draw object 2D orientation
-            if o.orientation is not None:
-                # Convert orientation to radians
-                theta_rad = math.radians(o.orientation)
+            if not world_objects:
+                ### draw object 2D orientation
+                if o.orientation is not None:
+                    # Convert orientation to radians
+                    theta_rad = math.radians(o.orientation)
 
-                # Compute center position (already given)
-                if camera_id == "base":
-                    center_x = int(self.cams_initial_width + (self.LEFT_PAD + o.box_center_x) * self.camera_resize_ratio)
-                else:
-                    center_x = int(self.cams_initial_width + o.box_center_x * self.camera_resize_ratio)
+                    # Compute center position (already given)
+                    if camera_id == "base":
+                        center_x = int(self.cams_initial_width + (self.LEFT_PAD + o.box_center_x) * self.camera_resize_ratio)
+                    else:
+                        center_x = int(self.cams_initial_width + o.box_center_x * self.camera_resize_ratio)
 
-                center_y = int(camera_height + o.box_center_y * self.camera_resize_ratio)
+                    center_y = int(camera_height + o.box_center_y * self.camera_resize_ratio)
 
-                line_length = 30*self.camera_resize_ratio
+                    line_length = 30*self.camera_resize_ratio
 
-                x_beg = int(center_x - line_length * math.cos(theta_rad))
-                y_beg = int(center_y - line_length * math.sin(theta_rad))
-                x_end = int(center_x + line_length * math.cos(theta_rad))
-                y_end = int(center_y + line_length * math.sin(theta_rad))
+                    x_beg = int(center_x - line_length * math.cos(theta_rad))
+                    y_beg = int(center_y - line_length * math.sin(theta_rad))
+                    x_end = int(center_x + line_length * math.cos(theta_rad))
+                    y_end = int(center_y + line_length * math.sin(theta_rad))
 
-                # Draw the orientation line (red color, width 2)
-                pygame.draw.line(self.WIN, (255, 255, 255), (x_beg, y_beg), (x_end, y_end), 4)
+                    # Draw the orientation line (red color, width 2)
+                    pygame.draw.line(self.WIN, (255, 255, 255), (x_beg, y_beg), (x_end, y_end), 4)
 
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
 
-            # text = str(o.object_name)
-            text = str(o.object_name)+" ("+str(o.index)+")"
+            if not world_objects:
+                text = str(o.object_name)+" ("+str(o.index)+")"
+                bb_color = self.object_class_to_bb_color(o.object_class)
+            else:
+                text = str(o.object_name)
+                bb_color = self.yolo_color_from_name(o.object_name)
+            
             text_width, text_height = self.text_font_t.size(text)
-            bb_color = self.object_class_to_bb_color(o.object_class)
 
             if camera_id == "base": # special case for base camera different resolution
                 if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
@@ -2002,6 +2093,12 @@ class DebugVisualMain():
             bb_color = self.BLACK
 
         return bb_color
+    
+    def yolo_color_from_name(self, name: str, s: float = 0.85, v: float = 0.95):
+        # stable hash -> hue in [0,1)
+        h = int(hashlib.md5(name.encode("utf-8")).hexdigest()[:8], 16) / 0xFFFFFFFF
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return (int(r * 255), int(g * 255), int(b * 255))
 
     def draw_tracking(self, camera_select):
 
@@ -2413,6 +2510,32 @@ class DebugVisualMain():
          
         if self.node.new_search_for_object:
             self.node.new_search_for_object = False    
+
+        ### WORLD OBJECT_DETECTED
+        for object in self.node.detected_world_objects.objects:
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
+                                    2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))
+            pygame.draw.rect(self.WIN, self.CYAN, temp_rect, width=0)
+
+        ### SEARCH FOR WORLD OBJECT 
+        if self.node.new_search_for_world_object:
+            print("DETECTED SEARCH FOR OBJECT:")
+
+        for object in self.node.search_for_world_object.objects:
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
+                                    2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))
+            pygame.draw.rect(self.WIN, self.MAGENTA, temp_rect, width=0)
+
+            if self.node.new_search_for_world_object:
+                name_and_cat_str = str(object.object_name)
+                room_and_furn_str = str(object.room_location + " (" + object.furniture_location + ")")
+                relative_coords_str = str("("+str(round(object.position_relative.x,2))+", "+str(round(object.position_relative.y,2))+", "+str(round(object.position_relative.z,2))+")")
+                print("id:", object.index, "|", str(int(round(object.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
+         
+        if self.node.new_search_for_world_object:
+            self.node.new_search_for_world_object = False    
 
         ### TRACKING
         if self.node.is_tracking_comm:
