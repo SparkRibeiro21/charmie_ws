@@ -39,7 +39,7 @@ class Yolo_obj(Node):
          ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("debug_draw", False) 
-        self.declare_parameter("load_prompt_free_model", True) 
+        self.declare_parameter("load_prompt_free_model", False) 
         self.declare_parameter("activate_world_pf_head", False)
         self.declare_parameter("activate_world_pf_hand", False)
         self.declare_parameter("activate_world_pf_base", False)
