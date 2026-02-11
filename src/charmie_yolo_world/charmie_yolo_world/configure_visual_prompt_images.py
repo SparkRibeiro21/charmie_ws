@@ -80,7 +80,7 @@ def main():
     payload = {
         "type": "yoloe_visual_prompt",
         "image": img_path.name,
-        "image_dir": str(IMG_DIR),
+        "image_dir": str(midpath_visual_prompt_images),
         "width": int(w),
         "height": int(h),
         "classes": [{"cls": cid, "name": name} for name, cid in label_to_cls.items()],

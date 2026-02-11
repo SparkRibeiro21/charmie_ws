@@ -1,7 +1,7 @@
 {
   "type": "yoloe_visual_prompt",
   "image": "door_handle_lar_gripper_cam.jpg",
-  "image_dir": "/home/tiago/charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images/",
+  "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
   "width": 2560,
   "height": 1440,
   "classes": [
@@ -14,9 +14,9 @@
     {
       "cls": 0,
       "xyxy": [
-        1230.0,
-        622.0,
-        1641.0,
+        1228.0,
+        620.0,
+        1642.0,
         712.0
       ]
     }
