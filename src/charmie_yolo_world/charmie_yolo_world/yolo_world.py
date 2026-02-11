@@ -406,40 +406,36 @@ class YoloObjectsMain():
 
         # self.get_logger().info('Receiving color video frame head')
         tempo_total = time.perf_counter()
-
         map_transform, _ = self.get_transform() # base_footprint -> map
 
         ### OBJECTS
         
         if self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD:
+            transform_head, head_link = self.get_transform("head")
             object_results = self.node.object_model.predict(source=head_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
             objects_result_list.append(object_results)
             models_dict["head_objects"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
-            if len(object_results[0]) > 0:
-                transform_head, head_link = self.get_transform("head")
 
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HEAD OBJECTS DEBUG", object_results[0].plot())
 
         if self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND:
+            transform_hand, hand_link = self.get_transform("hand")
             object_results = self.node.object_model_hand.predict(source=hand_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
             objects_result_list.append(object_results)
             models_dict["hand_objects"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
-            if len(object_results[0]) > 0:
-                transform_hand, hand_link = self.get_transform("hand")
 
             if self.node.DEBUG_DRAW:
                 cv2.imshow("HAND OBJECTS DEBUG", object_results[0].plot())
 
         if self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE:
+            transform_base, base_link = self.get_transform("base")
             object_results = self.node.object_model_base.predict(source=base_frame, conf=MIN_PF_CONF_VALUE, verbose=False)   
             objects_result_list.append(object_results)
             models_dict["base_objects"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
-            if len(object_results[0]) > 0:
-                transform_base, base_link = self.get_transform("base")
 
             if self.node.DEBUG_DRAW:
                 cv2.imshow("BASE OBJECTS DEBUG", object_results[0].plot())
