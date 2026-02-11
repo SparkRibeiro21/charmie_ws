@@ -2178,17 +2178,16 @@ class RobotStdFunctions():
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
 
-    def activate_yolo_world(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5, wait_for_end_of=True):
-        
+    def activate_yolo_world(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5):
         request = ActivateYoloWorld.Request()
-        request.activate_objects             = activate_objects
-        request.activate_furniture           = activate_furniture
-        request.activate_objects_hand        = activate_objects_hand
-        request.activate_furniture_hand      = activate_furniture_hand
-        request.activate_objects_base        = activate_objects_base
-        request.activate_furniture_base      = activate_furniture_base
-        request.minimum_objects_confidence   = float(minimum_objects_confidence)
-        request.minimum_furniture_confidence = float(minimum_furniture_confidence)
+        request.activate_prompt_free_head       = activate_prompt_free_head
+        request.activate_tv_prompt_head         = activate_tv_prompt_head
+        request.activate_prompt_free_hand       = activate_prompt_free_hand
+        request.activate_tv_prompt_hand         = activate_tv_prompt_hand
+        request.activate_prompt_free_base       = activate_prompt_free_base
+        request.activate_tv_prompt_base         = activate_tv_prompt_base
+        request.minimum_prompt_free_confidence  = float(minimum_prompt_free_confidence)
+        request.minimum_tv_prompt_confidence    = float(minimum_tv_prompt_confidence)
 
         self.node.call_activate_yolo_world_server(request=request)
 

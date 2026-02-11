@@ -12,7 +12,7 @@ from nav2_msgs.action import NavigateToPose
 from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
     TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
-    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
+    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
     SetRGB, GetMinRadarDistance, ActivateYoloWorld
 from charmie_interfaces.action import AdjustNavigationAngle
 from cv_bridge import CvBridge, CvBridgeError
@@ -119,8 +119,6 @@ class DebugVisualNode(Node):
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Radar
         self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance")
-        # Obstacles
-        self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         # self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
@@ -146,8 +144,6 @@ class DebugVisualNode(Node):
         self.activate_yolo_objects_message = ""
         self.activate_yolo_world_success = True
         self.activate_yolo_world_message = ""
-        self.activate_obstacles_success = True
-        self.activate_obstacles_message = ""
         
         self.head_rgb = Image()
         self.hand_rgb = Image()
@@ -393,39 +389,30 @@ class DebugVisualNode(Node):
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
     def call_activate_yolo_objects_server(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5):
         request = ActivateYoloObjects.Request()
-        request.activate_objects = activate_objects
-        request.activate_furniture = activate_furniture
-        request.activate_objects_hand = activate_objects_hand
-        request.activate_furniture_hand = activate_furniture_hand
-        request.activate_objects_base = activate_objects_base
-        request.activate_furniture_base = activate_furniture_base
-        request.minimum_objects_confidence = minimum_objects_confidence
-        request.minimum_furniture_confidence = minimum_furniture_confidence
+        request.activate_objects                 = activate_objects
+        request.activate_furniture               = activate_furniture
+        request.activate_objects_hand            = activate_objects_hand
+        request.activate_furniture_hand          = activate_furniture_hand
+        request.activate_objects_base            = activate_objects_base
+        request.activate_furniture_base          = activate_furniture_base
+        request.minimum_objects_confidence       = float(minimum_objects_confidence)
+        request.minimum_furniture_confidence     = float(minimum_furniture_confidence)
 
         self.activate_yolo_objects_client.call_async(request)
 
     ### ACTIVATE YOLO WORLD SERVER FUNCTIONS ###
-    def call_activate_yolo_world_server(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5):
+    def call_activate_yolo_world_server(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5):
         request = ActivateYoloWorld.Request()
-        request.activate_objects = activate_objects
-        request.activate_furniture = activate_furniture
-        request.activate_objects_hand = activate_objects_hand
-        request.activate_furniture_hand = activate_furniture_hand
-        request.activate_objects_base = activate_objects_base
-        request.activate_furniture_base = activate_furniture_base
-        request.minimum_objects_confidence = minimum_objects_confidence
-        request.minimum_furniture_confidence = minimum_furniture_confidence
+        request.activate_prompt_free_head       = activate_prompt_free_head
+        request.activate_tv_prompt_head         = activate_tv_prompt_head
+        request.activate_prompt_free_hand       = activate_prompt_free_hand
+        request.activate_tv_prompt_hand         = activate_tv_prompt_hand
+        request.activate_prompt_free_base       = activate_prompt_free_base
+        request.activate_tv_prompt_base         = activate_tv_prompt_base
+        request.minimum_prompt_free_confidence  = float(minimum_prompt_free_confidence)
+        request.minimum_tv_prompt_confidence    = float(minimum_tv_prompt_confidence)
 
         self.activate_yolo_world_client.call_async(request)
-
-    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
-    def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
-        request = ActivateObstacles.Request()
-        request.activate_lidar_up = obstacles_lidar_up
-        request.activate_lidar_bottom = obstacles_lidar_bottom
-        request.activate_camera_head = obstacles_camera_head
-
-        self.activate_obstacles_client.call_async(request)
 
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
@@ -1065,9 +1052,6 @@ class DebugVisualMain():
         self.toggle_pose_legs_visible =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+302, self.cams_initial_height+80+50, 40, 16)
         self.toggle_pose_characteristcs = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+427, self.cams_initial_height+80+50, 40, 16)
         
-        ########## self.toggle_obstacles_lidar_top =    Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+160+50, 40, 16)
-        ########## self.toggle_obstacles_lidar_bottom = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100,  self.cams_initial_height+160+50, 40, 16)
-        ########## self.toggle_obstacles_head_camera =  Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233, self.cams_initial_height+160+50, 40, 16)
         self.toggle_activate_prompt_free_head   = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+160+50, 40, 16)
         self.toggle_activate_tv_prompt_head     = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90,  self.cams_initial_height+160+50, 40, 16)
         self.toggle_activate_prompt_free_hand   = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192, self.cams_initial_height+160+50, 40, 16)
@@ -1090,9 +1074,6 @@ class DebugVisualMain():
         self.last_toggle_pose_legs_visible =   False
         self.last_toggle_pose_characteristcs = False
         
-        ########## self.last_toggle_obstacles_lidar_top =    False
-        ########## self.last_toggle_obstacles_lidar_bottom = False
-        ########## self.last_toggle_obstacles_head_camera =  False
         self.last_toggle_activate_prompt_free_head   = False
         self.last_toggle_activate_tv_prompt_head     = False
         self.last_toggle_activate_prompt_free_hand   = False
@@ -1154,23 +1135,14 @@ class DebugVisualMain():
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
     
-    def activate_yolo_world(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5, wait_for_end_of=True):
+    def activate_yolo_world(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5, wait_for_end_of=True):
         
-        self.node.call_activate_yolo_world_server(activate_objects=activate_objects, activate_furniture=activate_furniture, activate_objects_hand=activate_objects_hand, activate_furniture_hand=activate_furniture_hand, activate_objects_base=activate_objects_base, activate_furniture_base=activate_furniture_base, minimum_objects_confidence=minimum_objects_confidence, minimum_furniture_confidence=minimum_furniture_confidence)
+        self.node.call_activate_yolo_world_server(activate_prompt_free_head=activate_prompt_free_head, activate_tv_prompt_head=activate_tv_prompt_head, activate_prompt_free_hand=activate_prompt_free_hand, activate_tv_prompt_hand=activate_tv_prompt_hand, activate_prompt_free_base=activate_prompt_free_base, activate_tv_prompt_base=activate_tv_prompt_base, minimum_prompt_free_confidence=minimum_prompt_free_confidence, minimum_tv_prompt_confidence=minimum_tv_prompt_confidence)
 
         self.node.activate_yolo_world_success = True
         self.node.activate_yolo_world_message = "Activated with selected parameters"
 
         return self.node.activate_yolo_world_success, self.node.activate_yolo_world_message
-    
-    def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
-        
-        self.node.call_activate_obstacles_server(obstacles_lidar_up=obstacles_lidar_up, obstacles_lidar_bottom=obstacles_lidar_bottom, obstacles_camera_head=obstacles_camera_head)
-
-        self.node.activate_obstacles_success = True
-        self.node.activate_obstacles_message = "Activated with selected parameters"
-
-        return self.node.activate_obstacles_success, self.node.activate_obstacles_message
 
     def button_zoom_in_function(self):
         # print(self.MAP_SCALE - self.MAP_ZOOM_INC)
@@ -1738,9 +1710,6 @@ class DebugVisualMain():
         toggle_pose_characteristcs  = self.toggle_pose_characteristcs.getValue()
 
         # YOLO WORLD ACTIVATE ACTIVATE
-        ########## toggle_obstacles_lidar_top      = self.toggle_obstacles_lidar_top.getValue()
-        ########## toggle_obstacles_lidar_bottom   = self.toggle_obstacles_lidar_bottom.getValue()
-        ########## toggle_obstacles_head_camera    = self.toggle_obstacles_head_camera.getValue()
         toggle_activate_prompt_free_head   = self.toggle_activate_prompt_free_head.getValue()      
         toggle_activate_tv_prompt_head     = self.toggle_activate_tv_prompt_head.getValue()
         toggle_activate_prompt_free_hand   = self.toggle_activate_prompt_free_hand.getValue()
@@ -1757,7 +1726,6 @@ class DebugVisualMain():
             
             print("YOLO OBJECTS - CHANGED STATUS.")
 
-            ############################################################################################################################################################################################
             self.activate_yolo_objects(activate_objects     =toggle_activate_objects_head, activate_furniture     =toggle_activate_furniture_head, \
                                        activate_objects_hand=toggle_activate_objects_hand, activate_furniture_hand=toggle_activate_furniture_hand, \
                                        activate_objects_base=toggle_activate_objects_base, activate_furniture_base=toggle_activate_furniture_base)
@@ -1785,18 +1753,9 @@ class DebugVisualMain():
 
             print("YOLO WORLD - CHANGED STATUS.")
 
-            self.activate_yolo_world(activate_objects     =toggle_activate_prompt_free_head, activate_furniture     =toggle_activate_tv_prompt_head, \
-                                     activate_objects_hand=toggle_activate_prompt_free_hand, activate_furniture_hand=toggle_activate_tv_prompt_hand, \
-                                     activate_objects_base=toggle_activate_prompt_free_base, activate_furniture_base=toggle_activate_tv_prompt_base)
-
-        ########## if toggle_obstacles_lidar_top     != self.last_toggle_obstacles_lidar_top or \
-        ##########     toggle_obstacles_lidar_bottom != self.last_toggle_obstacles_lidar_bottom or \
-        ##########     toggle_obstacles_head_camera  != self.last_toggle_obstacles_head_camera:
-        ##########     
-        ##########     print("OBSTACLES - CHANGED STATUS.")
-        ########## 
-        ##########     self.activate_obstacles(obstacles_lidar_up=toggle_obstacles_lidar_top, obstacles_lidar_bottom=toggle_obstacles_lidar_bottom, \
-        ##########                             obstacles_camera_head=toggle_obstacles_head_camera)
+            self.activate_yolo_world(activate_prompt_free_head = toggle_activate_prompt_free_head, activate_tv_prompt_head = toggle_activate_tv_prompt_head, \
+                                     activate_prompt_free_hand = toggle_activate_prompt_free_hand, activate_tv_prompt_hand = toggle_activate_tv_prompt_hand, \
+                                     activate_prompt_free_base = toggle_activate_prompt_free_base, activate_tv_prompt_base = toggle_activate_tv_prompt_base)
 
         self.last_toggle_activate_objects_head   = toggle_activate_objects_head 
         self.last_toggle_activate_furniture_head = toggle_activate_furniture_head
@@ -1810,10 +1769,6 @@ class DebugVisualMain():
         self.last_toggle_pose_front_close       = toggle_pose_front_close
         self.last_toggle_pose_legs_visible      = toggle_pose_legs_visible
         self.last_toggle_pose_characteristcs    = toggle_pose_characteristcs
-        
-        ########## self.last_toggle_obstacles_lidar_top =    toggle_obstacles_lidar_top
-        ########## self.last_toggle_obstacles_lidar_bottom = toggle_obstacles_lidar_bottom
-        ########## self.last_toggle_obstacles_head_camera =  toggle_obstacles_head_camera
 
         self.last_toggle_activate_prompt_free_head  = toggle_activate_prompt_free_head
         self.last_toggle_activate_tv_prompt_head    = toggle_activate_tv_prompt_head
@@ -2288,10 +2243,7 @@ class DebugVisualMain():
         self.toggle_pose_front_close.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+182)
         self.toggle_pose_legs_visible.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+302)
         self.toggle_pose_characteristcs.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+427)
-        
-        ########## self.toggle_obstacles_lidar_top.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
-        ########## self.toggle_obstacles_lidar_bottom.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100)
-        ########## self.toggle_obstacles_head_camera.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233)        
+              
         self.toggle_activate_prompt_free_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
         self.toggle_activate_tv_prompt_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90)
         self.toggle_activate_prompt_free_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192)

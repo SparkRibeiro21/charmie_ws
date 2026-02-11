@@ -75,10 +75,10 @@ class TaskMain():
 
                 ### YOLO WORLD PROMPT FREE EXAMPLE ###
 
-                self.robot.activate_yolo_world(activate_objects=True)
+                self.robot.activate_yolo_world(activate_prompt_free_head=True)
                 print("ACTIVATE TRUE")
                 time.sleep(10.0)
-                self.robot.activate_yolo_world(activate_objects=False)
+                self.robot.activate_yolo_world(activate_prompt_free_head=False)
                 print("ACTIVATE FALSE")
 
                 

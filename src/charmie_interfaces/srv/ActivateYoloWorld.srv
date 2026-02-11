@@ -1,16 +1,14 @@
-# Service to activate the yolo object detection, thus publishing it on the topic
+# Service to activate the yolo world detection, thus publishing it on the topic
 
-bool activate_objects                                       # activate or deactivate yolo object detection
-bool activate_furniture                                     # activate or deactivate yolo furniture detection (includes doors, drawers, washing machine door, closet with doors)
-bool activate_objects_hand                                  # activate or deactivate hand yolo object detection
-bool activate_furniture_hand                                # activate or deactivate hand yolo furniture detection (includes doors, drawers, washing machine door, closet with doors)
-bool activate_objects_base                                  # activate or deactivate base yolo object detection
-bool activate_furniture_base                                # activate or deactivate base yolo furniture detection (includes doors, drawers, washing machine door, closet with doors)
-float64 minimum_objects_confidence                          # adjust the minimum accuracy to assume as an object
-float64 minimum_furniture_confidence                        # adjust the minimum accuracy to assume as a furniture
-# bool activate_shoes               # NOT USED ANYMORE      # activate or deactivate yolo shoes detection
-# bool activate_shoes_hand          # NOT USED ANYMORE      # activate or deactivate hand yolo shoes detection
-# float64 minimum_shoes_confidence  # NOT USED ANYMORE      # adjust the minimum accuracy to assume as a shoe
+bool activate_prompt_free_head          # activate or deactivate prompt free detection for head camera
+bool activate_tv_prompt_head            # activate or deactivate text and visual prompt detection for head camera
+bool activate_prompt_free_hand          # activate or deactivate prompt free detection for gripper camera
+bool activate_tv_prompt_hand            # activate or deactivate text and visual prompt detection for gripper camera
+bool activate_prompt_free_base          # activate or deactivate prompt free detection for base camera
+bool activate_tv_prompt_base            # activate or deactivate text and visual prompt detection for base camera
+float64 minimum_prompt_free_confidence  # set minimum confidence value for prompt free detections
+float64 minimum_tv_prompt_confidence    # set minimum confidence value for text and visual prompt detections
+
 ---
 bool success    # indicate successful run of triggered service
 string message  # informational, e.g. for error messages.
