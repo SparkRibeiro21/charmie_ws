@@ -234,6 +234,7 @@ class ROS2TaskNode(Node):
             "charmie_tracking":             False,
             "charmie_yolo_objects":         True,
             "charmie_yolo_pose":            False,
+            "charmie_yolo_world":           False,
         """
 
         # waits until all modules are correctly turned ON
@@ -532,6 +533,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
+        nodes_used.charmie_yolo_world           = self.ros2_modules["charmie_yolo_world"]
 
         self.nodes_used_client.call_async(nodes_used)
 
