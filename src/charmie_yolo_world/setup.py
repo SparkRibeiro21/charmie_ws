@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-        "yolo_world = charmie_yolo_world.yolo_world:main"
+        "yolo_world = charmie_yolo_world.yolo_world:main",
+        "configure_visual_prompt_images = charmie_yolo_world.configure_visual_prompt_images:main"
         ],
     },
 )
