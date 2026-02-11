@@ -18,7 +18,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, SetFloat, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
-    GetSoundClassificationContinuous, GetMinRadarDistance
+    GetSoundClassificationContinuous, GetMinRadarDistance, ActivateYoloWorld
 from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles
 
 from charmie_point_cloud.point_cloud_class import PointCloud
@@ -167,6 +167,8 @@ class ROS2TaskNode(Node):
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Yolo World
+        self.activate_yolo_world_client = self.create_client(ActivateYoloWorld, "activate_yolo_world")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Radar
@@ -308,6 +310,10 @@ class ROS2TaskNode(Node):
         if self.ros2_modules["charmie_yolo_pose"]:
             while not self.activate_yolo_pose_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+
+        if self.ros2_modules["charmie_yolo_world"]:
+            while not self.activate_yolo_world_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Yolo World Activate Command...")
         
         self.create_timer(0.5, self.task_states_info_publisher_timer)
 

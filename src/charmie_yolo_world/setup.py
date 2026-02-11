@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+        "yolo_world = charmie_yolo_world.yolo_world:main"
         ],
     },
 )

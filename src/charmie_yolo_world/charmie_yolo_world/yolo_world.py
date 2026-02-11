@@ -5,7 +5,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Point, PointStamped
 from sensor_msgs.msg import Image
 from charmie_interfaces.msg import DetectedObject, ListOfDetectedObject, MaskDetection
-from charmie_interfaces.srv import ActivateYoloObjects
+from charmie_interfaces.srv import ActivateYoloWorld
 from realsense2_camera_msgs.msg import RGBD
 from cv_bridge import CvBridge
 import cv2 
@@ -170,7 +170,7 @@ class Yolo_obj(Node):
 
     def temp_activate_yolo_service(self):
         ### Services ###
-        self.activate_yolo_world_service = self.create_service(ActivateYoloObjects, "activate_yolo_objects", self.callback_activate_yolo_world)
+        self.activate_yolo_world_service = self.create_service(ActivateYoloWorld, "activate_yolo_world", self.callback_activate_yolo_world)
 
     def callback_activate_yolo_world(self, request, response):
 
