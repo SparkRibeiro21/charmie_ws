@@ -9,6 +9,7 @@ bool activate_tv_prompt_base            # activate or deactivate text and visual
 float64 minimum_prompt_free_confidence  # set minimum confidence value for prompt free detections
 float64 minimum_tv_prompt_confidence    # set minimum confidence value for text and visual prompt detections
 string[] text_prompts
+string[] visual_prompts
 ---
 bool success    # indicate successful run of triggered service
 string message  # informational, e.g. for error messages.

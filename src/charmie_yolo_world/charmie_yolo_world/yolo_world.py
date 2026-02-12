@@ -212,7 +212,8 @@ class Yolo_obj(Node):
             f"tv_base={request.activate_tv_prompt_base}, "
             f"min_pf={request.minimum_prompt_free_confidence:.2f}, "
             f"min_tv={request.minimum_tv_prompt_confidence:.2f}, "
-            f"text_prompts={list(request.text_prompts)})"
+            f"text_prompts={list(request.text_prompts)}), "
+            f"visual_prompts={list(request.visual_prompts)})."
         )
 
         if not self.LOAD_PF_MODEL:
@@ -236,7 +237,7 @@ class Yolo_obj(Node):
         self.TEXT_PROMPT_CLASSES = []
         self._tv_prompts_last = None
 
-        # Apply prompts only if user sent some
+        # Apply prompts text only if user sent some
         if request.text_prompts and len(request.text_prompts) > 0:
             ok, msg = self.update_tv_text_prompts(request.text_prompts)
             response.message += " | " + msg
