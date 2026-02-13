@@ -1,0 +1,27 @@
+{
+  "type": "yoloe_visual_prompt",
+  "image": "tomato_soup_dinner_table_head_cam.png",
+  "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
+  "width": 2560,
+  "height": 1440,
+  "classes": [
+    {
+      "cls": 0,
+      "name": "tomato_soup"
+    }
+  ],
+  "bboxes": [
+    {
+      "cls": 0,
+      "xyxy": [
+        160.0,
+        961.0,
+        385.0,
+        1227.0
+      ]
+    }
+  ],
+  "meta": {
+    "notes": ""
+  }
+}
