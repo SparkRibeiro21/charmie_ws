@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-from ultralytics import YOLOE
+from ultralytics import YOLOE, settings
+from ultralytics.models.yolo.yoloe.predict import YOLOEVPSegPredictor
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Point, PointStamped
@@ -17,8 +18,14 @@ from tf2_geometry_msgs import do_transform_point
 from pathlib import Path
 import time
 import math
+import torch
+import traceback
 
 from charmie_point_cloud.point_cloud_class import PointCloud
+
+settings.update({
+    "weights_dir": str(Path.home() / ".cache" / "ultralytics" / "weights")
+})
 
 MIN_PF_CONF_VALUE = 0.5
 MIN_TV_CONF_VALUE = 0.5
@@ -36,10 +43,13 @@ class Yolo_obj(Node):
         super().__init__("Yolo_obj")
         self.get_logger().info("Initialised Yolo Object Node")
 
+        self.tv_model_lock = threading.Lock() # protects world_tv_prompt_model internal state
+        self.tv_update_in_progress = threading.Event() # true while activate is changing prompts
+
          ### ROS2 Parameters ###
         # when declaring a ros2 parameter the second argument of the function is the default value 
         self.declare_parameter("debug_draw", False) 
-        self.declare_parameter("load_prompt_free_model", False) 
+        self.declare_parameter("load_prompt_free_model", True) 
         self.declare_parameter("activate_world_pf_head", False)
         self.declare_parameter("activate_world_pf_hand", False)
         self.declare_parameter("activate_world_pf_base", False)
@@ -53,8 +63,14 @@ class Yolo_obj(Node):
         midpath_yolo_models = "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/yolo_models"
         self.complete_path_yolo_models = self.home+'/'+midpath_yolo_models+'/'
 
+        midpath_visual_prompt_images = "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images"
+        self.complete_path_visual_prompts = str(Path.home()) + "/" + midpath_visual_prompt_images + "/"
+
         midpath_configuration_files = "charmie_ws/src/configuration_files"
         self.complete_path_configuration_files = self.home+'/'+midpath_configuration_files+'/'
+
+        ULTRA_WEIGHTS = self.complete_path_yolo_models
+        settings.update({"weights_dir": ULTRA_WEIGHTS})
 
         # Opens files with objects names and categories
         try:
@@ -155,12 +171,24 @@ class Yolo_obj(Node):
         self.base_rgb_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_BASE_IMAGE_WIDTH, 3), np.uint8)
         self.base_depth_cv2_frame = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_BASE_IMAGE_WIDTH), np.uint8)
 
-        # Default prompts so TV model can warm up immediately
-        self.TEXT_PROMPT_CLASSES = ["chair"]
-        self._tv_prompts_last = None
+        self.vpe_pred = YOLOEVPSegPredictor(overrides={"conf": MIN_TV_CONF_VALUE, "task": "segment"})
+        self.vpe_pred.setup_model(self.world_tv_prompt_model.model)
 
-        # Apply once at startup
-        self.update_tv_text_prompts(self.TEXT_PROMPT_CLASSES)
+        # Mode: "none" | "text" | "visual"
+        self.tv_mode = "none"
+
+        # Text prompt state
+        self.tv_text_classes = []          # list[str]
+        self.tv_text_initialized = False   # whether embeddings are set
+
+        # Visual prompt state
+        self.tv_visual_files = []          # list[str] (json filenames)
+        self.tv_visual_initialized = False
+
+        # Apply once at startup for warmup, this will make the system run just once, the first frame usually takes a lot of time. 
+        # This way when the robot uses it for the first time, it has already warmed up
+        self.tv_text_classes = ["chair"]
+        self.update_tv_text_prompts(self.tv_text_classes)
         
         # this code forces the ROS2 component to wait for the models initialization with an empty frame, so that when turned ON does spend time with initializations and sends detections imediatly 
         # Allocates the memory necessary for each model, this takes some seconds, by doing this in the first frame, everytime one of the models is called instantly responde instead of loading the model
@@ -197,6 +225,8 @@ class Yolo_obj(Node):
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages.
 
+        self.tv_update_in_progress.set()
+
         # returns whether the message was played and some informations regarding status
         response.success = True
         response.message = "Activated with selected parameters"
@@ -212,8 +242,8 @@ class Yolo_obj(Node):
             f"tv_base={request.activate_tv_prompt_base}, "
             f"min_pf={request.minimum_prompt_free_confidence:.2f}, "
             f"min_tv={request.minimum_tv_prompt_confidence:.2f}, "
-            f"text_prompts={list(request.text_prompts)}), "
-            f"visual_prompts={list(request.visual_prompts)})."
+            f"text_prompts={list(request.text_prompts)}, "
+            f"visual_prompts={list(request.visual_prompts)})"
         )
 
         if not self.LOAD_PF_MODEL:
@@ -233,45 +263,359 @@ class Yolo_obj(Node):
             MIN_PF_CONF_VALUE = request.minimum_prompt_free_confidence
         MIN_TV_CONF_VALUE = request.minimum_tv_prompt_confidence
 
-        # --- reset prompts state every activation (your "clear cache/start over") ---
-        self.TEXT_PROMPT_CLASSES = []
-        self._tv_prompts_last = None
+        # --- reset TV prompt state every activation ---
+        self.tv_mode = "none"
 
-        # Apply prompts text only if user sent some
-        if request.text_prompts and len(request.text_prompts) > 0:
+        self.tv_text_classes = []
+        self.tv_text_initialized = False
+
+        self.tv_visual_files = []
+        self.tv_visual_initialized = False
+
+        # First priority is visual
+        if request.visual_prompts and len(request.visual_prompts) > 0:
+            ok, msg = self.update_tv_visual_prompts(request.visual_prompts)
+            response.message += " | " + msg
+            if request.text_prompts and len(request.text_prompts) > 0:
+                response.message += " | Visual prompts provided: ignoring text_prompts." # just to inform user
+
+        # Second priority is text
+        elif request.text_prompts and len(request.text_prompts) > 0:
             ok, msg = self.update_tv_text_prompts(request.text_prompts)
             response.message += " | " + msg
+
         else:
-            response.message += " | No text_prompts provided: TV prompts remain unset."
+            response.message += " | No TV prompts provided."
 
         if not self.LOAD_PF_MODEL and (request.activate_prompt_free_head or request.activate_prompt_free_hand or request.activate_prompt_free_base):
             response.message += " | Text/Visual model activated. Prompt Free model ignored because load_prompt_free_model is false."
         
+        self.tv_update_in_progress.clear()
+        
         return response
     
-    def update_tv_text_prompts(self, prompts):
-        cleaned = []
-        seen = set()
+    def update_tv_visual_prompts(self, prompts):
 
-        for s in prompts:
-            s = s.strip()
-            if not s or s in seen:
+        t0 = time.perf_counter()
+        
+        # Clean incoming prompt stems
+        cleaned = self._clean_string_list(prompts)
+        if not cleaned:
+            self.tv_visual_files = []
+            self.tv_visual_initialized = False
+            return False, "Ignored empty/invalid visual_prompts."
+
+        # Base directory where JSONs and images are stored
+        base_dir = Path(self.complete_path_visual_prompts)
+
+        print("T1:", time.perf_counter()-t0)
+
+        # Prepare a YOLOEVPSegPredictor used ONLY to compute VPE embeddings
+        try:
+            pred = YOLOEVPSegPredictor(
+                overrides={
+                    "conf": float(MIN_TV_CONF_VALUE),
+                    "task": "segment",
+                }
+            )
+
+            # Attach predictor to the underlying PyTorch model (robust unwrap)
+            torch_model = getattr(self.world_tv_prompt_model, "model", None)
+
+            # If it's not the correct type (your error suggests it isn't), fallback to predictor.model
+            if torch_model is None or not hasattr(torch_model, "fuse"):
+                predictor = getattr(self.world_tv_prompt_model, "predictor", None)
+                if predictor is not None:
+                    torch_model = getattr(predictor, "model", None)
+
+            # If still not valid, abort with a clear error
+            if torch_model is None or not hasattr(torch_model, "fuse"):
+                raise RuntimeError(
+                    f"Could not find a valid YOLO model to setup EVP predictor. "
+                    f"type(world_tv_prompt_model.model)={type(getattr(self.world_tv_prompt_model,'model',None))}, "
+                    f"type(world_tv_prompt_model.predictor.model)={type(getattr(getattr(self.world_tv_prompt_model,'predictor',None),'model',None))}"
+                )
+
+            pred.setup_model(torch_model)
+
+        except Exception as e:
+            self.get_logger().error(f"Failed to initialize YOLOEVPSegPredictor: {e}")
+            self.tv_visual_files = []
+            self.tv_visual_initialized = False
+            self.tv_mode = "none"
+            return False, f"Failed to initialize visual predictor: {e}"
+
+        label_to_vpes = {}
+        loaded_jsons = []  # store stems that successfully produced at least 1 usable VPE
+
+        print("T2:", time.perf_counter()-t0)
+
+        # Iterate through every requested visual stem
+        for stem in cleaned:
+
+            print("T2.5:", time.perf_counter()-t0)
+
+            json_path = base_dir / f"{stem}.json"
+
+            # if JSON does not exist
+            if not json_path.exists():
+                self.get_logger().warn(f"Visual prompt JSON not found (skipping): {json_path}")
                 continue
-            seen.add(s)
-            cleaned.append(s)
 
-        if len(cleaned) == 0:
+            # if there is a problem loading the json
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    vp = json.load(f)
+            except Exception as e:
+                self.get_logger().warn(f"Failed to read JSON {json_path.name} (skipping): {e}")
+                continue
+
+            # checks if all required fields exist in json
+            if "image" not in vp or "bboxes" not in vp or "classes" not in vp:
+                self.get_logger().warn(f"Invalid VP JSON (missing keys) in {json_path.name} (skipping)")
+                continue
+
+            # Enforce rule: 1 JSON = 1 label/class
+            if len(vp["classes"]) != 1:
+                self.get_logger().warn(f"VP JSON must contain exactly 1 class (skipping): {json_path.name}")
+                continue
+
+            try:
+                allowed_cls_id = int(vp["classes"][0]["cls"])
+                label = str(vp["classes"][0]["name"])
+            except Exception as e:
+                self.get_logger().warn(f"Invalid class entry in {json_path.name} (skipping): {e}")
+                continue
+
+            # if image exists
+            img_filename = vp["image"]
+            img_path = base_dir / img_filename
+            if not img_path.exists():
+                # Optional fallback if someone uses image_dir in JSON
+                img_dir = vp.get("image_dir", None)
+                if img_dir:
+                    img_path = Path(self.home) / img_dir / img_filename
+
+            if not img_path.exists():
+                self.get_logger().warn(f"VP image not found for {json_path.name} (skipping): {img_path}")
+                continue
+
+            # read image with opencv
+            ref = cv2.imread(str(img_path), cv2.IMREAD_COLOR)
+            if ref is None:
+                self.get_logger().warn(f"cv2.imread failed for {img_path} (skipping)")
+                continue
+
+            # Parse bboxes from JSON:
+            bboxes_list = []
+            cls_list = []
+
+            for b in vp.get("bboxes", []):
+                try:
+                    cls_id = int(b["cls"])
+                    x1, y1, x2, y2 = [float(v) for v in b["xyxy"]]
+
+                    # Clamp bbox coords
+                    h, w = ref.shape[:2]
+                    x1 = max(0.0, min(x1, w - 1.0))
+                    x2 = max(0.0, min(x2, w - 1.0))
+                    y1 = max(0.0, min(y1, h - 1.0))
+                    y2 = max(0.0, min(y2, h - 1.0))
+
+                    # Skip degenerate bboxes
+                    if x2 <= x1 or y2 <= y1:
+                        continue
+
+                    bboxes_list.append([x1, y1, x2, y2])
+                    cls_list.append(cls_id)
+
+                except Exception as e:
+                    self.get_logger().warn(f"Bad bbox entry in {json_path.name} (skipping bbox): {e}")
+                    continue
+
+            # if no valid bboxes
+            if len(bboxes_list) == 0:
+                self.get_logger().warn(f"No valid bboxes found in {json_path.name} (skipping)")
+                continue
+
+            # Check all bbox cls match the single allowed class id
+            if any(cid != allowed_cls_id for cid in cls_list):
+                self.get_logger().warn(f"VP JSON contains bbox cls != {allowed_cls_id} (skipping): {json_path.name}")
+                continue
+
+            # build the vp dict expected by YOLOEVPSegPredictor.set_prompts
+            vp_local = {
+                "bboxes": np.array(bboxes_list, dtype=np.float32).copy(),
+                "cls": np.array(cls_list, dtype=np.int32).copy(),
+            }
+
+            # set prompts for the predictor and compute the VPE embedding
+            try:
+                pred.set_prompts(vp_local)
+                vpe = pred.get_vpe(ref)
+                print(f"[{stem}] raw vpe shape={tuple(vpe.shape)}")
+
+                # Expected raw is (1, 1, 512). Convert to (512,) for averaging
+                if vpe.ndim == 3 and vpe.shape[:2] == (1, 1):
+                    vpe = vpe[0, 0, :]  # -> (512,)
+                elif vpe.ndim == 2 and vpe.shape[0] == 1:
+                    vpe = vpe[0, :]     # -> (512,)
+                elif vpe.ndim == 1 and vpe.shape[0] == 512:
+                    pass
+                else:
+                    raise RuntimeError(f"Unexpected VPE shape: {tuple(vpe.shape)}")
+
+                print(f"[{stem}] vpe vector shape={tuple(vpe.shape)}")
+
+                # Normalize safely (vpe is (512,))
+                eps = 1e-12
+                vpe = vpe / (vpe.norm(dim=-1) + eps)
+
+            except Exception as e:
+                self.get_logger().warn(f"Failed to compute VPE for {json_path.name} (skipping): {e}")
+                continue
+
+            if label not in label_to_vpes:
+                label_to_vpes[label] = []
+            print(f"[{stem}] append vpe for label='{label}': shape={tuple(vpe.shape)}")
+            label_to_vpes[label].append(vpe)
+
+            loaded_jsons.append(stem)
+
+
+        print("T3:", time.perf_counter()-t0)
+
+        # if nothing usable was loaded
+        if len(label_to_vpes) == 0:
+            self.tv_visual_files = []
+            self.tv_visual_initialized = False
+            self.tv_mode = "none"
+            return False, "No valid visual prompts could be loaded."
+
+        final_labels = []
+        final_embeds = []
+
+        for label, vpes in label_to_vpes.items():
+
+            print(f"[label={label}] vpes count={len(vpes)} shapes={[tuple(x.shape) for x in vpes]}")
+
+            # Stack and average embeddings
+            vpe_mean = torch.stack(vpes, dim=0).mean(dim=0)
+
+            print(f"[label={label}] vpe_mean shape={tuple(vpe_mean.shape)}")
+            
+            # Normalize mean embedding
+            eps = 1e-12
+            vpe_mean = vpe_mean / (vpe_mean.norm(dim=-1, keepdim=True) + eps)
+
+            final_labels.append(label)
+            final_embeds.append(vpe_mean)
+
+        print(f"final_embeds shapes={[tuple(x.shape) for x in final_embeds]}")
+        
+        try:
+            embeds_t = torch.stack(final_embeds, dim=0)   # (N,512)
+            embeds_t = embeds_t.unsqueeze(0)              # (1,N,512)  <-- REQUIRED by Ultralytics assert
+        except Exception as e:
+            self.get_logger().error(f"Failed to stack VPE embeddings: {e}")
+            self.tv_visual_files = []
+            self.tv_visual_initialized = False
+            self.tv_mode = "none"
+            return False, f"Failed to stack visual embeddings: {e}"
+        
+        print("T4:", time.perf_counter()-t0)
+        print(f"embeds_t shape={tuple(embeds_t.shape)}")
+
+        # Apply visual prompts by setting classes + embeddings
+        try:
+            self.get_logger().info(
+                f"Applying visual prompts: labels={final_labels}, embeds shape={tuple(embeds_t.shape)}, "
+                f"device={embeds_t.device}, dtype={embeds_t.dtype}"
+            )
+
+
+            # Names sanity
+            names_obj = getattr(self.world_tv_prompt_model.model, "names", None)
+            self.get_logger().info(f"names type={type(names_obj)} names={names_obj if isinstance(names_obj, dict) else '...'}")
+
+            # Labels sanity
+            self.get_logger().info(f"final_labels={final_labels} len={len(final_labels)} unique={len(set(final_labels))}")
+
+            # Embedding sanity
+            self.get_logger().info(
+                f"embeds_t shape={tuple(embeds_t.shape)} ndim={embeds_t.ndim} "
+                f"device={embeds_t.device} dtype={embeds_t.dtype} "
+                f"min={embeds_t.min().item():.4f} max={embeds_t.max().item():.4f} "
+                f"norms={[float(x.norm().item()) for x in embeds_t]}"
+            )
+
+            with self.tv_model_lock:
+                self.world_tv_prompt_model.set_classes(final_labels, embeds_t)
+
+                # Extra safety: force underlying names used by annotator
+                try:
+                    self.world_tv_prompt_model.model.names = {i: n for i, n in enumerate(final_labels)}
+                except Exception:
+                    pass
+
+        except Exception as e:
+            self.get_logger().error(f"Failed to apply visual prompts (set_classes): {type(e).__name__}: {e!r}")
+            self.get_logger().error(traceback.format_exc())
+            self.tv_visual_files = []
+            self.tv_visual_initialized = False
+            self.tv_mode = "none"
+            return False, f"Failed to apply visual prompts: {type(e).__name__}: {e!r}"
+
+        print("T5:", time.perf_counter()-t0)
+
+        loaded_count = len(loaded_jsons)
+        requested_count = len(cleaned)
+        skipped_count = requested_count - loaded_count
+
+        self.tv_mode = "visual"
+        self.tv_visual_files = loaded_jsons
+        self.tv_visual_initialized = True
+
+        msg = (
+            f"Loaded {loaded_count} visual prompts, "
+            f"skipped {skipped_count}. "
+            f"Active visual prompts: {loaded_jsons} | "
+            f"Active visual labels: {final_labels}"
+        )
+
+        self.get_logger().info(msg)
+        return True, msg
+
+    def update_tv_text_prompts(self, prompts):
+        
+        cleaned = self._clean_string_list(prompts)
+        if not cleaned:
+            self.tv_text_classes = []
+            self.tv_text_initialized = False
             return False, "Ignored empty/invalid text_prompts."
 
         # Compute text embeddings + set classes
         text_pe = self.world_tv_prompt_model.get_text_pe(cleaned)
         self.world_tv_prompt_model.set_classes(cleaned, text_pe)
 
-        self.TEXT_PROMPT_CLASSES = cleaned
-        self._tv_prompts_last = tuple(cleaned)
+        # Update new state
+        self.tv_mode = "text"
+        self.tv_text_classes = cleaned
+        self.tv_text_initialized = True
 
-        self.get_logger().info(f"TV prompts set → {cleaned}")
-        return True, f"TV prompts updated: {cleaned}"
+        self.get_logger().info(f"TV text prompts set → {cleaned}")
+        return True, f"TV text prompts updated: {cleaned}"
+    
+    def _clean_string_list(self, prompts):
+        cleaned = []
+        seen = set()
+        for s in prompts:
+            s = s.strip()
+            if not s or s in seen:
+                continue
+            seen.add(s)
+            cleaned.append(s)
+        return cleaned
     
     def get_rgbd_head_callback(self, rgbd: RGBD):
         with data_lock: 
@@ -516,11 +860,15 @@ class YoloObjectsMain():
 
         ### TEXT AND VISUAL PROMPT
         # makes sure there are text prompts
-        tv_ready = (self.node._tv_prompts_last is not None) and (len(self.node.TEXT_PROMPT_CLASSES) > 0)
+        tv_ready = (
+            (self.node.tv_mode == "text" and self.node.tv_text_initialized) or
+            (self.node.tv_mode == "visual" and self.node.tv_visual_initialized)
+        )
 
         if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD and tv_ready:
             transform_head, head_link = self.get_transform("head")
-            object_results = self.node.world_tv_prompt_model.predict(source=head_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
+            with self.node.tv_model_lock:
+                object_results = self.node.world_tv_prompt_model.predict(source=head_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
             objects_result_list.append(object_results)
             models_dict["head_tv"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
@@ -530,7 +878,8 @@ class YoloObjectsMain():
 
         if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HAND and tv_ready:
             transform_hand, hand_link = self.get_transform("hand")
-            object_results = self.node.world_tv_prompt_model.predict(source=hand_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
+            with self.node.tv_model_lock:
+                object_results = self.node.world_tv_prompt_model.predict(source=hand_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
             objects_result_list.append(object_results)
             models_dict["hand_tv"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
@@ -540,7 +889,8 @@ class YoloObjectsMain():
 
         if self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_BASE and tv_ready:
             transform_base, base_link = self.get_transform("base")
-            object_results = self.node.world_tv_prompt_model.predict(source=base_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
+            with self.node.tv_model_lock:
+                object_results = self.node.world_tv_prompt_model.predict(source=base_frame, conf=MIN_TV_CONF_VALUE, verbose=False)
             objects_result_list.append(object_results)
             models_dict["base_tv"] = len(objects_result_list) - 1
             num_obj += len(object_results[0])
@@ -584,14 +934,14 @@ class YoloObjectsMain():
                     transform = transform_base
                     camera_link = base_link
             
-            if map_transform is None:
+            """ if map_transform is None:
                 print("MAP TF: OFF!", end='')
             else:
                 print("MAP TF:  ON!", end='')
             if transform is None:
                 print("\tROBOT TF: OFF!")
             else:
-                print("\tROBOT TF:  ON!")
+                print("\tROBOT TF:  ON!") """
 
             # specific model settings
             match model:
@@ -750,24 +1100,16 @@ class YoloObjectsMain():
 
                 time_till_done = time.time()
                 
-                with data_lock: 
-                    head_image_frame = self.node.head_rgb_cv2_frame.copy()
-                    hand_image_frame = self.node.hand_rgb_cv2_frame.copy()
-                    base_image_frame = self.node.base_rgb_cv2_frame.copy()
-                    head_depth_frame = self.node.head_depth_cv2_frame.copy()
-                    hand_depth_frame = self.node.hand_depth_cv2_frame.copy()
-                    base_depth_frame = self.node.base_depth_cv2_frame.copy()
-                    head_image = self.node.head_rgb
-                    hand_image = self.node.hand_rgb
-                    base_image = self.node.base_rgb
-
                 pf_should_run = self.node.LOAD_PF_MODEL and (
                     (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HEAD and self.node.new_head_rgb) or
                     (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_HAND and self.node.new_hand_rgb) or
                     (self.node.ACTIVATE_YOLO_WORLD_PROMPT_FREE_BASE and self.node.new_base_rgb)
                 )
 
-                tv_ready = (self.node._tv_prompts_last is not None) and (len(self.node.TEXT_PROMPT_CLASSES) > 0)
+                tv_ready = (
+                    (self.node.tv_mode == "text" and self.node.tv_text_initialized) or
+                    (self.node.tv_mode == "visual" and self.node.tv_visual_initialized)
+                )
 
                 tv_should_run = tv_ready and (
                     (self.node.ACTIVATE_YOLO_WORLD_TV_PROMPT_HEAD and self.node.new_head_rgb) or
@@ -776,6 +1118,21 @@ class YoloObjectsMain():
                 )
 
                 if pf_should_run or tv_should_run:
+
+                    if tv_should_run: # waits for tv activation to avoid conflicts
+                        while self.node.tv_update_in_progress.is_set():
+                            time.sleep(0.001)
+
+                    with data_lock: 
+                        head_image_frame = self.node.head_rgb_cv2_frame.copy()
+                        hand_image_frame = self.node.hand_rgb_cv2_frame.copy()
+                        base_image_frame = self.node.base_rgb_cv2_frame.copy()
+                        head_depth_frame = self.node.head_depth_cv2_frame.copy()
+                        hand_depth_frame = self.node.hand_depth_cv2_frame.copy()
+                        base_depth_frame = self.node.base_depth_cv2_frame.copy()
+                        head_image = self.node.head_rgb
+                        hand_image = self.node.hand_rgb
+                        base_image = self.node.base_rgb
 
                     self.node.new_head_rgb = False
                     self.node.new_hand_rgb = False

@@ -74,19 +74,60 @@ class TaskMain():
             if self.state == Prompt_free_yolo_world:
 
                 ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                t0 = time.perf_counter()
+                print("PRE ACTIVATE")
+                self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair", "cabinet"])
+                print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                time.sleep(10.0)
 
-                self.robot.activate_yolo_world(activate_tv_prompt_head=True, activate_tv_prompt_hand=True, activate_tv_prompt_base=True, text_prompts=["table", "snack"], visual_prompts=["123", "456"])
-                print("ACTIVATE TRUE")
+                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                t0 = time.perf_counter()
+                print("PRE ACTIVATE")
+                self.robot.activate_yolo_world(activate_prompt_free_head=True, text_prompts=["chair", "cabinet"])
+                print("ACTIVATE TRUE ", time.perf_counter()-t0)
                 time.sleep(10.0)
-                self.robot.activate_yolo_world(activate_tv_prompt_head=True, activate_tv_prompt_hand=True, activate_tv_prompt_base=True)
-                print("ACTIVATE TRUE")
-                time.sleep(10.0)
-                self.robot.activate_yolo_world(activate_tv_prompt_head=True, activate_tv_prompt_hand=True, activate_tv_prompt_base=True, text_prompts=["cabinet", "person"], visual_prompts=["789", "012"])
-                print("ACTIVATE TRUE")
-                time.sleep(10.0)
-                self.robot.activate_yolo_world(activate_prompt_free_head=False, activate_tv_prompt_hand=False, activate_tv_prompt_base=False)
-                print("ACTIVATE FALSE")
 
+                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                t0 = time.perf_counter()
+                print("PRE ACTIVATE")
+                self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair", "cabinet"], visual_prompts=["tomato_soup_dinner_table_head_cam", "mustard_dinning_table_lar_head_cam"])
+                print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                time.sleep(10.0)
+
+                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                t0 = time.perf_counter()
+                print("PRE ACTIVATE")
+                self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair"])
+                print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                time.sleep(10.0)
+
+                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                t0 = time.perf_counter()
+                print("PRE ACTIVATE")
+                self.robot.activate_yolo_world(activate_tv_prompt_head=True, visual_prompts=["red_wine_dinner_table_head_cam", "bowl_dinner_table_head_cam"])
+                print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                time.sleep(10.0)
+
+                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                """ t0 = time.perf_counter()
+                print("PRE ACTIVATE")
+                self.robot.activate_yolo_world(activate_tv_prompt_hand=True, visual_prompts=["door_handle_lar_gripper_cam"])
+                print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                time.sleep(10.0) """
+
+                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                t0 = time.perf_counter()
+                print("PRE ACTIVATE")
+                self.robot.activate_yolo_world(activate_prompt_free_head=True, visual_prompts=["tomato_soup_dinner_table_head_cam", "mustard_dinning_table_lar_head_cam"])
+                print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                time.sleep(10.0)
+
+                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                t0 = time.perf_counter()
+                print("PRE ACTIVATE")
+                self.robot.activate_yolo_world(visual_prompts=["red_wine_dinner_table_head_cam", "bowl_dinner_table_head_cam"])
+                print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                time.sleep(10.0)
                 
                 """ # self.set_face(command="charmie_face")
                 self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)

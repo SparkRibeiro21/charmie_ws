@@ -3099,7 +3099,7 @@ class RobotStdFunctions():
             self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=t, wait_for_end_of=True)
             time.sleep(time_wait_neck_move_pre_each_frame)
-            self.node.detected_people.persons = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+            self.node.detected_people.persons = [] # clears detected_persons after receiving them to make sure the persons from previous frames are not considered again
             self.set_rgb(WHITE+SET_COLOUR)
 
             start_time = time.time()
