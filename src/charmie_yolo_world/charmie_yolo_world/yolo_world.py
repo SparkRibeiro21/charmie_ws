@@ -74,6 +74,9 @@ class Yolo_obj(Node):
 
         # Opens files with objects names and categories
         try:
+            with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
+                self.objects_file = json.load(json_file)
+            # print(self.objects_file)
             with open(self.complete_path_configuration_files + 'rooms.json', encoding='utf-8') as json_file:
                 self.house_rooms = json.load(json_file)
             # print(self.house_rooms)
@@ -83,6 +86,38 @@ class Yolo_obj(Node):
             self.get_logger().info("Successfully Imported data from json configuration files. (rooms and furniture)")
         except:
             self.get_logger().error("Could NOT import data from json configuration files. (rooms and furniture)")
+
+        # gets list of detected objects from objects.json and alphabetically orders it to match YOLO detections 
+        self.objects_class_names = [item["name"] for item in self.objects_file]
+        self.objects_class_names.sort()
+        
+        # gets objects_classes from objects.json
+        self.objects_class_names_dict = {}
+        self.objects_class_names_dict = {item["name"]: item["class"] for item in self.objects_file}
+
+        # gets objects width from objects.json
+        self.objects_width_dict = {}
+        self.objects_width_dict = {item["name"]: item["width"] for item in self.objects_file}
+
+        # gets objects length from objects.json
+        self.objects_length_dict = {}
+        self.objects_length_dict = {item["name"]: item["length"] for item in self.objects_file}
+
+        # gets objects height from objects.json
+        self.objects_height_dict = {}
+        self.objects_height_dict = {item["name"]: item["height"] for item in self.objects_file}
+
+        # gets objects shape from objects.json
+        self.objects_shape_dict = {}
+        self.objects_shape_dict = {item["name"]: item["shape"] for item in self.objects_file}
+
+        # gets objects can_pick from objects.json
+        self.objects_can_pick_dict = {}
+        self.objects_can_pick_dict = {item["name"]: item["can_pick"] for item in self.objects_file}
+
+        # gets objects std_pick from objects.json
+        self.objects_std_pick_dict = {}
+        self.objects_std_pick_dict = {item["name"]: item["std_pick"] for item in self.objects_file}
 
         self.world_prompt_free_model_filename   = "yoloe-11l-seg-pf.pt"
         self.world_text_visual_prompt_model_filename   = "yoloe-11l-seg.pt"
@@ -649,11 +684,17 @@ class Yolo_obj(Node):
             self.base_depth_cv2_frame = self.br.imgmsg_to_cv2(img, "passthrough")
         self.new_base_depth = True
 
-    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_coords_to_cam, object_coords_to_base, object_coords_to_map, camera, current_img, mask=None):
+    def add_object_to_detectedobject_msg(self, boxes_id, object_name, object_class, object_coords_to_cam, object_coords_to_base, object_coords_to_map, object_2d_orientation, camera, current_img, mask=None, cf_width=0.0, cf_length=0.0, cf_height=0.0, cf_shape="", cf_can_pick="", cf_std_pick=""):
+
+        ### NOT USED object_id = boxes_id.id
+        ### NOT USED if boxes_id.id == None:
+        ### NOT USED     object_id = 0 
 
         new_object = DetectedObject()
 
         new_object.object_name = object_name
+        new_object.object_class = object_class
+        ### NOT USED new_object.index = int(object_id)
         new_object.confidence = float(boxes_id.conf)
 
         # print(object_coords_to_cam)
@@ -697,7 +738,15 @@ class Yolo_obj(Node):
         new_object.box_center_y = new_object.box_top_left_y + new_object.box_height//2
 
         new_object.camera = camera
+        new_object.orientation = object_2d_orientation # object 2D angle so gripper can adjust to correctly pick up the object
         new_object.image_rgb_frame = current_img
+
+        new_object.cf_width = cf_width
+        new_object.cf_length = cf_length
+        new_object.cf_height = cf_height
+        new_object.cf_shape = cf_shape
+        new_object.cf_can_pick = cf_can_pick
+        new_object.cf_std_pick = cf_std_pick
 
         return new_object
 
@@ -934,14 +983,14 @@ class YoloObjectsMain():
                     transform = transform_base
                     camera_link = base_link
             
-            """ if map_transform is None:
+            if map_transform is None:
                 print("MAP TF: OFF!", end='')
             else:
                 print("MAP TF:  ON!", end='')
             if transform is None:
                 print("\tROBOT TF: OFF!")
             else:
-                print("\tROBOT TF:  ON!") """
+                print("\tROBOT TF:  ON!")
 
             # specific model settings
             match model:
@@ -964,14 +1013,39 @@ class YoloObjectsMain():
                 # mask.xy[0] = np.array([], dtype=np.float32) # used to test the bug prevented on the next line
                 if len(mask.xy[0]) >= 3: # this prevents a BUG where sometimes the mask had less than 3 points, which caused PC (if empty) and GUI (if less than 3 points) to crash
 
+                    # Adds empty values for the object configuration files properties
+                    object_class = ""
+                    object_2d_orientation = 0.0
+                    cf_object_width = 0.0
+                    cf_object_length = 0.0
+                    cf_object_height = 0.0
+                    cf_object_shape = ""
+                    cf_object_can_pick = ""
+                    cf_object_std_pick = ""
+
                     # aaa_ = time.time()
                     obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
                     
                     names = obj_res[0].names
                     object_name = names[int(box.cls)]
+                    temp_object_name = object_name.replace("_", " ").title()
 
                     # print("3D Coords Time", time.time() - aaa_)
                     # print(object_name, "3D Coords", obj_3d_cam_coords)
+
+                    temp_object_class = self.node.objects_class_names_dict.get(temp_object_name)
+                    if temp_object_class is not None: # if object is part of the detected objects list
+                        # self.node.get_logger().warn(f"Object '{temp_object_name}' found in objects.json")
+                        object_class          = temp_object_class
+                        cf_object_width       = self.node.objects_width_dict.get(temp_object_name)
+                        cf_object_length      = self.node.objects_length_dict.get(temp_object_name)
+                        cf_object_height      = self.node.objects_height_dict.get(temp_object_name)
+                        cf_object_shape       = self.node.objects_shape_dict.get(temp_object_name)
+                        cf_object_can_pick    = self.node.objects_can_pick_dict.get(temp_object_name)
+                        cf_object_std_pick    = self.node.objects_std_pick_dict.get(temp_object_name)
+                        object_2d_orientation = self.get_object_2D_orientation(depth_img=depth_frame, mask=mask.xy[0])
+                    else:
+                        self.node.get_logger().warn(f"Object '{temp_object_name}' NOT found in objects.json")
 
                     # bbb_ = time.time()
 
@@ -1006,9 +1080,12 @@ class YoloObjectsMain():
                                 self.node.get_logger().info(f"Object in map frame: {transformed_point_map.point}")
 
                         new_object = DetectedObject()
-                        new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_coords_to_cam=point_cam.point, \
+                        new_object = self.node.add_object_to_detectedobject_msg(boxes_id=box, object_name=object_name, object_class=object_class, object_coords_to_cam=point_cam.point, \
                                                                                 object_coords_to_base=transformed_point.point, object_coords_to_map=transformed_point_map.point, \
-                                                                                camera=camera, current_img=rgb_img, mask=mask)
+                                                                                object_2d_orientation=object_2d_orientation, camera=camera, current_img=rgb_img, mask=mask, \
+                                                                                cf_width=cf_object_width, cf_length=cf_object_length, cf_height=cf_object_height, cf_shape=cf_object_shape, \
+                                                                                cf_can_pick=cf_object_can_pick, cf_std_pick=cf_object_std_pick)
+                            
                         # print(new_object.object_name, "ID:", new_object.index, str(round(new_object.confidence*100,0)) + "%", round(new_object.position_cam.x, 2), round(new_object.position_cam.y, 2), round(new_object.position_cam.z, 2) )
                         
                         conf = f"{new_object.confidence * 100:.0f}%"
@@ -1024,6 +1101,45 @@ class YoloObjectsMain():
         # self.node.get_logger().info(f"Time Yolo_Objects: {time.perf_counter() - tempo_total}")
 
         return yolov8_obj_filtered, num_obj
+
+    def get_object_2D_orientation(self, depth_img, mask):
+
+        # aaa = time.time()
+        
+        b_mask = np.zeros(depth_img.shape[:2], np.uint8) # creates new empty window
+        contour = mask
+        contour = contour.astype(np.int32)
+        contour = contour.reshape(-1, 1, 2)
+        cv2.drawContours(b_mask, [contour], -1, (255, 255, 255), cv2.FILLED) # creates mask window with just the inside pixesl of the detected objects
+        
+        # Find non-zero points in the mask image
+        points = cv2.findNonZero(b_mask)  # returns (N,1,2) array or None
+
+        # Check if there are valid points to fit the line
+        if points is None or len(points) < 2:
+            return  0.0 # or handle it gracefully
+        
+        [vx,vy,x,y] = cv2.fitLine(points, cv2.DIST_L2,0,0.01,0.01)
+        theta = math.degrees(math.atan2(vy,vx))
+
+        # Drawings for debug
+
+        # Define length of the line to draw
+        # line_length = 1000  # Increase this if the line is too short
+        # Compute two points along the line (in both directions from the center point)
+        # x1 = int(x - vx * line_length)
+        # y1 = int(y - vy * line_length)
+        # x2 = int(x + vx * line_length)
+        # y2 = int(y + vy * line_length)
+        # b_mask_aux = b_mask.copy()
+        # Draw the line on the image
+        # cv2.line(b_mask_aux, (x1, y1), (x2, y2), (128), 2)  # grayscale image → color is a single value (0-255)
+        # cv2.imwrite('output_image_orientation.jpg', b_mask_aux)
+        
+        # print(theta)
+        # print("Orientation_time:", time.time() - aaa)
+
+        return theta
 
     # main state-machine function
     def main(self):

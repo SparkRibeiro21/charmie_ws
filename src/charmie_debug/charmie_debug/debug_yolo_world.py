@@ -12,7 +12,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 True,
+    "charmie_face":                 False,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
@@ -93,7 +93,14 @@ class TaskMain():
                       world_obj_found[0].position_absolute.z,
                       world_obj_found[0].room_location, 
                       world_obj_found[0].furniture_location, 
-                      world_obj_found[0].cf_shape
+                      world_obj_found[0].object_class,
+                      world_obj_found[0].orientation,
+                      world_obj_found[0].cf_width,
+                      world_obj_found[0].cf_length,
+                      world_obj_found[0].cf_height,
+                      world_obj_found[0].cf_shape,
+                      world_obj_found[0].cf_can_pick,
+                      world_obj_found[0].cf_std_pick
                 )
 
                 print("to face")
@@ -127,14 +134,21 @@ class TaskMain():
                       world_obj_found[0].position_absolute.z,
                       world_obj_found[0].room_location, 
                       world_obj_found[0].furniture_location, 
-                      world_obj_found[0].cf_shape
+                      world_obj_found[0].object_class,
+                      world_obj_found[0].orientation,
+                      world_obj_found[0].cf_width,
+                      world_obj_found[0].cf_length,
+                      world_obj_found[0].cf_height,
+                      world_obj_found[0].cf_shape,
+                      world_obj_found[0].cf_can_pick,
+                      world_obj_found[0].cf_std_pick
                 )
 
                 print("to face")
-                self.robot.detected_object_to_face_path(object=world_obj_found[0], send_to_face=True)
+                # self.robot.detected_object_to_face_path(object=world_obj_found[0], send_to_face=True)
                 time.sleep(8.0)
 
-                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                """ ### YOLO WORLD PROMPT FREE EXAMPLE ###
                 t0 = time.perf_counter()
                 print("PRE ACTIVATE")
                 self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair"])
@@ -167,7 +181,7 @@ class TaskMain():
                 print("PRE ACTIVATE")
                 self.robot.activate_yolo_world(visual_prompts=["red_wine_dinner_table_head_cam", "bowl_dinner_table_head_cam"])
                 print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0)
+                time.sleep(10.0) """
                 
                 """ # self.set_face(command="charmie_face")
                 self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
