@@ -341,6 +341,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_activate_yolo_world = False
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
@@ -659,30 +660,45 @@ class ROS2TaskNode(Node):
 
         self.activate_yolo_pose_client.call_async(request)
 
-
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
     def call_activate_yolo_objects_server(self, request=ActivateYoloObjects.Request()):
 
         self.activate_yolo_objects_client.call_async(request)
 
+    ### ACTIVATE YOLO WORLD SERVER FUNCTIONS ###
+    def call_activate_yolo_world_server(self, request = ActivateYoloWorld.Request(), wait_for_end_of=True):
 
-    ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
-    def call_activate_yolo_world_server(self, request=ActivateYoloWorld.Request()):
+        future = self.activate_yolo_world_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_activate_yolo_world)
+        else:
+            self.activate_yolo_world_success = True
+            self.activate_yolo_world_message = "Wait for answer not needed"
+    
+    def callback_call_activate_yolo_world(self, future):
 
-        self.activate_yolo_world_client.call_async(request)
-
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.activate_yolo_world_success = response.success
+            self.activate_yolo_world_message = response.message
+            self.waited_for_end_of_activate_yolo_world = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     ### ACTIVATE TRACKING SERVER FUNCTIONS ###
     def call_activate_tracking_server(self, request=ActivateTracking.Request()):
 
         self.activate_tracking_client.call_async(request)
 
-
     ### SET TABLE HEIGHT FOR MANUAL ARM MOVMENTS ###
     def call_set_height_furniture_for_arm_manual_movement_server(self, request=SetFloat.Request()):
 
         self.set_height_furniture_for_arm_manual_movement_client.call_async(request)
-
 
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, request=SetFace.Request(), wait_for_end_of=True):
@@ -2178,7 +2194,7 @@ class RobotStdFunctions():
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
 
-    def activate_yolo_world(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5, text_prompts=[], visual_prompts=[]):
+    def activate_yolo_world(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5, text_prompts=[], visual_prompts=[], wait_for_end_of=True):
         request = ActivateYoloWorld.Request()
         request.activate_prompt_free_head       = activate_prompt_free_head
         request.activate_tv_prompt_head         = activate_tv_prompt_head
@@ -2192,6 +2208,11 @@ class RobotStdFunctions():
         request.visual_prompts = visual_prompts
 
         self.node.call_activate_yolo_world_server(request=request)
+
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_activate_yolo_world:
+            pass
+        self.node.waited_for_end_of_activate_yolo_world = False
 
         self.node.activate_yolo_world_success = True
         self.node.activate_yolo_world_message = "Activated with selected parameters"
