@@ -1959,11 +1959,11 @@ class DebugVisualMain():
 
         if self.node.is_yolo_obj_comm:
             if camera_id == "head":
-                self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id, world_objects=False)
+                self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id)
             if camera_id == "gripper":
-                self.draw_object_bounding_boxes(temp_objects_hand, camera_height, camera_id, world_objects=False)
+                self.draw_object_bounding_boxes(temp_objects_hand, camera_height, camera_id)
             if camera_id == "base":
-                self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id, world_objects=False)
+                self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id)
 
     def draw_world_object_detections(self, camera_select, camera_id):
 
@@ -1999,28 +1999,34 @@ class DebugVisualMain():
 
         if self.node.is_yolo_world_comm:
             if camera_id == "head":
-                self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id, world_objects=True)
+                self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id)
             if camera_id == "gripper":
-                self.draw_object_bounding_boxes(temp_objects_hand, camera_height, camera_id, world_objects=True)
+                self.draw_object_bounding_boxes(temp_objects_hand, camera_height, camera_id)
             if camera_id == "base":
-                self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id, world_objects=True)
+                self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id)
 
-    def draw_object_bounding_boxes(self, objects, camera_height, camera_id, world_objects):
+    def draw_object_bounding_boxes(self, objects, camera_height, camera_id):
 
-        # world_objects -> creates a visual difference between detections from yolo_objects and yolo_world
+        # here we have an automatic detection whether objects are in configuration_files objects.json
+        # because objects from yolo_world may be in objects.json after latest update
+        non_dataset_objects = False
+
 
         if len(objects.objects) > 0:
             # print("DETECTED OBJECTS ("+head_or_hand.lower()+"):")
             pass
         
         for o in objects.objects:
-           
+
+            if o.object_class == "":
+                non_dataset_objects = True
+            
             if not o.mask.point: # if object does not have a mask, we show bounding box
                 # name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
                 # room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
                 # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
                 # print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
-                if not world_objects:
+                if not non_dataset_objects:
                     bb_color = self.object_class_to_bb_color(o.object_class)
                 else:
                     bb_color = self.yolo_color_from_name(o.object_name)
@@ -2044,14 +2050,14 @@ class DebugVisualMain():
                     temp_mask.append(p_list)
 
                 np_mask = np.array(temp_mask)
-                if not world_objects:
+                if not non_dataset_objects:
                     bb_color = self.object_class_to_bb_color(o.object_class)
                 else:
                     bb_color = self.yolo_color_from_name(o.object_name)
                 pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
                 self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
 
-            if not world_objects:
+            if not non_dataset_objects:
                 ### draw object 2D orientation
                 if o.orientation is not None:
                     # Convert orientation to radians
@@ -2078,11 +2084,14 @@ class DebugVisualMain():
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
 
-            if not world_objects:
-                text = str(o.object_name)+" ("+str(o.index)+")"
+            if o.object_class == "":
+                non_dataset_objects = True
+
+            if not non_dataset_objects:
+                text = str(o.object_name)+" "+str(int(round(round(o.confidence,2)*100,0)))+"%"+" ("+str(o.index)+")"
                 bb_color = self.object_class_to_bb_color(o.object_class)
             else:
-                text = str(o.object_name)
+                text = str(o.object_name)+" "+str(int(round(round(o.confidence,2)*100,0)))+"%"
                 bb_color = self.yolo_color_from_name(o.object_name)
             
             text_width, text_height = self.text_font_t.size(text)

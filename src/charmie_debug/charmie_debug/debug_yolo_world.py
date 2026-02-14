@@ -73,115 +73,111 @@ class TaskMain():
 
             if self.state == Prompt_free_yolo_world:
 
-                ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                t0 = time.perf_counter()
-                print("PRE ACTIVATE")
-                self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair", "cabinet"])
-                print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(2.0)
+                while True:
 
-                # sends detected object to face
-                world_obj_found = self.robot.node.detected_world_objects.objects
-                while len(world_obj_found) < 1:
+                    ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                    t0 = time.perf_counter()
+                    print("PRE ACTIVATE")
+                    self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair", "cabinet"])
+                    print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                    time.sleep(2.0)
+
+                    # sends detected object to face
                     world_obj_found = self.robot.node.detected_world_objects.objects
+                    while len(world_obj_found) < 1:
+                        world_obj_found = self.robot.node.detected_world_objects.objects
 
-                print("DONE")
-                print(world_obj_found[0].object_name, 
-                      world_obj_found[0].confidence, 
-                      world_obj_found[0].position_absolute.x,
-                      world_obj_found[0].position_absolute.y,
-                      world_obj_found[0].position_absolute.z,
-                      world_obj_found[0].room_location, 
-                      world_obj_found[0].furniture_location, 
-                      world_obj_found[0].object_class,
-                      world_obj_found[0].orientation,
-                      world_obj_found[0].cf_width,
-                      world_obj_found[0].cf_length,
-                      world_obj_found[0].cf_height,
-                      world_obj_found[0].cf_shape,
-                      world_obj_found[0].cf_can_pick,
-                      world_obj_found[0].cf_std_pick
-                )
+                    print(world_obj_found[0].object_name, 
+                        world_obj_found[0].confidence, 
+                        world_obj_found[0].position_absolute.x,
+                        world_obj_found[0].position_absolute.y,
+                        world_obj_found[0].position_absolute.z,
+                        world_obj_found[0].room_location, 
+                        world_obj_found[0].furniture_location, 
+                        world_obj_found[0].object_class,
+                        world_obj_found[0].orientation,
+                        world_obj_found[0].cf_width,
+                        world_obj_found[0].cf_length,
+                        world_obj_found[0].cf_height,
+                        world_obj_found[0].cf_shape,
+                        world_obj_found[0].cf_can_pick,
+                        world_obj_found[0].cf_std_pick
+                    )
+                    # self.robot.detected_object_to_face_path(object=world_obj_found[0], send_to_face=True)
+                    time.sleep(8.0)
 
-                print("to face")
-                self.robot.detected_object_to_face_path(object=world_obj_found[0], send_to_face=True)
-                time.sleep(8.0)
+                    ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                    # t0 = time.perf_counter()
+                    # print("PRE ACTIVATE")
+                    # self.robot.activate_yolo_world(activate_prompt_free_head=True, text_prompts=["chair", "cabinet"])
+                    # print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                    # time.sleep(10.0)
 
-                ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                t0 = time.perf_counter()
-                print("PRE ACTIVATE")
-                self.robot.activate_yolo_world(activate_prompt_free_head=True, text_prompts=["chair", "cabinet"])
-                print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0)
+                    ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                    t0 = time.perf_counter()
+                    print("PRE ACTIVATE")
+                    self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair", "cabinet"], visual_prompts=["tomato_soup_dinner_table_head_cam", "mustard_dinning_table_lar_head_cam"])
+                    print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                    time.sleep(2.0)
 
-                ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                t0 = time.perf_counter()
-                print("PRE ACTIVATE")
-                self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair", "cabinet"], visual_prompts=["tomato_soup_dinner_table_head_cam", "mustard_dinning_table_lar_head_cam"])
-                print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(2.0)
-
-                # sends detected object to face
-                world_obj_found = self.robot.node.detected_world_objects.objects
-                while len(world_obj_found) < 1:
+                    # sends detected object to face
                     world_obj_found = self.robot.node.detected_world_objects.objects
+                    while len(world_obj_found) < 1:
+                        world_obj_found = self.robot.node.detected_world_objects.objects
 
-                print("DONE")
-                print(world_obj_found[0].object_name, 
-                      world_obj_found[0].confidence, 
-                      world_obj_found[0].position_absolute.x,
-                      world_obj_found[0].position_absolute.y,
-                      world_obj_found[0].position_absolute.z,
-                      world_obj_found[0].room_location, 
-                      world_obj_found[0].furniture_location, 
-                      world_obj_found[0].object_class,
-                      world_obj_found[0].orientation,
-                      world_obj_found[0].cf_width,
-                      world_obj_found[0].cf_length,
-                      world_obj_found[0].cf_height,
-                      world_obj_found[0].cf_shape,
-                      world_obj_found[0].cf_can_pick,
-                      world_obj_found[0].cf_std_pick
-                )
+                    print(world_obj_found[0].object_name, 
+                        world_obj_found[0].confidence, 
+                        world_obj_found[0].position_absolute.x,
+                        world_obj_found[0].position_absolute.y,
+                        world_obj_found[0].position_absolute.z,
+                        world_obj_found[0].room_location, 
+                        world_obj_found[0].furniture_location, 
+                        world_obj_found[0].object_class,
+                        world_obj_found[0].orientation,
+                        world_obj_found[0].cf_width,
+                        world_obj_found[0].cf_length,
+                        world_obj_found[0].cf_height,
+                        world_obj_found[0].cf_shape,
+                        world_obj_found[0].cf_can_pick,
+                        world_obj_found[0].cf_std_pick
+                    )
+                    # self.robot.detected_object_to_face_path(object=world_obj_found[0], send_to_face=True)
+                    time.sleep(8.0)
 
-                print("to face")
-                # self.robot.detected_object_to_face_path(object=world_obj_found[0], send_to_face=True)
-                time.sleep(8.0)
+                    ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                    t0 = time.perf_counter()
+                    print("PRE ACTIVATE")
+                    self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair"])
+                    print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                    time.sleep(10.0)
 
-                """ ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                t0 = time.perf_counter()
-                print("PRE ACTIVATE")
-                self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair"])
-                print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0)
+                    ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                    t0 = time.perf_counter()
+                    print("PRE ACTIVATE")
+                    self.robot.activate_yolo_world(activate_tv_prompt_head=True, visual_prompts=["red_wine_dinner_table_head_cam", "bowl_dinner_table_head_cam"])
+                    print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                    time.sleep(10.0)
 
-                ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                t0 = time.perf_counter()
-                print("PRE ACTIVATE")
-                self.robot.activate_yolo_world(activate_tv_prompt_head=True, visual_prompts=["red_wine_dinner_table_head_cam", "bowl_dinner_table_head_cam"])
-                print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0)
+                    ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                    t0 = time.perf_counter()
+                    print("PRE ACTIVATE")
+                    self.robot.activate_yolo_world(activate_tv_prompt_hand=True, visual_prompts=["door_handle_lar_gripper_cam"])
+                    print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                    time.sleep(10.0)
 
-                ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                t0 = time.perf_counter()
-                print("PRE ACTIVATE")
-                self.robot.activate_yolo_world(activate_tv_prompt_hand=True, visual_prompts=["door_handle_lar_gripper_cam"])
-                print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0)
+                    ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                    # t0 = time.perf_counter()
+                    # print("PRE ACTIVATE")
+                    # self.robot.activate_yolo_world(activate_prompt_free_head=True, visual_prompts=["tomato_soup_dinner_table_head_cam", "mustard_dinning_table_lar_head_cam"])
+                    # print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                    # time.sleep(10.0)
 
-                ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                t0 = time.perf_counter()
-                print("PRE ACTIVATE")
-                self.robot.activate_yolo_world(activate_prompt_free_head=True, visual_prompts=["tomato_soup_dinner_table_head_cam", "mustard_dinning_table_lar_head_cam"])
-                print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0)
-
-                ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                t0 = time.perf_counter()
-                print("PRE ACTIVATE")
-                self.robot.activate_yolo_world(visual_prompts=["red_wine_dinner_table_head_cam", "bowl_dinner_table_head_cam"])
-                print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0) """
+                    ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                    # t0 = time.perf_counter()
+                    # print("PRE ACTIVATE")
+                    # self.robot.activate_yolo_world(visual_prompts=["red_wine_dinner_table_head_cam", "bowl_dinner_table_head_cam"])
+                    # print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                    # time.sleep(10.0)
                 
                 """ # self.set_face(command="charmie_face")
                 self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)

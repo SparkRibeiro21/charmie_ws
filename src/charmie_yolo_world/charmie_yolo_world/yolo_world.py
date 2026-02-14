@@ -1027,25 +1027,24 @@ class YoloObjectsMain():
                     obj_3d_cam_coords = self.node.point_cloud.convert_mask_to_3dpoint(depth_img=depth_frame, camera=camera, mask=mask.xy[0])
                     
                     names = obj_res[0].names
-                    object_name = names[int(box.cls)]
-                    temp_object_name = object_name.replace("_", " ").title()
+                    object_name = names[int(box.cls)].replace("_", " ").title()
 
                     # print("3D Coords Time", time.time() - aaa_)
                     # print(object_name, "3D Coords", obj_3d_cam_coords)
 
-                    temp_object_class = self.node.objects_class_names_dict.get(temp_object_name)
+                    temp_object_class = self.node.objects_class_names_dict.get(object_name)
                     if temp_object_class is not None: # if object is part of the detected objects list
-                        # self.node.get_logger().warn(f"Object '{temp_object_name}' found in objects.json")
+                        # self.node.get_logger().warn(f"Object '{object_name}' found in objects.json")
                         object_class          = temp_object_class
-                        cf_object_width       = self.node.objects_width_dict.get(temp_object_name)
-                        cf_object_length      = self.node.objects_length_dict.get(temp_object_name)
-                        cf_object_height      = self.node.objects_height_dict.get(temp_object_name)
-                        cf_object_shape       = self.node.objects_shape_dict.get(temp_object_name)
-                        cf_object_can_pick    = self.node.objects_can_pick_dict.get(temp_object_name)
-                        cf_object_std_pick    = self.node.objects_std_pick_dict.get(temp_object_name)
+                        cf_object_width       = self.node.objects_width_dict.get(object_name)
+                        cf_object_length      = self.node.objects_length_dict.get(object_name)
+                        cf_object_height      = self.node.objects_height_dict.get(object_name)
+                        cf_object_shape       = self.node.objects_shape_dict.get(object_name)
+                        cf_object_can_pick    = self.node.objects_can_pick_dict.get(object_name)
+                        cf_object_std_pick    = self.node.objects_std_pick_dict.get(object_name)
                         object_2d_orientation = self.get_object_2D_orientation(depth_img=depth_frame, mask=mask.xy[0])
                     else:
-                        self.node.get_logger().warn(f"Object '{temp_object_name}' NOT found in objects.json")
+                        self.node.get_logger().warn(f"Object '{object_name}' NOT found in objects.json")
 
                     # bbb_ = time.time()
 
