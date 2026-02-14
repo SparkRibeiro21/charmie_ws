@@ -96,6 +96,8 @@ class ROS2TaskNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        # Yolo World
+        self.world_objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'world_objects_all_detected_filtered', self.world_object_detected_filtered_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
@@ -367,6 +369,7 @@ class ROS2TaskNode(Node):
         self.first_depth_base_image_received = False
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
+        self.detected_world_objects = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
         self.gamepad_controller_state = GamepadController()
@@ -551,6 +554,10 @@ class ROS2TaskNode(Node):
         self.detected_objects = det_object
         self.new_object_frame_for_tracking = True
 
+    def world_object_detected_filtered_callback(self, det_world_object: ListOfDetectedObject):
+        self.detected_world_objects = det_world_object
+        self.new_object_frame_for_tracking = True
+    
     def get_rgbd_head_callback(self, rgbd: RGBD):
         self.rgb_head_img = rgbd.rgb
         self.first_rgb_head_image_received = True

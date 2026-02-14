@@ -12,7 +12,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 False,
+    "charmie_face":                 True,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
@@ -78,7 +78,27 @@ class TaskMain():
                 print("PRE ACTIVATE")
                 self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair", "cabinet"])
                 print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0)
+                time.sleep(2.0)
+
+                # sends detected object to face
+                world_obj_found = self.robot.node.detected_world_objects.objects
+                while len(world_obj_found) < 1:
+                    world_obj_found = self.robot.node.detected_world_objects.objects
+
+                print("DONE")
+                print(world_obj_found[0].object_name, 
+                      world_obj_found[0].confidence, 
+                      world_obj_found[0].position_absolute.x,
+                      world_obj_found[0].position_absolute.y,
+                      world_obj_found[0].position_absolute.z,
+                      world_obj_found[0].room_location, 
+                      world_obj_found[0].furniture_location, 
+                      world_obj_found[0].cf_shape
+                )
+
+                print("to face")
+                self.robot.detected_object_to_face_path(object=world_obj_found[0], send_to_face=True)
+                time.sleep(8.0)
 
                 ### YOLO WORLD PROMPT FREE EXAMPLE ###
                 t0 = time.perf_counter()
@@ -92,7 +112,27 @@ class TaskMain():
                 print("PRE ACTIVATE")
                 self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair", "cabinet"], visual_prompts=["tomato_soup_dinner_table_head_cam", "mustard_dinning_table_lar_head_cam"])
                 print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0)
+                time.sleep(2.0)
+
+                # sends detected object to face
+                world_obj_found = self.robot.node.detected_world_objects.objects
+                while len(world_obj_found) < 1:
+                    world_obj_found = self.robot.node.detected_world_objects.objects
+
+                print("DONE")
+                print(world_obj_found[0].object_name, 
+                      world_obj_found[0].confidence, 
+                      world_obj_found[0].position_absolute.x,
+                      world_obj_found[0].position_absolute.y,
+                      world_obj_found[0].position_absolute.z,
+                      world_obj_found[0].room_location, 
+                      world_obj_found[0].furniture_location, 
+                      world_obj_found[0].cf_shape
+                )
+
+                print("to face")
+                self.robot.detected_object_to_face_path(object=world_obj_found[0], send_to_face=True)
+                time.sleep(8.0)
 
                 ### YOLO WORLD PROMPT FREE EXAMPLE ###
                 t0 = time.perf_counter()
@@ -109,11 +149,11 @@ class TaskMain():
                 time.sleep(10.0)
 
                 ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                """ t0 = time.perf_counter()
+                t0 = time.perf_counter()
                 print("PRE ACTIVATE")
                 self.robot.activate_yolo_world(activate_tv_prompt_hand=True, visual_prompts=["door_handle_lar_gripper_cam"])
                 print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                time.sleep(10.0) """
+                time.sleep(10.0)
 
                 ### YOLO WORLD PROMPT FREE EXAMPLE ###
                 t0 = time.perf_counter()
