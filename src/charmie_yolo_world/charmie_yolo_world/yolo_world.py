@@ -38,10 +38,10 @@ data_lock = threading.Lock()
 # print("Device count:", torch.cuda.device_count())
 # print("Device name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No GPU")
 
-class Yolo_obj(Node):
+class Yolo_world(Node):
     def __init__(self):
-        super().__init__("Yolo_obj")
-        self.get_logger().info("Initialised Yolo Object Node")
+        super().__init__("Yolo_world")
+        self.get_logger().info("Initialised Yolo World Node")
 
         self.tv_model_lock = threading.Lock() # protects world_tv_prompt_model internal state
         self.tv_update_in_progress = threading.Event() # true while activate is changing prompts
@@ -64,7 +64,7 @@ class Yolo_obj(Node):
         self.complete_path_yolo_models = self.home+'/'+midpath_yolo_models+'/'
 
         midpath_visual_prompt_images = "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images"
-        self.complete_path_visual_prompts = str(Path.home()) + "/" + midpath_visual_prompt_images + "/"
+        self.complete_path_visual_prompts = self.home + "/" + midpath_visual_prompt_images + "/"
 
         midpath_configuration_files = "charmie_ws/src/configuration_files"
         self.complete_path_configuration_files = self.home+'/'+midpath_configuration_files+'/'
@@ -786,20 +786,20 @@ class Yolo_obj(Node):
 # main function that already creates the thread for the task state machine
 def main(args=None):
     rclpy.init(args=args)
-    node = Yolo_obj()
-    th_main = threading.Thread(target=ThreadMainYoloObjects, args=(node,), daemon=True)
+    node = Yolo_world()
+    th_main = threading.Thread(target=ThreadMainYoloWorld, args=(node,), daemon=True)
     th_main.start()
     rclpy.spin(node)
     rclpy.shutdown()
 
-def ThreadMainYoloObjects(node: Yolo_obj):
-    main = YoloObjectsMain(node)
+def ThreadMainYoloWorld(node: Yolo_world):
+    main = YoloWorldMain(node)
     main.main()
 
 
-class YoloObjectsMain():
+class YoloWorldMain():
 
-    def __init__(self, node: Yolo_obj):
+    def __init__(self, node: Yolo_world):
         # create a node instance so all variables ros related can be acessed
         self.node = node
 
@@ -1097,7 +1097,7 @@ class YoloObjectsMain():
                         # print("Create obj time:", time.time() - bbb_)
 
         # self.node.get_logger().info(f"Objects detected: {len(yolov8_obj_filtered.objects)}/{num_obj}")
-        # self.node.get_logger().info(f"Time Yolo_Objects: {time.perf_counter() - tempo_total}")
+        # self.node.get_logger().info(f"Time World: {time.perf_counter() - tempo_total}")
 
         return yolov8_obj_filtered, num_obj
 
@@ -1144,7 +1144,7 @@ class YoloObjectsMain():
     def main(self):
         
         # debug print to know we are on the main start of the task
-        self.node.get_logger().info("In YoloObjects Main...")
+        self.node.get_logger().info("In YoloWorld Main...")
         time_till_done = time.time()
         
         while True:
