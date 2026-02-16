@@ -5,6 +5,9 @@ import time
 from charmie_interfaces.msg import ListOfStrings
 from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR, GetLLMConfirmCommand
 
+
+import json
+
 ##### NOTAS: #####
 # temos de adicioanr infos sobre:
 # - que dia, mês, ano, dia da semana em que estamos (pode sair no GPSR)
@@ -12,6 +15,7 @@ from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR, GetLLMConfirmCommand
 # - Onde é que o robô está, local, cidade e país, mas também o evento e o charmie saber dizer o que é o evento (RoboParty, RoboCup)
 
 from charmie_llm.llm_demo_description import LLM_demo_description
+from charmie_llm.llm_planner_desciption import LLM_planner_description
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
@@ -29,6 +33,7 @@ class LLMNode(Node):
 
         # LLM objects declaration must come before the service declaration, so that if there is any error, in GUI never shows that LLM was initialized 
         self.llm_demo_description = LLM_demo_description() # TODO: add gpsr and question_debug
+        self.llm_planner_description = LLM_planner_description()
 
         self.llm_demonstration_server = self.create_service(GetLLMDemo, "llm_demonstration", self.llm_demonstration_callback)
         self.llm_confirm_command_server = self.create_service(GetLLMConfirmCommand, "llm_confirm_command", self.llm_confirm_command_callback)
@@ -75,18 +80,47 @@ class LLMNode(Node):
         
         self.get_logger().info("LLM GPSR REQUEST RECEIVED")
         print("Received:", request.command)
+
+        # sends the command to the LLM and gets the response (the generated plan)
+        llm_response = self.llm_planner_description.handle_request(request.command)
         
-        time.sleep(3.0)
+        print (f"LLM Output:", llm_response)
+        print (f"LLM response.output_text:", llm_response.output)
         
-        ### YOUR CODE HERE
-        example = ListOfStrings()
-        example.strings.append("Navigation-KitchenTable")
-        example.strings.append("SearchForObject-Milk")
-        example.strings.append("ArmPick-Milk")
-        example.strings.append("Navigation-SideTable")
-        example.strings.append("ArmPlace-SideTable")
-        example.strings.append("Navigation-LivingRoom")
-        example.strings.append("Speak-/gpsr/arrived_living_room")
-        response.answer = example
+
+        generatedPlan = []  # list of the subtasks in "natural language" format, to say the generated plan to the user
+        example = ListOfStrings()  # list of the subtasks in a structured format for the robot to execute (on the left of the '-' is the type of task and on the right the parameters)
+
+        for item in llm_response.output:
+            if item.type == "function_call":
+
+                args = json.loads(item.arguments)
+
+                if item.name == "set_speech":
+
+                    generatedPlan.append(f"say {args['command']}")
+                    example.strings.append("Speak-"+args['command'])
+
+                elif item.name == "move_to_position":
+
+                    generatedPlan.append(f"move to {args['move_coords']}")
+                    example.strings.append(f"Navigation-{args['move_coords']}")
+
+        final_plan = " and then ".join(generatedPlan)
+
+        # TODO Futuramente, substituir por set_speech para falar o plano 
+        print(f"Ok, I will {final_plan}") 
+
+        # example = ListOfStrings()
+        # example.strings.append("Navigation-KitchenTable")
+        # example.strings.append("SearchForObject-Milk")
+        # example.strings.append("ArmPick-Milk")
+        # example.strings.append("Navigation-SideTable")
+        # example.strings.append("ArmPlace-SideTable")
+        # example.strings.append("Navigation-LivingRoom")
+        # example.strings.append("Speak-/gpsr/arrived_living_room")
+        # response.answer = example
         
-        return response    
+        response.answer = example  
+        return response
+

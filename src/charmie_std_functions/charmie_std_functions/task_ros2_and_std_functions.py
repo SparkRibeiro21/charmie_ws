@@ -3710,19 +3710,20 @@ class RobotStdFunctions():
         ### EXAMPLE FOR LLM CONFIRM COMMAND - SLENDER
 
 
-        request = GetLLMConfirmCommand.Request()
-        request.command = command
-        self.node.call_llm_confirm_command_server(request=request, wait_for_end_of=wait_for_end_of)
+        # request = GetLLMConfirmCommand.Request()
+        # request.command = command
+        # self.node.call_llm_confirm_command_server(request=request, wait_for_end_of=wait_for_end_of)
 
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_llm_confirm_command:
-                pass
-            self.node.waited_for_end_of_llm_confirm_command = False
+        # if wait_for_end_of:
+        #     while not self.node.waited_for_end_of_llm_confirm_command:
+        #         pass
+        #     self.node.waited_for_end_of_llm_confirm_command = False
 
-        print(self.node.llm_confirm_command_response)
+        # print(self.node.llm_confirm_command_response)
 
-        self.set_speech(command=self.node.llm_confirm_command_response, quick_voice=True, wait_for_end_of=True)
+        # self.set_speech(command=self.node.llm_confirm_command_response, quick_voice=True, wait_for_end_of=True)
 
+        self.set_speech(command = "I heard the following command " + command, quick_voice=True, wait_for_end_of=True)
 
         ### END OF EXAMPLE
 
@@ -3737,7 +3738,7 @@ class RobotStdFunctions():
                 pass
             self.node.waited_for_end_of_llm_gpsr = False
 
-        # print(self.node.llm_gpsr_response)
+        print(self.node.llm_gpsr_response)
         for task in self.node.llm_gpsr_response.strings:
             task_split = task.split("-")
             
@@ -3747,6 +3748,8 @@ class RobotStdFunctions():
 
                 case "Navigation":
                     # self.set_navigation() ...
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to " + task_split[1], quick_voice=True, wait_for_end_of=True)
                     pass 
 
                 case "SearchForObject":
@@ -3759,6 +3762,7 @@ class RobotStdFunctions():
                 
                 case "Speak":
                     # self.set_speech() ...
+                    self.set_speech(command=task_split[1], quick_voice=True, wait_for_end_of=True)
                     pass
                 
                 case "ArmPick":
