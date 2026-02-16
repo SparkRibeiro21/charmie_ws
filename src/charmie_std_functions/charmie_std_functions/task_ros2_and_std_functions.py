@@ -3262,7 +3262,34 @@ class RobotStdFunctions():
         
         return img_path
 
-    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
+    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, 
+                           detect_objects        = False, 
+                           detect_furniture      = False, 
+                           detect_objects_hand   = False, 
+                           detect_furniture_hand = False, 
+                           detect_objects_base   = False, 
+                           detect_furniture_base = False,
+                           text_prompts=[], visual_prompts=(),
+                           detect_prompt_free_head  = False,
+                           detect_tv_prompt_head    = False,
+                           detect_prompt_free_hand  = False,
+                           detect_tv_prompt_hand    = False,
+                           detect_prompt_free_base  = False,
+                           detect_tv_prompt_base    = False,
+                           minimum_prompt_free_confidence = 0.5,
+                           minimum_tv_prompt_confidence = 0.5):
+        
+
+        # defines which models will be activated
+        yolo_objects_activate = False
+        if detect_objects or detect_furniture or detect_objects_hand or detect_furniture_hand or detect_objects_base or detect_furniture_base:
+            yolo_objects_activate = True
+
+        yolo_world_activate = False
+        if detect_prompt_free_head or detect_tv_prompt_head or detect_prompt_free_hand or detect_tv_prompt_hand or detect_prompt_free_base or detect_tv_prompt_base:
+            yolo_world_activate = True
+
+        # TODO: delete furniture yolo_objects 
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -3292,10 +3319,21 @@ class RobotStdFunctions():
             objects_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=detect_objects,             activate_furniture=detect_furniture,
-                                       activate_objects_hand=detect_objects_hand,   activate_furniture_hand=detect_furniture_hand,
-                                       activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
-                                       minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
+            self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+
+            if yolo_objects_activate:
+                self.activate_yolo_objects(activate_objects=detect_objects,             activate_furniture=detect_furniture,
+                                        activate_objects_hand=detect_objects_hand,   activate_furniture_hand=detect_furniture_hand,
+                                        activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
+                                        minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
+            
+            if yolo_world_activate:
+                self.activate_yolo_world(activate_prompt_free_head=detect_prompt_free_head, activate_tv_prompt_head=detect_tv_prompt_head,
+                                        activate_prompt_free_hand=detect_prompt_free_hand, activate_tv_prompt_hand=detect_tv_prompt_hand,
+                                        activate_prompt_free_base=detect_prompt_free_base, activate_tv_prompt_base=detect_tv_prompt_base,
+                                        minimum_prompt_free_confidence=minimum_prompt_free_confidence, minimum_tv_prompt_confidence=minimum_tv_prompt_confidence,
+                                        text_prompts=text_prompts, visual_prompts=visual_prompts, wait_for_end_of=True)
+
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             
             if detect_objects or detect_furniture:        
@@ -3304,8 +3342,6 @@ class RobotStdFunctions():
                 self.set_face(camera="hand", show_detections=True)
             elif detect_objects_base or detect_furniture_base:
                 self.set_face(camera="base", show_detections=True)
-                
-            # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
             
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
             for t in tetas:
@@ -3411,10 +3447,17 @@ class RobotStdFunctions():
                 if is_break_list_of_objects: 
                     break
 
-            self.activate_yolo_objects(activate_objects=False, activate_furniture=False,
-                                       activate_objects_hand=False, activate_furniture_hand=False,
-                                       activate_objects_base=False, activate_furniture_base=False,
-                                       minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
+            if yolo_objects_activate:
+                self.activate_yolo_objects(activate_objects=False, activate_furniture=False,
+                                        activate_objects_hand=False, activate_furniture_hand=False,
+                                        activate_objects_base=False, activate_furniture_base=False,
+                                        minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
+            if yolo_world_activate:
+                self.activate_yolo_world(activate_prompt_free_head=False, activate_tv_prompt_head=False,
+                                        activate_prompt_free_hand=False, activate_tv_prompt_hand=False,
+                                        activate_prompt_free_base=False, activate_tv_prompt_base=False,
+                                        minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5,
+                                        text_prompts=[], visual_prompts=[], wait_for_end_of=False)
             
             # DEBUG
             # print("TOTAL objects in this neck pos:")
@@ -3569,7 +3612,7 @@ class RobotStdFunctions():
         #     print(o.object_name)
         self.node.search_for_object_detections_publisher.publish(sfo_pub)
             
-        return final_objects        
+        return final_objects
 
     def detected_object_to_face_path(self, object=DetectedObject(), send_to_face=False, bb_color=(0,0,255)):
 
