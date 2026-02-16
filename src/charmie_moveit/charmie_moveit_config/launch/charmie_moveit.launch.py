@@ -140,37 +140,6 @@ def generate_launch_description():
         ],
     )
 
-    neck_node = Node(
-        package='charmie_neck_dynamixel',
-        executable='neck_dynamixel',
-        name='neck_dynamixel',
-        emulate_tty=True,
-        condition=IfCondition(use_real_hardware),
-    )
-    
-    low_level_node = Node(
-        package='charmie_low_level',
-        executable='low_level_stream',
-        name='low_level_stream',
-        emulate_tty=True,
-        condition=IfCondition(use_real_hardware),
-    )
-
-    map_tf = Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='static_transform_base_camera',
-            arguments=[
-                '0',  # x
-                '0',  # y
-                '0',  # z
-                '0',  # roll
-                '0',  # pitch
-                '0',  # yaw
-                'map',  # parent frame
-                'odom'  # child frame
-            ]
-        )
     
     return LaunchDescription([
 
@@ -179,13 +148,13 @@ def generate_launch_description():
         #####################################################################
         std_lf.robot_state_publisher_real_node,
         std_lf.static_transforms_launch,
-        use_real_hardware_arg,
+        # use_real_hardware_arg,
         std_lf.static_transforms_just_odom_launch, #Temporary
 
         #####################################################################
         # Visualization and Debugging                                       # 
         #####################################################################
-        rviz_node,
+        std_lf.moveit_rviz_node,
         # std_lf.rviz2_nav2_node,
         std_lf.gui,
         std_lf.marker_arrays_debug,
@@ -194,8 +163,9 @@ def generate_launch_description():
         # Actuators                                                          #
         ######################################################################
         LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
-        neck_node,
-        low_level_node,
+        # std_lf.arm,
+        std_lf.neck,
+        std_lf.low_level,
 
         #####################################################################
         # Localization                                                      # 
@@ -225,10 +195,10 @@ def generate_launch_description():
         #####################################################################
         # MoveIt                                                            # 
         #####################################################################
-        ros2_control_node,
-        joint_state_broadcaster_spawner,
-        xarm6_controller_spawner,
+        std_lf.ros2_control_node,
+        std_lf.joint_state_broadcaster_spawner,
+        std_lf.xarm6_controller_spawner,
         # xarm_gripper_controller_spawner,
-        move_group_launch,
-        commander_node,
+        std_lf.move_group_launch,
+        std_lf.moveit_commander,
     ])

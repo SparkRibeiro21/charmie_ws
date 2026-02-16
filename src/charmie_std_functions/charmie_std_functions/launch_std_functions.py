@@ -8,7 +8,9 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir, TextSubstitution
 
-from launch.substitutions import Command
+from moveit_configs_utils import MoveItConfigsBuilder
+
+from launch.substitutions import Command, FindExecutable
 from launch_ros.actions import Node
 from pathlib import Path
 
@@ -24,6 +26,12 @@ class LaunchStdFunctions():
         urdf_path_real = os.path.join(get_package_share_path('charmie_description'), 
                              'urdf', 'charmie_real.urdf.xacro')
         robot_description_real = ParameterValue(Command(['xacro ', urdf_path_real]), value_type=str)
+
+        moveit_robot_description = Command([
+            FindExecutable(name='xacro'), ' ',
+            urdf_path_real, ' ',
+            'use_real_hardware:=', LaunchConfiguration('use_real_hardware', default='true')
+        ])
 
         self.robot_state_publisher_real_node = Node(
             package="robot_state_publisher",
@@ -84,6 +92,24 @@ class LaunchStdFunctions():
             package="rviz2",
             executable="rviz2",
             arguments=['-d', rviz_calib_map_furniture_navigations_config_path]
+        )
+
+        moveit_config = (MoveItConfigsBuilder("charmie", package_name="charmie_moveit_config")
+                         .planning_pipelines("ompl")
+                         .to_moveit_configs())
+
+        moveit_rviz_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'rviz', 'moveit.rviz')
+
+        self.moveit_rviz_node = Node(
+            package="rviz2",
+            executable="rviz2",
+            arguments=['-d', moveit_rviz_path],
+            parameters=[
+                moveit_config.robot_description_kinematics,
+                moveit_config.planning_pipelines,
+            ],
+            output='screen'
         )
 
         ### GAZEBO
@@ -205,16 +231,50 @@ class LaunchStdFunctions():
             }.items()
         )
 
-        # added by Pedro to spawn and start the xArm controllers
-        self.xarm_controller_spawner = Node(
-            package='controller_manager',
-            executable='spawner',
-            arguments=[
-                'xarm6_traj_controller',
-                # 'xarm_gripper_traj_controller',
-                '--controller-manager', '/controller_manager'
+        ### MOVEIT
+        self.moveit_commander = Node(
+            package='charmie_commander_cpp',
+            executable='moveit_commander',
+            output='screen',
+            parameters=[
+                moveit_config.robot_description,
+                moveit_config.robot_description_semantic,
+                moveit_config.robot_description_kinematics,
+                moveit_config.planning_pipelines,
             ],
         )
+
+        ros2_controllers_path = os.path.join(get_package_share_path('charmie_moveit_config'), 'config', 'ros2_controllers.yaml')
+
+        self.ros2_control_node = Node(
+            package='controller_manager',
+            executable='ros2_control_node',
+            parameters=[
+                {'robot_description': moveit_robot_description},
+                ros2_controllers_path],
+            output='screen'
+        )
+
+        self.xarm6_controller_spawner = Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=['xarm6_controller'],
+            output='screen'
+        )
+
+        self.joint_state_broadcaster_spawner = Node(
+            package='controller_manager',
+            executable='spawner',
+            arguments=['joint_state_broadcaster'],
+            output='screen'
+        )
+
+        self.move_group_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(
+                    get_package_share_path('charmie_moveit_config'),
+                    'launch',
+                    'move_group.launch.py')))
 
         #parameters added by Pedro
         #Publishes the joint_states of the robot
