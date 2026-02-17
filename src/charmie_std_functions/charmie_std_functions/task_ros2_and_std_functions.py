@@ -3262,7 +3262,8 @@ class RobotStdFunctions():
         
         return img_path
 
-    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, 
+    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, 
+                           list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, 
                            detect_objects        = False, 
                            detect_furniture      = False, 
                            detect_objects_hand   = False, 
@@ -3279,6 +3280,7 @@ class RobotStdFunctions():
                            minimum_prompt_free_confidence = 0.5,
                            minimum_tv_prompt_confidence = 0.5):
         
+        # TODO: delete furniture yolo_objects 
 
         # defines which models will be activated
         yolo_objects_activate = False
@@ -3288,8 +3290,6 @@ class RobotStdFunctions():
         yolo_world_activate = False
         if detect_prompt_free_head or detect_tv_prompt_head or detect_prompt_free_hand or detect_tv_prompt_hand or detect_prompt_free_base or detect_tv_prompt_base:
             yolo_world_activate = True
-
-        # TODO: delete furniture yolo_objects 
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -3349,14 +3349,24 @@ class RobotStdFunctions():
                 self.set_rgb(RED+SET_COLOUR)
                 self.set_neck(position=t, wait_for_end_of=True)
                 time.sleep(time_wait_neck_move_pre_each_frame)
-                self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+
+                if yolo_objects_activate:
+                    self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+                if yolo_world_activate:
+                    self.node.detected_world_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
                 self.set_rgb(WHITE+SET_COLOUR)
 
                 start_time = time.time()
-                while (time.time() - start_time) < time_in_each_frame:      
+                while (time.time() - start_time) < time_in_each_frame:   
 
+                    local_detected_objects = ListOfDetectedObject()
+                    if yolo_objects_activate:
+                        local_detected_objects.objects += self.node.detected_objects.objects
+                    if yolo_world_activate:
+                        local_detected_objects.objects += self.node.detected_world_objects.objects
+                
                     # if detect_objects: 
-                    local_detected_objects = self.node.detected_objects
+                    # local_detected_objects = self.node.detected_objects
                     for temp_objects in local_detected_objects.objects:
                         
                         is_already_in_list = False
@@ -3379,7 +3389,7 @@ class RobotStdFunctions():
                         if is_already_in_list:
                             objects_detected.remove(object_already_in_list)
                         # else:
-                        elif temp_objects.index > 0: # debug
+                        elif (temp_objects.index > 0 and yolo_objects_activate) or yolo_world_activate: # can't check if index is 0 in yolo_world since all index are 0
                             # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
                             if list_of_objects: 
                                 if not rgb_found_list_of_objects:

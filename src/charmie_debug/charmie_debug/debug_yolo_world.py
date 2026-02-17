@@ -78,7 +78,7 @@ class TaskMain():
                     ### YOLO WORLD PROMPT FREE EXAMPLE ###
                     t0 = time.perf_counter()
                     print("PRE ACTIVATE")
-                    self.robot.activate_yolo_world(activate_tv_prompt_head=True, text_prompts=["chair", "cabinet"])
+                    self.robot.activate_yolo_world(activate_tv_prompt_hand=True, visual_prompts=["spam_office_table_head", "orange_juice_floor_office_base"], minimum_tv_prompt_confidence=0.25)
                     print("ACTIVATE TRUE ", time.perf_counter()-t0)
                     time.sleep(2.0)
 
@@ -86,23 +86,27 @@ class TaskMain():
                     world_obj_found = self.robot.node.detected_world_objects.objects
                     while len(world_obj_found) < 1:
                         world_obj_found = self.robot.node.detected_world_objects.objects
+                    
+                    for wof in world_obj_found:
+                        print(wof.object_name, 
+                              wof.confidence, 
+                              wof.position_absolute.x,
+                              wof.position_absolute.y,
+                              wof.position_absolute.z,
+                              wof.room_location, 
+                              wof.furniture_location, 
+                              wof.object_class,
+                              wof.orientation,
+                              wof.cf_width,
+                              wof.cf_length,
+                              wof.cf_height,
+                              wof.cf_shape,
+                              wof.cf_can_pick,
+                              wof.cf_std_pick
+                        )
 
-                    print(world_obj_found[0].object_name, 
-                        world_obj_found[0].confidence, 
-                        world_obj_found[0].position_absolute.x,
-                        world_obj_found[0].position_absolute.y,
-                        world_obj_found[0].position_absolute.z,
-                        world_obj_found[0].room_location, 
-                        world_obj_found[0].furniture_location, 
-                        world_obj_found[0].object_class,
-                        world_obj_found[0].orientation,
-                        world_obj_found[0].cf_width,
-                        world_obj_found[0].cf_length,
-                        world_obj_found[0].cf_height,
-                        world_obj_found[0].cf_shape,
-                        world_obj_found[0].cf_can_pick,
-                        world_obj_found[0].cf_std_pick
-                    )
+                    while True:
+                        pass
                     # self.robot.detected_object_to_face_path(object=world_obj_found[0], send_to_face=True)
                     time.sleep(8.0)
 
