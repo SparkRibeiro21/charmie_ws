@@ -2091,9 +2091,9 @@ class RobotStdFunctions():
 
         # Speak specific for doorbell after starting listening for doorbell if success:
         if success:
-            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_stop", wait_for_end_of=True)
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_stop", wait_for_end_of=False)
         else: # timeout or error
-            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_timeout", wait_for_end_of=True)
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_timeout", wait_for_end_of=False)
 
         return success, message, label, score
 
@@ -4244,7 +4244,113 @@ class RobotStdFunctions():
                 return obj['look'] # Return the look
         return None  # Return None if the object is not found
 
+    def activate_tracking_mask(self, track_person=None, track_object=None, mode="", custom_points=[], show_detections_on_face=True):
 
+        points = ListOfPoints()
+        bb = BoundingBox()
+        if track_person is not None:
+
+            match mode:
+                case "face": # does not include ears, since sometimes can add backgrout noise
+                    if track_person.kp_nose_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_nose_x), y=float(track_person.kp_nose_y), z=1.0))
+                    if track_person.kp_eye_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_left_x), y=float(track_person.kp_eye_left_y), z=1.0))
+                    if track_person.kp_eye_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_right_x), y=float(track_person.kp_eye_right_y), z=1.0))
+                case "head":
+                    if track_person.kp_nose_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_nose_x), y=float(track_person.kp_nose_y), z=1.0))
+                    if track_person.kp_eye_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_left_x), y=float(track_person.kp_eye_left_y), z=1.0))
+                    if track_person.kp_eye_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_right_x), y=float(track_person.kp_eye_right_y), z=1.0))
+                    if track_person.kp_ear_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ear_left_x), y=float(track_person.kp_ear_left_y), z=1.0))
+                    if track_person.kp_ear_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ear_right_x), y=float(track_person.kp_ear_right_y), z=1.0))
+                case "body":        
+                    if track_person.kp_nose_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_nose_x), y=float(track_person.kp_nose_y), z=1.0))
+                    if track_person.kp_eye_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_left_x), y=float(track_person.kp_eye_left_y), z=1.0))
+                    if track_person.kp_eye_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_right_x), y=float(track_person.kp_eye_right_y), z=1.0))
+                    if track_person.kp_ear_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ear_left_x), y=float(track_person.kp_ear_left_y), z=1.0))
+                    if track_person.kp_ear_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ear_right_x), y=float(track_person.kp_ear_right_y), z=1.0))
+                    if track_person.kp_shoulder_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_shoulder_left_x), y=float(track_person.kp_shoulder_left_y), z=1.0))
+                    if track_person.kp_shoulder_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_shoulder_right_x), y=float(track_person.kp_shoulder_right_y), z=1.0))
+                    if track_person.kp_elbow_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_elbow_left_x), y=float(track_person.kp_elbow_left_y), z=1.0))
+                    if track_person.kp_elbow_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_elbow_right_x), y=float(track_person.kp_elbow_right_y), z=1.0))
+                    if track_person.kp_wrist_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_wrist_left_x), y=float(track_person.kp_wrist_left_y), z=1.0))
+                    if track_person.kp_wrist_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_wrist_right_x), y=float(track_person.kp_wrist_right_y), z=1.0))
+                    if track_person.kp_hip_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_hip_left_x), y=float(track_person.kp_hip_left_y), z=1.0))
+                    if track_person.kp_hip_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_hip_right_x), y=float(track_person.kp_hip_right_y), z=1.0))
+                    if track_person.kp_knee_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_knee_left_x), y=float(track_person.kp_knee_left_y), z=1.0))
+                    if track_person.kp_knee_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_knee_right_x), y=float(track_person.kp_knee_right_y), z=1.0))
+                    if track_person.kp_ankle_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ankle_left_x), y=float(track_person.kp_ankle_left_y), z=1.0))
+                    if track_person.kp_ankle_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ankle_right_x), y=float(track_person.kp_ankle_right_y), z=1.0))
+                case _:
+                    print("WRONG TRACK MODE SELECTED! DOES NOT EXIST!")
+                    return False , "Wrong track mode selected"
+        
+        elif track_object is not None:
+
+            match mode:
+                case "object_center":
+                    ########## THIS IS NOT IDEAL FOR SOME CASES, A CENTER OF MASK SEGMENTATION POINT MUST BE COMPUTED IN THE FUTURE ##########
+                    points.coords.append(Point(x=float(track_object.box_center_x), y=float(track_object.box_center_y), z=1.0))
+                case "object_bounding_box":
+                    bb.box_top_left_x = int(track_object.box_top_left_x)
+                    bb.box_top_left_y = int(track_object.box_top_left_y)
+                    bb.box_width = int(track_object.box_width)
+                    bb.box_height = int(track_object.box_height)
+                case _:
+                    print("WRONG TRACK MODE SELECTED! DOES NOT EXIST!")
+                    return False , "Wrong track mode selected"
+        
+        elif mode == "custom":
+
+            if len(custom_points) > 0:
+                for coord in custom_points:
+                    points.coords.append(Point(x=float(coord[0]), y=float(coord[1]), z=1.0))
+            else:
+                print("NO CUSTOM COORDINATES PROVIDED!")
+                return False , "No custom coordinates provided"
+
+        else:
+            print("WRONG TRACK MODE SELECTED! DOES NOT EXIST!")
+            return False , "Wrong track mode selected"
+
+        self.activate_tracking(activate=True, points=points, bbox=bb)
+
+        if show_detections_on_face:
+            self.set_face(camera="head", show_detections=True)
+
+        return True, "Tracking activated successfully"
+
+    def deactivate_tracking_mask(self, reset_face=True):
+
+        if reset_face:
+            self.set_face("charmie_face")
+
+        self.activate_tracking(activate=False)
+        return True, "Tracking deactivated successfully"
+    
     def set_continuous_tracking_with_coordinates(self):
 
         request = TrackContinuous.Request()
@@ -4256,7 +4362,7 @@ class RobotStdFunctions():
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
         
         self.node.detected_people.persons = [] # clears detected_people after receiving them to make sure the objects from previous frames are not considered again
-        # self.activate_yolo_pose(activate=True) 
+        self.activate_yolo_pose(activate=True) 
         # self.activate_yolo_objects(activate_objects=True) 
         
         start_time = time.time()
@@ -4314,70 +4420,7 @@ class RobotStdFunctions():
         request.status = False
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
 
-    def set_follow_person(self):
-
-        self.activate_yolo_pose(activate=True) 
-        
-        while len(self.node.detected_people.persons) == 0:
-            pass
-
-        p = self.node.detected_people.persons[0]
-
-        self.activate_yolo_pose(activate=False) 
-
-        points = ListOfPoints()
-        
-        if p.kp_nose_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_nose_x), y=float(p.kp_nose_y), z=1.0))
-        if p.kp_eye_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_eye_left_x), y=float(p.kp_eye_left_y), z=1.0))
-        if p.kp_eye_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_eye_right_x), y=float(p.kp_eye_right_y), z=1.0))
-        if p.kp_ear_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_ear_left_x), y=float(p.kp_ear_left_y), z=1.0))
-        if p.kp_ear_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_ear_right_x), y=float(p.kp_ear_right_y), z=1.0))
-        if p.kp_shoulder_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_shoulder_left_x), y=float(p.kp_shoulder_left_y), z=1.0))
-        if p.kp_shoulder_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_shoulder_right_x), y=float(p.kp_shoulder_right_y), z=1.0))
-        if p.kp_elbow_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_elbow_left_x), y=float(p.kp_elbow_left_y), z=1.0))
-        if p.kp_elbow_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_elbow_right_x), y=float(p.kp_elbow_right_y), z=1.0))
-        if p.kp_wrist_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_wrist_left_x), y=float(p.kp_wrist_left_y), z=1.0))
-        if p.kp_wrist_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_wrist_right_x), y=float(p.kp_wrist_right_y), z=1.0))
-        if p.kp_hip_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_hip_left_x), y=float(p.kp_hip_left_y), z=1.0))
-        if p.kp_hip_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_hip_right_x), y=float(p.kp_hip_right_y), z=1.0))
-        if p.kp_knee_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_knee_left_x), y=float(p.kp_knee_left_y), z=1.0))
-        if p.kp_knee_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_knee_right_x), y=float(p.kp_knee_right_y), z=1.0))
-        if p.kp_ankle_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_ankle_left_x), y=float(p.kp_ankle_left_y), z=1.0))
-        if p.kp_ankle_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_ankle_right_x), y=float(p.kp_ankle_right_y), z=1.0))
-
-        # points.coords.append(Point(x=640.0//2, y=480.0//2, z=1.0))
-        # points.coords.append(Point(x=320.0, y=150.0, z=1.0))
-        # points.coords.append(Point(x=420.0, y=150.0, z=0.0))
-        # points.coords.append(Point(x=220.0, y=150.0, z=0.0))
-
-        bb = BoundingBox()
-        # bb.box_top_left_x = 200
-        # bb.box_top_left_y = 100
-        # bb.box_width = 640
-        # bb.box_height = 480
-
-
-        self.activate_tracking(activate=True, points=points, bbox=bb)
-        # self.activate_tracking(activate=False)
-
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, speak_timeout=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
         options = []
 
@@ -4460,7 +4503,8 @@ class RobotStdFunctions():
                 return ["ERROR"]
             
             elif self.node.selected_list_options_touchscreen_menu[0] == "TIMEOUT":
-                self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
+                if speak_timeout:
+                    self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
                 return self.node.selected_list_options_touchscreen_menu
         
             else:
@@ -4547,14 +4591,14 @@ class RobotStdFunctions():
     
             if not self.node.face_recognition_encoding:
                 self.node.get_logger().warn("Face recognition encoding List is empty.")
-                return "error", 0.0
+                return "error", 0.0, {}
             
             image = face_recognition.load_image_file(image_path)
             encoding_entry = face_recognition.face_encodings(image)
 
             if len(encoding_entry) == 0:
                 self.node.get_logger().warn("No face found in the image. Could not comapre to encodings list.")
-                return "error", 0.0
+                return "error", 0.0, {}
             encoding_entry = encoding_entry[0]  
 
             all_percentages = []
@@ -4564,20 +4608,22 @@ class RobotStdFunctions():
                 confidence = (1 - distance)
                 all_percentages.append(confidence)
 
-            name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
+            confidence_table = {name.lower(): conf for name, conf in zip(self.node.face_recognition_names, all_percentages)}
+
+            name_recognized, biggest_conf_recognized = max(confidence_table.items(), key=lambda x: x[1])
             if biggest_conf_recognized < tolerance:
                 name_recognized = "unknown"
 
-            print("RECOGNITION COMPARE TABLE:")
-            for prob, name in zip(all_percentages, self.node.face_recognition_names):
-                print(str(round(prob,2))+" -> "+name)
-            print("OUTCOME:", name_recognized, str(round(biggest_conf_recognized,2)))
+            # print("RECOGNITION COMPARE TABLE:")
+            # for prob, name in zip(all_percentages, self.node.face_recognition_names):
+            #     print(str(round(prob,2))+" -> "+name)
+            # print("OUTCOME:", name_recognized, str(round(biggest_conf_recognized,2)))
 
-            return name_recognized.lower(), biggest_conf_recognized
+            return name_recognized.lower(), biggest_conf_recognized, confidence_table
 
         else:
             self.node.get_logger().warn("Image path does not exist.")
-            return "error", 0.0
+            return "error", 0.0, {}
             
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
@@ -5810,3 +5856,10 @@ class RobotStdFunctions():
             
         print("Cannot get height from shelf")
         return False
+
+    def open_door(push_pull="push", left_right="left", wait_for_end_of=True):
+        # placeholder for door opening std_function
+        pass
+        # arm movements and search for objects for furniture door_handle 
+        # add safety and timeout mechanisms
+        

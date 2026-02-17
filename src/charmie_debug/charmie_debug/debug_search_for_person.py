@@ -28,8 +28,8 @@ ros2_modules = {
     "charmie_neck":                 True,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
-    "charmie_tracking":             False,
+    "charmie_speakers":             False,
+    "charmie_tracking":             True,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
@@ -59,11 +59,14 @@ class TaskMain():
         
         Search_for_person = 1
         Search_for_objects = 2
-        Continuous_tracking = 3
-        Final_State = 4
+        Activate_track_mask_person = 3
+        Activate_track_mask_object = 4
+        Activate_track_mask_custom = 5
+        Continuous_tracking = 6
+        Final_State = 7
 
         # VARS ...
-        self.state = Search_for_person
+        self.state = Activate_track_mask_person
 
         print("IN NEW MAIN")
 
@@ -142,13 +145,64 @@ class TaskMain():
                 # next state
                 self.state = Final_State
 
+
+            elif self.state == Activate_track_mask_person:
+
+                # TO TRACK PERSON
+                self.robot.activate_yolo_pose(activate=True) 
+                while len(self.robot.node.detected_people.persons) == 0:
+                    pass
+                p = self.robot.node.detected_people.persons[0]
+                self.robot.activate_yolo_pose(activate=False) 
+                # self.robot.activate_tracking_mask(track_person=p, mode="face", show_detections_on_face=True)
+                # self.robot.activate_tracking_mask(track_person=p, mode="head", show_detections_on_face=True)
+                self.robot.activate_tracking_mask(track_person=p, mode="body", show_detections_on_face=True)
+                time.sleep(10.0)
+                self.robot.deactivate_tracking_mask()
+                print("Finished tracking person")
             
+                # next state
+                self.state = Final_State
+
+
+            elif self.state == Activate_track_mask_object:
+
+                # TO TRACK OBJECT
+                self.robot.activate_yolo_objects(activate_objects=True) 
+                while len(self.robot.node.detected_objects.objects) == 0:
+                    pass
+                o = self.robot.node.detected_objects.objects[0]
+                self.robot.activate_yolo_objects(activate_objects=False) 
+                # self.robot.activate_tracking_mask(track_object=o, mode="object_center", show_detections_on_face=True)
+                self.robot.activate_tracking_mask(track_object=o, mode="object_bounding_box", show_detections_on_face=True)
+                time.sleep(10.0)
+                self.robot.deactivate_tracking_mask()
+                print("Finished tracking object")
+            
+                # next state
+                self.state = Final_State
+                
+
+            elif self.state == Activate_track_mask_custom:
+
+                # TO TRACK CUSTOM PIXELS
+                points =[
+                    [320.0, 150.0],
+                    [322.0, 148.0]
+                ]                
+                self.robot.activate_tracking_mask(custom_points=points, mode="custom", show_detections_on_face=True)
+                time.sleep(10.0)
+                self.robot.deactivate_tracking_mask()
+            
+                # next state
+                self.state = Final_State
+
+
             elif self.state == Continuous_tracking:
                 
                 ### CONTINUOUS TRACKING EXAMPLE ###
                 
-                # self.robot.set_continuous_tracking_with_coordinates()
-                self.robot.set_follow_person()
+                self.robot.set_continuous_tracking_with_coordinates()
 
                 # next state
                 self.state = Final_State
