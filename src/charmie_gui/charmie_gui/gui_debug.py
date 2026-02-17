@@ -2007,19 +2007,18 @@ class DebugVisualMain():
 
     def draw_object_bounding_boxes(self, objects, camera_height, camera_id):
 
-        # here we have an automatic detection whether objects are in configuration_files objects.json
-        # because objects from yolo_world may be in objects.json after latest update
-        non_dataset_objects = False
-
-
         if len(objects.objects) > 0:
             # print("DETECTED OBJECTS ("+head_or_hand.lower()+"):")
             pass
         
         for o in objects.objects:
-
+        
+            # here we have an automatic detection whether objects are in configuration_files objects.json
+            # because objects from yolo_world may be in objects.json after latest update
+            non_dataset_objects = False
             if o.object_class == "":
                 non_dataset_objects = True
+
             
             if not o.mask.point: # if object does not have a mask, we show bounding box
                 # name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
@@ -2084,6 +2083,7 @@ class DebugVisualMain():
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
 
+            non_dataset_objects = False
             if o.object_class == "":
                 non_dataset_objects = True
 
