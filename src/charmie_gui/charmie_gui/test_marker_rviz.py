@@ -797,9 +797,9 @@ class MarkerPublisher(Node):
                 marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
             else:
                 # Color (RGBA format, values from 0 to 1)
-                marker.color.r = 0.0 # 0.0  # Red
+                marker.color.r = 1.0 # 0.0  # Red
                 marker.color.g = 0.0 # 1.0  # Green
-                marker.color.b = 0.5 # 1.0  # Blue
+                marker.color.b = 0.0 # 1.0  # Blue
                 marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
             
             # Lifetime (0 = forever, otherwise, disappears after X seconds)
