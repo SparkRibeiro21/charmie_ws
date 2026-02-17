@@ -18,6 +18,8 @@ from screeninfo import get_monitors
 from PIL import Image
 import cv2
 import numpy as np
+import colorsys
+import hashlib
 
 
 DEBUG_WITHOUT_DISPLAY = False
@@ -54,6 +56,8 @@ class FaceNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        # Yolo World
+        self.world_objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'world_objects_all_detected_filtered', self.world_object_detected_filtered_callback, 10)
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         
@@ -114,10 +118,13 @@ class FaceNode(Node):
         self.new_detected_people = False
         self.detected_objects = ListOfDetectedObject()
         self.new_detected_objects = False
+        self.detected_world_objects = ListOfDetectedObject()
+        self.new_detected_world_objects = False
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
         self.is_yolo_pose_comm = False
         self.is_yolo_obj_comm = False
+        self.is_yolo_world_obj_comm = False
         self.is_tracking_comm = False
 
         self.br = CvBridge()
@@ -263,6 +270,10 @@ class FaceNode(Node):
         # for obj in self.detected_objects.objects:
         #     print(obj.object_name, "(", obj.position_cam.x, obj.position_cam.y, obj.position_cam.z, ") (", obj.position_relative.x, obj.position_relative.y, obj.position_relative.z, ") (", obj.position_absolute.x, obj.position_absolute.y, obj.position_absolute.z, ")" )
 
+    def world_object_detected_filtered_callback(self, det_world_object: ListOfDetectedObject):
+        self.detected_world_objects = det_world_object
+        self.new_detected_world_objects = True
+
     def tracking_mask_callback(self, mask: TrackingMask):
         self.tracking_mask = mask
         self.new_tracking_mask_msg = True
@@ -280,6 +291,12 @@ class FaceNode(Node):
             self.is_yolo_obj_comm = True
         else:
             self.is_yolo_obj_comm = False
+
+        if self.new_detected_world_objects:
+            self.new_detected_world_objects = False
+            self.is_yolo_world_obj_comm = True
+        else:
+            self.is_yolo_world_obj_comm = False
     
     def check_tracking_timer(self):
 
@@ -679,16 +696,34 @@ class FaceMain():
 
         return bb_color
 
-    def show_yolo_object_detections(self, surface, camera):
+    def yolo_color_from_name(self, name: str, s: float = 0.85, v: float = 0.95):
+        # stable hash -> hue in [0,1)
+        h = int(hashlib.md5(name.encode("utf-8")).hexdigest()[:8], 16) / 0xFFFFFFFF
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return (int(r * 255), int(g * 255), int(b * 255))
+    
+    def show_yolo_object_detections(self, surface, camera, world):
+
+        if not world: # if detections fro yolo_objects
+            list_of_obj = self.node.detected_objects.objects
+            yolo_comm = self.node.is_yolo_obj_comm
+        else:  # if detections fro yolo_world
+            list_of_obj = self.node.detected_world_objects.objects
+            yolo_comm = self.node.is_yolo_world_obj_comm
         
-        if self.node.is_yolo_obj_comm:
+        non_dataset_objects = False # if object is not in dataset (part of world objects) by default is in datset
+        if yolo_comm:
 
             BB_WIDTH = 3
 
-            for o in self.node.detected_objects.objects:
+            for o in list_of_obj:
                 
                 if o.camera == camera: # checks if camera stream shown is the same as the camera that detected the detection 
                     
+                    non_dataset_objects = False
+                    if o.object_class == "":
+                        non_dataset_objects = True  # if object is not in dataset (part of world objects)
+
                     temp_mask = []
                     for p in o.mask.point: # converts received mask into local coordinates and numpy array
                         p_list = []
@@ -698,7 +733,10 @@ class FaceMain():
 
                     np_mask = np.array(temp_mask)
                     if len(np_mask) > 2:
-                        bb_color = self.object_class_to_bb_color(o.object_class)
+                        if not non_dataset_objects:
+                            bb_color = self.object_class_to_bb_color(o.object_class)
+                        else:
+                            bb_color = self.yolo_color_from_name(o.object_name)                        
                         pygame.draw.polygon(surface, bb_color, np_mask, BB_WIDTH) # outside line (darker)
                         self.draw_polygon_alpha(surface, bb_color+(128,), np_mask) # inside fill with transparecny
 
@@ -708,12 +746,20 @@ class FaceMain():
             # However we must mirror all dections as well.
             """ # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
             text_font_t = pygame.font.SysFont(None, 28)
-            for o in self.node.detected_objects.objects:
+            for o in list_of_obj:
                 
                 if o.camera == camera: # checks if camera stream shown is the same as the camera that detected the detection 
+                    
+                    non_dataset_objects = False
+                    if o.object_class == "":
+                        non_dataset_objects = True  # if object is not in dataset (part of world objects)
+                    
                     text = str(o.object_name) # +" ("+str(o.index)+")"
                     text_width, text_height = text_font_t.size(text)
-                    bb_color = self.object_class_to_bb_color(o.object_class)
+                    if not non_dataset_objects:
+                        bb_color = self.object_class_to_bb_color(o.object_class)
+                    else:
+                        bb_color = self.yolo_color_from_name(o.object_name)   
 
                     if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
                         self.draw_transparent_rect(surface, int(o.box_top_left_x), int(o.box_top_left_y), text_width, text_height, bb_color, 255)
@@ -1704,8 +1750,9 @@ class FaceMain():
                     if self.node.show_camera_detections:
                         if self.node.selected_camera_stream.split(' ')[0] == "head": # just for head since yolo_pose and tracking are only considered for head, if this changes in the future must edit this
                             self.show_yolo_pose_detections(surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
-                            self.show_tracking_detections( surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
-                        self.show_yolo_object_detections(surface, self.node.selected_camera_stream.split(' ')[0])
+                            self.show_tracking_detections(surface, self.node.selected_camera_stream.split(' ')[0]) # ignores the " depth" when is using depth images
+                        self.show_yolo_object_detections(surface, self.node.selected_camera_stream.split(' ')[0], False) # detections from yolo_objects
+                        self.show_yolo_object_detections(surface, self.node.selected_camera_stream.split(' ')[0], True) # detections from yolo_world
 
                     scaled_surface = pygame.transform.scale(surface, self.dynamic_image_resize(surface))
                     # The image used is a copy from GUI, where the prespective was seen from behind the robot,

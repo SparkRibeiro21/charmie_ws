@@ -12,23 +12,26 @@ class MarkerPublisher(Node):
     def __init__(self):
         super().__init__("marker_publisher")
         # self.publisher = self.create_publisher(Marker, "visualization_marker", 10)
-        self.publisher_marker_array_rooms =             self.create_publisher(MarkerArray, "visualization_marker_array_rooms", 10)
-        self.publisher_marker_array_rooms_names =       self.create_publisher(MarkerArray, "visualization_marker_array_rooms_names", 10)
-        self.publisher_marker_array_furniture =         self.create_publisher(MarkerArray, "visualization_marker_array_furniture", 10)
-        self.publisher_marker_array_furniture_names =   self.create_publisher(MarkerArray, "visualization_marker_array_furniture_names", 10)
-        self.publisher_marker_array_navigations =       self.create_publisher(MarkerArray, "visualization_marker_array_navigations", 10)
-        self.publisher_marker_array_navigations_names = self.create_publisher(MarkerArray, "visualization_marker_array_navigations_names", 10)
+        self.publisher_marker_array_rooms                   = self.create_publisher(MarkerArray, "visualization_marker_array_rooms", 10)
+        self.publisher_marker_array_rooms_names             = self.create_publisher(MarkerArray, "visualization_marker_array_rooms_names", 10)
+        self.publisher_marker_array_furniture               = self.create_publisher(MarkerArray, "visualization_marker_array_furniture", 10)
+        self.publisher_marker_array_furniture_names         = self.create_publisher(MarkerArray, "visualization_marker_array_furniture_names", 10)
+        self.publisher_marker_array_navigations             = self.create_publisher(MarkerArray, "visualization_marker_array_navigations", 10)
+        self.publisher_marker_array_navigations_names       = self.create_publisher(MarkerArray, "visualization_marker_array_navigations_names", 10)
 
-        self.publisher_marker_array_detected_person =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_person", 10)
-        self.publisher_marker_array_detected_object =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_object", 10)
-        self.publisher_marker_array_tracking =          self.create_publisher(MarkerArray, "visualization_marker_array_tracking", 10)
+        self.publisher_marker_array_detected_person         = self.create_publisher(MarkerArray, "visualization_marker_array_detected_person", 10)
+        self.publisher_marker_array_detected_object         = self.create_publisher(MarkerArray, "visualization_marker_array_detected_object", 10)
+        self.publisher_marker_array_detected_world_object   = self.create_publisher(MarkerArray, "visualization_marker_array_detected_world_object", 10)
+        self.publisher_marker_array_tracking                = self.create_publisher(MarkerArray, "visualization_marker_array_tracking", 10)
         
-        self.publisher_marker_array_radar =             self.create_publisher(MarkerArray, "visualization_marker_array_radar", 10)
+        self.publisher_marker_array_radar                   = self.create_publisher(MarkerArray, "visualization_marker_array_radar", 10)
         
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        # Yolo World
+        self.world_objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'world_objects_all_detected_filtered', self.world_object_detected_filtered_callback, 10)
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         # Radar
@@ -56,6 +59,7 @@ class MarkerPublisher(Node):
 
         self.detected_people = ListOfDetectedPerson()
         self.detected_object = ListOfDetectedObject()
+        self.detected_world_object = ListOfDetectedObject()
         self.previous_marker_array_detected_people = ListOfDetectedPerson() 
         self.tracking = TrackingMask()
         self.radar = RadarData()
@@ -73,7 +77,6 @@ class MarkerPublisher(Node):
 
         self.NAMES_TEXT_SIZE = 0.2
 
-
         # self.timer = self.create_timer(1.0, self.publish_marker)  # Publish every 1 second
         # self.timer = self.create_timer(1.0, self.publish_marker_array)  # Publish every 1 second
         self.timer = self.create_timer(1.0, self.publish_all_marker_arrays)  # Publish every 1 second
@@ -85,6 +88,10 @@ class MarkerPublisher(Node):
     def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_object = det_object
         self.publish_marker_array_detected_object()
+
+    def world_object_detected_filtered_callback(self, world_det_object: ListOfDetectedObject):
+        self.detected_world_object = world_det_object
+        self.publish_marker_array_world_detected_object()
 
     def tracking_mask_callback(self, track: TrackingMask):
         self.tracking = track
@@ -695,6 +702,136 @@ class MarkerPublisher(Node):
                 marker_array.markers.append(marker_name)
             
         self.publisher_marker_array_detected_object.publish(marker_array)
+
+    def publish_marker_array_world_detected_object(self):
+
+        marker_array = MarkerArray()
+
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "map"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "Detected_world_object_B"
+        delete_marker.id = 0  # Use the same ID to delete it
+        delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
+        marker_array.markers.append(delete_marker)
+
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "map"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "Detected_world_object_N"
+        delete_marker.id = 0  # Use the same ID to delete it
+        delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
+        marker_array.markers.append(delete_marker)
+
+        # marker_array.markers.clear()
+
+        ### FALTA:
+        # ORIENTATION
+
+        world_obj_size = 0.2
+
+        ctr = 0
+        for object_ in self.detected_world_object.objects:
+            ctr += 1
+
+            # if object is in objects.json configuration file or not
+            if object_.object_class == "":
+                non_dataset_objects = True
+            else:
+                non_dataset_objects = False
+            
+            conf = f"{object_.confidence * 100:.0f}%"
+            x_ = f"{object_.position_absolute.x:4.2f}"
+            y_ = f"{object_.position_absolute.y:5.2f}"
+            z_ = f"{object_.position_absolute.z:5.2f}"
+            print(f"{object_.object_name:<17} {conf:<3} {object_.camera} ({x_}, {y_}, {z_}) {object_.room_location:<12} {object_.furniture_location}")
+            
+            marker = Marker()
+
+            # Header - Defines frame and timestamp
+            marker.header.frame_id = "map"
+            marker.header.stamp = self.get_clock().now().to_msg()
+            # Namespace and ID (useful when publishing multiple markers)
+            marker.ns = "Detected_world_object_B"
+            marker.id = ctr  # Each marker must have a unique ID
+            
+            if not non_dataset_objects:
+                # Marker Type (Choose shape)
+                if object_.cf_shape == "cylinder":
+                    marker.type = Marker.CYLINDER  # Other options: SPHERE, CYLINDER, ARROW, etc.
+                elif object_.cf_shape == "cuboid":
+                    marker.type = Marker.CUBE
+                elif object_.cf_shape == "sphere":
+                    marker.type = Marker.SPHERE
+                elif object_.cf_shape == "special": # may change in the future for something clearer
+                    marker.type = Marker.CYLINDER  
+            else:
+                    marker.type = Marker.SPHERE
+                
+            # Marker Action
+            marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+
+            marker.pose.position.x = object_.position_absolute.x  # Set the X coordinate
+            marker.pose.position.y = object_.position_absolute.y  # Set the X coordinate
+            marker.pose.position.z = object_.position_absolute.z  # Set the Z coordinate
+
+            marker.pose.orientation.x = 0.0
+            marker.pose.orientation.y = 0.0
+            marker.pose.orientation.z = 0.0
+            marker.pose.orientation.w = 1.0  # No rotation
+
+            if not non_dataset_objects:
+                marker.scale.x = object_.cf_length # Length
+                marker.scale.y = object_.cf_width  # Width
+                marker.scale.z = object_.cf_height # Height
+            else:
+                marker.scale.x = world_obj_size # Length
+                marker.scale.y = world_obj_size  # Width
+                marker.scale.z = world_obj_size # Height
+            
+            if not non_dataset_objects:
+                # Color (RGBA format, values from 0 to 1)
+                marker.color.r = 0.0 # 0.0  # Red
+                marker.color.g = 0.0 # 1.0  # Green
+                marker.color.b = 1.0 # 1.0  # Blue
+                marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+            else:
+                # Color (RGBA format, values from 0 to 1)
+                marker.color.r = 1.0 # 0.0  # Red
+                marker.color.g = 0.0 # 1.0  # Green
+                marker.color.b = 0.0 # 1.0  # Blue
+                marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+            
+            # Lifetime (0 = forever, otherwise, disappears after X seconds)
+            marker.lifetime.sec = 0
+            marker.lifetime.nanosec = 0
+
+            # Frame behavior (Keeps marker always facing the camera if enabled)
+            marker.frame_locked = False
+            
+            marker_array.markers.append(marker)
+
+            marker_name = Marker()
+            marker_name.header.frame_id = "map"
+            marker_name.header.stamp = self.get_clock().now().to_msg()
+            marker_name.ns = "Detected_world_object_N"
+            marker_name.id = ctr
+            marker_name.type = Marker.TEXT_VIEW_FACING
+            marker_name.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+            marker_name.pose.position.x = object_.position_absolute.x  # Set the X coordinate
+            marker_name.pose.position.y = object_.position_absolute.y  # Set the Y coordinate
+            marker_name.pose.position.z = object_.position_absolute.z  # Set the Z coordinate
+            marker_name.pose.orientation.w = 1.0  # No rotation
+            marker_name.scale.z = self.NAMES_TEXT_SIZE/2  # Height
+            marker_name.text = str(object_.object_name).replace(" ","_")
+            marker_name.color.r = 0.0  # Red
+            marker_name.color.g = 0.0  # Green
+            marker_name.color.b = 0.0  # Blue
+            marker_name.color.a = 1.0  # Alpha (1.0 = fully visible, 0.0 = invisible)
+
+            marker_array.markers.append(marker_name)
+            
+        self.publisher_marker_array_detected_world_object.publish(marker_array)
     
     def publish_marker_array_tracking(self):
 
