@@ -18,7 +18,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, SetFloat, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
-    GetSoundClassificationContinuous, GetMinRadarDistance
+    GetSoundClassificationContinuous, GetMinRadarDistance, ActivateYoloWorld
 from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles
 
 from charmie_point_cloud.point_cloud_class import PointCloud
@@ -96,6 +96,8 @@ class ROS2TaskNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        # Yolo World
+        self.world_objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'world_objects_all_detected_filtered', self.world_object_detected_filtered_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
@@ -167,6 +169,8 @@ class ROS2TaskNode(Node):
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Yolo World
+        self.activate_yolo_world_client = self.create_client(ActivateYoloWorld, "activate_yolo_world")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Radar
@@ -232,6 +236,7 @@ class ROS2TaskNode(Node):
             "charmie_tracking":             False,
             "charmie_yolo_objects":         True,
             "charmie_yolo_pose":            False,
+            "charmie_yolo_world":           False,
         """
 
         # waits until all modules are correctly turned ON
@@ -308,6 +313,10 @@ class ROS2TaskNode(Node):
         if self.ros2_modules["charmie_yolo_pose"]:
             while not self.activate_yolo_pose_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+
+        if self.ros2_modules["charmie_yolo_world"]:
+            while not self.activate_yolo_world_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Yolo World Activate Command...")
         
         self.create_timer(0.5, self.task_states_info_publisher_timer)
 
@@ -334,6 +343,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_activate_yolo_world = False
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
@@ -359,6 +369,7 @@ class ROS2TaskNode(Node):
         self.first_depth_base_image_received = False
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
+        self.detected_world_objects = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
         self.gamepad_controller_state = GamepadController()
@@ -411,6 +422,8 @@ class ROS2TaskNode(Node):
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.activate_yolo_world_success = True
+        self.activate_yolo_world_message = ""
         self.arm_success = True
         self.arm_message = ""
         self.navigation_success = True
@@ -524,6 +537,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
+        nodes_used.charmie_yolo_world           = self.ros2_modules["charmie_yolo_world"]
 
         self.nodes_used_client.call_async(nodes_used)
 
@@ -540,6 +554,10 @@ class ROS2TaskNode(Node):
         self.detected_objects = det_object
         self.new_object_frame_for_tracking = True
 
+    def world_object_detected_filtered_callback(self, det_world_object: ListOfDetectedObject):
+        self.detected_world_objects = det_world_object
+        self.new_object_frame_for_tracking = True
+    
     def get_rgbd_head_callback(self, rgbd: RGBD):
         self.rgb_head_img = rgbd.rgb
         self.first_rgb_head_image_received = True
@@ -649,24 +667,45 @@ class ROS2TaskNode(Node):
 
         self.activate_yolo_pose_client.call_async(request)
 
-
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
     def call_activate_yolo_objects_server(self, request=ActivateYoloObjects.Request()):
 
         self.activate_yolo_objects_client.call_async(request)
 
+    ### ACTIVATE YOLO WORLD SERVER FUNCTIONS ###
+    def call_activate_yolo_world_server(self, request = ActivateYoloWorld.Request(), wait_for_end_of=True):
+
+        future = self.activate_yolo_world_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_activate_yolo_world)
+        else:
+            self.activate_yolo_world_success = True
+            self.activate_yolo_world_message = "Wait for answer not needed"
+    
+    def callback_call_activate_yolo_world(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.activate_yolo_world_success = response.success
+            self.activate_yolo_world_message = response.message
+            self.waited_for_end_of_activate_yolo_world = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     ### ACTIVATE TRACKING SERVER FUNCTIONS ###
     def call_activate_tracking_server(self, request=ActivateTracking.Request()):
 
         self.activate_tracking_client.call_async(request)
 
-
     ### SET TABLE HEIGHT FOR MANUAL ARM MOVMENTS ###
     def call_set_height_furniture_for_arm_manual_movement_server(self, request=SetFloat.Request()):
 
         self.set_height_furniture_for_arm_manual_movement_client.call_async(request)
-
 
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, request=SetFace.Request(), wait_for_end_of=True):
@@ -2162,6 +2201,31 @@ class RobotStdFunctions():
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
 
+    def activate_yolo_world(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5, text_prompts=[], visual_prompts=[], wait_for_end_of=True):
+        request = ActivateYoloWorld.Request()
+        request.activate_prompt_free_head       = activate_prompt_free_head
+        request.activate_tv_prompt_head         = activate_tv_prompt_head
+        request.activate_prompt_free_hand       = activate_prompt_free_hand
+        request.activate_tv_prompt_hand         = activate_tv_prompt_hand
+        request.activate_prompt_free_base       = activate_prompt_free_base
+        request.activate_tv_prompt_base         = activate_tv_prompt_base
+        request.minimum_prompt_free_confidence  = float(minimum_prompt_free_confidence)
+        request.minimum_tv_prompt_confidence    = float(minimum_tv_prompt_confidence)
+        request.text_prompts = text_prompts
+        request.visual_prompts = visual_prompts
+
+        self.node.call_activate_yolo_world_server(request=request)
+
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_activate_yolo_world:
+            pass
+        self.node.waited_for_end_of_activate_yolo_world = False
+
+        self.node.activate_yolo_world_success = True
+        self.node.activate_yolo_world_message = "Activated with selected parameters"
+
+        return self.node.activate_yolo_world_success, self.node.activate_yolo_world_message
+
     def activate_motors(self, activate=True, wait_for_end_of=True):
         
         request = ActivateBool.Request()
@@ -3042,7 +3106,7 @@ class RobotStdFunctions():
             self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=t, wait_for_end_of=True)
             time.sleep(time_wait_neck_move_pre_each_frame)
-            self.node.detected_people.persons = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+            self.node.detected_people.persons = [] # clears detected_persons after receiving them to make sure the persons from previous frames are not considered again
             self.set_rgb(WHITE+SET_COLOUR)
 
             start_time = time.time()
@@ -3198,7 +3262,37 @@ class RobotStdFunctions():
         
         return img_path
 
-    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
+    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, 
+                           list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, 
+                           detect_objects        = False, 
+                           detect_furniture      = False, 
+                           detect_objects_hand   = False, 
+                           detect_furniture_hand = False, 
+                           detect_objects_base   = False, 
+                           detect_furniture_base = False,
+                           text_prompts=[], visual_prompts=(),
+                           detect_prompt_free_head  = False,
+                           detect_tv_prompt_head    = False,
+                           detect_prompt_free_hand  = False,
+                           detect_tv_prompt_hand    = False,
+                           detect_prompt_free_base  = False,
+                           detect_tv_prompt_base    = False,
+                           minimum_prompt_free_confidence = 0.5,
+                           minimum_tv_prompt_confidence = 0.5):
+        
+        # TODO: delete furniture yolo_objects 
+
+        # defines which models will be activated
+        yolo_objects_activate = False
+        if detect_objects or detect_furniture or detect_objects_hand or detect_furniture_hand or detect_objects_base or detect_furniture_base:
+            yolo_objects_activate = True
+
+        yolo_world_activate = False
+        if detect_prompt_free_head or detect_tv_prompt_head or detect_prompt_free_hand or detect_tv_prompt_hand or detect_prompt_free_base or detect_tv_prompt_base:
+            yolo_world_activate = True
+
+        # print("yolo_obj:", yolo_objects_activate)
+        # print("yolo_world:", yolo_world_activate)
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -3228,20 +3322,29 @@ class RobotStdFunctions():
             objects_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=detect_objects,             activate_furniture=detect_furniture,
-                                       activate_objects_hand=detect_objects_hand,   activate_furniture_hand=detect_furniture_hand,
-                                       activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
-                                       minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
+            self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+
+            if yolo_objects_activate:
+                self.activate_yolo_objects(activate_objects=detect_objects,             activate_furniture=detect_furniture,
+                                        activate_objects_hand=detect_objects_hand,   activate_furniture_hand=detect_furniture_hand,
+                                        activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
+                                        minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
+            
+            if yolo_world_activate:
+                self.activate_yolo_world(activate_prompt_free_head=detect_prompt_free_head, activate_tv_prompt_head=detect_tv_prompt_head,
+                                        activate_prompt_free_hand=detect_prompt_free_hand, activate_tv_prompt_hand=detect_tv_prompt_hand,
+                                        activate_prompt_free_base=detect_prompt_free_base, activate_tv_prompt_base=detect_tv_prompt_base,
+                                        minimum_prompt_free_confidence=minimum_prompt_free_confidence, minimum_tv_prompt_confidence=minimum_tv_prompt_confidence,
+                                        text_prompts=text_prompts, visual_prompts=visual_prompts, wait_for_end_of=True)
+
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             
-            if detect_objects or detect_furniture:        
+            if detect_objects or detect_furniture or detect_prompt_free_head or detect_tv_prompt_head:        
                 self.set_face(camera="head", show_detections=True)
-            elif detect_objects_hand or detect_furniture_hand:
+            elif detect_objects_hand or detect_furniture_hand or detect_prompt_free_hand or detect_tv_prompt_hand:
                 self.set_face(camera="hand", show_detections=True)
-            elif detect_objects_base or detect_furniture_base:
+            elif detect_objects_base or detect_furniture_base or detect_prompt_free_base or detect_tv_prompt_base:
                 self.set_face(camera="base", show_detections=True)
-                
-            # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
             
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
             for t in tetas:
@@ -3249,14 +3352,24 @@ class RobotStdFunctions():
                 self.set_rgb(RED+SET_COLOUR)
                 self.set_neck(position=t, wait_for_end_of=True)
                 time.sleep(time_wait_neck_move_pre_each_frame)
-                self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+
+                if yolo_objects_activate:
+                    self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+                if yolo_world_activate:
+                    self.node.detected_world_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
                 self.set_rgb(WHITE+SET_COLOUR)
 
                 start_time = time.time()
-                while (time.time() - start_time) < time_in_each_frame:      
+                while (time.time() - start_time) < time_in_each_frame:   
 
+                    local_detected_objects = ListOfDetectedObject()
+                    if yolo_objects_activate:
+                        local_detected_objects.objects += self.node.detected_objects.objects
+                    if yolo_world_activate:
+                        local_detected_objects.objects += self.node.detected_world_objects.objects
+                
                     # if detect_objects: 
-                    local_detected_objects = self.node.detected_objects
+                    # local_detected_objects = self.node.detected_objects
                     for temp_objects in local_detected_objects.objects:
                         
                         is_already_in_list = False
@@ -3264,7 +3377,7 @@ class RobotStdFunctions():
                         for object in objects_detected:
 
                             # filters by same index
-                            if temp_objects.index == object.index and temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
+                            if (temp_objects.index == object.index and yolo_objects_activate) and temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
                                 is_already_in_list = True
                                 object_already_in_list = object
 
@@ -3279,7 +3392,7 @@ class RobotStdFunctions():
                         if is_already_in_list:
                             objects_detected.remove(object_already_in_list)
                         # else:
-                        elif temp_objects.index > 0: # debug
+                        elif (temp_objects.index > 0 and yolo_objects_activate) or yolo_world_activate: # can't check if index is 0 in yolo_world since all index are 0
                             # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
                             if list_of_objects: 
                                 if not rgb_found_list_of_objects:
@@ -3291,7 +3404,7 @@ class RobotStdFunctions():
                             else:
                                 self.set_rgb(GREEN+SET_COLOUR)
                         
-                        if temp_objects.index > 0:
+                        if (temp_objects.index > 0 and yolo_objects_activate) or yolo_world_activate:
                             objects_detected.append(temp_objects)
                             objects_ctr+=1
 
@@ -3347,10 +3460,17 @@ class RobotStdFunctions():
                 if is_break_list_of_objects: 
                     break
 
-            self.activate_yolo_objects(activate_objects=False, activate_furniture=False,
-                                       activate_objects_hand=False, activate_furniture_hand=False,
-                                       activate_objects_base=False, activate_furniture_base=False,
-                                       minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
+            if yolo_objects_activate:
+                self.activate_yolo_objects(activate_objects=False, activate_furniture=False,
+                                        activate_objects_hand=False, activate_furniture_hand=False,
+                                        activate_objects_base=False, activate_furniture_base=False,
+                                        minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
+            if yolo_world_activate:
+                self.activate_yolo_world(activate_prompt_free_head=False, activate_tv_prompt_head=False,
+                                        activate_prompt_free_hand=False, activate_tv_prompt_hand=False,
+                                        activate_prompt_free_base=False, activate_tv_prompt_base=False,
+                                        minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5,
+                                        text_prompts=[], visual_prompts=[], wait_for_end_of=False)
             
             # DEBUG
             # print("TOTAL objects in this neck pos:")
@@ -3386,7 +3506,7 @@ class RobotStdFunctions():
 
                             if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name and \
                                 total_objects_detected[frame][object].camera == filtered_objects[filtered].camera and \
-                                total_objects_detected[frame][object].index == filtered_objects[filtered].index :
+                                (total_objects_detected[frame][object].index == filtered_objects[filtered].index and yolo_objects_activate):
                                         same_object_ctr+=1
                                         same_object_old = filtered_objects[filtered]
                                         same_object_new = total_objects_detected[frame][object]
@@ -3505,7 +3625,7 @@ class RobotStdFunctions():
         #     print(o.object_name)
         self.node.search_for_object_detections_publisher.publish(sfo_pub)
             
-        return final_objects        
+        return final_objects
 
     def detected_object_to_face_path(self, object=DetectedObject(), send_to_face=False, bb_color=(0,0,255)):
 
