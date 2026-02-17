@@ -59,9 +59,10 @@ def main():
         labels.append(label)
         print(f"Saved bbox: {bboxes[-1]}  label='{label}'\n")
 
-        more = input("Add another bbox? [Y/n]: ").strip().lower()
-        if more == "n":
-            break
+        # In case we want more than one bounding box per image. Temporarly removed
+        # more = input("Add another bbox? [Y/n]: ").strip().lower()
+        # if more == "n":
+        break
 
     if not bboxes:
         print("No bboxes saved. Exiting.")
