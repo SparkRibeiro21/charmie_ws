@@ -257,9 +257,14 @@ class LaunchStdFunctions():
             PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('realsense2_camera'), 'launch', 'charmie_multi_camera_launch.py')])
             )
 
-            # Include static transforms
+        # Include static transforms
         self.static_transforms_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('charmie_description'), 'launch', 'static_transforms_launch.py')])
+            )
+        
+        # Include static transforms for localization using just odom (mainly for unmapped environments)
+        self.static_transforms_just_odom_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('charmie_description'), 'launch', 'static_transforms_just_odom_launch.py')])
             )
         
         # Use IncludeLaunchDescription to include the launch file

@@ -3694,17 +3694,49 @@ class RobotStdFunctions():
 
         self.set_speech(command=self.node.llm_demonstration_response, quick_voice=True, wait_for_end_of=True)
 
-    def get_llm_gpsr(self, wait_for_end_of=True):
+    def get_llm_confirm_command(self, wait_for_end_of=True):
+
+        command_confirmed = False
+        max_confirm_attempts = 3
+        confirm_attempts_cntr = 0
 
         self.calibrate_audio(wait_for_end_of=True)
         # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-        random_question = str(random.randint(1, 3))
-        command = self.get_audio(gpsr=True, question="demonstration/llm_get_question_"+random_question, wait_for_end_of=True)
 
-        # add generic sentence so it is not so long quiet
-        self.set_speech(filename="generic/uhm", wait_for_end_of=False)
-        random_wait = str(random.randint(1, 3))
-        self.set_speech(filename="gpsr/llm_wait_for_gpsr_"+random_wait, wait_for_end_of=False)
+        while not command_confirmed and confirm_attempts_cntr < max_confirm_attempts:
+            confirm_attempts_cntr += 1
+
+            self.set_speech(command="What is your request?", quick_voice=True, wait_for_end_of=True)
+            command = self.get_audio(gpsr=True, wait_for_end_of=True)
+
+            # add step to normalize command
+
+            self.set_speech(filename="generic/uhm", wait_for_end_of=False)
+            self.set_speech(command="Do you want me to " + command + "?", quick_voice=True, wait_for_end_of=True)
+            self.set_speech(command="Answer with robot yes or robot no", quick_voice=True, wait_for_end_of=True)
+            confirmation = self.get_audio(yes_or_no= True, wait_for_end_of=True)
+            if confirmation == "yes":
+                command_confirmed = True
+            elif confirmation == "no":
+                if confirm_attempts_cntr < max_confirm_attempts:
+                    command_confirmed = False
+                    self.set_speech(command="I am sorry, I did not understand. Let's try again.", quick_voice=True, wait_for_end_of=True)
+                else:
+                    command = "ERROR"
+
+        return command
+
+    def get_llm_gpsr(self, command= "", wait_for_end_of=True):
+
+        # self.calibrate_audio(wait_for_end_of=True)
+        # # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+        # random_question = str(random.randint(1, 3))
+        # command = self.get_audio(gpsr=True, question="demonstration/llm_get_question_"+random_question, wait_for_end_of=True)
+
+        # # add generic sentence so it is not so long quiet
+        # self.set_speech(filename="generic/uhm", wait_for_end_of=False)
+        # random_wait = str(random.randint(1, 3))
+        # self.set_speech(filename="gpsr/llm_wait_for_gpsr_"+random_wait, wait_for_end_of=False)
 
         
         ### EXAMPLE FOR LLM CONFIRM COMMAND - SLENDER
@@ -3723,11 +3755,9 @@ class RobotStdFunctions():
 
         # self.set_speech(command=self.node.llm_confirm_command_response, quick_voice=True, wait_for_end_of=True)
 
-        self.set_speech(command = "I heard the following command " + command, quick_voice=True, wait_for_end_of=True)
+        # self.set_speech(command = "I heard the following command " + command, quick_voice=True, wait_for_end_of=True)
 
         ### END OF EXAMPLE
-
-
 
         request = GetLLMGPSR.Request()
         request.command = command
