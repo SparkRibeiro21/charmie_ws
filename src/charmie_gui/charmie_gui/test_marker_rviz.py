@@ -731,7 +731,7 @@ class MarkerPublisher(Node):
         world_obj_size = 0.2
 
         ctr = 0
-        for object_ in self.detected_object.objects:
+        for object_ in self.detected_world_object.objects:
             ctr += 1
 
             # if object is in objects.json configuration file or not
