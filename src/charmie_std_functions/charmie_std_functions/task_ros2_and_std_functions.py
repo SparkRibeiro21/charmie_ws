@@ -3291,6 +3291,9 @@ class RobotStdFunctions():
         if detect_prompt_free_head or detect_tv_prompt_head or detect_prompt_free_hand or detect_tv_prompt_hand or detect_prompt_free_base or detect_tv_prompt_base:
             yolo_world_activate = True
 
+        # print("yolo_obj:", yolo_objects_activate)
+        # print("yolo_world:", yolo_world_activate)
+
         final_objects = []
         if not list_of_objects_detected_as:
             list_of_objects_detected_as = [None] * len(list_of_objects)
@@ -3336,11 +3339,11 @@ class RobotStdFunctions():
 
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             
-            if detect_objects or detect_furniture:        
+            if detect_objects or detect_furniture or detect_prompt_free_head or detect_tv_prompt_head:        
                 self.set_face(camera="head", show_detections=True)
-            elif detect_objects_hand or detect_furniture_hand:
+            elif detect_objects_hand or detect_furniture_hand or detect_prompt_free_hand or detect_tv_prompt_hand:
                 self.set_face(camera="hand", show_detections=True)
-            elif detect_objects_base or detect_furniture_base:
+            elif detect_objects_base or detect_furniture_base or detect_prompt_free_base or detect_tv_prompt_base:
                 self.set_face(camera="base", show_detections=True)
             
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
@@ -3374,7 +3377,7 @@ class RobotStdFunctions():
                         for object in objects_detected:
 
                             # filters by same index
-                            if temp_objects.index == object.index and temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
+                            if (temp_objects.index == object.index and yolo_objects_activate) and temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
                                 is_already_in_list = True
                                 object_already_in_list = object
 
@@ -3401,7 +3404,7 @@ class RobotStdFunctions():
                             else:
                                 self.set_rgb(GREEN+SET_COLOUR)
                         
-                        if temp_objects.index > 0:
+                        if (temp_objects.index > 0 and yolo_objects_activate) or yolo_world_activate:
                             objects_detected.append(temp_objects)
                             objects_ctr+=1
 
@@ -3503,7 +3506,7 @@ class RobotStdFunctions():
 
                             if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name and \
                                 total_objects_detected[frame][object].camera == filtered_objects[filtered].camera and \
-                                total_objects_detected[frame][object].index == filtered_objects[filtered].index :
+                                (total_objects_detected[frame][object].index == filtered_objects[filtered].index and yolo_objects_activate):
                                         same_object_ctr+=1
                                         same_object_old = filtered_objects[filtered]
                                         same_object_new = total_objects_detected[frame][object]

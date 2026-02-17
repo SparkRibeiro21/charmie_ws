@@ -12,7 +12,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 False,
+    "charmie_face":                 True,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
@@ -25,12 +25,12 @@ ros2_modules = {
     "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
-    "charmie_neck":                 False,
+    "charmie_neck":                 True,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             False,
     "charmie_tracking":             False,
-    "charmie_yolo_objects":         False,
+    "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           True,
 }
@@ -73,37 +73,75 @@ class TaskMain():
 
             if self.state == Prompt_free_yolo_world:
 
-                while True:
+                
+ 
+                # self.set_face(command="charmie_face")
+                self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
-                    ### YOLO WORLD PROMPT FREE EXAMPLE ###
-                    t0 = time.perf_counter()
-                    print("PRE ACTIVATE")
-                    self.robot.activate_yolo_world(activate_tv_prompt_hand=True, visual_prompts=["spam_office_table_head", "orange_juice_floor_office_base"], minimum_tv_prompt_confidence=0.25)
-                    print("ACTIVATE TRUE ", time.perf_counter()-t0)
-                    time.sleep(2.0)
+                time.sleep(2.0)
 
-                    # sends detected object to face
-                    world_obj_found = self.robot.node.detected_world_objects.objects
-                    while len(world_obj_found) < 1:
-                        world_obj_found = self.robot.node.detected_world_objects.objects
+                # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
+                tetas = [[-30, -45], [0, -45], [30, -45]]
+                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
+                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, detect_tv_prompt_head=True, visual_prompts=["red_wine_dinner_table_head_cam", "tomato_soup_dinner_table_head_cam"], minimum_tv_prompt_confidence=0.25)
+
+                print("LIST OF DETECTED OBJECTS:")
+                for o in objects_found:
+                    conf = f"{o.confidence * 100:.0f}%"
+                    x_ = f"{o.position_absolute.x:4.2f}"
+                    y_ = f"{o.position_absolute.y:5.2f}"
+                    z_ = f"{o.position_absolute.z:5.2f}"
+                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({x_}, {y_}, {z_})")
                     
-                    for wof in world_obj_found:
-                        print(wof.object_name, 
-                              wof.confidence, 
-                              wof.position_absolute.x,
-                              wof.position_absolute.y,
-                              wof.position_absolute.z,
-                              wof.room_location, 
-                              wof.furniture_location, 
-                              wof.object_class,
-                              wof.orientation,
-                              wof.cf_width,
-                              wof.cf_length,
-                              wof.cf_height,
-                              wof.cf_shape,
-                              wof.cf_can_pick,
-                              wof.cf_std_pick
-                        )
+                self.robot.set_rgb(CYAN+HALF_ROTATE)
+                time.sleep(0.5)
+
+                if objects_found:
+                    self.robot.set_speech(filename="generic/found_the", wait_for_end_of=True)
+                    for o in objects_found:
+                        path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
+                        self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+                        time.sleep(4)
+                                
+                # next state
+
+
+
+
+
+                while True:
+                    pass
+
+                ### YOLO WORLD PROMPT FREE EXAMPLE ###
+                t0 = time.perf_counter()
+                print("PRE ACTIVATE")
+                self.robot.activate_yolo_world(activate_tv_prompt_hand=True, visual_prompts=["spam_office_table_head", "orange_juice_floor_office_base"], minimum_tv_prompt_confidence=0.25)
+                print("ACTIVATE TRUE ", time.perf_counter()-t0)
+                time.sleep(2.0)
+
+                # sends detected object to face
+                world_obj_found = self.robot.node.detected_world_objects.objects
+                while len(world_obj_found) < 1:
+                    world_obj_found = self.robot.node.detected_world_objects.objects
+                
+                for wof in world_obj_found:
+                    print(wof.object_name, 
+                            wof.confidence, 
+                            wof.position_absolute.x,
+                            wof.position_absolute.y,
+                            wof.position_absolute.z,
+                            wof.room_location, 
+                            wof.furniture_location, 
+                            wof.object_class,
+                            wof.orientation,
+                            wof.cf_width,
+                            wof.cf_length,
+                            wof.cf_height,
+                            wof.cf_shape,
+                            wof.cf_can_pick,
+                            wof.cf_std_pick
+                    )
 
                     while True:
                         pass
