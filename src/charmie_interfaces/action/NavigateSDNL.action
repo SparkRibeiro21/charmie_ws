@@ -1,0 +1,27 @@
+# SDNL Navigation Action
+# This action commands the SDNL navigation controller to reach a target pose
+# and optionally avoid obstacles, providing continuous feedback and a final result.
+
+# Goal (sent by the client)
+geometry_msgs/Pose2D target_pose        # Target pose in MAP frame (x,y) and desired final yaw (theta) [rad]
+uint8 mode                              # Navigation mode (e.g., MOVE_TO_POSE, MOVE_ONLY, ROTATE_ONLY, MOVE_THEN_ORIENT)
+bool ignore_obstacles                   # If true, obstacle repulsion is ignored (attractor-only behavior)
+float32 reached_radius                  # Distance threshold [m] to consider the target position reached
+float32 yaw_tolerance                   # Yaw threshold [rad] to consider the final orientation reached
+float32 max_linear_speed                # Max linear speed command [m/s] (controller clamps to this)
+float32 max_angular_speed               # Max angular speed command [rad/s] (controller clamps to this)
+
+---
+
+# Result (returned once)
+bool success                            # True if the goal finished successfully, false otherwise (aborted/canceled)
+string message                          # Human-readable message (error or completion info)
+
+---
+
+# Feedback (streamed)
+float32 dist_to_target                  # Current Euclidean distance [m] from robot to target position (MAP frame)
+float32 yaw_error                       # Current yaw error [rad] between robot yaw and target yaw (wrapped to [-pi, pi])
+geometry_msgs/Twist cmd_vel             # Latest velocity command published by the controller (cmd_vel)
+float32 min_obstacle_dist_edge          # Minimum obstacle distance [m] from robot edge (not center), in a selected region or global
+string state                            # Controller state label (e.g., "moving", "rotating", "reached_pos", "finished")
