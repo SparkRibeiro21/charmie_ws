@@ -32,7 +32,7 @@ setup(
             "arm_carry_my_luggage = charmie_arm_ufactory.arm_carry_my_luggage:main",
             "arm_receptionist = charmie_arm_ufactory.arm_receptionist:main",
             "arm_clean_table = charmie_arm_ufactory.arm_clean_table:main",
-
+            "arm_moveit = charmie_arm_ufactory.arm_moveit:main",
         ],
     },
 )
