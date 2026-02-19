@@ -332,8 +332,25 @@ class LaunchStdFunctions():
         self.charmie_localisation = Node(package='charmie_localisation',
                     executable='localisation',
                     name='localisation',
-                    emulate_tty=True
-                    )
+                    emulate_tty=True,
+                    parameters=[{
+                        'publish_pose': True,
+                        'publish_gripper_map': True,
+                        'publish_gripper_base': True,
+                    }]
+                )
+        
+        self.charmie_localisation_sim = Node(package='charmie_localisation',
+                    executable='localisation',
+                    name='localisation',
+                    emulate_tty=True,
+                    parameters=[{
+                        'use_sim_time': True,
+                        'publish_pose': True,
+                        'publish_gripper_map': False,
+                        'publish_gripper_base': False,
+                    }]
+                )
         
         self.face = Node(package='charmie_face',
                     executable='face',
@@ -445,11 +462,20 @@ class LaunchStdFunctions():
                 arguments=['--display-config', rviz_config_path]
             )
         
-        self.radar = Node(  package='charmie_radar',
-                            executable='radar',
-                            name='radar',
-                            emulate_tty=True
-                            )
+        self.radar = Node(package='charmie_radar',
+                          executable='radar',
+                          name='radar',
+                          emulate_tty=True
+                          )
+        
+        self.radar_sim = Node(package='charmie_radar',
+                              executable='radar',
+                              name='radar',
+                              emulate_tty=True,
+                              parameters=[{
+                                  'use_sim_time': True
+                              }]
+                          )
         
         self.odometry_lidar = Node(package='rf2o_laser_odometry',
                 executable='rf2o_laser_odometry_node',
