@@ -9,15 +9,15 @@ using namespace std::chrono_literals;
 
 SDNLNavNode::SDNLNavNode()
 : Node("sdnl_nav"),
+  debug_test_signal_(this->declare_parameter<bool>("debug_test_signal", true)),
   control_rate_hz_(this->declare_parameter<double>("control_rate_hz", 30.0)),
-  debug_enabled_(this->declare_parameter<bool>("debug_enabled", false)),
+  debug_enabled_(this->declare_parameter<bool>("debug_enabled", true)),
   debug_rate_hz_(this->declare_parameter<double>("debug_rate_hz", 10.0)),
   n_samples_(this->declare_parameter<int>("n_samples", 720)),
   topic_robot_localisation_(this->declare_parameter<std::string>("topic_robot_localisation", "robot_localisation")),
   topic_radar_data_(this->declare_parameter<std::string>("topic_radar_data", "radar/data")),
   topic_cmd_vel_(this->declare_parameter<std::string>("topic_cmd_vel", "cmd_vel")),
   topic_sdnl_debug_(this->declare_parameter<std::string>("topic_sdnl_debug", "sdnl/debug")),
-  robot_radius_(this->declare_parameter<double>("robot_radius", 0.28)),
   default_max_linear_speed_(this->declare_parameter<double>("default_max_linear_speed", 0.4)),
   default_max_angular_speed_(this->declare_parameter<double>("default_max_angular_speed", 1.0)),
   default_reached_radius_(this->declare_parameter<double>("default_reached_radius", 0.6)),
@@ -217,55 +217,48 @@ void SDNLNavNode::controlLoop()
 void SDNLNavNode::debugLoop()
 {
   if (!debug_enabled_ || !debug_pub_) return;
-  if (!goal_active_.load()) return;
 
-  NavigateSDNL::Goal goal;
-  geometry_msgs::msg::Pose2D pose;
-  bool have_pose = false;
+  const int N = std::max(64, n_samples_);
+  const double dtheta = (2.0 * M_PI) / static_cast<double>(N);
+  const double t = this->now().seconds();
 
-  {
-    std::lock_guard<std::mutex> lk(goal_mutex_);
-    goal = active_goal_;
+  std::vector<float> y_att(N), y_rep(N), y_final(N);
+
+  for (int i = 0; i < N; ++i) {
+    const double th = i * dtheta;
+    y_att[i] = static_cast<float>(10.0 * std::sin(th - 0.5 * t));
+    y_rep[i] = static_cast<float>( 6.0 * std::cos(2.0 * th + 0.3 * t));
+    y_final[i] = y_att[i] + y_rep[i];
   }
-  {
-    std::lock_guard<std::mutex> lk(data_mutex_);
-    have_pose = have_pose_;
-    if (have_pose) pose = last_pose_;
-  }
-  if (!have_pose) return;
-
-  geometry_msgs::msg::Twist cmd;
-  double dist = 0.0, yaw_err = 0.0, psi_target_base = 0.0;
-  {
-    std::lock_guard<std::mutex> lk(debug_mutex_);
-    cmd = latest_cmd_;
-    dist = latest_dist_;
-    yaw_err = latest_yaw_err_;
-    psi_target_base = latest_psi_target_base_;
-  }
-
-  std::vector<float> y_att, y_rep, y_final;
-  debug_builder_.build_curves(n_samples_, psi_target_base, goal.ignore_obstacles, y_att, y_rep, y_final);
 
   charmie_interfaces::msg::SDNLDebug dbg;
   dbg.header.stamp = this->now();
   dbg.header.frame_id = "base_link";
-  dbg.n_samples = static_cast<uint16_t>(y_att.size());
-  dbg.dtheta = static_cast<float>((2.0 * M_PI) / static_cast<double>(std::max<size_t>(1, y_att.size())));
-  dbg.y_attractor = y_att;
-  dbg.y_rep_sum = y_rep;
-  dbg.y_final = y_final;
+  dbg.n_samples = static_cast<uint16_t>(N);
+  dbg.dtheta = static_cast<float>(dtheta);
 
-  dbg.robot_map = pose;
-  dbg.target_pose = goal.target_pose;
-  dbg.psi_target_base = static_cast<float>(psi_target_base);
+  dbg.y_attractor = y_att;
+  dbg.y_rep_sum   = y_rep;
+  dbg.y_final     = y_final;
+
+  // Minimal “fake” metadata so viewer can draw heading line etc.
+  dbg.robot_map.x = 0.0;
+  dbg.robot_map.y = 0.0;
+  dbg.robot_map.theta = 0.0;
+
+  dbg.target_pose.x = 1.0;
+  dbg.target_pose.y = 0.0;
+  dbg.target_pose.theta = 0.0;
+
+  // Animate psi so you can see the red line move
+  dbg.psi_target_base = static_cast<float>(std::fmod(std::max(0.0, t * 0.3), 2.0 * M_PI));
 
   dbg.f_target = 0.0f;
   dbg.f_obstacle = 0.0f;
   dbg.f_final = 0.0f;
 
-  dbg.cmd_vel = cmd;
-  dbg.dist_to_target = static_cast<float>(dist);
+  dbg.cmd_vel = geometry_msgs::msg::Twist(); // zeros
+  dbg.dist_to_target = 0.0f;
   dbg.min_obstacle_dist_edge = -1.0f;
 
   debug_pub_->publish(dbg);

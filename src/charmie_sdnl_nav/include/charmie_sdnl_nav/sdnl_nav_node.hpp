@@ -57,11 +57,12 @@ private:
   std::string topic_cmd_vel_;
   std::string topic_sdnl_debug_;
 
-  double robot_radius_;
   double default_max_linear_speed_;
   double default_max_angular_speed_;
   double default_reached_radius_;
   double default_yaw_tolerance_;
+
+  bool debug_test_signal_;
 
   // ROS interfaces
   rclcpp::Subscription<geometry_msgs::msg::Pose2D>::SharedPtr pose_sub_;
