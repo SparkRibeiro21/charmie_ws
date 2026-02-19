@@ -45,7 +45,10 @@ class LaunchStdFunctions():
         self.robot_state_publisher_gazebo_node = Node(
             package="robot_state_publisher",
             executable="robot_state_publisher",
-            parameters=[{'robot_description': robot_description_gazebo}]
+            parameters=[{
+                'robot_description': robot_description_gazebo,
+                'use_sim_time': True
+            }]
         )
 
 
