@@ -1,0 +1,27 @@
+{
+  "type": "yoloe_visual_prompt",
+  "image": "pringles2_office_base.jpg",
+  "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
+  "width": 640,
+  "height": 480,
+  "classes": [
+    {
+      "cls": 0,
+      "name": "pringles"
+    }
+  ],
+  "bboxes": [
+    {
+      "cls": 0,
+      "xyxy": [
+        110.0,
+        61.0,
+        192.0,
+        249.0
+      ]
+    }
+  ],
+  "meta": {
+    "notes": ""
+  }
+}

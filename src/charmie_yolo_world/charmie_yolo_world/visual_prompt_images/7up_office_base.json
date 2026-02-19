@@ -1,0 +1,27 @@
+{
+  "type": "yoloe_visual_prompt",
+  "image": "7up_office_base.jpg",
+  "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
+  "width": 640,
+  "height": 480,
+  "classes": [
+    {
+      "cls": 0,
+      "name": "7up"
+    }
+  ],
+  "bboxes": [
+    {
+      "cls": 0,
+      "xyxy": [
+        115.0,
+        165.0,
+        194.0,
+        326.0
+      ]
+    }
+  ],
+  "meta": {
+    "notes": ""
+  }
+}
