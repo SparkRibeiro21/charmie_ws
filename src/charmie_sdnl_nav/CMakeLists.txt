@@ -13,7 +13,17 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(charmie_interfaces REQUIRED)
 
-add_executable(sdnl_nav src/sdnl_nav.cpp)
+add_executable(sdnl_nav
+  src/main.cpp
+  src/sdnl_nav_node.cpp
+  src/sdnl_core.cpp
+  src/debug_builder.cpp
+)
+
+target_include_directories(sdnl_nav PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 
 ament_target_dependencies(sdnl_nav
   rclcpp
@@ -27,6 +37,11 @@ install(TARGETS
   sdnl_nav
   DESTINATION lib/${PROJECT_NAME}
 )
+
+install(DIRECTORY include/
+  DESTINATION include/
+)
+
 
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}/
