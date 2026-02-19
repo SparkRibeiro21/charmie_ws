@@ -62,6 +62,16 @@ class LaunchStdFunctions():
             arguments=['-d', rviz_basic_config_path]
         )
 
+        self.rviz2_basic_node_sim = Node(
+            package="rviz2",
+            executable="rviz2",
+            name="rviz",  # nome fixo (igual ao que já aparece na tua lista)
+            arguments=['-d', rviz_basic_config_path],
+            parameters=[{
+                'use_sim_time': True
+            }]
+        )
+
         rviz_slam_config_path = os.path.join(get_package_share_path('charmie_description'), 
                                 'rviz', 'slam_config.rviz')
     
