@@ -273,7 +273,12 @@ class ROS2TaskNode(Node):
 
         if self.ros2_modules["charmie_nav2"]:
             while not self.nav2_client_.server_is_ready():
-                self.get_logger().warn("Waiting for Server Nav2 Trigger Command...")
+                self.get_logger().warn("Waiting for Nav2 Server...")
+                time.sleep(1.0)
+
+        if self.ros2_modules["charmie_nav_sdnl"]:
+            while not self.sdnl_nav_client_.server_is_ready():
+                self.get_logger().warn("Waiting for Nav SDNL Server...")
                 time.sleep(1.0)
 
         if self.ros2_modules["charmie_neck"]:
@@ -533,6 +538,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_llm                  = self.ros2_modules["charmie_llm"]
         nodes_used.charmie_navigation           = self.ros2_modules["charmie_navigation"]
         nodes_used.charmie_nav2                 = self.ros2_modules["charmie_nav2"]
+        nodes_used.charmie_nav_sdnl             = self.ros2_modules["charmie_nav_sdnl"]
         nodes_used.charmie_neck                 = self.ros2_modules["charmie_neck"]
         nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
         nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
