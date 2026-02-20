@@ -54,6 +54,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RadarSector.msg"
   "msg/RGB.msg"
   "msg/SDNLDebug.msg"
+  "msg/SDNLMarkerDebug.msg"
   "msg/SuccessMessage.msg"
   "msg/TarNavSDNL.msg"
   "msg/TaskStatesInfo.msg"
