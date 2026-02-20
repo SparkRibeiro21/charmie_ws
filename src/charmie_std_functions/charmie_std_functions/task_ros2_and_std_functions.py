@@ -11,7 +11,7 @@ from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from nav2_msgs.srv import ClearEntireCostmap
 from realsense2_camera_msgs.msg import RGBD
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
     ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
     TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
@@ -19,7 +19,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
     GetSoundClassificationContinuous, GetMinRadarDistance, ActivateYoloWorld
-from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles
+from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles, NavigateSDNL
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
@@ -101,11 +101,6 @@ class ROS2TaskNode(Node):
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
-        # Navigation
-        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
-        self.target_pos_check_answer_subscriber = self.create_subscription(Bool, "target_pos_check_answer", self.target_pos_check_answer_callback, 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
-        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) # used only for gamepad controller
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
@@ -199,8 +194,9 @@ class ROS2TaskNode(Node):
 
         ### Actions (Clients) ###
         # From NAV2
-        self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
-        self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
+        self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose") # just to check if nav2 is operational
+        # self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
+
         # From CHARMIE Navigation
         self.charmie_nav2_client_ = ActionClient(self, NavigateToPose, "charmie_navigate_to_pose")
         self.charmie_nav2_follow_waypoints_client_ = ActionClient(self, FollowWaypoints, "charmie_navigate_follow_waypoints")
@@ -209,6 +205,10 @@ class ROS2TaskNode(Node):
         self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
         self.adjust_navigation_omni_client = ActionClient(self, AdjustNavigationOmnidirectional, "adjust_navigation_omni")
         self.adjust_navigation_obstacle_client = ActionClient(self, AdjustNavigationObstacles, "adjust_navigation_obstacle")
+
+        # From NAV SDNL
+        self.sdnl_nav_client_ = ActionClient(self, NavigateSDNL, "sdnl_navigate_to_pose")
+
     
 
         self.send_node_used_to_gui()
@@ -426,8 +426,6 @@ class ROS2TaskNode(Node):
         self.activate_yolo_world_message = ""
         self.arm_success = True
         self.arm_message = ""
-        self.navigation_success = True
-        self.navigation_message = ""
         self.activate_motors_success = True
         self.activate_motors_message = ""
         self.activate_tracking_success = True
@@ -494,6 +492,11 @@ class ROS2TaskNode(Node):
         self.adjust_obstacle_navigation_accepted = None
         self.adjust_obstacle_navigation_feedback = AdjustNavigationObstacles.Feedback()
         self.adjust_obstacle_navigation_status = GoalStatus.STATUS_UNKNOWN
+
+        self.sdnl_nav_goal_handle_ = None
+        self.sdnl_nav_goal_accepted = None
+        self.sdnl_nav_feedback = NavigateSDNL.Feedback()
+        self.sdnl_nav_status = GoalStatus.STATUS_UNKNOWN
 
         self.current_odom_pose = None
         self.current_odom_wheels_pose = None
@@ -599,14 +602,6 @@ class ROS2TaskNode(Node):
             self.arm_message = "Wrong Movement Received"
 
         self.get_logger().info("Received Arm Finished")
-
-    ### NAVIGATION ###
-    def flag_navigation_reached_callback(self, flag: Bool):
-        self.flag_navigation_reached = flag
-
-    def target_pos_check_answer_callback(self, flag: Bool):
-        self.flag_target_pos_check_answer = flag.data
-        # print("RECEIVED NAVIGATION CONFIRMATION")
 
     ### ODOMETRY ###
     def odom_callback(self, msg):
@@ -1547,6 +1542,57 @@ class ROS2TaskNode(Node):
         # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
 
+    ### SDNL Nav Action Client ###
+    # ros2 action send_goal /sdnl_navigate_to_pose charmie_interfaces/action/NavigateSDNL "{target_pose: {x: 1.0, y: 1.0, theta: 1.57079632679}, mode: 0, ignore_obstacles: false, reached_radius: 0.20, yaw_tolerance: 0.10, max_linear_speed: 0.30, max_angular_speed: 0.80 }"
+    
+    def sdnl_nav_client_goal_response_callback(self, future):
+        self.sdnl_nav_goal_handle_: ClientGoalHandle = future.result()
+        if self.sdnl_nav_goal_handle_.accepted:
+            self.get_logger().info("SDNL Nav Goal accepted.")
+            self.sdnl_nav_goal_handle_.get_result_async().add_done_callback(self.sdnl_nav_client_goal_result_callback)
+            self.sdnl_nav_goal_accepted = True
+        else:
+            self.sdnl_nav_goal_accepted = False
+            self.sdnl_nav_goal_handle_ = None
+            self.get_logger().warn("SDNL Nav Goal rejected.")
+
+    def sdnl_nav_client_goal_result_callback(self, future):
+        status = future.result().status
+        result = future.result().result
+        
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.sdnl_nav_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info(f"SDNL NAV SUCCEEDED: {result.message}")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.sdnl_nav_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().info(f"SDNL NAV ABORTED: {result.message}")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.sdnl_nav_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().info(f"SDNL NAV CANCELED: {result.message}")
+        else:
+            self.sdnl_nav_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}, {result.message}")
+        
+        # When goal is finished, clear the handle
+        self.sdnl_nav_goal_handle_ = None
+    
+    def sdnl_nav_client_cancel_goal(self):
+        if self.sdnl_nav_goal_handle_ is None:
+            self.get_logger().warn("No active NavigateSDNL goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to SDNL...")
+        self.sdnl_nav_goal_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.sdnl_nav_goal_handle_ = None
+
+    def sdnl_nav_client_goal_feedback_callback(self, feedback_msg):
+        self.sdnl_nav_feedback = feedback_msg.feedback
+        # Exemplos úteis para debug (se quiseres imprimir):
+        # dist = self.sdnl_nav_feedback.dist_to_target
+        # yaw_err = self.sdnl_nav_feedback.yaw_error
+        # wz = self.sdnl_nav_feedback.cmd_vel.angular.z
+        # self.get_logger().info(f"dist={dist:.2f} yaw_err={yaw_err:.2f} wz={wz:.2f}")
 
 #############################################################################################################################
 #
@@ -2329,60 +2375,6 @@ class RobotStdFunctions():
 
         return self.node.set_height_furniture_for_arm_manual_movement_client_success, self.node.set_height_furniture_for_arm_manual_movement_client_message
     
-    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, avoid_people=False, wait_for_end_of=True):
-
-        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
-            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
-
-            self.node.navigation_success = False
-            self.node.navigation_message = "Wrong Movement Name"
-
-        else:
-
-            self.node.flag_target_pos_check_answer = False
-            while not self.node.flag_target_pos_check_answer:
-                navigation = TarNavSDNL()
-
-                # Pose2D target_coordinates
-                # string move_or_rotate
-                # float32 orientation_absolute
-                # bool flag_not_obs
-                # float32 reached_radius
-                # bool avoid_people
-                # float32 adjust_distance
-                # float32 adjust_direction
-                # float32 adjust_min_dist
-                # float32 max_speed
-
-                if adjust_direction < 0:
-                    adjust_direction += 360
-
-                navigation.target_coordinates.x = float(target[0])
-                navigation.target_coordinates.y = float(target[1])
-                navigation.move_or_rotate = movement
-                navigation.orientation_absolute = float(absolute_angle)
-                navigation.flag_not_obs = flag_not_obs
-                navigation.reached_radius = float(reached_radius)
-                navigation.avoid_people = avoid_people
-                navigation.adjust_distance = float(adjust_distance)
-                navigation.adjust_direction = float(adjust_direction)
-                navigation.adjust_min_dist = float(adjust_min_dist)
-                navigation.max_speed = float(max_speed)
-
-                self.node.flag_navigation_reached = False                
-                self.node.target_pos_publisher.publish(navigation)
-                time.sleep(0.1)
-
-            if wait_for_end_of:
-                while not self.node.flag_navigation_reached:
-                    pass
-                self.node.flag_navigation_reached = False
-
-            self.node.navigation_success = True
-            self.node.navigation_message = "Arrived at selected location"
-
-        return self.node.navigation_success, self.node.navigation_message   
-
     def set_initial_position(self, initial_position, clear_costmaps=True):
 
         if initial_position is not None:
@@ -2490,7 +2482,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -2588,7 +2580,7 @@ class RobotStdFunctions():
 
             if wait_for_end_of:
 
-                feedback_freq = 1.0
+                # feedback_freq = 1.0
                 feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
                 feedback_start_time = time.time()
 
@@ -2689,7 +2681,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -2822,7 +2814,7 @@ class RobotStdFunctions():
 
         return overall
     
-    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, timeout=0.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         adjust_msg = AdjustNavigationOmnidirectional.Goal()
@@ -2859,7 +2851,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -2906,7 +2898,7 @@ class RobotStdFunctions():
         else:
             return False
 
-    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5, timeout=0.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         adjust_msg = AdjustNavigationObstacles.Goal()
@@ -2940,7 +2932,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -2987,7 +2979,7 @@ class RobotStdFunctions():
         else:
             return False
 
-    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1.0, kp=1.3, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1.0, kp=1.3, use_wheel_odometry=False, timeout=0.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         adjust_msg = AdjustNavigationAngle.Goal()
@@ -3020,7 +3012,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -3089,6 +3081,114 @@ class RobotStdFunctions():
         
         return success, message, min_radar_distance_to_robot_edge
     
+    def sdnl_move_to_position(self, move_coords, mode=0, ignore_obstacles=False, reached_radius=0.20, yaw_tolerance_deg=10.0, max_linear_speed=0.30, max_angular_speed=0.80, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        # Create a goal
+        goal_msg = NavigateSDNL.Goal()
+
+        goal_msg.target_pose.x = float(move_coords[0])
+        goal_msg.target_pose.y = float(move_coords[1])
+        goal_msg.target_pose.theta = math.radians(float(move_coords[2]))  # deg -> rad
+
+        goal_msg.mode = int(mode)
+        goal_msg.ignore_obstacles = bool(ignore_obstacles)
+        goal_msg.reached_radius = float(reached_radius)
+        goal_msg.yaw_tolerance = float(math.radians(yaw_tolerance_deg))    # deg -> rad
+        goal_msg.max_linear_speed = float(max_linear_speed)
+        goal_msg.max_angular_speed = float(max_angular_speed)
+
+        # Wait for server
+        self.node.get_logger().info("Waiting for SDNL action server...")
+        self.node.sdnl_nav_client_.wait_for_server()
+        self.node.get_logger().info("SDNL action server is ON...")
+
+        # Reset state
+        self.node.sdnl_nav_goal_handle_ = None
+        self.node.sdnl_nav_goal_accepted = None
+        self.node.sdnl_nav_status = GoalStatus.STATUS_UNKNOWN
+        self.node.sdnl_nav_feedback = NavigateSDNL.Feedback()
+
+        # Send goal
+        # self.node.get_logger().info("Sending SDNL Nav Goal...")
+        self.node.sdnl_nav_client_.send_goal_async(goal_msg, feedback_callback=self.node.sdnl_nav_client_goal_feedback_callback).add_done_callback(self.node.sdnl_nav_client_goal_response_callback)
+        self.node.get_logger().info("SDNL Nav Goal Sent")
+
+        # Wait acceptance
+        while self.node.sdnl_nav_goal_accepted is None:
+            time.sleep(0.05)
+        
+        success = self.node.sdnl_nav_goal_accepted
+        message = ""
+
+        if wait_for_end_of:
+
+            # feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.sdnl_nav_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+
+                        feedback = self.node.sdnl_nav_feedback
+
+                        state = getattr(feedback, "state", "")
+                        dist = getattr(feedback, "dist_to_target", 0.0)
+                        yaw_err = getattr(feedback, "yaw_error", 0.0)
+                        min_obs = float(getattr(feedback, "min_obstacle_dist_edge", float("nan")))
+
+                        cmd = getattr(feedback, "cmd_vel", None)
+                        if cmd is not None:
+                            vx = float(getattr(getattr(cmd, "linear", None), "x", 0.0))
+                            vy = float(getattr(getattr(cmd, "linear", None), "y", 0.0))
+                            wz = float(getattr(getattr(cmd, "angular", None), "z", 0.0))
+                        else:
+                            vx = vy = wz = 0.0
+                        
+                        print(
+                            f"[SDNL] state={state:<14} "
+                            f"dist={dist:5.2f}(m) "
+                            f"yaw_err={math.degrees(yaw_err):6.1f}(deg) "
+                            f"cmd(vx,vy,wz)=({vx:+.2f},{vy:+.2f},{wz:+.2f}) "
+                            f"min_obs_edge={min_obs:5.2f}m"
+                        )
+                                  
+                        feedback_start_time = time.time()
+                                                
+            if self.node.sdnl_nav_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("SDNL NAV RESULT: SUCCEEDED.")
+                success = True
+                message = "Successfully moved to position"
+            # elif self.node.sdnl_nav_status == GoalStatus.STATUS_ABORTED:
+            #     self.set_rgb(RED+BACK_AND_FORTH_8)
+            #     self.node.get_logger().info("SDNL NAV RESULT: ABORTED.")
+            #     success = False
+            #     message = "Canceled moved to position"
+            elif self.node.sdnl_nav_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("SDNL NAV RESULT: CANCELED.")
+                success = False
+                message = "Canceled moved to position"
+
+            return success, message
+        
+        else:
+            success = True
+            message = "Sent Command to SDNL NAV, not waiting for end of"
+            return success, message
+
+    def sdnl_move_to_position_cancel(self):
+        if self.node.sdnl_nav_goal_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.sdnl_nav_client_cancel_goal()
+
+    def sdnl_move_to_position_is_done(self):
+        if self.node.sdnl_nav_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
+
     def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
 
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
