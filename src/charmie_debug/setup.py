@@ -34,6 +34,7 @@ setup(
             "debug_pick_front = charmie_debug.debug_pick_front:main",
             "debug_pick_object_depth = charmie_debug.debug_pick_object_depth:main",
             "debug_pick_top = charmie_debug.debug_pick_top:main",
+            "debug_sdnl_navigation = charmie_debug.debug_sdnl_navigation:main",
             "debug_search_for_person = charmie_debug.debug_search_for_person:main",
             "debug_sound_classification = charmie_debug.debug_sound_classification:main",
 		    "debug_spkr_face = charmie_debug.debug_spkr_face:main",
