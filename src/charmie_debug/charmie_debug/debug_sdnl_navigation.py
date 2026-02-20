@@ -25,7 +25,7 @@ ros2_modules = {
     "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
-    "charmie_nav_sdnl":             False,
+    "charmie_nav_sdnl":             True,
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
@@ -69,8 +69,8 @@ class TaskMain():
         self.NAVIGATION_TARGET = "couch"
         self.NAVIGATION_TARGET2 = "desk"
         self.NAVIGATION_TARGET3 = "Left Lounge Chair"
-        self.NAVIGATION_TARGET4 = [-1.0, 0.0, 0.0]
-        self.NAVIGATION_TARGET5 = [-2.0, 0.0, 0.0]
+        self.NAVIGATION_TARGET4 = [-2.0, 0.0, 0.0]
+        self.NAVIGATION_TARGET5 = [-4.0, 0.0, 0.0]
         
 
         # Neck Positions
@@ -89,13 +89,16 @@ class TaskMain():
                 # your code here ...
 
 
-                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, wait_for_end_of=False)
+                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, reached_radius=1, wait_for_end_of=False)
                 # self.robot.sdnl_move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET), wait_for_end_of=False)
-                time.sleep(2.0)
+                time.sleep(3.0)
+
+                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, reached_radius=1, wait_for_end_of=False)
+                time.sleep(3.0)
                 self.robot.sdnl_move_to_position_cancel()
                 time.sleep(5.0)
 
-                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, wait_for_end_of=False)
+                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, reached_radius=1, wait_for_end_of=False)
                 # self.robot.sdnl_move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET), wait_for_end_of=False)
                 time.sleep(2.0)
 
@@ -106,7 +109,7 @@ class TaskMain():
                 print("DONE")
                 time.sleep(5.0)
 
-                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, print_feedback=True, wait_for_end_of=True)
+                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, reached_radius=1, print_feedback=True, wait_for_end_of=True)
                 # self.robot.sdnl_move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET), wait_for_end_of=False)
                 time.sleep(2.0)
 

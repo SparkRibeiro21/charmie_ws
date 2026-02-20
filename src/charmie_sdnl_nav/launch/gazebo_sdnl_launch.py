@@ -19,5 +19,6 @@ def generate_launch_description():
         std_lf.marker_arrays_debug,
         std_lf.radar_sim,
         std_lf.charmie_localisation_sim,
+        # std_lf.sdnl_navigation,
     ])
     
