@@ -18,6 +18,8 @@ SDNLNavNode::SDNLNavNode()
   topic_radar_data_(this->declare_parameter<std::string>("topic_radar_data", "radar/data")),
   topic_cmd_vel_(this->declare_parameter<std::string>("topic_cmd_vel", "cmd_vel")),
   topic_sdnl_debug_(this->declare_parameter<std::string>("topic_sdnl_debug", "sdnl/debug")),
+  topic_sdnl_marker_debug_(this->declare_parameter<std::string>("topic_sdnl_marker_debug", "sdnl/marker_debug")),
+  marker_debug_rate_hz_(this->declare_parameter<double>("marker_debug_rate_hz", 5.0)),
   default_max_linear_speed_(this->declare_parameter<double>("default_max_linear_speed", 0.4)),
   default_max_angular_speed_(this->declare_parameter<double>("default_max_angular_speed", 1.0)),
   default_reached_radius_(this->declare_parameter<double>("default_reached_radius", 0.6)),
@@ -49,6 +51,8 @@ SDNLNavNode::SDNLNavNode()
     debug_pub_ = this->create_publisher<charmie_interfaces::msg::SDNLDebug>(topic_sdnl_debug_, 10);
   }
 
+  marker_debug_pub_ = this->create_publisher<charmie_interfaces::msg::SDNLMarkerDebug>(topic_sdnl_marker_debug_, 10);
+
   pose_sub_ = this->create_subscription<geometry_msgs::msg::Pose2D>(
     topic_robot_localisation_, 10,
     std::bind(&SDNLNavNode::poseCallback, this, std::placeholders::_1));
@@ -75,6 +79,25 @@ SDNLNavNode::SDNLNavNode()
       std::chrono::duration_cast<std::chrono::nanoseconds>(debug_period),
       std::bind(&SDNLNavNode::debugLoop, this));
   }
+
+  const auto marker_period = std::chrono::duration<double>(1.0 / std::max(1e-6, marker_debug_rate_hz_));
+  marker_debug_timer_ = this->create_wall_timer(
+  std::chrono::duration_cast<std::chrono::nanoseconds>(marker_period),
+  [this]()
+  {
+    // Make it robust even if RViz starts late: always publish something
+    if (!goal_active_.load()) {
+      publishMarkerDebug(false, nullptr);
+      return;
+    }
+
+    NavigateSDNL::Goal g;
+    {
+      std::lock_guard<std::mutex> lk(goal_mutex_);
+      g = active_goal_;
+    }
+    publishMarkerDebug(true, &g);
+  });
 
   RCLCPP_INFO(this->get_logger(), "SDNLNavNode started (control_rate=%.1f Hz, debug=%s).",
               control_rate_hz_, debug_enabled_ ? "true" : "false");
@@ -127,13 +150,15 @@ void SDNLNavNode::handle_accepted(const std::shared_ptr<GoalHandleNavigate> goal
   {
     std::lock_guard<std::mutex> lk(goal_mutex_);
     old_gh = active_goal_handle_;
-    old_goal_copy = active_goal_;  // <-- old antes de sobrescrever
+    old_goal_copy = active_goal_;
 
     active_goal_handle_ = goal_handle;
     active_goal_ = new_goal_copy;
     goal_active_.store(true);
     cancel_requested_.store(false);
   }
+  
+  publishMarkerDebug(true, &new_goal_copy);
 
   if (old_gh && old_gh->is_active()) {
     RCLCPP_WARN(this->get_logger(),
@@ -146,7 +171,7 @@ void SDNLNavNode::handle_accepted(const std::shared_ptr<GoalHandleNavigate> goal
     auto result = std::make_shared<NavigateSDNL::Result>();
     result->success = false;
     result->message = "Preempted by a new goal";
-    old_gh->canceled(result);
+    old_gh->abort(result);
   }
 
   const double theta_deg = new_goal_copy.target_pose.theta * 180.0 / M_PI;
@@ -174,6 +199,40 @@ void SDNLNavNode::publishZeroCmd()
 {
   geometry_msgs::msg::Twist t;
   cmd_vel_pub_->publish(t);
+}
+
+void SDNLNavNode::publishMarkerDebug(bool active, const NavigateSDNL::Goal* goal_ptr)
+{
+  if (!marker_debug_pub_) return;
+
+  charmie_interfaces::msg::SDNLMarkerDebug m;
+  m.header.stamp = this->now();
+  m.header.frame_id = "map";   // important: RViz cylinder should be in map frame
+
+  m.active = active;
+
+  if (goal_ptr) {
+    m.target_pose = goal_ptr->target_pose;
+    m.reached_radius = (goal_ptr->reached_radius > 0.0f) ? goal_ptr->reached_radius : static_cast<float>(default_reached_radius_);
+    m.mode = goal_ptr->mode;
+    m.ignore_obstacles = goal_ptr->ignore_obstacles;
+  } else {
+    // When inactive, it's still useful to publish something consistent
+    m.target_pose.x = 0.0;
+    m.target_pose.y = 0.0;
+    m.target_pose.theta = 0.0;
+    m.reached_radius = 0.0f;
+    m.mode = 0;
+    m.ignore_obstacles = false;
+  }
+
+  marker_debug_pub_->publish(m);
+
+  // Optional cache
+  {
+    std::lock_guard<std::mutex> lk(marker_debug_mutex_);
+    last_marker_debug_ = m;
+  }
 }
 
 void SDNLNavNode::controlLoop()
@@ -205,18 +264,19 @@ void SDNLNavNode::controlLoop()
   }
 
   if (cancel_requested_.load() || gh->is_canceling()) {
-    const auto & g = goal;
-
-    RCLCPP_WARN(this->get_logger(),
-      "Canceling SDNL goal now: x=%.3f y=%.3f theta=%.3f rad",
-      g.target_pose.x, g.target_pose.y, g.target_pose.theta);
-
     publishZeroCmd();
 
     auto result = std::make_shared<NavigateSDNL::Result>();
     result->success = false;
     result->message = "Canceled";
-    gh->canceled(result);
+
+    if (gh->is_canceling()) {
+      gh->canceled(result);   // ✅ valid
+    } else {
+      // Not yet CANCELING (race) -> abort is always valid from EXECUTING
+      result->message = "Canceled (server-side abort race)";
+      gh->abort(result);
+    }
 
     {
       std::lock_guard<std::mutex> lk(goal_mutex_);
@@ -224,6 +284,7 @@ void SDNLNavNode::controlLoop()
     }
     goal_active_.store(false);
     cancel_requested_.store(false);
+    publishMarkerDebug(false, nullptr);
     return;
   }
 
@@ -307,6 +368,10 @@ void SDNLNavNode::controlLoop()
       active_goal_handle_.reset();
     }
     goal_active_.store(false);
+
+    // publish marker debug immediately (inactive)
+    publishMarkerDebug(false, nullptr);
+
     return;
   } */
 
@@ -331,6 +396,10 @@ void SDNLNavNode::controlLoop()
       active_goal_handle_.reset();
     }
     goal_active_.store(false);
+
+    // publish marker debug immediately (inactive)
+    publishMarkerDebug(false, nullptr);
+
     return;
   }
 }

@@ -12,6 +12,7 @@
 
 #include "charmie_interfaces/msg/radar_data.hpp"
 #include "charmie_interfaces/msg/sdnl_debug.hpp"
+#include "charmie_interfaces/msg/sdnl_marker_debug.hpp"
 #include "charmie_interfaces/action/navigate_sdnl.hpp"
 
 #include "charmie_sdnl_nav/sdnl_core.hpp"
@@ -40,6 +41,8 @@ private:
   void poseCallback(const geometry_msgs::msg::Pose2D::SharedPtr msg);
   void radarCallback(const charmie_interfaces::msg::RadarData::SharedPtr msg);
 
+  void publishMarkerDebug(bool active, const NavigateSDNL::Goal* goal_ptr = nullptr);
+
   // Timers
   void controlLoop();
   void debugLoop();
@@ -51,11 +54,13 @@ private:
   bool debug_enabled_;
   double debug_rate_hz_;
   int n_samples_;
+  double marker_debug_rate_hz_;
 
   std::string topic_robot_localisation_;
   std::string topic_radar_data_;
   std::string topic_cmd_vel_;
   std::string topic_sdnl_debug_;
+  std::string topic_sdnl_marker_debug_;
 
   double default_max_linear_speed_;
   double default_max_angular_speed_;
@@ -70,11 +75,13 @@ private:
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   rclcpp::Publisher<charmie_interfaces::msg::SDNLDebug>::SharedPtr debug_pub_;
+  rclcpp::Publisher<charmie_interfaces::msg::SDNLMarkerDebug>::SharedPtr marker_debug_pub_;
 
   rclcpp_action::Server<NavigateSDNL>::SharedPtr action_server_;
 
   rclcpp::TimerBase::SharedPtr control_timer_;
   rclcpp::TimerBase::SharedPtr debug_timer_;
+  rclcpp::TimerBase::SharedPtr marker_debug_timer_;
 
   // Cached data
   std::mutex data_mutex_;
@@ -93,6 +100,10 @@ private:
   // SDNL core + debug
   sdnl::SdnlCore core_;
   sdnl::DebugBuilder debug_builder_;
+
+  // Latest debug marker msgs
+  charmie_interfaces::msg::SDNLMarkerDebug last_marker_debug_;
+  std::mutex marker_debug_mutex_;
 
   // Latest computed for debug
   std::mutex debug_mutex_;
