@@ -59,7 +59,7 @@ SDNLNavNode::SDNLNavNode()
 
   action_server_ = rclcpp_action::create_server<NavigateSDNL>(
     this,
-    "navigate_sdnl",
+    "sdnl_navigate_to_pose",
     std::bind(&SDNLNavNode::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
     std::bind(&SDNLNavNode::handle_cancel, this, std::placeholders::_1),
     std::bind(&SDNLNavNode::handle_accepted, this, std::placeholders::_1));
@@ -81,26 +81,79 @@ SDNLNavNode::SDNLNavNode()
 }
 
 rclcpp_action::GoalResponse SDNLNavNode::handle_goal(
-  const rclcpp_action::GoalUUID& /*uuid*/,
-  std::shared_ptr<const NavigateSDNL::Goal> /*goal*/)
+  const rclcpp_action::GoalUUID&,
+  std::shared_ptr<const NavigateSDNL::Goal> goal)
 {
+  (void)goal;
+
+  // exemplo: se não tens pose ainda, rejeita
+  {
+    std::lock_guard<std::mutex> lk(data_mutex_);
+    if (!have_pose_) {
+      RCLCPP_WARN(this->get_logger(), "Rejecting goal: no robot_localisation yet.");
+      return rclcpp_action::GoalResponse::REJECT;
+    }
+  }
+
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
 rclcpp_action::CancelResponse SDNLNavNode::handle_cancel(
-  const std::shared_ptr<GoalHandleNavigate> /*goal_handle*/)
+  const std::shared_ptr<GoalHandleNavigate> goal_handle)
 {
-  cancel_requested_.store(true);
-  return rclcpp_action::CancelResponse::ACCEPT;
+  std::lock_guard<std::mutex> lk(goal_mutex_);
+
+  // Só aceitamos cancel do goal ativo
+  if (active_goal_handle_ && goal_handle == active_goal_handle_) {
+    const auto & g = active_goal_;
+    RCLCPP_WARN(this->get_logger(),
+      "Cancel requested for active goal: x=%.3f y=%.3f theta=%.3f rad",
+      g.target_pose.x, g.target_pose.y, g.target_pose.theta);
+
+    cancel_requested_.store(true);
+    return rclcpp_action::CancelResponse::ACCEPT;
+  }
+
+  RCLCPP_WARN(this->get_logger(), "Cancel requested for NON-active goal -> REJECT");
+  return rclcpp_action::CancelResponse::REJECT;
 }
 
 void SDNLNavNode::handle_accepted(const std::shared_ptr<GoalHandleNavigate> goal_handle)
 {
-  std::lock_guard<std::mutex> lk(goal_mutex_);
-  active_goal_handle_ = goal_handle;
-  active_goal_ = *(goal_handle->get_goal());
-  goal_active_.store(true);
-  cancel_requested_.store(false);
+  std::shared_ptr<GoalHandleNavigate> old_gh;
+  NavigateSDNL::Goal old_goal_copy;
+  NavigateSDNL::Goal new_goal_copy = *(goal_handle->get_goal());
+
+  {
+    std::lock_guard<std::mutex> lk(goal_mutex_);
+    old_gh = active_goal_handle_;
+    old_goal_copy = active_goal_;  // <-- old antes de sobrescrever
+
+    active_goal_handle_ = goal_handle;
+    active_goal_ = new_goal_copy;
+    goal_active_.store(true);
+    cancel_requested_.store(false);
+  }
+
+  if (old_gh && old_gh->is_active()) {
+    RCLCPP_WARN(this->get_logger(),
+      "Preempting previous goal: old(x=%.3f y=%.3f th=%.3f) -> new(x=%.3f y=%.3f th=%.3f)",
+      old_goal_copy.target_pose.x, old_goal_copy.target_pose.y, old_goal_copy.target_pose.theta,
+      new_goal_copy.target_pose.x, new_goal_copy.target_pose.y, new_goal_copy.target_pose.theta);
+
+    publishZeroCmd();
+
+    auto result = std::make_shared<NavigateSDNL::Result>();
+    result->success = false;
+    result->message = "Preempted by a new goal";
+    old_gh->canceled(result);
+  }
+
+  const double theta_deg = new_goal_copy.target_pose.theta * 180.0 / M_PI;
+  RCLCPP_INFO(this->get_logger(),
+    "Accepted NavigateSDNL goal: x=%.3f y=%.3f theta=%.3f rad (%.1f deg) (mode=%u ignore_obs=%s)",
+    new_goal_copy.target_pose.x, new_goal_copy.target_pose.y, new_goal_copy.target_pose.theta, theta_deg,
+    new_goal_copy.mode, new_goal_copy.ignore_obstacles ? "true" : "false");
 }
 
 void SDNLNavNode::poseCallback(const geometry_msgs::msg::Pose2D::SharedPtr msg)
@@ -152,11 +205,23 @@ void SDNLNavNode::controlLoop()
   }
 
   if (cancel_requested_.load() || gh->is_canceling()) {
+    const auto & g = goal;
+
+    RCLCPP_WARN(this->get_logger(),
+      "Canceling SDNL goal now: x=%.3f y=%.3f theta=%.3f rad",
+      g.target_pose.x, g.target_pose.y, g.target_pose.theta);
+
     publishZeroCmd();
+
     auto result = std::make_shared<NavigateSDNL::Result>();
     result->success = false;
     result->message = "Canceled";
     gh->canceled(result);
+
+    {
+      std::lock_guard<std::mutex> lk(goal_mutex_);
+      active_goal_handle_.reset();
+    }
     goal_active_.store(false);
     cancel_requested_.store(false);
     return;
@@ -177,13 +242,31 @@ void SDNLNavNode::controlLoop()
   const double psi_target_map = std::atan2(dy, dx);
   const double psi_target_base = sdnl::wrap_pi(psi_target_map - pose.theta);
 
-  geometry_msgs::msg::Twist cmd;
+  /* geometry_msgs::msg::Twist cmd;
   if (dist > reached_radius) {
     cmd.linear.x = v_max;
     cmd.angular.z = sdnl::clamp(1.5 * psi_target_base, -w_max, w_max);
   } else {
     cmd.linear.x = 0.0;
     cmd.angular.z = sdnl::clamp(2.0 * yaw_err, -w_max, w_max);
+  } */
+  
+  geometry_msgs::msg::Twist cmd;
+
+  if (dist > reached_radius) {
+    // Placeholder: recuar até ao target
+    // Para recuar na direção do target, o heading “ideal” é psi_target_base ~ pi.
+    const double psi_rev = sdnl::wrap_pi(psi_target_base - M_PI);
+
+    cmd.linear.x  = -v_max;  // <-- recua sempre
+    cmd.angular.z = sdnl::clamp(1.5 * psi_rev, -w_max, w_max);
+
+    // Opcional: estado mais explícito
+    // fb->state = "moving_reverse";
+  } else {
+    // Quando chega, para (e já dás succeed logo a seguir)
+    cmd.linear.x  = 0.0;
+    cmd.angular.z = 0.0;
   }
 
   cmd_vel_pub_->publish(cmd);
@@ -204,13 +287,51 @@ void SDNLNavNode::controlLoop()
     latest_psi_target_base_ = psi_target_base;
   }
 
-  if (dist <= reached_radius && std::abs(yaw_err) <= yaw_tol) {
+  /* if (dist <= reached_radius && std::abs(yaw_err) <= yaw_tol) {
+    const auto & g = goal;
+
+    RCLCPP_INFO(this->get_logger(),
+      "SDNL goal SUCCEEDED: x=%.3f y=%.3f theta=%.3f rad | final dist=%.3f yaw_err=%.3f",
+      g.target_pose.x, g.target_pose.y, g.target_pose.theta,
+      dist, yaw_err);
+
     publishZeroCmd();
+
     auto result = std::make_shared<NavigateSDNL::Result>();
     result->success = true;
     result->message = "Reached target pose";
     gh->succeed(result);
+
+    {
+      std::lock_guard<std::mutex> lk(goal_mutex_);
+      active_goal_handle_.reset();
+    }
     goal_active_.store(false);
+    return;
+  } */
+
+  if (dist <= reached_radius) {
+    const auto & g = goal;
+
+    RCLCPP_INFO(this->get_logger(),
+      "SDNL goal SUCCEEDED: x=%.3f y=%.3f theta=%.3f rad | dist=%.3f (<= %.3f) | pose=(%.3f,%.3f,%.3f)",
+      g.target_pose.x, g.target_pose.y, g.target_pose.theta,
+      dist, reached_radius,
+      pose.x, pose.y, pose.theta);
+
+    publishZeroCmd();
+
+    auto result = std::make_shared<NavigateSDNL::Result>();
+    result->success = true;
+    result->message = "Reached target position (placeholder)";
+    gh->succeed(result);
+
+    {
+      std::lock_guard<std::mutex> lk(goal_mutex_);
+      active_goal_handle_.reset();
+    }
+    goal_active_.store(false);
+    return;
   }
 }
 
