@@ -24,6 +24,7 @@ SDNLNavNode::SDNLNavNode()
   default_max_angular_speed_(this->declare_parameter<double>("default_max_angular_speed", 1.0)),
   default_reached_radius_(this->declare_parameter<double>("default_reached_radius", 0.6)),
   default_yaw_tolerance_(this->declare_parameter<double>("default_yaw_tolerance", 0.26)),
+  radar_timeout_s_(this->declare_parameter<double>("radar_timeout_s", 1.0)),
   have_pose_(false),
   have_radar_(false),
   goal_active_(false),
@@ -193,6 +194,7 @@ void SDNLNavNode::radarCallback(const charmie_interfaces::msg::RadarData::Shared
   std::lock_guard<std::mutex> lk(data_mutex_);
   last_radar_ = *msg;
   have_radar_ = true;
+  last_radar_stamp_ = rclcpp::Time(msg->header.stamp);
 }
 
 void SDNLNavNode::publishZeroCmd()
@@ -254,6 +256,52 @@ void SDNLNavNode::controlLoop()
     have_pose = have_pose_;
     if (have_pose) pose = last_pose_;
   }
+
+  charmie_interfaces::msg::RadarData radar;
+  bool have_radar = false;
+  rclcpp::Time radar_stamp(0, 0, this->get_clock()->get_clock_type());
+
+  {
+    std::lock_guard<std::mutex> lk(data_mutex_);
+    have_radar = have_radar_;
+    if (have_radar) {
+      radar = last_radar_;
+      radar_stamp = last_radar_stamp_;
+    }
+  }
+
+  const double radar_age_s =
+    have_radar ? (this->now() - radar_stamp).seconds()
+               : std::numeric_limits<double>::infinity();
+
+  const bool radar_stale = (!have_radar) || (radar_age_s > radar_timeout_s_);
+
+  RCLCPP_INFO_THROTTLE(
+    this->get_logger(), *this->get_clock(), 2000,
+    "Radar status: have=%s stale=%s age=%.3fs (timeout=%.3fs) sectors=%u",
+    have_radar ? "true" : "false",
+    radar_stale ? "true" : "false",
+    radar_age_s, radar_timeout_s_,
+    have_radar ? radar.number_of_sectors : 0);
+
+  // Compute min obstacle distance to robot edge (debug metric only)
+  bool any_point = false;
+  double min_dist_center = std::numeric_limits<double>::infinity();
+
+  if (!radar_stale) {
+    for (const auto & s : radar.sectors) {
+      if (!s.has_point) continue;
+      any_point = true;
+      min_dist_center = std::min(min_dist_center, static_cast<double>(s.min_distance));
+    }
+  }
+
+  // Use the existing ROS parameter (no dependency on SdnlCore API)
+  const double robot_radius = this->get_parameter("robot_radius").as_double();
+
+  const double min_dist_edge =
+    any_point ? (min_dist_center - robot_radius)
+              : std::numeric_limits<double>::infinity();
 
   if (!gh) { goal_active_.store(false); return; }
 
@@ -336,7 +384,7 @@ void SDNLNavNode::controlLoop()
   fb->dist_to_target = static_cast<float>(dist);
   fb->yaw_error = static_cast<float>(yaw_err);
   fb->cmd_vel = cmd;
-  fb->min_obstacle_dist_edge = -1.0f;
+  fb->min_obstacle_dist_edge = std::isfinite(min_dist_edge) ? static_cast<float>(min_dist_edge) : -1.0f;
   fb->state = (dist > reached_radius) ? "moving" : "rotating";
   gh->publish_feedback(fb);
 
@@ -346,6 +394,7 @@ void SDNLNavNode::controlLoop()
     latest_dist_ = dist;
     latest_yaw_err_ = yaw_err;
     latest_psi_target_base_ = psi_target_base;
+    latest_min_obs_edge_ = min_dist_edge;
   }
 
   /* if (dist <= reached_radius && std::abs(yaw_err) <= yaw_tol) {

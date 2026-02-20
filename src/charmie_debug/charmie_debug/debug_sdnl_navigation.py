@@ -88,8 +88,7 @@ class TaskMain():
             if self.state == Waiting_for_start_button:
                 # your code here ...
 
-
-                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, reached_radius=1, wait_for_end_of=False)
+                """ self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, reached_radius=1, wait_for_end_of=False)
                 # self.robot.sdnl_move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET), wait_for_end_of=False)
                 time.sleep(3.0)
 
@@ -107,11 +106,11 @@ class TaskMain():
                     time.sleep(0.5)
                     pass
                 print("DONE")
-                time.sleep(5.0)
+                time.sleep(5.0) """
 
                 self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, reached_radius=1, print_feedback=True, wait_for_end_of=True)
                 # self.robot.sdnl_move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET), wait_for_end_of=False)
-                time.sleep(2.0)
+                # time.sleep(2.0)
 
 
                 while True:

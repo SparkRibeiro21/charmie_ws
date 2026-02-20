@@ -55,6 +55,7 @@ private:
   double debug_rate_hz_;
   int n_samples_;
   double marker_debug_rate_hz_;
+  double radar_timeout_s_;
 
   std::string topic_robot_localisation_;
   std::string topic_radar_data_;
@@ -86,9 +87,10 @@ private:
   // Cached data
   std::mutex data_mutex_;
   geometry_msgs::msg::Pose2D last_pose_;
-  charmie_interfaces::msg::RadarData last_radar_;
   bool have_pose_;
+  charmie_interfaces::msg::RadarData last_radar_;
   bool have_radar_;
+  rclcpp::Time last_radar_stamp_;
 
   // Goal state
   std::mutex goal_mutex_;
