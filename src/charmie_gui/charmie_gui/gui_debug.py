@@ -9,8 +9,8 @@ from sensor_msgs.msg import Image, LaserScan, PointCloud2
 from sensor_msgs_py import point_cloud2
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
-from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
-    TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData
+from charmie_interfaces.msg import NeckPosition, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
+    TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData, SDNLMarkerDebug
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
     SetRGB, GetMinRadarDistance, ActivateYoloWorld
@@ -61,9 +61,8 @@ class DebugVisualNode(Node):
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
-        # Navigation
-        self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
+        # SDNL Nav
+        self.sdnl_marker_debug_subscriber = self.create_subscription(SDNLMarkerDebug, "sdnl/marker_debug", self.sdnl_marker_debug_callback, 10) 
         # search for person and object 
         self.search_for_person_subscriber = self.create_subscription(ListOfDetectedPerson, "search_for_person_detections", self.search_for_person_detections_callback, 10)
         self.search_for_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_object_detections", self.search_for_object_detections_callback, 10)
@@ -219,8 +218,8 @@ class DebugVisualNode(Node):
         self.new_search_for_person = False
         self.new_search_for_object = False
         self.new_search_for_world_object = False
-        self.navigation = TarNavSDNL()
-        self.is_navigating = False
+        self.sdnl_dbg = SDNLMarkerDebug()
+        self.sdnl_dbg.active = False
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
         self.is_tracking_comm = False
@@ -559,14 +558,10 @@ class DebugVisualNode(Node):
     
     def radar_data_callback(self, radar: RadarData):
         self.radar = radar
-
-    def target_pos_callback(self, nav: TarNavSDNL):
-        self.navigation = nav
-        self.is_navigating = True
-        print(nav)
-
-    def flag_navigation_reached_callback(self, flag: Bool):
-        self.is_navigating = False
+    
+    def sdnl_marker_debug_callback(self, msg: SDNLMarkerDebug):
+        self.sdnl_dbg = msg
+        # print(self.sdnl_dbg)
 
     def get_neck_position_callback(self, pose: NeckPosition):
         # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
@@ -2466,10 +2461,9 @@ class DebugVisualMain():
 
 
         ### NAVIGATION TARGETS
-        if self.node.is_navigating:
-            if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
-                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.robot_radius/2), width=0)
-                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.node.navigation.reached_radius), width=1)
+        if self.node.sdnl_dbg.active:
+            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.sdnl_dbg.target_pose.x, self.node.sdnl_dbg.target_pose.y), radius=self.size_to_map(self.robot_radius/2), width=0)
+            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.sdnl_dbg.target_pose.x, self.node.sdnl_dbg.target_pose.y), radius=self.size_to_map(self.node.sdnl_dbg.reached_radius), width=1)
 
         ### 3D LIDAR
         if self.node.livox_3dlidar.width > 0 and len(self.node.livox_3dlidar.data) > 0:
