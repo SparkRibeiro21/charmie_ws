@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from visualization_msgs.msg import Marker, MarkerArray
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, ListOfDetectedPerson, ListOfDetectedObject, TrackingMask, RadarData
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, ListOfDetectedPerson, ListOfDetectedObject, TrackingMask, RadarData, SDNLMarkerDebug
 from geometry_msgs.msg import Point
 import math
 import json
@@ -25,6 +25,8 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_tracking                = self.create_publisher(MarkerArray, "visualization_marker_array_tracking", 10)
         
         self.publisher_marker_array_radar                   = self.create_publisher(MarkerArray, "visualization_marker_array_radar", 10)
+
+        self.publisher_marker_array_sdnl_goal = self.create_publisher(MarkerArray, "visualization_marker_array_sdnl_goal", 10)
         
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
@@ -36,6 +38,8 @@ class MarkerPublisher(Node):
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         # Radar
         self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
+        # Nav SDNL Goal
+        self.sdnl_marker_debug_subscriber = self.create_subscription(SDNLMarkerDebug, "sdnl/marker_debug", self.sdnl_marker_debug_callback, 10)
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -63,6 +67,8 @@ class MarkerPublisher(Node):
         self.previous_marker_array_detected_people = ListOfDetectedPerson() 
         self.tracking = TrackingMask()
         self.radar = RadarData()
+        self.sdnl_dbg = SDNLMarkerDebug()
+        self.sdnl_dbg.active = False
         self.aux_time = time.time()
 
         self.COLOR_LIST = [
@@ -76,6 +82,7 @@ class MarkerPublisher(Node):
         ]
 
         self.NAMES_TEXT_SIZE = 0.2
+        self.DEFAULT_ROBOT_RADIUS = 0.28
 
         # self.timer = self.create_timer(1.0, self.publish_marker)  # Publish every 1 second
         # self.timer = self.create_timer(1.0, self.publish_marker_array)  # Publish every 1 second
@@ -100,6 +107,10 @@ class MarkerPublisher(Node):
     def radar_data_callback(self, radar: RadarData):
         self.radar = radar
         self.publish_marker_array_radar()
+
+    def sdnl_marker_debug_callback(self, msg: SDNLMarkerDebug):
+        self.sdnl_dbg = msg
+        self.publish_marker_array_sdnl_goal()
 
     def publish_all_marker_arrays(self):
         self.publish_marker_array_rooms()
@@ -1055,6 +1066,109 @@ class MarkerPublisher(Node):
 
         self.publisher_marker_array_radar.publish(marker_array)
         self.aux_time = curr_time
+
+    def publish_marker_array_sdnl_goal(self):
+
+        SDNL_TARGET_CYL_HEIGHT = 1.0
+        SDNL_REACHED_CYL_HEIGHT = 0.32
+
+        marker_array = MarkerArray()
+
+        # Always delete previous SDNL markers
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "map"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "SDNL_GOAL"
+        delete_marker.id = 0
+        delete_marker.action = Marker.DELETEALL
+        marker_array.markers.append(delete_marker)
+
+        # If not active -> only publish delete (clears RViz)
+        if not getattr(self.sdnl_dbg, "active", False):
+            self.publisher_marker_array_sdnl_goal.publish(marker_array)
+            return
+
+        # Use msg header if you want (but be consistent)
+        frame_id = self.sdnl_dbg.header.frame_id if self.sdnl_dbg.header.frame_id else "map"
+        stamp = self.sdnl_dbg.header.stamp  # comes from sdnl node, OK for RViz
+        x = self.sdnl_dbg.target_pose.x
+        y = self.sdnl_dbg.target_pose.y
+        th = self.sdnl_dbg.target_pose.theta
+        reached = float(self.sdnl_dbg.reached_radius)
+
+        # --- 1) Target cylinder (robot footprint at target) ---
+        target_cyl = Marker()
+        target_cyl.header.frame_id = frame_id
+        target_cyl.header.stamp = stamp
+        target_cyl.ns = "SDNL_GOAL"
+        target_cyl.id = 1
+        target_cyl.type = Marker.CYLINDER
+        target_cyl.action = Marker.ADD
+
+        target_cyl.pose.position.x = x
+        target_cyl.pose.position.y = y
+        target_cyl.pose.position.z = SDNL_TARGET_CYL_HEIGHT / 2.0
+        target_cyl.pose.orientation.w = 1.0
+
+        # diameter = 2*radius
+        rr = self.DEFAULT_ROBOT_RADIUS
+        target_cyl.scale.x = rr/2.0
+        target_cyl.scale.y = rr/2.0
+        target_cyl.scale.z = SDNL_TARGET_CYL_HEIGHT
+
+        target_cyl.color.r = 0.0
+        target_cyl.color.g = 1.0
+        target_cyl.color.b = 0.0
+        target_cyl.color.a = 0.8
+
+        marker_array.markers.append(target_cyl)
+
+        # --- 2) Reached radius cylinder (bigger ring/disk) ---
+        reached_cyl = Marker()
+        reached_cyl.header.frame_id = frame_id
+        reached_cyl.header.stamp = stamp
+        reached_cyl.ns = "SDNL_GOAL"
+        reached_cyl.id = 2
+        reached_cyl.type = Marker.CYLINDER
+        reached_cyl.action = Marker.ADD
+
+        reached_cyl.pose.position.x = x
+        reached_cyl.pose.position.y = y
+        reached_cyl.pose.position.z = SDNL_REACHED_CYL_HEIGHT / 2.0
+        reached_cyl.pose.orientation.w = 1.0
+
+        reached_cyl.scale.x = 2.0 * reached
+        reached_cyl.scale.y = 2.0 * reached
+        reached_cyl.scale.z = SDNL_REACHED_CYL_HEIGHT
+
+        reached_cyl.color.r = 0.0
+        reached_cyl.color.g = 0.0
+        reached_cyl.color.b = 1.0
+        reached_cyl.color.a = 0.4
+
+        marker_array.markers.append(reached_cyl)
+
+        # --- 4) Optional text label ---
+        txt = Marker()
+        txt.header.frame_id = frame_id
+        txt.header.stamp = stamp
+        txt.ns = "SDNL_GOAL"
+        txt.id = 4
+        txt.type = Marker.TEXT_VIEW_FACING
+        txt.action = Marker.ADD
+        txt.pose.position.x = x
+        txt.pose.position.y = y
+        txt.pose.position.z = 0.35
+        txt.pose.orientation.w = 1.0
+        txt.scale.z = 0.10
+        txt.text = f"({x:.2f},{y:.2f},{math.degrees(th):.1f})r={reached:.2f}"
+        txt.color.r = 1.0
+        txt.color.g = 1.0
+        txt.color.b = 1.0
+        txt.color.a = 0.9
+        marker_array.markers.append(txt)
+
+        self.publisher_marker_array_sdnl_goal.publish(marker_array)
 
 
 def main(args=None):
