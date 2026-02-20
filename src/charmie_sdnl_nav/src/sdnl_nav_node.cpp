@@ -351,31 +351,13 @@ void SDNLNavNode::controlLoop()
   const double psi_target_map = std::atan2(dy, dx);
   const double psi_target_base = sdnl::wrap_pi(psi_target_map - pose.theta);
 
-  /* geometry_msgs::msg::Twist cmd;
+  geometry_msgs::msg::Twist cmd;
   if (dist > reached_radius) {
     cmd.linear.x = v_max;
     cmd.angular.z = sdnl::clamp(1.5 * psi_target_base, -w_max, w_max);
   } else {
     cmd.linear.x = 0.0;
     cmd.angular.z = sdnl::clamp(2.0 * yaw_err, -w_max, w_max);
-  } */
-  
-  geometry_msgs::msg::Twist cmd;
-
-  if (dist > reached_radius) {
-    // Placeholder: recuar até ao target
-    // Para recuar na direção do target, o heading “ideal” é psi_target_base ~ pi.
-    const double psi_rev = sdnl::wrap_pi(psi_target_base - M_PI);
-
-    cmd.linear.x  = -v_max;  // <-- recua sempre
-    cmd.angular.z = sdnl::clamp(1.5 * psi_rev, -w_max, w_max);
-
-    // Opcional: estado mais explícito
-    // fb->state = "moving_reverse";
-  } else {
-    // Quando chega, para (e já dás succeed logo a seguir)
-    cmd.linear.x  = 0.0;
-    cmd.angular.z = 0.0;
   }
 
   cmd_vel_pub_->publish(cmd);
@@ -397,7 +379,7 @@ void SDNLNavNode::controlLoop()
     latest_min_obs_edge_ = min_dist_edge;
   }
 
-  /* if (dist <= reached_radius && std::abs(yaw_err) <= yaw_tol) {
+  if (dist <= reached_radius && std::abs(yaw_err) <= yaw_tol) {
     const auto & g = goal;
 
     RCLCPP_INFO(this->get_logger(),
@@ -410,34 +392,6 @@ void SDNLNavNode::controlLoop()
     auto result = std::make_shared<NavigateSDNL::Result>();
     result->success = true;
     result->message = "Reached target pose";
-    gh->succeed(result);
-
-    {
-      std::lock_guard<std::mutex> lk(goal_mutex_);
-      active_goal_handle_.reset();
-    }
-    goal_active_.store(false);
-
-    // publish marker debug immediately (inactive)
-    publishMarkerDebug(false, nullptr);
-
-    return;
-  } */
-
-  if (dist <= reached_radius) {
-    const auto & g = goal;
-
-    RCLCPP_INFO(this->get_logger(),
-      "SDNL goal SUCCEEDED: x=%.3f y=%.3f theta=%.3f rad | dist=%.3f (<= %.3f) | pose=(%.3f,%.3f,%.3f)",
-      g.target_pose.x, g.target_pose.y, g.target_pose.theta,
-      dist, reached_radius,
-      pose.x, pose.y, pose.theta);
-
-    publishZeroCmd();
-
-    auto result = std::make_shared<NavigateSDNL::Result>();
-    result->success = true;
-    result->message = "Reached target position (placeholder)";
     gh->succeed(result);
 
     {
