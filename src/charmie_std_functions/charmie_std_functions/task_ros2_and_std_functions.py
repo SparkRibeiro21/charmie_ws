@@ -3087,7 +3087,7 @@ class RobotStdFunctions():
         
         return success, message, min_radar_distance_to_robot_edge
     
-    def sdnl_move_to_position(self, move_coords, mode=0, ignore_obstacles=False, reached_radius=0.20, yaw_tolerance_deg=10.0, max_linear_speed=0.30, max_angular_speed=0.80, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+    def sdnl_move_to_position(self, move_coords, mode=0, ignore_obstacles=False, reached_radius=0.50, yaw_tolerance_deg=3.0, max_linear_speed=0.42, max_angular_speed=0.90, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         goal_msg = NavigateSDNL.Goal()
