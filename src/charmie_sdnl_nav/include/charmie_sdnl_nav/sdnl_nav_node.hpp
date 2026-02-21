@@ -16,7 +16,6 @@
 #include "charmie_interfaces/action/navigate_sdnl.hpp"
 
 #include "charmie_sdnl_nav/sdnl_core.hpp"
-#include "charmie_sdnl_nav/debug_builder.hpp"
 
 class SDNLNavNode : public rclcpp::Node
 {
@@ -68,8 +67,6 @@ private:
   double default_reached_radius_;
   double default_yaw_tolerance_;
 
-  bool debug_test_signal_;
-
   // ROS interfaces
   rclcpp::Subscription<geometry_msgs::msg::Pose2D>::SharedPtr pose_sub_;
   rclcpp::Subscription<charmie_interfaces::msg::RadarData>::SharedPtr radar_sub_;
@@ -99,9 +96,8 @@ private:
   std::atomic<bool> goal_active_;
   std::atomic<bool> cancel_requested_;
 
-  // SDNL core + debug
+  // SDNL core
   sdnl::SdnlCore core_;
-  sdnl::DebugBuilder debug_builder_;
 
   // Latest debug marker msgs
   charmie_interfaces::msg::SDNLMarkerDebug last_marker_debug_;
@@ -110,8 +106,11 @@ private:
   // Latest computed for debug
   std::mutex debug_mutex_;
   geometry_msgs::msg::Twist latest_cmd_;
-  double latest_dist_;
-  double latest_yaw_err_;
-  double latest_min_obs_edge_;
-  double latest_psi_target_base_;
+  geometry_msgs::msg::Pose2D latest_pose_for_debug_;
+  NavigateSDNL::Goal latest_goal_for_debug_;
+  bool latest_have_pose_for_debug_{false};
+
+  charmie_interfaces::msg::RadarData latest_radar_for_debug_;
+  bool latest_have_radar_for_debug_{false};
+  rclcpp::Time latest_radar_stamp_for_debug_;
 };

@@ -9,26 +9,27 @@ using namespace std::chrono_literals;
 
 SDNLNavNode::SDNLNavNode()
 : Node("sdnl_nav"),
-  debug_test_signal_(this->declare_parameter<bool>("debug_test_signal", true)),
   control_rate_hz_(this->declare_parameter<double>("control_rate_hz", 30.0)),
   debug_enabled_(this->declare_parameter<bool>("debug_enabled", true)),
   debug_rate_hz_(this->declare_parameter<double>("debug_rate_hz", 10.0)),
   n_samples_(this->declare_parameter<int>("n_samples", 720)),
+  marker_debug_rate_hz_(this->declare_parameter<double>("marker_debug_rate_hz", 5.0)),
+  radar_timeout_s_(this->declare_parameter<double>("radar_timeout_s", 1.0)),
   topic_robot_localisation_(this->declare_parameter<std::string>("topic_robot_localisation", "robot_localisation")),
   topic_radar_data_(this->declare_parameter<std::string>("topic_radar_data", "radar/data")),
   topic_cmd_vel_(this->declare_parameter<std::string>("topic_cmd_vel", "cmd_vel")),
   topic_sdnl_debug_(this->declare_parameter<std::string>("topic_sdnl_debug", "sdnl/debug")),
   topic_sdnl_marker_debug_(this->declare_parameter<std::string>("topic_sdnl_marker_debug", "sdnl/marker_debug")),
-  marker_debug_rate_hz_(this->declare_parameter<double>("marker_debug_rate_hz", 5.0)),
-  default_max_linear_speed_(this->declare_parameter<double>("default_max_linear_speed", 0.4)),
-  default_max_angular_speed_(this->declare_parameter<double>("default_max_angular_speed", 1.0)),
-  default_reached_radius_(this->declare_parameter<double>("default_reached_radius", 0.6)),
-  default_yaw_tolerance_(this->declare_parameter<double>("default_yaw_tolerance", 0.26)),
-  radar_timeout_s_(this->declare_parameter<double>("radar_timeout_s", 1.0)),
+  default_max_linear_speed_(this->declare_parameter<double>("default_max_linear_speed", 0.42)),
+  default_max_angular_speed_(this->declare_parameter<double>("default_max_angular_speed", 0.9)),
+  default_reached_radius_(this->declare_parameter<double>("default_reached_radius", 0.5)),
+  default_yaw_tolerance_(this->declare_parameter<double>("default_yaw_tolerance", 0.052359908)), // 3 degrees in radians
+
   have_pose_(false),
   have_radar_(false),
   goal_active_(false),
   cancel_requested_(false),
+
   core_([&]{
     sdnl::SdnlParams p;
     p.lambda_target_not_obs  = this->declare_parameter<double>("lambda_target_not_obs", 10.0);
@@ -39,12 +40,8 @@ SDNLNavNode::SDNLNavNode()
     p.robot_radius           = this->declare_parameter<double>("robot_radius", 0.28);
     p.heading_offset_rad     = this->declare_parameter<double>("heading_offset_rad", 0.0);
     return sdnl::SdnlCore(p);
-  }()),
-  debug_builder_(core_),
-  latest_dist_(0.0),
-  latest_yaw_err_(0.0),
-  latest_min_obs_edge_(std::numeric_limits<double>::infinity()),
-  latest_psi_target_base_(0.0)
+  }())
+
 {
   cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>(topic_cmd_vel_, 10);
 
@@ -173,6 +170,12 @@ void SDNLNavNode::handle_accepted(const std::shared_ptr<GoalHandleNavigate> goal
     result->success = false;
     result->message = "Preempted by a new goal";
     old_gh->abort(result);
+    
+    {
+    std::lock_guard<std::mutex> lk(debug_mutex_);
+    latest_have_pose_for_debug_ = false;
+    latest_have_radar_for_debug_ = false;
+    }
   }
 
   const double theta_deg = new_goal_copy.target_pose.theta * 180.0 / M_PI;
@@ -239,7 +242,15 @@ void SDNLNavNode::publishMarkerDebug(bool active, const NavigateSDNL::Goal* goal
 
 void SDNLNavNode::controlLoop()
 {
-  if (!goal_active_.load()) return;
+
+  if (!goal_active_.load()) {
+    {
+      std::lock_guard<std::mutex> lk(debug_mutex_);
+      latest_have_pose_for_debug_ = false;
+      latest_have_radar_for_debug_ = false;
+    }
+    return;
+  }
 
   NavigateSDNL::Goal goal;
   std::shared_ptr<GoalHandleNavigate> gh;
@@ -284,26 +295,15 @@ void SDNLNavNode::controlLoop()
     radar_age_s, radar_timeout_s_,
     have_radar ? radar.number_of_sectors : 0);
 
-  // Compute min obstacle distance to robot edge (debug metric only)
-  bool any_point = false;
-  double min_dist_center = std::numeric_limits<double>::infinity();
-
-  if (!radar_stale) {
-    for (const auto & s : radar.sectors) {
-      if (!s.has_point) continue;
-      any_point = true;
-      min_dist_center = std::min(min_dist_center, static_cast<double>(s.min_distance));
+  if (!gh) {
+    goal_active_.store(false);
+    {
+      std::lock_guard<std::mutex> lk(debug_mutex_);
+      latest_have_pose_for_debug_ = false;
+      latest_have_radar_for_debug_ = false;
     }
+    return;
   }
-
-  // Use the existing ROS parameter (no dependency on SdnlCore API)
-  const double robot_radius = this->get_parameter("robot_radius").as_double();
-
-  const double min_dist_edge =
-    any_point ? (min_dist_center - robot_radius)
-              : std::numeric_limits<double>::infinity();
-
-  if (!gh) { goal_active_.store(false); return; }
 
   if (!have_pose) {
     RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "No robot_localisation yet.");
@@ -330,62 +330,88 @@ void SDNLNavNode::controlLoop()
       std::lock_guard<std::mutex> lk(goal_mutex_);
       active_goal_handle_.reset();
     }
+
     goal_active_.store(false);
+
+    {
+    std::lock_guard<std::mutex> lk(debug_mutex_);
+    latest_have_pose_for_debug_ = false;
+    latest_have_radar_for_debug_ = false;
+    }
+
     cancel_requested_.store(false);
     publishMarkerDebug(false, nullptr);
     return;
   }
 
-  const double dx = goal.target_pose.x - pose.x;
-  const double dy = goal.target_pose.y - pose.y;
-  const double dist = std::hypot(dx, dy);
+  sdnl::SdnlInput in;
+  in.robot_map = {pose.x, pose.y, pose.theta};
+  in.target_map = {goal.target_pose.x, goal.target_pose.y, goal.target_pose.theta};
+  in.ignore_obstacles = goal.ignore_obstacles;
+  in.n_samples = n_samples_;      // not used when compute_curves=false, but fine
+  in.compute_curves = false;      // ✅ always false in controlLoop
 
+  // Radar: pass only if fresh (optional, but good)
+  in.radar.valid = !radar_stale;
+  if (in.radar.valid) {
+    in.radar.sectors.reserve(radar.sectors.size());
+    for (const auto& s : radar.sectors) {
+      sdnl::RadarSector rs;
+      rs.start_angle  = s.start_angle;
+      rs.end_angle    = s.end_angle;
+      rs.min_distance = s.min_distance;
+      rs.has_point    = s.has_point;
+      in.radar.sectors.push_back(rs);
+    }
+  }
+
+  const sdnl::SdnlOutput out = core_.compute(in);
+  
   const double reached_radius = (goal.reached_radius > 0.0f) ? goal.reached_radius : static_cast<float>(default_reached_radius_);
   const double yaw_tol = (goal.yaw_tolerance > 0.0f) ? goal.yaw_tolerance : static_cast<float>(default_yaw_tolerance_);
-
-  const double yaw_err = sdnl::wrap_pi(static_cast<double>(goal.target_pose.theta) - static_cast<double>(pose.theta));
-
   const double v_max = (goal.max_linear_speed > 0.0f) ? goal.max_linear_speed : static_cast<float>(default_max_linear_speed_);
-  const double w_max = (goal.max_angular_speed > 0.0f) ? goal.max_angular_speed : static_cast<float>(default_max_angular_speed_);
-
-  const double psi_target_map = std::atan2(dy, dx);
-  const double psi_target_base = sdnl::wrap_pi(psi_target_map - pose.theta);
+  const double w_max = (goal.max_angular_speed > 0.0f) ? goal.max_angular_speed : static_cast<float>(default_max_angular_speed_);;
 
   geometry_msgs::msg::Twist cmd;
-  if (dist > reached_radius) {
+  if (out.dist_to_target > reached_radius) {
     cmd.linear.x = v_max;
-    cmd.angular.z = sdnl::clamp(1.5 * psi_target_base, -w_max, w_max);
+    cmd.angular.z = sdnl::clamp(1.5 * out.psi_target_base, -w_max, w_max);
   } else {
     cmd.linear.x = 0.0;
-    cmd.angular.z = sdnl::clamp(2.0 * yaw_err, -w_max, w_max);
+    cmd.angular.z = sdnl::clamp(2.0 * out.yaw_error, -w_max, w_max);
   }
 
   cmd_vel_pub_->publish(cmd);
 
   auto fb = std::make_shared<NavigateSDNL::Feedback>();
-  fb->dist_to_target = static_cast<float>(dist);
-  fb->yaw_error = static_cast<float>(yaw_err);
+  fb->dist_to_target = static_cast<float>(out.dist_to_target);
+  fb->yaw_error = static_cast<float>(out.yaw_error);
   fb->cmd_vel = cmd;
-  fb->min_obstacle_dist_edge = std::isfinite(min_dist_edge) ? static_cast<float>(min_dist_edge) : -1.0f;
-  fb->state = (dist > reached_radius) ? "moving" : "rotating";
+  fb->min_obstacle_dist_edge =
+    std::isfinite(out.min_obstacle_dist_edge) ? static_cast<float>(out.min_obstacle_dist_edge) : -1.0f;
+  fb->state = (out.dist_to_target > reached_radius) ? "moving" : "rotating";
   gh->publish_feedback(fb);
 
   {
     std::lock_guard<std::mutex> lk(debug_mutex_);
     latest_cmd_ = cmd;
-    latest_dist_ = dist;
-    latest_yaw_err_ = yaw_err;
-    latest_psi_target_base_ = psi_target_base;
-    latest_min_obs_edge_ = min_dist_edge;
+
+    latest_pose_for_debug_ = pose;
+    latest_goal_for_debug_ = goal;
+    latest_have_pose_for_debug_ = have_pose;
+
+    latest_radar_for_debug_ = radar;
+    latest_have_radar_for_debug_ = have_radar;
+    latest_radar_stamp_for_debug_ = radar_stamp;
   }
 
-  if (dist <= reached_radius && std::abs(yaw_err) <= yaw_tol) {
+  if (out.dist_to_target <= reached_radius && std::abs(out.yaw_error) <= yaw_tol) {
     const auto & g = goal;
 
     RCLCPP_INFO(this->get_logger(),
       "SDNL goal SUCCEEDED: x=%.3f y=%.3f theta=%.3f rad | final dist=%.3f yaw_err=%.3f",
       g.target_pose.x, g.target_pose.y, g.target_pose.theta,
-      dist, yaw_err);
+      out.dist_to_target, out.yaw_error);
 
     publishZeroCmd();
 
@@ -400,6 +426,12 @@ void SDNLNavNode::controlLoop()
     }
     goal_active_.store(false);
 
+    {
+    std::lock_guard<std::mutex> lk(debug_mutex_);
+    latest_have_pose_for_debug_ = false;
+    latest_have_radar_for_debug_ = false;
+    }
+
     // publish marker debug immediately (inactive)
     publishMarkerDebug(false, nullptr);
 
@@ -411,48 +443,109 @@ void SDNLNavNode::debugLoop()
 {
   if (!debug_enabled_ || !debug_pub_) return;
 
-  const int N = std::max(64, n_samples_);
-  const double dtheta = (2.0 * M_PI) / static_cast<double>(N);
-  const double t = this->now().seconds();
+  // ----------------------------
+  // Grab latest snapshot safely
+  // ----------------------------
+  geometry_msgs::msg::Pose2D pose;
+  NavigateSDNL::Goal goal;
+  charmie_interfaces::msg::RadarData radar;
+  rclcpp::Time radar_stamp(0, 0, this->get_clock()->get_clock_type());
+  bool have_pose = false;
+  bool have_radar = false;
+  geometry_msgs::msg::Twist last_cmd;
 
-  std::vector<float> y_att(N), y_rep(N), y_final(N);
+  {
+    std::lock_guard<std::mutex> lk(debug_mutex_);
+    have_pose = latest_have_pose_for_debug_;
+    if (have_pose) {
+      pose = latest_pose_for_debug_;
+      goal = latest_goal_for_debug_;
+    }
 
-  for (int i = 0; i < N; ++i) {
-    const double th = i * dtheta;
-    y_att[i] = static_cast<float>(10.0 * std::sin(th - 0.5 * t));
-    y_rep[i] = static_cast<float>( 6.0 * std::cos(2.0 * th + 0.3 * t));
-    y_final[i] = y_att[i] + y_rep[i];
+    have_radar = latest_have_radar_for_debug_;
+    if (have_radar) {
+      radar = latest_radar_for_debug_;
+      radar_stamp = latest_radar_stamp_for_debug_;
+    }
+
+    last_cmd = latest_cmd_;
   }
 
+  if (!have_pose) {
+    // No pose yet -> nothing meaningful to debug
+    return;
+  }
+
+  // ----------------------------
+  // Radar freshness (same logic)
+  // ----------------------------
+  const double radar_age_s =
+    have_radar ? (this->now() - radar_stamp).seconds()
+               : std::numeric_limits<double>::infinity();
+
+  const bool radar_stale = (!have_radar) || (radar_age_s > radar_timeout_s_);
+
+  // ----------------------------
+  // Build core input (debug)
+  // ----------------------------
+  sdnl::SdnlInput in;
+  in.robot_map = {pose.x, pose.y, pose.theta};
+  in.target_map = {goal.target_pose.x, goal.target_pose.y, goal.target_pose.theta};
+  in.ignore_obstacles = goal.ignore_obstacles;
+
+  // Debug wants curves
+  in.n_samples = std::max(64, n_samples_);
+  in.compute_curves = true;
+
+  // Optional radar
+  in.radar.valid = !radar_stale;
+  if (in.radar.valid) {
+    in.radar.sectors.reserve(radar.sectors.size());
+    for (const auto& s : radar.sectors) {
+      sdnl::RadarSector rs;
+      rs.start_angle  = s.start_angle;
+      rs.end_angle    = s.end_angle;
+      rs.min_distance = s.min_distance;
+      rs.has_point    = s.has_point;
+      in.radar.sectors.push_back(rs);
+    }
+  }
+
+  // Compute full debug data (curves)
+  const sdnl::SdnlOutput out = core_.compute(in);
+
+  // Core should have curves now
+  if (out.y_attractor.empty()) return;
+
+  // ----------------------------
+  // Publish SDNLDebug (REAL)
+  // ----------------------------
   charmie_interfaces::msg::SDNLDebug dbg;
   dbg.header.stamp = this->now();
-  dbg.header.frame_id = "base_link";
-  dbg.n_samples = static_cast<uint16_t>(N);
-  dbg.dtheta = static_cast<float>(dtheta);
+  dbg.header.frame_id = "base_link";  // your viewer expects base_link
 
-  dbg.y_attractor = y_att;
-  dbg.y_rep_sum   = y_rep;
-  dbg.y_final     = y_final;
+  dbg.n_samples = static_cast<uint16_t>(out.n_samples);
+  dbg.dtheta = static_cast<float>(out.dtheta);
 
-  // Minimal “fake” metadata so viewer can draw heading line etc.
-  dbg.robot_map.x = 0.0;
-  dbg.robot_map.y = 0.0;
-  dbg.robot_map.theta = 0.0;
+  dbg.y_attractor = out.y_attractor;
+  dbg.y_rep_sum   = out.y_rep_sum;   // zeros for now
+  dbg.y_final     = out.y_final;     // equals attractor for now
 
-  dbg.target_pose.x = 1.0;
-  dbg.target_pose.y = 0.0;
-  dbg.target_pose.theta = 0.0;
+  // Fill metadata
+  dbg.robot_map = pose;
+  dbg.target_pose = goal.target_pose;
 
-  // Animate psi so you can see the red line move
-  dbg.psi_target_base = static_cast<float>(std::fmod(std::max(0.0, t * 0.3), 2.0 * M_PI));
+  dbg.psi_target_base = static_cast<float>(out.psi_target_base);
 
-  dbg.f_target = 0.0f;
-  dbg.f_obstacle = 0.0f;
-  dbg.f_final = 0.0f;
+  dbg.f_target = static_cast<float>(out.f_target);
+  dbg.f_obstacle = static_cast<float>(out.f_obstacle);
+  dbg.f_final = static_cast<float>(out.f_final);
 
-  dbg.cmd_vel = geometry_msgs::msg::Twist(); // zeros
-  dbg.dist_to_target = 0.0f;
-  dbg.min_obstacle_dist_edge = -1.0f;
+  dbg.cmd_vel = last_cmd;
+  dbg.dist_to_target = static_cast<float>(out.dist_to_target);
+
+  dbg.min_obstacle_dist_edge =
+    std::isfinite(out.min_obstacle_dist_edge) ? static_cast<float>(out.min_obstacle_dist_edge) : -1.0f;
 
   debug_pub_->publish(dbg);
 }
