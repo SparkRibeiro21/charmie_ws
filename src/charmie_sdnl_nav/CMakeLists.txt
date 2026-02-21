@@ -17,7 +17,6 @@ add_executable(sdnl_nav
   src/main.cpp
   src/sdnl_nav_node.cpp
   src/sdnl_core.cpp
-  src/debug_builder.cpp
 )
 
 target_include_directories(sdnl_nav PUBLIC
