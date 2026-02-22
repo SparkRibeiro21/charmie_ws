@@ -70,7 +70,7 @@ class TaskMain():
         self.NAVIGATION_TARGET2 = "desk"
         self.NAVIGATION_TARGET3 = "Left Lounge Chair"
         self.NAVIGATION_TARGET4 = [-2.0, 0.0,  0.0]
-        self.NAVIGATION_TARGET5 = [-4.0, 0.0,  0.0]
+        self.NAVIGATION_TARGET5 = [-3.0, 3.0,  0.0]
         self.NAVIGATION_TARGET6 = [ 0.0, 0.0, 90.0]
         
 
@@ -109,7 +109,7 @@ class TaskMain():
                 print("DONE")
                 time.sleep(5.0) """
 
-                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET6, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, reached_radius=0.8, print_feedback=True, wait_for_end_of=True)
                 # self.robot.sdnl_move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET), wait_for_end_of=False)
                 # time.sleep(2.0)
 

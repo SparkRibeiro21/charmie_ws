@@ -161,9 +161,9 @@ def main():
             draw_curve_fixed(screen, rect3, y_rep, (120, 120, 120), y_lim_bot)
             draw_curve_fixed(screen, rect3, y_fin, (255, 255, 0), y_lim_bot)
 
-            # Vertical "heading" line: use psi_target_base or robot yaw mapping
-            # For now: use psi_target_base mapped into [-pi, pi]
-            psi = float(msg.psi_target_base)
+            # Vertical line = robot heading in MAP (robot_map.theta)
+            # Curves are in MAP-angle convention [-pi, pi]
+            psi = float(msg.robot_map.theta) 
 
             # Ensure psi is in [-pi, pi]
             psi = (psi + math.pi) % (2.0 * math.pi) - math.pi

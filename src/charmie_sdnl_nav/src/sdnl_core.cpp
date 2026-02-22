@@ -53,7 +53,7 @@ SdnlOutput SdnlCore::compute(const SdnlInput& in) const
 
   if (in.compute_curves) {
     // Attractor curve
-    compute_attractor_curve(N, out.psi_target_base, in.ignore_obstacles, out.y_attractor);
+    compute_attractor_curve(N, out.psi_target_map, in.ignore_obstacles, out.y_attractor);
 
     // Repulsion (later) - for now zeros
     out.y_rep_sum.assign(out.y_attractor.size(), 0.0f);
@@ -75,7 +75,7 @@ SdnlOutput SdnlCore::compute(const SdnlInput& in) const
 
 void SdnlCore::compute_attractor_curve(
   int n_samples,
-  double psi_target_base,
+  double psi_target,
   bool ignore_obstacles,
   std::vector<float>& y_att_out) const
 {
@@ -92,7 +92,7 @@ void SdnlCore::compute_attractor_curve(
     // i=N-1  -> th approx +pi - dtheta
     const double th = -M_PI + static_cast<double>(i) * dtheta;
 
-    const double y = -lambda * std::sin(th - psi_target_base);
+    const double y = -lambda * std::sin(th - psi_target);
     y_att_out[static_cast<size_t>(i)] = static_cast<float>(y);
   }
 }
