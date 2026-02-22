@@ -162,21 +162,22 @@ def main():
             draw_curve_fixed(screen, rect3, y_fin, (255, 255, 0), y_lim_bot)
 
             # Vertical "heading" line: use psi_target_base or robot yaw mapping
-            # For now: use psi_target_base mapped into [0, 2pi)
+            # For now: use psi_target_base mapped into [-pi, pi]
             psi = float(msg.psi_target_base)
-            while psi < 0:
-                psi += 2.0 * math.pi
-            while psi >= 2.0 * math.pi:
-                psi -= 2.0 * math.pi
 
-            x_line = rect1.left + int((psi / (2.0 * math.pi)) * rect1.width)
+            # Ensure psi is in [-pi, pi]
+            psi = (psi + math.pi) % (2.0 * math.pi) - math.pi
+
+            # Map [-pi, pi] -> [0, width]
+            x_line = rect1.left + int(((psi + math.pi) / (2.0 * math.pi)) * rect1.width)
+
             for r in (rect1, rect2, rect3):
                 pygame.draw.line(screen, (255, 60, 60), (x_line, r.top), (x_line, r.bottom), 2)
 
             # Labels
-            screen.blit(font.render("Attractor (0..2π)", True, (230, 230, 230)), (rect1.left + 8, rect1.top + 6))
-            screen.blit(font.render("Repulsor sum (0..2π)", True, (230, 230, 230)), (rect2.left + 8, rect2.top + 6))
-            screen.blit(font.render("Final = Att + Rep (0..2π)", True, (230, 230, 230)), (rect3.left + 8, rect3.top + 6))
+            screen.blit(font.render("Attractor [-π, π]", True, (230, 230, 230)), (rect1.left + 8, rect1.top + 6))
+            screen.blit(font.render("Repulsor sum [-π, π]", True, (230, 230, 230)), (rect2.left + 8, rect2.top + 6))
+            screen.blit(font.render("Final = Att + Rep [-π, π]", True, (230, 230, 230)), (rect3.left + 8, rect3.top + 6))
 
             # Show current limits
             screen.blit(font.render(f"±{y_lim_top:.1f}", True, (180, 180, 180)), (rect1.right - 90, rect1.top + 6))

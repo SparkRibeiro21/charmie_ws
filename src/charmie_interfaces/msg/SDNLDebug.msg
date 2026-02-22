@@ -1,13 +1,13 @@
 # SDNL Debug Message
 # This message is meant ONLY for visualization/debug tools (e.g., sdnl_debug.py).
-# It contains full 0..2pi curves used to produce the SDNL control output.
+# It contains full [-pi, +pi] curves used to produce the SDNL control output.
 
 std_msgs/Header header                  # Timestamp + frame id (typically "base_link" or robot base frame for angular curves)
 
-uint16 n_samples                        # Number of samples used to represent the curves over [0, 2*pi)
+uint16 n_samples                        # Number of samples used to represent the curves over [-pi, +pi]
 float32 dtheta                          # Angular step per sample [rad], typically (2*pi)/n_samples
 
-float32[] y_attractor                   # Attractor influence curve y_att(theta) for theta in [0, 2*pi), size = n_samples
+float32[] y_attractor                   # Attractor influence curve y_att(theta) for theta in [-pi, +pi], size = n_samples
 float32[] y_rep_sum                     # Sum of all repulsor curves y_rep_sum(theta), size = n_samples
 float32[] y_final                       # Final curve y_final(theta) = y_att(theta) + y_rep_sum(theta) (optionally + noise), size = n_samples
 

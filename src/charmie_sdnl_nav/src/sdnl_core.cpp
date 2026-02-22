@@ -86,7 +86,12 @@ void SdnlCore::compute_attractor_curve(
   const double lambda = ignore_obstacles ? params_.lambda_target_not_obs : params_.lambda_target_with_obs;
 
   for (int i = 0; i < n_samples; ++i) {
-    const double th = static_cast<double>(i) * dtheta;
+    // New convention: sample angles cover [-pi, +pi) for red line in sdnl debug to be mostly in and not in side limits of the graphic
+    // i=0    -> th = -pi
+    // i=N/2  -> th = 0
+    // i=N-1  -> th approx +pi - dtheta
+    const double th = -M_PI + static_cast<double>(i) * dtheta;
+
     const double y = -lambda * std::sin(th - psi_target_base);
     y_att_out[static_cast<size_t>(i)] = static_cast<float>(y);
   }

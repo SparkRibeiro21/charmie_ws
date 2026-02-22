@@ -319,7 +319,7 @@ void SDNLNavNode::controlLoop()
     result->message = "Canceled";
 
     if (gh->is_canceling()) {
-      gh->canceled(result);   // ✅ valid
+      gh->canceled(result);
     } else {
       // Not yet CANCELING (race) -> abort is always valid from EXECUTING
       result->message = "Canceled (server-side abort race)";
@@ -349,7 +349,7 @@ void SDNLNavNode::controlLoop()
   in.target_map = {goal.target_pose.x, goal.target_pose.y, goal.target_pose.theta};
   in.ignore_obstacles = goal.ignore_obstacles;
   in.n_samples = n_samples_;      // not used when compute_curves=false, but fine
-  in.compute_curves = false;      // ✅ always false in controlLoop
+  in.compute_curves = false;      // always false in controlLoop
 
   // Radar: pass only if fresh (optional, but good)
   in.radar.valid = !radar_stale;
