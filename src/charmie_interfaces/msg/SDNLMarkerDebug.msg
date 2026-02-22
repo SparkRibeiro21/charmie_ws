@@ -7,5 +7,3 @@ geometry_msgs/Pose2D target_pose      # Current target pose in MAP frame: (x, y)
 
 float32 reached_radius                # Distance threshold [m] used to consider the target position reached
 bool active                           # True when a goal is currently active, false when idle / finished / canceled
-uint8 mode                            # Navigation mode (e.g., MOVE_TO_POSE, MOVE_ONLY, ROTATE_ONLY, etc.)
-bool ignore_obstacles                 # If true, obstacle repulsion is ignored (attractor-only behavior)

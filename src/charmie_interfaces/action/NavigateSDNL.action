@@ -4,8 +4,9 @@
 
 # Goal (sent by the client)
 geometry_msgs/Pose2D target_pose        # Target pose in MAP frame (x,y) and desired final yaw (theta) [rad]
-uint8 mode                              # Navigation mode (e.g., MOVE_TO_POSE, MOVE_ONLY, ROTATE_ONLY, MOVE_THEN_ORIENT)
 bool ignore_obstacles                   # If true, obstacle repulsion is ignored (attractor-only behavior)
+bool first_rotate                       # If true, robot first rotates to target yaw, then moves to position
+bool orient_after_move                  # If true, robot first moves to target position, then rotates to target yaw
 float32 reached_radius                  # Distance threshold [m] to consider the target position reached
 float32 yaw_tolerance                   # Yaw threshold [rad] to consider the final orientation reached
 float32 max_linear_speed                # Max linear speed command [m/s] (controller clamps to this)

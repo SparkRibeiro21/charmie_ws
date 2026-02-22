@@ -180,9 +180,9 @@ void SDNLNavNode::handle_accepted(const std::shared_ptr<GoalHandleNavigate> goal
 
   const double theta_deg = new_goal_copy.target_pose.theta * 180.0 / M_PI;
   RCLCPP_INFO(this->get_logger(),
-    "Accepted NavigateSDNL goal: x=%.3f y=%.3f theta=%.3f rad (%.1f deg) (mode=%u ignore_obs=%s)",
+    "Accepted NavigateSDNL goal: x=%.3f y=%.3f theta=%.3f rad (%.1f deg) ignore_obs=%s",
     new_goal_copy.target_pose.x, new_goal_copy.target_pose.y, new_goal_copy.target_pose.theta, theta_deg,
-    new_goal_copy.mode, new_goal_copy.ignore_obstacles ? "true" : "false");
+    new_goal_copy.ignore_obstacles ? "true" : "false");
 }
 
 void SDNLNavNode::poseCallback(const geometry_msgs::msg::Pose2D::SharedPtr msg)
@@ -219,16 +219,12 @@ void SDNLNavNode::publishMarkerDebug(bool active, const NavigateSDNL::Goal* goal
   if (goal_ptr) {
     m.target_pose = goal_ptr->target_pose;
     m.reached_radius = (goal_ptr->reached_radius > 0.0f) ? goal_ptr->reached_radius : static_cast<float>(default_reached_radius_);
-    m.mode = goal_ptr->mode;
-    m.ignore_obstacles = goal_ptr->ignore_obstacles;
   } else {
     // When inactive, it's still useful to publish something consistent
     m.target_pose.x = 0.0;
     m.target_pose.y = 0.0;
     m.target_pose.theta = 0.0;
     m.reached_radius = 0.0f;
-    m.mode = 0;
-    m.ignore_obstacles = false;
   }
 
   marker_debug_pub_->publish(m);

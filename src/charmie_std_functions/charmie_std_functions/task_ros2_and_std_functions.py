@@ -3087,7 +3087,7 @@ class RobotStdFunctions():
         
         return success, message, min_radar_distance_to_robot_edge
     
-    def sdnl_move_to_position(self, move_coords, mode=0, ignore_obstacles=False, reached_radius=0.50, yaw_tolerance_deg=3.0, max_linear_speed=0.42, max_angular_speed=0.90, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+    def sdnl_move_to_position(self, move_coords, ignore_obstacles=False, first_rotate=False, orient_after_move=False, reached_radius=0.50, yaw_tolerance_deg=3.0, max_linear_speed=0.42, max_angular_speed=0.90, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         goal_msg = NavigateSDNL.Goal()
@@ -3096,8 +3096,9 @@ class RobotStdFunctions():
         goal_msg.target_pose.y = float(move_coords[1])
         goal_msg.target_pose.theta = math.radians(float(move_coords[2]))  # deg -> rad
 
-        goal_msg.mode = int(mode)
         goal_msg.ignore_obstacles = bool(ignore_obstacles)
+        goal_msg.first_rotate = bool(first_rotate)
+        goal_msg.orient_after_move = bool(orient_after_move)
         goal_msg.reached_radius = float(reached_radius)
         goal_msg.yaw_tolerance = float(math.radians(yaw_tolerance_deg))    # deg -> rad
         goal_msg.max_linear_speed = float(max_linear_speed)
