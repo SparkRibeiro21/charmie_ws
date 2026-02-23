@@ -1,19 +1,19 @@
 import rclpy
-import math
 from rclpy.node import Node
 from rclpy.action import ActionClient
 
 from control_msgs.action import FollowJointTrajectory
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-
 from sensor_msgs.msg import JointState
 
 from tf2_ros import Buffer, TransformListener
-import tf2_geometry_msgs
+from rclpy.duration import Duration
+from rclpy.time import Time
 
 from moveit_msgs.srv import GetPositionIK
 from moveit_msgs.msg import PositionIKRequest, RobotState
 from geometry_msgs.msg import PoseStamped
+
 
 class ArmMoveIt(Node):
 
@@ -33,6 +33,7 @@ class ArmMoveIt(Node):
             "xarm_joint6",
         ]
 
+        # Action client
         self._action_client = ActionClient(
             self,
             FollowJointTrajectory,
@@ -43,7 +44,8 @@ class ArmMoveIt(Node):
         self._action_client.wait_for_server()
         self.get_logger().info("Trajectory action server ready.")
 
-        self._current_joints: dict[str, float] = {}
+        # Joint states
+        self._current_joints = {}
         self.create_subscription(
             JointState,
             "/joint_states",
@@ -51,38 +53,76 @@ class ArmMoveIt(Node):
             10
         )
 
+        # TF
         self._tf_buffer = Buffer()
         self._tf_listener = TransformListener(self._tf_buffer, self)
 
+        # IK client
         self._ik_client = self.create_client(GetPositionIK, "/compute_ik")
         self.get_logger().info("Waiting for IK service...")
         self._ik_client.wait_for_service()
         self.get_logger().info("IK service ready.")
+
+    # ============================================================
+    # Joint state callback
+    # ============================================================
 
     def _joint_state_callback(self, msg: JointState):
         for name, pos in zip(msg.name, msg.position):
             self._current_joints[name] = pos
 
 
+    def wait_for_tf(self):
+        self.get_logger().info("Waiting for TF...")
+
+        while rclpy.ok():
+            if self._tf_buffer.can_transform(
+                    self.BASE_FRAME,
+                    self.EE_LINK,
+                    rclpy.time.Time(),
+                    timeout=rclpy.duration.Duration(seconds=0.5)
+            ):
+                break
+            rclpy.spin_once(self, timeout_sec=0.1)
+
+        self.get_logger().info("TF ready.")
+
+    # ============================================================
+    # PUBLIC: Relative Cartesian Motion
+    # ============================================================
+
     def set_move_tool(self, dx: float, dy: float, dz: float, duration_sec=3.0):
         """
-        Move the tool by a relative offset in the base frame.
-
-        dx, dy, dz: desired tool movement in meters
+        Move tool relative to current pose (BASE FRAME).
         """
 
-        # Get current end-effector pose
-        try:
-            tf = self._tf_buffer.lookup_transform(
-                self.BASE_FRAME,
-                self.EE_LINK,
-                rclpy.time.Time(),
-                timeout=rclpy.duration.Duration(seconds=1.0),
-            )
-        except Exception as e:
-            self.get_logger().error(f"TF lookup failed: {e}")
+        # Get current EE pose
+        # try:
+        #     tf = self._tf_buffer.lookup_transform(
+        #         self.BASE_FRAME,
+        #         self.EE_LINK,
+        #         Time(),
+        #         timeout=Duration(seconds=1.0),
+        #     )
+        # except Exception as e:
+        #     self.get_logger().error(f"TF lookup failed: {e}")
+        #     return
+
+        if not self._tf_buffer.can_transform(
+            self.BASE_FRAME,
+            self.EE_LINK,
+            Time(),
+            timeout=Duration(seconds=1.0),
+        ):
+            self.get_logger().error("TF transform not available.")
             return
         
+        tf = self._tf_buffer.lookup_transform(
+            self.BASE_FRAME,
+            self.EE_LINK,
+            Time(),
+        )
+
         t = tf.transform.translation
         r = tf.transform.rotation
 
@@ -103,6 +143,7 @@ class ArmMoveIt(Node):
             f"{target_pose.pose.position.y:f}, {target_pose.pose.position.z:f}) "
         )
 
+        # Build IK request
         ik_request = PositionIKRequest()
         ik_request.group_name = self.PLANNING_GROUP
         ik_request.ik_link_name = self.EE_LINK
@@ -123,9 +164,10 @@ class ArmMoveIt(Node):
         future.add_done_callback(lambda f: self._ik_response_callback(f, duration_sec))
                 
 
-    # ------------------------------------------------------------------
-    # PUBLIC API — equivalent to your old set_joint_values_
-    # ------------------------------------------------------------------
+    # ============================================================
+    # Send joint trajectory
+    # ============================================================
+
     def send_joint_goal(self, positions_rad, duration_sec=3.0):
         """
         Send a single-point joint trajectory.
@@ -156,9 +198,10 @@ class ArmMoveIt(Node):
         future = self._action_client.send_goal_async(goal_msg)
         future.add_done_callback(self._goal_response_callback)
 
-    # ------------------------------------------------------------------
-    # Callbacks
-    # ------------------------------------------------------------------
+    # ============================================================
+    # Action Callbacks
+    # ============================================================
+
     def _goal_response_callback(self, future):
         goal_handle = future.result()
 
@@ -167,37 +210,50 @@ class ArmMoveIt(Node):
             return
 
         self.get_logger().info("Trajectory goal accepted.")
+
         result_future = goal_handle.get_result_async()
         result_future.add_done_callback(self._result_callback)
 
     def _result_callback(self, future):
         result = future.result().result
-        self.get_logger().info(f"Trajectory finished with error_code={result.error_code}")
+        self.get_logger().info(
+            f"Trajectory finished with error_code={result.error_code}"
+        )
 
-    def _ik_response_callback(self, future, duration_sec: float):
-            try:
-                response = future.result()
-            except Exception as e:
-                self.get_logger().error(f"IK service call failed: {e}")
-                return
+    # ============================================================
+    # IK Callback
+    # ============================================================
 
-            if response.error_code.val != 1:
-                self.get_logger().error(f"IK solution not found: error_code={response.error_code.val}")
-                return
+    def _ik_response_callback(self, future, duration_sec):
 
-            joint_positions = response.solution.joint_state
-            joint_map = dict(zip(joint_positions.name, joint_positions.position))
-            positions = [joint_map[n] for n in self.joint_names]
+        try:
+            response = future.result()
+        except Exception as e:
+            self.get_logger().error(f"IK service call failed: {e}")
+            return
 
-            self.get_logger().info(f"IK solution found: {positions}")   
-            self.send_joint_goal(positions, duration_sec=duration_sec)
+        if response.error_code.val != 1:
+            self.get_logger().error(
+                f"IK failed: error_code={response.error_code.val}"
+            )
+            return
+
+        joint_positions = response.solution.joint_state
+        joint_map = dict(zip(joint_positions.name,
+                             joint_positions.position))
+
+        positions = [joint_map[n] for n in self.joint_names]
+
+        self.get_logger().info(f"IK solution found: {positions}")
+
+        self.send_joint_goal(positions, duration_sec)
 
 
-# ----------------------------------------------------------------------
-# Standalone test
-# ----------------------------------------------------------------------
+# ============================================================
+# Main
+# ============================================================
+
 def main(args=None):
-
     rclpy.init(args=args)
     node = ArmMoveIt()
 
@@ -208,6 +264,7 @@ def main(args=None):
 
 
     node.create_timer(2.0, lambda: node.set_move_tool(dx=0.1, dy=0.0, dz=0.0, duration_sec=4.0))
+    # node.set_move_tool(dx=0.1, dy=0.0, dz=0.0)
 
     rclpy.spin(node)
 
