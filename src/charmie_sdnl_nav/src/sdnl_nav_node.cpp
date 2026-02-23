@@ -24,8 +24,10 @@ SDNLNavNode::SDNLNavNode()
   default_max_angular_speed_(this->declare_parameter<double>("default_max_angular_speed", 0.9)),
   default_reached_radius_(this->declare_parameter<double>("default_reached_radius", 0.5)),
   default_yaw_tolerance_(this->declare_parameter<double>("default_yaw_tolerance", 0.052359908)), // 3 degrees in radians
-  stop_ticks_default_(this->declare_parameter<int>("stop_ticks_default", 3)), // we can use 0 if we do not intend to stop before final orientation
-
+  stop_ticks_default_(this->declare_parameter<int>("stop_ticks_default", 0)), // we can use 0 if we do not intend to stop before final orientation
+  timing_debug_enabled_(this->declare_parameter<bool>("timing_debug_enabled", false)),
+  timing_debug_period_ms_(this->declare_parameter<int>("timing_debug_period_ms", 1000)),
+  
   have_pose_(false),
   have_radar_(false),
   goal_active_(false),
@@ -163,6 +165,9 @@ void SDNLNavNode::handle_accepted(const std::shared_ptr<GoalHandleNavigate> goal
     stop_ticks_remaining_ = 0;
   }
   
+  last_goal_accept_time_ = this->now();
+  first_cmd_after_goal_pending_.store(true);
+  
   publishMarkerDebug(true, &new_goal_copy);
 
   if (old_gh && old_gh->is_active()) {
@@ -252,7 +257,6 @@ void SDNLNavNode::publishMarkerDebug(bool active, const NavigateSDNL::Goal* goal
 
 void SDNLNavNode::controlLoop()
 {
-
   if (!goal_active_.load()) {
     {
       std::lock_guard<std::mutex> lk(debug_mutex_);
@@ -261,6 +265,11 @@ void SDNLNavNode::controlLoop()
     }
     return;
   }
+
+  static auto t_last_loop_start = std::chrono::steady_clock::now();
+  const auto t_loop_start = std::chrono::steady_clock::now();
+  const auto dt_loop_us = std::chrono::duration_cast<std::chrono::microseconds>(t_loop_start - t_last_loop_start).count();
+  t_last_loop_start = t_loop_start;
 
   NavigateSDNL::Goal goal;
   std::shared_ptr<GoalHandleNavigate> gh;
@@ -384,7 +393,10 @@ void SDNLNavNode::controlLoop()
     }
   }
 
+  const auto t_compute_start = std::chrono::steady_clock::now();
   const sdnl::SdnlOutput out = core_.compute(in);
+  const auto t_compute_end = std::chrono::steady_clock::now();
+  const auto dt_compute_us = std::chrono::duration_cast<std::chrono::microseconds>(t_compute_end - t_compute_start).count();
 
   ExecPhase phase;
   {
@@ -501,6 +513,34 @@ void SDNLNavNode::controlLoop()
     default:                                  fb->state = "unknown";      break;
   }
   gh->publish_feedback(fb);
+    
+  const auto t_loop_end = std::chrono::steady_clock::now();
+  const auto dt_total_us = std::chrono::duration_cast<std::chrono::microseconds>(t_loop_end - t_loop_start).count();
+
+  if (timing_debug_enabled_) {
+
+    // prints in microseconds
+    RCLCPP_INFO_THROTTLE(
+      this->get_logger(), *this->get_clock(), timing_debug_period_ms_,
+      "Timing: loop_dt=%.2f ms (%.1f Hz) | compute=%ld us | total=%ld us | radar_age=%.3f s | phase=%d",
+      dt_loop_us / 1000.0,
+      (dt_loop_us > 0 ? 1e6 / dt_loop_us : 0.0),
+      dt_compute_us,
+      dt_total_us,
+      radar_age_s,
+      static_cast<int>(phase_for_fb));
+
+    // prints in miliseconds
+    /* RCLCPP_INFO_THROTTLE(
+        this->get_logger(), *this->get_clock(), timing_debug_period_ms_,
+        "Timing: loop_dt=%.2f ms (%.1f Hz) | compute=%.2f ms | total=%.2f ms | radar_age=%.3f s | phase=%d",
+        dt_loop_us / 1000.0,
+        (dt_loop_us > 0 ? 1e6 / dt_loop_us : 0.0),
+        dt_compute_us / 1000.0,
+        dt_total_us / 1000.0,
+        radar_age_s,
+        static_cast<int>(phase_for_fb)); */
+  }
 
   {
     std::lock_guard<std::mutex> lk(debug_mutex_);

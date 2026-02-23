@@ -81,8 +81,13 @@ private:
   rclcpp::TimerBase::SharedPtr debug_timer_;
   rclcpp::TimerBase::SharedPtr marker_debug_timer_;
 
+  // Stop ticks management, after movement and before final orientation
   int stop_ticks_remaining_{0};
   int stop_ticks_default_{3};
+
+  // Timing debug
+  bool timing_debug_enabled_;
+  int timing_debug_period_ms_;
 
   // Cached data
   std::mutex data_mutex_;
@@ -127,4 +132,8 @@ private:
   charmie_interfaces::msg::RadarData latest_radar_for_debug_;
   bool latest_have_radar_for_debug_{false};
   rclcpp::Time latest_radar_stamp_for_debug_;
+
+  // Timing / latency metrics
+  rclcpp::Time last_goal_accept_time_;
+  std::atomic<bool> first_cmd_after_goal_pending_{false};
 };
