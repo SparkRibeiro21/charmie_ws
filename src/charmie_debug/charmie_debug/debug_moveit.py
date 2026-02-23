@@ -158,7 +158,7 @@ class TaskMain():
 
                                 print("OPEN GRIPPER")
 
-                                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                                self.robot.set_gripper(850.0, wait_for_end_of=True)
 
                                 print("WAIT FOR START BUTTON")
 
@@ -188,15 +188,17 @@ class TaskMain():
 
                                         self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_object_position, wait_for_end_of=True)
 
-                                        object_in_gripper = False
+                                        # object_in_gripper = False
 
-                                        self.robot.wait_for_start_button()
+                                        # self.robot.wait_for_start_button()
 
-                                        object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                        # object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
                                             
-                                        if not object_in_gripper:
+                                        # if not object_in_gripper:
                                             
-                                            print("OBJECT NOT IN GRIPPER")
+                                        #     print("OBJECT NOT IN GRIPPER")
+
+                                        self.robot.set_gripper(0.0, wait_for_end_of=True)
 
                                         self.robot.wait_for_start_button()
 

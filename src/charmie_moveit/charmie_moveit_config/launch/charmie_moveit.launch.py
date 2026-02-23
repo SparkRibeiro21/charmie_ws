@@ -140,6 +140,16 @@ def generate_launch_description():
         ],
     )
 
+    gripper_node = Node(
+        package='charmie_arm_ufactory',
+        executable='gripper_moveit',
+        name='gripper_moveit',
+        output='screen',
+        parameters=[
+            {'robot_ip':'192.168.1.219'}
+        ]
+    )
+
     
     return LaunchDescription([
 
@@ -198,7 +208,8 @@ def generate_launch_description():
         std_lf.ros2_control_node,
         std_lf.joint_state_broadcaster_spawner,
         std_lf.xarm6_controller_spawner,
-        xarm_gripper_controller_spawner,
+        # xarm_gripper_controller_spawner,
         std_lf.move_group_launch,
         std_lf.moveit_commander,
+        gripper_node,
     ])

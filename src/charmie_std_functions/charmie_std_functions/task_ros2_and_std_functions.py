@@ -147,6 +147,7 @@ class ROS2TaskNode(Node):
         self.set_joint_target_client = self.create_client(SetJointTarget, 'set_joint_target')
         self.set_pose_target_client = self.create_client(SetPoseTarget, 'set_pose_target')
         self.set_move_tool_target_client = self.create_client(SetPoseTarget, 'set_move_tool_target')
+        self.set_gripper_client = self.create_client(SetFloat, 'set_gripper_mm')
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
@@ -345,6 +346,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_set_joint_target_arm = False
         self.waited_for_end_of_set_pose_target_arm = False
         self.waited_for_end_of_set_move_tool_target_arm = False
+        self.waited_for_end_of_set_gripper = False
         self.waited_for_end_of_face = False
         self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
@@ -758,6 +760,27 @@ class ROS2TaskNode(Node):
             self.set_move_tool_target_arm_success = response.success
             self.set_move_tool_target_arm_message = response.message
             self.waited_for_end_of_set_move_tool_target_arm = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    def call_set_gripper_server(self, request=SetFloat.Request(), wait_for_end_of=True):
+
+        future = self.set_gripper_client.call_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_set_gripper_server)
+        else:
+            self.set_gripper_success = True
+            self.set_gripper_message = "Wait for answer not needed"
+
+    def callback_call_set_gripper_server(self, future):
+
+        try:
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.set_gripper_success = response.success
+            self.set_gripper_message = response.message
+            self.waited_for_end_of_set_gripper = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -2420,6 +2443,23 @@ class RobotStdFunctions():
         self.node.waited_for_end_of_set_move_tool_target_arm = False
 
         return self.node.set_move_tool_target_arm_success, self.node.set_move_tool_target_arm_message
+
+    def set_gripper(self, position_mm=0.0, wait_for_end_of=True):
+
+        # Gripper physical limits
+        position_mm = max(0.0, min(float(position_mm), 850.0))
+
+        request = SetFloat.Request()
+        request.data = position_mm
+
+        self.node.call_set_gripper_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_set_gripper:
+            pass
+        self.node.waited_for_end_of_set_gripper = False
+
+        return self.node.set_gripper_success, self.node.set_gripper_message
     
     def set_height_furniture_for_arm_manual_movements(self, height=0.0, wait_for_end_of=True):        
 

@@ -12,7 +12,7 @@ from xarm.wrapper import XArmAPI
 class XArmGripperService(Node):
 
     def __init__(self):
-        super().__init__('xarm_gripper_service')
+        super().__init__('gripper_moveit')
 
         # Parameters
         self.declare_parameter('robot_ip', '192.168.1.219')
