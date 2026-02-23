@@ -81,6 +81,9 @@ private:
   rclcpp::TimerBase::SharedPtr debug_timer_;
   rclcpp::TimerBase::SharedPtr marker_debug_timer_;
 
+  int stop_ticks_remaining_{0};
+  int stop_ticks_default_{3};
+
   // Cached data
   std::mutex data_mutex_;
   geometry_msgs::msg::Pose2D last_pose_;
@@ -95,6 +98,17 @@ private:
   NavigateSDNL::Goal active_goal_;
   std::atomic<bool> goal_active_;
   std::atomic<bool> cancel_requested_;
+
+  // Execution phase 
+  enum class ExecPhase : uint8_t {
+    ROTATE_TO_TARGET_BEARING = 0, // first_rotate (depends of first_rotate flag)
+    MOVE_TO_POSITION         = 1,
+    STOP_BEFORE_FINAL_ORIENT = 2, // stop and wait before final orientation
+    FINAL_ORIENT             = 3  // defined final orientation (depends of orientate_after_move flag)
+  };
+
+  std::mutex phase_mutex_;
+  ExecPhase exec_phase_{ExecPhase::MOVE_TO_POSITION};
 
   // SDNL core
   sdnl::SdnlCore core_;

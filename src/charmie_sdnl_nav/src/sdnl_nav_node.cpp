@@ -24,6 +24,7 @@ SDNLNavNode::SDNLNavNode()
   default_max_angular_speed_(this->declare_parameter<double>("default_max_angular_speed", 0.9)),
   default_reached_radius_(this->declare_parameter<double>("default_reached_radius", 0.5)),
   default_yaw_tolerance_(this->declare_parameter<double>("default_yaw_tolerance", 0.052359908)), // 3 degrees in radians
+  stop_ticks_default_(this->declare_parameter<int>("stop_ticks_default", 3)), // we can use 0 if we do not intend to stop before final orientation
 
   have_pose_(false),
   have_radar_(false),
@@ -155,6 +156,12 @@ void SDNLNavNode::handle_accepted(const std::shared_ptr<GoalHandleNavigate> goal
     goal_active_.store(true);
     cancel_requested_.store(false);
   }
+
+  {
+    std::lock_guard<std::mutex> lk(phase_mutex_);
+    exec_phase_ = new_goal_copy.first_rotate ? ExecPhase::ROTATE_TO_TARGET_BEARING : ExecPhase::MOVE_TO_POSITION;
+    stop_ticks_remaining_ = 0;
+  }
   
   publishMarkerDebug(true, &new_goal_copy);
 
@@ -172,17 +179,24 @@ void SDNLNavNode::handle_accepted(const std::shared_ptr<GoalHandleNavigate> goal
     old_gh->abort(result);
     
     {
-    std::lock_guard<std::mutex> lk(debug_mutex_);
-    latest_have_pose_for_debug_ = false;
-    latest_have_radar_for_debug_ = false;
+      std::lock_guard<std::mutex> lk(debug_mutex_);
+      latest_have_pose_for_debug_ = false;
+      latest_have_radar_for_debug_ = false;
+    }
+    {
+      std::lock_guard<std::mutex> lk(phase_mutex_);
+      exec_phase_ = ExecPhase::MOVE_TO_POSITION;
+      stop_ticks_remaining_ = 0;
     }
   }
 
   const double theta_deg = new_goal_copy.target_pose.theta * 180.0 / M_PI;
   RCLCPP_INFO(this->get_logger(),
-    "Accepted NavigateSDNL goal: x=%.3f y=%.3f theta=%.3f rad (%.1f deg) ignore_obs=%s",
+    "Accepted NavigateSDNL goal: x=%.3f y=%.3f theta=%.3f rad (%.1f deg) ignore_obs=%s first_rotate=%s orient_after_move=%s",
     new_goal_copy.target_pose.x, new_goal_copy.target_pose.y, new_goal_copy.target_pose.theta, theta_deg,
-    new_goal_copy.ignore_obstacles ? "true" : "false");
+    new_goal_copy.ignore_obstacles ? "true" : "false",
+    new_goal_copy.first_rotate ? "true" : "false",
+    new_goal_copy.orient_after_move ? "true" : "false");
 }
 
 void SDNLNavNode::poseCallback(const geometry_msgs::msg::Pose2D::SharedPtr msg)
@@ -283,13 +297,13 @@ void SDNLNavNode::controlLoop()
 
   const bool radar_stale = (!have_radar) || (radar_age_s > radar_timeout_s_);
 
-  RCLCPP_INFO_THROTTLE(
+  /* RCLCPP_INFO_THROTTLE(
     this->get_logger(), *this->get_clock(), 2000,
     "Radar status: have=%s stale=%s age=%.3fs (timeout=%.3fs) sectors=%u",
     have_radar ? "true" : "false",
     radar_stale ? "true" : "false",
     radar_age_s, radar_timeout_s_,
-    have_radar ? radar.number_of_sectors : 0);
+    have_radar ? radar.number_of_sectors : 0); */
 
   if (!gh) {
     goal_active_.store(false);
@@ -297,6 +311,11 @@ void SDNLNavNode::controlLoop()
       std::lock_guard<std::mutex> lk(debug_mutex_);
       latest_have_pose_for_debug_ = false;
       latest_have_radar_for_debug_ = false;
+    }
+    {
+      std::lock_guard<std::mutex> lk(phase_mutex_);
+      exec_phase_ = ExecPhase::MOVE_TO_POSITION;
+      stop_ticks_remaining_ = 0;
     }
     return;
   }
@@ -328,11 +347,15 @@ void SDNLNavNode::controlLoop()
     }
 
     goal_active_.store(false);
-
     {
-    std::lock_guard<std::mutex> lk(debug_mutex_);
-    latest_have_pose_for_debug_ = false;
-    latest_have_radar_for_debug_ = false;
+      std::lock_guard<std::mutex> lk(debug_mutex_);
+      latest_have_pose_for_debug_ = false;
+      latest_have_radar_for_debug_ = false;
+    }
+    {
+      std::lock_guard<std::mutex> lk(phase_mutex_);
+      exec_phase_ = ExecPhase::MOVE_TO_POSITION;
+      stop_ticks_remaining_ = 0;
     }
 
     cancel_requested_.store(false);
@@ -362,6 +385,12 @@ void SDNLNavNode::controlLoop()
   }
 
   const sdnl::SdnlOutput out = core_.compute(in);
+
+  ExecPhase phase;
+  {
+    std::lock_guard<std::mutex> lk(phase_mutex_);
+    phase = exec_phase_;
+  }
   
   const double reached_radius = (goal.reached_radius > 0.0f) ? goal.reached_radius : static_cast<float>(default_reached_radius_);
   const double yaw_tol = (goal.yaw_tolerance > 0.0f) ? goal.yaw_tolerance : static_cast<float>(default_yaw_tolerance_);
@@ -369,12 +398,87 @@ void SDNLNavNode::controlLoop()
   const double w_max = (goal.max_angular_speed > 0.0f) ? goal.max_angular_speed : static_cast<float>(default_max_angular_speed_);;
 
   geometry_msgs::msg::Twist cmd;
-  if (out.dist_to_target > reached_radius) {
-    cmd.linear.x = v_max;
-    cmd.angular.z = sdnl::clamp(1.5 * out.psi_target_base, -w_max, w_max);
-  } else {
-    cmd.linear.x = 0.0;
-    cmd.angular.z = sdnl::clamp(2.0 * out.yaw_error, -w_max, w_max);
+
+  // bearing_err: angular error to face the target position (x,y) in base frame
+  const double bearing_err = out.psi_target_base;
+
+  // final_yaw_err: final orientation error (depends on orient_after_move flag)
+  // - if true  -> rotate to goal.target_pose.theta
+  // - if false -> rotate to face target position (x,y)
+  const double final_yaw_err = goal.orient_after_move ? out.yaw_error : bearing_err;
+
+  switch (phase) {
+
+    case ExecPhase::ROTATE_TO_TARGET_BEARING:
+    {
+      // Rotate in place to align robot heading with target position (x,y)
+      cmd.linear.x  = 0.0;
+      cmd.angular.z = sdnl::clamp(2.0 * bearing_err, -w_max, w_max);
+
+      // Transition to MOVE phase once bearing error is within tolerance
+      if (std::abs(bearing_err) <= yaw_tol) {
+        std::lock_guard<std::mutex> lk(phase_mutex_);
+        exec_phase_ = ExecPhase::MOVE_TO_POSITION;
+      }
+      break;
+    }
+
+    case ExecPhase::MOVE_TO_POSITION:
+    {
+      if (out.dist_to_target > reached_radius) {
+        // Normal SDNL motion: move forward while steering toward target
+        cmd.linear.x  = v_max;
+        cmd.angular.z = sdnl::clamp(1.5 * bearing_err, -w_max, w_max);
+      } else {
+        // Target position reached -> transition to FINAL_ORIENT phase
+        cmd.linear.x  = 0.0;
+        cmd.angular.z = 0.0;
+
+        {
+          std::lock_guard<std::mutex> lk(phase_mutex_);
+          if (stop_ticks_default_ > 0) {
+            exec_phase_ = ExecPhase::STOP_BEFORE_FINAL_ORIENT;
+            stop_ticks_remaining_ = stop_ticks_default_;
+          } else {
+            exec_phase_ = ExecPhase::FINAL_ORIENT; // so if 0, skips STOP_BEFORE_FINAL_ORIENT
+            stop_ticks_remaining_ = 0;
+          }
+        }
+      }
+      break;
+    }
+
+    case ExecPhase::STOP_BEFORE_FINAL_ORIENT:
+    {
+      // Force stop: publish zero a few consecutive control cycles
+      cmd.linear.x  = 0.0;
+      cmd.angular.z = 0.0;
+
+      bool done = false;
+      {
+        std::lock_guard<std::mutex> lk(phase_mutex_);
+        if (stop_ticks_remaining_ > 0) {
+          stop_ticks_remaining_--;
+        }
+        if (stop_ticks_remaining_ <= 0) {
+          exec_phase_ = ExecPhase::FINAL_ORIENT;
+          done = true;
+        }
+      }
+
+      // (optional) you can keep cmd zero regardless; next loop will enter FINAL_ORIENT
+      (void)done;
+      break;
+    }
+
+    case ExecPhase::FINAL_ORIENT:
+    default:
+    {
+      // Rotate in place to desired final orientation
+      cmd.linear.x  = 0.0;
+      cmd.angular.z = sdnl::clamp(2.0 * final_yaw_err, -w_max, w_max);
+      break;
+    }
   }
 
   cmd_vel_pub_->publish(cmd);
@@ -383,9 +487,19 @@ void SDNLNavNode::controlLoop()
   fb->dist_to_target = static_cast<float>(out.dist_to_target);
   fb->yaw_error = static_cast<float>(out.yaw_error);
   fb->cmd_vel = cmd;
-  fb->min_obstacle_dist_edge =
-    std::isfinite(out.min_obstacle_dist_edge) ? static_cast<float>(out.min_obstacle_dist_edge) : -1.0f;
-  fb->state = (out.dist_to_target > reached_radius) ? "moving" : "rotating";
+  fb->min_obstacle_dist_edge = std::isfinite(out.min_obstacle_dist_edge) ? static_cast<float>(out.min_obstacle_dist_edge) : -1.0f;
+  ExecPhase phase_for_fb;
+  {
+    std::lock_guard<std::mutex> lk(phase_mutex_);
+    phase_for_fb = exec_phase_;
+  }
+  switch (phase_for_fb) {
+    case ExecPhase::ROTATE_TO_TARGET_BEARING: fb->state = "rotate_init"; break;
+    case ExecPhase::MOVE_TO_POSITION:         fb->state = "moving";       break;
+    case ExecPhase::STOP_BEFORE_FINAL_ORIENT: fb->state = "stopping_before_final_orient";     break;
+    case ExecPhase::FINAL_ORIENT:             fb->state = goal.orient_after_move ? "rotate_f_theta" : "rotate_f_target"; break;
+    default:                                  fb->state = "unknown";      break;
+  }
   gh->publish_feedback(fb);
 
   {
@@ -401,7 +515,15 @@ void SDNLNavNode::controlLoop()
     latest_radar_stamp_for_debug_ = radar_stamp;
   }
 
-  if (out.dist_to_target <= reached_radius && std::abs(out.yaw_error) <= yaw_tol) {
+  ExecPhase phase_now;
+  {
+    std::lock_guard<std::mutex> lk(phase_mutex_);
+    phase_now = exec_phase_;
+  }
+
+  const double final_yaw_err_now = goal.orient_after_move ? out.yaw_error : out.psi_target_base;
+  if (phase_now == ExecPhase::FINAL_ORIENT && out.dist_to_target <= reached_radius && std::abs(final_yaw_err_now) <= yaw_tol)  
+  {
     const auto & g = goal;
 
     RCLCPP_INFO(this->get_logger(),
@@ -420,12 +542,17 @@ void SDNLNavNode::controlLoop()
       std::lock_guard<std::mutex> lk(goal_mutex_);
       active_goal_handle_.reset();
     }
-    goal_active_.store(false);
 
+    goal_active_.store(false);
     {
-    std::lock_guard<std::mutex> lk(debug_mutex_);
-    latest_have_pose_for_debug_ = false;
-    latest_have_radar_for_debug_ = false;
+      std::lock_guard<std::mutex> lk(debug_mutex_);
+      latest_have_pose_for_debug_ = false;
+      latest_have_radar_for_debug_ = false;
+    }
+    {
+      std::lock_guard<std::mutex> lk(phase_mutex_);
+      exec_phase_ = ExecPhase::MOVE_TO_POSITION;
+      stop_ticks_remaining_ = 0;
     }
 
     // publish marker debug immediately (inactive)
