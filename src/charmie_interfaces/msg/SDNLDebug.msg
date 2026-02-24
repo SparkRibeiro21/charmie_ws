@@ -11,6 +11,9 @@ float32[] y_attractor                   # Attractor influence curve y_att(theta)
 float32[] y_rep_sum                     # Sum of all repulsor curves y_rep_sum(theta), size = n_samples
 float32[] y_final                       # Final curve y_final(theta) = y_att(theta) + y_rep_sum(theta) (optionally + noise), size = n_samples
 
+uint16 n_repulsors                      # Number of individual repulsor curves (e.g., from different radar points)
+float32[] y_rep_all                     # All individual repulsor curves, but flattened
+
 geometry_msgs/Pose2D robot_map          # Robot pose in MAP frame (x,y,theta) used for computing target direction
 geometry_msgs/Pose2D target_pose        # Target pose in MAP frame (x,y,theta) currently being pursued
 

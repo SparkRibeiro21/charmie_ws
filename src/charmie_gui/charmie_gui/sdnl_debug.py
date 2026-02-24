@@ -34,8 +34,7 @@ class SdnlDebugViewer(Node):
         with self._lock:
             return self._last_msg
 
-
-def draw_curve_fixed(surface, rect, y, color, y_lim):
+def draw_curve_fixed(surface, rect, y, color, y_lim, width=2):
     """Draw curve y[] in rect with fixed symmetric limits [-y_lim, +y_lim] and zero centered."""
     if not y or len(y) < 2:
         return
@@ -58,7 +57,7 @@ def draw_curve_fixed(surface, rect, y, color, y_lim):
     pygame.draw.line(surface, (60, 60, 60), (rect.left, y0), (rect.right, y0), 1)
 
     pts = [(map_x(i), map_y(y[i])) for i in range(n)]
-    pygame.draw.lines(surface, color, False, pts, 2)
+    pygame.draw.lines(surface, color, False, pts, width)
 
 def recompute_layout(screen, margin=20):
     w, h = screen.get_size()
@@ -151,9 +150,23 @@ def main():
             y_rep = list(msg.y_rep_sum)
             y_fin = list(msg.y_final)
 
-            # Fixed symmetric scaling around zero (manual, per-plot)
+            # Draw attactor in top plot (green)
             draw_curve_fixed(screen, rect1, y_att, (0, 255, 0), y_lim_top)
-            draw_curve_fixed(screen, rect2, y_rep, (0, 200, 255), y_lim_mid)
+           
+            # Draw individual repulsors in grey (if provided)
+            n_samples = int(msg.n_samples)
+            n_rep = int(getattr(msg, "n_repulsors", 0))
+            y_rep_all = list(getattr(msg, "y_rep_all", []))
+
+            if n_rep > 0 and len(y_rep_all) >= n_rep * n_samples:
+                for k in range(n_rep):
+                    start = k * n_samples
+                    end = start + n_samples
+                    yk = y_rep_all[start:end]
+                    draw_curve_fixed(screen, rect2, yk, (90, 90, 90), y_lim_mid, width=1)
+
+            # Draw repulsor sum on top (colored)
+            draw_curve_fixed(screen, rect2, y_rep, (255, 60, 60), y_lim_mid, width=2)
 
             # Final plot: draw att + rep + final
             # Final plot: all curves share the same limits (so the sum is visually correct)
@@ -172,7 +185,7 @@ def main():
             x_line = rect1.left + int(((psi + math.pi) / (2.0 * math.pi)) * rect1.width)
 
             for r in (rect1, rect2, rect3):
-                pygame.draw.line(screen, (255, 60, 60), (x_line, r.top), (x_line, r.bottom), 2)
+                pygame.draw.line(screen, (0, 200, 255), (x_line, r.top), (x_line, r.bottom), 2)
 
             # Labels
             screen.blit(font.render("Attractor [-π, π]", True, (230, 230, 230)), (rect1.left + 8, rect1.top + 6))
@@ -189,7 +202,8 @@ def main():
             screen.blit(font.render(help_txt, True, (160, 160, 160)), (margin, node.height - margin - 45))
 
             # Status line
-            status = f"N={msg.n_samples} dθ={msg.dtheta:.4f}  dist={msg.dist_to_target:.2f}  min_obs={msg.min_obstacle_dist_edge:.2f}"
+            n_rep = int(getattr(msg, "n_repulsors", 0))
+            status = f"N={msg.n_samples} dθ={msg.dtheta:.4f}  rep={n_rep}  dist={msg.dist_to_target:.2f}  min_obs={msg.min_obstacle_dist_edge:.2f}"
             screen.blit(font.render(status, True, (200, 200, 200)), (margin, node.height - margin - 20))
 
         pygame.display.flip()

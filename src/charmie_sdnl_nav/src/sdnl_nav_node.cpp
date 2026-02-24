@@ -494,7 +494,7 @@ void SDNLNavNode::controlLoop()
     }
   }
 
-  //cmd_vel_pub_->publish(cmd);
+  cmd_vel_pub_->publish(cmd);
 
   auto fb = std::make_shared<NavigateSDNL::Feedback>();
   fb->dist_to_target = static_cast<float>(out.dist_to_target);
