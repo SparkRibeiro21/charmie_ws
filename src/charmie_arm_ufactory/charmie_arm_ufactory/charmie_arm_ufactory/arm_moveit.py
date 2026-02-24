@@ -239,13 +239,13 @@ def main(args=None):
     rclpy.init(args=args)
     node = ArmMoveIt()
 
-    # Move to a known starting pose, then do a relative Cartesian shift.
-    # home = [-3.3672, 1.449, -1.1339, -0.017, 1.309, 4.712]
-    # node.send_joint_goal(home, duration_sec=4.0)
-    node.set_move_tool(dx=-0.01, dy=0.0, dz=0.01, duration_sec=3.0)
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
 
-    # A single spin() drives all callbacks — no nested blocking calls.
-    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
 
 
 if __name__ == "__main__":
