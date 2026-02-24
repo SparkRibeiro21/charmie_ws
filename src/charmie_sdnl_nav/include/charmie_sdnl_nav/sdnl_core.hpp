@@ -20,6 +20,7 @@ struct SdnlParams
   double max_dist_for_obs = 2.0;
   double robot_radius = 0.28;
   double heading_offset_rad = 0.0;  // optional offset applied in target->base angle computation
+  bool use_obstacle_cutoff = true;
 };
 
 // -------------------------
@@ -53,6 +54,13 @@ struct RadarData
   std::vector<RadarSector> sectors;
 };
 
+struct ObstacleTerm
+{
+  double psi_obs{0.0};       // radians, base frame, 0 forward, +left (CCW)
+  double d_obs_edge{0.0};    // meters, distance from robot *edge* (>= 0)
+  double delta_theta{0.0};   // radians, angular span of the obstacle term
+};
+
 struct SdnlInput
 {
   Pose2D robot_map;
@@ -77,8 +85,9 @@ struct SdnlOutput
   double psi_target_base{0.0};  // wrap_pi(psi_target_map - robot.theta + heading_offset)
   double yaw_error{0.0};        // wrap_pi(target.theta - robot.theta)
 
-  // Obstacle debug metric (optional)
-  double min_obstacle_dist_edge{std::numeric_limits<double>::infinity()}; // (min center dist - robot_radius)
+  // Obstacle info
+  double min_obstacle_dist_edge{std::numeric_limits<double>::infinity()}; 
+  std::vector<ObstacleTerm> obstacles;
 
   // Curves
   int n_samples{0};
@@ -110,20 +119,19 @@ public:
   // Compute attractor curve y_att(theta) over [0, 2pi)
   void compute_attractor_curve(
     int n_samples,
-    double psi_target_base,
+    double psi_target,
     bool ignore_obstacles,
     std::vector<float>& y_att_out) const;
 
 private:
-  static double wrap_pi(double a)
-  {
-    return std::atan2(std::sin(a), std::cos(a));  // [-pi, pi]
-  }
 
-  static double clamp(double v, double lo, double hi)
-  {
-    return std::max(lo, std::min(v, hi));
-  }
+  static void map_radar_to_obstacles(
+    const RadarData& radar,
+    double robot_radius,
+    double max_dist_for_obs,
+    bool use_obstacle_cutoff,
+    std::vector<ObstacleTerm>& out_terms,
+    double& out_min_edge_dist);
 
   SdnlParams params_;
 };

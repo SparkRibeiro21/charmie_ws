@@ -39,9 +39,10 @@ SDNLNavNode::SDNLNavNode()
     p.lambda_target_with_obs = this->declare_parameter<double>("lambda_target_with_obs", 4.0);
     p.beta1                  = this->declare_parameter<double>("beta1", 40.0);
     p.beta2                  = this->declare_parameter<double>("beta2", 0.06);
-    p.max_dist_for_obs        = this->declare_parameter<double>("max_dist_for_obs", 2.0);
+    p.max_dist_for_obs       = this->declare_parameter<double>("max_dist_for_obs", 2.0);
     p.robot_radius           = this->declare_parameter<double>("robot_radius", 0.28);
     p.heading_offset_rad     = this->declare_parameter<double>("heading_offset_rad", 0.0);
+    p.use_obstacle_cutoff    = this->declare_parameter<bool>("use_obstacle_cutoff", false);
     return sdnl::SdnlCore(p);
   }())
 
@@ -493,7 +494,7 @@ void SDNLNavNode::controlLoop()
     }
   }
 
-  cmd_vel_pub_->publish(cmd);
+  //cmd_vel_pub_->publish(cmd);
 
   auto fb = std::make_shared<NavigateSDNL::Feedback>();
   fb->dist_to_target = static_cast<float>(out.dist_to_target);
@@ -529,6 +530,27 @@ void SDNLNavNode::controlLoop()
       dt_total_us,
       radar_age_s,
       static_cast<int>(phase_for_fb));
+
+    /* std::ostringstream oss;
+
+    oss << "Obstacles detected: " << out.obstacles.size()
+        << " (min_edge_dist=" << out.min_obstacle_dist_edge << " m)\n";
+
+    for (size_t i = 0; i < out.obstacles.size(); ++i)
+    {
+      const auto& o = out.obstacles[i];
+      oss << "  [" << i << "] psi_obs=" << o.psi_obs
+          << " rad (" << o.psi_obs * 180.0 / M_PI << " deg)"
+          << " | d_edge=" << o.d_obs_edge
+          << " | dtheta=" << o.delta_theta << "\n";
+    }
+
+    RCLCPP_INFO_THROTTLE(
+      this->get_logger(),
+      *this->get_clock(),
+      1000,
+      "%s",
+      oss.str().c_str()); */
 
     // prints in miliseconds
     /* RCLCPP_INFO_THROTTLE(

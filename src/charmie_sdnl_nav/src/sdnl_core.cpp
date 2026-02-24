@@ -1,4 +1,5 @@
 #include "charmie_sdnl_nav/sdnl_core.hpp"
+#include "charmie_sdnl_nav/angle_utils.hpp"
 
 namespace sdnl
 {
@@ -21,26 +22,21 @@ SdnlOutput SdnlCore::compute(const SdnlInput& in) const
 
   // Angles
   out.psi_target_map = std::atan2(out.dy, out.dx);
-  out.psi_target_base = wrap_pi(out.psi_target_map - in.robot_map.theta + params_.heading_offset_rad);
-  out.yaw_error = wrap_pi(in.target_map.theta - in.robot_map.theta);
+  out.psi_target_base = sdnl::wrap_pi(out.psi_target_map - in.robot_map.theta + params_.heading_offset_rad);
+  out.yaw_error = sdnl::wrap_pi(in.target_map.theta - in.robot_map.theta);
 
-  // Obstacle debug metric (cheap; does not change behavior)
-  // Compute whenever radar is valid (independent of ignore_obstacles).
+  // Obstacles
+  out.obstacles.clear();
+  out.min_obstacle_dist_edge = std::numeric_limits<double>::infinity();
+
   if (in.radar.valid) {
-    bool any_point = false;
-    double min_dist_center = std::numeric_limits<double>::infinity();
-
-    for (const auto& s : in.radar.sectors) {
-      if (!s.has_point) continue;
-      any_point = true;
-      min_dist_center = std::min(min_dist_center, s.min_distance);
-    }
-
-    out.min_obstacle_dist_edge =
-      any_point ? (min_dist_center - params_.robot_radius)
-                : std::numeric_limits<double>::infinity();
-  } else {
-    out.min_obstacle_dist_edge = std::numeric_limits<double>::infinity();
+    map_radar_to_obstacles(
+      in.radar,
+      params_.robot_radius,
+      params_.max_dist_for_obs,
+      params_.use_obstacle_cutoff,
+      out.obstacles,
+      out.min_obstacle_dist_edge);
   }
 
   // Default: no curves computed unless requested
@@ -71,6 +67,70 @@ SdnlOutput SdnlCore::compute(const SdnlInput& in) const
   }
 
   return out;
+}
+
+void SdnlCore::map_radar_to_obstacles(
+  const RadarData& radar,
+  double robot_radius,
+  double max_dist_for_obs,
+  bool use_obstacle_cutoff,
+  std::vector<ObstacleTerm>& out_terms,
+  double& out_min_edge_dist)
+{
+  out_terms.clear();
+  out_min_edge_dist = std::numeric_limits<double>::infinity();
+
+  if (!radar.valid) {
+    return;
+  }
+
+  // For each sector with a point, create one obstacle term.
+  // Assumptions (matches your radar node):
+  // - angles are in base frame, 0 forward (+x), +CCW to the left (+y)
+  // - min_distance is from robot center (base frame origin)
+  for (const auto& s : radar.sectors) {
+
+    if (!s.has_point) {
+      continue;
+    }
+
+    if (!std::isfinite(s.min_distance)) {
+      continue;
+    }
+
+    // Convert center-distance -> edge-distance (>= 0)
+    const double d_edge = std::max(0.0, s.min_distance - robot_radius);
+
+    // Only keep obstacles within the SDNL obstacle influence range
+    if (use_obstacle_cutoff && d_edge > max_dist_for_obs) {
+      continue;
+    }
+
+    // Sector angular span (should be positive)
+    double dtheta = s.end_angle - s.start_angle;
+
+    // If something weird happens (wraps), make it positive in a safe way
+    // (Normally your radar builder produces monotonic start/end, so this is just a guard.)
+    if (dtheta < 0.0) {
+      dtheta = -dtheta;
+    }
+
+    // Obstacle "direction": center of the sector
+    const double psi_center = 0.5 * (s.start_angle + s.end_angle);
+
+    ObstacleTerm t;
+    t.psi_obs = wrap_pi(psi_center);  // use sdnl::wrap_pi from angle_utils.hpp
+    t.d_obs_edge = d_edge;
+    t.delta_theta = dtheta;
+
+    out_terms.push_back(t);
+    out_min_edge_dist = std::min(out_min_edge_dist, d_edge);
+  }
+
+  // If no valid obstacles were added, keep infinity
+  if (out_terms.empty()) {
+    out_min_edge_dist = std::numeric_limits<double>::infinity();
+  }
 }
 
 void SdnlCore::compute_attractor_curve(
