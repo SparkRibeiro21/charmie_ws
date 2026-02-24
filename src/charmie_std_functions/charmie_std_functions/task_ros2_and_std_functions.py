@@ -5183,8 +5183,14 @@ class RobotStdFunctions():
 
                     gripper_position = self.get_gripper_localization()
                     #height_furniture = self.get_shelf_from_height( object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
-                    correct_x = (gripper_position.z - tf_x - oh - furniture_height)*1000 - 210
-                    print("Gripper Position z: ",gripper_position.z," || Tf_X: ", tf_x, " || OH : ", oh, " || height_furniture", furniture_height, " || Correct_X: ", correct_x )
+                    if furniture_height >= 0:
+                        correct_x = (gripper_position.z - tf_x - oh - furniture_height)*1000 - 210
+                    else:
+                        HEIGHT = 0.04
+                        if oh <= 0.044:
+                            HEIGHT = oh/1.5 
+                        correct_x = (gripper_position.z - valid_detected_object.position_cam.x + HEIGHT - tf_x)*1000
+                    #print("Gripper Position z: ",gripper_position.z," || Tf_X: ", tf_x, " || OH : ", oh, " || height_furniture", furniture_height, " || Correct_X: ", correct_x )
                     object_position = [0.0, 0.0, correct_x, 0.0, 0.0, 0.0]
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
                     
@@ -5268,14 +5274,7 @@ class RobotStdFunctions():
 
                         red = cv2.inRange(crop_img, lower_red, upper_red)
                         
-                        cv2.imshow('hsv', crop_img)
-                        cv2.imshow('yolo', yolo_mask)
-                        cv2.imshow('red', red)
-                        cv2.imshow('otsu', th)
-                        cv2.imshow('lab', crop_lab)
-                        cv2.imshow('lab_red', crop_lab[:,:,1])
-                        cv2.waitKey(0)
-                        self.wait_for_start_button()
+                        #cv2.imshow('hsv', crop_img) #cv2.imshow('yolo', yolo_mask) #cv2.imshow('red', red) #cv2.imshow('otsu', th) #cv2.imshow('lab', crop_lab) #cv2.imshow('lab_red', crop_lab[:,:,1]) #cv2.waitKey(0) #self.wait_for_start_button()
 
                         Y, X = np.mgrid[0:red.shape[0]:1, 0:red.shape[1]:1]
 
@@ -5284,7 +5283,7 @@ class RobotStdFunctions():
                             centroid_y = int(float(np.sum(cv2.bitwise_and(Y, Y, mask=red)))/np.count_nonzero(red))
                         print("Centroid x: ", centroid_x, " Centroid y: ", centroid_y, " Center y: ", obj.box_height/2)
 
-                        self.wait_for_start_button()
+                        #self.wait_for_start_button()
                         print("Rotation", correct_rotation)
 
                         if centroid_y < obj.box_height/2 and correct_rotation < 90:
@@ -5354,6 +5353,7 @@ class RobotStdFunctions():
                     picked_height = current_gripper_height.z - furniture_height
                 else:
                     asked_help = True
+                    picked_height = -1
 
                 print("HEIGHT FURNITURE:", furniture_height)
                 print("Picked Height: ", picked_height)
@@ -5573,7 +5573,7 @@ class RobotStdFunctions():
             gripper_place_position = self.get_gripper_localization()
 
             if asked_help:
-                final_z = (gripper_place_position.z - furniture_height - (self.get_object_height_from_object(selected_object)/1.25) - TOLERANCE_ERROR)*1000
+                final_z = (gripper_place_position.z - furniture_height - (self.get_object_height_from_object(selected_object)/1.20) - TOLERANCE_ERROR)*1000
             else:
                 final_z = (gripper_place_position.z - furniture_height - picked_height - TOLERANCE_ERROR)*1000
 
