@@ -5186,7 +5186,7 @@ class RobotStdFunctions():
                     if furniture_height >= 0:
                         correct_x = (gripper_position.z - tf_x - oh - furniture_height)*1000 - 210
                     else:
-                        correct_x = (gripper_position.z - tf_x - oh - valid_detected_object.position_absolute.z)*1000 - 210
+                        correct_x = (gripper_position.z - tf_x - oh - valid_detected_object.position_relative.z)*1000 - 150
                         #HEIGHT = 0.04
                         #if oh <= 0.044:
                             #HEIGHT = oh/1.5 
@@ -5306,21 +5306,21 @@ class RobotStdFunctions():
                 if pick_mode == "top":
                     if furniture_height >= 0:
                         correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
+                    
+                        # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established. DO NOT CHANGE UNLESS TESTED
+                        if pick_mode == "front":
+                            MAX_MOVE_LIMIT = 245
+                            if correct_x_grab > MAX_MOVE_LIMIT:
+                                correct_x_grab = MAX_MOVE_LIMIT
+                        if pick_mode == "top":
+                            MAX_MOVE_LIMIT = 235
+                            if correct_x_grab > MAX_MOVE_LIMIT:
+                                correct_x_grab = MAX_MOVE_LIMIT
                     else:
                         HEIGHT = 0.04
                         if oh <= 0.044:
                             HEIGHT = oh/1.5 
                         correct_x_grab = (obj.position_cam.x + HEIGHT - tf_x)*1000
-                    
-                    # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established. DO NOT CHANGE UNLESS TESTED
-                    if pick_mode == "front":
-                        MAX_MOVE_LIMIT = 245
-                        if correct_x_grab > MAX_MOVE_LIMIT:
-                            correct_x_grab = MAX_MOVE_LIMIT
-                    if pick_mode == "top":
-                        MAX_MOVE_LIMIT = 235
-                        if correct_x_grab > MAX_MOVE_LIMIT:
-                            correct_x_grab = MAX_MOVE_LIMIT
                 
                 print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab})")
                 
@@ -5359,7 +5359,9 @@ class RobotStdFunctions():
 
                     picked_height = current_gripper_height.z - furniture_height
                 else:
-                    picked_height = (self.get_object_height_from_object(selected_object)*0.9)
+                    picked_height = (self.get_object_height_from_object(selected_object)*1.5)
+                    if picked_height < 0.1:
+                        picked_height = 0.1
 
                 print("HEIGHT FURNITURE:", furniture_height)
                 print("Picked Height: ", picked_height)
@@ -5581,6 +5583,7 @@ class RobotStdFunctions():
             #if asked_help:
                 #final_z = (gripper_place_position.z - furniture_height - (self.get_object_height_from_object(selected_object)/1.20) - TOLERANCE_ERROR)*1000
             #else:
+            print("position z: ", gripper_place_position.z," furniture: ", furniture_height," picked height: ", picked_height)
             final_z = (gripper_place_position.z - furniture_height - picked_height - TOLERANCE_ERROR)*1000
 
             print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", furniture_height, " picked height : ", picked_height)
