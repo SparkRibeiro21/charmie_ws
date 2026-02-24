@@ -5186,10 +5186,11 @@ class RobotStdFunctions():
                     if furniture_height >= 0:
                         correct_x = (gripper_position.z - tf_x - oh - furniture_height)*1000 - 210
                     else:
-                        HEIGHT = 0.04
-                        if oh <= 0.044:
-                            HEIGHT = oh/1.5 
-                        correct_x = (gripper_position.z - valid_detected_object.position_cam.x + HEIGHT - tf_x)*1000
+                        correct_x = (gripper_position.z - tf_x - oh - valid_detected_object.position_absolute.z)*1000 - 210
+                        #HEIGHT = 0.04
+                        #if oh <= 0.044:
+                            #HEIGHT = oh/1.5 
+                        #correct_x = (gripper_position.z - valid_detected_object.position_relative.z + HEIGHT - tf_x)*1000
                     #print("Gripper Position z: ",gripper_position.z," || Tf_X: ", tf_x, " || OH : ", oh, " || height_furniture", furniture_height, " || Correct_X: ", correct_x )
                     object_position = [0.0, 0.0, correct_x, 0.0, 0.0, 0.0]
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
@@ -5303,7 +5304,13 @@ class RobotStdFunctions():
                     correct_x_grab = (obj.position_cam.x + ow/1.5 - tf_x)*1000
                     print("OBJECT WIDTH:", ow)
                 if pick_mode == "top":
-                    correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
+                    if furniture_height >= 0:
+                        correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
+                    else:
+                        HEIGHT = 0.04
+                        if oh <= 0.044:
+                            HEIGHT = oh/1.5 
+                        correct_x_grab = (obj.position_cam.x + HEIGHT - tf_x)*1000
                     
                     # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established. DO NOT CHANGE UNLESS TESTED
                     if pick_mode == "front":
@@ -5352,8 +5359,7 @@ class RobotStdFunctions():
 
                     picked_height = current_gripper_height.z - furniture_height
                 else:
-                    asked_help = True
-                    picked_height = -1
+                    picked_height = (self.get_object_height_from_object(selected_object)*0.9)
 
                 print("HEIGHT FURNITURE:", furniture_height)
                 print("Picked Height: ", picked_height)
@@ -5572,10 +5578,10 @@ class RobotStdFunctions():
 
             gripper_place_position = self.get_gripper_localization()
 
-            if asked_help:
-                final_z = (gripper_place_position.z - furniture_height - (self.get_object_height_from_object(selected_object)/1.20) - TOLERANCE_ERROR)*1000
-            else:
-                final_z = (gripper_place_position.z - furniture_height - picked_height - TOLERANCE_ERROR)*1000
+            #if asked_help:
+                #final_z = (gripper_place_position.z - furniture_height - (self.get_object_height_from_object(selected_object)/1.20) - TOLERANCE_ERROR)*1000
+            #else:
+            final_z = (gripper_place_position.z - furniture_height - picked_height - TOLERANCE_ERROR)*1000
 
             print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", furniture_height, " picked height : ", picked_height)
 
