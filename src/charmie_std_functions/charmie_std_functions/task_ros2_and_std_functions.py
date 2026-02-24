@@ -18,7 +18,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, SetFloat, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
-    GetSoundClassificationContinuous, GetMinRadarDistance, SetNamedTarget, SetJointTarget, SetPoseTarget
+    GetSoundClassificationContinuous, GetMinRadarDistance, SetNamedTarget, SetJointTarget, SetPoseTarget, SetSimpleMoveTool
 from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles
 
 from charmie_point_cloud.point_cloud_class import PointCloud
@@ -147,7 +147,9 @@ class ROS2TaskNode(Node):
         self.set_joint_target_client = self.create_client(SetJointTarget, 'set_joint_target')
         self.set_pose_target_client = self.create_client(SetPoseTarget, 'set_pose_target')
         self.set_move_tool_target_client = self.create_client(SetPoseTarget, 'set_move_tool_target')
+        # Arm compatible with ros2_control
         self.set_gripper_client = self.create_client(SetFloat, 'set_gripper_mm')
+        self.set_simple_move_tool_client = self.create_client(SetSimpleMoveTool, 'set_simple_move_tool')
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
@@ -347,6 +349,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_set_pose_target_arm = False
         self.waited_for_end_of_set_move_tool_target_arm = False
         self.waited_for_end_of_set_gripper = False
+        self.waited_for_end_of_set_simple_move_tool = False
         self.waited_for_end_of_face = False
         self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
@@ -784,6 +787,26 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
+    def call_set_simple_move_tool_server(self, request=SetPoseTarget.Request(), wait_for_end_of=True):
+
+        future = self.set_simple_move_tool_client.call_async(request)
+
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_set_simple_move_tool_server)
+        else:
+            self.set_simple_move_tool_success = True
+            self.set_simple_move_tool_message = "Wait for answer not needed"
+
+    def callback_call_set_simple_move_tool_server(self, future):
+
+        try:
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.set_simple_move_tool_success = response.success
+            self.set_simple_move_tool_message = response.message
+            self.waited_for_end_of_set_simple_move_tool = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
 
     #### FACE SERVER FUNCTIONS #####
@@ -2460,6 +2483,24 @@ class RobotStdFunctions():
         self.node.waited_for_end_of_set_gripper = False
 
         return self.node.set_gripper_success, self.node.set_gripper_message
+
+    def set_simple_move_tool(self, dx=0.0, dy=0.0, dz=0.0, duration_sec=3.0, wait_for_end_of=True):
+
+        request = SetSimpleMoveTool.Request()
+        request.dx = float(dx)
+        request.dy = float(dy)
+        request.dz = float(dz)
+        request.duration_sec = float(duration_sec)
+
+        self.node.call_set_simple_move_tool_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_set_simple_move_tool:
+                pass
+        self.node.waited_for_end_of_set_simple_move_tool = False
+
+        return self.node.set_simple_move_tool_success, self.node.set_simple_move_tool_message
+    
     
     def set_height_furniture_for_arm_manual_movements(self, height=0.0, wait_for_end_of=True):        
 

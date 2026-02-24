@@ -93,6 +93,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetPoseTarget.srv"
   "srv/SetPoseWithCovarianceStamped.srv"
   "srv/SetRGB.srv"
+  "srv/SetSimpleMoveTool.srv"
   "srv/SetString.srv"
   "srv/SetTextFace.srv"
   "srv/SetTorso.srv"

@@ -164,7 +164,7 @@ class TaskMain():
 
                                 self.robot.wait_for_start_button()
 
-                                hand_objects = self.robot.search_for_objects(list_of_objects=[self.SELECTED_OBJECT], detect_objects_hand = True)
+                                hand_objects = self.robot.search_for_objects(tetas= [[0.0,0.0]], list_of_objects=[self.SELECTED_OBJECT], list_of_objects_detected_as=[['Pringles', 'Cheezit']], detect_objects_hand = True)
 
                                 print("LIST OF DETECTED OBJECTS:")
                                 for o in hand_objects:
@@ -180,17 +180,21 @@ class TaskMain():
 
                                         ow = self.robot.get_object_width_from_object(o.object_name)
 
-                                        grab_x = (o.position_cam.x + ow/1.5 - TCP_OFFSET_X)*1000
-                                        grab_y = (o.position_cam.y - TCP_OFFSET_Y)*1000
-                                        grab_z = (o.position_cam.z - TCP_OFFSET_Z)*1000
+                                        grab_x = (o.position_cam.x + ow/1.5 - TCP_OFFSET_X)
+                                        grab_y = (o.position_cam.y - TCP_OFFSET_Y)
+                                        grab_z = (o.position_cam.z - TCP_OFFSET_Z)
 
                                         grab_object_position = [grab_x, grab_y, grab_z, 0.0, 0.0, 0.0]
 
-                                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_object_position, wait_for_end_of=True)
+                                        # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_object_position, wait_for_end_of=True)
 
                                         # object_in_gripper = False
 
-                                        # self.robot.wait_for_start_button()
+                                        self.robot.wait_for_start_button()
+
+                                        # self.robot.set_move_tool_target_arm(grab_x, grab_y, grab_z, 0.0, 0.7071, 0.0, 0.7071, wait_for_end_of=True)
+
+                                        self.robot.set_simple_move_tool(0.27, 0.08, -0.05, duration_sec=3.0)
 
                                         # object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
                                             
@@ -204,7 +208,9 @@ class TaskMain():
 
                                         safe_position = [-grab_x, -grab_y, -grab_z, 0.0, 0.0, 0.0]
 
-                                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_position, wait_for_end_of=True)
+                                        self.robot.set_simple_move_tool(-0.27, -0.08, 0.05, duration_sec=3.0)
+
+                                        # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_position, wait_for_end_of=True)
 
 
 

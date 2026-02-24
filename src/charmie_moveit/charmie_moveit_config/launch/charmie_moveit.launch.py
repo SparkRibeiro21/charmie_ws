@@ -150,6 +150,13 @@ def generate_launch_description():
         ]
     )
 
+    arm_node = Node(
+        package='charmie_arm_ufactory',
+        executable='arm_moveit',
+        name='arm_moveit',
+        output='screen',
+    )
+
     
     return LaunchDescription([
 
@@ -212,4 +219,5 @@ def generate_launch_description():
         std_lf.move_group_launch,
         std_lf.moveit_commander,
         gripper_node,
+        arm_node,
     ])

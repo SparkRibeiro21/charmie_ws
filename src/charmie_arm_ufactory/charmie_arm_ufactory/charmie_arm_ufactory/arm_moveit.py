@@ -1,7 +1,12 @@
+#!/usr/bin/env python3
+
+import threading
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
+from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.duration import Duration
+from rclpy.executors import MultiThreadedExecutor
 from rclpy.time import Time
 
 from control_msgs.action import FollowJointTrajectory
@@ -11,6 +16,8 @@ from tf2_ros import Buffer, TransformListener
 from moveit_msgs.srv import GetPositionIK
 from moveit_msgs.msg import PositionIKRequest, RobotState
 from geometry_msgs.msg import PoseStamped
+
+from charmie_interfaces.srv import SetSimpleMoveTool
 
 
 class ArmMoveIt(Node):
@@ -32,18 +39,26 @@ class ArmMoveIt(Node):
 
         self._current_joints: dict[str, float] = {}
 
+        # ReentrantCallbackGroup allows service callbacks to make
+        # blocking calls on other clients/actions without deadlocking
+        self._cb_group = ReentrantCallbackGroup()
+
         # --- Action client ---
         self._action_client = ActionClient(
             self,
             FollowJointTrajectory,
             "/xarm6_controller/follow_joint_trajectory",
+            callback_group=self._cb_group,
         )
         self.get_logger().info("Waiting for trajectory action server...")
         self._action_client.wait_for_server()
         self.get_logger().info("Trajectory action server ready.")
 
         # --- Joint state subscription ---
-        self.create_subscription(JointState, "/joint_states", self._joint_state_cb, 10)
+        self.create_subscription(
+            JointState, "/joint_states", self._joint_state_cb, 10,
+            callback_group=self._cb_group,
+        )
 
         # --- TF ---
         self._tf_buffer = Buffer()
@@ -51,10 +66,20 @@ class ArmMoveIt(Node):
         self._wait_for_tf()
 
         # --- IK service client ---
-        self._ik_client = self.create_client(GetPositionIK, "/compute_ik")
+        self._ik_client = self.create_client(
+            GetPositionIK, "/compute_ik",
+            callback_group=self._cb_group,
+        )
         self.get_logger().info("Waiting for IK service...")
         self._ik_client.wait_for_service()
         self.get_logger().info("IK service ready.")
+
+        # --- SetMoveTool service server ---
+        self.create_service(
+            SetSimpleMoveTool, "set_simple_move_tool", self._handle_set_move_tool,
+            callback_group=self._cb_group,
+        )
+        self.get_logger().info("SetMoveTool service ready.")
 
         # --- Block until we have real joint state data ---
         if not self._wait_for_joint_states():
@@ -72,9 +97,7 @@ class ArmMoveIt(Node):
         self.get_logger().info("Waiting for TF...")
         while rclpy.ok():
             if self._tf_buffer.can_transform(
-                self.BASE_FRAME,
-                self.EE_LINK,
-                Time(),
+                self.BASE_FRAME, self.EE_LINK, Time(),
                 timeout=Duration(seconds=0.5),
             ):
                 break
@@ -82,7 +105,6 @@ class ArmMoveIt(Node):
         self.get_logger().info("TF ready.")
 
     def _wait_for_joint_states(self, timeout_sec: float = 5.0) -> bool:
-        """Block until all joints have been received at least once."""
         self.get_logger().info("Waiting for joint states...")
         start = self.get_clock().now()
         while rclpy.ok():
@@ -100,56 +122,35 @@ class ArmMoveIt(Node):
         return False
 
     def _joints_are_ready(self) -> bool:
-        """Runtime guard — confirm all joints are still present."""
         missing = [n for n in self.JOINT_NAMES if n not in self._current_joints]
         if missing:
-            self.get_logger().error(
-                f"Joint states incomplete — missing: {missing}"
-            )
+            self.get_logger().error(f"Joint states incomplete — missing: {missing}")
             return False
         return True
 
     # ------------------------------------------------------------------ #
-    #  Public API                                                          #
+    #  Service handler — blocking, safe inside ReentrantCallbackGroup      #
     # ------------------------------------------------------------------ #
 
-    def send_joint_goal(self, positions_rad: list[float], duration_sec: float = 3.0):
-        """Send a single-point joint trajectory goal (non-blocking)."""
-        if len(positions_rad) != len(self.JOINT_NAMES):
-            self.get_logger().error(
-                f"Expected {len(self.JOINT_NAMES)} joint values, got {len(positions_rad)}."
-            )
-            return
-
-        point = JointTrajectoryPoint()
-        point.positions = list(positions_rad)
-        point.time_from_start.sec = int(duration_sec)
-        point.time_from_start.nanosec = int((duration_sec % 1) * 1e9)
-
-        traj = JointTrajectory()
-        traj.joint_names = self.JOINT_NAMES
-        traj.points.append(point)
-
-        goal_msg = FollowJointTrajectory.Goal()
-        goal_msg.trajectory = traj
-
-        self.get_logger().info(f"Sending trajectory goal: {positions_rad}")
-        future = self._action_client.send_goal_async(goal_msg)
-        future.add_done_callback(self._on_goal_response)
-
-    def set_move_tool(self, dx: float, dy: float, dz: float, duration_sec: float = 3.0):
-        """Move the tool-center-point by (dx, dy, dz) in the base frame (non-blocking)."""
-        # Guard 1: joint states must be populated with real data
+    def _handle_set_move_tool(self, request, response):
+        """
+        Fully blocking service handler.
+        Safe because MultiThreadedExecutor + ReentrantCallbackGroup
+        allows other callbacks to run on other threads while this blocks.
+        """
         if not self._joints_are_ready():
-            return
+            response.success = False
+            response.message = "Joint states not ready."
+            return response
 
-        # Guard 2: TF must be available
         if not self._tf_buffer.can_transform(
             self.BASE_FRAME, self.EE_LINK, Time(), timeout=Duration(seconds=1.0)
         ):
-            self.get_logger().error("TF transform not available.")
-            return
+            response.success = False
+            response.message = "TF transform not available."
+            return response
 
+        # --- Look up current EE pose ---
         tf = self._tf_buffer.lookup_transform(self.BASE_FRAME, self.EE_LINK, Time())
         t = tf.transform.translation
         r = tf.transform.rotation
@@ -161,21 +162,21 @@ class ArmMoveIt(Node):
 
         target = PoseStamped()
         target.header.frame_id = self.BASE_FRAME
-        target.pose.position.x = t.x + dx
-        target.pose.position.y = t.y + dy
-        target.pose.position.z = t.z + dz
+        target.pose.position.x = t.x + request.dx
+        target.pose.position.y = t.y + request.dy
+        target.pose.position.z = t.z + request.dz
         target.pose.orientation = r
 
         self.get_logger().info(
-            f"Target  EE pose: pos=({target.pose.position.x:.4f}, "
+            f"Target EE pose: pos=({target.pose.position.x:.4f}, "
             f"{target.pose.position.y:.4f}, {target.pose.position.z:.4f})"
         )
 
-        # Seed IK with current joint positions (guaranteed non-zero here)
+        # --- Call IK service (blocking) ---
         robot_state = RobotState()
         robot_state.joint_state.name = self.JOINT_NAMES
         robot_state.joint_state.position = [
-            self._current_joints[n] for n in self.JOINT_NAMES  # no .get() fallback
+            self._current_joints[n] for n in self.JOINT_NAMES
         ]
 
         ik_req = PositionIKRequest()
@@ -187,60 +188,81 @@ class ArmMoveIt(Node):
         req = GetPositionIK.Request()
         req.ik_request = ik_req
 
-        future = self._ik_client.call_async(req)
-        future.add_done_callback(
-            lambda f, d=duration_sec: self._on_ik_response(f, d)
-        )
+        ik_future = self._ik_client.call_async(req)
+        rclpy.spin_until_future_complete(self, ik_future)  # blocks, but executor keeps spinning
 
-    # ------------------------------------------------------------------ #
-    #  Private callbacks                                                   #
-    # ------------------------------------------------------------------ #
-
-    def _on_ik_response(self, future, duration_sec: float):
         try:
-            response = future.result()
+            ik_response = ik_future.result()
         except Exception as e:
-            self.get_logger().error(f"IK service call failed: {e}")
-            return
+            response.success = False
+            response.message = f"IK service call failed: {e}"
+            return response
 
-        if response.error_code.val != 1:
-            self.get_logger().error(f"IK failed: error_code={response.error_code.val}")
-            return
+        if ik_response.error_code.val != 1:
+            response.success = False
+            response.message = f"IK failed: error_code={ik_response.error_code.val}"
+            return response
 
-        js = response.solution.joint_state
+        js = ik_response.solution.joint_state
         joint_map = dict(zip(js.name, js.position))
         positions = [joint_map[n] for n in self.JOINT_NAMES]
         self.get_logger().info(f"IK solution: {[f'{p:.4f}' for p in positions]}")
-        self.send_joint_goal(positions, duration_sec)
 
-    def _on_goal_response(self, future):
-        goal_handle = future.result()
+        # --- Send trajectory goal (blocking) ---
+        point = JointTrajectoryPoint()
+        point.positions = positions
+        point.time_from_start.sec = int(request.duration_sec)
+        point.time_from_start.nanosec = int((request.duration_sec % 1) * 1e9)
+
+        traj = JointTrajectory()
+        traj.joint_names = self.JOINT_NAMES
+        traj.points.append(point)
+
+        goal_msg = FollowJointTrajectory.Goal()
+        goal_msg.trajectory = traj
+
+        goal_future = self._action_client.send_goal_async(goal_msg)
+        rclpy.spin_until_future_complete(self, goal_future)
+
+        goal_handle = goal_future.result()
         if not goal_handle.accepted:
-            self.get_logger().error("Trajectory goal rejected.")
-            return
-        self.get_logger().info("Trajectory goal accepted.")
-        goal_handle.get_result_async().add_done_callback(self._on_result)
+            response.success = False
+            response.message = "Trajectory goal rejected."
+            return response
 
-    def _on_result(self, future):
-        result = future.result().result
+        self.get_logger().info("Trajectory goal accepted, waiting for result...")
+
+        result_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self, result_future)
+
+        result = result_future.result().result
         if result.error_code == 0:
             self.get_logger().info("Motion complete.")
+            response.success = True
+            response.message = "Motion complete."
         else:
-            self.get_logger().error(
-                f"Trajectory failed: error_code={result.error_code}"
-            )
+            self.get_logger().error(f"Trajectory failed: error_code={result.error_code}")
+            response.success = False
+            response.message = f"Trajectory failed: error_code={result.error_code}"
+
+        return response
 
 
 # ---------------------------------------------------------------------- #
-#  Entry point                                                            #
+#  Entry point — MultiThreadedExecutor is required                        #
 # ---------------------------------------------------------------------- #
 
 def main(args=None):
     rclpy.init(args=args)
     node = ArmMoveIt()
 
+    # MultiThreadedExecutor lets the service callback block on futures
+    # while other callbacks (joint states, TF, etc.) keep running
+    executor = MultiThreadedExecutor()
+    executor.add_node(node)
+
     try:
-        rclpy.spin(node)
+        executor.spin()
     except KeyboardInterrupt:
         pass
 
