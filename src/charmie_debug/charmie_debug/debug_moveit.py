@@ -164,7 +164,7 @@ class TaskMain():
 
                                 self.robot.wait_for_start_button()
 
-                                hand_objects = self.robot.search_for_objects(tetas= [[0.0,0.0]], list_of_objects=[self.SELECTED_OBJECT], list_of_objects_detected_as=[['Pringles', 'Cheezit']], detect_objects_hand = True)
+                                hand_objects = self.robot.search_for_objects(tetas= [[0.0,0.0]], list_of_objects=[self.SELECTED_OBJECT], list_of_objects_detected_as=[['Pringles', 'Cheezit', 'Sugar']], detect_objects_hand = True)
 
                                 print("LIST OF DETECTED OBJECTS:")
                                 for o in hand_objects:
@@ -184,6 +184,8 @@ class TaskMain():
                                         grab_y = (o.position_cam.y - TCP_OFFSET_Y)
                                         grab_z = (o.position_cam.z - TCP_OFFSET_Z)
 
+                                        print("X:", grab_x, "Y:", grab_y, "Z:", grab_z)
+
                                         grab_object_position = [grab_x, grab_y, grab_z, 0.0, 0.0, 0.0]
 
                                         # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_object_position, wait_for_end_of=True)
@@ -194,23 +196,36 @@ class TaskMain():
 
                                         # self.robot.set_move_tool_target_arm(grab_x, grab_y, grab_z, 0.0, 0.7071, 0.0, 0.7071, wait_for_end_of=True)
 
-                                        self.robot.set_simple_move_tool(0.27, 0.08, -0.05, duration_sec=3.0)
+                                        s,m = self.robot.set_simple_move_tool(-grab_x, -grab_y, -grab_z, duration_sec=3.0)
 
-                                        # object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                                            
-                                        # if not object_in_gripper:
-                                            
-                                        #     print("OBJECT NOT IN GRIPPER")
+                                        if not s:
 
-                                        self.robot.set_gripper(0.0, wait_for_end_of=True)
+                                            for i in range(self.trys):
 
-                                        self.robot.wait_for_start_button()
+                                                s,m = self.robot.set_simple_move_tool(grab_x, grab_y, grab_z, duration_sec=3.0)
 
-                                        safe_position = [-grab_x, -grab_y, -grab_z, 0.0, 0.0, 0.0]
+                                                if s:
 
-                                        self.robot.set_simple_move_tool(-0.27, -0.08, 0.05, duration_sec=3.0)
+                                                    print(f"Pose planning succeeded on attempt{i+1}!")
+                                                    break
 
-                                        # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_position, wait_for_end_of=True)
+                                        if s:
+
+                                            # object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                                
+                                            # if not object_in_gripper:
+                                                
+                                            #     print("OBJECT NOT IN GRIPPER")
+
+                                            self.robot.set_gripper(0.0, wait_for_end_of=True)
+
+                                            self.robot.wait_for_start_button()
+
+                                            safe_position = [-grab_x, -grab_y, -grab_z, 0.0, 0.0, 0.0]
+
+                                            self.robot.set_simple_move_tool(-0.27, -0.08, 0.05, duration_sec=3.0)
+
+                                            # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_position, wait_for_end_of=True)
 
 
 
