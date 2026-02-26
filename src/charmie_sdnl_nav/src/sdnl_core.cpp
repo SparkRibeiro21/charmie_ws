@@ -135,7 +135,7 @@ void SdnlCore::map_radar_to_obstacles(
 
 void SdnlCore::compute_attractor_curve(
   int n_samples,
-  double psi_target,
+  double psi_target_map,
   bool ignore_obstacles,
   std::vector<float>& y_att_out) const
 {
@@ -152,7 +152,7 @@ void SdnlCore::compute_attractor_curve(
     // i=N-1  -> th approx +pi - dtheta
     const double th = -M_PI + static_cast<double>(i) * dtheta;
 
-    const double y = -lambda * std::sin(th - psi_target);
+    const double y = -lambda * std::sin(th - psi_target_map);
     y_att_out[static_cast<size_t>(i)] = static_cast<float>(y);
   }
 }

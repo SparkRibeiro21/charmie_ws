@@ -61,6 +61,14 @@ struct ObstacleTerm
   double delta_theta{0.0};   // radians, angular span of the obstacle term
 };
 
+struct RepulsorPrecomp
+{
+  double psi;            // direction (either base or map, depending on context)
+  double lambda;         // beta1 * exp(-d/beta2)
+  double sigma;          // computed from delta_theta and d
+  double inv_two_sigma2; // avoids recomputation for divisions and exponentials
+};
+
 struct SdnlInput
 {
   Pose2D robot_map;
@@ -89,6 +97,9 @@ struct SdnlOutput
   double min_obstacle_dist_edge{std::numeric_limits<double>::infinity()}; 
   std::vector<ObstacleTerm> obstacles;
 
+  int n_repulsors{0};                 // number of repulsor curves
+  std::vector<float> y_rep_all_flat;  // size = n_repulsors * n_samples
+
   // Curves
   int n_samples{0};
   double dtheta{0.0};
@@ -116,10 +127,10 @@ public:
   // One main entry point: computes all SDNL math (attractor-only for now).
   SdnlOutput compute(const SdnlInput& in) const;
 
-  // Compute attractor curve y_att(theta) over [0, 2pi)
+  // Compute attractor curve y_att(phi) over [-pi, +pi]
   void compute_attractor_curve(
     int n_samples,
-    double psi_target,
+    double psi_target_map,
     bool ignore_obstacles,
     std::vector<float>& y_att_out) const;
 
@@ -132,6 +143,27 @@ private:
     bool use_obstacle_cutoff,
     std::vector<ObstacleTerm>& out_terms,
     double& out_min_edge_dist);
+
+  static void build_repulsors_base(
+    const std::vector<ObstacleTerm>& obstacles,
+    const SdnlParams& p,
+    std::vector<RepulsorPrecomp>& rep_out);
+
+  static void build_repulsors_map(
+    const std::vector<ObstacleTerm>& obstacles,
+    double robot_yaw_map,
+    const SdnlParams& p,
+    std::vector<RepulsorPrecomp>& rep_out);
+
+  static double eval_repulsor_sum(
+    double phi,  // angle in the same domain as repulsors.psi
+    const std::vector<RepulsorPrecomp>& reps);
+
+  static void compute_repulsor_curves_map(
+    int N,
+    const std::vector<RepulsorPrecomp>& reps_map,
+    std::vector<float>& y_rep_sum,
+    std::vector<float>& y_rep_all_flat); // Flattened row-major: y_rep_all_flat[k*N + i]
 
   SdnlParams params_;
 };
