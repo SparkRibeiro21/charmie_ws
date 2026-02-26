@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import threading
+import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
@@ -40,7 +41,7 @@ class ArmMoveIt(Node):
         self._current_joints: dict[str, float] = {}
 
         # ReentrantCallbackGroup allows service callbacks to make
-        # blocking calls on other clients/actions without deadlocking
+        # blocking calls on other clients/actions without deadlocking.
         self._cb_group = ReentrantCallbackGroup()
 
         # --- Action client ---
@@ -85,6 +86,11 @@ class ArmMoveIt(Node):
         if not self._wait_for_joint_states():
             raise RuntimeError("Could not get joint states — aborting.")
 
+    # ------------------------------------------------------------------ #
+    #  Helper: block a service-handler thread on an async future          #
+    #  WITHOUT calling spin — the MultiThreadedExecutor handles spinning. #
+    # ------------------------------------------------------------------ #
+
     def _await_future(self, future):
         """
         Block the calling thread until `future` is resolved, then return
@@ -100,6 +106,24 @@ class ArmMoveIt(Node):
         future.add_done_callback(lambda _: event.set())
         event.wait()
         return future.result()
+
+    # ------------------------------------------------------------------ #
+    #  Helper: rotate a vector by a quaternion (tool → base frame)        #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _rotate_vector_by_quat(v, q):
+        """
+        Rotate vector v by quaternion q = [x, y, z, w].
+        Uses the efficient Rodrigues-like formula:
+            t = 2 * (q_vec x v)
+            v' = v + q_w * t + (q_vec x t)
+        Pure numpy, no external quaternion libraries needed.
+        """
+        qx, qy, qz, qw = q
+        q_vec = np.array([qx, qy, qz])
+        t = 2.0 * np.cross(q_vec, v)
+        return v + qw * t + np.cross(q_vec, t)
 
     # ------------------------------------------------------------------ #
     #  Subscriptions / wait helpers                                        #
@@ -154,8 +178,8 @@ class ArmMoveIt(Node):
         Safe because MultiThreadedExecutor + ReentrantCallbackGroup
         allows other callbacks to run on other threads while this blocks.
 
-        Key: all async futures are awaited via _await_future(), which uses
-        threading.Event instead of a second spin loop.
+        The dx/dy/dz in the request are interpreted in the EE tool frame.
+        They are rotated into the base frame before being passed to IK.
         """
         if not self._joints_are_ready():
             response.success = False
@@ -179,11 +203,15 @@ class ArmMoveIt(Node):
             f"rot=({r.x:.4f}, {r.y:.4f}, {r.z:.4f}, {r.w:.4f})"
         )
 
+        # --- Rotate delta from tool frame into base frame ---
+        delta_tool = np.array([request.dx, request.dy, request.dz])
+        delta_base = self._rotate_vector_by_quat(delta_tool, [r.x, r.y, r.z, r.w])
+
         target = PoseStamped()
         target.header.frame_id = self.BASE_FRAME
-        target.pose.position.x = t.x + request.dx
-        target.pose.position.y = t.y + request.dy
-        target.pose.position.z = t.z + request.dz
+        target.pose.position.x = t.x + delta_base[0]
+        target.pose.position.y = t.y + delta_base[1]
+        target.pose.position.z = t.z + delta_base[2]
         target.pose.orientation = r
 
         self.get_logger().info(
