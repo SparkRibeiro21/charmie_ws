@@ -201,14 +201,14 @@ class TaskMain():
 
                     # s,m = self.robot.set_simple_move_tool(-grab_x, -grab_y, -grab_z, duration_sec=3.0)
 
-                    s,m = self.robot.set_simple_move_tool(-grab_x, 0.0, grab_y, duration_sec=3.0)
+                    s,m = self.robot.set_simple_move_tool(dx=grab_z, dy=-grab_y, dz=grab_x, duration_sec=5.0)
                     print(m)
 
                     if not s:
 
                         for i in range(self.trys):
 
-                            s,m = self.robot.set_simple_move_tool(-grab_x, 0.0, grab_y, duration_sec=3.0)
+                            s,m = self.robot.set_simple_move_tool(dx=grab_z, dy=-grab_y, dz=grab_x, duration_sec=5.0)
 
                             if s:
 
@@ -225,7 +225,7 @@ class TaskMain():
 
                         print("LIFT OBJECT")
 
-                        s2, m2 = self.robot.set_simple_move_tool(grab_x + 0.05, 0.01, -grab_y + 0.01, duration_sec=5.0)
+                        s2, m2 = self.robot.set_simple_move_tool(dx=-grab_z, dy=grab_y, dz=-grab_x, duration_sec=5.0)
 
                         print("DEBUG")
 
@@ -235,7 +235,7 @@ class TaskMain():
 
                             for i in range(self.trys):
 
-                                s2,m2 = self.robot.set_simple_move_tool(grab_x + 0.05, 0.01, -grab_y + 0.01, duration_sec=5.0)
+                                s2, m2 = self.robot.set_simple_move_tool(dx=-grab_z, dy=grab_y, dz=-grab_x, duration_sec=5.0)
 
                                 if s2:
 
