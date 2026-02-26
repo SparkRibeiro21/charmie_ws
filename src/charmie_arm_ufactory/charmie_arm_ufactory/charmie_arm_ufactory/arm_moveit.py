@@ -85,6 +85,22 @@ class ArmMoveIt(Node):
         if not self._wait_for_joint_states():
             raise RuntimeError("Could not get joint states — aborting.")
 
+    def _await_future(self, future):
+        """
+        Block the calling thread until `future` is resolved, then return
+        its result.  Uses a threading.Event so the GIL is released and
+        the executor's other threads keep processing callbacks normally.
+
+        Never call rclpy.spin_until_future_complete() inside a callback
+        that is already managed by a MultiThreadedExecutor — doing so
+        creates a second spin loop that corrupts the executor's internal
+        wait-set state and breaks subsequent calls.
+        """
+        event = threading.Event()
+        future.add_done_callback(lambda _: event.set())
+        event.wait()
+        return future.result()
+
     # ------------------------------------------------------------------ #
     #  Subscriptions / wait helpers                                        #
     # ------------------------------------------------------------------ #
@@ -137,6 +153,9 @@ class ArmMoveIt(Node):
         Fully blocking service handler.
         Safe because MultiThreadedExecutor + ReentrantCallbackGroup
         allows other callbacks to run on other threads while this blocks.
+
+        Key: all async futures are awaited via _await_future(), which uses
+        threading.Event instead of a second spin loop.
         """
         if not self._joints_are_ready():
             response.success = False
@@ -172,7 +191,7 @@ class ArmMoveIt(Node):
             f"{target.pose.position.y:.4f}, {target.pose.position.z:.4f})"
         )
 
-        # --- Call IK service (blocking) ---
+        # --- Call IK service (blocking via threading.Event) ---
         robot_state = RobotState()
         robot_state.joint_state.name = self.JOINT_NAMES
         robot_state.joint_state.position = [
@@ -188,11 +207,8 @@ class ArmMoveIt(Node):
         req = GetPositionIK.Request()
         req.ik_request = ik_req
 
-        ik_future = self._ik_client.call_async(req)
-        rclpy.spin_until_future_complete(self, ik_future)  # blocks, but executor keeps spinning
-
         try:
-            ik_response = ik_future.result()
+            ik_response = self._await_future(self._ik_client.call_async(req))
         except Exception as e:
             response.success = False
             response.message = f"IK service call failed: {e}"
@@ -208,7 +224,7 @@ class ArmMoveIt(Node):
         positions = [joint_map[n] for n in self.JOINT_NAMES]
         self.get_logger().info(f"IK solution: {[f'{p:.4f}' for p in positions]}")
 
-        # --- Send trajectory goal (blocking) ---
+        # --- Send trajectory goal (blocking via threading.Event) ---
         point = JointTrajectoryPoint()
         point.positions = positions
         point.time_from_start.sec = int(request.duration_sec)
@@ -221,10 +237,15 @@ class ArmMoveIt(Node):
         goal_msg = FollowJointTrajectory.Goal()
         goal_msg.trajectory = traj
 
-        goal_future = self._action_client.send_goal_async(goal_msg)
-        rclpy.spin_until_future_complete(self, goal_future)
+        try:
+            goal_handle = self._await_future(
+                self._action_client.send_goal_async(goal_msg)
+            )
+        except Exception as e:
+            response.success = False
+            response.message = f"Send goal failed: {e}"
+            return response
 
-        goal_handle = goal_future.result()
         if not goal_handle.accepted:
             response.success = False
             response.message = "Trajectory goal rejected."
@@ -232,10 +253,14 @@ class ArmMoveIt(Node):
 
         self.get_logger().info("Trajectory goal accepted, waiting for result...")
 
-        result_future = goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, result_future)
+        try:
+            result_response = self._await_future(goal_handle.get_result_async())
+        except Exception as e:
+            response.success = False
+            response.message = f"Get result failed: {e}"
+            return response
 
-        result = result_future.result().result
+        result = result_response.result
         if result.error_code == 0:
             self.get_logger().info("Motion complete.")
             response.success = True
