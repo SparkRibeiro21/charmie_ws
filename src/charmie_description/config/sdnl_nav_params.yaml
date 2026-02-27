@@ -16,17 +16,17 @@ sdnl_nav:
     lambda_target_not_obs: 10.0
     lambda_target_with_obs: 4.0
     beta1: 40.0
-    beta2: 0.06
+    beta2: 6.0
     max_dist_for_obs: 2.0
     robot_radius: 0.28
+    heading_offset_rad: 0.0
+    use_obstacle_cutoff: false
 
-    # Controller constraints (defaults; Action goal pode limitar por cima)
-    default_max_linear_speed: 0.4
-    default_max_angular_speed: 1.0
+    # Controller constraints
+    default_max_linear_speed: 0.42
+    default_max_angular_speed: 0.9
 
     # Thresholds
-    default_reached_radius: 0.6
-    default_yaw_tolerance: 0.26   # ~15 deg
+    default_reached_radius: 0.5
+    default_yaw_tolerance: 0.052359908 # ~3 degrees in radians
 
-    # Heading alignment offset (para casar com o teu comportamento antigo)
-    heading_offset_rad: 0.0
