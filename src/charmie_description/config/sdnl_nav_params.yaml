@@ -12,11 +12,13 @@ sdnl_nav:
     topic_cmd_vel: "cmd_vel"
     topic_sdnl_debug: "sdnl/debug"
 
-    # SDNL params
+    # SDNL major params
     lambda_target_not_obs: 10.0
-    lambda_target_with_obs: 4.0
-    beta1: 40.0
-    beta2: 6.0
+    lambda_target_with_obs: 2.0
+    beta1: 5.0
+    beta2: 3.0
+
+    # SDNL minor params
     max_dist_for_obs: 2.0
     robot_radius: 0.28
     heading_offset_rad: 0.0

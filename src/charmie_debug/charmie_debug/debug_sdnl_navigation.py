@@ -111,9 +111,9 @@ class TaskMain():
 
                 while True:
 
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, first_rotate=True, orient_after_move=False, reached_radius=1.0, max_linear_speed=0.3, max_angular_speed=0.6, print_feedback=True, wait_for_end_of=True)
+                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, first_rotate=False, orient_after_move=False, reached_radius=1.0, max_linear_speed=0.3, max_angular_speed=0.6, print_feedback=True, wait_for_end_of=True)
                     time.sleep(5.0)
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET6, first_rotate=False, orient_after_move=True, reached_radius=1.0, max_linear_speed=0.3, max_angular_speed=0.6, print_feedback=True, wait_for_end_of=True)
+                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET6, first_rotate=False, orient_after_move=False, reached_radius=1.0, max_linear_speed=0.3, max_angular_speed=0.6, print_feedback=True, wait_for_end_of=True)
                     time.sleep(5.0)
                
                

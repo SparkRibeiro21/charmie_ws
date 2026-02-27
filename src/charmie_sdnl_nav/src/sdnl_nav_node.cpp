@@ -38,7 +38,7 @@ SDNLNavNode::SDNLNavNode()
     p.lambda_target_not_obs  = this->declare_parameter<double>("lambda_target_not_obs", 10.0);
     p.lambda_target_with_obs = this->declare_parameter<double>("lambda_target_with_obs", 4.0);
     p.beta1                  = this->declare_parameter<double>("beta1", 40.0);
-    p.beta2                  = this->declare_parameter<double>("beta2", 0.06);
+    p.beta2                  = this->declare_parameter<double>("beta2", 6.0);
     p.max_dist_for_obs       = this->declare_parameter<double>("max_dist_for_obs", 2.0);
     p.robot_radius           = this->declare_parameter<double>("robot_radius", 0.28);
     p.heading_offset_rad     = this->declare_parameter<double>("heading_offset_rad", 0.0);
@@ -103,6 +103,16 @@ SDNLNavNode::SDNLNavNode()
 
   RCLCPP_INFO(this->get_logger(), "SDNLNavNode started (control_rate=%.1f Hz, debug=%s).",
               control_rate_hz_, debug_enabled_ ? "true" : "false");
+
+  const auto& p = core_.params();
+  RCLCPP_INFO(
+    this->get_logger(),
+    "[SDNL params] l(no_obs)=%.1f l(obs)=%.1f | B1=%.1f | B2=%.1f",
+    p.lambda_target_not_obs,
+    p.lambda_target_with_obs,
+    p.beta1,
+    p.beta2
+  );
 }
 
 rclcpp_action::GoalResponse SDNLNavNode::handle_goal(
@@ -441,7 +451,8 @@ void SDNLNavNode::controlLoop()
       if (out.dist_to_target > reached_radius) {
         // Normal SDNL motion: move forward while steering toward target
         cmd.linear.x  = v_max;
-        cmd.angular.z = sdnl::clamp(1.5 * bearing_err, -w_max, w_max);
+        constexpr double k_w = 1.0;
+        cmd.angular.z = sdnl::clamp(k_w * out.f_final, -w_max, w_max);
       } else {
         // Target position reached -> transition to FINAL_ORIENT phase
         cmd.linear.x  = 0.0;
@@ -713,8 +724,6 @@ void SDNLNavNode::debugLoop()
   dbg.dtheta = static_cast<float>(out.dtheta);
 
   dbg.y_attractor = out.y_attractor;
-  dbg.y_rep_sum   = out.y_rep_sum;   // zeros for now
-  dbg.y_final     = out.y_final;     // equals attractor for now
 
   // Fill metadata
   dbg.robot_map = pose;
@@ -731,6 +740,11 @@ void SDNLNavNode::debugLoop()
 
   dbg.min_obstacle_dist_edge =
     std::isfinite(out.min_obstacle_dist_edge) ? static_cast<float>(out.min_obstacle_dist_edge) : -1.0f;
+
+  dbg.n_repulsors = static_cast<uint16_t>(out.n_repulsors);
+  dbg.y_rep_all   = out.y_rep_all_flat;
+  dbg.y_rep_sum   = out.y_rep_sum;
+  dbg.y_final     = out.y_final;
 
   debug_pub_->publish(dbg);
 }

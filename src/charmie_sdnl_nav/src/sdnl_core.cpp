@@ -39,31 +39,64 @@ SdnlOutput SdnlCore::compute(const SdnlInput& in) const
       out.min_obstacle_dist_edge);
   }
 
-  // Default: no curves computed unless requested
+  // -------------------------
+  // Scalars (ALWAYS base-domain)
+  // -------------------------
+  const double lambda_t = in.ignore_obstacles ? params_.lambda_target_not_obs
+                                             : params_.lambda_target_with_obs;
+
+  // Evaluate attractor scalar at phi_b = 0 (front of robot), base-domain:
+  // f_target = -lambda*sin(0 - psi_target_base) = lambda*sin(psi_target_base)
+  out.f_target = lambda_t * std::sin(out.psi_target_base);
+
+  out.f_obstacle = 0.0;
+  if (!in.ignore_obstacles && !out.obstacles.empty()) {
+    std::vector<RepulsorPrecomp> reps_base;
+    build_repulsors_base(out.obstacles, params_, reps_base);
+    // Evaluate at phi_b = 0
+    out.f_obstacle = eval_repulsor_sum(0.0, reps_base);
+  }
+
+  out.f_final = out.f_target + out.f_obstacle;
+
+  // -------------------------
+  // Curves (ALWAYS map-domain, only if compute_curves)
+  // -------------------------
   out.y_attractor.clear();
   out.y_rep_sum.clear();
   out.y_final.clear();
-  out.f_target = 0.0;
-  out.f_obstacle = 0.0;
-  out.f_final = 0.0;
+  out.n_repulsors = 0;
+  out.y_rep_all_flat.clear();
 
   if (in.compute_curves) {
-    // Attractor curve
-    compute_attractor_curve(N, out.psi_target_map, in.ignore_obstacles, out.y_attractor);
 
-    // Repulsion (later) - for now zeros
-    out.y_rep_sum.assign(out.y_attractor.size(), 0.0f);
+    // Map-domain debug target bearing:
+    // psi_target_map_debug = psi_target_base + robot_yaw_map
+    const double psi_target_map_debug = sdnl::wrap_pi(out.psi_target_base + in.robot_map.theta);
 
-    // Final curve (later sum) - for now attractor
-    out.y_final = out.y_attractor;
+    // Attractor curve in MAP domain (stable in viewer)
+    compute_attractor_curve(N, psi_target_map_debug, in.ignore_obstacles, out.y_attractor);
 
-    // Debug scalar terms (optional, but helpful for your SDNLDebug)
-    const double lambda = in.ignore_obstacles ? params_.lambda_target_not_obs : params_.lambda_target_with_obs;
+    // Repulsor curves in MAP domain (stable in viewer)
+    if (!in.ignore_obstacles && !out.obstacles.empty()) {
 
-    // NOTE: this is "instantaneous" attractor value at theta = 0 (convention).
-    out.f_target = lambda * std::sin(out.psi_target_base);
-    out.f_obstacle = 0.0;
-    out.f_final = out.f_target;
+      std::vector<RepulsorPrecomp> reps_map;
+      build_repulsors_map(out.obstacles, in.robot_map.theta, params_, reps_map);
+
+      out.n_repulsors = static_cast<int>(reps_map.size());
+      compute_repulsor_curves_map(N, reps_map, out.y_rep_sum, out.y_rep_all_flat);
+
+    } else {
+      out.y_rep_sum.assign(out.y_attractor.size(), 0.0f);
+      out.n_repulsors = 0;
+      out.y_rep_all_flat.clear();
+    }
+
+    // Final curve
+    out.y_final.resize(out.y_attractor.size(), 0.0f);
+    for (size_t i = 0; i < out.y_final.size(); ++i) {
+      out.y_final[i] = out.y_attractor[i] + out.y_rep_sum[i];
+    }
   }
 
   return out;
@@ -154,6 +187,127 @@ void SdnlCore::compute_attractor_curve(
 
     const double y = -lambda * std::sin(th - psi_target_map);
     y_att_out[static_cast<size_t>(i)] = static_cast<float>(y);
+  }
+}
+
+// -------------------------
+// Repulsor helpers (doc eqs. 2-5)
+// -------------------------
+void SdnlCore::build_repulsors_base(
+  const std::vector<ObstacleTerm>& obstacles,
+  const SdnlParams& p,
+  std::vector<RepulsorPrecomp>& rep_out)
+{
+  rep_out.clear();
+  rep_out.reserve(obstacles.size());
+
+  const double R = p.robot_radius;
+  const double beta1 = p.beta1;
+  const double beta2 = std::max(1e-9, p.beta2); // avoid div by zero
+
+  for (const auto& o : obstacles) {
+
+    // Distance in the doc/Python is "measured distance" ~ center distance
+    const double d_center = std::max(0.0, o.d_obs_edge + R);
+
+    // lambda_i = beta1 * exp(-d/beta2)
+    const double lambda = beta1 * std::exp(-d_center / beta2);
+
+    // sigma_i = atan( tan(delta_theta/2) + R/(R + d) )
+    const double half_span = 0.5 * std::max(0.0, o.delta_theta);
+    const double sigma_raw = std::atan(std::tan(half_span) + (R / (R + d_center)));
+
+    // Numerical guard
+    const double sigma = std::max(1e-6, sigma_raw);
+    const double inv_two_sigma2 = 1.0 / (2.0 * sigma * sigma);
+
+    RepulsorPrecomp r;
+    r.psi = wrap_pi(o.psi_obs);   // base domain
+    r.lambda = lambda;
+    r.sigma = sigma;
+    r.inv_two_sigma2 = inv_two_sigma2;
+    rep_out.push_back(r);
+  }
+}
+
+void SdnlCore::build_repulsors_map(
+  const std::vector<ObstacleTerm>& obstacles,
+  double robot_yaw_map,
+  const SdnlParams& p,
+  std::vector<RepulsorPrecomp>& rep_out)
+{
+  rep_out.clear();
+  rep_out.reserve(obstacles.size());
+
+  const double R = p.robot_radius;
+  const double beta1 = p.beta1;
+  const double beta2 = std::max(1e-9, p.beta2); // avoid div by zero
+
+  for (const auto& o : obstacles) {
+
+    const double d_center = std::max(0.0, o.d_obs_edge + R);
+    const double lambda = beta1 * std::exp(-d_center / beta2);
+
+    const double half_span = 0.5 * std::max(0.0, o.delta_theta);
+    const double sigma_raw = std::atan(std::tan(half_span) + (R / (R + d_center)));
+    const double sigma = std::max(1e-6, sigma_raw);
+    const double inv_two_sigma2 = 1.0 / (2.0 * sigma * sigma);
+
+    RepulsorPrecomp r;
+    // base -> map for debug curves
+    r.psi = wrap_pi(o.psi_obs + robot_yaw_map);
+    r.lambda = lambda;
+    r.sigma = sigma;
+    r.inv_two_sigma2 = inv_two_sigma2;
+    rep_out.push_back(r);
+  }
+}
+
+double SdnlCore::eval_repulsor_sum(
+  double phi,
+  const std::vector<RepulsorPrecomp>& reps)
+{
+  double sum = 0.0;
+
+  for (const auto& r : reps) {
+    const double d = wrap_pi(phi - r.psi);
+    // f_obs,i(phi) = lambda * d * exp(-(d^2)/(2*sigma^2))
+    sum += r.lambda * d * std::exp(-(d * d) * r.inv_two_sigma2);
+  }
+
+  return sum;
+}
+
+void SdnlCore::compute_repulsor_curves_map(
+  int N,
+  const std::vector<RepulsorPrecomp>& reps_map,
+  std::vector<float>& y_rep_sum,
+  std::vector<float>& y_rep_all_flat)
+{
+  if (N < 8) N = 8;
+
+  const int K = static_cast<int>(reps_map.size());
+  const double dphi = (2.0 * M_PI) / static_cast<double>(N);
+
+  y_rep_sum.assign(static_cast<size_t>(N), 0.0f);
+  y_rep_all_flat.assign(static_cast<size_t>(K) * static_cast<size_t>(N), 0.0f);
+
+  for (int i = 0; i < N; ++i) {
+    const double phi = -M_PI + static_cast<double>(i) * dphi;
+
+    double s = 0.0;
+    for (int k = 0; k < K; ++k) {
+      const auto& r = reps_map[static_cast<size_t>(k)];
+      const double d = wrap_pi(phi - r.psi);
+      const double v = r.lambda * d * std::exp(-(d * d) * r.inv_two_sigma2);
+
+      y_rep_all_flat[static_cast<size_t>(k) * static_cast<size_t>(N) + static_cast<size_t>(i)] =
+        static_cast<float>(v);
+
+      s += v;
+    }
+
+    y_rep_sum[static_cast<size_t>(i)] = static_cast<float>(s);
   }
 }
 
