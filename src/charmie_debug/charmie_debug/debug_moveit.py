@@ -62,7 +62,7 @@ class TaskMain():
 
     def configurables(self):
         self.tetas = [[0, 20], [0, 0], [0, -35]]
-        self.SELECTED_OBJECT = "Cola"
+        self.SELECTED_OBJECT = "Tropical Juice"
         self.trys = 3
 
     # main state-machine function
@@ -201,14 +201,14 @@ class TaskMain():
 
                     # s,m = self.robot.set_simple_move_tool(-grab_x, -grab_y, -grab_z, duration_sec=3.0)
 
-                    s,m = self.robot.set_simple_move_tool(dx=grab_z, dy=-grab_y, dz=grab_x, duration_sec=5.0)
+                    s,m = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
                     print(m)
 
                     if not s:
 
                         for i in range(self.trys):
 
-                            s,m = self.robot.set_simple_move_tool(dx=grab_z, dy=-grab_y, dz=grab_x, duration_sec=5.0)
+                            s,m = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
 
                             if s:
 
