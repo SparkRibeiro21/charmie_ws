@@ -17,6 +17,12 @@ def generate_launch_description():
             name='sdnl_nav',
             output='screen',
             emulate_tty=True,
-            parameters=[sdnl_params_yaml_path]
+            parameters=[
+                sdnl_params_yaml_path,
+                {
+                    'use_sim_time': True,
+                    'timing_debug_enabled': True
+                }
+            ]
         )
     ])

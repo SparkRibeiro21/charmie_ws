@@ -497,12 +497,21 @@ class LaunchStdFunctions():
                     emulate_tty=True
                     )
         
+        sdnl_params_yaml_path = os.path.join(
+            get_package_share_path('charmie_description'),
+            'config',
+            'sdnl_nav_params.yaml'
+        )
         self.sdnl_navigation = Node(package='charmie_sdnl_nav',
                     executable='sdnl_nav',
                     name='sdnl_nav',
-                    emulate_tty=True
+                    output='screen',
+                    emulate_tty=True,
+                    parameters=[
+                        sdnl_params_yaml_path,
+                        ]
                     )
-        
+
         ### JOY & GAMEPAD CONTROLLER
         # Compute config file path using LaunchConfiguration and TextSubstitution
         self.config_filepath = LaunchConfiguration('config_filepath', default=[
