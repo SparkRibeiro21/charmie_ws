@@ -43,6 +43,11 @@ SDNLNavNode::SDNLNavNode()
     p.robot_radius           = this->declare_parameter<double>("robot_radius", 0.28);
     p.heading_offset_rad     = this->declare_parameter<double>("heading_offset_rad", 0.0);
     p.use_obstacle_cutoff    = this->declare_parameter<bool>("use_obstacle_cutoff", false);
+
+    p.k_slow_target    = this->declare_parameter<double>("k_slow_target", 2.0);
+    p.stop_dist_obs    = this->declare_parameter<double>("stop_dist_obs", 0.10);
+    p.slow_dist_obs    = this->declare_parameter<double>("slow_dist_obs", 0.80);
+    p.v_turn_min_frac  = this->declare_parameter<double>("v_turn_min_frac", 0.20);
     return sdnl::SdnlCore(p);
   }())
 
@@ -107,11 +112,16 @@ SDNLNavNode::SDNLNavNode()
   const auto& p = core_.params();
   RCLCPP_INFO(
     this->get_logger(),
-    "[SDNL params] l(no_obs)=%.1f l(obs)=%.1f | B1=%.1f | B2=%.1f",
+    "[SDNL params] l(no_obs)=%.1f l(obs)=%.1f | B1=%.1f | B2=%.1f | "
+    "k_slow=%.2f stop_obs=%.2f slow_obs=%.2f v_turn_min=%.2f",
     p.lambda_target_not_obs,
     p.lambda_target_with_obs,
     p.beta1,
-    p.beta2
+    p.beta2,
+    p.k_slow_target,
+    p.stop_dist_obs,
+    p.slow_dist_obs,
+    p.v_turn_min_frac
   );
 }
 
@@ -383,12 +393,21 @@ void SDNLNavNode::controlLoop()
     return;
   }
 
+  const double reached_radius = (goal.reached_radius > 0.0f) ? goal.reached_radius : static_cast<float>(default_reached_radius_);
+  const double yaw_tol = (goal.yaw_tolerance > 0.0f) ? goal.yaw_tolerance : static_cast<float>(default_yaw_tolerance_);
+  const double v_max = (goal.max_linear_speed > 0.0f) ? goal.max_linear_speed : static_cast<float>(default_max_linear_speed_);
+  const double w_max = (goal.max_angular_speed > 0.0f) ? goal.max_angular_speed : static_cast<float>(default_max_angular_speed_);;
+
   sdnl::SdnlInput in;
   in.robot_map = {pose.x, pose.y, pose.theta};
   in.target_map = {goal.target_pose.x, goal.target_pose.y, goal.target_pose.theta};
   in.ignore_obstacles = goal.ignore_obstacles;
   in.n_samples = n_samples_;      // not used when compute_curves=false, but fine
   in.compute_curves = false;      // always false in controlLoop
+
+  in.v_max = v_max;
+  in.w_max = w_max;
+  in.reached_radius = reached_radius;
 
   // Radar: pass only if fresh (optional, but good)
   in.radar.valid = !radar_stale;
@@ -414,11 +433,6 @@ void SDNLNavNode::controlLoop()
     std::lock_guard<std::mutex> lk(phase_mutex_);
     phase = exec_phase_;
   }
-  
-  const double reached_radius = (goal.reached_radius > 0.0f) ? goal.reached_radius : static_cast<float>(default_reached_radius_);
-  const double yaw_tol = (goal.yaw_tolerance > 0.0f) ? goal.yaw_tolerance : static_cast<float>(default_yaw_tolerance_);
-  const double v_max = (goal.max_linear_speed > 0.0f) ? goal.max_linear_speed : static_cast<float>(default_max_linear_speed_);
-  const double w_max = (goal.max_angular_speed > 0.0f) ? goal.max_angular_speed : static_cast<float>(default_max_angular_speed_);;
 
   geometry_msgs::msg::Twist cmd;
 
@@ -450,9 +464,8 @@ void SDNLNavNode::controlLoop()
     {
       if (out.dist_to_target > reached_radius) {
         // Normal SDNL motion: move forward while steering toward target
-        cmd.linear.x  = v_max;
-        constexpr double k_w = 1.0;
-        cmd.angular.z = sdnl::clamp(k_w * out.f_final, -w_max, w_max);
+        cmd.linear.x  = out.v_cmd;
+        cmd.angular.z = out.w_cmd;
       } else {
         // Target position reached -> transition to FINAL_ORIENT phase
         cmd.linear.x  = 0.0;
@@ -681,6 +694,11 @@ void SDNLNavNode::debugLoop()
 
   const bool radar_stale = (!have_radar) || (radar_age_s > radar_timeout_s_);
 
+  const double reached_radius = (goal.reached_radius > 0.0f) ? goal.reached_radius : static_cast<float>(default_reached_radius_);
+  // const double yaw_tol = (goal.yaw_tolerance > 0.0f) ? goal.yaw_tolerance : static_cast<float>(default_yaw_tolerance_); // NOT USED 
+  const double v_max = (goal.max_linear_speed > 0.0f) ? goal.max_linear_speed : static_cast<float>(default_max_linear_speed_);
+  const double w_max = (goal.max_angular_speed > 0.0f) ? goal.max_angular_speed : static_cast<float>(default_max_angular_speed_);;
+
   // ----------------------------
   // Build core input (debug)
   // ----------------------------
@@ -692,6 +710,10 @@ void SDNLNavNode::debugLoop()
   // Debug wants curves
   in.n_samples = std::max(64, n_samples_);
   in.compute_curves = true;
+
+  in.v_max = v_max;
+  in.w_max = w_max;
+  in.reached_radius = reached_radius;
 
   // Optional radar
   in.radar.valid = !radar_stale;
@@ -737,6 +759,12 @@ void SDNLNavNode::debugLoop()
 
   dbg.cmd_vel = last_cmd;
   dbg.dist_to_target = static_cast<float>(out.dist_to_target);
+
+  dbg.v_cmd    = static_cast<float>(out.v_cmd);
+  dbg.v_max    = static_cast<float>(in.v_max);
+  dbg.s_target = static_cast<float>(out.s_target);
+  dbg.s_obs    = static_cast<float>(out.s_obs);
+  dbg.s_turn   = static_cast<float>(out.s_turn);
 
   dbg.min_obstacle_dist_edge =
     std::isfinite(out.min_obstacle_dist_edge) ? static_cast<float>(out.min_obstacle_dist_edge) : -1.0f;
