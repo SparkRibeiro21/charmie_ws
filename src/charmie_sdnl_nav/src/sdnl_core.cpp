@@ -60,6 +60,27 @@ SdnlOutput SdnlCore::compute(const SdnlInput& in) const
   out.f_final = out.f_target + out.f_obstacle;
 
   // -------------------------
+  // Commands (base-domain)
+  // -------------------------
+  // Angular from SDNL final scalar (clamped)
+  out.w_cmd = sdnl::clamp(out.f_final, -in.w_max, in.w_max);
+
+  const double turn_frac = (in.w_max > 1e-6) ? std::min(1.0, std::abs(out.w_cmd) / in.w_max) : 0.0;
+
+  out.v_cmd = compute_v_cmd(
+    out.dist_to_target,
+    in.reached_radius,
+    out.min_obstacle_dist_edge,
+    in.ignore_obstacles,
+    in.v_max,
+    turn_frac,        // 0..1
+    params_,
+    out.s_target,
+    out.s_obs,
+    out.s_turn
+  );
+
+  // -------------------------
   // Curves (ALWAYS map-domain, only if compute_curves)
   // -------------------------
   out.y_attractor.clear();
@@ -309,6 +330,124 @@ void SdnlCore::compute_repulsor_curves_map(
 
     y_rep_sum[static_cast<size_t>(i)] = static_cast<float>(s);
   }
+}
+
+
+double SdnlCore::smoothstep01(double x)
+{
+  if (x <= 0.0) return 0.0;
+  if (x >= 1.0) return 1.0;
+  return x * x * (3.0 - 2.0 * x);  // smoothstep
+}
+
+double SdnlCore::compute_v_cmd(
+  double dist_to_target,
+  double reached_radius,
+  double min_obstacle_dist_edge,
+  bool ignore_obstacles,
+  double v_max,
+  double turn_frac,   // 0..1
+  const SdnlParams& p,
+  double& s_target,
+  double& s_obs,
+  double& s_turn)
+{
+  // Defaults (useful when we don't compute a factor)
+  s_target = 1.0;
+  s_obs    = 1.0;
+  s_turn   = 1.0;
+  
+  // -------------------------
+  // 1) Target slowdown
+  // -------------------------
+  const double rr = std::max(1e-6, reached_radius);
+
+  // Distances where the target slowdown starts / reaches minimum (offset by reached radius)
+  const double d_min  = std::max(0.0, rr + p.tar_min_dist);
+  const double d_slow = std::max(d_min + 1e-6, rr + p.tar_slow_dist);
+
+  double target_factor = 1.0;
+
+  if (dist_to_target <= d_min) {
+    // closest zone -> enforce minimum speed fraction
+    target_factor = std::clamp(p.v_tar_min_frac, 0.0, 1.0);
+  }
+  else if (dist_to_target < d_slow) {
+    // Map dist: [d_min .. d_slow] -> x: [0 .. 1]
+    const double x = (dist_to_target - d_min) / (d_slow - d_min);  // 0..1
+    const double s = smoothstep01(x);                              // 0..1
+
+    const double vmin = std::clamp(p.v_tar_min_frac, 0.0, 1.0);
+    target_factor = vmin + (1.0 - vmin) * s;  // s=0 -> vmin, s=1 -> 1.0
+  }
+  else {
+    target_factor = 1.0;
+  }
+
+  // -------------------------
+  // 2) Obstacles slowdown
+  // -------------------------
+  double obs_factor = 1.0;
+
+  if (ignore_obstacles) {
+    obs_factor = 1.0;
+  }
+  else if (std::isfinite(min_obstacle_dist_edge)) {
+
+    const double d_min  = std::max(0.0, p.obs_min_dist);
+    const double d_slow = std::max(d_min + 1e-6, p.obs_slow_dist);
+
+    // Map distance to x in [0..1]
+    // d <= d_min  -> x = 0   (max slowdown)
+    // d >= d_slow -> x = 1   (no slowdown)
+    double x = 1.0;
+
+    if (min_obstacle_dist_edge <= d_min) {
+      x = 0.0;
+    }
+    else if (min_obstacle_dist_edge < d_slow) {
+      x = (min_obstacle_dist_edge - d_min) / (d_slow - d_min);
+    }
+    else {
+      x = 1.0;
+    }
+
+    const double s = smoothstep01(x);  // smooth 0..1
+
+    const double vmin = std::clamp(p.v_obs_min_frac, 0.0, 1.0);
+
+    // s=0 -> vmin
+    // s=1 -> 1.0
+    obs_factor = vmin + (1.0 - vmin) * s;
+  }
+  else {
+    obs_factor = 1.0;
+  }
+
+  // -------------------------
+  // 3) Turn slowdown
+  // -------------------------
+  const double a = std::clamp(turn_frac, 0.0, 1.0);          // 0..1
+  const double vmin = std::clamp(p.v_turn_min_frac, 0.0, 1.0);
+
+  // Queremos um "x" que seja 1 quando a=0 e 0 quando a=1,
+  // para smoothstep nos dar 1 -> 0 suavemente.
+  const double x = 1.0 - a;                                  // 1..0
+
+  // smoothstep01(x): 1 (a=0) -> 0 (a=1)
+  const double s = smoothstep01(x);
+
+  // mapeia: s=1 -> 1.0 ; s=0 -> vmin
+  const double turn_factor = vmin + (1.0 - vmin) * s;
+
+  // Export debug scalars
+  s_target = target_factor;
+  s_obs    = obs_factor;
+  s_turn   = turn_factor;
+
+  // Use the most restrictive factor
+  const double factor = std::min({s_target, s_obs, s_turn});
+  return std::max(0.0, v_max * factor);
 }
 
 }  // namespace sdnl

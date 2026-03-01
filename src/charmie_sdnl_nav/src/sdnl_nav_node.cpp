@@ -44,10 +44,14 @@ SDNLNavNode::SDNLNavNode()
     p.heading_offset_rad     = this->declare_parameter<double>("heading_offset_rad", 0.0);
     p.use_obstacle_cutoff    = this->declare_parameter<bool>("use_obstacle_cutoff", false);
 
-    p.k_slow_target    = this->declare_parameter<double>("k_slow_target", 2.0);
-    p.stop_dist_obs    = this->declare_parameter<double>("stop_dist_obs", 0.10);
-    p.slow_dist_obs    = this->declare_parameter<double>("slow_dist_obs", 0.80);
-    p.v_turn_min_frac  = this->declare_parameter<double>("v_turn_min_frac", 0.20);
+    p.tar_min_dist    = this->declare_parameter<double>("tar_min_dist", 0.20);
+    p.tar_slow_dist   = this->declare_parameter<double>("tar_slow_dist", 1.00);
+    p.v_tar_min_frac  = this->declare_parameter<double>("v_tar_min_frac", 0.20);
+    p.obs_min_dist    = this->declare_parameter<double>("obs_min_dist", 0.30);
+    p.obs_slow_dist   = this->declare_parameter<double>("obs_slow_dist", 1.00);
+    p.v_obs_min_frac  = this->declare_parameter<double>("v_obs_min_frac", 0.10);
+    p.v_turn_min_frac = this->declare_parameter<double>("v_turn_min_frac", 0.10);
+
     return sdnl::SdnlCore(p);
   }())
 
@@ -113,14 +117,17 @@ SDNLNavNode::SDNLNavNode()
   RCLCPP_INFO(
     this->get_logger(),
     "[SDNL params] l(no_obs)=%.1f l(obs)=%.1f | B1=%.1f | B2=%.1f | "
-    "k_slow=%.2f stop_obs=%.2f slow_obs=%.2f v_turn_min=%.2f",
+    "tar_sd=%.2f tar_md=%.2f tar_vmin=%.2f | obs_sd=%.2f obs_md=%.2f obs_vmin=%.2f | turn_vmin=%.2f",
     p.lambda_target_not_obs,
     p.lambda_target_with_obs,
     p.beta1,
     p.beta2,
-    p.k_slow_target,
-    p.stop_dist_obs,
-    p.slow_dist_obs,
+    p.tar_slow_dist,
+    p.tar_min_dist,
+    p.v_tar_min_frac,
+    p.obs_slow_dist,
+    p.obs_min_dist,
+    p.v_obs_min_frac,
     p.v_turn_min_frac
   );
 }

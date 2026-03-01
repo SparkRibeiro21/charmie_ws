@@ -21,6 +21,14 @@ struct SdnlParams
   double robot_radius = 0.28;
   double heading_offset_rad = 0.0;  // optional offset applied in target->base angle computation
   bool use_obstacle_cutoff = true;
+  
+  double tar_min_dist    = 0.20; // distance where slowdown for target is maximum (0 means only at reached radius)
+  double tar_slow_dist   = 1.00; // distance where slowdown for target begins (measured from reached_radius)
+  double v_tar_min_frac  = 0.20; // minimum allowed velocity fraction for target slowdown
+  double obs_min_dist    = 0.30; // distance where slowdown for obstacles is maximum
+  double obs_slow_dist   = 1.00; // distance where slowdown for obstacles begins
+  double v_obs_min_frac  = 0.10; // minimum allowed velocity fraction for obstacles 
+  double v_turn_min_frac = 0.10; // minimum allowed velocity fraction when turning
 };
 
 // -------------------------
@@ -80,6 +88,12 @@ struct SdnlInput
   RadarData radar;              // optional; radar.valid=false means “no radar”
 
   bool compute_curves{false};   // Only true when debug publishing is enabled
+
+  // Control constraints (provided by node: defaults or action goal)
+  double v_max{0.0};          // [m/s] clamp for linear command
+  double w_max{0.0};          // [rad/s] clamp for angular command
+  double reached_radius{0.0}; // [m] used to define slow_dist to target
+
 };
 
 struct SdnlOutput
@@ -111,6 +125,15 @@ struct SdnlOutput
   double f_target{0.0};
   double f_obstacle{0.0};
   double f_final{0.0};
+
+  // Final suggested commands (controller output)
+  double v_cmd{0.0};  // [m/s]
+  double w_cmd{0.0};  // [rad/s]
+
+  // For debug only
+  double s_target{1.0};
+  double s_obs{1.0};
+  double s_turn{1.0};
 };
 
 // -------------------------
@@ -123,8 +146,8 @@ public:
 
   const SdnlParams& params() const { return params_; }
   void set_params(const SdnlParams& p) { params_ = p; }
-
-  // One main entry point: computes all SDNL math (attractor-only for now).
+  
+  // Main entry: computes SDNL math (attractor + repulsors + optional curves + cmd_vel).
   SdnlOutput compute(const SdnlInput& in) const;
 
   // Compute attractor curve y_att(phi) over [-pi, +pi]
@@ -164,6 +187,20 @@ private:
     const std::vector<RepulsorPrecomp>& reps_map,
     std::vector<float>& y_rep_sum,
     std::vector<float>& y_rep_all_flat); // Flattened row-major: y_rep_all_flat[k*N + i]
+
+  static double compute_v_cmd(
+    double dist_to_target,
+    double reached_radius,
+    double min_obstacle_dist_edge,
+    bool ignore_obstacles,
+    double v_max,
+    double turn_frac,   // 0..1
+    const SdnlParams& p,
+    double& s_target,
+    double& s_obs,
+    double& s_turn);
+
+  static double smoothstep01(double x);
 
   SdnlParams params_;
 };

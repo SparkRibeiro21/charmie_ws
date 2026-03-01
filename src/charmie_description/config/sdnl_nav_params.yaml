@@ -23,6 +23,20 @@ sdnl_nav:
     robot_radius: 0.28
     heading_offset_rad: 0.0
     use_obstacle_cutoff: false
+        
+    # Linear velocity control params
+    # Target slowdown
+    tar_slow_dist: 1.00   # [m]   start slowing down distance from reached radius
+    tar_min_dist: 0.20    # [m]   distance from reached radius at which we reach minimum speed due
+    v_tar_min_frac: 0.20  # [m/s] min v fraction when for target slowdown
+
+    # Obstacle slowdown
+    obs_slow_dist: 1.00   # [m]   start slowing down due to obstacles
+    obs_min_dist: 0.20    # [m]   distance at which we reach minimum speed due to obstacles
+    v_obs_min_frac: 0.20  # [m/s] min v fraction when obstacles are present
+
+    # Turning slowdown
+    v_turn_min_frac: 0.10 # [m/s] min v fraction when turning hard
 
     # Controller constraints
     default_max_linear_speed: 0.42
