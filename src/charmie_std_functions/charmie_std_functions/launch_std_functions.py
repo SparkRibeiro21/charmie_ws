@@ -462,19 +462,31 @@ class LaunchStdFunctions():
                 arguments=['--display-config', rviz_config_path]
             )
         
+        radar_params_yaml_path = os.path.join(
+            get_package_share_path('charmie_description'),
+            'config',
+            'radar_params.yaml'
+        )
+
         self.radar = Node(package='charmie_radar',
                           executable='radar',
-                          name='radar',
-                          emulate_tty=True
+                          name='radar_node',
+                          emulate_tty=True,
+                          output='screen',
+                          parameters=[radar_params_yaml_path]
                           )
         
         self.radar_sim = Node(package='charmie_radar',
                               executable='radar',
-                              name='radar',
+                              name='radar_node',
                               emulate_tty=True,
-                              parameters=[{
-                                  'use_sim_time': True
-                              }]
+                              output='screen',
+                              parameters=[
+                                    radar_params_yaml_path,
+                                    {
+                                        'use_sim_time': True,
+                                    }
+                                ]
                           )
         
         self.odometry_lidar = Node(package='rf2o_laser_odometry',
