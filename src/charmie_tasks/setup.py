@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
 
+        "finals          = charmie_tasks.finals_task_2026:main",
         "clean_the_table = charmie_tasks.clean_table:main",
 		"inspection      = charmie_tasks.inspection:main",
 		"receptionist    = charmie_tasks.receptionist:main",
