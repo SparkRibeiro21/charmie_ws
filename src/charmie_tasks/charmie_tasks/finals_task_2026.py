@@ -11,7 +11,7 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
+    "charmie_arm":                  False,
     "charmie_audio":                False,
     "charmie_face":                 True,
     "charmie_head_camera":          True,
@@ -61,9 +61,8 @@ class TaskMain():
         # Task States
         self.task_states ={
             "Waiting_for_task_start":       0,
-            "Move_to_furniture":            1,
-            "Search_for_misplaced_objects": 2,
-            "Final_State":                  3,
+            "Search_for_misplaced_objects": 1,
+            "Final_State":                  2,
         }
 
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
@@ -82,7 +81,7 @@ class TaskMain():
         self.DEMO_MODE = self.robot.get_demo_mode()
         self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
 
-        self.FURNITURE_WE_WANT_TO_ANALYSE = "Office Table"
+        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table","Shelf", "Coffee Table"]
         
         # Neck Positions
         self.look_forward = [0, 0]
@@ -114,59 +113,64 @@ class TaskMain():
                 self.robot.wait_for_start_button()
                 
 
-                self.state = self.task_states["Move_to_furniture"]
-
-            elif self.state == self.task_states["Move_to_furniture"]:
-
-                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+ self.FURNITURE_WE_WANT_TO_ANALYSE.replace(" ","_").lower(), wait_for_end_of=False)
-
-                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=self.FURNITURE_WE_WANT_TO_ANALYSE))
-
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+ self.FURNITURE_WE_WANT_TO_ANALYSE.replace(" ","_").lower(), wait_for_end_of=False)
-
                 self.state = self.task_states["Search_for_misplaced_objects"]
-                
 
             elif self.state == self.task_states["Search_for_misplaced_objects"]:
 
-                objects_in_correct_furniture = []
-                objects_in_wrong_furniture = []
+                for current_furniture in self.FURNITURE_WE_WANT_TO_ANALYSE:
 
-                if self.robot.get_look_orientation_from_furniture(furniture=self.FURNITURE_WE_WANT_TO_ANALYSE) == "horizontal":
-                    search_misplaced_obj_tetas = self.search_tetas_horizontal
-                elif self.robot.get_look_orientation_from_furniture(furniture=self.FURNITURE_WE_WANT_TO_ANALYSE) == "vertical":
-                    search_misplaced_obj_tetas = self.search_tetas_vertical
+                    self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+ current_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
-                object_detected = self.robot.search_for_objects(tetas=search_misplaced_obj_tetas, detect_objects=True)
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=current_furniture), wait_for_end_of=True)
 
-                for obj in object_detected:
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+ current_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
-                    conf   = f"{obj.confidence * 100:.0f}%"
-                    cam_x_ = f"{obj.position_relative.x:5.2f}"
-                    cam_y_ = f"{obj.position_relative.y:5.2f}"
-                    cam_z_ = f"{obj.position_relative.z:5.2f}"
+                    objects_in_correct_furniture = []
+                    objects_in_wrong_furniture = []
+                    ignored_objects = []
 
-                    print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
-                    print("INFO FROM JSON:", self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(obj.object_name)))
+                    if self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "horizontal":
+                        search_misplaced_obj_tetas = self.search_tetas_horizontal
+                    elif self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "vertical":
+                        search_misplaced_obj_tetas = self.search_tetas_vertical
 
-                    if obj.furniture_location.replace(" ","_").lower() != self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(object_name=obj.object_name)):
-                        print("OBJECT IS NOT IN CORRECT FURNITURE")
+                    object_detected = self.robot.search_for_objects(tetas=search_misplaced_obj_tetas, detect_objects=True)
 
-                        self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
-                        self.robot.set_speech(filename="clean_the_table/object_in_the_wrong_furniture", wait_for_end_of=False)
-                        objects_in_wrong_furniture.append(obj.object_name)
-                    else:
-                        print("OBJECT IN CORRECT FURNITURE")
-                        self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
-                        self.robot.set_speech(filename="clean_the_table/object_in_the_correct_furniture", wait_for_end_of=False)
-                        objects_in_correct_furniture.append(obj.object_name)
+                    for obj in object_detected:
+
+                        conf   = f"{obj.confidence * 100:.0f}%"
+                        cam_x_ = f"{obj.position_relative.x:5.2f}"
+                        cam_y_ = f"{obj.position_relative.y:5.2f}"
+                        cam_z_ = f"{obj.position_relative.z:5.2f}"
+
+                        print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
+                        print("INFO FROM JSON:", self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(obj.object_name)))
+
+                        if obj.furniture_location.replace(" ","_").lower() == current_furniture.replace(" ","_").lower():
+
+                            if obj.furniture_location.replace(" ","_").lower() != self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(object_name=obj.object_name)):
+                                print("OBJECT IS NOT IN CORRECT FURNITURE")
+
+                                self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+                                self.robot.set_speech(filename="clean_the_table/object_in_the_wrong_furniture", wait_for_end_of=True)
+                                objects_in_wrong_furniture.append(obj.object_name)
+                            else:
+                                print("OBJECT IN CORRECT FURNITURE")
+                                self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+                                self.robot.set_speech(filename="clean_the_table/object_in_the_correct_furniture", wait_for_end_of=True)
+                                objects_in_correct_furniture.append(obj.object_name)
+
+                        else:
+                            print("I don't care about this object")
+                            ignored_objects.append(obj.object_name)
 
 
-                print("Objects in correct furniture:", objects_in_correct_furniture)
-                print("Objects in wrong furniture:", objects_in_wrong_furniture)
+                    print("Objects in correct furniture:", objects_in_correct_furniture)
+                    print("Objects in wrong furniture:", objects_in_wrong_furniture)
+                    print("Ignored objects:", ignored_objects)
                                         
                 
                 self.state = self.task_states["Final_State"]
