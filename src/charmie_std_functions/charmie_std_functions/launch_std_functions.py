@@ -509,6 +509,14 @@ class LaunchStdFunctions():
                     emulate_tty=True
                     )
         
+        # do not wait until costmaps are clear before starting navigation
+        self.charmie_navigation_unmapped = Node(package='charmie_navigation',
+                    executable='navigation',
+                    name='navigation',
+                    emulate_tty=True,
+                    parameters=[{"wait_for_clear_costmaps": False}],
+                    )
+        
         sdnl_params_yaml_path = os.path.join(
             get_package_share_path('charmie_description'),
             'config',
