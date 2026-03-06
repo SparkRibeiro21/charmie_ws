@@ -69,10 +69,9 @@ class TaskMain():
         self.NAVIGATION_TARGET = "couch"
         self.NAVIGATION_TARGET2 = "desk"
         self.NAVIGATION_TARGET3 = "Left Lounge Chair"
-        self.NAVIGATION_TARGET4 = [-2.0, 0.0,  0.0]
-        self.NAVIGATION_TARGET5 = [-2.0, -0.1,  0.0]
-        self.NAVIGATION_TARGET6 = [ 0.0, 0.0, 90.0]
-        
+        self.NAVIGATION_TARGET4 = [ 2.0,  2.0,   0.0]
+        self.NAVIGATION_TARGET5 = [ 2.0, -2.0,   0.0]
+        self.NAVIGATION_TARGET6 = [ 0.0, -0.0,  90.0]
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -111,10 +110,15 @@ class TaskMain():
 
                 while True:
 
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, first_rotate=False, orient_after_move=False, reached_radius=1.0, print_feedback=True, wait_for_end_of=True)
-                    time.sleep(5.0)
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET6, first_rotate=False, orient_after_move=False, reached_radius=1.0, print_feedback=True, wait_for_end_of=True)
-                    time.sleep(5.0)
+                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                    print("Moved to target 4")
+                    # time.sleep(10.0)
+                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                    print("Moved to target 5")
+                    # time.sleep(10.0)
+                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET6, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                    print("Moved to target 6")
+                    # time.sleep(10.0)
                
                
                 # self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, first_rotate=False, reached_radius=0.8, print_feedback=True, wait_for_end_of=True)
