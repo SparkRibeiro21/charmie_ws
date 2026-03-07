@@ -303,6 +303,11 @@ class LaunchStdFunctions():
                 executable='test_marker_rviz',
                 name='test_marker_rviz',
                 )
+
+        self.sdnl_debug = Node(package='charmie_gui',
+                executable='sdnl_debug',
+                name='sdnl_debug',
+                )
         
         self.audio = Node(package='charmie_audio',
                       executable='audio',
