@@ -4350,7 +4350,25 @@ class RobotStdFunctions():
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['look'] # Return the look
         return None  # Return None if the object is not found
+    
+    def get_radius_from_furniture(self, furniture):
 
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['diameter']/2 # Return the radius
+        return None  # Return None if the object is not found
+
+    def get_furniture_shape_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['shape'] # Return the shape
+        return None  # Return None if the object is not found
+    
     def activate_tracking_mask(self, track_person=None, track_object=None, mode="", custom_points=[], show_detections_on_face=True):
 
         points = ListOfPoints()
@@ -5964,7 +5982,151 @@ class RobotStdFunctions():
         print("Cannot get height from shelf")
         return False
 
-    def open_door(push_pull="push", left_right="left", wait_for_end_of=True):
+    def move_to_pre_pick_position_after_search_for_objects(self, furniture = "", object = DetectedObject(), approach_offset = 0.5, move_to = True, wait_for_end_of = True):
+
+        success = False
+        message = ""
+        nav_coords_ret = []
+
+        shape = self.get_furniture_shape_from_furniture(furniture)
+        if shape == None: # checks if furniture exists
+            success = False
+            message = "Furniture shape not found, cannot move to pre-pick position"
+        else:
+        
+            furniture_dict = {
+                "name":             furniture,
+                "top_left_coords":  self.get_top_coords_from_furniture(furniture),
+                "bot_right_coords": self.get_bottom_coords_from_furniture(furniture),
+                "radius":           self.get_radius_from_furniture(furniture),
+                "shape":            self.get_furniture_shape_from_furniture(furniture)
+            }
+            object_coords = [object.position_absolute.x, object.position_absolute.y]
+
+            print(furniture_dict["name"], furniture_dict["shape"])
+
+            ### CIRCULAR FURNITURES
+            if furniture_dict["shape"] == "circle":
+
+                # helpers
+                table_center = [(furniture_dict["top_left_coords"][0]+furniture_dict["bot_right_coords"][0])/2, 
+                                (furniture_dict["top_left_coords"][1]+furniture_dict["bot_right_coords"][1])/2]
+                table_radius = furniture_dict["radius"]
+
+                if table_radius < 1e-9: # safer to use tiny tolerance, to avoid floating point issues
+                    print("WARNING: Table diameter is 0.0. Must be a misconfiguraiton in configuration_files!")
+
+                # attributions
+                cx, cy = table_center
+                ox, oy = object_coords
+
+                # vector from furniture center to object
+                vx = ox - cx
+                vy = oy - cy
+
+                # distance from furniture center to object
+                dco = math.sqrt(vx**2 + vy**2)
+
+                # furniture validation
+                if dco > table_radius:
+                    success = False
+                    message = "Object is outside of circular shaped furniture"
+                else: # did not use elif to not repeat attribution code and prints
+                    if dco < 1e-9: # safer to use tiny tolerance, to avoid floating point issues
+                        # special case: object exactly at the center of the circular furniture 
+                        # choose a default pose with orientation = 0 degrees (face north)
+                        print("Object is exactly at the table center.")
+                        
+                        nav_x = cx - (table_radius + approach_offset)
+                        nav_y = cy
+                        angle_deg = 0.0
+        
+                    else:
+                        # unit vector from center to object
+                        ux = vx / dco
+                        uy = vy / dco
+
+                        # robot position = point on auxiliary circle (furniture radius + approach_offset)
+                        nav_x = cx + (table_radius + approach_offset) * ux
+                        nav_y = cy + (table_radius + approach_offset) * uy
+
+                        # robot should face the object
+                        angle_rad = math.atan2(oy - nav_y, ox - nav_x)
+                        # angle_deg = math.degrees(angle_rad)
+                        angle_deg = (math.degrees(angle_rad) + 360) % 360
+
+                    nav_coords = [nav_x, nav_y, angle_deg]
+
+                    print("Object coords:", object_coords)
+                    print("Table center:", table_center)
+                    print("Robot nav coords:", nav_coords)
+            
+                    success = True
+                    message = "Moved to pre pick position in circular shaped furniture."
+                    nav_coords_ret = nav_coords
+
+            ### SQUARED FURNITURES
+            elif furniture_dict ["shape"] == "square":
+
+                # helpers
+                x_min = min(furniture_dict["top_left_coords"][0], furniture_dict["bot_right_coords"][0])  # bottom
+                x_max = max(furniture_dict["top_left_coords"][0], furniture_dict["bot_right_coords"][0])  # top
+                y_min = min(furniture_dict["top_left_coords"][1], furniture_dict["bot_right_coords"][1])  # right
+                y_max = max(furniture_dict["top_left_coords"][1], furniture_dict["bot_right_coords"][1])  # left
+
+                # attributions
+                ox, oy = object_coords
+
+                # furniture validation
+                if not (x_min <= ox <= x_max and y_min <= oy <= y_max):
+                    success = False
+                    message = "Object is outside of rectangular shaped furniture"
+
+                else:
+                    # checks min distance to four sides of furniture select closest
+                    distances = {
+                        "bottom":   abs(ox - x_min),
+                        "top":      abs(x_max - ox),
+                        "right":    abs(oy - y_min),
+                        "left":     abs(y_max - oy)
+                    }
+
+                    closest_side = min(distances, key=distances.get)
+                    if closest_side == "bottom":
+                        nav_x = x_min - approach_offset
+                        nav_y = oy
+                        angle_deg = 0.0
+                    elif closest_side == "top":
+                        nav_x = x_max + approach_offset
+                        nav_y = oy
+                        angle_deg = 180.0
+                    elif closest_side == "right":
+                        nav_x = ox
+                        nav_y = y_min - approach_offset
+                        angle_deg = 90.0
+                    elif closest_side == "left":
+                        nav_x = ox
+                        nav_y = y_max + approach_offset
+                        angle_deg = 270.0
+
+                    nav_coords = [nav_x, nav_y, angle_deg]
+
+                    print("Object coords:", object_coords)
+                    print("Closest side:", closest_side)
+                    print("Robot nav coords:", nav_coords)
+
+                    success = True
+                    message = "Moved to pre pick position in rectangular shaped furniture."
+                    nav_coords_ret = nav_coords
+
+            else:
+                success = False
+                message = "Furniture shape not recognized, cannot move to pre-pick position"
+
+        return success, message, nav_coords_ret
+
+
+    def open_door(self, push_pull="push", left_right="left", wait_for_end_of=True):
         # placeholder for door opening std_function
         pass
         # arm movements and search for objects for furniture door_handle 

@@ -2,6 +2,7 @@
 import rclpy
 import threading
 import time
+from charmie_interfaces.msg import DetectedObject
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
@@ -25,7 +26,7 @@ ros2_modules = {
     "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
-    "charmie_nav_sdnl":             True,
+    "charmie_nav_sdnl":             False,
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
@@ -120,7 +121,17 @@ class TaskMain():
                     print("Moved to target 6")
                     # time.sleep(10.0)
                
-               
+
+                # to test move_to_pre_pick_position_after_search_for_objects std_function
+                o = DetectedObject()
+                o.position_absolute.x = 5.55 -0.2
+                o.position_absolute.y = 1.78 -0.2
+                print(self.robot.move_to_pre_pick_position_after_search_for_objects(
+                    furniture="dinner table", object=o, approach_offset=0.5))
+
+                while True:
+                    pass
+
                 # self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, first_rotate=False, reached_radius=0.8, print_feedback=True, wait_for_end_of=True)
                 # self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, first_rotate=False, reached_radius=0.8, print_feedback=True, wait_for_end_of=True)
                 
