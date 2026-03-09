@@ -6123,6 +6123,9 @@ class RobotStdFunctions():
                 success = False
                 message = "Furniture shape not recognized, cannot move to pre-pick position"
 
+        if nav_coords_ret and move_to:
+            self.move_to_position(move_coords=nav_coords_ret, wait_for_end_of=wait_for_end_of)
+
         return success, message, nav_coords_ret
 
 
