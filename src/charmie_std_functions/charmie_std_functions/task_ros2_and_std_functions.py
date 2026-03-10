@@ -3818,7 +3818,7 @@ class RobotStdFunctions():
 
         # self.calibrate_audio(wait_for_end_of=True)
         # self.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
-        command = self.get_audio(gpsr=True, question="receptionist/receptionist_question", wait_for_end_of=True)
+        # command = self.get_audio(gpsr=True, question="receptionist/receptionist_question", wait_for_end_of=True)
 
         request = GetLLMDemo.Request()
         # Append info_type to command: "info_type - command"
