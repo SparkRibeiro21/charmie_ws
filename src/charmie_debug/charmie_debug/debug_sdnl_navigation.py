@@ -13,26 +13,26 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 False,
+    "charmie_face":                 True,
     "charmie_head_camera":          False,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                False,
-    "charmie_lidar_bottom":         False,
+    "charmie_lidar":                True,
+    "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         False,
-    "charmie_low_level":            False,
-    "charmie_navigation":           False,
-    "charmie_nav2":                 False,
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
+    "charmie_navigation":           True,
+    "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 False,
+    "charmie_neck":                 True,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             False,
+    "charmie_speakers":             True,
     "charmie_tracking":             False,
-    "charmie_yolo_objects":         False,
+    "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
@@ -68,6 +68,7 @@ class TaskMain():
         # self.initial_position = [2.6, -3.60, 45.0] # temp (near Tiago desk for testing)
         # self.initial_position = [0.0, 0.0, 0.0] # temp (near Tiago desk for testing)
         self.NAVIGATION_TARGET = "Dinner Table"
+        self.NAVIGATION_TARGET = self.NAVIGATION_TARGET.replace(" ","_").lower()
         self.NAVIGATION_TARGET2 = "desk"
         self.NAVIGATION_TARGET3 = "Left Lounge Chair"
         self.NAVIGATION_TARGET4 = [ 2.0,  2.0,   0.0]
@@ -77,10 +78,10 @@ class TaskMain():
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
-        self.look_judge = [90, 0]
+        self.look_judge = [-90, 0]
         
         # VARS ...
-        self.state = Waiting_for_start_button
+        self.state = Move_to_pre_pick_position_after_search_for_objects
 
         self.robot.set_rgb(RED+BACK_AND_FORTH_8)
 
@@ -166,7 +167,7 @@ class TaskMain():
                 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 # tetas = [[-30, -45], [0, -45], [30, -45]]
-                tetas = [[0, -40]]
+                tetas = [[0, -30]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
                 objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
                 
@@ -179,6 +180,7 @@ class TaskMain():
                     print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.furniture_location} ({x_}, {y_}, {z_})")
 
                 time.sleep(0.5)
+                self.robot.set_face("charmie_face", wait_for_end_of=False)
                     
                 if objects_found:
                     self.robot.set_neck(position=self.look_judge, wait_for_end_of=False)
@@ -192,6 +194,8 @@ class TaskMain():
                     for o in objects_found:
                         if o.furniture_location.replace(" ","_").lower() == self.NAVIGATION_TARGET.replace(" ","_").lower():
                             
+                            self.robot.set_face("charmie_face", wait_for_end_of=False)
+                            self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                             self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                             self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=False)
                             
@@ -199,8 +203,9 @@ class TaskMain():
 
                             self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
                             self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                            path = self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
                             self.robot.set_neck_coords(position=[o.position_absolute.x, o.position_absolute.y, o.position_absolute.z], wait_for_end_of=True)
-                            time.sleep(5.0)
+                            time.sleep(3.0)
 
                 
                 # self.robot.set_neck(position=self.look_table_objects, wait_for_end_of=False)
@@ -211,7 +216,7 @@ class TaskMain():
                 #     pass    
 
                 # next state
-                # self.state = Final_State
+                self.state = Final_State
             
             elif self.state == Final_State:
 
