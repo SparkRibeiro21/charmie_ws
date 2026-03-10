@@ -268,19 +268,20 @@ class TaskMain():
                 print("Added to face recognition:", s, m)
 
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+                #command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+                self.GUEST1_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                self.GUEST1_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+
                 print("Finished:", command)
                 
-                if command == "ERR_MAX":
-                    print("MAX HEARING ATTEMPTS REACHED")
-                    self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-                else:
-                    keyword_list= command.split(" ")
-                    self.GUEST1_NAME = keyword_list[0] 
-                    self.GUEST1_DRINK = keyword_list[1]
-                    print(self.GUEST1_NAME, self.GUEST1_DRINK)
+                # if command == "ERR_MAX":
+                #     print("MAX HEARING ATTEMPTS REACHED")
+                #     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
+                # else:
+                keyword_list= command.split(" ")
+                print(self.GUEST1_NAME, self.GUEST1_DRINK)
 
-                    self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
+                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
 
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=True) 
                 
