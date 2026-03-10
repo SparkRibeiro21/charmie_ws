@@ -3120,12 +3120,18 @@ class RobotStdFunctions():
         self.node.sdnl_nav_client_.send_goal_async(goal_msg, feedback_callback=self.node.sdnl_nav_client_goal_feedback_callback).add_done_callback(self.node.sdnl_nav_client_goal_response_callback)
         self.node.get_logger().info("SDNL Nav Goal Sent")
 
-        # Wait acceptance
+        # Wait for acceptance/rejection
         while self.node.sdnl_nav_goal_accepted is None:
             time.sleep(0.05)
         
-        success = self.node.sdnl_nav_goal_accepted
-        message = ""
+        # If rejected, return immediately
+        if not self.node.sdnl_nav_goal_accepted:
+            self.node.get_logger().warn("SDNL NAV RESULT: GOAL REJECTED.")
+            return False, "SDNL Nav Goal rejected"
+
+        # If user does not want to wait for completion, goal was accepted
+        if not wait_for_end_of:
+            return True, "SDNL Nav Goal accepted and sent, not waiting for end"
 
         if wait_for_end_of:
 
@@ -3166,24 +3172,13 @@ class RobotStdFunctions():
                                                 
             if self.node.sdnl_nav_status == GoalStatus.STATUS_SUCCEEDED:
                 self.node.get_logger().info("SDNL NAV RESULT: SUCCEEDED.")
-                success = True
-                message = "Successfully moved to position"
+                return True, "Successfully moved to position"
             # elif self.node.sdnl_nav_status == GoalStatus.STATUS_ABORTED:
-            #     self.set_rgb(RED+BACK_AND_FORTH_8)
             #     self.node.get_logger().info("SDNL NAV RESULT: ABORTED.")
-            #     success = False
-            #     message = "Canceled moved to position"
+            #     return False, "Aborted moving to position"
             elif self.node.sdnl_nav_status == GoalStatus.STATUS_CANCELED:
                 self.node.get_logger().info("SDNL NAV RESULT: CANCELED.")
-                success = False
-                message = "Canceled moved to position"
-
-            return success, message
-        
-        else:
-            success = True
-            message = "Sent Command to SDNL NAV, not waiting for end of"
-            return success, message
+                return False, "Canceled moving to position"
 
     def sdnl_move_to_position_cancel(self):
         if self.node.sdnl_nav_goal_handle_ is not None:
