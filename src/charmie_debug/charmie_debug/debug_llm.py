@@ -62,7 +62,8 @@ class TaskMain():
         # Waiting_for_start_button = 0
         LLM_demo = 1
         LLM_gpsr = 2
-        Final_State = 3
+        LLM_hri= 3
+        Final_State = 4
 
         # VARS ...
         self.state = LLM_gpsr
@@ -83,8 +84,10 @@ class TaskMain():
             if self.state == LLM_demo:
 
                 print("New LLM Demo")
+
                 self.robot.get_llm_demonstration()
-                print("Finished LLM Demo")
+
+                print("Finished first LLM Demo")
                 time.sleep(5)
                 
             if self.state == LLM_gpsr:
@@ -92,6 +95,22 @@ class TaskMain():
                 print("New LLM GPSR")
                 self.robot.get_llm_gpsr()
                 print("Finished LLM GPSR")
+                time.sleep(5)
+            
+            if self.state == LLM_hri:
+
+                print("New LLM HRI")
+                ##  TESTING INFO EXTRACTION STANDARDFUNCTION ##
+                #self.robot.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
+                command = self.robot.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
+                # command = "My name is John and my favorite drink is coffee"
+
+                name = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                favorite_drink = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                print ("GUEST INFO- name:"+name+", favorite drink:"+favorite_drink)
+
+                ##  END OF TESTING INFO EXTRACTION STANDARDFUNCTION ##
+                print("Finished LLM HRI")
                 time.sleep(5)
                             
             elif self.state == Final_State:
