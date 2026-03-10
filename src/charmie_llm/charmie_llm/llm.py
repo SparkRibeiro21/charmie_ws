@@ -5,7 +5,6 @@ import time
 from charmie_interfaces.msg import ListOfStrings
 from charmie_interfaces.srv import GetLLMDemo, GetLLMGPSR, GetLLMConfirmCommand
 
-
 import json
 
 ##### NOTAS: #####
@@ -16,6 +15,7 @@ import json
 
 from charmie_llm.llm_demo_description import LLM_demo_description
 from charmie_llm.llm_planner_desciption import LLM_planner_description
+from charmie_llm.llm_info_extraction_description import LLM_info_extraction_description
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
@@ -32,13 +32,13 @@ class LLMNode(Node):
         self.get_logger().info("Initialised CHARMIE LLM Node")
 
         # LLM objects declaration must come before the service declaration, so that if there is any error, in GUI never shows that LLM was initialized 
-        self.llm_demo_description = LLM_demo_description() # TODO: add gpsr and question_debug
+        self.llm_demo_description = LLM_demo_description() 
         self.llm_planner_description = LLM_planner_description()
+        self.llm_info_extraction_description = LLM_info_extraction_description()
 
         self.llm_demonstration_server = self.create_service(GetLLMDemo, "llm_demonstration", self.llm_demonstration_callback)
         self.llm_confirm_command_server = self.create_service(GetLLMConfirmCommand, "llm_confirm_command", self.llm_confirm_command_callback)
         self.llm_gpsr_server = self.create_service(GetLLMGPSR, "llm_gpsr", self.llm_gpsr_callback)
-
 
     def llm_demonstration_callback(self, request, response):
         # Type of service received: 
@@ -50,9 +50,23 @@ class LLMNode(Node):
         self.get_logger().info("LLM DEMO REQUEST RECEIVED")
         print("Received:", request.command)
 
-        response.answer = self.llm_demo_description.run(request.command) 
+        # FOR THE DEMO
+        # response.answer = self.llm_demo_description.run(request.command) 
+
+        # TEMPORARY IN HERE!!! FOR THE INFO EXTRACTION
+        request_command = request.command
+
+        info_type, command = request_command.split(" - ", 1)
+
+        extracted_info = self.llm_info_extraction_description.extract_info(request=command, info_type=info_type)
+    
+        print("Extracted favorite drink:", extracted_info)
+
+        response.answer = extracted_info
 
         return response
+    
+
 
     def llm_confirm_command_callback(self, request, response):
         # Type of service received: 
@@ -84,11 +98,9 @@ class LLMNode(Node):
         # sends the command to the LLM and gets the response (the generated plan)
         llm_response = self.llm_planner_description.handle_request(request.command)
         
-        print (f"LLM Output:", llm_response)
-        print (f"LLM response.output_text:", llm_response.output)
+        # print (f"LLM Output:", llm_response)
+        # print (f"LLM response.output_text:", llm_response.output)
         
-
-        generatedPlan = []  # list of the subtasks in "natural language" format, to say the generated plan to the user
         example = ListOfStrings()  # list of the subtasks in a structured format for the robot to execute (on the left of the '-' is the type of task and on the right the parameters)
 
         for item in llm_response.output:
@@ -96,31 +108,41 @@ class LLMNode(Node):
 
                 args = json.loads(item.arguments)
 
-                if item.name == "set_speech":
+                if item.name == "move_to_room":
 
-                    generatedPlan.append(f"say {args['command']}")
-                    example.strings.append("Speak-"+args['command'])
+                    example.strings.append(f"MoveToRoom-{args['room']}")
+                
+                elif item.name == "move_to_furniture":
+                    
+                    example.strings.append(f"MoveToFurniture-{args['furniture']}")
+                
+                elif item.name == "move_to_person_through_name":
+                    
+                    example.strings.append(f"MoveToPersonName-{args['person_name']}")
+                
+                elif item.name == "move_to_person_with_pose":
+                    
+                    example.strings.append(f"MoveToPersonPose-{args['person_pose']}")
+                
+                elif item.name == "move_to_person_with_clothing":
 
-                elif item.name == "move_to_position":
+                    example.strings.append(f"MoveToPersonClothing-{args['person_clothing']}")
 
-                    generatedPlan.append(f"move to {args['move_coords']}")
-                    example.strings.append(f"Navigation-{args['move_coords']}")
+                elif item.name == "move_to_initial_person_position":
+                    
+                    example.strings.append(f"MoveToInitialPersonPosition")
+                
+                elif item.name == "pick_object":
 
-        final_plan = " and then ".join(generatedPlan)
+                    example.strings.append(f"Pick-{args['name_of_object']}")
 
-        # TODO Futuramente, substituir por set_speech para falar o plano 
-        print(f"Ok, I will {final_plan}") 
+                elif item.name == "place_object_on_furniture":
 
-        # example = ListOfStrings()
-        # example.strings.append("Navigation-KitchenTable")
-        # example.strings.append("SearchForObject-Milk")
-        # example.strings.append("ArmPick-Milk")
-        # example.strings.append("Navigation-SideTable")
-        # example.strings.append("ArmPlace-SideTable")
-        # example.strings.append("Navigation-LivingRoom")
-        # example.strings.append("Speak-/gpsr/arrived_living_room")
-        # response.answer = example
-        
+                    example.strings.append(f"Place-{args['name_of_object']},{args['furniture']}")
+                elif item.name == "hand_object_to_person":
+
+                    example.strings.append(f"HandObject")
+                
         response.answer = example  
         return response
 

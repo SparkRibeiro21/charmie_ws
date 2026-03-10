@@ -3693,7 +3693,34 @@ class RobotStdFunctions():
         print(self.node.llm_demonstration_response)
 
         self.set_speech(command=self.node.llm_demonstration_response, quick_voice=True, wait_for_end_of=True)
+    
+    def get_info_from_llm(self,command, info_type, wait_for_end_of=True):
 
+        # self.calibrate_audio(wait_for_end_of=True)
+        # self.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
+        # command = self.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
+
+        request = GetLLMDemo.Request()
+        # Append info_type to command: "info_type - command"
+        request.command = info_type + " - " + command
+        self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        print("Message sent to LLM:", request.command)
+        print("Command:", command)
+        print("Info to extract:", info_type)
+        # print("LLM response:", self.node.llm_demonstration_response)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_demonstration:
+                pass
+            self.node.waited_for_end_of_llm_demonstration = False
+
+        print("LLM response:", self.node.llm_demonstration_response)
+   
+
+        return self.node.llm_demonstration_response
+
+##  GETS AND CONFIRMS A GPSR COMMAND ##
     def get_llm_confirm_command(self, wait_for_end_of=True):
 
         command_confirmed = False
@@ -3724,8 +3751,14 @@ class RobotStdFunctions():
                 else:
                     command = "ERROR"
 
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_gpsr:
+                pass
+            self.node.waited_for_end_of_llm_gpsr = False
+
         return command
 
+##  GENERATES A PLAN FOR A GPSR COMMAND##
     def get_llm_gpsr(self, command= "", wait_for_end_of=True):
 
         # self.calibrate_audio(wait_for_end_of=True)
@@ -3760,7 +3793,9 @@ class RobotStdFunctions():
         ### END OF EXAMPLE
 
         request = GetLLMGPSR.Request()
-        request.command = command
+        request.command = "Go to the shelf then find a tuna and get it."
+        # request.command = command
+        
         self.node.call_llm_gpsr_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
@@ -3769,38 +3804,72 @@ class RobotStdFunctions():
             self.node.waited_for_end_of_llm_gpsr = False
 
         print(self.node.llm_gpsr_response)
-        for task in self.node.llm_gpsr_response.strings:
+
+        self.execute_gpsr_plan(plan=self.node.llm_gpsr_response)
+
+    def execute_gpsr_plan(self, plan=ListOfStrings()):
+
+        for task in plan.strings:
             task_split = task.split("-")
             
-            print("Task type:", task_split[0], " Task info:", task_split[1])
+            task_type = task_split[0]
+            task_info = task_split[1] if len(task_split) > 1 else ""
+            
+            print("Task type:", task_type, " Task info:", task_info)
 
-            match task_split[0]:
+            match task_type:
 
-                case "Navigation":
-                    # self.set_navigation() ...
+                case "MoveToRoom":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to " + task_split[1], quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(command="Moving to " + task_info, quick_voice=True, wait_for_end_of=True)
                     pass 
 
-                case "SearchForObject":
-                    # self.search_for_object() ...
+                case "MoveToFurniture":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to " + task_info, quick_voice=True, wait_for_end_of=True)
                     pass
                 
-                case "SearchForPerson":
-                    # self.search_for_person() ...
+                case "move_to_person_through_name":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to person called" + task_info, quick_voice=True, wait_for_end_of=True)
+                    
                     pass
                 
-                case "Speak":
-                    # self.set_speech() ...
-                    self.set_speech(command=task_split[1], quick_voice=True, wait_for_end_of=True)
+                case "MoveToPersonPose":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to person with pose" + task_info, quick_voice=True, wait_for_end_of=True)
+                    
                     pass
                 
-                case "ArmPick":
-                    # self.set_arm() ...
+                case "MoveToPersonClothing":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to person with a" + task_info, quick_voice=True, wait_for_end_of=True)
+                  
                     pass
                 
-                case "ArmPlace":
-                    # self.set_arm() ...
+                case "MoveToInitialPersonPosition":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to the person who made the request", quick_voice=True, wait_for_end_of=True)
+                    pass
+
+                case "Pick":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Picking the " + task_info, quick_voice=True, wait_for_end_of=True)
+                    
+                    pass
+
+                case "Place":
+                    # temporary speech to show it is working
+                    task_split_2 = task_info.split(",")
+                    if len(task_split_2) >= 2:
+                        self.set_speech(command="Placing the " + task_split_2[0]+ " on the " + task_split_2[1], quick_voice=True, wait_for_end_of=True)
+                    
+                    pass
+
+                case "HandObject":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Handing the object in my hand", quick_voice=True, wait_for_end_of=True)
+                    
                     pass
 
     def get_detected_person_characteristics(self, detected_person=DetectedPerson(), first_sentence="", ethnicity=False, age=False, gender=False, height=False, shirt_color=False, pants_color=False):
