@@ -5773,31 +5773,124 @@ class RobotStdFunctions():
             print(" YOU NEED TO DEFINE THE FURNITURE WHERE THE ROBOT IS GOING TO PLACE THE OBJECT !!!!!!!!!!")
             return
         elif furniture == "Tray":
+
             first_safe_tray = [-206.8, 29, -74.7, -5.8, 51.9, 248.7]
-            first_tray = [-212.1, 7.5, -62.4, -27.3, 102.3, 246.5]
+            first_right_tray_front = [-212.1, 7.5, -62.4, -27.3, 102.3, 246.5]
+            first_left_tray_front = [-209.5, 40.7, -71.3, -24.2, 85.3, 253.8]
+            first_left_tray_top = [-183.9,60.3,-68,-90.3,41.6,321.4]
+            second_left_tray_top = [-182.7, 59.5, -44.5, -89.2, 93.2, 84.3]
+            first_right_tray_top = [-177.6,9.8,-68.6,-54.1,68.4,128.7]
+            second_right_tray_top = [-184.1,-9.9,-6,-97.2,92.1,122.8]
+            initial_position_to_safe_joints = 	[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
 
-            self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
-            self.set_arm(command="adjust_joint_motion", joint_motion_values = first_tray, wait_for_end_of=True)
+            state = 3
 
-            gripper_place_position = self.get_gripper_localization()
+            if state == 0:
+                self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_front, wait_for_end_of=True)
 
-
-            final_z = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
-
-            print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
-
-            self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
-            self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
-
-
-            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                gripper_place_position = self.get_gripper_localization()
 
 
-            time.sleep(0.5)
-            self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
-            time.sleep(0.5)
+                final_z = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
 
-            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                time.sleep(0.5)
+                self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                return
+            elif state == 1:
+
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_front, wait_for_end_of=True)
+
+                gripper_place_position = self.get_gripper_localization()
+
+
+                final_z = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
+
+                print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                time.sleep(0.5)
+                self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                return
+            elif state == 2:
+
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_top, wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = second_left_tray_top, wait_for_end_of=True)
+
+                gripper_place_position = self.get_gripper_localization()
+
+
+                final_x = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
+
+                print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                time.sleep(0.5)
+                self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = first_left_tray_top, wait_for_end_of=True)
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                return
+            elif state == 3:
+
+                #self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+
+
+                gripper_place_position = self.get_gripper_localization()
+
+
+                final_x = (gripper_place_position.z - 0.59 - place_height - 0.145 - TOLERANCE_ERROR)*1000
+
+                print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                time.sleep(0.5)
+                self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                self.wait_for_start_button()
+                #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = , wait_for_end_of=True)
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                return
 
 
 

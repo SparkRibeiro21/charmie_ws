@@ -137,6 +137,9 @@ class TaskMain():
                 
                 print("SET INITIAL POSITION")
 
+                self.robot.wait_for_start_button()
+
+
                 self.state = self.task_states["Select_object_to_pick"]
             
             if self.state == self.task_states["Select_object_to_pick"]:
@@ -359,7 +362,7 @@ class TaskMain():
 
                 #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
-                self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode="front",furniture="Tray",asked_help=False,place_height=0.08)
+                self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode="front",furniture="Tray",asked_help=False,place_height=0.13)
 
                 if self.object_mode == "front":
 
