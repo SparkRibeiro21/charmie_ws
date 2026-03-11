@@ -152,7 +152,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "Plate"
+                    self.object_name = "Pringles"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
@@ -160,7 +160,7 @@ class TaskMain():
                     # selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_furniture)
 
-                    self.place_furniture = "Dinner Table"
+                    self.place_furniture = "Tray"
 
                     self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
 
@@ -278,7 +278,7 @@ class TaskMain():
                 elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
                     self.tetas = [[0, 0], [0, 15], [0, -35]]
 
-                self.state = self.task_states["Move_to_Location"]
+                self.state = self.task_states["Place_object"]
 
 
 
@@ -359,6 +359,7 @@ class TaskMain():
 
                 #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
+                self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode="front",furniture=self.place_furniture,asked_help=asked_help,place_height=)
 
                 if self.object_mode == "front":
 

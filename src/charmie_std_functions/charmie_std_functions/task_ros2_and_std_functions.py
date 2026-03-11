@@ -5769,7 +5769,33 @@ class RobotStdFunctions():
         if furniture == "":
             print(" YOU NEED TO DEFINE THE FURNITURE WHERE THE ROBOT IS GOING TO PLACE THE OBJECT !!!!!!!!!!")
             return
-        
+        elif furniture == "Tray":
+            first_safe_tray = [-206.8, 29, -74.7, -5.8, 51.9, 248.7]
+            first_tray = [-212.1, 7.5, -62.4, -27.3, 102.3, 246.5]
+
+            self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = first_tray, wait_for_end_of=True)
+
+            gripper_place_position = self.get_gripper_localization()
+
+
+            final_z = (gripper_place_position.z - furniture_height - place_height - TOLERANCE_ERROR)*1000
+
+            self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+            self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+            time.sleep(0.5)
+            self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+            time.sleep(0.5)
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+
+
+
         else:
             verified = False
             for furn in self.node.furniture:
