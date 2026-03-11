@@ -5360,8 +5360,8 @@ class RobotStdFunctions():
                     picked_height = current_gripper_height.z - furniture_height
                 else:
                     object_height = self.get_object_height_from_object(selected_object)*1.5
-                    if object_height > 0.2:
-                        object_height = 0.2
+                    if pick_mode == "front":
+                        object_height = self.get_object_height_from_object(selected_object)*0.75
                     picked_height = (object_height)
                     if picked_height < 0.1:
                         picked_height = 0.1
@@ -5523,6 +5523,7 @@ class RobotStdFunctions():
         if furniture == "" and furniture_height == -1:
             print(" YOU NEED TO DEFINE THE FURNITURE WHERE THE ROBOT IS GOING TO PLACE THE OBJECT !!!!!!!!!!")
             return
+        if furniture == ""
         
         elif furniture != "":
             verified = False
