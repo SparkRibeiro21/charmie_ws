@@ -92,7 +92,30 @@ class TaskMain():
             if self.state == LLM_gpsr:
 
                 print("New LLM GPSR")
-                self.robot.get_llm_gpsr()
+                # self.robot.get_llm_gpsr()
+
+                for self.curr_request in range(3):
+                    # your code here ...
+
+                    # Look at the judge
+                    # self.robot.set_neck
+                    
+                    request = self.robot.get_llm_confirm_command()
+
+                    if request == "ERROR":
+                        print("Error in request " + str(self.curr_request + 1))
+                        ##### SPEAK: "I was not able to understand your request. Let's move on."
+                        self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
+
+                    else:
+                        # Save current request
+                        # self.request1 ou 2 ou 3 = request
+                        print("Request " + str(self.curr_request + 1) + ": " + request)
+
+                        ##### SPEAK: "Okay, I understood your curr_request request. Let's move on."
+                        self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=True)
+
+
                 print("Finished LLM GPSR")
                 time.sleep(5)
             

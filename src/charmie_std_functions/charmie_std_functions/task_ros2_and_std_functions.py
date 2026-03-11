@@ -3841,42 +3841,57 @@ class RobotStdFunctions():
         return self.node.llm_demonstration_response
 
 ##  GETS AND CONFIRMS A GPSR COMMAND ##
-    def get_llm_confirm_command(self, wait_for_end_of=True):
+    def get_llm_confirm_command(self):
 
         command_confirmed = False
         max_confirm_attempts = 3
         confirm_attempts_cntr = 0
 
         self.calibrate_audio(wait_for_end_of=True)
-        # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+
+        self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
 
         while not command_confirmed and confirm_attempts_cntr < max_confirm_attempts:
+
             confirm_attempts_cntr += 1
 
-            self.set_speech(command="What is your request?", quick_voice=True, wait_for_end_of=True)
-            command = self.get_audio(gpsr=True, wait_for_end_of=True)
-
+            ##### SPEAK: "What is your request?"
+            # gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green_yes_no", wait_for_end_of= True)
+            gpsr_command = "Go get me a water"
+            print("Finished:", gpsr_command)
             # add step to normalize command
 
-            self.set_speech(filename="generic/uhm", wait_for_end_of=False)
-            self.set_speech(command="Do you want me to " + command + "?", quick_voice=True, wait_for_end_of=True)
-            self.set_speech(command="Answer with robot yes or robot no", quick_voice=True, wait_for_end_of=True)
-            confirmation = self.get_audio(yes_or_no= True, wait_for_end_of=True)
-            if confirmation == "yes":
+            self.save_speech(command= gpsr_command, filename="gpsr_command", wait_for_end_of=False)
+            
+            ##### SPEAK: "Please give me a moment to process your command"
+            self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=True)
+            self.set_speech(filename="generic/uhm", wait_for_end_of=True)
+            ##### SPEAK: "I have understood the following command."
+            self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
+            self.set_speech(filename="temp/gpsr_command", wait_for_end_of=True)
+            ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
+            self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
+            confirmation = "yes"
+            # confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+            print("Finished:", confirmation)
+
+            if confirmation.lower() == "yes":
+                self.set_rgb(command=GREEN+BLINK_LONG)
+                ##### SPEAK: "Great!"
                 command_confirmed = True
-            elif confirmation == "no":
+
+            else:
+                self.set_rgb(command=RED+BLINK_LONG)
+
                 if confirm_attempts_cntr < max_confirm_attempts:
+                    ##### SPEAK: Sorry for my mistake, lets try again.
+                    self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
                     command_confirmed = False
-                    self.set_speech(command="I am sorry, I did not understand. Let's try again.", quick_voice=True, wait_for_end_of=True)
+            
                 else:
-                    command = "ERROR"
+                    gpsr_command = "ERROR"
 
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_llm_gpsr:
-                pass
-            self.node.waited_for_end_of_llm_gpsr = False
-
-        return command
+        return gpsr_command
 
 ##  GENERATES A PLAN FOR A GPSR COMMAND##
     def get_llm_gpsr(self, command= "", wait_for_end_of=True):

@@ -176,26 +176,24 @@ class TaskMain():
                     # Look at the judge
                     # self.robot.set_neck
 
-                    # Ask for the requests 
-                    # ("Hello! My name is Charmie and I am here to help you with what you need.")
-                    # self.robot.set_speech with quick_voice 
+                    ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."
+                    self.robot.set_speech(filename="gpsr/gpsr_intro", wait_for_end_of=True)
                     
-                    # Hear and confirm requests
-                    # "Please tell me your curr_request request"
-                    # self.set_speech
+                    request = self.robot.get_llm_confirm_command(wait_for_end_of=True)
 
-                    self.request1 = self.robot.get_llm_confirm_command(wait_for_end_of=True)
-
-                    if self.request1 == "ERROR":
+                    if request == "ERROR":
                         print("Error in request " + str(self.curr_request + 1))
-                        # Announce error
-                        # ("I was not able to understand your request. Let's move on to the next one.")
-                        # self.robot.set_speech
+                        ##### SPEAK: "I was not able to understand your request. Let's move on."
+                        self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
 
                     else:
-                        print("Request " + str(self.curr_request + 1) + ": " + self.request1)
-                        # "Okay, I understood your curr_request request. Let's move on to the next one."
-               
+                        # Save current request
+                        # self.request1 ou 2 ou 3 = request
+                        print("Request " + str(self.curr_request + 1) + ": " + request)
+
+                        ##### SPEAK: "Okay, I understood your curr_request request. Let's move on."
+                        self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=True)
+
                 self.state = self.task_states["Show_generated_plans"]
 
 
