@@ -76,7 +76,7 @@ class TaskMain():
 
 
         #self.place_furniture = "Office Table"
-        self.home_furniture = "Pantry"        
+        self.home_furniture = "Dinner Table"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
@@ -132,7 +132,7 @@ class TaskMain():
 
                 self.robot.wait_for_start_button()
                 
-                self.robot.set_initial_position(self.initial_position)
+                #self.robot.set_initial_position(self.initial_position)
                 
                 print("SET INITIAL POSITION")
 
@@ -151,7 +151,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "Plate"
+                    self.object_name = "Pringles"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
@@ -277,7 +277,7 @@ class TaskMain():
                 elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
                     self.tetas = [[0, 0], [0, 15], [0, -35]]
 
-                self.state = self.task_states["Move_to_Location"]
+                self.state = self.task_states["Pick_Object"]
 
 
 
