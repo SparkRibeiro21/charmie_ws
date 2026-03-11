@@ -269,22 +269,28 @@ class TaskMain():
 
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                 command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+
+                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=False)
+                self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) 
+
+                a = time.time()
                 self.GUEST1_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                print("Name:", self.GUEST1_NAME, time.time()-a)
+                
+                b = time.time()
                 self.GUEST1_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
 
                 self.robot.save_speech(command=self.GUEST1_NAME, filename=self.GUEST1_NAME, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST1_DRINK, filename=self.GUEST1_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
 
                 print("Finished:", command)
                 
-                if command == "ERR_MAX":
+                """ if command == "ERR_MAX":
                     print("MAX HEARING ATTEMPTS REACHED")
                     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-                else:
-                    print(self.GUEST1_NAME, self.GUEST1_DRINK)
-                
-                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
-                self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=True) 
+                else: """
+                print(self.GUEST1_NAME, self.GUEST1_DRINK)
                 
                 self.robot.deactivate_tracking_mask()
                 ### NECK: DEACTIVATE CONTINUOUS MODE
@@ -454,23 +460,25 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
 
                 command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
-                
+
+                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
+
                 a = time.time()
                 self.GUEST2_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                print("Name:", self.GUEST2_NAME, time.time()-a)
+                
+                b = time.time()
                 self.GUEST2_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
                 
                 self.robot.save_speech(command=self.GUEST2_NAME, filename=self.GUEST2_NAME, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
-
-                print("Finished:", command, time.time()-a)
                
-                if command == "ERR_MAX":
+                """if command == "ERR_MAX":
                     print("MAX HEARING ATTEMPTS REACHED")
                     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-                else:
-                    print(self.GUEST2_NAME, self.GUEST2_DRINK)
-
-                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
+                else:"""
+                print(self.GUEST2_NAME, self.GUEST2_DRINK)
 
                 ### INITIALLY SAYING THE CHARACTERISTICS WAS HERE. HOWEVER TO IMPROVE TASK EFFICIENCY, THIS IS NOW SAID DURING NAVIGATION TO SITTING AREA
                 # self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
@@ -493,10 +501,10 @@ class TaskMain():
                     self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=False)
                     self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
 
-                    self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=True)
-                    self.robot.set_face("help_pick_bag")
+                    self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
-
+                    self.robot.set_face("help_pick_bag")
+                    
                     wait_time_show_help_face=1.0
                     attempts_at_receiving=4
                     time.sleep(wait_time_show_help_face)
