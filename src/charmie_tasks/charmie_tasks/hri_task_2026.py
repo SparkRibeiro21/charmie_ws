@@ -12,28 +12,28 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  False,
+    "charmie_arm":                  True,
     "charmie_audio":                True,
     "charmie_face":                 True,
-    "charmie_head_camera":          False,
+    "charmie_head_camera":          True,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                False,
-    "charmie_lidar_bottom":         False,
-    "charmie_lidar_livox":          False,
+    "charmie_lidar":                True,
+    "charmie_lidar_bottom":         True,
+    "charmie_lidar_livox":          True,
     "charmie_llm":                  True, # True (check name and fav. drink)
-    "charmie_localisation":         False,
-    "charmie_low_level":            False,
-    "charmie_navigation":           False,
-    "charmie_nav2":                 False,
-    "charmie_neck":                 False,
-    "charmie_radar":                False, 
-    "charmie_sound_classification": False,
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
+    "charmie_navigation":           True,
+    "charmie_nav2":                 True,
+    "charmie_neck":                 True,
+    "charmie_radar":                True, 
+    "charmie_sound_classification": True,
     "charmie_speakers":             True,
-    "charmie_tracking":             False,
-    "charmie_yolo_objects":         False,
-    "charmie_yolo_pose":            False,
+    "charmie_tracking":             True,
+    "charmie_yolo_objects":         True,
+    "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
 }
 
@@ -196,7 +196,7 @@ class TaskMain():
         self.look_right = [-90, 0]
         self.search_tetas = [[-60, -30], [0, -30], [60, -30]]
 
-        self.state = self.task_states["Receive_guest2"]
+        self.state = self.task_states["Waiting_for_task_start"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -277,16 +277,13 @@ class TaskMain():
 
                 print("Finished:", command)
                 
-                # if command == "ERR_MAX":
-                #     print("MAX HEARING ATTEMPTS REACHED")
-                #     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-                # else:
-                keyword_list= command.split(" ")
-
-                print(self.GUEST1_NAME, self.GUEST1_DRINK)
-
+                if command == "ERR_MAX":
+                    print("MAX HEARING ATTEMPTS REACHED")
+                    self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
+                else:
+                    print(self.GUEST1_NAME, self.GUEST1_DRINK)
+                
                 self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
-
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=True) 
                 
                 self.robot.deactivate_tracking_mask()
@@ -436,29 +433,28 @@ class TaskMain():
                 
                 time.sleep(1.0) # wait time for robot to stop and do an audio calibration
                 self.robot.calibrate_audio(wait_for_end_of=True)
-                ##self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                ##self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
                 
-                # """ people_found = []
-                # while len(people_found) == 0:
-                #     # still need to check for timeout, and decide what to do in that case
-                #     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True)
+                people_found = []
+                while len(people_found) == 0:
+                    # still need to check for timeout, and decide what to do in that case
+                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True)
 
-                # print("People found:", len(people_found))
-                # self.GUEST2 = people_found[0]
+                print("People found:", len(people_found))
+                self.GUEST2 = people_found[0]
 
-                # #################################################################################### DYNAMICALLY ADJUST NECK !!!!
-                # self.robot.activate_tracking_mask(track_person=self.GUEST2, mode="face", show_detections_on_face=True)
-                # ### NECK: ACTIVATE CONTINUOUS MODE """
+                #################################################################################### DYNAMICALLY ADJUST NECK !!!!
+                self.robot.activate_tracking_mask(track_person=self.GUEST2, mode="face", show_detections_on_face=True)
+                ### NECK: ACTIVATE CONTINUOUS MODE
 
-                # s, m = self.robot.add_face_to_face_recognition(person=self.GUEST2, name="guest2")
-                # print("Added to face recognition:", s, m)
+                s, m = self.robot.add_face_to_face_recognition(person=self.GUEST2, name="guest2")
+                print("Added to face recognition:", s, m)
 
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
 
                 command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
                 
-
                 a = time.time()
                 self.GUEST2_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
                 self.GUEST2_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
@@ -467,24 +463,18 @@ class TaskMain():
                 self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
 
                 print("Finished:", command, time.time()-a)
-
-                # if command == "ERR_MAX":
-                #     print("MAX HEARING ATTEMPTS REACHED")
-                #     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-                # else:
-                print(self.GUEST2_NAME, self.GUEST2_DRINK)
+               
+                if command == "ERR_MAX":
+                    print("MAX HEARING ATTEMPTS REACHED")
+                    self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
+                else:
+                    print(self.GUEST2_NAME, self.GUEST2_DRINK)
 
                 self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
-
-                ## only for testing
-                self.robot.set_speech(filename="temp/"+self.GUEST2_NAME.lower(), wait_for_end_of=True)
-                self.robot.set_speech(filename="temp/"+self.GUEST2_DRINK.lower(), wait_for_end_of=True)
 
                 ### INITIALLY SAYING THE CHARACTERISTICS WAS HERE. HOWEVER TO IMPROVE TASK EFFICIENCY, THIS IS NOW SAID DURING NAVIGATION TO SITTING AREA
                 # self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
                 #                                                        ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
-                while True:
-                    pass
 
                 self.state = self.task_states["Get_guest2_bag"]
 

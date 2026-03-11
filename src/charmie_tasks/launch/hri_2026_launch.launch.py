@@ -10,58 +10,57 @@ def generate_launch_description():
         #####################################################################
         # Robot State and Static Transforms                                 #
         #####################################################################
-        # std_lf.robot_state_publisher_real_node,
-        # std_lf.static_transforms_launch,
+        std_lf.robot_state_publisher_real_node,
+        std_lf.static_transforms_launch,
         
         #####################################################################
         # Visualization and Debugging                                       # 
         #####################################################################
-        # std_lf.rviz2_nav2_node,
+        std_lf.rviz2_nav2_node,
         std_lf.gui,
-        # std_lf.marker_arrays_debug,
+        std_lf.marker_arrays_debug,
         # std_lf.task_with_gamepad, # debug mode where task is selected via gamepad
 
         ######################################################################
         # Actuators                                                          #
         ######################################################################
-        # LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
-        # std_lf.arm,
-        # std_lf.speakers,
+        LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
+        std_lf.arm,
         std_lf.speakers_with_save, ### this is different on purpose for HRI task!
-        # std_lf.neck,
+        std_lf.neck,
         std_lf.face,
-        # std_lf.low_level,
+        std_lf.low_level,
         
         #####################################################################
         # Sensors                                                           # 
         #####################################################################
-        # std_lf.lidar,
-        # std_lf.lidar_bottom,
-        # std_lf.livox_driver,
-        # std_lf.radar,
+        std_lf.lidar,
+        std_lf.lidar_bottom,
+        std_lf.livox_driver,
+        std_lf.radar,
         std_lf.audio,
-        # std_lf.sound_classification,
+        std_lf.sound_classification,
         
         #####################################################################
         # Localization                                                      # 
         #####################################################################
-        # std_lf.odometry_lidar,
-        # std_lf.robot_localization,
-        # std_lf.charmie_localisation,
+        std_lf.odometry_lidar,
+        std_lf.robot_localization,
+        std_lf.charmie_localisation,
 
         #####################################################################
         # Navigation                                                        # 
         #####################################################################
-        # std_lf.manual_obstacles_map_server,
-        # std_lf.delayed_nav2_localization,        
-        # std_lf.nav2_navigation,
-        # std_lf.charmie_navigation,
+        std_lf.manual_obstacles_map_server,
+        std_lf.delayed_nav2_localization,        
+        std_lf.nav2_navigation,
+        std_lf.charmie_navigation,
 
         #####################################################################
         # Cameras                                                           # 
         #####################################################################
         # CAMS have to be after nav2 otherwise map does not show up in rviz
-        # std_lf.charmie_multi_camera_launch_description,
+        std_lf.charmie_multi_camera_launch_description,
         # std_lf.charmie_orbbec_base_camera_launch_description,
 
         #####################################################################
@@ -74,12 +73,11 @@ def generate_launch_description():
         #####################################################################
         # Detections                                                        # 
         #####################################################################
-        # std_lf.yolo_objects,
-        # std_lf.yolo_objects,
+        std_lf.yolo_objects,
         # std_lf.yolo_world_without_prompt_free,
         # std_lf.yolo_world_with_prompt_free,
-        # std_lf.yolo_pose,
-        # std_lf.tracking,
+        std_lf.yolo_pose,
+        std_lf.tracking,
         std_lf.llm,
 
     ])
