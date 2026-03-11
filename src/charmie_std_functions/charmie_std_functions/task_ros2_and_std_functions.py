@@ -5755,6 +5755,9 @@ class RobotStdFunctions():
         # PLACE OBJECT
         # MOVE ARM TO SAFE POSITION
 
+        TOLERANCE_ERROR = 0.02
+        FRONT_Z_ADJUST_LIMIT = 450
+
         selected_object = selected_object.replace(" ","_").lower()
 
         #### PLACE ARM POSITIONS ####
@@ -5779,7 +5782,9 @@ class RobotStdFunctions():
             gripper_place_position = self.get_gripper_localization()
 
 
-            final_z = (gripper_place_position.z - furniture_height - place_height - TOLERANCE_ERROR)*1000
+            final_z = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
+
+            print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
             self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
             self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
@@ -5824,9 +5829,6 @@ class RobotStdFunctions():
             asked_help = True
 
         #### CONSTANTS ####
-
-        TOLERANCE_ERROR = 0.02
-        FRONT_Z_ADJUST_LIMIT = 450
 
         if furniture_distance == -1:
 

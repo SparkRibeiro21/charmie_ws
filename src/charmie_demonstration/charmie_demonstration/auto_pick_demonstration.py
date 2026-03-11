@@ -160,7 +160,7 @@ class TaskMain():
                     # selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_furniture)
 
-                    self.place_furniture = "Tray"
+                    self.place_furniture = "Dinner Table"
 
                     self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
 
@@ -359,7 +359,7 @@ class TaskMain():
 
                 #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
-                self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode="front",furniture=self.place_furniture,asked_help=asked_help,place_height=)
+                self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode="front",furniture="Tray",asked_help=False,place_height=0.08)
 
                 if self.object_mode == "front":
 
