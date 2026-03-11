@@ -5965,4 +5965,30 @@ class RobotStdFunctions():
         pass
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms
+
+    def close_dishwasher(self):
+
+        initial_position = [-188.4,61.9,-140.7,69,50.5,358.1]
+        second_position = [-155.9,59.4,-130.6,69,50.5,358.1]
+        final_position = [-200.2,58.4,-139.7,67,28.3,358.1]
+
+        self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=True)
+        _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+        self.wait_for_start_button()
+        self.adjust_omnidirectional_position(dx = furniture_distance - 0.57, dy = 0.0,wait_for_end_of=True)
+        self.wait_for_start_button()
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position, wait_for_end_of=True)
+        self.wait_for_start_button()
+        self.set_torso_position(legs=0.015, torso=50, wait_for_end_of=True)
+        self.wait_for_start_button()
+        self.adjust_omnidirectional_position(dx = furniture_distance - 0.47, dy = 0.0,wait_for_end_of=True)
+        self.wait_for_start_button()
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = second_position, wait_for_end_of=True)
+        self.wait_for_start_button()
+
+        pass
+        # arm movements and search for objects for furniture door_handle 
+        # add safety and timeout mechanisms
+
+
         

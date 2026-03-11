@@ -132,6 +132,10 @@ class TaskMain():
                 self.robot.set_initial_position(self.initial_position)
 
                 self.robot.wait_for_start_button()
+
+                self.robot.close_dishwasher()
+
+                self.robot.wait_for_start_button()
                 
                 self.robot.set_initial_position(self.initial_position)
                 
