@@ -5523,7 +5523,6 @@ class RobotStdFunctions():
         if furniture == "" and furniture_height == -1:
             print(" YOU NEED TO DEFINE THE FURNITURE WHERE THE ROBOT IS GOING TO PLACE THE OBJECT !!!!!!!!!!")
             return
-        if furniture == ""
         
         elif furniture != "":
             verified = False
