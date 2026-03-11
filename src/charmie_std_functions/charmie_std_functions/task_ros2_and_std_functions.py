@@ -3791,10 +3791,14 @@ class RobotStdFunctions():
 
     def get_llm_demonstration(self, wait_for_end_of=True):
 
+        resquest_type = "DEMO"
+
         self.calibrate_audio(wait_for_end_of=True)
         # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
         random_question = str(random.randint(1, 3))
-        command = self.get_audio(gpsr=True, question="demonstration/llm_get_question_"+random_question, wait_for_end_of=True)
+
+        ## command = resquest_type + ":" + self.get_audio(gpsr=True, question="demonstration/llm_get_question_"+random_question, wait_for_end_of=True)
+        command = resquest_type + " : " + "Hello, what is you name?"
 
         # add generic sentence so it is not so long quiet
         self.set_speech(filename="generic/uhm", wait_for_end_of=False)
@@ -3820,9 +3824,10 @@ class RobotStdFunctions():
         # self.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
         # command = self.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
 
+        resquest_type = "HRI"
         request = GetLLMDemo.Request()
         # Append info_type to command: "info_type - command"
-        request.command = info_type + " - " + command
+        request.command = resquest_type + " : " + info_type + " - " + command
         self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
 
         print("Message sent to LLM:", request.command)
@@ -3893,44 +3898,32 @@ class RobotStdFunctions():
 
         return gpsr_command
 
-##  GENERATES A PLAN FOR A GPSR COMMAND##
-    def get_llm_gpsr(self, command= "", wait_for_end_of=True):
-
-        # self.calibrate_audio(wait_for_end_of=True)
-        # # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-        # random_question = str(random.randint(1, 3))
-        # command = self.get_audio(gpsr=True, question="demonstration/llm_get_question_"+random_question, wait_for_end_of=True)
-
-        # # add generic sentence so it is not so long quiet
-        # self.set_speech(filename="generic/uhm", wait_for_end_of=False)
-        # random_wait = str(random.randint(1, 3))
-        # self.set_speech(filename="gpsr/llm_wait_for_gpsr_"+random_wait, wait_for_end_of=False)
-
+##  HIGH-LEVEL PLANNER (GENERATES A HIGH-LEVEL PLAN FOR A GPSR COMMAND)
+    def get_llm_high_level_plan(self, command= "", wait_for_end_of=True):
         
-        ### EXAMPLE FOR LLM CONFIRM COMMAND - SLENDER
+        resquest_type = "HLP"
 
+        request = GetLLMDemo.Request()
+        request.command = resquest_type + " : " + "Go to the shelf then find a tuna and get it."
+        # request.command = resquest_type + " : " + command
+        
+        self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
 
-        # request = GetLLMConfirmCommand.Request()
-        # request.command = command
-        # self.node.call_llm_confirm_command_server(request=request, wait_for_end_of=wait_for_end_of)
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_demonstration:
+                pass
+            self.node.waited_for_end_of_llm_demonstration = False
 
-        # if wait_for_end_of:
-        #     while not self.node.waited_for_end_of_llm_confirm_command:
-        #         pass
-        #     self.node.waited_for_end_of_llm_confirm_command = False
+        print(self.node.llm_demonstration_response)
 
-        # print(self.node.llm_confirm_command_response)
+        # self.execute_gpsr_plan(plan=self.node.llm_demonstration_response)
 
-        # self.set_speech(command=self.node.llm_confirm_command_response, quick_voice=True, wait_for_end_of=True)
-
-        # self.set_speech(command = "I heard the following command " + command, quick_voice=True, wait_for_end_of=True)
-
-        ### END OF EXAMPLE
+##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)
+    def execute_gpsr_plan(self, command ="", wait_for_end_of = True):
 
         request = GetLLMGPSR.Request()
-        request.command = "Go to the shelf then find a tuna and get it."
-        # request.command = command
-        
+        request.command = command
+
         self.node.call_llm_gpsr_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
@@ -3938,12 +3931,8 @@ class RobotStdFunctions():
                 pass
             self.node.waited_for_end_of_llm_gpsr = False
 
-        print(self.node.llm_gpsr_response)
-
-        self.execute_gpsr_plan(plan=self.node.llm_gpsr_response)
-
-    def execute_gpsr_plan(self, plan=ListOfStrings()):
-
+        plan = self.node.llm_gpsr_response
+        
         for task in plan.strings:
             task_split = task.split("-")
             

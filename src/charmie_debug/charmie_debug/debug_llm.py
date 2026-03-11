@@ -65,7 +65,7 @@ class TaskMain():
         Final_State = 4
 
         # VARS ...
-        self.state = LLM_gpsr
+        self.state = LLM_demo
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")
@@ -80,11 +80,17 @@ class TaskMain():
             # State 4 = Calibrate Audio
             # State 5 = Final Speech
 
-            if self.state == LLM_demo:
+            if self.state == LLM_gpsr:
 
                 print("New LLM Demo")
 
                 self.robot.get_llm_demonstration()
+                print("Finished LLM Demo")
+                self.robot.get_llm_high_level_plan(command="Go to the kitchen", wait_for_end_of=True)
+                print("Finished LLM HLP")
+                self.robot.get_info_from_llm(command="Victor and rum",info_type="name", wait_for_end_of=True)
+                self.robot.get_info_from_llm(command="Victor and rum",info_type="favorite drink", wait_for_end_of=True)
+                print("Finished LLM HRI")
 
                 print("Finished first LLM Demo")
                 time.sleep(5)
@@ -100,7 +106,7 @@ class TaskMain():
                     # Look at the judge
                     # self.robot.set_neck
                     
-                    request = self.robot.get_llm_confirm_command()
+                    request = self.robot.execute_gpsr_plan()
 
                     if request == "ERROR":
                         print("Error in request " + str(self.curr_request + 1))
