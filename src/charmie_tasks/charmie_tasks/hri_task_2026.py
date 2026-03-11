@@ -457,6 +457,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
 
                 command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+                
+
                 a = time.time()
                 self.GUEST2_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
                 self.GUEST2_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
@@ -475,8 +477,8 @@ class TaskMain():
                 self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
 
                 ## only for testing
-                self.robot.set_speech(filename="temp/"+self.GUEST1_NAME, wait_for_end_of=True)
-                self.robot.set_speech(filename="temp/"+self.GUEST1_DRINK, wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST2_NAME.lower(), wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST2_DRINK.lower(), wait_for_end_of=True)
 
                 ### INITIALLY SAYING THE CHARACTERISTICS WAS HERE. HOWEVER TO IMPROVE TASK EFFICIENCY, THIS IS NOW SAID DURING NAVIGATION TO SITTING AREA
                 # self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
@@ -653,7 +655,7 @@ class TaskMain():
                 self.robot.set_speech(filename="receptionist/second_guest_name_is", wait_for_end_of=True)
                 self.robot.set_speech(filename="temp/"+self.GUEST2_NAME.lower(), wait_for_end_of=True)
                 self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="temp/"+self.GUEST2_DRINK, wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST2_DRINK.lower(), wait_for_end_of=True)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
                 
                 if self.SIDE_TO_LOOK.lower() == "right":
@@ -666,7 +668,7 @@ class TaskMain():
                 self.robot.set_speech(filename="receptionist/first_guest_name_is", wait_for_end_of=True)
                 self.robot.set_speech(filename="temp/"+self.GUEST1_NAME.lower(), wait_for_end_of=True)
                 self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="temp/"+self.GUEST1_DRINK, wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST1_DRINK.lower(), wait_for_end_of=True)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
