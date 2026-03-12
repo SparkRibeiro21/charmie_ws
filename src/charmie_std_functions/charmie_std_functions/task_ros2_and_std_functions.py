@@ -126,8 +126,6 @@ class ROS2TaskNode(Node):
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", self.torso_low_level_callback, 10)
         self.orientation_low_level_subscriber = self.create_subscription(Float32, "orientation_low_level", self.orientation_callback, 10)
-        # Neck
-        self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
         # Tracking
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         # Task States Info
@@ -4462,76 +4460,6 @@ class RobotStdFunctions():
         request.tracking_type = "person_head"
         request.tracking_position = Point()
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=True)
-        
-    """ def set_continuous_tracking_with_coordinates(self):
-
-        request = TrackContinuous.Request()
-
-        ### TURN ON CONTINUOUS TRACKING
-        request.status = True
-        request.tracking_type = "person_head"
-        request.tracking_position = Point()
-        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
-        
-        self.node.detected_people.persons = [] # clears detected_people after receiving them to make sure the objects from previous frames are not considered again
-        self.activate_yolo_pose(activate=True) 
-        # self.activate_yolo_objects(activate_objects=True) 
-        
-        start_time = time.time()
-        tracking_condition = True
-        selected_object_to_track = "bowl"
-        
-        self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
-        while tracking_condition:
-
-            ### PERSON
-            correct_track_per = DetectedPerson()
-            local_detected_people = self.node.detected_people.persons
-            if self.node.new_person_frame_for_tracking:
-            
-                if len(local_detected_people) > 0:
-                    correct_track_per = local_detected_people[0]
-                
-                    # enviar valores 
-                    coords = Point()
-                    coords.x = float(correct_track_per.head_center_x)
-                    coords.y = float(correct_track_per.head_center_y)
-                    # coords.z = correct_person_to_track.position_absolute_head.z
-                    self.node.continuous_tracking_position_publisher.publish(coords)
-                    print(coords)
-                self.node.new_person_frame_for_tracking = False
-
-            ### OBJECTS
-            # correct_track_obj = DetectedObject()  
-            # local_detected_objects = self.node.detected_objects.objects
-            # if self.node.new_object_frame_for_tracking:
-            # 
-            #     for o in local_detected_objects:
-            #         if o.object_name.lower() == selected_object_to_track:
-            #             correct_track_obj = o
-            # 
-            #     if correct_track_obj.object_name.lower() == selected_object_to_track:  
-            #         # enviar valores 
-            #         coords = Point()
-            #         coords.x = float(correct_track_obj.box_center_x)
-            #         coords.y = float(correct_track_obj.box_center_y)
-            #         # coords.z = correct_person_to_track.position_absolute_head.z
-            #         self.node.continuous_tracking_position_publisher.publish(coords)
-            #         print(coords)
-            #     self.node.new_object_frame_for_tracking = False
-
-            # confirmar condição de fim de tracking
-            # if time.time() - start_time > 60.0:
-            #     tracking_condition = False
-
-        self.set_rgb(CYAN+BREATH)
-        self.activate_yolo_pose(activate=False) 
-        self.activate_yolo_objects(activate_objects=False) 
-        
-        ### TURN OFF CONTINUOUS TRACKING
-        request.status = False
-        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
-        """
 
     def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, speak_timeout=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
