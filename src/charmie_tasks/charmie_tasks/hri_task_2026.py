@@ -257,10 +257,8 @@ class TaskMain():
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True)
                     if len(people_found) == 0:
-                        pass
-                        ### SPEAK: PLEASE STAND A LITTLE CLOSER TO ME UNTIL YOU SEE THE DETECTION ON MY FACE
-
-                    if len(people_found) > 1:
+                        self.robot.set_speech(filename="hri/stand_closer_until_see_detection", wait_for_end_of=True)
+                    elif len(people_found) > 1:
                         pass
                         ### CALCULATE CLOSEST PERSON TO THE ROBOT, IF DISTANCES ARE CLOSE, SELECT THE ONE CLOSER TO THE CENTER OF THE ROBOT FRONT
 
@@ -453,10 +451,8 @@ class TaskMain():
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True)
                     if len(people_found) == 0:
-                        pass
-                        ### SPEAK: PLEASE STAND A LITTLE CLOSER TO ME UNTIL YOU SEE THE DETECTION ON MY FACE
-
-                    if len(people_found) > 1:
+                        self.robot.set_speech(filename="hri/stand_closer_until_see_detection", wait_for_end_of=True)
+                    elif len(people_found) > 1:
                         pass
                         ### CALCULATE CLOSEST PERSON TO THE ROBOT, IF DISTANCES ARE CLOSE, SELECT THE ONE CLOSER TO THE CENTER OF THE ROBOT FRONT
 
@@ -470,7 +466,6 @@ class TaskMain():
                 print("Added to face recognition:", s, m)
 
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-
                 command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
 
                 self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
