@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from charmie_interfaces import msg
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Point, PointStamped
@@ -258,7 +259,12 @@ class TrackingMain():
                 msg = TrackingMask()
                 msg.centroid.x = float(centroid[0])
                 msg.centroid.y = float(centroid[1])
-                
+                msg.centroid.z = 0.0 # not used
+
+                msg.centroid_norm.x = float(centroid[0]) / float(self.node.CAM_IMAGE_WIDTH)
+                msg.centroid_norm.y = float(centroid[1]) / float(self.node.CAM_IMAGE_HEIGHT)
+                msg.centroid_norm.z = 0.0 # not used
+
                 list_masks = ListOfMaskDetections()
                 list_masks_for_pc = []
                 
