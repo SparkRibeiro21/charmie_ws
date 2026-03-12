@@ -256,6 +256,13 @@ class TaskMain():
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True)
+                    if len(people_found) == 0:
+                        pass
+                        ### SPEAK: PLEASE STAND A LITTLE CLOSER TO ME UNTIL YOU SEE THE DETECTION ON MY FACE
+
+                    if len(people_found) > 1:
+                        pass
+                        ### CALCULATE CLOSEST PERSON TO THE ROBOT, IF DISTANCES ARE CLOSE, SELECT THE ONE CLOSER TO THE CENTER OF THE ROBOT FRONT
 
                 print("People found:", len(people_found))
                 self.GUEST1 = people_found[0]
@@ -445,6 +452,13 @@ class TaskMain():
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True)
+                    if len(people_found) == 0:
+                        pass
+                        ### SPEAK: PLEASE STAND A LITTLE CLOSER TO ME UNTIL YOU SEE THE DETECTION ON MY FACE
+
+                    if len(people_found) > 1:
+                        pass
+                        ### CALCULATE CLOSEST PERSON TO THE ROBOT, IF DISTANCES ARE CLOSE, SELECT THE ONE CLOSER TO THE CENTER OF THE ROBOT FRONT
 
                 print("People found:", len(people_found))
                 self.GUEST2 = people_found[0]
