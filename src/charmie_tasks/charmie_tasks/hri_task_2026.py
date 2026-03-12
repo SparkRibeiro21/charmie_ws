@@ -285,11 +285,11 @@ class TaskMain():
 
                 print("Finished:", command)
                 
-                """ if command == "ERR_MAX":
+                if command == "ERR_MAX":
                     print("MAX HEARING ATTEMPTS REACHED")
                     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-                else: """
-                print(self.GUEST1_NAME, self.GUEST1_DRINK)
+                else:
+                    print(self.GUEST1_NAME, self.GUEST1_DRINK)
                 
                 self.robot.set_neck_continuous_tracking(activate=False)
                 self.robot.deactivate_tracking_mask()
@@ -472,11 +472,11 @@ class TaskMain():
                 self.robot.save_speech(command=self.GUEST2_NAME, filename=self.GUEST2_NAME, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
                
-                """if command == "ERR_MAX":
+                if command == "ERR_MAX":
                     print("MAX HEARING ATTEMPTS REACHED")
                     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-                else:"""
-                print(self.GUEST2_NAME, self.GUEST2_DRINK)
+                else:
+                    print(self.GUEST2_NAME, self.GUEST2_DRINK)
 
                 ### INITIALLY SAYING THE CHARACTERISTICS WAS HERE. HOWEVER TO IMPROVE TASK EFFICIENCY, THIS IS NOW SAID DURING NAVIGATION TO SITTING AREA
                 # self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
