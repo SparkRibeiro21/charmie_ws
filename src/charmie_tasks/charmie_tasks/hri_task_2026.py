@@ -260,9 +260,8 @@ class TaskMain():
                 print("People found:", len(people_found))
                 self.GUEST1 = people_found[0]
 
-                #################################################################################### DYNAMICALLY ADJUST NECK !!!!
-                self.robot.activate_tracking_mask(track_person=self.GUEST1, mode="face", show_detections_on_face=True)                
-                ### NECK: ACTIVATE CONTINUOUS MODE
+                self.robot.activate_tracking_mask(track_person=self.GUEST1, mode="face", show_detections_on_face=True)
+                self.robot.set_neck_continuous_tracking(activate=True)
 
                 s, m = self.robot.add_face_to_face_recognition(person=self.GUEST1, name="guest1")
                 print("Added to face recognition:", s, m)
@@ -292,8 +291,8 @@ class TaskMain():
                 else: """
                 print(self.GUEST1_NAME, self.GUEST1_DRINK)
                 
+                self.robot.set_neck_continuous_tracking(activate=False)
                 self.robot.deactivate_tracking_mask()
-                ### NECK: DEACTIVATE CONTINUOUS MODE
 
                 self.robot.set_speech(filename="hri/please_follow_me", wait_for_end_of=False)
 
@@ -450,9 +449,8 @@ class TaskMain():
                 print("People found:", len(people_found))
                 self.GUEST2 = people_found[0]
 
-                #################################################################################### DYNAMICALLY ADJUST NECK !!!!
                 self.robot.activate_tracking_mask(track_person=self.GUEST2, mode="face", show_detections_on_face=True)
-                ### NECK: ACTIVATE CONTINUOUS MODE
+                self.robot.set_neck_continuous_tracking(activate=True)
 
                 s, m = self.robot.add_face_to_face_recognition(person=self.GUEST2, name="guest2")
                 print("Added to face recognition:", s, m)
@@ -525,9 +523,9 @@ class TaskMain():
                 
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=True)
 
+                self.robot.set_neck_continuous_tracking(activate=True)
                 self.robot.deactivate_tracking_mask()
-                ### NECK: DEACTIVATE CONTINUOUS MODE
-
+                
                 self.robot.set_speech(filename="hri/please_follow_me", wait_for_end_of=False)
 
                 self.state = self.task_states["Move_guest2_to_sitting_area"]
@@ -720,9 +718,8 @@ class TaskMain():
                 print("People found:", len(people_found))
                 HOST_FOR_FOLLOW = people_found[0]
 
-                #################################################################################### DYNAMICALLY ADJUST NECK !!!!
-                self.robot.activate_tracking_mask(track_person=HOST_FOR_FOLLOW, mode="body", show_detections_on_face=True)                
-                ### NECK: ACTIVATE CONTINUOUS MODE
+                self.robot.activate_tracking_mask(track_person=HOST_FOR_FOLLOW, mode="body", show_detections_on_face=True)
+                self.robot.set_neck_continuous_tracking(activate=True)
 
                 self.robot.set_speech(filename="hri/follow_host_follow_instructions", wait_for_end_of=True)
                 self.robot.set_speech(filename="hri/ready_to_follow_host", wait_for_end_of=True)
@@ -735,9 +732,14 @@ class TaskMain():
                     print("SELECTED OPTION:", selected_option)
                     # NAVIGATION: STOP FOLLOWING HOST
 
+                
+                ### IF HOST VERY CLOSE TO THE ROBOT, PAUSE TRACKING FOR EASY TOUCHSCREEN ACCESS TO THE ROBOT
+
+                self.robot.set_neck_continuous_tracking(activate=False)
                 self.robot.deactivate_tracking_mask()
-                ### NECK: DEACTIVATE CONTINUOUS MODE
+                
                 self.robot.set_speech(filename="hri/end_follow_host", wait_for_end_of=True)
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 # ARM: PLACE BAG ON THE FLOOR
                 self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
                 self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
