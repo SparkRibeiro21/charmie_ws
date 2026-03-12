@@ -5768,7 +5768,7 @@ class RobotStdFunctions():
             #SEARCH FOR OBJECT
 
     
-    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0):
+    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = False):
 
         # CHECK OBJECT NAME FOR SPECIAL CASES
         # CHECK PICK/PLACE MODE
@@ -6003,8 +6003,8 @@ class RobotStdFunctions():
 
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-            # if return_to_initial_position:
-            #     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+            if return_to_initial_position:
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
 
             # while not self.adjust_omnidirectional_position_is_done():
             #     pass  

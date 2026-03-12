@@ -70,7 +70,8 @@ class TaskMain():
 
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
-        self.initial_position = [0.0, 0.0, 0.0]
+        # self.initial_position = [0.0, 0.0, 0.0]
+        self.initial_position = self.robot.get_navigation_coords_from_furniture(furniture="Dinner Table")
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         print(self.initial_position)
         
@@ -82,7 +83,7 @@ class TaskMain():
         self.DEMO_MODE = self.robot.get_demo_mode()
         self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
 
-        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table","Shelf", "Coffee Table"]
+        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Dinner Table"]
         
         # Neck Positions
         self.look_forward = [0, 0]
@@ -109,7 +110,7 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.robot.set_speech(filename="serve_breakfast/sb_ready_start", wait_for_end_of=True)
+                self.robot.set_speech(filename="finals/start_finals", wait_for_end_of=True)
 
                 self.robot.wait_for_start_button()
                 
@@ -156,12 +157,12 @@ class TaskMain():
                                 print("OBJECT IS NOT IN CORRECT FURNITURE")
 
                                 self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
-                                self.robot.set_speech(filename="clean_the_table/object_in_the_wrong_furniture", wait_for_end_of=True)
+                                self.robot.set_speech(filename="finals/object_in_the_wrong_furniture", wait_for_end_of=True)
                                 objects_in_wrong_furniture.append(obj.object_name)
                             else:
                                 print("OBJECT IN CORRECT FURNITURE")
                                 self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
-                                self.robot.set_speech(filename="clean_the_table/object_in_the_correct_furniture", wait_for_end_of=True)
+                                self.robot.set_speech(filename="finals/object_in_the_correct_furniture", wait_for_end_of=True)
                                 objects_in_correct_furniture.append(obj.object_name)
 
                         else:
@@ -172,7 +173,33 @@ class TaskMain():
                     print("Objects in correct furniture:", objects_in_correct_furniture)
                     print("Objects in wrong furniture:", objects_in_wrong_furniture)
                     print("Ignored objects:", ignored_objects)
-                                        
+
+                    for wrong_obj in objects_in_wrong_furniture:
+                        picked_height, asked_help = self.robot.pick_object_risky(selected_object=wrong_obj,
+                                                    pick_mode=self.robot.get_standard_pick_from_object(wrong_obj),
+                                                    first_search_tetas=search_misplaced_obj_tetas)
+                        
+                        place_furniture = self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(wrong_obj))
+                    
+                        self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/" + place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
+
+                        self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
+
+
+                        self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/" + place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
+
+                        self.robot.place_object_in_furniture(selected_object=wrong_obj,
+                                                             place_mode=self.robot.get_standard_pick_from_object(wrong_obj),
+                                                             furniture=place_furniture,
+                                                             shelf_number=2, place_height=picked_height,
+                                                             return_to_initial_position=True)
+                        
+                        self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=current_furniture), wait_for_end_of=True)
+                        
+                        
+                    
                 
                 self.state = self.task_states["Final_State"]
 
@@ -180,7 +207,7 @@ class TaskMain():
             elif self.state == self.task_states["Final_State"]:
                 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=False)
+                self.robot.set_speech(filename="finals/finished_finals", wait_for_end_of=False)
 
                 while True:
                     pass
