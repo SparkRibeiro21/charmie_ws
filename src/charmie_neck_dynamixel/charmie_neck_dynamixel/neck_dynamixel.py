@@ -7,7 +7,7 @@ from tf2_geometry_msgs import do_transform_point
 from geometry_msgs.msg import Pose2D, Point, TransformStamped, PointStamped
 from builtin_interfaces.msg import Time
 from example_interfaces.msg import Bool
-from charmie_interfaces.msg import NeckPosition
+from charmie_interfaces.msg import NeckPosition, TrackingMask
 from charmie_interfaces.srv import SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackPerson, TrackObject, TrackContinuous
 
 import math
@@ -182,7 +182,10 @@ class NeckNode(Node):
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         # Continuous Tracking
-        self.continuous_tracking_position_subscriber = self.create_subscription(Point, "continuous_tracking_position", self.continuous_tracking_position_callback, 10)
+        # self.continuous_tracking_position_subscriber = self.create_subscription(Point, "continuous_tracking_position", self.continuous_tracking_position_callback, 10)
+        # SAM2 Tracking Mask
+        self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.continuous_tracking_callback, 10)
+        
         
         self.initialise_servos()
 
@@ -193,6 +196,7 @@ class NeckNode(Node):
         self.server_set_neck_to_coordinates = self.create_service(SetNeckCoordinates, "neck_to_coords", self.callback_set_neck_to_coordinates) 
         self.server_neck_track_person = self.create_service(TrackPerson, "neck_track_person", self.callback_neck_track_person)
         self.server_neck_track_object = self.create_service(TrackObject, "neck_track_object", self.callback_neck_track_object)
+
         self.server_neck_continuous_tracking = self.create_service(TrackContinuous, "set_continuous_tracking", self.callback_continuous_tracking)
         self.get_logger().info("Neck Servers have been started")
 
@@ -256,11 +260,14 @@ class NeckNode(Node):
                 self.send_neck_move(self.tracking_new_pan, self.tracking_new_tilt)
                 self.tracking_ctr+=1
             
-
-    def continuous_tracking_position_callback(self, position: Point):
-        self.continuous_tracking_point_position = position
-        self.move_neck_with_target_pixel(target_x=self.continuous_tracking_point_position.x, target_y=self.continuous_tracking_point_position.y, tracking_mode=True)
-        print("NEW")
+    def continuous_tracking_callback(self, tracking_mask: TrackingMask):
+        self.get_logger().info("%s" %str(tracking_mask.centroid_norm.x)+", "+str(tracking_mask.centroid_norm.y))
+        self.move_neck_with_target_pixel(target_x=tracking_mask.centroid.x, target_y=tracking_mask.centroid.y, tracking_mode=True)
+    
+    # def continuous_tracking_position_callback(self, position: Point):
+    #     self.continuous_tracking_point_position = position
+    #     self.move_neck_with_target_pixel(target_x=self.continuous_tracking_point_position.x, target_y=self.continuous_tracking_point_position.y, tracking_mode=True)
+    #     print("NEW")
 
     ########## SERVICES ##########
     def callback_set_neck_position(self, request, response):
@@ -347,8 +354,7 @@ class NeckNode(Node):
         response.success = True
         response.message = "Neck Track Person"
         return response
-
-    
+ 
     def callback_neck_track_object(self, request, response):
 
         # Type of service received: 
@@ -384,9 +390,8 @@ class NeckNode(Node):
         
         # returns whether the message was played and some informations regarding status
         response.success = True
-        response.message = "Set Neck Position"
+        response.message = "Set Neck Continuous Tracking to:"+str(request.status)
         return response
-
 
     ########## CALLBACKS ##########
     def robot_localisation_callback(self, pose: Pose2D):
@@ -458,8 +463,7 @@ class NeckNode(Node):
         self.move_neck(180, 135) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         self.move_neck(180+self.initial_position[0], 180+self.initial_position[1]) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
         # self.move_neck(180, 180) # resets the neck whenever the node is started, so that at the beginning the neck is always facing forward 
-        
-        
+
     def read_servo_position(self):
 
         global read_pan_closed_loop, read_tilt_closed_loop
@@ -479,7 +483,6 @@ class NeckNode(Node):
 
         return read_pan_closed_loop, read_tilt_closed_loop
 
-
     def publish_get_neck_pos(self, p, t):
 
         # this function is used for nodes that need to keep the latest neck position value saved, so when new data comes
@@ -490,7 +493,6 @@ class NeckNode(Node):
         ### print(pose) # THIS IS THE COMMENT THAT SHOWS EVERY MOVEMENT ITERATION
         self.neck_get_position_topic_publisher.publish(pose)
         self.publish_neck_tf2s(pose)
-
 
     def publish_neck_tf2s(self, pose: NeckPosition):
 
@@ -545,7 +547,6 @@ class NeckNode(Node):
         self.tf_broadcaster.sendTransform(neck_tilt_transform)
         # print(pose.tilt)
         # self.get_logger().info('Published TF from neck_pan_link to neck_tilt_link')
-
 
     def move_neck_with_target_coordinates(self, target_x, target_y, target_z, tracking_mode=False):
         self.get_logger().info(f"Target: x={target_x:.3f}, y={target_y:.3f}, z={target_z:.3f}")
@@ -621,15 +622,14 @@ class NeckNode(Node):
 
         return roll, pitch, yaw
 
-
     def move_neck_with_target_pixel(self, target_x, target_y, tracking_mode=False):
     
         global read_pan_open_loop, read_tilt_open_loop
 
         # print(target_x, target_y)
 
-        img_width = 1280
-        img_height = 720
+        img_width = 848
+        img_height = 480
 
         # target_x = request.person.kp_nose_x
         # target_y = request.person.kp_nose_y
@@ -652,7 +652,6 @@ class NeckNode(Node):
 
         # print(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y)
         self.move_neck(read_pan_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_x, read_tilt_open_loop*SERVO_TICKS_TO_DEGREES_CONST + new_a_y, tracking_mode=tracking_mode)
-
 
     def move_neck(self, p, t, tracking_mode=False):
         global read_pan_open_loop, read_tilt_open_loop
@@ -751,7 +750,6 @@ class NeckNode(Node):
 
         # print("ctr:", ctr)
         # print("END")
-
 
     def send_neck_move(self, p, t):
 

@@ -1,7 +1,8 @@
 # SAM2 Tracking activated information
 
-geometry_msgs/Point centroid   # pixel centroid coordinates
-ListOfMaskDetections mask      # mask of the tracking selection
+geometry_msgs/Point centroid        # pixel centroid coordinates
+geometry_msgs/Point centroid_norm   # normalized centroid coordinates [0..1]
+ListOfMaskDetections mask           # mask of the tracking selection
 
 geometry_msgs/Point position_cam      # position relative to the camera frame
 geometry_msgs/Point position_relative # position relative to the robot frame
