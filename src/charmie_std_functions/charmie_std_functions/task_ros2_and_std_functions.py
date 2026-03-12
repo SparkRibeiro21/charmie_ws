@@ -5768,7 +5768,7 @@ class RobotStdFunctions():
             #SEARCH FOR OBJECT
 
     
-    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", furniture_height = -1, shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, picked_height= -1, return_to_initial_position = True):
+    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0):
 
         # CHECK OBJECT NAME FOR SPECIAL CASES
         # CHECK PICK/PLACE MODE
@@ -5780,6 +5780,7 @@ class RobotStdFunctions():
 
         TOLERANCE_ERROR = 0.02
         FRONT_Z_ADJUST_LIMIT = 450
+        TRAY_HEIGHT = 0.59
 
         selected_object = selected_object.replace(" ","_").lower()
 
@@ -5815,7 +5816,7 @@ class RobotStdFunctions():
                 gripper_place_position = self.get_gripper_localization()
 
 
-                final_z = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
+                final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
 
                 print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
@@ -5839,7 +5840,7 @@ class RobotStdFunctions():
                 gripper_place_position = self.get_gripper_localization()
 
 
-                final_z = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
+                final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
 
                 print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
@@ -5865,7 +5866,7 @@ class RobotStdFunctions():
                 gripper_place_position = self.get_gripper_localization()
 
 
-                final_x = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
+                final_x = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
 
                 print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
@@ -5922,28 +5923,27 @@ class RobotStdFunctions():
             for furn in self.node.furniture:
                 if str(furn["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():
                     verified = True
-                    furniture_height = self.get_height_from_furniture(furniture=furniture)
-                    if shelf_number < 0:
-                       furniture_height =  furniture_height[0]
-
-                    elif shelf_number <= len(furniture_height) - 1:
-                        furniture_height = furniture_height[shelf_number]
-
-                    elif shelf_number > len(furniture_height) -1:
-                        furniture_height = furniture_height[len(furniture_height)-1]
-
-                    if furniture_height < 0.0:
-                        print("PLACE FURNITURE HEIGHT CANNOT BE NEGATIVE !!!!")
-                    
             if not verified:
                 print("THAT FURNITURE DOES NOT EXIST, UNABLE TO PLACE OBJECT !!!")
                 return
-        
-        if picked_height == -1:
-            asked_help = True
             
+        print("Place 1:", place_mode)
         if place_mode == "":
             place_mode = self.get_standard_pick_from_object(selected_object)
+            print("Place 2:", place_mode)
+        furniture_height = self.get_height_from_furniture(furniture)
+
+        if shelf_number < 0:
+            furniture_height =  furniture_height[0]
+
+        elif shelf_number <= len(furniture_height) - 1:
+            furniture_height = furniture_height[shelf_number]
+
+        elif shelf_number > len(furniture_height) -1:
+            furniture_height = furniture_height[len(furniture_height)-1]
+
+        if place_height < 0.0:
+            asked_help = True
 
         #### CONSTANTS ####
 
@@ -5973,13 +5973,12 @@ class RobotStdFunctions():
 
             gripper_place_position = self.get_gripper_localization()
 
-            #if asked_help:
-                #final_z = (gripper_place_position.z - furniture_height - (self.get_object_height_from_object(selected_object)/1.20) - TOLERANCE_ERROR)*1000
-            #else:
-            print("position z: ", gripper_place_position.z," furniture: ", furniture_height," picked height: ", picked_height)
-            final_z = (gripper_place_position.z - furniture_height - picked_height - TOLERANCE_ERROR)*1000
+            if asked_help:
+                final_z = (gripper_place_position.z - furniture_height - (self.get_object_height_from_object(selected_object)/1.25) - TOLERANCE_ERROR)*1000
+            else:
+                final_z = (gripper_place_position.z - furniture_height - place_height - TOLERANCE_ERROR)*1000
 
-            print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", furniture_height, " picked height : ", picked_height)
+            print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", furniture_height, " picked height : ", place_height)
 
 
             if final_z > FRONT_Z_ADJUST_LIMIT:
@@ -6004,8 +6003,11 @@ class RobotStdFunctions():
 
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-            if return_to_initial_position:
-                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+            # if return_to_initial_position:
+            #     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
+            # while not self.adjust_omnidirectional_position_is_done():
+            #     pass  
 
         elif place_mode == "top":
 
@@ -6021,10 +6023,7 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=True)     
             self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=False)                                                     
 
-            final_x = (gripper_place_position.z - furniture_height - picked_height - 0.02)*1000
-
-            if final_x > 720:
-                final_x = 720                                     
+            final_x = (gripper_place_position.z - furniture_height - place_height - 0.02)*1000                                     
 
             self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]                                                         
             self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]                                                       
@@ -6037,18 +6036,17 @@ class RobotStdFunctions():
 
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)    
 
-            self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)
+            self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)                                                                     
+
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
 
-            if return_to_initial_position:                                                                     
-                self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
-                self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
-
-                self.set_arm(command="close_gripper", wait_for_end_of=True)
+            #self.set_arm(command="close_gripper", wait_for_end_of=True)
 
             
-        while not self.adjust_omnidirectional_position_is_done():
-            pass       
+        # while not self.adjust_omnidirectional_position_is_done():
+        #     pass       
 
     def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
 
