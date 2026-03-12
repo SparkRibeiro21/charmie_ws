@@ -2252,7 +2252,7 @@ class RobotStdFunctions():
 
         return self.node.activate_tracking_success, self.node.activate_tracking_message
 
-    def track_person(self, person=DetectedPerson(), body_part="Head", wait_for_end_of=True):
+    def look_at_person(self, person=DetectedPerson(), body_part="Head", wait_for_end_of=True):
 
         request = TrackPerson.Request()
         request.person = person
@@ -2267,7 +2267,7 @@ class RobotStdFunctions():
 
         return self.node.track_person_success, self.node.track_person_message
  
-    def track_object(self, object=DetectedObject(), wait_for_end_of=True):
+    def look_at_object(self, object=DetectedObject(), wait_for_end_of=True):
 
         request = TrackObject.Request()
         request.object = object
@@ -4454,7 +4454,16 @@ class RobotStdFunctions():
         self.activate_tracking(activate=False)
         return True, "Tracking deactivated successfully"
     
-    def set_continuous_tracking_with_coordinates(self):
+    def set_neck_continuous_tracking(self, activate=True):
+
+        # turn ON or OFF the neck continuous tracking with the track mask
+        request = TrackContinuous.Request()
+        request.status = activate
+        request.tracking_type = "person_head"
+        request.tracking_position = Point()
+        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=True)
+        
+    """ def set_continuous_tracking_with_coordinates(self):
 
         request = TrackContinuous.Request()
 
@@ -4522,6 +4531,7 @@ class RobotStdFunctions():
         ### TURN OFF CONTINUOUS TRACKING
         request.status = False
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
+        """
 
     def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, speak_timeout=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
