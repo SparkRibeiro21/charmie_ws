@@ -22,6 +22,7 @@ bool charmie_speakers
 bool charmie_tracking
 bool charmie_yolo_objects
 bool charmie_yolo_pose
+bool charmie_yolo_world
 ---
 bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages.

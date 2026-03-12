@@ -12,28 +12,29 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              True,
-    "charmie_audio":            False,
-    "charmie_face":             True,
-    "charmie_gamepad":          False,
-    "charmie_head_camera":      True,
-    "charmie_hand_camera":      True,
-    "charmie_base_camera":      False,
-    "charmie_lidar":            True,
-    "charmie_lidar_bottom":     True,
-    "charmie_lidar_livox":      True,
-    "charmie_llm":              False,
-    "charmie_localisation":     True,
-    "charmie_low_level":        True,
-    "charmie_navigation":       False,
-    "charmie_nav2":             True,
-    "charmie_neck":             True,
-    "charmie_radar":            True,
+    "charmie_arm":                  True,
+    "charmie_audio":                False,
+    "charmie_face":                 True,
+    "charmie_gamepad":              False,
+    "charmie_head_camera":          True,
+    "charmie_hand_camera":          True,
+    "charmie_base_camera":          False,
+    "charmie_lidar":                True,
+    "charmie_lidar_bottom":         True,
+    "charmie_lidar_livox":          True,
+    "charmie_llm":                  False,
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 True,
+    "charmie_neck":                 True,
+    "charmie_radar":                True,
     "charmie_sound_classification": False,
-    "charmie_speakers":         True,
-    "charmie_tracking":         False,
-    "charmie_yolo_objects":     True,
-    "charmie_yolo_pose":        False,
+    "charmie_speakers":             True,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         True,
+    "charmie_yolo_pose":            False,
+    "charmie_yolo_world":           False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -135,6 +136,9 @@ class TaskMain():
                 #self.robot.set_initial_position(self.initial_position)
                 
                 print("SET INITIAL POSITION")
+
+                self.robot.wait_for_start_button()
+
 
                 self.state = self.task_states["Select_object_to_pick"]
             
@@ -358,6 +362,7 @@ class TaskMain():
 
                 #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
+                self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode="front",furniture="Tray",asked_help=False,place_height=0.13)
 
                 if self.object_mode == "front":
 

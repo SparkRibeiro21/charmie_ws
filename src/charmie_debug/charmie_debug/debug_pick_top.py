@@ -33,6 +33,7 @@ ros2_modules = {
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
+    "charmie_yolo_world":           False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -159,10 +160,7 @@ class TaskMain():
             
             elif self.state == Continuous_tracking:
                 
-                ### CONTINUOUS TRACKING EXAMPLE ###
-                
-                # self.robot.set_continuous_tracking_with_coordinates()
-                self.robot.set_follow_person()
+                pass
 
                 # next state
                 self.state = Final_State

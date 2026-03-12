@@ -1,24 +1,44 @@
 <?xml version="1.0"?>
 <robot name="charmie" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+    <xacro:arg name="wheel_radius" default="0.1"/>
+    <xacro:arg name="head_version" default="3"/>
+
     <xacro:include filename="common_properties.xacro"/>
     <xacro:include filename="inertial_macros.xacro"/>
     <xacro:include filename="mobile_base.xacro"/>
     <xacro:include filename="mobile_base_gazebo.xacro"/>
+
+
     <xacro:include filename="lidar.xacro"/>
     <xacro:include filename="lidar_bottom.xacro"/>
     <xacro:include filename="lidar_gazebo.xacro"/>
     <xacro:include filename="lidar_bottom_gazebo.xacro"/>
-    <xacro:include filename="torso.xacro"/>
+
+
+    <!-- TEMP COMMENT FOR SDNL TESTS -->
+    <!-- <xacro:include filename="torso.xacro"/>
     <xacro:include filename="torso_gazebo.xacro"/>
     <xacro:include filename="neck.xacro"/>
     <xacro:include filename="neck_gazebo.xacro"/>
-    <xacro:include filename="face_v2.xacro"/>
+
+
+    <xacro:if value="${float($(arg head_version)) == 2}">
+        <xacro:include filename="face_v2.xacro"/>
+    </xacro:if>
+    <xacro:if value="${float($(arg head_version)) == 3}">
+        <xacro:include filename="face_v3.xacro"/>
+    </xacro:if>
+    <xacro:unless value="${float($(arg head_version)) == 2 or float($(arg head_version)) == 3}">
+        <xacro:include filename="face_v2.xacro"/>
+    </xacro:unless>
+
+    
     <xacro:include filename="head_camera.xacro"/>
     <xacro:include filename="head_camera_gazebo.xacro"/>
-    <xacro:include filename="base_camera.xacro"/>
+    <xacro:include filename="base_camera.xacro"/> -->
     <!-- <xacro:include filename="base_camera_gazebo.xacro"/> -->
-    <xacro:include filename="hand_camera.xacro"/>
+    <!-- <xacro:include filename="hand_camera.xacro"/> -->
     <!-- <xacro:include filename="hand_camera_gazebo.xacro"/> -->
 
 </robot>

@@ -38,6 +38,7 @@ setup(
             "debug_sound_classification = charmie_debug.debug_sound_classification:main",
 		    "debug_spkr_face = charmie_debug.debug_spkr_face:main",
 		    "debug_visual = charmie_debug.debug_visual:main",
+		    "debug_yolo_world = charmie_debug.debug_yolo_world:main",
             "nav2_actions_client = charmie_debug.nav2_actions_client:main",
             "node_template = charmie_debug.node_template:main",
             "rosbag_2_video_converter = charmie_debug.rosbag_2_video_converter:main",

@@ -12,5 +12,5 @@ def generate_launch_description():
         std_lf.rviz2_basic_node,
         std_lf.spawn_entity,
         std_lf.gazebo,
-        std_lf.odometry_lidar
+        # std_lf.odometry_lidar
     ])

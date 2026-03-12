@@ -345,6 +345,24 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
+        self.yolo_world_without_prompt_free = Node(package='charmie_yolo_world',
+                            executable='yolo_world',
+                            name='yolo_world',
+                            parameters=[
+                                {'load_prompt_free_model': False},
+                                ],
+                            emulate_tty=True
+                            )
+        
+        self.yolo_world_with_prompt_free = Node(package='charmie_yolo_world',
+                            executable='yolo_world',
+                            name='yolo_world',
+                            parameters=[
+                                {'load_prompt_free_model': True},
+                                ],
+                            emulate_tty=True
+                            )
+        
         self.yolo_pose = Node(package='charmie_yolo_pose',
                             executable='yolo_pose',
                             name='yolo_pose',

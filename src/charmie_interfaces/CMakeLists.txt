@@ -63,6 +63,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ActivateTracking.srv"
   "srv/ActivateYoloObjects.srv"
   "srv/ActivateYoloPose.srv"
+  "srv/ActivateYoloWorld.srv"
   "srv/CalibrateAudio.srv"
   "srv/ContinuousGetAudio.srv"
   "srv/GetAudio.srv"

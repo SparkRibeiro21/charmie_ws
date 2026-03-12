@@ -18,7 +18,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, SetFloat, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
-    GetSoundClassificationContinuous, GetMinRadarDistance
+    GetSoundClassificationContinuous, GetMinRadarDistance, ActivateYoloWorld
 from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles
 
 from charmie_point_cloud.point_cloud_class import PointCloud
@@ -96,6 +96,8 @@ class ROS2TaskNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        # Yolo World
+        self.world_objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'world_objects_all_detected_filtered', self.world_object_detected_filtered_callback, 10)
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
@@ -167,6 +169,8 @@ class ROS2TaskNode(Node):
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Yolo World
+        self.activate_yolo_world_client = self.create_client(ActivateYoloWorld, "activate_yolo_world")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Radar
@@ -232,6 +236,7 @@ class ROS2TaskNode(Node):
             "charmie_tracking":             False,
             "charmie_yolo_objects":         True,
             "charmie_yolo_pose":            False,
+            "charmie_yolo_world":           False,
         """
 
         # waits until all modules are correctly turned ON
@@ -308,6 +313,10 @@ class ROS2TaskNode(Node):
         if self.ros2_modules["charmie_yolo_pose"]:
             while not self.activate_yolo_pose_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Pose Activate Command...")
+
+        if self.ros2_modules["charmie_yolo_world"]:
+            while not self.activate_yolo_world_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Yolo World Activate Command...")
         
         self.create_timer(0.5, self.task_states_info_publisher_timer)
 
@@ -334,6 +343,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_get_neck = False
         self.waited_for_end_of_track_person = False
         self.waited_for_end_of_track_object = False
+        self.waited_for_end_of_activate_yolo_world = False
         self.waited_for_end_of_continuous_tracking = False
         self.waited_for_end_of_arm = False
         self.waited_for_end_of_face = False
@@ -359,6 +369,7 @@ class ROS2TaskNode(Node):
         self.first_depth_base_image_received = False
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
+        self.detected_world_objects = ListOfDetectedObject()
         self.flag_navigation_reached = False
         self.flag_target_pos_check_answer = False
         self.gamepad_controller_state = GamepadController()
@@ -411,6 +422,8 @@ class ROS2TaskNode(Node):
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
+        self.activate_yolo_world_success = True
+        self.activate_yolo_world_message = ""
         self.arm_success = True
         self.arm_message = ""
         self.navigation_success = True
@@ -524,6 +537,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
+        nodes_used.charmie_yolo_world           = self.ros2_modules["charmie_yolo_world"]
 
         self.nodes_used_client.call_async(nodes_used)
 
@@ -540,6 +554,10 @@ class ROS2TaskNode(Node):
         self.detected_objects = det_object
         self.new_object_frame_for_tracking = True
 
+    def world_object_detected_filtered_callback(self, det_world_object: ListOfDetectedObject):
+        self.detected_world_objects = det_world_object
+        self.new_object_frame_for_tracking = True
+    
     def get_rgbd_head_callback(self, rgbd: RGBD):
         self.rgb_head_img = rgbd.rgb
         self.first_rgb_head_image_received = True
@@ -649,24 +667,45 @@ class ROS2TaskNode(Node):
 
         self.activate_yolo_pose_client.call_async(request)
 
-
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
     def call_activate_yolo_objects_server(self, request=ActivateYoloObjects.Request()):
 
         self.activate_yolo_objects_client.call_async(request)
 
+    ### ACTIVATE YOLO WORLD SERVER FUNCTIONS ###
+    def call_activate_yolo_world_server(self, request = ActivateYoloWorld.Request(), wait_for_end_of=True):
+
+        future = self.activate_yolo_world_client.call_async(request)
+        
+        if wait_for_end_of:
+            future.add_done_callback(self.callback_call_activate_yolo_world)
+        else:
+            self.activate_yolo_world_success = True
+            self.activate_yolo_world_message = "Wait for answer not needed"
+    
+    def callback_call_activate_yolo_world(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.activate_yolo_world_success = response.success
+            self.activate_yolo_world_message = response.message
+            self.waited_for_end_of_activate_yolo_world = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
 
     ### ACTIVATE TRACKING SERVER FUNCTIONS ###
     def call_activate_tracking_server(self, request=ActivateTracking.Request()):
 
         self.activate_tracking_client.call_async(request)
 
-
     ### SET TABLE HEIGHT FOR MANUAL ARM MOVMENTS ###
     def call_set_height_furniture_for_arm_manual_movement_server(self, request=SetFloat.Request()):
 
         self.set_height_furniture_for_arm_manual_movement_client.call_async(request)
-
 
     #### FACE SERVER FUNCTIONS #####
     def call_face_command_server(self, request=SetFace.Request(), wait_for_end_of=True):
@@ -2052,9 +2091,9 @@ class RobotStdFunctions():
 
         # Speak specific for doorbell after starting listening for doorbell if success:
         if success:
-            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_stop", wait_for_end_of=True)
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_stop", wait_for_end_of=False)
         else: # timeout or error
-            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_timeout", wait_for_end_of=True)
+            self.set_speech(filename="sound_classification/doorbell_sound_classification_continuous_timeout", wait_for_end_of=False)
 
         return success, message, label, score
 
@@ -2161,6 +2200,31 @@ class RobotStdFunctions():
         self.node.activate_yolo_objects_message = "Activated with selected parameters"
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
+
+    def activate_yolo_world(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5, text_prompts=[], visual_prompts=[], wait_for_end_of=True):
+        request = ActivateYoloWorld.Request()
+        request.activate_prompt_free_head       = activate_prompt_free_head
+        request.activate_tv_prompt_head         = activate_tv_prompt_head
+        request.activate_prompt_free_hand       = activate_prompt_free_hand
+        request.activate_tv_prompt_hand         = activate_tv_prompt_hand
+        request.activate_prompt_free_base       = activate_prompt_free_base
+        request.activate_tv_prompt_base         = activate_tv_prompt_base
+        request.minimum_prompt_free_confidence  = float(minimum_prompt_free_confidence)
+        request.minimum_tv_prompt_confidence    = float(minimum_tv_prompt_confidence)
+        request.text_prompts = text_prompts
+        request.visual_prompts = visual_prompts
+
+        self.node.call_activate_yolo_world_server(request=request)
+
+        if wait_for_end_of:
+          while not self.node.waited_for_end_of_activate_yolo_world:
+            pass
+        self.node.waited_for_end_of_activate_yolo_world = False
+
+        self.node.activate_yolo_world_success = True
+        self.node.activate_yolo_world_message = "Activated with selected parameters"
+
+        return self.node.activate_yolo_world_success, self.node.activate_yolo_world_message
 
     def activate_motors(self, activate=True, wait_for_end_of=True):
         
@@ -3042,7 +3106,7 @@ class RobotStdFunctions():
             self.set_rgb(RED+SET_COLOUR)
             self.set_neck(position=t, wait_for_end_of=True)
             time.sleep(time_wait_neck_move_pre_each_frame)
-            self.node.detected_people.persons = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+            self.node.detected_people.persons = [] # clears detected_persons after receiving them to make sure the persons from previous frames are not considered again
             self.set_rgb(WHITE+SET_COLOUR)
 
             start_time = time.time()
@@ -3198,7 +3262,37 @@ class RobotStdFunctions():
         
         return img_path
 
-    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, detect_objects=False, detect_furniture=False, detect_objects_hand=False, detect_furniture_hand=False, detect_objects_base=False, detect_furniture_base=False):
+    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, 
+                           list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, 
+                           detect_objects        = False, 
+                           detect_furniture      = False, 
+                           detect_objects_hand   = False, 
+                           detect_furniture_hand = False, 
+                           detect_objects_base   = False, 
+                           detect_furniture_base = False,
+                           text_prompts=[], visual_prompts=(),
+                           detect_prompt_free_head  = False,
+                           detect_tv_prompt_head    = False,
+                           detect_prompt_free_hand  = False,
+                           detect_tv_prompt_hand    = False,
+                           detect_prompt_free_base  = False,
+                           detect_tv_prompt_base    = False,
+                           minimum_prompt_free_confidence = 0.5,
+                           minimum_tv_prompt_confidence = 0.5):
+        
+        # TODO: delete furniture yolo_objects 
+
+        # defines which models will be activated
+        yolo_objects_activate = False
+        if detect_objects or detect_furniture or detect_objects_hand or detect_furniture_hand or detect_objects_base or detect_furniture_base:
+            yolo_objects_activate = True
+
+        yolo_world_activate = False
+        if detect_prompt_free_head or detect_tv_prompt_head or detect_prompt_free_hand or detect_tv_prompt_hand or detect_prompt_free_base or detect_tv_prompt_base:
+            yolo_world_activate = True
+
+        # print("yolo_obj:", yolo_objects_activate)
+        # print("yolo_world:", yolo_world_activate)
 
         final_objects = []
         if not list_of_objects_detected_as:
@@ -3228,20 +3322,29 @@ class RobotStdFunctions():
             objects_detected = []
             objects_ctr = 0
 
-            self.activate_yolo_objects(activate_objects=detect_objects,             activate_furniture=detect_furniture,
-                                       activate_objects_hand=detect_objects_hand,   activate_furniture_hand=detect_furniture_hand,
-                                       activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
-                                       minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
+            self.set_rgb(WHITE+ALTERNATE_QUARTERS)
+
+            if yolo_objects_activate:
+                self.activate_yolo_objects(activate_objects=detect_objects,             activate_furniture=detect_furniture,
+                                        activate_objects_hand=detect_objects_hand,   activate_furniture_hand=detect_furniture_hand,
+                                        activate_objects_base=detect_objects_base,   activate_furniture_base=detect_furniture_base,
+                                        minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
+            
+            if yolo_world_activate:
+                self.activate_yolo_world(activate_prompt_free_head=detect_prompt_free_head, activate_tv_prompt_head=detect_tv_prompt_head,
+                                        activate_prompt_free_hand=detect_prompt_free_hand, activate_tv_prompt_hand=detect_tv_prompt_hand,
+                                        activate_prompt_free_base=detect_prompt_free_base, activate_tv_prompt_base=detect_tv_prompt_base,
+                                        minimum_prompt_free_confidence=minimum_prompt_free_confidence, minimum_tv_prompt_confidence=minimum_tv_prompt_confidence,
+                                        text_prompts=text_prompts, visual_prompts=visual_prompts, wait_for_end_of=True)
+
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             
-            if detect_objects or detect_furniture:        
+            if detect_objects or detect_furniture or detect_prompt_free_head or detect_tv_prompt_head:        
                 self.set_face(camera="head", show_detections=True)
-            elif detect_objects_hand or detect_furniture_hand:
+            elif detect_objects_hand or detect_furniture_hand or detect_prompt_free_hand or detect_tv_prompt_hand:
                 self.set_face(camera="hand", show_detections=True)
-            elif detect_objects_base or detect_furniture_base:
+            elif detect_objects_base or detect_furniture_base or detect_prompt_free_base or detect_tv_prompt_base:
                 self.set_face(camera="base", show_detections=True)
-                
-            # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
             
             ### MOVES NECK AND SAVES DETECTED OBJECTS ###
             for t in tetas:
@@ -3249,14 +3352,24 @@ class RobotStdFunctions():
                 self.set_rgb(RED+SET_COLOUR)
                 self.set_neck(position=t, wait_for_end_of=True)
                 time.sleep(time_wait_neck_move_pre_each_frame)
-                self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+
+                if yolo_objects_activate:
+                    self.node.detected_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
+                if yolo_world_activate:
+                    self.node.detected_world_objects.objects = [] # clears detected_objects after receiving them to make sure the objects from previous frames are not considered again
                 self.set_rgb(WHITE+SET_COLOUR)
 
                 start_time = time.time()
-                while (time.time() - start_time) < time_in_each_frame:      
+                while (time.time() - start_time) < time_in_each_frame:   
 
+                    local_detected_objects = ListOfDetectedObject()
+                    if yolo_objects_activate:
+                        local_detected_objects.objects += self.node.detected_objects.objects
+                    if yolo_world_activate:
+                        local_detected_objects.objects += self.node.detected_world_objects.objects
+                
                     # if detect_objects: 
-                    local_detected_objects = self.node.detected_objects
+                    # local_detected_objects = self.node.detected_objects
                     for temp_objects in local_detected_objects.objects:
                         
                         is_already_in_list = False
@@ -3264,7 +3377,7 @@ class RobotStdFunctions():
                         for object in objects_detected:
 
                             # filters by same index
-                            if temp_objects.index == object.index and temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
+                            if (temp_objects.index == object.index and yolo_objects_activate) and temp_objects.object_name == object.object_name and temp_objects.camera == object.camera:
                                 is_already_in_list = True
                                 object_already_in_list = object
 
@@ -3279,7 +3392,7 @@ class RobotStdFunctions():
                         if is_already_in_list:
                             objects_detected.remove(object_already_in_list)
                         # else:
-                        elif temp_objects.index > 0: # debug
+                        elif (temp_objects.index > 0 and yolo_objects_activate) or yolo_world_activate: # can't check if index is 0 in yolo_world since all index are 0
                             # print("added_first_time", temp_objects.index, temp_objects.position_absolute.x, temp_objects.position_absolute.y)
                             if list_of_objects: 
                                 if not rgb_found_list_of_objects:
@@ -3291,7 +3404,7 @@ class RobotStdFunctions():
                             else:
                                 self.set_rgb(GREEN+SET_COLOUR)
                         
-                        if temp_objects.index > 0:
+                        if (temp_objects.index > 0 and yolo_objects_activate) or yolo_world_activate:
                             objects_detected.append(temp_objects)
                             objects_ctr+=1
 
@@ -3347,10 +3460,17 @@ class RobotStdFunctions():
                 if is_break_list_of_objects: 
                     break
 
-            self.activate_yolo_objects(activate_objects=False, activate_furniture=False,
-                                       activate_objects_hand=False, activate_furniture_hand=False,
-                                       activate_objects_base=False, activate_furniture_base=False,
-                                       minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
+            if yolo_objects_activate:
+                self.activate_yolo_objects(activate_objects=False, activate_furniture=False,
+                                        activate_objects_hand=False, activate_furniture_hand=False,
+                                        activate_objects_base=False, activate_furniture_base=False,
+                                        minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5)
+            if yolo_world_activate:
+                self.activate_yolo_world(activate_prompt_free_head=False, activate_tv_prompt_head=False,
+                                        activate_prompt_free_hand=False, activate_tv_prompt_hand=False,
+                                        activate_prompt_free_base=False, activate_tv_prompt_base=False,
+                                        minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5,
+                                        text_prompts=[], visual_prompts=[], wait_for_end_of=False)
             
             # DEBUG
             # print("TOTAL objects in this neck pos:")
@@ -3386,7 +3506,7 @@ class RobotStdFunctions():
 
                             if total_objects_detected[frame][object].object_name == filtered_objects[filtered].object_name and \
                                 total_objects_detected[frame][object].camera == filtered_objects[filtered].camera and \
-                                total_objects_detected[frame][object].index == filtered_objects[filtered].index :
+                                (total_objects_detected[frame][object].index == filtered_objects[filtered].index and yolo_objects_activate):
                                         same_object_ctr+=1
                                         same_object_old = filtered_objects[filtered]
                                         same_object_new = total_objects_detected[frame][object]
@@ -3505,7 +3625,7 @@ class RobotStdFunctions():
         #     print(o.object_name)
         self.node.search_for_object_detections_publisher.publish(sfo_pub)
             
-        return final_objects        
+        return final_objects
 
     def detected_object_to_face_path(self, object=DetectedObject(), send_to_face=False, bb_color=(0,0,255)):
 
@@ -3693,43 +3813,109 @@ class RobotStdFunctions():
         print(self.node.llm_demonstration_response)
 
         self.set_speech(command=self.node.llm_demonstration_response, quick_voice=True, wait_for_end_of=True)
+    
+    def get_info_from_llm(self,command, info_type, wait_for_end_of=True):
 
-    def get_llm_gpsr(self, wait_for_end_of=True):
+        # self.calibrate_audio(wait_for_end_of=True)
+        # self.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
+        # command = self.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
+
+        request = GetLLMDemo.Request()
+        # Append info_type to command: "info_type - command"
+        request.command = info_type + " - " + command
+        self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        print("Message sent to LLM:", request.command)
+        print("Command:", command)
+        print("Info to extract:", info_type)
+        # print("LLM response:", self.node.llm_demonstration_response)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_demonstration:
+                pass
+            self.node.waited_for_end_of_llm_demonstration = False
+
+        print("LLM response:", self.node.llm_demonstration_response)
+   
+
+        return self.node.llm_demonstration_response
+
+##  GETS AND CONFIRMS A GPSR COMMAND ##
+    def get_llm_confirm_command(self, wait_for_end_of=True):
+
+        command_confirmed = False
+        max_confirm_attempts = 3
+        confirm_attempts_cntr = 0
 
         self.calibrate_audio(wait_for_end_of=True)
         # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-        random_question = str(random.randint(1, 3))
-        command = self.get_audio(gpsr=True, question="demonstration/llm_get_question_"+random_question, wait_for_end_of=True)
 
-        # add generic sentence so it is not so long quiet
-        self.set_speech(filename="generic/uhm", wait_for_end_of=False)
-        random_wait = str(random.randint(1, 3))
-        self.set_speech(filename="gpsr/llm_wait_for_gpsr_"+random_wait, wait_for_end_of=False)
+        while not command_confirmed and confirm_attempts_cntr < max_confirm_attempts:
+            confirm_attempts_cntr += 1
+
+            self.set_speech(command="What is your request?", quick_voice=True, wait_for_end_of=True)
+            command = self.get_audio(gpsr=True, wait_for_end_of=True)
+
+            # add step to normalize command
+
+            self.set_speech(filename="generic/uhm", wait_for_end_of=False)
+            self.set_speech(command="Do you want me to " + command + "?", quick_voice=True, wait_for_end_of=True)
+            self.set_speech(command="Answer with robot yes or robot no", quick_voice=True, wait_for_end_of=True)
+            confirmation = self.get_audio(yes_or_no= True, wait_for_end_of=True)
+            if confirmation == "yes":
+                command_confirmed = True
+            elif confirmation == "no":
+                if confirm_attempts_cntr < max_confirm_attempts:
+                    command_confirmed = False
+                    self.set_speech(command="I am sorry, I did not understand. Let's try again.", quick_voice=True, wait_for_end_of=True)
+                else:
+                    command = "ERROR"
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_gpsr:
+                pass
+            self.node.waited_for_end_of_llm_gpsr = False
+
+        return command
+
+##  GENERATES A PLAN FOR A GPSR COMMAND##
+    def get_llm_gpsr(self, command= "", wait_for_end_of=True):
+
+        # self.calibrate_audio(wait_for_end_of=True)
+        # # self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+        # random_question = str(random.randint(1, 3))
+        # command = self.get_audio(gpsr=True, question="demonstration/llm_get_question_"+random_question, wait_for_end_of=True)
+
+        # # add generic sentence so it is not so long quiet
+        # self.set_speech(filename="generic/uhm", wait_for_end_of=False)
+        # random_wait = str(random.randint(1, 3))
+        # self.set_speech(filename="gpsr/llm_wait_for_gpsr_"+random_wait, wait_for_end_of=False)
 
         
         ### EXAMPLE FOR LLM CONFIRM COMMAND - SLENDER
 
 
-        request = GetLLMConfirmCommand.Request()
-        request.command = command
-        self.node.call_llm_confirm_command_server(request=request, wait_for_end_of=wait_for_end_of)
+        # request = GetLLMConfirmCommand.Request()
+        # request.command = command
+        # self.node.call_llm_confirm_command_server(request=request, wait_for_end_of=wait_for_end_of)
 
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_llm_confirm_command:
-                pass
-            self.node.waited_for_end_of_llm_confirm_command = False
+        # if wait_for_end_of:
+        #     while not self.node.waited_for_end_of_llm_confirm_command:
+        #         pass
+        #     self.node.waited_for_end_of_llm_confirm_command = False
 
-        print(self.node.llm_confirm_command_response)
+        # print(self.node.llm_confirm_command_response)
 
-        self.set_speech(command=self.node.llm_confirm_command_response, quick_voice=True, wait_for_end_of=True)
+        # self.set_speech(command=self.node.llm_confirm_command_response, quick_voice=True, wait_for_end_of=True)
 
+        # self.set_speech(command = "I heard the following command " + command, quick_voice=True, wait_for_end_of=True)
 
         ### END OF EXAMPLE
 
-
-
         request = GetLLMGPSR.Request()
-        request.command = command
+        request.command = "Go to the shelf then find a tuna and get it."
+        # request.command = command
+        
         self.node.call_llm_gpsr_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
@@ -3737,36 +3923,73 @@ class RobotStdFunctions():
                 pass
             self.node.waited_for_end_of_llm_gpsr = False
 
-        # print(self.node.llm_gpsr_response)
-        for task in self.node.llm_gpsr_response.strings:
+        print(self.node.llm_gpsr_response)
+
+        self.execute_gpsr_plan(plan=self.node.llm_gpsr_response)
+
+    def execute_gpsr_plan(self, plan=ListOfStrings()):
+
+        for task in plan.strings:
             task_split = task.split("-")
             
-            print("Task type:", task_split[0], " Task info:", task_split[1])
+            task_type = task_split[0]
+            task_info = task_split[1] if len(task_split) > 1 else ""
+            
+            print("Task type:", task_type, " Task info:", task_info)
 
-            match task_split[0]:
+            match task_type:
 
-                case "Navigation":
-                    # self.set_navigation() ...
+                case "MoveToRoom":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to " + task_info, quick_voice=True, wait_for_end_of=True)
                     pass 
 
-                case "SearchForObject":
-                    # self.search_for_object() ...
+                case "MoveToFurniture":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to " + task_info, quick_voice=True, wait_for_end_of=True)
                     pass
                 
-                case "SearchForPerson":
-                    # self.search_for_person() ...
+                case "move_to_person_through_name":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to person called" + task_info, quick_voice=True, wait_for_end_of=True)
+                    
                     pass
                 
-                case "Speak":
-                    # self.set_speech() ...
+                case "MoveToPersonPose":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to person with pose" + task_info, quick_voice=True, wait_for_end_of=True)
+                    
                     pass
                 
-                case "ArmPick":
-                    # self.set_arm() ...
+                case "MoveToPersonClothing":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to person with a" + task_info, quick_voice=True, wait_for_end_of=True)
+                  
                     pass
                 
-                case "ArmPlace":
-                    # self.set_arm() ...
+                case "MoveToInitialPersonPosition":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Moving to the person who made the request", quick_voice=True, wait_for_end_of=True)
+                    pass
+
+                case "Pick":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Picking the " + task_info, quick_voice=True, wait_for_end_of=True)
+                    
+                    pass
+
+                case "Place":
+                    # temporary speech to show it is working
+                    task_split_2 = task_info.split(",")
+                    if len(task_split_2) >= 2:
+                        self.set_speech(command="Placing the " + task_split_2[0]+ " on the " + task_split_2[1], quick_voice=True, wait_for_end_of=True)
+                    
+                    pass
+
+                case "HandObject":
+                    # temporary speech to show it is working
+                    self.set_speech(command="Handing the object in my hand", quick_voice=True, wait_for_end_of=True)
+                    
                     pass
 
     def get_detected_person_characteristics(self, detected_person=DetectedPerson(), first_sentence="", ethnicity=False, age=False, gender=False, height=False, shirt_color=False, pants_color=False):
@@ -4124,7 +4347,113 @@ class RobotStdFunctions():
                 return obj['look'] # Return the look
         return None  # Return None if the object is not found
 
+    def activate_tracking_mask(self, track_person=None, track_object=None, mode="", custom_points=[], show_detections_on_face=True):
 
+        points = ListOfPoints()
+        bb = BoundingBox()
+        if track_person is not None:
+
+            match mode:
+                case "face": # does not include ears, since sometimes can add backgrout noise
+                    if track_person.kp_nose_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_nose_x), y=float(track_person.kp_nose_y), z=1.0))
+                    if track_person.kp_eye_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_left_x), y=float(track_person.kp_eye_left_y), z=1.0))
+                    if track_person.kp_eye_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_right_x), y=float(track_person.kp_eye_right_y), z=1.0))
+                case "head":
+                    if track_person.kp_nose_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_nose_x), y=float(track_person.kp_nose_y), z=1.0))
+                    if track_person.kp_eye_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_left_x), y=float(track_person.kp_eye_left_y), z=1.0))
+                    if track_person.kp_eye_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_right_x), y=float(track_person.kp_eye_right_y), z=1.0))
+                    if track_person.kp_ear_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ear_left_x), y=float(track_person.kp_ear_left_y), z=1.0))
+                    if track_person.kp_ear_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ear_right_x), y=float(track_person.kp_ear_right_y), z=1.0))
+                case "body":        
+                    if track_person.kp_nose_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_nose_x), y=float(track_person.kp_nose_y), z=1.0))
+                    if track_person.kp_eye_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_left_x), y=float(track_person.kp_eye_left_y), z=1.0))
+                    if track_person.kp_eye_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_eye_right_x), y=float(track_person.kp_eye_right_y), z=1.0))
+                    if track_person.kp_ear_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ear_left_x), y=float(track_person.kp_ear_left_y), z=1.0))
+                    if track_person.kp_ear_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ear_right_x), y=float(track_person.kp_ear_right_y), z=1.0))
+                    if track_person.kp_shoulder_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_shoulder_left_x), y=float(track_person.kp_shoulder_left_y), z=1.0))
+                    if track_person.kp_shoulder_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_shoulder_right_x), y=float(track_person.kp_shoulder_right_y), z=1.0))
+                    if track_person.kp_elbow_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_elbow_left_x), y=float(track_person.kp_elbow_left_y), z=1.0))
+                    if track_person.kp_elbow_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_elbow_right_x), y=float(track_person.kp_elbow_right_y), z=1.0))
+                    if track_person.kp_wrist_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_wrist_left_x), y=float(track_person.kp_wrist_left_y), z=1.0))
+                    if track_person.kp_wrist_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_wrist_right_x), y=float(track_person.kp_wrist_right_y), z=1.0))
+                    if track_person.kp_hip_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_hip_left_x), y=float(track_person.kp_hip_left_y), z=1.0))
+                    if track_person.kp_hip_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_hip_right_x), y=float(track_person.kp_hip_right_y), z=1.0))
+                    if track_person.kp_knee_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_knee_left_x), y=float(track_person.kp_knee_left_y), z=1.0))
+                    if track_person.kp_knee_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_knee_right_x), y=float(track_person.kp_knee_right_y), z=1.0))
+                    if track_person.kp_ankle_left_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ankle_left_x), y=float(track_person.kp_ankle_left_y), z=1.0))
+                    if track_person.kp_ankle_right_conf > 0.5:
+                        points.coords.append(Point(x=float(track_person.kp_ankle_right_x), y=float(track_person.kp_ankle_right_y), z=1.0))
+                case _:
+                    print("WRONG TRACK MODE SELECTED! DOES NOT EXIST!")
+                    return False , "Wrong track mode selected"
+        
+        elif track_object is not None:
+
+            match mode:
+                case "object_center":
+                    ########## THIS IS NOT IDEAL FOR SOME CASES, A CENTER OF MASK SEGMENTATION POINT MUST BE COMPUTED IN THE FUTURE ##########
+                    points.coords.append(Point(x=float(track_object.box_center_x), y=float(track_object.box_center_y), z=1.0))
+                case "object_bounding_box":
+                    bb.box_top_left_x = int(track_object.box_top_left_x)
+                    bb.box_top_left_y = int(track_object.box_top_left_y)
+                    bb.box_width = int(track_object.box_width)
+                    bb.box_height = int(track_object.box_height)
+                case _:
+                    print("WRONG TRACK MODE SELECTED! DOES NOT EXIST!")
+                    return False , "Wrong track mode selected"
+        
+        elif mode == "custom":
+
+            if len(custom_points) > 0:
+                for coord in custom_points:
+                    points.coords.append(Point(x=float(coord[0]), y=float(coord[1]), z=1.0))
+            else:
+                print("NO CUSTOM COORDINATES PROVIDED!")
+                return False , "No custom coordinates provided"
+
+        else:
+            print("WRONG TRACK MODE SELECTED! DOES NOT EXIST!")
+            return False , "Wrong track mode selected"
+
+        self.activate_tracking(activate=True, points=points, bbox=bb)
+
+        if show_detections_on_face:
+            self.set_face(camera="head", show_detections=True)
+
+        return True, "Tracking activated successfully"
+
+    def deactivate_tracking_mask(self, reset_face=True):
+
+        if reset_face:
+            self.set_face("charmie_face")
+
+        self.activate_tracking(activate=False)
+        return True, "Tracking deactivated successfully"
+    
     def set_continuous_tracking_with_coordinates(self):
 
         request = TrackContinuous.Request()
@@ -4136,7 +4465,7 @@ class RobotStdFunctions():
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
         
         self.node.detected_people.persons = [] # clears detected_people after receiving them to make sure the objects from previous frames are not considered again
-        # self.activate_yolo_pose(activate=True) 
+        self.activate_yolo_pose(activate=True) 
         # self.activate_yolo_objects(activate_objects=True) 
         
         start_time = time.time()
@@ -4194,70 +4523,7 @@ class RobotStdFunctions():
         request.status = False
         self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
 
-    def set_follow_person(self):
-
-        self.activate_yolo_pose(activate=True) 
-        
-        while len(self.node.detected_people.persons) == 0:
-            pass
-
-        p = self.node.detected_people.persons[0]
-
-        self.activate_yolo_pose(activate=False) 
-
-        points = ListOfPoints()
-        
-        if p.kp_nose_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_nose_x), y=float(p.kp_nose_y), z=1.0))
-        if p.kp_eye_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_eye_left_x), y=float(p.kp_eye_left_y), z=1.0))
-        if p.kp_eye_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_eye_right_x), y=float(p.kp_eye_right_y), z=1.0))
-        if p.kp_ear_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_ear_left_x), y=float(p.kp_ear_left_y), z=1.0))
-        if p.kp_ear_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_ear_right_x), y=float(p.kp_ear_right_y), z=1.0))
-        if p.kp_shoulder_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_shoulder_left_x), y=float(p.kp_shoulder_left_y), z=1.0))
-        if p.kp_shoulder_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_shoulder_right_x), y=float(p.kp_shoulder_right_y), z=1.0))
-        if p.kp_elbow_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_elbow_left_x), y=float(p.kp_elbow_left_y), z=1.0))
-        if p.kp_elbow_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_elbow_right_x), y=float(p.kp_elbow_right_y), z=1.0))
-        if p.kp_wrist_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_wrist_left_x), y=float(p.kp_wrist_left_y), z=1.0))
-        if p.kp_wrist_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_wrist_right_x), y=float(p.kp_wrist_right_y), z=1.0))
-        if p.kp_hip_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_hip_left_x), y=float(p.kp_hip_left_y), z=1.0))
-        if p.kp_hip_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_hip_right_x), y=float(p.kp_hip_right_y), z=1.0))
-        if p.kp_knee_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_knee_left_x), y=float(p.kp_knee_left_y), z=1.0))
-        if p.kp_knee_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_knee_right_x), y=float(p.kp_knee_right_y), z=1.0))
-        if p.kp_ankle_left_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_ankle_left_x), y=float(p.kp_ankle_left_y), z=1.0))
-        if p.kp_ankle_right_conf > 0.5:
-            points.coords.append(Point(x=float(p.kp_ankle_right_x), y=float(p.kp_ankle_right_y), z=1.0))
-
-        # points.coords.append(Point(x=640.0//2, y=480.0//2, z=1.0))
-        # points.coords.append(Point(x=320.0, y=150.0, z=1.0))
-        # points.coords.append(Point(x=420.0, y=150.0, z=0.0))
-        # points.coords.append(Point(x=220.0, y=150.0, z=0.0))
-
-        bb = BoundingBox()
-        # bb.box_top_left_x = 200
-        # bb.box_top_left_y = 100
-        # bb.box_width = 640
-        # bb.box_height = 480
-
-
-        self.activate_tracking(activate=True, points=points, bbox=bb)
-        # self.activate_tracking(activate=False)
-
-    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
+    def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, speak_timeout=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
         options = []
 
@@ -4340,7 +4606,8 @@ class RobotStdFunctions():
                 return ["ERROR"]
             
             elif self.node.selected_list_options_touchscreen_menu[0] == "TIMEOUT":
-                self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
+                if speak_timeout:
+                    self.set_speech(filename=end_speak_file_error, wait_for_end_of=True)
                 return self.node.selected_list_options_touchscreen_menu
         
             else:
@@ -4427,14 +4694,14 @@ class RobotStdFunctions():
     
             if not self.node.face_recognition_encoding:
                 self.node.get_logger().warn("Face recognition encoding List is empty.")
-                return "error", 0.0
+                return "error", 0.0, {}
             
             image = face_recognition.load_image_file(image_path)
             encoding_entry = face_recognition.face_encodings(image)
 
             if len(encoding_entry) == 0:
                 self.node.get_logger().warn("No face found in the image. Could not comapre to encodings list.")
-                return "error", 0.0
+                return "error", 0.0, {}
             encoding_entry = encoding_entry[0]  
 
             all_percentages = []
@@ -4444,20 +4711,22 @@ class RobotStdFunctions():
                 confidence = (1 - distance)
                 all_percentages.append(confidence)
 
-            name_recognized, biggest_conf_recognized = max(zip(self.node.face_recognition_names, all_percentages), key=lambda x: x[1])
+            confidence_table = {name.lower(): conf for name, conf in zip(self.node.face_recognition_names, all_percentages)}
+
+            name_recognized, biggest_conf_recognized = max(confidence_table.items(), key=lambda x: x[1])
             if biggest_conf_recognized < tolerance:
                 name_recognized = "unknown"
 
-            print("RECOGNITION COMPARE TABLE:")
-            for prob, name in zip(all_percentages, self.node.face_recognition_names):
-                print(str(round(prob,2))+" -> "+name)
-            print("OUTCOME:", name_recognized, str(round(biggest_conf_recognized,2)))
+            # print("RECOGNITION COMPARE TABLE:")
+            # for prob, name in zip(all_percentages, self.node.face_recognition_names):
+            #     print(str(round(prob,2))+" -> "+name)
+            # print("OUTCOME:", name_recognized, str(round(biggest_conf_recognized,2)))
 
-            return name_recognized.lower(), biggest_conf_recognized
+            return name_recognized.lower(), biggest_conf_recognized, confidence_table
 
         else:
             self.node.get_logger().warn("Image path does not exist.")
-            return "error", 0.0
+            return "error", 0.0, {}
             
     def get_quaternion_from_euler(self, roll, pitch, yaw):
         """
@@ -5509,6 +5778,9 @@ class RobotStdFunctions():
         # PLACE OBJECT
         # MOVE ARM TO SAFE POSITION
 
+        TOLERANCE_ERROR = 0.02
+        FRONT_Z_ADJUST_LIMIT = 450
+
         selected_object = selected_object.replace(" ","_").lower()
 
         #### PLACE ARM POSITIONS ####
@@ -5523,8 +5795,129 @@ class RobotStdFunctions():
         if furniture == "" and furniture_height == -1:
             print(" YOU NEED TO DEFINE THE FURNITURE WHERE THE ROBOT IS GOING TO PLACE THE OBJECT !!!!!!!!!!")
             return
-        
-        elif furniture != "":
+        elif furniture == "Tray":
+
+            first_safe_tray = [-206.8, 29, -74.7, -5.8, 51.9, 248.7]
+            first_right_tray_front = [-212.1, 7.5, -62.4, -27.3, 102.3, 246.5]
+            first_left_tray_front = [-209.5, 40.7, -71.3, -24.2, 85.3, 253.8]
+            first_left_tray_top = [-183.9,60.3,-68,-90.3,41.6,321.4]
+            second_left_tray_top = [-182.7, 59.5, -44.5, -89.2, 93.2, 84.3]
+            first_right_tray_top = [-177.6,9.8,-68.6,-54.1,68.4,128.7]
+            second_right_tray_top = [-184.1,-9.9,-6,-97.2,92.1,122.8]
+            initial_position_to_safe_joints = 	[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
+
+            state = 3
+
+            if state == 0:
+                self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_front, wait_for_end_of=True)
+
+                gripper_place_position = self.get_gripper_localization()
+
+
+                final_z = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
+
+                print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                time.sleep(0.5)
+                self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                return
+            elif state == 1:
+
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_front, wait_for_end_of=True)
+
+                gripper_place_position = self.get_gripper_localization()
+
+
+                final_z = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
+
+                print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                time.sleep(0.5)
+                self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                return
+            elif state == 2:
+
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_top, wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = second_left_tray_top, wait_for_end_of=True)
+
+                gripper_place_position = self.get_gripper_localization()
+
+
+                final_x = (gripper_place_position.z - 0.59 - place_height - TOLERANCE_ERROR)*1000
+
+                print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                time.sleep(0.5)
+                self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = first_left_tray_top, wait_for_end_of=True)
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                return
+            elif state == 3:
+
+                #self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+
+
+                gripper_place_position = self.get_gripper_localization()
+
+
+                final_x = (gripper_place_position.z - 0.59 - place_height - 0.145 - TOLERANCE_ERROR)*1000
+
+                print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                time.sleep(0.5)
+                self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                self.wait_for_start_button()
+                #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = , wait_for_end_of=True)
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                return
+
+
+
+        else:
             verified = False
             for furn in self.node.furniture:
                 if str(furn["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():
@@ -5553,9 +5946,6 @@ class RobotStdFunctions():
             place_mode = self.get_standard_pick_from_object(selected_object)
 
         #### CONSTANTS ####
-
-        TOLERANCE_ERROR = 0.02
-        FRONT_Z_ADJUST_LIMIT = 450
 
         if furniture_distance == -1:
 
@@ -5723,3 +6113,10 @@ class RobotStdFunctions():
             
         print("Cannot get height from shelf")
         return False
+
+    def open_door(push_pull="push", left_right="left", wait_for_end_of=True):
+        # placeholder for door opening std_function
+        pass
+        # arm movements and search for objects for furniture door_handle 
+        # add safety and timeout mechanisms
+        

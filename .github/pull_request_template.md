@@ -1,34 +1,31 @@
-## Description
- 
-## Related links
- 
-Parent Issue:
- 
-- Link
- 
-<!-- ⬇️🟢
-Private Links:
- 
-- [CompanyName internal link]()
-⬆️🟢 -->
- 
-## How was this PR tested?
- 
-## Notes for reviewers
- 
-None.
- 
-## Interface changes
- 
-None.
- 
+### (Please delete all PR helpers in parentheses, including this one!)
 
-⬇️🔴
+## PR Details
+Jira Ticket: (Insert here, ticket number and description)
 
- 
-### Topic changes
- 
-#### Additions and removals
+Jira Epic: (Inser here, epic name)
+
+Sprint: (Insert here, sprint number)
+
+## Summary
+(Insert here, brief overview of this PR)
+
+## Key Changes
+(Insert here, bullet points of most significant changes)
+- key change 1
+- key change 2
+- key change 2
+
+## ROS2 Communication Interfaces 
+(Insert here, any changes regarding ROS2, topics, services, actions and parameters)
+
+(Please only leave, the sub-sections used, delete everything else)
+
+(If there aren't any changes to ros2 communication interfaces, please delete this whole Section)
+
+### ROS2 Topics/Services/Actions Changes
+
+#### Additions and Removals
  
 | Change type   | Topic Type      | Topic Name    | Message Type        | Description       |
 |:--------------|:----------------|:--------------|:--------------------|:------------------|
@@ -41,9 +38,9 @@ None.
 | Old     | Pub/Sub/Srv/Cli | /old_topic_name | sensor_msgs/Image | Topic description |
 | New     | Pub/Sub/Srv/Cli | /new_topic_name | sensor_msgs/Image | Topic description |
  
-### ROS Parameter Changes
+### ROS2 Parameter Changes
  
-#### Additions and removals
+#### Additions and Removals
  
 | Change type   | Parameter Name | Type     | Default Value | Description       |
 |:--------------|:---------------|:---------|:--------------|:------------------|
@@ -55,12 +52,14 @@ None.
 |:--------|:-----------------|:---------|:--------------|:------------------|
 | Old     | old_param_name | double | 1.0         | Param description |
 | New     | new_param_name | double | 1.0         | Param description |
- 
- 
- 
- 
-🔴⬆️
- 
-## Effects on system behavior
- 
-None.
+
+## Testing
+(Insert here, testing procedure for this PR)
+
+
+## Notes / Follow-up Work
+(Insert here, general notes and follow-up work)
+
+ 
+## Notes for reviewers
+(Insert here, notes for reviewers, if any)
