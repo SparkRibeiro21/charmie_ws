@@ -5807,7 +5807,7 @@ class RobotStdFunctions():
             second_right_tray_top = [-184.1,-9.9,-6,-97.2,92.1,122.8]
             initial_position_to_safe_joints = 	[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
 
-            state = 3
+            state = 0
 
             if state == 0:
                 self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
@@ -5832,6 +5832,9 @@ class RobotStdFunctions():
                 time.sleep(0.5)
 
                 self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
                 return
             elif state == 1:
 

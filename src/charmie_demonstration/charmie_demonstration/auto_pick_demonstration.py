@@ -77,7 +77,7 @@ class TaskMain():
 
 
         #self.place_furniture = "Office Table"
-        self.home_furniture = "Dinner Table"        
+        self.home_furniture = "Dishwasher"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
@@ -155,7 +155,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "Mustard"
+                    self.object_name = "Pringles"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
@@ -163,7 +163,7 @@ class TaskMain():
                     # selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_furniture)
 
-                    self.place_furniture = "Dinner Table"
+                    self.place_furniture = "Dishwasher"
 
                     self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
 
@@ -317,6 +317,10 @@ class TaskMain():
                     picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas, return_arm_to_initial_position=False)
                 else:
                     picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
+
+
+                self.robot.place_object_in_furniture(selected_object=self.object_name, place_mode=self.robot.get_standard_pick_from_object(object_name=self.object_name), furniture="tray", place_height=picked_height)
+
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.state = self.task_states["Move_to_place"]
