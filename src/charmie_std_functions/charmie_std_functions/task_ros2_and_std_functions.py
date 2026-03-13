@@ -3854,7 +3854,7 @@ class RobotStdFunctions():
 
         self.calibrate_audio(wait_for_end_of=True)
 
-        self.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
+        self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
 
         while not command_confirmed and confirm_attempts_cntr < max_confirm_attempts:
 
@@ -3862,7 +3862,8 @@ class RobotStdFunctions():
 
             ##### SPEAK: "What is your request?"
             # gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green_yes_no", wait_for_end_of= True)
-            gpsr_command = "Go get me a water"
+            self.set_speech(filename="gpsr/gpsr_question_2", wait_for_end_of=True)
+            gpsr_command = "Place the milk on the dining table"
             print("Finished:", gpsr_command)
             # add step to normalize command
 
@@ -3870,7 +3871,6 @@ class RobotStdFunctions():
             
             ##### SPEAK: "Please give me a moment to process your command"
             self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=True)
-            self.set_speech(filename="generic/uhm", wait_for_end_of=True)
             ##### SPEAK: "I have understood the following command."
             self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
             self.set_speech(filename="temp/gpsr_command", wait_for_end_of=True)
@@ -3904,8 +3904,8 @@ class RobotStdFunctions():
         resquest_type = "HLP"
 
         request = GetLLMDemo.Request()
-        request.command = resquest_type + " : " + "Go to the shelf then find a tuna and get it."
-        # request.command = resquest_type + " : " + command
+        # request.command = resquest_type + " : " + "Go to the shelf then find a tuna and get it."
+        request.command = resquest_type + " : " + command
         
         self.node.call_llm_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
 
@@ -3916,6 +3916,7 @@ class RobotStdFunctions():
 
         print(self.node.llm_demonstration_response)
 
+        return self.node.llm_demonstration_response
         # self.execute_gpsr_plan(plan=self.node.llm_demonstration_response)
 
 ##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)

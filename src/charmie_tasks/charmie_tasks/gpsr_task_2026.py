@@ -165,57 +165,152 @@ class TaskMain():
                 
                 # Announce the instruction point
 
-                self.state = self.task_states["Receive_requests"]
+                self.state = self.task_states["Receive_request1"]
 
 
-            elif self.state == self.task_states["Receive_requests"]:
+            elif self.state == self.task_states["Receive_request1"]:
                 
-                for self.curr_request in range(self.number_of_requests):
-                    # your code here ...
+                ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."
+                self.robot.set_speech(filename="gpsr/gpsr_intro", wait_for_end_of=True)
 
-                    # Look at the judge
-                    # self.robot.set_neck
+                self.curr_request = 1
+                # your code here ...
 
-                    ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."
-                    self.robot.set_speech(filename="gpsr/gpsr_intro", wait_for_end_of=True)
-                    
-                    request = self.robot.get_llm_confirm_command(wait_for_end_of=True)
+                # Look at the judge
+                # self.robot.set_neck
+                
+                request = self.robot.get_llm_confirm_command()
 
-                    if request == "ERROR":
-                        print("Error in request " + str(self.curr_request + 1))
-                        ##### SPEAK: "I was not able to understand your request. Let's move on."
-                        self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
+                if request == "ERROR":
+                    print("Error in request " + str(self.curr_request))
+                    ##### SPEAK: "I was not able to understand your request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
 
-                    else:
-                        # Save current request
-                        # self.request1 ou 2 ou 3 = request
-                        print("Request " + str(self.curr_request + 1) + ": " + request)
+                else:
+                    # Save current request
+                    self.request1 = request
+                    print("Request " + str(self.curr_request + 1) + ": " + request)
 
-                        ##### SPEAK: "Okay, I understood your curr_request request. Let's move on."
-                        self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=True)
+                    ##### SPEAK: "Okay, I understood your request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
+
+                    hlp_request = self.robot.get_llm_high_level_plan(command=request, wait_for_end_of=True)
+                    self.robot.save_speech(command=hlp_request, filename="gpsr_request"+str(self.curr_request), quick_voice=True ,wait_for_end_of=False)
+                    self.request1 = hlp_request
+
+                self.state = self.task_states["Receive_request2"]
+
+            elif self.state == self.task_states["Receive_request2"]:
+                
+                ##### SPEAK: "Let's move on to the second request"
+                #
+
+                self.curr_request = 2
+
+                # Look at the judge
+                # self.robot.set_neck
+                
+                request = self.robot.get_llm_confirm_command()
+
+
+                if request == "ERROR":
+                    print("Error in request " + str(self.curr_request))
+                    ##### SPEAK: "I was not able to understand your request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
+
+                else:
+                    # Save current request
+                    self.request2 = request
+                    print("Request " + str(self.curr_request) + ": " + request)
+
+                    ##### SPEAK: "Okay, I understood your curr_request request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
+
+                    hlp_request = self.robot.get_llm_high_level_plan(command=request, wait_for_end_of=True)
+                    self.robot.save_speech(command=hlp_request, filename="gpsr_request"+str(self.curr_request), quick_voice=True ,wait_for_end_of=False)
+                    self.request2 = hlp_request
+
+                self.state = self.task_states["Receive_request3"]
+            
+            elif self.state == self.task_states["Receive_request3"]:
+            
+                self.curr_request = 3
+                # your code here ...
+
+                # Look at the judge
+                # self.robot.set_neck
+                
+                request = self.robot.get_llm_confirm_command()
+
+
+                if request == "ERROR":
+                    print("Error in request " + str(self.curr_request))
+                    ##### SPEAK: "I was not able to understand your request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
+
+                else:
+                    # Save current request
+                    self.request3 = request
+                    print("Request " + str(self.curr_request + 1) + ": " + request)
+
+                    ##### SPEAK: "Okay, I understood your curr_request request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
+
+                    hlp_request = self.robot.get_llm_high_level_plan(command=request, wait_for_end_of=True)
+                    self.robot.save_speech(command=hlp_request, filename="gpsr_request"+str(self.curr_request), quick_voice=True ,wait_for_end_of=False)
+                    self.request3 = hlp_request
 
                 self.state = self.task_states["Show_generated_plans"]
 
 
             elif self.state == self.task_states["Show_generated_plans"]:
+
+                ##### SPEAK: "Please give me a moment while I proccess your requests"
+                self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=True)
+                
+                ##### SPEAK: "To execute the first request"  
+                # set_speech
+                self.robot.set_speech(filename="temp/gpsr_request1", wait_for_end_of= True)
+
+                
+                ##### SPEAK: "To execute the second request"  
+                # set_speech
+                self.robot.set_speech(filename="temp/gpsr_request2", wait_for_end_of= True)
+                
+                ##### SPEAK: "To execute the first request"  
+                # set_speech
+                self.robot.set_speech(filename="temp/gpsr_request3", wait_for_end_of= True)
                                         
-                pass
                 # your code here ...
 
                 self.state = self.task_states["Execute_request1"]
 
 
             elif self.state == self.task_states["Execute_request1"]:
-                                        
-                pass
-                # your code here ...
+
+                ##### SPEAK: "I will start by executing the first request."
+                self.robot.set_speech(command= "Ok! I will start executing the first request now.", quick_voice= True, wait_for_end_of= True)
+
+                self.robot.execute_gpsr_plan(command=self.request1,wait_for_end_of=True)
+
+                ##### SPEAK: "I have finished executing the first task."
+                self.robot.set_speech(command= "I have finished executing the first task.", quick_voice= True, wait_for_end_of= True)
+
+                
 
                 self.state = self.task_states["Execute_request2"]
 
 
             elif self.state == self.task_states["Execute_request2"]:
                                         
-                pass
+                ##### SPEAK: "I will start by executing the second request."
+                self.robot.set_speech(command= "I will start executing the second request now.", quick_voice= True, wait_for_end_of= True)
+
+                self.robot.execute_gpsr_plan(command=self.request2,wait_for_end_of=True)
+
+                ##### SPEAK: "I have finished executing the second task."
+                self.robot.set_speech(command= "I have finished executing the second task.", quick_voice= True, wait_for_end_of= True)
+
                 # your code here ...
 
                 self.state = self.task_states["Execute_request3"]
@@ -223,8 +318,13 @@ class TaskMain():
 
             elif self.state == self.task_states["Execute_request3"]:
                                         
-                pass
-                # your code here ...
+                ##### SPEAK: "I will start by executing the third request."
+                self.robot.set_speech(command= "I will start executing the third request now.", quick_voice= True, wait_for_end_of= True)
+
+                self.robot.execute_gpsr_plan(command=self.request3,wait_for_end_of=True)
+
+                ##### SPEAK: "I have finished executing the third task."
+                self.robot.set_speech(command= "I have finished executing the third task.", quick_voice= True, wait_for_end_of= True)
 
                 self.state = self.task_states["Return_to_instruction_point"]
 
@@ -258,6 +358,7 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 #change to GPSR Challenge
                 # self.robot.set_speech(filename="hri/finish_hri_task", wait_for_end_of=False)
+                self.robot.set_speech(command= "I have finished my general purpose service robot task.", quick_voice= True, wait_for_end_of= True)
 
                 while True:
                     pass
