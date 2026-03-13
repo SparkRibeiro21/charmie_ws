@@ -30,6 +30,7 @@ setup(
             "debug_face_recognition = charmie_debug.debug_face_recognition:main",
             "debug_inspection_person_detection = charmie_debug.debug_inspection_person_detection:main",
             "debug_llm = charmie_debug.debug_llm:main",
+            "debug_move_to_position_all_furnitures = charmie_debug.debug_move_to_position_all_furnitures:main",
             "debug_navigation_localization = charmie_debug.debug_navigation_localization:main",
             "debug_pick_front = charmie_debug.debug_pick_front:main",
             "debug_pick_object_depth = charmie_debug.debug_pick_object_depth:main",
