@@ -129,6 +129,9 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
+                l = self.robot.get_torso_position()
+                print("l", l)
+
                 self.robot.set_initial_position(self.initial_position)
 
                 self.robot.wait_for_start_button()
