@@ -16,13 +16,13 @@ ros2_modules = {
     "charmie_audio":                True,
     "charmie_face":                 True,
     "charmie_head_camera":          True,
-    "charmie_hand_camera":          True,
+    "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          True,
-    "charmie_llm":                  False, # True (check name and fav. drink)
+    "charmie_llm":                  True, # True (check name and fav. drink)
     "charmie_localisation":         True,
     "charmie_low_level":            True,
     "charmie_navigation":           True,
@@ -33,7 +33,7 @@ ros2_modules = {
     "charmie_sound_classification": True,
     "charmie_speakers":             True,
     "charmie_tracking":             True,
-    "charmie_yolo_objects":         False,
+    "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
 }
@@ -269,21 +269,29 @@ class TaskMain():
                 print("Added to face recognition:", s, m)
 
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+                command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+
+                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=False)
+                self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) 
+
+                a = time.time()
+                self.GUEST1_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                print("Name:", self.GUEST1_NAME, time.time()-a)
+                
+                b = time.time()
+                self.GUEST1_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
+
+                self.robot.save_speech(command=self.GUEST1_NAME, filename=self.GUEST1_NAME, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+                self.robot.save_speech(command=self.GUEST1_DRINK, filename=self.GUEST1_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+
                 print("Finished:", command)
                 
-                if command == "ERR_MAX":
+                """ if command == "ERR_MAX":
                     print("MAX HEARING ATTEMPTS REACHED")
                     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-                else:
-                    keyword_list= command.split(" ")
-                    self.GUEST1_NAME = keyword_list[0] 
-                    self.GUEST1_DRINK = keyword_list[1]
-                    print(self.GUEST1_NAME, self.GUEST1_DRINK)
-
-                    self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
-
-                self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=True) 
+                else: """
+                print(self.GUEST1_NAME, self.GUEST1_DRINK)
                 
                 self.robot.deactivate_tracking_mask()
                 ### NECK: DEACTIVATE CONTINUOUS MODE
@@ -451,24 +459,32 @@ class TaskMain():
                 print("Added to face recognition:", s, m)
 
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
-                command = self.robot.get_audio(receptionist=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
-                print("Finished:", command)
+
+                command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
+
+                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
+
+                a = time.time()
+                self.GUEST2_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                print("Name:", self.GUEST2_NAME, time.time()-a)
                 
-                if command == "ERR_MAX":
+                b = time.time()
+                self.GUEST2_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
+                
+                self.robot.save_speech(command=self.GUEST2_NAME, filename=self.GUEST2_NAME, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+                self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+               
+                """if command == "ERR_MAX":
                     print("MAX HEARING ATTEMPTS REACHED")
                     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
-                else:
-                    keyword_list= command.split(" ")
-                    self.GUEST2_NAME = keyword_list[0] 
-                    self.GUEST2_DRINK = keyword_list[1]
-                    print(self.GUEST2_NAME, self.GUEST2_DRINK)
-
-                    self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
+                else:"""
+                print(self.GUEST2_NAME, self.GUEST2_DRINK)
 
                 ### INITIALLY SAYING THE CHARACTERISTICS WAS HERE. HOWEVER TO IMPROVE TASK EFFICIENCY, THIS IS NOW SAID DURING NAVIGATION TO SITTING AREA
                 # self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
                 #                                                        ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
-                        
+
                 self.state = self.task_states["Get_guest2_bag"]
 
 
@@ -486,10 +502,10 @@ class TaskMain():
                     self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=False)
                     self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
 
-                    self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=True)
-                    self.robot.set_face("help_pick_bag")
+                    self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
-
+                    self.robot.set_face("help_pick_bag")
+                    
                     wait_time_show_help_face=1.0
                     attempts_at_receiving=4
                     time.sleep(wait_time_show_help_face)
@@ -636,9 +652,9 @@ class TaskMain():
                 self.robot.set_speech(filename="receptionist/dear_first_guest", wait_for_end_of=True)
                 self.robot.detected_person_to_face_path(person=self.GUEST2, just_face=True, send_to_face=True)
                 self.robot.set_speech(filename="receptionist/second_guest_name_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="person_names/"+self.GUEST2_NAME.replace(" ","_").lower(), wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST2_NAME.lower(), wait_for_end_of=True)
                 self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="objects_names/"+self.GUEST2_DRINK, wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST2_DRINK.lower(), wait_for_end_of=True)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
                 
                 if self.SIDE_TO_LOOK.lower() == "right":
@@ -649,9 +665,9 @@ class TaskMain():
                 self.robot.set_speech(filename="receptionist/dear_second_guest", wait_for_end_of=True)
                 self.robot.detected_person_to_face_path(person=self.GUEST1, just_face=True, send_to_face=True)
                 self.robot.set_speech(filename="receptionist/first_guest_name_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="person_names/"+self.GUEST1_NAME.replace(" ","_").lower(), wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST1_NAME.lower(), wait_for_end_of=True)
                 self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="objects_names/"+self.GUEST1_DRINK, wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST1_DRINK.lower(), wait_for_end_of=True)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
