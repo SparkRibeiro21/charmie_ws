@@ -1811,7 +1811,7 @@ class RobotStdFunctions():
         success = False
         message = ""
 
-        MAX_ERROR_LEGS_READING = 0.003
+        MAX_ERROR_LEGS_READING = 0.006
         MAX_ERROR_TORSO_READING = 3
 
         MIN_POSSIBLE_LEGS =  0.00 - (MAX_ERROR_LEGS_READING/2)
@@ -1842,7 +1842,7 @@ class RobotStdFunctions():
                     l, t = self.get_torso_position()
                     error_l = abs(request.legs - l)
                     error_t = abs(request.torso - t)
-                    # print(l, t, error_l, error_t)
+                    print(l, t, error_l, error_t)
 
                     if error_l <= MAX_ERROR_LEGS_READING and error_t <= MAX_ERROR_TORSO_READING:
                         self.node.waited_for_end_of_set_torso_position = True
@@ -5971,24 +5971,29 @@ class RobotStdFunctions():
         initial_position = [-194.1,65.3,-147.5,69.3,2.4,358.1]
         second_position = [-155.9,59.4,-130.6,69,50.5,358.1]
         final_position = [-200.2,58.4,-139.7,67,28.3,358.1]
+        initial_position_joints = 					[ -224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
+        torso_wait = True
 
         self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=True)
         _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
         print("furdis", furniture_distance)
-        self.wait_for_start_button()
-        self.adjust_omnidirectional_position(dx = furniture_distance - 1.25, dy = 0.0,wait_for_end_of=True)
-        self.wait_for_start_button()
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position, wait_for_end_of=True)
-        self.wait_for_start_button()
+        self.adjust_omnidirectional_position(dx = furniture_distance - 1.15, dy = 0.0,wait_for_end_of=False)
+        #self.wait_for_start_button()
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position, wait_for_end_of=False)
+        #self.wait_for_start_button()
         self.set_torso_position(legs=0.015, torso=50, wait_for_end_of=True)
-        self.wait_for_start_button()
-        self.adjust_omnidirectional_position(dx = 0.3, dy = 0.0,wait_for_end_of=True, safety=False)
-        self.wait_for_start_button()
-        self.set_torso_position(legs=0.10, torso=25, wait_for_end_of=True)
+        #self.wait_for_start_button()
+        self.adjust_omnidirectional_position(dx = 0.2, dy = 0.0,wait_for_end_of=True, safety=False)
+        #self.wait_for_start_button()
+        self.set_torso_position(legs=0.095, torso=25, wait_for_end_of=True)
+        print("torso done")
         #self.set_arm(command="adjust_joint_motion", joint_motion_values = second_position, wait_for_end_of=True)
-        self.wait_for_start_button()
-        self.adjust_omnidirectional_position(dx = 0.44, dy = 0.0,wait_for_end_of=True, safety=False)
-        self.wait_for_start_button()
+        #self.wait_for_start_button()
+        self.adjust_omnidirectional_position(dx = 0.43, dy = 0.0,wait_for_end_of=True, safety=False)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=False)
+        self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=True)
+        #self.wait_for_start_button()
+        self.adjust_omnidirectional_position(dx = -0.20, dy = 0.0,wait_for_end_of=True, safety=False)
 
         pass
         # arm movements and search for objects for furniture door_handle 
