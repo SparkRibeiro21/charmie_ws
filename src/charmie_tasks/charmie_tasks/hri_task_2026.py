@@ -251,19 +251,29 @@ class TaskMain():
                 self.robot.calibrate_audio(wait_for_end_of=True)
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
+                time.sleep(0.5)
 
                 people_found = []
+                correct_person = DetectedPerson()
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True)
+                    print("People found:", len(people_found))
+
                     if len(people_found) == 0:
                         self.robot.set_speech(filename="hri/stand_closer_until_see_detection", wait_for_end_of=True)
+                    elif len(people_found) == 1:
+                        correct_person = people_found[0]
                     elif len(people_found) > 1:
-                        pass
-                        ### CALCULATE CLOSEST PERSON TO THE ROBOT, IF DISTANCES ARE CLOSE, SELECT THE ONE CLOSER TO THE CENTER OF THE ROBOT FRONT
+                        
+                        # if there are multiple person detected, it assumes the person most centered (in width) in the image frame 
+                        min_dist_to_center = people_found[0].image_rgb_frame.width
+                        for p in people_found:
+                            width_dist_to_center = abs(p.body_center_x-p.image_rgb_frame.width)
+                            if width_dist_to_center < min_dist_to_center:
+                                correct_person = p
 
-                print("People found:", len(people_found))
-                self.GUEST1 = people_found[0]
+                self.GUEST1 = correct_person
 
                 self.robot.activate_tracking_mask(track_person=self.GUEST1, mode="face", show_detections_on_face=True)
                 self.robot.set_neck_continuous_tracking(activate=True)
@@ -445,19 +455,29 @@ class TaskMain():
                 self.robot.calibrate_audio(wait_for_end_of=True)
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
+                time.sleep(0.5)
                 
                 people_found = []
+                correct_person = DetectedPerson()
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True)
+                    print("People found:", len(people_found))
+                    
                     if len(people_found) == 0:
                         self.robot.set_speech(filename="hri/stand_closer_until_see_detection", wait_for_end_of=True)
+                    elif len(people_found) == 1:
+                        correct_person = people_found[0]
                     elif len(people_found) > 1:
-                        pass
-                        ### CALCULATE CLOSEST PERSON TO THE ROBOT, IF DISTANCES ARE CLOSE, SELECT THE ONE CLOSER TO THE CENTER OF THE ROBOT FRONT
+                        
+                        # if there are multiple person detected, it assumes the person most centered (in width) in the image frame 
+                        min_dist_to_center = people_found[0].image_rgb_frame.width
+                        for p in people_found:
+                            width_dist_to_center = abs(p.body_center_x-p.image_rgb_frame.width)
+                            if width_dist_to_center < min_dist_to_center:
+                                correct_person = p
 
-                print("People found:", len(people_found))
-                self.GUEST2 = people_found[0]
+                self.GUEST2 = correct_person
 
                 self.robot.activate_tracking_mask(track_person=self.GUEST2, mode="face", show_detections_on_face=True)
                 self.robot.set_neck_continuous_tracking(activate=True)
