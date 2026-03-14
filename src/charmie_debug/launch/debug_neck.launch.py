@@ -10,8 +10,8 @@ def generate_launch_description():
         #####################################################################
         # Robot State and Static Transforms                                 #
         #####################################################################
-        std_lf.robot_state_publisher_real_node,
-        std_lf.static_transforms_launch,
+        # std_lf.robot_state_publisher_real_node,
+        # std_lf.static_transforms_launch,
         
         #####################################################################
         # Visualization and Debugging                                       # 
@@ -61,7 +61,7 @@ def generate_launch_description():
         # Cameras                                                           # 
         #####################################################################
         # CAMS have to be after nav2 otherwise map does not show up in rviz
-        std_lf.charmie_multi_camera_launch_description,
+        # std_lf.charmie_multi_camera_launch_description,
         # std_lf.charmie_orbbec_base_camera_launch_description,
 
         #####################################################################

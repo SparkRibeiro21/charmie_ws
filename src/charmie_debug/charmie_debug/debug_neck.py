@@ -69,20 +69,6 @@ class TaskMain():
                 "v": {"min": -60,  "max": 60},
             }
         
-
-
-
-        ### CHECK AXIS
-        ### CHECK LIMITS
-
-
-
-
-
-
-
-
-
         self.current_neck_position = [0, 0]
 
         # Neck Positions
