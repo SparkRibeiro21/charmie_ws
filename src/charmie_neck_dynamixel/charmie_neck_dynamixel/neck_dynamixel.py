@@ -387,6 +387,21 @@ class NeckNode(Node):
         self.get_logger().info("Received Neck Continuous Tracking: %s" %str(request.status))
 
         self.continuous_tracking = request.status
+
+        # cleans tracking variables every time we turn on or off
+        self.tracking_target_p = 0
+        self.tracking_target_t = 0
+        self.tracking_ctr = 1
+        self.tracking_new_pan = 0
+        self.tracking_new_tilt = 0
+        self.tracking_read_pan_open_loop_deg = 0
+        self.tracking_read_tilt_open_loop_deg = 0
+        self.tracking_signal_pan = 0
+        self.tracking_signal_tilt = 0
+        self.tracking_u_pan = 0
+        self.tracking_u_tilt = 0
+        self.tracking_rem_pan = 0
+        self.tracking_rem_tilt = 0
         
         # returns whether the message was played and some informations regarding status
         response.success = True
