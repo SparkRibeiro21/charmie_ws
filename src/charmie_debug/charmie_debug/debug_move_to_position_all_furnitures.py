@@ -141,7 +141,7 @@ class TaskMain():
                     move_coords = self.robot.get_navigation_coords_from_room(self.NAVIGATION_TARGET)
 
                 ### NAVIGATE TO CORRECT FURNITURE
-                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                # self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename=self.NAVIGATION_TARGET_SPEAK, wait_for_end_of=False)
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=False)
