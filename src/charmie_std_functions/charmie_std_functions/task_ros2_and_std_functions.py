@@ -5807,7 +5807,7 @@ class RobotStdFunctions():
             second_right_tray_top = [-184.1,-9.9,-6,-97.2,92.1,122.8]
             initial_position_to_safe_joints = 	[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
 
-            state = 0
+            state = 3
 
             if state == 0:
                 self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
