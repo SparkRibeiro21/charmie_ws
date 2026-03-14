@@ -258,21 +258,25 @@ class TaskMain():
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True)
-                    print("People found:", len(people_found))
+                    print("Number of people found:", len(people_found))
 
                     if len(people_found) == 0:
                         self.robot.set_speech(filename="hri/stand_closer_until_see_detection", wait_for_end_of=True)
                     elif len(people_found) == 1:
                         correct_person = people_found[0]
                     elif len(people_found) > 1:
-                        
+                        print("Multiple people found:")
                         # if there are multiple person detected, it assumes the person most centered (in width) in the image frame 
                         min_dist_to_center = people_found[0].image_rgb_frame.width
                         for p in people_found:
-                            width_dist_to_center = abs(p.body_center_x-p.image_rgb_frame.width)
+                            width_dist_to_center = abs(p.body_center_x-p.image_rgb_frame.width/2)
+                            print("Index:", p.index, "Body Center X:", p.body_center_x, "Image RGB Frame Width Center:", p.image_rgb_frame.width/2, "Width Dist to Center:", width_dist_to_center)
                             if width_dist_to_center < min_dist_to_center:
+                                min_dist_to_center = width_dist_to_center
                                 correct_person = p
-
+                        print("CORRECT PERSON:")
+                        print("Index:", correct_person.index, "Body Center X:", correct_person.body_center_x, "Image RGB Frame Width Center:", correct_person.image_rgb_frame.width/2, "Width Dist to Center:", width_dist_to_center)
+                        
                 self.GUEST1 = correct_person
 
                 self.robot.activate_tracking_mask(track_person=self.GUEST1, mode="face", show_detections_on_face=True)
@@ -462,21 +466,25 @@ class TaskMain():
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
                     people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True)
-                    print("People found:", len(people_found))
-                    
+                    print("Number of people found:", len(people_found))
+
                     if len(people_found) == 0:
                         self.robot.set_speech(filename="hri/stand_closer_until_see_detection", wait_for_end_of=True)
                     elif len(people_found) == 1:
                         correct_person = people_found[0]
                     elif len(people_found) > 1:
-                        
+                        print("Multiple people found:")
                         # if there are multiple person detected, it assumes the person most centered (in width) in the image frame 
                         min_dist_to_center = people_found[0].image_rgb_frame.width
                         for p in people_found:
-                            width_dist_to_center = abs(p.body_center_x-p.image_rgb_frame.width)
+                            width_dist_to_center = abs(p.body_center_x-p.image_rgb_frame.width/2)
+                            print("Index:", p.index, "Body Center X:", p.body_center_x, "Image RGB Frame Width Center:", p.image_rgb_frame.width/2, "Width Dist to Center:", width_dist_to_center)
                             if width_dist_to_center < min_dist_to_center:
+                                min_dist_to_center = width_dist_to_center
                                 correct_person = p
-
+                        print("CORRECT PERSON:")
+                        print("Index:", correct_person.index, "Body Center X:", correct_person.body_center_x, "Image RGB Frame Width Center:", correct_person.image_rgb_frame.width/2, "Width Dist to Center:", width_dist_to_center)
+                    
                 self.GUEST2 = correct_person
 
                 self.robot.activate_tracking_mask(track_person=self.GUEST2, mode="face", show_detections_on_face=True)
@@ -488,7 +496,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/presentation_green_face_quick", wait_for_end_of=True)
                 command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
 
-                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=True)
+                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=False)
+                self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=False) # placed here for time optimization
 
                 a = time.time()
                 self.GUEST2_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
@@ -524,13 +533,13 @@ class TaskMain():
                     ### bag_object.object_name = "bag"
                     ### self.robot.ask_help_pick_object_gripper(object_d=bag_object, show_detection=False, look_judge=self.look_forward, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
                     # I should use the std function. However this is a very specific pick that I do not need to detect, so we added here an optimized version just for this case 
-                    
-                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=False)
-                    self.robot.set_arm(command="open_gripper", wait_for_end_of=False)
 
-                    self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=False)
-                    self.robot.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
+                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                    self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                    self.robot.set_speech(filename="hri/place_the_bag", wait_for_end_of=True)
                     self.robot.set_face("help_pick_bag")
+                    self.robot.set_speech(filename="generic/check_face_put_object_hand_p2", wait_for_end_of=True)
                     
                     wait_time_show_help_face=1.0
                     attempts_at_receiving=4
