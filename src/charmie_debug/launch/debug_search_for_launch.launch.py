@@ -19,7 +19,7 @@ def generate_launch_description():
         std_lf.rviz2_nav2_node,
         std_lf.gui,
         std_lf.marker_arrays_debug,
-        std_lf.task_with_gamepad, # debug mode where task is selected via gamepad
+        # std_lf.task_with_gamepad, # debug mode where task is selected via gamepad
 
         ######################################################################
         # Actuators                                                          #
@@ -28,8 +28,8 @@ def generate_launch_description():
         # std_lf.arm,
         std_lf.speakers,
         # std_lf.save_speakers,
-        # std_lf.neck,
-        # std_lf.face,
+        std_lf.neck,
+        std_lf.face,
         std_lf.low_level,
         
         #####################################################################
@@ -38,7 +38,7 @@ def generate_launch_description():
         std_lf.lidar,
         std_lf.lidar_bottom,
         # std_lf.livox_driver,
-        # std_lf.radar,
+        std_lf.radar,
         # std_lf.audio,
         # std_lf.sound_classification,
         
@@ -56,6 +56,7 @@ def generate_launch_description():
         std_lf.delayed_nav2_localization,        
         std_lf.nav2_navigation,
         std_lf.charmie_navigation,
+        # std_lf.sdnl_navigation,
 
         #####################################################################
         # Cameras                                                           # 
@@ -77,8 +78,8 @@ def generate_launch_description():
         std_lf.yolo_objects,
         # std_lf.yolo_world_without_prompt_free,
         # std_lf.yolo_world_with_prompt_free,
-        std_lf.yolo_pose,
-        std_lf.tracking,
+        # std_lf.yolo_pose,
+        # std_lf.tracking,
         # std_lf.llm,
 
     ])
