@@ -257,7 +257,7 @@ class TaskMain():
                 correct_person = DetectedPerson()
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
-                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True)
+                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     print("Number of people found:", len(people_found))
 
                     if len(people_found) == 0:
@@ -299,11 +299,9 @@ class TaskMain():
                 self.GUEST1_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
                 print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
 
-                self.robot.save_speech(command=self.GUEST1_NAME, filename=self.GUEST1_NAME, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
-                self.robot.save_speech(command=self.GUEST1_DRINK, filename=self.GUEST1_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+                self.robot.save_speech(command=self.GUEST1_NAME,  filename=self.GUEST1_NAME,  quick_voice=False, wait_for_end_of=False)
+                self.robot.save_speech(command=self.GUEST1_DRINK, filename=self.GUEST1_DRINK, quick_voice=False, wait_for_end_of=False)
 
-                print("Finished:", command)
-                
                 if command == "ERR_MAX":
                     print("MAX HEARING ATTEMPTS REACHED")
                     self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
@@ -419,8 +417,9 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
                 self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
+                # commented out for time optimmization
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
                 
                 self.state = self.task_states["Wait_for_guest2_to_arrive"]
 
@@ -465,7 +464,7 @@ class TaskMain():
                 correct_person = DetectedPerson()
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
-                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True)
+                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     print("Number of people found:", len(people_found))
 
                     if len(people_found) == 0:
@@ -507,8 +506,8 @@ class TaskMain():
                 self.GUEST2_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
                 print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
                 
-                self.robot.save_speech(command=self.GUEST2_NAME, filename=self.GUEST2_NAME, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
-                self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+                self.robot.save_speech(command=self.GUEST2_NAME,  filename=self.GUEST2_NAME,  quick_voice=False, wait_for_end_of=False)
+                self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, wait_for_end_of=False)
                
                 if command == "ERR_MAX":
                     print("MAX HEARING ATTEMPTS REACHED")
