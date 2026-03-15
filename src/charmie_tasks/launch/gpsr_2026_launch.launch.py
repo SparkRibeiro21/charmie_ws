@@ -26,8 +26,8 @@ def generate_launch_description():
         ######################################################################
         # LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
         # std_lf.arm,
-        # std_lf.speakers,
-        std_lf.speakers_with_save, ### this is different on purpose for HRI task!
+        std_lf.speakers,
+        std_lf.save_speakers,
         std_lf.neck,
         std_lf.face,
         std_lf.low_level,

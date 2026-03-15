@@ -20,6 +20,7 @@ bool charmie_neck
 bool charmie_radar
 bool charmie_sound_classification
 bool charmie_speakers
+bool charmie_speakers_save
 bool charmie_tracking
 bool charmie_yolo_objects
 bool charmie_yolo_pose

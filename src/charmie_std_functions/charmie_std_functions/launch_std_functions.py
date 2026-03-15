@@ -325,7 +325,7 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
-        self.speakers_with_save = Node(package='charmie_speakers',
+        self.save_speakers = Node(package='charmie_speakers',
                             executable='speakers_with_save',
                             name='speakers_with_save',
                             emulate_tty=True

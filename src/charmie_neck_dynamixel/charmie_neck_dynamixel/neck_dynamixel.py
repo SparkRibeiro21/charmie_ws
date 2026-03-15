@@ -225,10 +225,8 @@ class NeckNode(Node):
 
             max_error_p = 7
             max_error_t = 7
-
-            print("Tr_PAN:", self.tracking_target_p, " -> ", self.tracking_target_p, "error_p:", error_pan)
-            print("Tr_TILT:", self.tracking_target_t, " -> ", self.tracking_target_t, "error_t:", error_tilt)
-
+            print("Tr_PAN:", self.tracking_new_pan, " -> ", self.tracking_target_p, "error_p:", error_pan)
+            print("Tr_TILT:", self.tracking_new_tilt, " -> ", self.tracking_target_t, "error_t:", error_tilt)
 
             if error_pan < 20:# 
                 self.tracking_u_pan = 1
@@ -236,6 +234,8 @@ class NeckNode(Node):
                 self.tracking_u_pan = 2
             elif error_pan < 40:
                 self.tracking_u_pan = 3
+            else:
+                self.tracking_u_pan = 4
 
             print("pan_speed:", self.tracking_u_pan)
             
@@ -261,8 +261,12 @@ class NeckNode(Node):
                 self.tracking_ctr+=1
             
     def continuous_tracking_callback(self, tracking_mask: TrackingMask):
-        self.get_logger().info("%s" %str(tracking_mask.centroid_norm.x)+", "+str(tracking_mask.centroid_norm.y))
+        self.get_logger().info("%s" %str(tracking_mask.centroid.x)+", "+str(tracking_mask.centroid.y))
         self.move_neck_with_target_pixel(target_x=tracking_mask.centroid.x, target_y=tracking_mask.centroid.y, tracking_mode=True)
+
+        ### IN THE FUTURE I HAVE TO CHANGE TO NORMALIZED CENTROID
+        self.get_logger().info("%s" %str(tracking_mask.centroid_norm.x)+", "+str(tracking_mask.centroid_norm.y))
+        
     
     # def continuous_tracking_position_callback(self, position: Point):
     #     self.continuous_tracking_point_position = position
@@ -386,6 +390,24 @@ class NeckNode(Node):
 
         self.get_logger().info("Received Neck Continuous Tracking: %s" %str(request.status))
 
+        current_pan_deg = int(read_pan_open_loop * SERVO_TICKS_TO_DEGREES_CONST)
+        current_tilt_deg = int(read_tilt_open_loop * SERVO_TICKS_TO_DEGREES_CONST)
+
+        # cleans tracking variables every time we turn on or off
+        self.tracking_target_p = current_pan_deg
+        self.tracking_target_t = current_tilt_deg
+        self.tracking_ctr = 1
+        self.tracking_new_pan = current_pan_deg
+        self.tracking_new_tilt = current_tilt_deg
+        self.tracking_read_pan_open_loop_deg = current_pan_deg
+        self.tracking_read_tilt_open_loop_deg = current_tilt_deg
+        self.tracking_signal_pan = 0
+        self.tracking_signal_tilt = 0
+        self.tracking_u_pan = 0
+        self.tracking_u_tilt = 0
+        self.tracking_rem_pan = 0
+        self.tracking_rem_tilt = 0
+        
         self.continuous_tracking = request.status
         
         # returns whether the message was played and some informations regarding status

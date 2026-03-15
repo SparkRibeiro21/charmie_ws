@@ -94,6 +94,7 @@ class DebugVisualNode(Node):
         self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        # Speakers Save
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
@@ -318,6 +319,7 @@ class DebugVisualNode(Node):
         # bool charmie_radar
         # bool charmie_sound_classification
         # bool charmie_speakers
+        # bool charmie_speakers_save
         # bool charmie_tracking
         # bool charmie_yolo_objects
         # bool charmie_yolo_pose
@@ -631,6 +633,7 @@ class CheckNodesMain():
         self.CHECK_RADAR_NODE = False
         self.CHECK_SOUND_CLASSIFICATION_NODE = False
         self.CHECK_SPEAKERS_NODE = False
+        self.CHECK_SPEAKERS_SAVE_NODE = False
         self.CHECK_TRACKING_NODE = False
         self.CHECK_YOLO_OBJECTS_NODE = False
         self.CHECK_YOLO_POSE_NODE = False
@@ -794,6 +797,13 @@ class CheckNodesMain():
                 self.CHECK_SPEAKERS_NODE = False
             else:
                 self.CHECK_SPEAKERS_NODE = True
+
+            # SPEAKERS SAVE
+            if not self.node.save_speech_command_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Speech Save ...")
+                self.CHECK_SPEAKERS_SAVE_NODE = False
+            else:
+                self.CHECK_SPEAKERS_SAVE_NODE = True
 
             # TRACKING (SAM2)
             if not self.node.activate_tracking_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -1034,6 +1044,7 @@ class DebugVisualMain():
         self.CHARMIE_RADAR_NODE_RECT                = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_SPEAKERS_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_SPEAKERS_SAVE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_TRACKING_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_YOLO_OBJECTS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_YOLO_WORLD_NODE_RECT           = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1298,9 +1309,18 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT)
 
         # SPEAKERS
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
-        self.draw_text("Speakers", self.text_font, tc, self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
+        tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_SPEAKERS_NODE_RECT)
+        # SAVE SPEAKERS        
+        tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers_save, self.check_nodes.CHECK_SPEAKERS_SAVE_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_SPEAKERS_SAVE_NODE_RECT)
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
+            tc = self.BLUE_L
+        else:
+            tc = self.WHITE
+        self.draw_text("Speakers/Save", self.text_font, tc, self.CHARMIE_SPEAKERS_SAVE_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_SAVE_NODE_RECT.width, self.CHARMIE_SPEAKERS_SAVE_NODE_RECT.y-2)
+
+        ###########################################################
 
         # TRACKING
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_tracking, self.check_nodes.CHECK_TRACKING_NODE)
@@ -1308,10 +1328,10 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_TRACKING_NODE_RECT)
 
         # YOLO OBJECTS
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_objects, self.check_nodes.CHECK_YOLO_OBJECTS_NODE)
+        tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_objects, self.check_nodes.CHECK_YOLO_OBJECTS_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
         # YOLO WORLD
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_world, self.check_nodes.CHECK_YOLO_WORLD_NODE)
+        tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_world, self.check_nodes.CHECK_YOLO_WORLD_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_YOLO_WORLD_NODE_RECT)
         if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
             tc = self.BLUE_L
