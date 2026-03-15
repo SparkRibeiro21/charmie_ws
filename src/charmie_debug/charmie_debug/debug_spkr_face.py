@@ -30,6 +30,7 @@ ros2_modules = {
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
+    "charmie_speakers_save":        True,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
@@ -85,15 +86,19 @@ class TaskMain():
 
                 self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=False)
 
-                a = time.time()
-                self.GUEST1_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
-                print("Name:", self.GUEST1_NAME, time.time()-a)
+                # a = time.time()
+                # self.GUEST1_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                # print("Name:", self.GUEST1_NAME, time.time()-a)
+                self.GUEST1_NAME = "Fernando"
+                time.sleep(1.0)
 
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) 
                 
-                b = time.time()
-                self.GUEST1_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
-                print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
+                # b = time.time()
+                # self.GUEST1_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                # print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
+                self.GUEST1_DRINK = "strawberry juice"
+                time.sleep(1.0)
 
                 self.robot.save_speech(command=self.GUEST1_NAME, filename=self.GUEST1_NAME, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST1_DRINK, filename=self.GUEST1_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)

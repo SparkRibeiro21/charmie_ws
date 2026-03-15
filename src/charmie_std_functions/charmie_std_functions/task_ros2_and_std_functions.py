@@ -144,6 +144,7 @@ class ROS2TaskNode(Node):
         self.set_height_furniture_for_arm_manual_movement_client = self.create_client(SetFloat, "set_table_height")
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        # Save Speakers
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
@@ -231,6 +232,7 @@ class ROS2TaskNode(Node):
         "charmie_radar":                    True,
             "charmie_sound_classification": False,
             "charmie_speakers":             True,
+            "charmie_speakers_save":        False,
             "charmie_tracking":             False,
             "charmie_yolo_objects":         True,
             "charmie_yolo_pose":            False,
@@ -297,8 +299,10 @@ class ROS2TaskNode(Node):
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Speech Command...")
+        
+        if self.ros2_modules["charmie_speakers_save"]:
             while not self.save_speech_command_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Save Speech Command...")
+                self.get_logger().warn("Waiting for Server Save Speakers Command...")
 
         if self.ros2_modules["charmie_tracking"]:
             while not self.activate_tracking_client.wait_for_service(1.0):
@@ -532,6 +536,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
         nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
+        nodes_used.charmie_speakers_save        = self.ros2_modules["charmie_speakers_save"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
