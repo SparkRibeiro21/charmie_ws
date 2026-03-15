@@ -12,13 +12,15 @@ def generate_launch_description():
         #####################################################################
         std_lf.robot_state_publisher_real_node,
         std_lf.static_transforms_launch,
+        std_lf.static_transforms_just_odom_launch, ### this is different on purpose for restaurant task!
         
         #####################################################################
         # Visualization and Debugging                                       # 
         #####################################################################
-        std_lf.rviz2_nav2_node,
+        std_lf.rviz2_restaurant_node, ### this is different on purpose for restaurant task!
         std_lf.gui,
         std_lf.marker_arrays_debug,
+        std_lf.sdnl_debug, ### this is different on purpose for restaurant task!
         # std_lf.task_with_gamepad, # debug mode where task is selected via gamepad
 
         ######################################################################
@@ -51,10 +53,11 @@ def generate_launch_description():
         #####################################################################
         # Navigation                                                        # 
         #####################################################################
-        std_lf.manual_obstacles_map_server,
-        std_lf.delayed_nav2_localization,        
-        std_lf.nav2_navigation,
-        std_lf.charmie_navigation,
+        # std_lf.manual_obstacles_map_server,
+        # std_lf.delayed_nav2_localization,        
+        # std_lf.nav2_navigation,
+        std_lf.charmie_navigation_unmapped, ### this is different on purpose for restaurant task!
+        std_lf.sdnl_navigation,
 
         #####################################################################
         # Cameras                                                           # 
@@ -77,7 +80,7 @@ def generate_launch_description():
         # std_lf.yolo_world_without_prompt_free,
         # std_lf.yolo_world_with_prompt_free,
         std_lf.yolo_pose,
-        std_lf.tracking,
+        # std_lf.tracking,
         # std_lf.llm,
 
     ])

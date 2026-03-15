@@ -15,6 +15,7 @@ bool charmie_localisation
 bool charmie_low_level
 bool charmie_navigation
 bool charmie_nav2
+bool charmie_nav_sdnl
 bool charmie_neck
 bool charmie_radar
 bool charmie_sound_classification

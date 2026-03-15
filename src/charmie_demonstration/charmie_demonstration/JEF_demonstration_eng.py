@@ -11,26 +11,29 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":              True,
-    "charmie_audio":            False,
-    "charmie_face":             True,
-    "charmie_head_camera":      True,
-    "charmie_hand_camera":      True,
-    "charmie_base_camera":      False,
-    "charmie_lidar":            False,
-    "charmie_lidar_bottom":     False,
-    "charmie_llm":              False,
-    "charmie_localisation":     False,
-    "charmie_low_level":        True,
-    "charmie_navigation":       False, #TRUE
-    "charmie_nav2":             False, #ASK MOTOR WHICH SHOULD BE TRUE
-    "charmie_neck":             True,
-    "charmie_obstacles":        False,
-    "charmie_ps4_controller":   False,
-    "charmie_speakers":         True,
-    "charmie_tracking":         False,
-    "charmie_yolo_objects":     True,
-    "charmie_yolo_pose":        True,
+    "charmie_arm":                  True,
+    "charmie_audio":                False,
+    "charmie_face":                 True,
+    "charmie_head_camera":          True,
+    "charmie_hand_camera":          True,
+    "charmie_base_camera":          False,
+    "charmie_gamepad":              False,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
+    "charmie_llm":                  False,
+    "charmie_localisation":         False,
+    "charmie_low_level":            True,
+    "charmie_navigation":           False, #TRUE
+    "charmie_nav2":                 False, #ASK MOTOR WHICH SHOULD BE TRUE
+    "charmie_nav_sdnl":             False,
+    "charmie_neck":                 True,
+    "charmie_radar":                False,
+    "charmie_sound_classification": False,
+    "charmie_speakers":             True,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         True,
+    "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
 }
 

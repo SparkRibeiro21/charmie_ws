@@ -9,12 +9,12 @@ from sensor_msgs.msg import Image, LaserScan, PointCloud2
 from sensor_msgs_py import point_cloud2
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
-from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
-    TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData
+from charmie_interfaces.msg import NeckPosition, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
+    TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData, SDNLMarkerDebug
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
     SetRGB, GetMinRadarDistance, ActivateYoloWorld
-from charmie_interfaces.action import AdjustNavigationAngle
+from charmie_interfaces.action import AdjustNavigationAngle, NavigateSDNL
 from cv_bridge import CvBridge, CvBridgeError
 from realsense2_camera_msgs.msg import RGBD
 
@@ -61,9 +61,8 @@ class DebugVisualNode(Node):
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
-        # Navigation
-        self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
+        # SDNL Nav
+        self.sdnl_marker_debug_subscriber = self.create_subscription(SDNLMarkerDebug, "sdnl/marker_debug", self.sdnl_marker_debug_callback, 10) 
         # search for person and object 
         self.search_for_person_subscriber = self.create_subscription(ListOfDetectedPerson, "search_for_person_detections", self.search_for_person_detections_callback, 10)
         self.search_for_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_object_detections", self.search_for_object_detections_callback, 10)
@@ -131,6 +130,7 @@ class DebugVisualNode(Node):
         ### Actions (Clients) ###
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
+        self.sdnl_nav_client_ = ActionClient(self, NavigateSDNL, "sdnl_navigate_to_pose")
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
@@ -218,8 +218,8 @@ class DebugVisualNode(Node):
         self.new_search_for_person = False
         self.new_search_for_object = False
         self.new_search_for_world_object = False
-        self.navigation = TarNavSDNL()
-        self.is_navigating = False
+        self.sdnl_dbg = SDNLMarkerDebug()
+        self.sdnl_dbg.active = False
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
         self.is_tracking_comm = False
@@ -313,6 +313,7 @@ class DebugVisualNode(Node):
         # bool charmie_low_level
         # bool charmie_navigation
         # bool charmie_nav2
+        # bool charmie_nav_sdnl
         # bool charmie_neck
         # bool charmie_radar
         # bool charmie_sound_classification
@@ -557,14 +558,10 @@ class DebugVisualNode(Node):
     
     def radar_data_callback(self, radar: RadarData):
         self.radar = radar
-
-    def target_pos_callback(self, nav: TarNavSDNL):
-        self.navigation = nav
-        self.is_navigating = True
-        print(nav)
-
-    def flag_navigation_reached_callback(self, flag: Bool):
-        self.is_navigating = False
+    
+    def sdnl_marker_debug_callback(self, msg: SDNLMarkerDebug):
+        self.sdnl_dbg = msg
+        # print(self.sdnl_dbg)
 
     def get_neck_position_callback(self, pose: NeckPosition):
         # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
@@ -629,6 +626,7 @@ class CheckNodesMain():
         self.CHECK_LOW_LEVEL_NODE = False
         self.CHECK_NAVIGATION_NODE = False
         self.CHECK_NAV2_NODE = False
+        self.CHECK_NAV_SDNL_NODE = False
         self.CHECK_NECK_NODE = False
         self.CHECK_RADAR_NODE = False
         self.CHECK_SOUND_CLASSIFICATION_NODE = False
@@ -755,6 +753,13 @@ class CheckNodesMain():
                 self.CHECK_NAV2_NODE = False
             else:
                 self.CHECK_NAV2_NODE = True
+
+            # NAV SDNL
+            if not self.node.sdnl_nav_client_.server_is_ready():
+                # self.node.get_logger().warn("Waiting for Server Navigation ...")
+                self.CHECK_NAV_SDNL_NODE = False
+            else:
+                self.CHECK_NAV_SDNL_NODE = True
 
             # NECK
             if not self.node.set_neck_position_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -1024,6 +1029,7 @@ class DebugVisualMain():
         # the two navs have the same node rect for now, only nav2 will be used for now
         self.CHARMIE_NAVIGATION_NODE_RECT           = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NAV2_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAV_SDNL_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NECK_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_RADAR_NODE_RECT                = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1267,11 +1273,14 @@ class DebugVisualMain():
         # NAV2
         tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_nav2, self.check_nodes.CHECK_NAV2_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAV2_NODE_RECT)
-        if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
+        # SDNL
+        tc3, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_nav_sdnl, self.check_nodes.CHECK_NAV_SDNL_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAV_SDNL_NODE_RECT)
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L or tc3 == self.BLUE_L:
             tc = self.BLUE_L
         else:
             tc = self.WHITE
-        self.draw_text("Navigation/Nav2", self.text_font, tc, self.CHARMIE_NAV2_NODE_RECT.x+2*self.CHARMIE_NAV2_NODE_RECT.width, self.CHARMIE_NAV2_NODE_RECT.y-2)
+        self.draw_text("CNav/Nav2/SDNL", self.text_font, tc, self.CHARMIE_NAV_SDNL_NODE_RECT.x+2*self.CHARMIE_NAV_SDNL_NODE_RECT.width, self.CHARMIE_NAV_SDNL_NODE_RECT.y-2)
         
         # NECK
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_neck, self.check_nodes.CHECK_NECK_NODE)
@@ -2452,10 +2461,9 @@ class DebugVisualMain():
 
 
         ### NAVIGATION TARGETS
-        if self.node.is_navigating:
-            if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
-                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.robot_radius/2), width=0)
-                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.node.navigation.reached_radius), width=1)
+        if self.node.sdnl_dbg.active:
+            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.sdnl_dbg.target_pose.x, self.node.sdnl_dbg.target_pose.y), radius=self.size_to_map(self.robot_radius/2), width=0)
+            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.sdnl_dbg.target_pose.x, self.node.sdnl_dbg.target_pose.y), radius=self.size_to_map(self.node.sdnl_dbg.reached_radius), width=1)
 
         ### 3D LIDAR
         if self.node.livox_3dlidar.width > 0 and len(self.node.livox_3dlidar.data) > 0:

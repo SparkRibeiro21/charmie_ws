@@ -1,17 +1,12 @@
 #include "rclcpp/rclcpp.hpp"
-#include "ament_index_cpp/get_package_share_directory.hpp"
 
 #include "std_msgs/msg/float32_multi_array.hpp"
-
 #include "geometry_msgs/msg/point.hpp"
-
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
-
 #include "charmie_interfaces/msg/radar_sector.hpp"
 #include "charmie_interfaces/msg/radar_data.hpp"
-
 #include "charmie_interfaces/srv/get_min_radar_distance.hpp"
 
 #include "tf2_ros/transform_listener.h"
@@ -22,197 +17,199 @@
 #include <pcl/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include <yaml-cpp/yaml.h>
-#include <chrono>
-#include <mutex>
+#include <unordered_map>
 #include <optional>
+#include <sstream>
+#include <iomanip>
+#include <limits>
+#include <chrono>
+#include <cmath>
+#include <mutex>
 
 
 class RadarNode : public rclcpp::Node {
 public:
-    RadarNode() : Node("radar_node") {
+    RadarNode() : Node("radar_node", rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true))
+    {
 
-        debug_enabled_ = this->declare_parameter<bool>("debug", false);
+        // --- Debug params ---
+        debug_enabled_ = declare_if_missing_and_get<bool>("debug", false);
+
+        // --- General params ---
+        robot_base_frame_ = declare_if_missing_and_get<std::string>("robot_base_frame", "base_footprint");
+        robot_radius_     = declare_if_missing_and_get<double>("robot_radius", 0.28);
+        double update_frequency = declare_if_missing_and_get<double>("update_frequency", 10.0);
+
+        // --- Radar configuration (nested) ---
+        number_of_sectors_ = declare_if_missing_and_get<int>("radar_configuration.number_of_sectors", 0);
+        min_radar_angle_   = declare_if_missing_and_get<double>("radar_configuration.min_radar_angle", -M_PI);
+        max_radar_angle_   = declare_if_missing_and_get<double>("radar_configuration.max_radar_angle",  M_PI);
+        max_radar_range_   = declare_if_missing_and_get<double>("radar_configuration.max_radar_dist", 10.0);
+
+        const double total_angle_range = max_radar_angle_ - min_radar_angle_;
+        sector_size_ = (number_of_sectors_ > 0) ? total_angle_range / static_cast<double>(number_of_sectors_) : 0.0;
+
+        // --- Observation sources: list of sensor names ---
+        std::vector<std::string> sources = declare_if_missing_and_get<std::vector<std::string>>("observation_sources", std::vector<std::string>{});
         
-        std::string full_path = ament_index_cpp::get_package_share_directory("charmie_description") + "/config/radar_params.yaml";
-        std::string yaml_path = this->declare_parameter<std::string>("radar_config", full_path);
+        if (sources.empty()) {
+            RCLCPP_WARN(this->get_logger(), "Parameter 'observation_sources' is empty. No sensors will be used.");
+        }
+
+        // Pretty-print the sources list
+        std::ostringstream sources_oss;
+        for (size_t i = 0; i < sources.size(); ++i) {
+            sources_oss << sources[i];
+            if (i + 1 < sources.size()) sources_oss << " ";
+        }
+
+        std::string successful_sensors_str;
+        int number_sensor_skipped = 0;
+
+        RCLCPP_INFO(this->get_logger(), "--- General Configurations: ---");
+        RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
+        RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
+        RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f m", robot_radius_);
+        RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_oss.str().c_str());
         
-        try {
-            YAML::Node config = YAML::LoadFile(yaml_path);
-            YAML::Node radar = config["radar_node"];
-            if (!radar) {
-                RCLCPP_ERROR(this->get_logger(), "Missing 'radar_node' key in YAML file.");
-                return;
-            }
+        RCLCPP_INFO(this->get_logger(), "--- Sensor Configurations: ---");
+
+        auto key = [](const std::string& sensor_name, const std::string& suffix) {
+            return sensor_name + "." + suffix;
+        };
+        
+        for (const auto& sensor_name : sources) {
+
+            RCLCPP_INFO(this->get_logger(), "\t--- Sensor: %s ---", sensor_name.c_str());
             
-            RCLCPP_INFO(this->get_logger(), "Loading config from: %s", yaml_path.c_str());
+            const std::string topic = declare_if_missing_and_get<std::string>(key(sensor_name, "topic"), "");
+            const std::string data_type = declare_if_missing_and_get<std::string>(key(sensor_name, "data_type"), "");
 
-            robot_base_frame_       = radar["robot_base_frame"] ? radar["robot_base_frame"].as<std::string>() : "N/A";
-            double update_frequency = radar["update_frequency"] ? radar["update_frequency"].as<double>() : 10.0;
-            robot_radius_           = radar["robot_radius"] ? radar["robot_radius"].as<double>() : 0.0;
-
-            // Read radar_configuration block
-            if (radar["radar_configuration"]) {
-                YAML::Node radar_config = radar["radar_configuration"];
-                number_of_sectors_ = radar_config["number_of_sectors"] ? radar_config["number_of_sectors"].as<int>()   :     0;
-                min_radar_angle_  = radar_config["min_radar_angle"]  ? radar_config["min_radar_angle"].as<double>() : -M_PI;
-                max_radar_angle_  = radar_config["max_radar_angle"]  ? radar_config["max_radar_angle"].as<double>() :  M_PI;
-                max_radar_range_  = radar_config["max_radar_dist"] ? radar_config["max_radar_dist"].as<double>() :   10.0;
-            } else {
-                RCLCPP_WARN(this->get_logger(), "No 'radar_configuration' block found in YAML. Using defaults.");
-                number_of_sectors_ =     0;
-                min_radar_angle_   = -M_PI;
-                max_radar_angle_   =  M_PI;
-                max_radar_range_   =  10.0;
+            if (topic.empty() || data_type.empty()) {
+                RCLCPP_WARN(this->get_logger(),
+                            "\tSensor '%s' missing required parameters (topic/data_type). Skipping.",
+                            sensor_name.c_str());
+                number_sensor_skipped++;
+                continue;
             }
 
-            double total_angle_range = max_radar_angle_ - min_radar_angle_;
-            sector_size_ = (number_of_sectors_ > 0) ? total_angle_range / static_cast<double>(number_of_sectors_) : 0.0;
+            // Early Data Type validation
+            if (data_type != "LaserScan" && data_type != "PointCloud2") {
+                RCLCPP_WARN(this->get_logger(),
+                            "\tUnsupported data type '%s' for sensor '%s'. Skipping.",
+                            data_type.c_str(), sensor_name.c_str());
+                number_sensor_skipped++;
+                continue;
+            }
 
-            // Get observation_sources string and split it
-            std::string sources_str = radar["observation_sources"].as<std::string>();
-            std::vector<std::string> sources = split_string(sources_str, ' ');
+            const double min_obstacle_height = declare_if_missing_and_get<double>(key(sensor_name, "min_obstacle_height"), 0.0);
+            const double max_obstacle_height = declare_if_missing_and_get<double>(key(sensor_name, "max_obstacle_height"), 2.0);
+            const double min_obstacle_range  = declare_if_missing_and_get<double>(key(sensor_name, "min_obstacle_range"), 0.0);
+            const double max_obstacle_range  = declare_if_missing_and_get<double>(key(sensor_name, "max_obstacle_range"), 30.0);
+            const double min_obstacle_angle  = declare_if_missing_and_get<double>(key(sensor_name, "min_obstacle_angle"), -M_PI);
+            const double max_obstacle_angle  = declare_if_missing_and_get<double>(key(sensor_name, "max_obstacle_angle"),  M_PI);
 
-            std::string successful_sensors_str;
-            int number_sensor_skipped = 0;
-            
-            RCLCPP_INFO(this->get_logger(), "--- General Configurations: ---");
-            RCLCPP_INFO(this->get_logger(), "Robot Base Frame: %s", robot_base_frame_.c_str());
-            RCLCPP_INFO(this->get_logger(), "Update Frequency: %.1f ", update_frequency);
-            RCLCPP_INFO(this->get_logger(), "Robot Radius: %.2f m", robot_radius_);
-            RCLCPP_INFO(this->get_logger(), "Observation sources: %s", sources_str.c_str());
-            
-            RCLCPP_INFO(this->get_logger(), "--- Sensor Configurations: ---");
+            SensorLimits limits;
+            limits.min_height = min_obstacle_height;
+            limits.max_height = max_obstacle_height;
+            limits.min_range  = min_obstacle_range;
+            limits.max_range  = max_obstacle_range;
+            limits.min_angle  = min_obstacle_angle;
+            limits.max_angle  = max_obstacle_angle;
+            sensor_limits_[sensor_name] = limits;
 
-            for (const auto& sensor_name : sources) {
+            RCLCPP_INFO(this->get_logger(), "\tTopic: %s", topic.c_str());
+            RCLCPP_INFO(this->get_logger(), "\tData type: %s", data_type.c_str());
+            RCLCPP_INFO(this->get_logger(), "\tObstacle height: %.2f to %.2f (m)", min_obstacle_height, max_obstacle_height);
+            RCLCPP_INFO(this->get_logger(), "\tObstacle range: %.2f to %.2f (m)", min_obstacle_range, max_obstacle_range);
+            RCLCPP_INFO(this->get_logger(), "\tObstacle angle: %.4f to %.4f (rad), %.2f to %.2f (deg)",
+                        min_obstacle_angle, max_obstacle_angle,
+                        min_obstacle_angle * 180.0 / M_PI, max_obstacle_angle * 180.0 / M_PI);
 
-                RCLCPP_INFO(this->get_logger(), "\t--- Sensor: %s ---", sensor_name.c_str());
+            // PointCLoud2 specific parameters and publishers (publish filtered cloud, and if debug enabled, discarded cloud)
+            if (data_type == "PointCloud2") {
+                bool publish_filtered = declare_if_missing_and_get<bool>(key(sensor_name, "publish_filtered"), true);
+                sensor_publish_filtered_[sensor_name] = publish_filtered;
 
-                if (!radar[sensor_name]) {
-                    RCLCPP_WARN(this->get_logger(), "\tSensor config block '%s' not found. Skipping", sensor_name.c_str());
-                    number_sensor_skipped++;
-                    continue;
-                }
+                RCLCPP_INFO(this->get_logger(), "\tPublish Filtered: %s", publish_filtered ? "True" : "False");
 
-                YAML::Node sensor = radar[sensor_name];
-                std::string topic = sensor["topic"] ? sensor["topic"].as<std::string>() : "N/A";
-                std::string data_type = sensor["data_type"] ? sensor["data_type"].as<std::string>() : "N/A";
+                if (publish_filtered) {
+                    std::string filtered_topic = topic + "/filtered";
+                    auto pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(filtered_topic, 10);
+                    filtered_cloud_publishers_[sensor_name] = pub;
+                    RCLCPP_INFO(this->get_logger(), "\tCreated publisher for filtered data on topic: %s", filtered_topic.c_str());
 
-                // Early Data Type validation
-                if (data_type != "LaserScan" && data_type != "PointCloud2") { // for now we only support these two types
-                    RCLCPP_WARN(this->get_logger(), "\tUnsupported data type '%s' for sensor '%s'. Skipping.", data_type.c_str(), sensor_name.c_str());
-                    number_sensor_skipped++;
-                    continue;
-                }
-                
-                double max_obstacle_height = sensor["max_obstacle_height"] ? sensor["max_obstacle_height"].as<double>() : 2.0;
-                double min_obstacle_height = sensor["min_obstacle_height"] ? sensor["min_obstacle_height"].as<double>() : 0.0;
-                double max_obstacle_range = sensor["max_obstacle_range"] ? sensor["max_obstacle_range"].as<double>() :   30.0;
-                double min_obstacle_range = sensor["min_obstacle_range"] ? sensor["min_obstacle_range"].as<double>() :    0.0;
-                double min_obstacle_angle = sensor["min_obstacle_angle"] ? sensor["min_obstacle_angle"].as<double>() :  -M_PI;
-                double max_obstacle_angle = sensor["max_obstacle_angle"] ? sensor["max_obstacle_angle"].as<double>() :   M_PI;
-                
-                SensorLimits limits;
-                limits.min_height = min_obstacle_height;
-                limits.max_height = max_obstacle_height;
-                limits.min_range = min_obstacle_range;
-                limits.max_range = max_obstacle_range;
-                limits.min_angle = min_obstacle_angle;
-                limits.max_angle = max_obstacle_angle;
-
-                sensor_limits_[sensor_name] = limits;
-
-                RCLCPP_INFO(this->get_logger(), "\tTopic: %s", topic.c_str());
-                RCLCPP_INFO(this->get_logger(), "\tData type: %s", data_type.c_str());
-                RCLCPP_INFO(this->get_logger(), "\tObstacle height: %.2f to %.2f (m)", min_obstacle_height, max_obstacle_height);
-                RCLCPP_INFO(this->get_logger(), "\tObstacle range: %.2f to %.2f (m)", min_obstacle_range, max_obstacle_range);
-                RCLCPP_INFO(this->get_logger(), "\tObstacle angle: %.4f to %.4f (rad), %.2f to %.2f (deg)", min_obstacle_angle, max_obstacle_angle, min_obstacle_angle * 180.0 / M_PI, max_obstacle_angle * 180.0 / M_PI);
-
-                if (data_type == "PointCloud2") {
-                    bool publish_filtered = sensor["publish_filtered"] ? sensor["publish_filtered"].as<bool>() : true;
-                    sensor_publish_filtered_[sensor_name] = publish_filtered;
-
-                    RCLCPP_INFO(this->get_logger(), "\tPublish Filtered: %s", publish_filtered ? "True" : "False");
-
-                    if (publish_filtered) { // dynamic creates publisher for all point cloud with publish filtered set to true 
-                        std::string filtered_topic = topic + "/filtered";
-                        auto pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(filtered_topic, 10);
-                        filtered_cloud_publishers_[sensor_name] = pub;
-                        RCLCPP_INFO(this->get_logger(), "\tCreated publisher for filtered data on topic: %s", filtered_topic.c_str());
-                        
-                        if (debug_enabled_) {
-                            std::string discarded_topic = topic + "/discarded";
-                            auto discarded_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(discarded_topic, 10);
-                            discarded_cloud_publishers_[sensor_name] = discarded_pub;
-                            RCLCPP_INFO(this->get_logger(), "\tCreated publisher for discarded points on topic: %s", discarded_topic.c_str());
-                        }
-
+                    if (debug_enabled_) {
+                        std::string discarded_topic = topic + "/discarded";
+                        auto discarded_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>(discarded_topic, 10);
+                        discarded_cloud_publishers_[sensor_name] = discarded_pub;
+                        RCLCPP_INFO(this->get_logger(), "\tCreated publisher for discarded points on topic: %s", discarded_topic.c_str());
                     }
                 }
-
-                if (data_type == "LaserScan") {
-                    auto sub = this->create_subscription<sensor_msgs::msg::LaserScan>(topic, 10, 
-                        [this, sensor_name](const sensor_msgs::msg::LaserScan::SharedPtr msg) {
-                            this->laser_callback(msg, sensor_name);
-                        });
-                    laser_subscribers_[sensor_name] = sub;
-                    RCLCPP_INFO(this->get_logger(), "\tSubscribed to sensor '%s' of type '%s'", sensor_name.c_str(), data_type.c_str());
-                } else if (data_type == "PointCloud2") {
-                    auto sub = this->create_subscription<sensor_msgs::msg::PointCloud2>(topic, 10,
-                        [this, sensor_name](const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
-                            this->cloud_callback(msg, sensor_name);
-                        });
-                    cloud_subscribers_[sensor_name] = sub;
-                    RCLCPP_INFO(this->get_logger(), "\tSubscribed to sensor '%s' of type 'PointCloud2'", sensor_name.c_str());
-
-                } else {
-                    // Unsupported data type code ...
-                }
-
-                successful_sensors_str += sensor_name + " ";
-
             }
+                
 
-            RCLCPP_INFO(this->get_logger(), "--- Radar Configurations: ---");
-            RCLCPP_INFO(this->get_logger(), "Sensors Used: %s", successful_sensors_str.c_str());
-            if (number_sensor_skipped > 0) {
-                RCLCPP_WARN(this->get_logger(), "Skipped %d sensors due to missing, wrong or unsupported configurations.", number_sensor_skipped);
+            // Create subscribers based on data type (after all validations and parameter declarations)
+            if (data_type == "LaserScan") {
+                auto sub = this->create_subscription<sensor_msgs::msg::LaserScan>(topic, 10,
+                    [this, sensor_name](const sensor_msgs::msg::LaserScan::SharedPtr msg) {
+                        this->laser_callback(msg, sensor_name);
+                    });
+                laser_subscribers_[sensor_name] = sub;
+                RCLCPP_INFO(this->get_logger(), "\tSubscribed to sensor '%s' of type '%s'", sensor_name.c_str(), data_type.c_str());
+
+            } else if (data_type == "PointCloud2") {
+                auto sub = this->create_subscription<sensor_msgs::msg::PointCloud2>(topic, 10,
+                    [this, sensor_name](const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
+                        this->cloud_callback(msg, sensor_name);
+                    });
+                cloud_subscribers_[sensor_name] = sub;
+                RCLCPP_INFO(this->get_logger(), "\tSubscribed to sensor '%s' of type 'PointCloud2'", sensor_name.c_str());
+
+            } else {
+                // Unsupported data type code ... 
+                // Ready for diferent data types that can be added in the future
             }
-            RCLCPP_INFO(this->get_logger(), "Sectors: %d", number_of_sectors_); 
-            RCLCPP_INFO(this->get_logger(), "Min angle: %.4f rad, %.2f deg", min_radar_angle_, min_radar_angle_ * 180.0 / M_PI); 
-            RCLCPP_INFO(this->get_logger(), "Max angle: %.4f rad, %.2f deg", max_radar_angle_, max_radar_angle_ * 180.0 / M_PI); 
-            RCLCPP_INFO(this->get_logger(), "Sector size: %.4f rad, %.2f deg", sector_size_, sector_size_ * 180.0 / M_PI); 
-            RCLCPP_INFO(this->get_logger(), "Max range: %.2f m", max_radar_range_); 
-
-            if (max_radar_range_ <= robot_radius_) {
-                RCLCPP_FATAL(this->get_logger(),
-                    "Invalid radar config: max_radar_range_ (%.2f m) <= robot_radius_ (%.2f m).",
-                    max_radar_range_, robot_radius_);
-                throw std::runtime_error("Radar config error: max range must be greater than robot radius.");
-            }
-
-            RCLCPP_INFO(this->get_logger(), "--- Finished Sensors Setup ---");
-            
-            // TF2 setup
-            tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
-            tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
-
-            // Publisher setup
-            radar_pointcloud_baseframe_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("radar/pointcloud_baseframe", 10);
-            radar_distances_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances", 10);
-            radar_distances_normalized_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances/normalized", 10);
-            radar_custom_pub_ = this->create_publisher<charmie_interfaces::msg::RadarData>("radar/data", 10);
-
-            get_min_srv_ = this->create_service<charmie_interfaces::srv::GetMinRadarDistance>("get_min_radar_distance", std::bind(&RadarNode::getMinRadarDistanceSrv, this, std::placeholders::_1, std::placeholders::_2));
-
-            timer_ = this->create_wall_timer(
-                std::chrono::duration<double>(1.0 / update_frequency),
-                std::bind(&RadarNode::timer_callback, this)
-            );
-
-        } catch (const YAML::Exception& e) {
-            RCLCPP_ERROR(this->get_logger(), "Failed to load or parse radar_params.yaml: %s", e.what());
+    
+            successful_sensors_str += sensor_name + " ";
         }
+
+        RCLCPP_INFO(this->get_logger(), "--- Radar Configurations: ---");
+        RCLCPP_INFO(this->get_logger(), "Sensors Used: %s", successful_sensors_str.c_str());
+        if (number_sensor_skipped > 0) {
+            RCLCPP_WARN(this->get_logger(), "Skipped %d sensors due to missing, wrong or unsupported configurations.", number_sensor_skipped);
+        }
+        RCLCPP_INFO(this->get_logger(), "Sectors: %d", number_of_sectors_); 
+        RCLCPP_INFO(this->get_logger(), "Min angle: %.4f rad, %.2f deg", min_radar_angle_, min_radar_angle_ * 180.0 / M_PI); 
+        RCLCPP_INFO(this->get_logger(), "Max angle: %.4f rad, %.2f deg", max_radar_angle_, max_radar_angle_ * 180.0 / M_PI); 
+        RCLCPP_INFO(this->get_logger(), "Sector size: %.4f rad, %.2f deg", sector_size_, sector_size_ * 180.0 / M_PI); 
+        RCLCPP_INFO(this->get_logger(), "Max range: %.2f m", max_radar_range_); 
+
+        if (max_radar_range_ <= robot_radius_) {
+            RCLCPP_FATAL(this->get_logger(),
+                "Invalid radar config: max_radar_range_ (%.2f m) <= robot_radius_ (%.2f m).",
+                max_radar_range_, robot_radius_);
+            throw std::runtime_error("Radar config error: max range must be greater than robot radius.");
+        }
+
+        RCLCPP_INFO(this->get_logger(), "--- Finished Sensors Setup ---");
+        
+        // TF2 setup
+        tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+        tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
+        // Publisher setup
+        radar_pointcloud_baseframe_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("radar/pointcloud_baseframe", 10);
+        radar_distances_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances", 10);
+        radar_distances_normalized_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("radar/distances/normalized", 10);
+        radar_custom_pub_ = this->create_publisher<charmie_interfaces::msg::RadarData>("radar/data", 10);
+
+        get_min_srv_ = this->create_service<charmie_interfaces::srv::GetMinRadarDistance>("get_min_radar_distance", std::bind(&RadarNode::getMinRadarDistanceSrv, this, std::placeholders::_1, std::placeholders::_2));
+
+        timer_ = this->create_wall_timer(
+            std::chrono::duration<double>(1.0 / update_frequency),
+            std::bind(&RadarNode::timer_callback, this)
+        );
 
         RCLCPP_INFO(this->get_logger(), "RadarNode Setup Complete.");
     }
@@ -233,6 +230,20 @@ private:
         pcl::PointXYZ closest_point;
         bool has_point = false;
     };
+
+    // Helper: declares a parameter with a default value if it does not exist,
+    // then returns its value as type T.
+    // Useful for dynamic parameters (sensor_name.*) where configs may be missing.
+    // Prevents double-declaration errors when parameters are auto-declared from YAML.
+    // Not needed for fixed parameters, but still use it for consistency and safety.
+    template <typename T>
+    T declare_if_missing_and_get(const std::string& name, const T& default_value)
+    {
+        if (!this->has_parameter(name)) {
+            this->declare_parameter<T>(name, default_value);
+        }
+        return this->get_parameter(name).get_value<T>();
+    }
 
     bool debug_enabled_ = false;
     std::unordered_map<std::string, rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr> laser_subscribers_;
@@ -266,18 +277,6 @@ private:
     double max_radar_angle_;
     double sector_size_;
     double max_radar_range_;
-
-    std::vector<std::string> split_string(const std::string &input, char delimiter) {
-        std::stringstream ss(input);
-        std::string item;
-        std::vector<std::string> tokens;
-        while (std::getline(ss, item, delimiter)) {
-            if (!item.empty()) {
-                tokens.push_back(item);
-            }
-        }
-        return tokens;
-    }
 
     void laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg, const std::string &source_name) {
         latest_scans_[source_name] = msg;
