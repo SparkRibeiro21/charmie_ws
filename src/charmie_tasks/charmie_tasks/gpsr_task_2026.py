@@ -189,7 +189,7 @@ class TaskMain():
                 else:
                     # Save current request
                     self.request1 = request
-                    print("Request " + str(self.curr_request + 1) + ": " + request)
+                    print("Request " + str(self.curr_request) + ": " + request)
 
                     ##### SPEAK: "Okay, I understood your request. Let's move on."
                     self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
@@ -251,7 +251,7 @@ class TaskMain():
                 else:
                     # Save current request
                     self.request3 = request
-                    print("Request " + str(self.curr_request + 1) + ": " + request)
+                    print("Request " + str(self.curr_request) + ": " + request)
 
                     ##### SPEAK: "Okay, I understood your curr_request request. Let's move on."
                     self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
@@ -269,16 +269,16 @@ class TaskMain():
                 self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=True)
                 
                 ##### SPEAK: "To execute the first request"  
-                # set_speech
+                self.robot.set_speech(filename="gpsr/say_plan1", wait_for_end_of= True)
                 self.robot.set_speech(filename="temp/gpsr_request1", wait_for_end_of= True)
 
                 
                 ##### SPEAK: "To execute the second request"  
-                # set_speech
+                self.robot.set_speech(filename="gpsr/say_plan2", wait_for_end_of= True)
                 self.robot.set_speech(filename="temp/gpsr_request2", wait_for_end_of= True)
                 
                 ##### SPEAK: "To execute the first request"  
-                # set_speech
+                self.robot.set_speech(filename="gpsr/say_plan3", wait_for_end_of= True)
                 self.robot.set_speech(filename="temp/gpsr_request3", wait_for_end_of= True)
                                         
                 # your code here ...
@@ -289,12 +289,11 @@ class TaskMain():
             elif self.state == self.task_states["Execute_request1"]:
 
                 ##### SPEAK: "I will start by executing the first request."
-                self.robot.set_speech(command= "Ok! I will start executing the first request now.", quick_voice= True, wait_for_end_of= True)
-
+                self.robot.set_speech(filename="gpsr/execute_request1", wait_for_end_of=True)
                 self.robot.execute_gpsr_plan(command=self.request1,wait_for_end_of=True)
 
                 ##### SPEAK: "I have finished executing the first task."
-                self.robot.set_speech(command= "I have finished executing the first task.", quick_voice= True, wait_for_end_of= True)
+                self.robot.set_speech(filename="gpsr/finished_request1", wait_for_end_of=True)
 
                 
 
@@ -304,12 +303,12 @@ class TaskMain():
             elif self.state == self.task_states["Execute_request2"]:
                                         
                 ##### SPEAK: "I will start by executing the second request."
-                self.robot.set_speech(command= "I will start executing the second request now.", quick_voice= True, wait_for_end_of= True)
+                self.robot.set_speech(filename="gpsr/execute_request2", wait_for_end_of=True)
 
                 self.robot.execute_gpsr_plan(command=self.request2,wait_for_end_of=True)
 
                 ##### SPEAK: "I have finished executing the second task."
-                self.robot.set_speech(command= "I have finished executing the second task.", quick_voice= True, wait_for_end_of= True)
+                self.robot.set_speech(filename="gpsr/finished_request2", wait_for_end_of=True)
 
                 # your code here ...
 
@@ -319,12 +318,12 @@ class TaskMain():
             elif self.state == self.task_states["Execute_request3"]:
                                         
                 ##### SPEAK: "I will start by executing the third request."
-                self.robot.set_speech(command= "I will start executing the third request now.", quick_voice= True, wait_for_end_of= True)
+                self.robot.set_speech(filename="gpsr/execute_request3", wait_for_end_of=True)
 
                 self.robot.execute_gpsr_plan(command=self.request3,wait_for_end_of=True)
 
                 ##### SPEAK: "I have finished executing the third task."
-                self.robot.set_speech(command= "I have finished executing the third task.", quick_voice= True, wait_for_end_of= True)
+                self.robot.set_speech(filename="gpsr/finished_request3", wait_for_end_of=True)
 
                 self.state = self.task_states["Return_to_instruction_point"]
 
