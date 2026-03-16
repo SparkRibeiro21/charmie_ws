@@ -39,6 +39,9 @@ class ROS2NavigationNode(Node):
         super().__init__("ROS2CHARMIENavigation")
         # self.get_logger().info("Initialised CHARMIE Navigation Node")
 
+        self.declare_parameter("wait_for_clear_costmaps", True)
+        self.wait_for_clear_costmaps = self.get_parameter("wait_for_clear_costmaps").get_parameter_value().bool_value
+
         # Reentrant group so action + subs can overlap
         self.cb_group = ReentrantCallbackGroup()
 
@@ -120,11 +123,15 @@ class ROS2NavigationNode(Node):
             self.get_logger().warn("Waiting for Server Low Level ...")
         while not self.get_minimum_radar_distance_client.wait_for_service(1.0):
             self.get_logger().warn("Waiting for Server Radar ...")
-        while not self.clear_entire_local_costmap_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for /local_costmap/clear_entirely_local_costmap ...")
-        while not self.clear_entire_global_costmap_client.wait_for_service(1.0):
-            self.get_logger().warn("Waiting for /global_costmap/clear_entirely_global_costmap ...")
 
+        if self.wait_for_clear_costmaps:
+            while not self.clear_entire_local_costmap_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for /local_costmap/clear_entirely_local_costmap ...")
+            while not self.clear_entire_global_costmap_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for /global_costmap/clear_entirely_global_costmap ...")
+        else:
+            self.get_logger().info("Skipping wait for clear costmaps services (parameter disabled).")
+            
         # Service to clear both nav2 costmaps
         self.clear_nav_costmaps_server = self.create_service(Trigger, "clear_nav_costmaps", self._clear_nav_costmaps_cb, callback_group=self.cb_group)
 

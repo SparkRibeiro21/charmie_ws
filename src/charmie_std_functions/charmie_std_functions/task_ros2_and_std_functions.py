@@ -11,7 +11,7 @@ from nav_msgs.msg import Odometry
 from nav2_msgs.action import NavigateToPose, FollowWaypoints
 from nav2_msgs.srv import ClearEntireCostmap
 from realsense2_camera_msgs.msg import RGBD
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, TarNavSDNL, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, BoundingBox, ListOfDetectedPerson, ListOfDetectedObject, \
     ArmController, GamepadController, ListOfStrings, ListOfPoints, TrackingMask, ButtonsLowLevel, VCCsLowLevel, TorsoPosition, \
     TaskStatesInfo, RadarData
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, \
@@ -19,7 +19,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
     GetSoundClassificationContinuous, GetMinRadarDistance, ActivateYoloWorld
-from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles
+from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles, NavigateSDNL
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
@@ -101,11 +101,6 @@ class ROS2TaskNode(Node):
         # Arm CHARMIE
         self.arm_command_publisher = self.create_publisher(ArmController, "arm_command", 10)
         self.arm_finished_movement_subscriber = self.create_subscription(Bool, 'arm_finished_movement', self.arm_finished_movement_callback, 10)
-        # Navigation
-        self.target_pos_publisher = self.create_publisher(TarNavSDNL, "target_pos", 10)
-        self.target_pos_check_answer_subscriber = self.create_subscription(Bool, "target_pos_check_answer", self.target_pos_check_answer_callback, 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10) 
-        self.flag_pos_reached_publisher = self.create_publisher(Bool, "flag_pos_reached", 10) # used only for gamepad controller
         # Localisation
         self.initialpose_publisher = self.create_publisher(PoseWithCovarianceStamped, "initialpose", 10)
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
@@ -126,8 +121,6 @@ class ROS2TaskNode(Node):
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         self.torso_low_level_subscriber = self.create_subscription(TorsoPosition, "torso_position", self.torso_low_level_callback, 10)
         self.orientation_low_level_subscriber = self.create_subscription(Float32, "orientation_low_level", self.orientation_callback, 10)
-        # Neck
-        self.continuous_tracking_position_publisher = self.create_publisher(Point, "continuous_tracking_position", 10)
         # Tracking
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         # Task States Info
@@ -146,6 +139,7 @@ class ROS2TaskNode(Node):
         self.set_height_furniture_for_arm_manual_movement_client = self.create_client(SetFloat, "set_table_height")
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        # Save Speakers
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
@@ -199,8 +193,9 @@ class ROS2TaskNode(Node):
 
         ### Actions (Clients) ###
         # From NAV2
-        self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
-        self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
+        self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose") # just to check if nav2 is operational
+        # self.nav2_client_follow_waypoints_ = ActionClient(self, FollowWaypoints, "follow_waypoints")
+
         # From CHARMIE Navigation
         self.charmie_nav2_client_ = ActionClient(self, NavigateToPose, "charmie_navigate_to_pose")
         self.charmie_nav2_follow_waypoints_client_ = ActionClient(self, FollowWaypoints, "charmie_navigate_follow_waypoints")
@@ -209,6 +204,10 @@ class ROS2TaskNode(Node):
         self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
         self.adjust_navigation_omni_client = ActionClient(self, AdjustNavigationOmnidirectional, "adjust_navigation_omni")
         self.adjust_navigation_obstacle_client = ActionClient(self, AdjustNavigationObstacles, "adjust_navigation_obstacle")
+
+        # From NAV SDNL
+        self.sdnl_nav_client_ = ActionClient(self, NavigateSDNL, "sdnl_navigate_to_pose")
+
     
 
         self.send_node_used_to_gui()
@@ -233,6 +232,7 @@ class ROS2TaskNode(Node):
         "charmie_radar":                    True,
             "charmie_sound_classification": False,
             "charmie_speakers":             True,
+            "charmie_speakers_save":        False,
             "charmie_tracking":             False,
             "charmie_yolo_objects":         True,
             "charmie_yolo_pose":            False,
@@ -273,7 +273,12 @@ class ROS2TaskNode(Node):
 
         if self.ros2_modules["charmie_nav2"]:
             while not self.nav2_client_.server_is_ready():
-                self.get_logger().warn("Waiting for Server Nav2 Trigger Command...")
+                self.get_logger().warn("Waiting for Nav2 Server...")
+                time.sleep(1.0)
+
+        if self.ros2_modules["charmie_nav_sdnl"]:
+            while not self.sdnl_nav_client_.server_is_ready():
+                self.get_logger().warn("Waiting for Nav SDNL Server...")
                 time.sleep(1.0)
 
         if self.ros2_modules["charmie_neck"]:
@@ -299,8 +304,10 @@ class ROS2TaskNode(Node):
         if self.ros2_modules["charmie_speakers"]:
             while not self.speech_command_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Speech Command...")
+        
+        if self.ros2_modules["charmie_speakers_save"]:
             while not self.save_speech_command_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Server Save Speech Command...")
+                self.get_logger().warn("Waiting for Server Save Speakers Command...")
 
         if self.ros2_modules["charmie_tracking"]:
             while not self.activate_tracking_client.wait_for_service(1.0):
@@ -426,8 +433,6 @@ class ROS2TaskNode(Node):
         self.activate_yolo_world_message = ""
         self.arm_success = True
         self.arm_message = ""
-        self.navigation_success = True
-        self.navigation_message = ""
         self.activate_motors_success = True
         self.activate_motors_message = ""
         self.activate_tracking_success = True
@@ -495,6 +500,11 @@ class ROS2TaskNode(Node):
         self.adjust_obstacle_navigation_feedback = AdjustNavigationObstacles.Feedback()
         self.adjust_obstacle_navigation_status = GoalStatus.STATUS_UNKNOWN
 
+        self.sdnl_nav_goal_handle_ = None
+        self.sdnl_nav_goal_accepted = None
+        self.sdnl_nav_feedback = NavigateSDNL.Feedback()
+        self.sdnl_nav_status = GoalStatus.STATUS_UNKNOWN
+
         self.current_odom_pose = None
         self.current_odom_wheels_pose = None
 
@@ -530,10 +540,12 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_llm                  = self.ros2_modules["charmie_llm"]
         nodes_used.charmie_navigation           = self.ros2_modules["charmie_navigation"]
         nodes_used.charmie_nav2                 = self.ros2_modules["charmie_nav2"]
+        nodes_used.charmie_nav_sdnl             = self.ros2_modules["charmie_nav_sdnl"]
         nodes_used.charmie_neck                 = self.ros2_modules["charmie_neck"]
         nodes_used.charmie_radar                = self.ros2_modules["charmie_radar"]
         nodes_used.charmie_sound_classification = self.ros2_modules["charmie_sound_classification"]
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
+        nodes_used.charmie_speakers_save        = self.ros2_modules["charmie_speakers_save"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
@@ -599,14 +611,6 @@ class ROS2TaskNode(Node):
             self.arm_message = "Wrong Movement Received"
 
         self.get_logger().info("Received Arm Finished")
-
-    ### NAVIGATION ###
-    def flag_navigation_reached_callback(self, flag: Bool):
-        self.flag_navigation_reached = flag
-
-    def target_pos_check_answer_callback(self, flag: Bool):
-        self.flag_target_pos_check_answer = flag.data
-        # print("RECEIVED NAVIGATION CONFIRMATION")
 
     ### ODOMETRY ###
     def odom_callback(self, msg):
@@ -1547,6 +1551,57 @@ class ROS2TaskNode(Node):
         # print("Nav Time: " + navigation_time + " Distance Left:" + distance_remaining)
         # self.get_logger().info(f"Feedback: {feedback}")
 
+    ### SDNL Nav Action Client ###
+    # ros2 action send_goal /sdnl_navigate_to_pose charmie_interfaces/action/NavigateSDNL "{target_pose: {x: 1.0, y: 1.0, theta: 1.57079632679}, mode: 0, ignore_obstacles: false, reached_radius: 0.20, yaw_tolerance: 0.10, max_linear_speed: 0.30, max_angular_speed: 0.80 }"
+    
+    def sdnl_nav_client_goal_response_callback(self, future):
+        self.sdnl_nav_goal_handle_: ClientGoalHandle = future.result()
+        if self.sdnl_nav_goal_handle_.accepted:
+            self.get_logger().info("SDNL Nav Goal accepted.")
+            self.sdnl_nav_goal_handle_.get_result_async().add_done_callback(self.sdnl_nav_client_goal_result_callback)
+            self.sdnl_nav_goal_accepted = True
+        else:
+            self.sdnl_nav_goal_accepted = False
+            self.sdnl_nav_goal_handle_ = None
+            self.get_logger().warn("SDNL Nav Goal rejected.")
+
+    def sdnl_nav_client_goal_result_callback(self, future):
+        status = future.result().status
+        result = future.result().result
+        
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            self.sdnl_nav_status = GoalStatus.STATUS_SUCCEEDED
+            self.get_logger().info(f"SDNL NAV SUCCEEDED: {result.message}")
+        elif status == GoalStatus.STATUS_ABORTED:
+            self.sdnl_nav_status = GoalStatus.STATUS_ABORTED
+            self.get_logger().info(f"SDNL NAV ABORTED: {result.message}")
+        elif status == GoalStatus.STATUS_CANCELED:
+            self.sdnl_nav_status = GoalStatus.STATUS_CANCELED
+            self.get_logger().info(f"SDNL NAV CANCELED: {result.message}")
+        else:
+            self.sdnl_nav_status = status
+            self.get_logger().info(f"Result: Unknown result code {status}, {result.message}")
+        
+        # When goal is finished, clear the handle
+        self.sdnl_nav_goal_handle_ = None
+    
+    def sdnl_nav_client_cancel_goal(self):
+        if self.sdnl_nav_goal_handle_ is None:
+            self.get_logger().warn("No active NavigateSDNL goal handle to cancel.")
+            return
+
+        self.get_logger().info("Sending cancel request to SDNL...")
+        self.sdnl_nav_goal_handle_.cancel_goal_async()
+        self.get_logger().info("Cancel request sent.")
+        self.sdnl_nav_goal_handle_ = None
+
+    def sdnl_nav_client_goal_feedback_callback(self, feedback_msg):
+        self.sdnl_nav_feedback = feedback_msg.feedback
+        # Exemplos úteis para debug (se quiseres imprimir):
+        # dist = self.sdnl_nav_feedback.dist_to_target
+        # yaw_err = self.sdnl_nav_feedback.yaw_error
+        # wz = self.sdnl_nav_feedback.cmd_vel.angular.z
+        # self.get_logger().info(f"dist={dist:.2f} yaw_err={yaw_err:.2f} wz={wz:.2f}")
 
 #############################################################################################################################
 #
@@ -2252,7 +2307,7 @@ class RobotStdFunctions():
 
         return self.node.activate_tracking_success, self.node.activate_tracking_message
 
-    def track_person(self, person=DetectedPerson(), body_part="Head", wait_for_end_of=True):
+    def look_at_person(self, person=DetectedPerson(), body_part="Head", wait_for_end_of=True):
 
         request = TrackPerson.Request()
         request.person = person
@@ -2267,7 +2322,7 @@ class RobotStdFunctions():
 
         return self.node.track_person_success, self.node.track_person_message
  
-    def track_object(self, object=DetectedObject(), wait_for_end_of=True):
+    def look_at_object(self, object=DetectedObject(), wait_for_end_of=True):
 
         request = TrackObject.Request()
         request.object = object
@@ -2329,60 +2384,6 @@ class RobotStdFunctions():
 
         return self.node.set_height_furniture_for_arm_manual_movement_client_success, self.node.set_height_furniture_for_arm_manual_movement_client_message
     
-    def set_navigation(self, movement="", target=[0.0, 0.0], max_speed=15.0, absolute_angle=0.0, flag_not_obs=False, reached_radius=0.6, adjust_distance=0.0, adjust_direction=0.0, adjust_min_dist=0.0, avoid_people=False, wait_for_end_of=True):
-
-        if movement.lower() != "move" and movement.lower() != "rotate" and movement.lower() != "orientate" and movement.lower() != "adjust" and movement.lower() != "adjust_obstacle" and movement.lower() != "adjust_angle" :   
-            self.node.get_logger().error("WRONG MOVEMENT NAME: PLEASE USE: MOVE, ROTATE OR ORIENTATE.")
-
-            self.node.navigation_success = False
-            self.node.navigation_message = "Wrong Movement Name"
-
-        else:
-
-            self.node.flag_target_pos_check_answer = False
-            while not self.node.flag_target_pos_check_answer:
-                navigation = TarNavSDNL()
-
-                # Pose2D target_coordinates
-                # string move_or_rotate
-                # float32 orientation_absolute
-                # bool flag_not_obs
-                # float32 reached_radius
-                # bool avoid_people
-                # float32 adjust_distance
-                # float32 adjust_direction
-                # float32 adjust_min_dist
-                # float32 max_speed
-
-                if adjust_direction < 0:
-                    adjust_direction += 360
-
-                navigation.target_coordinates.x = float(target[0])
-                navigation.target_coordinates.y = float(target[1])
-                navigation.move_or_rotate = movement
-                navigation.orientation_absolute = float(absolute_angle)
-                navigation.flag_not_obs = flag_not_obs
-                navigation.reached_radius = float(reached_radius)
-                navigation.avoid_people = avoid_people
-                navigation.adjust_distance = float(adjust_distance)
-                navigation.adjust_direction = float(adjust_direction)
-                navigation.adjust_min_dist = float(adjust_min_dist)
-                navigation.max_speed = float(max_speed)
-
-                self.node.flag_navigation_reached = False                
-                self.node.target_pos_publisher.publish(navigation)
-                time.sleep(0.1)
-
-            if wait_for_end_of:
-                while not self.node.flag_navigation_reached:
-                    pass
-                self.node.flag_navigation_reached = False
-
-            self.node.navigation_success = True
-            self.node.navigation_message = "Arrived at selected location"
-
-        return self.node.navigation_success, self.node.navigation_message   
-
     def set_initial_position(self, initial_position, clear_costmaps=True):
 
         if initial_position is not None:
@@ -2490,7 +2491,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -2588,7 +2589,7 @@ class RobotStdFunctions():
 
             if wait_for_end_of:
 
-                feedback_freq = 1.0
+                # feedback_freq = 1.0
                 feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
                 feedback_start_time = time.time()
 
@@ -2689,7 +2690,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -2822,7 +2823,7 @@ class RobotStdFunctions():
 
         return overall
     
-    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+    def adjust_omnidirectional_position(self, dx, dy, ang_obstacle_check=45, safety=True, max_speed=0.05, tolerance=0.01, kp=1.5, enter_house_special_case=False, use_wheel_odometry=False, timeout=0.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         adjust_msg = AdjustNavigationOmnidirectional.Goal()
@@ -2859,7 +2860,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -2906,7 +2907,7 @@ class RobotStdFunctions():
         else:
             return False
 
-    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+    def adjust_obstacles(self, distance=0.0, direction=0.0, ang_obstacle_check=45, max_speed=0.05, tolerance=0.01, kp=1.5, timeout=0.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         adjust_msg = AdjustNavigationObstacles.Goal()
@@ -2940,7 +2941,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -2987,7 +2988,7 @@ class RobotStdFunctions():
         else:
             return False
 
-    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1.0, kp=1.3, use_wheel_odometry=False, timeout=0.0, print_feedback=True, wait_for_end_of=True):
+    def adjust_angle(self, angle=0.0, max_angular_speed=0.25, tolerance=1.0, kp=1.3, use_wheel_odometry=False, timeout=0.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         adjust_msg = AdjustNavigationAngle.Goal()
@@ -3020,7 +3021,7 @@ class RobotStdFunctions():
 
         if wait_for_end_of:
 
-            feedback_freq = 1.0
+            # feedback_freq = 1.0
             feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
             feedback_start_time = time.time()
 
@@ -3089,8 +3090,112 @@ class RobotStdFunctions():
         
         return success, message, min_radar_distance_to_robot_edge
     
-    def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False):
+    def sdnl_move_to_position(self, move_coords, ignore_obstacles=False, first_rotate=False, orient_after_move=False, reached_radius=0.50, yaw_tolerance_deg=3.0, max_linear_speed=0.42, max_angular_speed=0.90, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
+        # Create a goal
+        goal_msg = NavigateSDNL.Goal()
+
+        goal_msg.target_pose.x = float(move_coords[0])
+        goal_msg.target_pose.y = float(move_coords[1])
+        goal_msg.target_pose.theta = math.radians(float(move_coords[2]))  # deg -> rad
+
+        goal_msg.ignore_obstacles = bool(ignore_obstacles)
+        goal_msg.first_rotate = bool(first_rotate)
+        goal_msg.orient_after_move = bool(orient_after_move)
+        goal_msg.reached_radius = float(reached_radius)
+        goal_msg.yaw_tolerance = float(math.radians(yaw_tolerance_deg))    # deg -> rad
+        goal_msg.max_linear_speed = float(max_linear_speed)
+        goal_msg.max_angular_speed = float(max_angular_speed)
+
+        # Wait for server
+        self.node.get_logger().info("Waiting for SDNL action server...")
+        self.node.sdnl_nav_client_.wait_for_server()
+        self.node.get_logger().info("SDNL action server is ON...")
+
+        # Reset state
+        self.node.sdnl_nav_goal_handle_ = None
+        self.node.sdnl_nav_goal_accepted = None
+        self.node.sdnl_nav_status = GoalStatus.STATUS_UNKNOWN
+        self.node.sdnl_nav_feedback = NavigateSDNL.Feedback()
+
+        # Send goal
+        # self.node.get_logger().info("Sending SDNL Nav Goal...")
+        self.node.sdnl_nav_client_.send_goal_async(goal_msg, feedback_callback=self.node.sdnl_nav_client_goal_feedback_callback).add_done_callback(self.node.sdnl_nav_client_goal_response_callback)
+        self.node.get_logger().info("SDNL Nav Goal Sent")
+
+        # Wait for acceptance/rejection
+        while self.node.sdnl_nav_goal_accepted is None:
+            time.sleep(0.05)
+        
+        # If rejected, return immediately
+        if not self.node.sdnl_nav_goal_accepted:
+            self.node.get_logger().warn("SDNL NAV RESULT: GOAL REJECTED.")
+            return False, "SDNL Nav Goal rejected"
+
+        # If user does not want to wait for completion, goal was accepted
+        if not wait_for_end_of:
+            return True, "SDNL Nav Goal accepted and sent, not waiting for end"
+
+        if wait_for_end_of:
+
+            # feedback_freq = 1.0
+            feedback_timer_period = 1.0 / feedback_freq  # Convert Hz to seconds
+            feedback_start_time = time.time()
+
+            while self.node.sdnl_nav_status == GoalStatus.STATUS_UNKNOWN:
+
+                if print_feedback:
+
+                    if time.time() - feedback_start_time > feedback_timer_period:
+
+                        feedback = self.node.sdnl_nav_feedback
+
+                        state = getattr(feedback, "state", "")
+                        dist = getattr(feedback, "dist_to_target", 0.0)
+                        yaw_err = getattr(feedback, "yaw_error", 0.0)
+                        min_obs = float(getattr(feedback, "min_obstacle_dist_edge", float("nan")))
+
+                        cmd = getattr(feedback, "cmd_vel", None)
+                        if cmd is not None:
+                            vx = float(getattr(getattr(cmd, "linear", None), "x", 0.0))
+                            vy = float(getattr(getattr(cmd, "linear", None), "y", 0.0))
+                            wz = float(getattr(getattr(cmd, "angular", None), "z", 0.0))
+                        else:
+                            vx = vy = wz = 0.0
+                        
+                        print(
+                            f"[SDNL] state={state:<14} "
+                            f"dist={dist:5.2f}(m) "
+                            f"yaw_err={math.degrees(yaw_err):6.1f}(deg) "
+                            f"cmd(vx,vy,wz)=({vx:+.2f},{vy:+.2f},{wz:+.2f}) "
+                            f"min_obs_edge={min_obs:5.2f}m"
+                        )
+                                  
+                        feedback_start_time = time.time()
+                                                
+            if self.node.sdnl_nav_status == GoalStatus.STATUS_SUCCEEDED:
+                self.node.get_logger().info("SDNL NAV RESULT: SUCCEEDED.")
+                return True, "Successfully moved to position"
+            # elif self.node.sdnl_nav_status == GoalStatus.STATUS_ABORTED:
+            #     self.node.get_logger().info("SDNL NAV RESULT: ABORTED.")
+            #     return False, "Aborted moving to position"
+            elif self.node.sdnl_nav_status == GoalStatus.STATUS_CANCELED:
+                self.node.get_logger().info("SDNL NAV RESULT: CANCELED.")
+                return False, "Canceled moving to position"
+
+    def sdnl_move_to_position_cancel(self):
+        if self.node.sdnl_nav_goal_handle_ is not None:
+            self.set_rgb(RED+BACK_AND_FORTH_8)
+        self.node.sdnl_nav_client_cancel_goal()
+
+    def sdnl_move_to_position_is_done(self):
+        if self.node.sdnl_nav_status == GoalStatus.STATUS_SUCCEEDED:
+            return True
+        else:
+            return False
+
+    def search_for_person(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, break_if_detect=False, characteristics=False, only_detect_person_arm_raised=False, only_detect_person_legs_visible=False, only_detect_person_right_in_front=False, keep_neck_in_final_search_position=False):
+    
         self.activate_yolo_pose(activate=True, characteristics=characteristics, only_detect_person_arm_raised=only_detect_person_arm_raised, only_detect_person_legs_visible=only_detect_person_legs_visible, only_detect_person_right_in_front=only_detect_person_right_in_front) 
         self.set_speech(filename="generic/search_people", wait_for_end_of=False)
         # self.set_rgb(WHITE+ALTERNATE_QUARTERS)
@@ -3221,7 +3326,8 @@ class RobotStdFunctions():
             to_append.clear()
         
         self.set_face("charmie_face")    
-        self.set_neck(position=[0, 0], wait_for_end_of=False)
+        if not keep_neck_in_final_search_position:
+            self.set_neck(position=[0, 0], wait_for_end_of=False)
         self.set_rgb(YELLOW+HALF_ROTATE)
 
         sfp_pub = ListOfDetectedPerson()
@@ -3818,7 +3924,7 @@ class RobotStdFunctions():
 
         # self.calibrate_audio(wait_for_end_of=True)
         # self.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
-        # command = self.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
+        # command = self.get_audio(gpsr=True, question="receptionist/receptionist_question", wait_for_end_of=True)
 
         request = GetLLMDemo.Request()
         # Append info_type to command: "info_type - command"
@@ -4346,7 +4452,25 @@ class RobotStdFunctions():
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['look'] # Return the look
         return None  # Return None if the object is not found
+    
+    def get_radius_from_furniture(self, furniture):
 
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['diameter']/2 # Return the radius
+        return None  # Return None if the object is not found
+
+    def get_furniture_shape_from_furniture(self, furniture):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.furniture:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
+                return obj['shape'] # Return the shape
+        return None  # Return None if the object is not found
+    
     def activate_tracking_mask(self, track_person=None, track_object=None, mode="", custom_points=[], show_detections_on_face=True):
 
         points = ListOfPoints()
@@ -4454,74 +4578,14 @@ class RobotStdFunctions():
         self.activate_tracking(activate=False)
         return True, "Tracking deactivated successfully"
     
-    def set_continuous_tracking_with_coordinates(self):
+    def set_neck_continuous_tracking(self, activate=True):
 
+        # turn ON or OFF the neck continuous tracking with the track mask
         request = TrackContinuous.Request()
-
-        ### TURN ON CONTINUOUS TRACKING
-        request.status = True
+        request.status = activate
         request.tracking_type = "person_head"
         request.tracking_position = Point()
-        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
-        
-        self.node.detected_people.persons = [] # clears detected_people after receiving them to make sure the objects from previous frames are not considered again
-        self.activate_yolo_pose(activate=True) 
-        # self.activate_yolo_objects(activate_objects=True) 
-        
-        start_time = time.time()
-        tracking_condition = True
-        selected_object_to_track = "bowl"
-        
-        self.set_rgb(MAGENTA+ALTERNATE_QUARTERS)
-        while tracking_condition:
-
-            ### PERSON
-            correct_track_per = DetectedPerson()
-            local_detected_people = self.node.detected_people.persons
-            if self.node.new_person_frame_for_tracking:
-            
-                if len(local_detected_people) > 0:
-                    correct_track_per = local_detected_people[0]
-                
-                    # enviar valores 
-                    coords = Point()
-                    coords.x = float(correct_track_per.head_center_x)
-                    coords.y = float(correct_track_per.head_center_y)
-                    # coords.z = correct_person_to_track.position_absolute_head.z
-                    self.node.continuous_tracking_position_publisher.publish(coords)
-                    print(coords)
-                self.node.new_person_frame_for_tracking = False
-
-            ### OBJECTS
-            # correct_track_obj = DetectedObject()  
-            # local_detected_objects = self.node.detected_objects.objects
-            # if self.node.new_object_frame_for_tracking:
-            # 
-            #     for o in local_detected_objects:
-            #         if o.object_name.lower() == selected_object_to_track:
-            #             correct_track_obj = o
-            # 
-            #     if correct_track_obj.object_name.lower() == selected_object_to_track:  
-            #         # enviar valores 
-            #         coords = Point()
-            #         coords.x = float(correct_track_obj.box_center_x)
-            #         coords.y = float(correct_track_obj.box_center_y)
-            #         # coords.z = correct_person_to_track.position_absolute_head.z
-            #         self.node.continuous_tracking_position_publisher.publish(coords)
-            #         print(coords)
-            #     self.node.new_object_frame_for_tracking = False
-
-            # confirmar condição de fim de tracking
-            # if time.time() - start_time > 60.0:
-            #     tracking_condition = False
-
-        self.set_rgb(CYAN+BREATH)
-        self.activate_yolo_pose(activate=False) 
-        self.activate_yolo_objects(activate_objects=False) 
-        
-        ### TURN OFF CONTINUOUS TRACKING
-        request.status = False
-        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=False)
+        self.node.call_neck_continuous_tracking_server(request=request, wait_for_end_of=True)
 
     def set_face_touchscreen_menu(self, choice_category=[], custom_options=[], timeout=15.0, mode="single", instruction="", alphabetical_order=True, speak_results=True, speak_timeout=True, start_speak_file="face_touchscreen_menu/init_touchscreen_menu", end_speak_file_error="face_touchscreen_menu/problem_touchscreen_menu", wait_for_end_of=True):
 
@@ -6115,7 +6179,154 @@ class RobotStdFunctions():
         print("Cannot get height from shelf")
         return False
 
-    def open_door(push_pull="push", left_right="left", wait_for_end_of=True):
+    def move_to_pre_pick_position_after_search_for_objects(self, furniture = "", object = DetectedObject(), approach_offset = 0.5, move_to = True, wait_for_end_of = True):
+
+        success = False
+        message = ""
+        nav_coords_ret = []
+
+        shape = self.get_furniture_shape_from_furniture(furniture)
+        if shape == None: # checks if furniture exists
+            success = False
+            message = "Furniture shape not found, cannot move to pre-pick position"
+        else:
+        
+            furniture_dict = {
+                "name":             furniture,
+                "top_left_coords":  self.get_top_coords_from_furniture(furniture),
+                "bot_right_coords": self.get_bottom_coords_from_furniture(furniture),
+                "radius":           self.get_radius_from_furniture(furniture),
+                "shape":            self.get_furniture_shape_from_furniture(furniture)
+            }
+            object_coords = [object.position_absolute.x, object.position_absolute.y]
+
+            print(furniture_dict["name"], furniture_dict["shape"])
+
+            ### CIRCULAR FURNITURES
+            if furniture_dict["shape"] == "circle":
+
+                # helpers
+                table_center = [(furniture_dict["top_left_coords"][0]+furniture_dict["bot_right_coords"][0])/2, 
+                                (furniture_dict["top_left_coords"][1]+furniture_dict["bot_right_coords"][1])/2]
+                table_radius = furniture_dict["radius"]
+
+                if table_radius < 1e-9: # safer to use tiny tolerance, to avoid floating point issues
+                    print("WARNING: Table diameter is 0.0. Must be a misconfiguraiton in configuration_files!")
+
+                # attributions
+                cx, cy = table_center
+                ox, oy = object_coords
+
+                # vector from furniture center to object
+                vx = ox - cx
+                vy = oy - cy
+
+                # distance from furniture center to object
+                dco = math.sqrt(vx**2 + vy**2)
+
+                # furniture validation
+                if dco > table_radius:
+                    success = False
+                    message = "Object is outside of circular shaped furniture"
+                else: # did not use elif to not repeat attribution code and prints
+                    if dco < 1e-9: # safer to use tiny tolerance, to avoid floating point issues
+                        # special case: object exactly at the center of the circular furniture 
+                        # choose a default pose with orientation = 0 degrees (face north)
+                        print("Object is exactly at the table center.")
+                        
+                        nav_x = cx - (table_radius + approach_offset)
+                        nav_y = cy
+                        angle_deg = 0.0
+        
+                    else:
+                        # unit vector from center to object
+                        ux = vx / dco
+                        uy = vy / dco
+
+                        # robot position = point on auxiliary circle (furniture radius + approach_offset)
+                        nav_x = cx + (table_radius + approach_offset) * ux
+                        nav_y = cy + (table_radius + approach_offset) * uy
+
+                        # robot should face the object
+                        angle_rad = math.atan2(oy - nav_y, ox - nav_x)
+                        # angle_deg = math.degrees(angle_rad)
+                        angle_deg = (math.degrees(angle_rad) + 360) % 360
+
+                    nav_coords = [nav_x, nav_y, angle_deg]
+
+                    print("Object coords:", object_coords)
+                    print("Table center:", table_center)
+                    print("Robot nav coords:", nav_coords)
+            
+                    success = True
+                    message = "Moved to pre pick position in circular shaped furniture."
+                    nav_coords_ret = nav_coords
+
+            ### SQUARED FURNITURES
+            elif furniture_dict ["shape"] == "square":
+
+                # helpers
+                x_min = min(furniture_dict["top_left_coords"][0], furniture_dict["bot_right_coords"][0])  # bottom
+                x_max = max(furniture_dict["top_left_coords"][0], furniture_dict["bot_right_coords"][0])  # top
+                y_min = min(furniture_dict["top_left_coords"][1], furniture_dict["bot_right_coords"][1])  # right
+                y_max = max(furniture_dict["top_left_coords"][1], furniture_dict["bot_right_coords"][1])  # left
+
+                # attributions
+                ox, oy = object_coords
+
+                # furniture validation
+                if not (x_min <= ox <= x_max and y_min <= oy <= y_max):
+                    success = False
+                    message = "Object is outside of rectangular shaped furniture"
+
+                else:
+                    # checks min distance to four sides of furniture select closest
+                    distances = {
+                        "bottom":   abs(ox - x_min),
+                        "top":      abs(x_max - ox),
+                        "right":    abs(oy - y_min),
+                        "left":     abs(y_max - oy)
+                    }
+
+                    closest_side = min(distances, key=distances.get)
+                    if closest_side == "bottom":
+                        nav_x = x_min - approach_offset
+                        nav_y = oy
+                        angle_deg = 0.0
+                    elif closest_side == "top":
+                        nav_x = x_max + approach_offset
+                        nav_y = oy
+                        angle_deg = 180.0
+                    elif closest_side == "right":
+                        nav_x = ox
+                        nav_y = y_min - approach_offset
+                        angle_deg = 90.0
+                    elif closest_side == "left":
+                        nav_x = ox
+                        nav_y = y_max + approach_offset
+                        angle_deg = 270.0
+
+                    nav_coords = [nav_x, nav_y, angle_deg]
+
+                    print("Object coords:", object_coords)
+                    print("Closest side:", closest_side)
+                    print("Robot nav coords:", nav_coords)
+
+                    success = True
+                    message = "Moved to pre pick position in rectangular shaped furniture."
+                    nav_coords_ret = nav_coords
+
+            else:
+                success = False
+                message = "Furniture shape not recognized, cannot move to pre-pick position"
+
+        if nav_coords_ret and move_to:
+            self.move_to_position(move_coords=nav_coords_ret, wait_for_end_of=wait_for_end_of)
+
+        return success, message, nav_coords_ret
+
+
+    def open_door(self, push_pull="push", left_right="left", wait_for_end_of=True):
         # placeholder for door opening std_function
         pass
         # arm movements and search for objects for furniture door_handle 
