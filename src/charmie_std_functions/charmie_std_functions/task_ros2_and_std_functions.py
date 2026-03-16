@@ -6205,7 +6205,9 @@ class RobotStdFunctions():
             dx = furniture_gap - front_base_adjust_x
             dy = front_base_adjust_y 
             self.adjust_omnidirectional_position(dx=0.0,dy=dy, safety=True)
-            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=True)  
+            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=True)
+
+            print("ADJUSTED BASE IN X:", dx, "AND IN Y:", dy)  
 
             time.sleep(0.5)
             self.set_arm(command="slow_open_gripper", wait_for_end_of=True)

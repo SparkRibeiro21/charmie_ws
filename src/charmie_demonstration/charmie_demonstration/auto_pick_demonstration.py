@@ -323,11 +323,14 @@ class TaskMain():
                 # else:
                 #     picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
 
-                picked_height_2, asked_help = self.robot.pick_object_risky(selected_object="Coffee Grounds", pick_mode=self.object_mode, first_search_tetas=self.HORIZONTAL_TETAS)
+                picked_height_1, asked_help = self.robot.pick_object_risky(selected_object="Coffee Grounds", pick_mode=self.object_mode, first_search_tetas=self.HORIZONTAL_TETAS)
+                print("FIRST PICK HEIGHT:", picked_height_1)
 
-                place_object_in_tray_height = self.robot.place_object_in_furniture(selected_object=self.object_name, place_mode=self.robot.get_standard_pick_from_object(object_name=self.object_name), furniture="Tray", place_height=picked_height_2)
+                place_object_in_tray_height = self.robot.place_object_in_furniture(selected_object=self.object_name, place_mode=self.robot.get_standard_pick_from_object(object_name=self.object_name), furniture="Tray", place_height=picked_height_1)
+                print("PLACE IN TRAY HEIGHT:", place_object_in_tray_height)
 
-                picked_height_1, asked_help_tray = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.HORIZONTAL_TETAS)
+                picked_height_2, asked_help_tray = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.HORIZONTAL_TETAS)
+                print("SECOND PICK HEIGHT:", picked_height_2)
 
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
@@ -375,9 +378,10 @@ class TaskMain():
                 #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
 
-                self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode="front",furniture=self.place_furniture,asked_help=False,place_height=picked_height_1, return_to_initial_position=True)
+                self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode="front",furniture=self.place_furniture,asked_help=False,place_height=picked_height_2, return_to_initial_position=True)
 
                 picked_height_3 = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, furniture="Tray", placed_in_tray_height = place_object_in_tray_height)
+                print("THIRD PICK HEIGHT:", picked_height_3)
 
                 self.robot.place_object_in_furniture(selected_object="Coffee Grounds",place_mode="front",furniture=self.place_furniture,asked_help=False,place_height=picked_height_3, return_to_initial_position=True)
 
