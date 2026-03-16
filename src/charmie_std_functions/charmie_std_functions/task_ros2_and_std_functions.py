@@ -5321,8 +5321,6 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_Y = 1
 
 
-
-
         if furniture != "" and furniture != "Tray":
                 is_object_in_furniture_check = True
         
@@ -5337,14 +5335,14 @@ class RobotStdFunctions():
         if pick_mode == "" and search_with_head_camera:
             pick_mode = self.get_standard_pick_from_object(selected_object)
 
-        if furniture_height == -1 and furniture != "" and furniture != "Tray":
+        if furniture_height == -1 and furniture != "" and furniture != "tray":
             furniture_height = self.get_height_from_furniture(furniture)
             if furniture_height is None:
                 print("PICK FURNITURE DOES NOT EXIST OR HAS NO HEIGHT")
         elif furniture_height < 0:
             print("PICK FURNITURE HEIGHT IS NEGATIVE")
 
-        if furniture == "Tray":
+        if furniture == "tray":
             print("PICKING FROM TRAY !!!!!!!!")
 
             first_safe_tray = [-206.8, 29, -74.7, -5.8, 51.9, 248.7]
@@ -5480,6 +5478,8 @@ class RobotStdFunctions():
                     
                     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
                     return placed_height
+            else:
+                print("PICKING FROM FURNITURE OTHER THAN TRAY")
 
 
         ### While cycle to get a valid detected object ###
@@ -6204,10 +6204,10 @@ class RobotStdFunctions():
 
             dx = furniture_gap - front_base_adjust_x
             dy = front_base_adjust_y 
-            self.adjust_omnidirectional_position(dx=0.0,dy=dy, safety=True)
-            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=True)
+            self.adjust_omnidirectional_position(dx=0.0,dy=dy, safety=False)
+            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=False)
 
-            print("ADJUSTED BASE IN X:", dx, "AND IN Y:", dy)  
+            print("ADJUSTED BASE IN X:", dx, "AND IN Y:", dy)
 
             time.sleep(0.5)
             self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
