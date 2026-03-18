@@ -5877,7 +5877,7 @@ class RobotStdFunctions():
                     else:
                         if obj.object_name != "plate":    
                             self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
 
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
@@ -6480,22 +6480,22 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms
         
-    def sort_for_pick(self, objects=[]):
+    #def sort_for_pick(self, objects=[]):
 
-        if len(objects) == 2:
-            obj1_shape = self.get_object_shape_from_object(objects(0))
-            obj1_height = self.get_object_height_from_object(objects(0))
-            obj2_shape = self.get_object_shape_from_object(objects(1))
-            obj2_height = self.get_object_height_from_object(objects(1))
-            changed = False
-            if obj1_shape == "sphere" and obj2_shape != "sphere":
-                changed = True
-                obj = objects(0)
-                objects(0) = objects(1)
-                objects(1) = obj
-            if abs(obj1_height - 0.14) > abs (obj2_height - 0.14) and not changed:
-                obj = objects(0)
-                objects(0) = objects(1)
-                objects(1) = obj
-        return objects
+        #if len(objects) == 2:
+            #obj1_shape = self.get_object_shape_from_object(objects(0))
+            #obj1_height = self.get_object_height_from_object(objects(0))
+            #obj2_shape = self.get_object_shape_from_object(objects(1))
+            #obj2_height = self.get_object_height_from_object(objects(1))
+            #changed = False
+            #if obj1_shape == "sphere" and obj2_shape != "sphere":
+                #changed = True
+                #obj = objects(0)
+                #objects(0) = objects(1)
+                #objects(1) = obj
+            #if abs(obj1_height - 0.14) > abs (obj2_height - 0.14) and not changed:
+                #obj = objects(0)
+                #objects(0) = objects(1)
+                #objects(1) = obj
+        #return objects
         

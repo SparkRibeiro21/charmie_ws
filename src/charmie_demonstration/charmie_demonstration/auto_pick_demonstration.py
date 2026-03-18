@@ -83,7 +83,7 @@ class TaskMain():
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
-        self.GET_HEAR = False
+        self.GET_HEAR = True
 
         #Furniture which we cannot place with place_front
 
@@ -157,7 +157,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "Mustard"
+                    self.object_name = "Coffee Grounds"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
@@ -323,7 +323,7 @@ class TaskMain():
                 # else:
                 #     picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
 
-                picked_height_1, asked_help = self.robot.pick_object_risky(selected_object="Mustard", pick_mode=self.object_mode, first_search_tetas=self.VERTICAL_TETAS)
+                picked_height_1, asked_help = self.robot.pick_object_risky(selected_object="Mustard", pick_mode=self.object_mode, first_search_tetas=self.VERTICAL_TETAS, return_arm_to_initial_position=False)
                 print("FIRST PICK HEIGHT:", picked_height_1)
 
                 place_object_in_tray_height = self.robot.place_object_in_furniture(selected_object=self.object_name, place_mode=self.robot.get_standard_pick_from_object(object_name=self.object_name), furniture="Tray", place_height=picked_height_1)
