@@ -6481,9 +6481,21 @@ class RobotStdFunctions():
         # add safety and timeout mechanisms
         
     def sort_for_pick(self, objects=[]):
-        for obj in len(objects)-2:
-            obj1_shape = self.get_object_shape_from_object(object(obj))
-            obj1_height = self.get_object_height_from_object(object(obj))
-            obj2_shape = self.get_object_shape_from_object(object(obj+1))
-            obj2_height = self.get_object_height_from_object(object(obj+1))
+
+        if len(objects) == 2:
+            obj1_shape = self.get_object_shape_from_object(objects(0))
+            obj1_height = self.get_object_height_from_object(objects(0))
+            obj2_shape = self.get_object_shape_from_object(objects(1))
+            obj2_height = self.get_object_height_from_object(objects(1))
+            changed = False
+            if obj1_shape == "sphere" and obj2_shape != "sphere":
+                changed = True
+                obj = objects(0)
+                objects(0) = objects(1)
+                objects(1) = obj
+            if abs(obj1_height - 0.14) > abs (obj2_height - 0.14) and not changed:
+                obj = objects(0)
+                objects(0) = objects(1)
+                objects(1) = obj
+        return objects
         
