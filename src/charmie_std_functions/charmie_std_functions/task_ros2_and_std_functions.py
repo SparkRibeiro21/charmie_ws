@@ -5122,7 +5122,7 @@ class RobotStdFunctions():
                     self.adjust_y_      = valid_detected_object.position_relative.y + DISTANCE_IN_FRONT_Y
                     print("FINAL ADJUST:", self.adjust_x_, self.adjust_y_)
 
-                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False)
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False, safety=False)
 
                 # IF ADJUST IS NOT POSSIBLE DUE TO OBSTACLES ASK FOR HELP
                 if not s:
@@ -5601,8 +5601,8 @@ class RobotStdFunctions():
 
             dx = furniture_gap - front_base_adjust_x
             dy = front_base_adjust_y 
-            self.adjust_omnidirectional_position(dx=0.0,dy=dy, safety=True)
-            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=True)  
+            self.adjust_omnidirectional_position(dx=0.0,dy=dy, safety=False)
+            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=False)  
 
             time.sleep(0.5)
             self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
