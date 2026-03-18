@@ -78,12 +78,12 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
 
-        self.home_furniture = "Office Table"
+        self.home_furniture = "Dinner Table"
         # self.home_furniture = "Dinner Table"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
-        self.GET_HEAR = True
+        self.GET_HEAR = False
 
         #Furniture which we cannot place with place_front
 
@@ -157,7 +157,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "Pringles"
+                    self.object_name = "Mustard"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
@@ -165,7 +165,7 @@ class TaskMain():
                     # selected_furniture = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_furniture", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_furniture)
 
-                    self.place_furniture = "Office Table"
+                    self.place_furniture = "Dinner Table"
 
                     self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
 
@@ -286,7 +286,7 @@ class TaskMain():
                 self.HORIZONTAL_TETAS = [[0, -45], [-40, -45], [40, -45]]
                 self.VERTICAL_TETAS = [[0, 0], [0, 15], [0, -35]]
 
-                self.state = self.task_states["Pick_Object"]
+                self.state = self.task_states["Move_to_Location"]
 
 
 
@@ -323,7 +323,7 @@ class TaskMain():
                 # else:
                 #     picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
 
-                picked_height_1, asked_help = self.robot.pick_object_risky(selected_object="Coffee Grounds", pick_mode=self.object_mode, first_search_tetas=self.HORIZONTAL_TETAS)
+                picked_height_1, asked_help = self.robot.pick_object_risky(selected_object="Mustard", pick_mode=self.object_mode, first_search_tetas=self.VERTICAL_TETAS)
                 print("FIRST PICK HEIGHT:", picked_height_1)
 
                 place_object_in_tray_height = self.robot.place_object_in_furniture(selected_object=self.object_name, place_mode=self.robot.get_standard_pick_from_object(object_name=self.object_name), furniture="Tray", place_height=picked_height_1)

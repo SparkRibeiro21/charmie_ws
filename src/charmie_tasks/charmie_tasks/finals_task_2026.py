@@ -188,7 +188,7 @@ class TaskMain():
 
                             picked_height, asked_help = self.robot.pick_object_risky(selected_object=wrong_obj,
                                                         pick_mode=self.robot.get_standard_pick_from_object(wrong_obj),
-                                                        first_search_tetas=search_misplaced_obj_tetas)
+                                                        first_search_tetas=search_misplaced_obj_tetas, return_arm_to_initial_position=False)
                             
                             place_furniture = self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(wrong_obj))
                         
