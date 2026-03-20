@@ -175,6 +175,14 @@ class TaskMain():
 
                 else:
 
+                    Object_menu = ["1","2"]
+
+                    while True:
+                        selected_number = self.robot.set_face_touchscreen_menu(["custom"], custom_options=Object_menu, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                        print(selected_number[0])
+                        if selected_number[0] != "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                            break
+
                     while True:
                         selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                         print(selected_category[0])
@@ -191,6 +199,31 @@ class TaskMain():
                     self.object_name = selected_option[0]
 
                     self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
+
+                    if selected_number[0] == "2":
+                        while True:
+                            selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                            print(selected_category[0])
+                            if selected_category[0] != "TIMEOUT" and self.robot.get_furniture_from_object_class(selected_category[0]) != "NONE": #THINK ABOUT REPEAT LIMIT
+                                break
+
+                        selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                        print(selected_option[0])
+
+                        while selected_option[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                            selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                            print(selected_option[0])
+
+                        self.object2_name = selected_option[0]
+                        objects = self.robot.sort_for_pick(objects=[self.object_name,self.object2_name])
+
+                        self.object_name = objects[1]
+                        self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
+
+                        self.object2_name = objects[1]
+                        self.object2_mode = self.robot.get_standard_pick_from_object(self.object2_name)
+                        print("Object 1 ", self.object_name, " Object 2 ", self.object2_name)
+
 
                     rooms = []
                     for obj in self.robot.node.rooms:
