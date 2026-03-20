@@ -5954,7 +5954,7 @@ class RobotStdFunctions():
                                 pass
                         else:
                             self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
                             while not self.adjust_omnidirectional_position_is_done():
                                 pass
                     #self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
@@ -6493,7 +6493,7 @@ class RobotStdFunctions():
                 obj = objects[0]
                 objects[0] = objects[1]
                 objects[1] = obj
-            if abs(obj1_height - 0.14) > abs (obj2_height - 0.14) and not changed:
+            if abs(obj1_height - 0.14) < abs (obj2_height - 0.14) and not changed:
                 obj = objects[0]
                 objects[0] = objects[1]
                 objects[1] = obj
