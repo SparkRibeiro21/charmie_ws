@@ -68,9 +68,9 @@ class DebugVisualNode(Node):
         self.search_for_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_object_detections", self.search_for_object_detections_callback, 10)
         self.search_for_world_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_world_object_detections", self.search_for_world_object_detections_callback, 10)
         # Low Level
-        # self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10) ### OLD
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         # Livox 3D Lidar
+        self.livox_3dlidar_fullpc_subscriber = self.create_subscription(PointCloud2, "/livox/lidar", self.livox_full_pc_3dlidar_callback, 10) # just for node rect
         self.livox_3dlidar_subscriber = self.create_subscription(PointCloud2, "/livox/lidar/filtered", self.livox_3dlidar_callback, 10)
         # Gamepad Controller
         self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
@@ -546,9 +546,15 @@ class DebugVisualNode(Node):
 
                 self.lidar_bottom_obstacle_points.append(target)
 
-    def livox_3dlidar_callback(self, points: PointCloud2):
+    def livox_full_pc_3dlidar_callback(self, points: PointCloud2):
         # print("Received Livox 3D Lidar Points")
         self.lidar_livox_time = time.time()
+        # self.livox_3dlidar = points
+        # print(points)
+
+    def livox_3dlidar_callback(self, points: PointCloud2):
+        # print("Received Livox 3D Lidar Points")
+        # self.lidar_livox_time = time.time()
         self.livox_3dlidar = points
         # print(points)
 
