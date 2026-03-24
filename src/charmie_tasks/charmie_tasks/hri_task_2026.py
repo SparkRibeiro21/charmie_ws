@@ -498,7 +498,8 @@ class TaskMain():
                 command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
 
                 self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=False)
-                self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=False) # placed here for time optimization
+                # self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=False) # placed here for time optimization # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
+                self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
 
                 a = time.time()
                 self.GUEST2_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
@@ -517,12 +518,18 @@ class TaskMain():
                 else:
                     print(self.GUEST2_NAME, self.GUEST2_DRINK)
 
+                self.robot.set_neck_continuous_tracking(activate=False) # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
+                self.robot.deactivate_tracking_mask() # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
+
+                self.robot.set_speech(filename="hri/please_follow_me", wait_for_end_of=False)
+
                 ### INITIALLY SAYING THE CHARACTERISTICS WAS HERE. HOWEVER TO IMPROVE TASK EFFICIENCY, THIS IS NOW SAID DURING NAVIGATION TO SITTING AREA
                 # self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
                 #                                                        ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
 
-                self.state = self.task_states["Get_guest2_bag"]
-
+                ### self.state = self.task_states["Get_guest2_bag"] # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
+                self.state = self.task_states["Move_guest2_to_sitting_area"] # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
+            
 
             elif self.state == self.task_states["Get_guest2_bag"]:
 
@@ -562,7 +569,7 @@ class TaskMain():
                 
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=True)
 
-                self.robot.set_neck_continuous_tracking(activate=True)
+                self.robot.set_neck_continuous_tracking(activate=False)
                 self.robot.deactivate_tracking_mask()
                 
                 self.robot.set_speech(filename="hri/please_follow_me", wait_for_end_of=False)
