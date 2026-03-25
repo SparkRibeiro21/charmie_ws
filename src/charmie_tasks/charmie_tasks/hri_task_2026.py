@@ -737,7 +737,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="rooms/"+self.SITTING_AREA_ROOM.replace(" ","_").lower(), wait_for_end_of=False)
                 
-                self.state = self.task_states["Follow_host_to_bag_drop"]
+                # self.state = self.task_states["Follow_host_to_bag_drop"] # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
+                self.state = self.task_states["Final_State"] # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
 
 
             elif self.state == self.task_states["Follow_host_to_bag_drop"]:
