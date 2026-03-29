@@ -36,6 +36,10 @@ class LLMNode(Node):
         self.llm_planner_description = LLM_planner_description()
         self.llm_info_extraction_description = LLM_info_extraction_description()
 
+        ### HERE WE NEED TO ADD A DUMMY FUNCTION TO GET A FIRST RESPONSE FROM THE LLM
+        ### THIS IS BECAUSE THE FIRST TIME WE CALL THE LLM IT TAKES A LONG TIME TO LOAD, SO WE WANT TO DO IT IN THE BEGINNING, SO THAT WHEN WE CALL IT LATER ON, IT IS ALREADY LOADED AND READY TO RESPOND QUICKLY
+        ### THIS NEEDS TO HAPPEN BEFORE THE SERVERS CREATION, SO THAT WHEN OTHER NODES CHECK THE SERVICE AVAILABILITY, IT IS ALREADY AVAILABLE AND NOT WAITING FOR THE LLM TO LOAD
+
         self.llm_ollama_demonstration_server    = self.create_service(GetLLMResponse, "llm_ollama_demonstration",   self.llm_ollama_demonstration_callback)
         self.llm_ollama_information_server      = self.create_service(GetLLMResponse, "llm_ollama_information",     self.llm_ollama_information_callback)
         self.llm_ollama_gpsr_high_level_server  = self.create_service(GetLLMResponse, "llm_ollama_gpsr_high_level", self.llm_ollama_gpsr_high_level_callback)
