@@ -26,13 +26,16 @@ ros2_modules = {
     "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
+    "charmie_nav_sdnl":             False,
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
+    "charmie_speakers_save":        True,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
+    "charmie_yolo_world":           False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -78,8 +81,47 @@ class TaskMain():
 
             if self.state == Waiting_for_start_button:
 
-                self.robot.set_speech(filename="serve_breakfast/sB_finished", wait_for_end_of=True)
+                ### self.robot.set_speech(filename="serve_breakfast/sB_finished", wait_for_end_of=True)
+
+                command = "My name is Fernando and my favourite drink is strawberry juice"
+
+                self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=False)
+
+                # a = time.time()
+                # self.GUEST1_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                # print("Name:", self.GUEST1_NAME, time.time()-a)
+                self.GUEST1_NAME = "Fernando"
+                time.sleep(1.0)
+
+                self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) 
                 
+                # b = time.time()
+                # self.GUEST1_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                # print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
+                self.GUEST1_DRINK = "strawberry juice"
+                time.sleep(1.0)
+
+                self.robot.save_speech(command=self.GUEST1_NAME, filename=self.GUEST1_NAME, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+                self.robot.save_speech(command=self.GUEST1_DRINK, filename=self.GUEST1_DRINK, quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+
+                if command == "ERR_MAX":
+                    print("MAX HEARING ATTEMPTS REACHED")
+                    self.robot.set_speech(filename="generic/could_not_hear_max_attempts", wait_for_end_of=True)
+                else:
+                    print(self.GUEST1_NAME, self.GUEST1_DRINK)
+                
+                self.robot.set_neck_continuous_tracking(activate=False)
+                self.robot.deactivate_tracking_mask()
+
+                # time.sleep(1.0) # small wait, otherwise speaks would get all mixed up
+
+                self.robot.set_speech(filename="hri/please_follow_me", wait_for_end_of=True)
+                                        
+                # self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
+                
+
                 # time.sleep(2.0)
 
                 # self.robot.set_speech(filename="serve_breakfast/cornflakes_poured", wait_for_end_of=True)

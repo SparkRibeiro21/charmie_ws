@@ -26,13 +26,16 @@ ros2_modules = {
     "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
+    "charmie_nav_sdnl":             False,
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             False,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            True,
+    "charmie_yolo_world":           False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -87,8 +90,9 @@ class TaskMain():
                     print("COMPARE ENCODING MODE")
                     for person in det_ppl:
                         # print("ID:", person.index)
-                        pred, pred_perc = self.robot.recognize_face_from_face_recognition(person=person)
+                        pred, pred_perc, conf_table = self.robot.recognize_face_from_face_recognition(person=person)
                         print("COMPARE OUTCOME:", pred, round(pred_perc, 2))
+                        print("CONFIDENCE TABLE:", conf_table)
                 
                 else: # name of person to add
                     print("ADD ENCODING MODE, name:", choice)

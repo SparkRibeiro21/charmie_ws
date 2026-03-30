@@ -26,13 +26,16 @@ ros2_modules = {
     "charmie_low_level":            True,
     "charmie_navigation":           True,
     "charmie_nav2":                 True,
+    "charmie_nav_sdnl":             False,
     "charmie_neck":                 True,
     "charmie_radar":                True,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            True,
+    "charmie_yolo_world":           False,
 }
 
 # main function that already creates the thread for the task state machine

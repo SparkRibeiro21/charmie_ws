@@ -1,0 +1,31 @@
+Institutional Background – CHARMIE
+
+CHARMIE was developed by the Laboratory of Automation and Robotics (LAR), a research laboratory integrated in the Department of Industrial Electronics (DEI) at the University of Minho, Portugal.
+
+The LAR research group focuses on robotics, autonomous systems, human-robot interaction, and intelligent control systems.
+
+LAR has been actively participating in RoboCup competitions since 1999. The laboratory competes in multiple RoboCup leagues, including:
+
+- RoboCup Middle Size League (LAR@MSL)
+- RoboCup@Home (LAR@Home)
+- RoboCup Humanoid League (LAR@Humanoids)
+
+The LAR@Home team focuses on service robotics for domestic and assistive environments.
+
+CHARMIE development started in 2020 as a collaborative home and healthcare assistant robot platform.
+
+RoboCup Participation History (CHARMIE – RoboCup@Home):
+
+- 2023 – RoboCup Bordeaux, France: 7th place (CHARMIE debut)
+- 2024 – RoboCup (Eindhoven, Netherlands): 5th place, with significant score improvement
+- 2023 – Portugal Open (Tomar, Portugal): 3rd place
+- 2024 – Portugal Open (Paredes de Coura, Portugal): 1st place
+
+The LAR team emphasizes:
+- Innovation in autonomous navigation
+- Human-centered robot design
+- Real-world robustness
+- Offline-capable systems
+- Integration of advanced AI techniques into physical robotics
+
+CHARMIE represents the University of Minho and LAR in international RoboCup competitions and research demonstrations.

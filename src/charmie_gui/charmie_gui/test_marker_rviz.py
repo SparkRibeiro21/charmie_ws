@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from visualization_msgs.msg import Marker, MarkerArray
-from charmie_interfaces.msg import DetectedPerson, DetectedObject, ListOfDetectedPerson, ListOfDetectedObject, TrackingMask, RadarData
+from charmie_interfaces.msg import DetectedPerson, DetectedObject, ListOfDetectedPerson, ListOfDetectedObject, TrackingMask, RadarData, SDNLMarkerDebug
 from geometry_msgs.msg import Point
 import math
 import json
@@ -12,27 +12,34 @@ class MarkerPublisher(Node):
     def __init__(self):
         super().__init__("marker_publisher")
         # self.publisher = self.create_publisher(Marker, "visualization_marker", 10)
-        self.publisher_marker_array_rooms =             self.create_publisher(MarkerArray, "visualization_marker_array_rooms", 10)
-        self.publisher_marker_array_rooms_names =       self.create_publisher(MarkerArray, "visualization_marker_array_rooms_names", 10)
-        self.publisher_marker_array_furniture =         self.create_publisher(MarkerArray, "visualization_marker_array_furniture", 10)
-        self.publisher_marker_array_furniture_names =   self.create_publisher(MarkerArray, "visualization_marker_array_furniture_names", 10)
-        self.publisher_marker_array_navigations =       self.create_publisher(MarkerArray, "visualization_marker_array_navigations", 10)
-        self.publisher_marker_array_navigations_names = self.create_publisher(MarkerArray, "visualization_marker_array_navigations_names", 10)
+        self.publisher_marker_array_rooms                   = self.create_publisher(MarkerArray, "visualization_marker_array_rooms", 10)
+        self.publisher_marker_array_rooms_names             = self.create_publisher(MarkerArray, "visualization_marker_array_rooms_names", 10)
+        self.publisher_marker_array_furniture               = self.create_publisher(MarkerArray, "visualization_marker_array_furniture", 10)
+        self.publisher_marker_array_furniture_names         = self.create_publisher(MarkerArray, "visualization_marker_array_furniture_names", 10)
+        self.publisher_marker_array_navigations             = self.create_publisher(MarkerArray, "visualization_marker_array_navigations", 10)
+        self.publisher_marker_array_navigations_names       = self.create_publisher(MarkerArray, "visualization_marker_array_navigations_names", 10)
 
-        self.publisher_marker_array_detected_person =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_person", 10)
-        self.publisher_marker_array_detected_object =   self.create_publisher(MarkerArray, "visualization_marker_array_detected_object", 10)
-        self.publisher_marker_array_tracking =          self.create_publisher(MarkerArray, "visualization_marker_array_tracking", 10)
+        self.publisher_marker_array_detected_person         = self.create_publisher(MarkerArray, "visualization_marker_array_detected_person", 10)
+        self.publisher_marker_array_detected_object         = self.create_publisher(MarkerArray, "visualization_marker_array_detected_object", 10)
+        self.publisher_marker_array_detected_world_object   = self.create_publisher(MarkerArray, "visualization_marker_array_detected_world_object", 10)
+        self.publisher_marker_array_tracking                = self.create_publisher(MarkerArray, "visualization_marker_array_tracking", 10)
         
-        self.publisher_marker_array_radar =             self.create_publisher(MarkerArray, "visualization_marker_array_radar", 10)
+        self.publisher_marker_array_radar                   = self.create_publisher(MarkerArray, "visualization_marker_array_radar", 10)
+
+        self.publisher_marker_array_sdnl_goal = self.create_publisher(MarkerArray, "visualization_marker_array_sdnl_goal", 10)
         
         # Yolo Pose
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        # Yolo World
+        self.world_objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'world_objects_all_detected_filtered', self.world_object_detected_filtered_callback, 10)
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         # Radar
         self.radar_data_subscriber = self.create_subscription(RadarData, "radar/data", self.radar_data_callback, 10)
+        # Nav SDNL Goal
+        self.sdnl_marker_debug_subscriber = self.create_subscription(SDNLMarkerDebug, "sdnl/marker_debug", self.sdnl_marker_debug_callback, 10)
 
         # info regarding the paths for the recorded files intended to be played
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -56,9 +63,12 @@ class MarkerPublisher(Node):
 
         self.detected_people = ListOfDetectedPerson()
         self.detected_object = ListOfDetectedObject()
+        self.detected_world_object = ListOfDetectedObject()
         self.previous_marker_array_detected_people = ListOfDetectedPerson() 
         self.tracking = TrackingMask()
         self.radar = RadarData()
+        self.sdnl_dbg = SDNLMarkerDebug()
+        self.sdnl_dbg.active = False
         self.aux_time = time.time()
 
         self.COLOR_LIST = [
@@ -72,7 +82,7 @@ class MarkerPublisher(Node):
         ]
 
         self.NAMES_TEXT_SIZE = 0.2
-
+        self.DEFAULT_ROBOT_RADIUS = 0.28
 
         # self.timer = self.create_timer(1.0, self.publish_marker)  # Publish every 1 second
         # self.timer = self.create_timer(1.0, self.publish_marker_array)  # Publish every 1 second
@@ -86,6 +96,10 @@ class MarkerPublisher(Node):
         self.detected_object = det_object
         self.publish_marker_array_detected_object()
 
+    def world_object_detected_filtered_callback(self, world_det_object: ListOfDetectedObject):
+        self.detected_world_object = world_det_object
+        self.publish_marker_array_world_detected_object()
+
     def tracking_mask_callback(self, track: TrackingMask):
         self.tracking = track
         self.publish_marker_array_tracking()
@@ -93,6 +107,10 @@ class MarkerPublisher(Node):
     def radar_data_callback(self, radar: RadarData):
         self.radar = radar
         self.publish_marker_array_radar()
+
+    def sdnl_marker_debug_callback(self, msg: SDNLMarkerDebug):
+        self.sdnl_dbg = msg
+        self.publish_marker_array_sdnl_goal()
 
     def publish_all_marker_arrays(self):
         self.publish_marker_array_rooms()
@@ -695,6 +713,136 @@ class MarkerPublisher(Node):
                 marker_array.markers.append(marker_name)
             
         self.publisher_marker_array_detected_object.publish(marker_array)
+
+    def publish_marker_array_world_detected_object(self):
+
+        marker_array = MarkerArray()
+
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "map"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "Detected_world_object_B"
+        delete_marker.id = 0  # Use the same ID to delete it
+        delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
+        marker_array.markers.append(delete_marker)
+
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "map"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "Detected_world_object_N"
+        delete_marker.id = 0  # Use the same ID to delete it
+        delete_marker.action = Marker.DELETEALL  # REMOVE from RViz
+        marker_array.markers.append(delete_marker)
+
+        # marker_array.markers.clear()
+
+        ### FALTA:
+        # ORIENTATION
+
+        world_obj_size = 0.2
+
+        ctr = 0
+        for object_ in self.detected_world_object.objects:
+            ctr += 1
+
+            # if object is in objects.json configuration file or not
+            if object_.object_class == "":
+                non_dataset_objects = True
+            else:
+                non_dataset_objects = False
+            
+            conf = f"{object_.confidence * 100:.0f}%"
+            x_ = f"{object_.position_absolute.x:4.2f}"
+            y_ = f"{object_.position_absolute.y:5.2f}"
+            z_ = f"{object_.position_absolute.z:5.2f}"
+            print(f"{object_.object_name:<17} {conf:<3} {object_.camera} ({x_}, {y_}, {z_}) {object_.room_location:<12} {object_.furniture_location}")
+            
+            marker = Marker()
+
+            # Header - Defines frame and timestamp
+            marker.header.frame_id = "map"
+            marker.header.stamp = self.get_clock().now().to_msg()
+            # Namespace and ID (useful when publishing multiple markers)
+            marker.ns = "Detected_world_object_B"
+            marker.id = ctr  # Each marker must have a unique ID
+            
+            if not non_dataset_objects:
+                # Marker Type (Choose shape)
+                if object_.cf_shape == "cylinder":
+                    marker.type = Marker.CYLINDER  # Other options: SPHERE, CYLINDER, ARROW, etc.
+                elif object_.cf_shape == "cuboid":
+                    marker.type = Marker.CUBE
+                elif object_.cf_shape == "sphere":
+                    marker.type = Marker.SPHERE
+                elif object_.cf_shape == "special": # may change in the future for something clearer
+                    marker.type = Marker.CYLINDER  
+            else:
+                    marker.type = Marker.SPHERE
+                
+            # Marker Action
+            marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+
+            marker.pose.position.x = object_.position_absolute.x  # Set the X coordinate
+            marker.pose.position.y = object_.position_absolute.y  # Set the X coordinate
+            marker.pose.position.z = object_.position_absolute.z  # Set the Z coordinate
+
+            marker.pose.orientation.x = 0.0
+            marker.pose.orientation.y = 0.0
+            marker.pose.orientation.z = 0.0
+            marker.pose.orientation.w = 1.0  # No rotation
+
+            if not non_dataset_objects:
+                marker.scale.x = object_.cf_length # Length
+                marker.scale.y = object_.cf_width  # Width
+                marker.scale.z = object_.cf_height # Height
+            else:
+                marker.scale.x = world_obj_size # Length
+                marker.scale.y = world_obj_size  # Width
+                marker.scale.z = world_obj_size # Height
+            
+            if not non_dataset_objects:
+                # Color (RGBA format, values from 0 to 1)
+                marker.color.r = 0.0 # 0.0  # Red
+                marker.color.g = 0.0 # 1.0  # Green
+                marker.color.b = 1.0 # 1.0  # Blue
+                marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+            else:
+                # Color (RGBA format, values from 0 to 1)
+                marker.color.r = 1.0 # 0.0  # Red
+                marker.color.g = 0.0 # 1.0  # Green
+                marker.color.b = 0.0 # 1.0  # Blue
+                marker.color.a = 0.5  # Alpha (1.0 = fully visible, 0.0 = invisible)
+            
+            # Lifetime (0 = forever, otherwise, disappears after X seconds)
+            marker.lifetime.sec = 0
+            marker.lifetime.nanosec = 0
+
+            # Frame behavior (Keeps marker always facing the camera if enabled)
+            marker.frame_locked = False
+            
+            marker_array.markers.append(marker)
+
+            marker_name = Marker()
+            marker_name.header.frame_id = "map"
+            marker_name.header.stamp = self.get_clock().now().to_msg()
+            marker_name.ns = "Detected_world_object_N"
+            marker_name.id = ctr
+            marker_name.type = Marker.TEXT_VIEW_FACING
+            marker_name.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
+            marker_name.pose.position.x = object_.position_absolute.x  # Set the X coordinate
+            marker_name.pose.position.y = object_.position_absolute.y  # Set the Y coordinate
+            marker_name.pose.position.z = object_.position_absolute.z  # Set the Z coordinate
+            marker_name.pose.orientation.w = 1.0  # No rotation
+            marker_name.scale.z = self.NAMES_TEXT_SIZE/2  # Height
+            marker_name.text = str(object_.object_name).replace(" ","_")
+            marker_name.color.r = 0.0  # Red
+            marker_name.color.g = 0.0  # Green
+            marker_name.color.b = 0.0  # Blue
+            marker_name.color.a = 1.0  # Alpha (1.0 = fully visible, 0.0 = invisible)
+
+            marker_array.markers.append(marker_name)
+            
+        self.publisher_marker_array_detected_world_object.publish(marker_array)
     
     def publish_marker_array_tracking(self):
 
@@ -918,6 +1066,109 @@ class MarkerPublisher(Node):
 
         self.publisher_marker_array_radar.publish(marker_array)
         self.aux_time = curr_time
+
+    def publish_marker_array_sdnl_goal(self):
+
+        SDNL_TARGET_CYL_HEIGHT = 1.0
+        SDNL_REACHED_CYL_HEIGHT = 0.32
+
+        marker_array = MarkerArray()
+
+        # Always delete previous SDNL markers
+        delete_marker = Marker()
+        delete_marker.header.frame_id = "map"
+        delete_marker.header.stamp = self.get_clock().now().to_msg()
+        delete_marker.ns = "SDNL_GOAL"
+        delete_marker.id = 0
+        delete_marker.action = Marker.DELETEALL
+        marker_array.markers.append(delete_marker)
+
+        # If not active -> only publish delete (clears RViz)
+        if not getattr(self.sdnl_dbg, "active", False):
+            self.publisher_marker_array_sdnl_goal.publish(marker_array)
+            return
+
+        # Use msg header if you want (but be consistent)
+        frame_id = self.sdnl_dbg.header.frame_id if self.sdnl_dbg.header.frame_id else "map"
+        stamp = self.sdnl_dbg.header.stamp  # comes from sdnl node, OK for RViz
+        x = self.sdnl_dbg.target_pose.x
+        y = self.sdnl_dbg.target_pose.y
+        th = self.sdnl_dbg.target_pose.theta
+        reached = float(self.sdnl_dbg.reached_radius)
+
+        # --- 1) Target cylinder (robot footprint at target) ---
+        target_cyl = Marker()
+        target_cyl.header.frame_id = frame_id
+        target_cyl.header.stamp = stamp
+        target_cyl.ns = "SDNL_GOAL"
+        target_cyl.id = 1
+        target_cyl.type = Marker.CYLINDER
+        target_cyl.action = Marker.ADD
+
+        target_cyl.pose.position.x = x
+        target_cyl.pose.position.y = y
+        target_cyl.pose.position.z = SDNL_TARGET_CYL_HEIGHT / 2.0
+        target_cyl.pose.orientation.w = 1.0
+
+        # diameter = 2*radius
+        rr = self.DEFAULT_ROBOT_RADIUS
+        target_cyl.scale.x = rr/2.0
+        target_cyl.scale.y = rr/2.0
+        target_cyl.scale.z = SDNL_TARGET_CYL_HEIGHT
+
+        target_cyl.color.r = 0.0
+        target_cyl.color.g = 1.0
+        target_cyl.color.b = 0.0
+        target_cyl.color.a = 0.8
+
+        marker_array.markers.append(target_cyl)
+
+        # --- 2) Reached radius cylinder (bigger ring/disk) ---
+        reached_cyl = Marker()
+        reached_cyl.header.frame_id = frame_id
+        reached_cyl.header.stamp = stamp
+        reached_cyl.ns = "SDNL_GOAL"
+        reached_cyl.id = 2
+        reached_cyl.type = Marker.CYLINDER
+        reached_cyl.action = Marker.ADD
+
+        reached_cyl.pose.position.x = x
+        reached_cyl.pose.position.y = y
+        reached_cyl.pose.position.z = SDNL_REACHED_CYL_HEIGHT / 2.0
+        reached_cyl.pose.orientation.w = 1.0
+
+        reached_cyl.scale.x = 2.0 * reached
+        reached_cyl.scale.y = 2.0 * reached
+        reached_cyl.scale.z = SDNL_REACHED_CYL_HEIGHT
+
+        reached_cyl.color.r = 0.0
+        reached_cyl.color.g = 0.0
+        reached_cyl.color.b = 1.0
+        reached_cyl.color.a = 0.4
+
+        marker_array.markers.append(reached_cyl)
+
+        # --- 4) Optional text label ---
+        txt = Marker()
+        txt.header.frame_id = frame_id
+        txt.header.stamp = stamp
+        txt.ns = "SDNL_GOAL"
+        txt.id = 4
+        txt.type = Marker.TEXT_VIEW_FACING
+        txt.action = Marker.ADD
+        txt.pose.position.x = x
+        txt.pose.position.y = y
+        txt.pose.position.z = 0.35
+        txt.pose.orientation.w = 1.0
+        txt.scale.z = 0.10
+        txt.text = f"({x:.2f},{y:.2f},{math.degrees(th):.1f})r={reached:.2f}"
+        txt.color.r = 1.0
+        txt.color.g = 1.0
+        txt.color.b = 1.0
+        txt.color.a = 0.9
+        marker_array.markers.append(txt)
+
+        self.publisher_marker_array_sdnl_goal.publish(marker_array)
 
 
 def main(args=None):

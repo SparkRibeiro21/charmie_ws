@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
         "gui_debug = charmie_gui.gui_debug:main",
+        "sdnl_debug = charmie_gui.sdnl_debug:main",
         "test_marker_rviz = charmie_gui.test_marker_rviz:main"
         ],
     },

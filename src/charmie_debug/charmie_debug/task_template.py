@@ -44,13 +44,16 @@ HOW THE CODE OF A TASK SHOULD BE MADE:
         "charmie_low_level":            True,
         "charmie_navigation":           False,
         "charmie_nav2":                 True,
+        "charmie_nav_sdnl":             False,
         "charmie_neck":                 True,
         "charmie_radar":                False,
         "charmie_sound_classification": False,
         "charmie_speakers":             True,
+        "charmie_speakers_save":        False,
         "charmie_tracking":             False,
         "charmie_yolo_objects":         True,
         "charmie_yolo_pose":            False,
+        "charmie_yolo_world":           False,
     }
 
 # 4) CREATE THE STATE STRUCTURE:
@@ -207,13 +210,16 @@ ros2_modules = {
     "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
+    "charmie_nav_sdnl":             False,
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             False,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
+    "charmie_yolo_world":           False,
 }
 
 # main function that already creates the thread for the task state machine

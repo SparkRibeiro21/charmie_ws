@@ -53,7 +53,10 @@ class LaunchStdFunctions():
         self.robot_state_publisher_gazebo_node = Node(
             package="robot_state_publisher",
             executable="robot_state_publisher",
-            parameters=[{'robot_description': robot_description_gazebo}]
+            parameters=[{
+                'robot_description': robot_description_gazebo,
+                'use_sim_time': True
+            }]
         )
 
 
@@ -65,6 +68,16 @@ class LaunchStdFunctions():
             package="rviz2",
             executable="rviz2",
             arguments=['-d', rviz_basic_config_path]
+        )
+
+        self.rviz2_basic_node_sim = Node(
+            package="rviz2",
+            executable="rviz2",
+            name="rviz",  # nome fixo (igual ao que já aparece na tua lista)
+            arguments=['-d', rviz_basic_config_path],
+            parameters=[{
+                'use_sim_time': True
+            }]
         )
 
         rviz_slam_config_path = os.path.join(get_package_share_path('charmie_description'), 
@@ -83,6 +96,15 @@ class LaunchStdFunctions():
             package="rviz2",
             executable="rviz2",
             arguments=['-d', rviz_nav2_config_path]
+        )
+        
+        rviz_restaurant_config_path = os.path.join(get_package_share_path('charmie_description'), 
+                                'rviz', 'restaurant_default_view_charmie.rviz')
+        
+        self.rviz2_restaurant_node = Node(
+            package="rviz2",
+            executable="rviz2",
+            arguments=['-d', rviz_restaurant_config_path]
         )
 
         rviz_calib_map_furniture_navigations_config_path = os.path.join(get_package_share_path('charmie_description'), 
@@ -341,6 +363,11 @@ class LaunchStdFunctions():
                 executable='test_marker_rviz',
                 name='test_marker_rviz',
                 )
+
+        self.sdnl_debug = Node(package='charmie_gui',
+                executable='sdnl_debug',
+                name='sdnl_debug',
+                )
         
         self.audio = Node(package='charmie_audio',
                       executable='audio',
@@ -358,7 +385,7 @@ class LaunchStdFunctions():
                             emulate_tty=True
                             )
         
-        self.speakers_with_save = Node(package='charmie_speakers',
+        self.save_speakers = Node(package='charmie_speakers',
                             executable='speakers_with_save',
                             name='speakers_with_save',
                             emulate_tty=True
@@ -379,8 +406,25 @@ class LaunchStdFunctions():
         self.charmie_localisation = Node(package='charmie_localisation',
                     executable='localisation',
                     name='localisation',
-                    emulate_tty=True
-                    )
+                    emulate_tty=True,
+                    parameters=[{
+                        'publish_pose': True,
+                        'publish_gripper_map': True,
+                        'publish_gripper_base': True,
+                    }]
+                )
+        
+        self.charmie_localisation_sim = Node(package='charmie_localisation',
+                    executable='localisation',
+                    name='localisation',
+                    emulate_tty=True,
+                    parameters=[{
+                        'use_sim_time': True,
+                        'publish_pose': True,
+                        'publish_gripper_map': False,
+                        'publish_gripper_base': False,
+                    }]
+                )
         
         self.face = Node(package='charmie_face',
                     executable='face',
@@ -402,6 +446,24 @@ class LaunchStdFunctions():
         self.yolo_objects = Node(package='charmie_yolo_objects',
                             executable='yolo_objects',
                             name='yolo_objects',
+                            emulate_tty=True
+                            )
+        
+        self.yolo_world_without_prompt_free = Node(package='charmie_yolo_world',
+                            executable='yolo_world',
+                            name='yolo_world',
+                            parameters=[
+                                {'load_prompt_free_model': False},
+                                ],
+                            emulate_tty=True
+                            )
+        
+        self.yolo_world_with_prompt_free = Node(package='charmie_yolo_world',
+                            executable='yolo_world',
+                            name='yolo_world',
+                            parameters=[
+                                {'load_prompt_free_model': True},
+                                ],
                             emulate_tty=True
                             )
         
@@ -428,7 +490,7 @@ class LaunchStdFunctions():
                             name='lidar_hokuyo_bottom',
                             emulate_tty=True
                             )
-        '''
+        
         ################### user configure livox parameters for ros2 start ###################
         xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
         multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
@@ -474,12 +536,33 @@ class LaunchStdFunctions():
                 arguments=['--display-config', rviz_config_path]
             )
         
-        self.radar = Node(  package='charmie_radar',
-                            executable='radar',
-                            name='radar',
-                            emulate_tty=True
-                            )
-        '''
+        radar_params_yaml_path = os.path.join(
+            get_package_share_path('charmie_description'),
+            'config',
+            'radar_params.yaml'
+        )
+
+        self.radar = Node(package='charmie_radar',
+                          executable='radar',
+                          name='radar_node',
+                          emulate_tty=True,
+                          output='screen',
+                          parameters=[radar_params_yaml_path]
+                          )
+        
+        self.radar_sim = Node(package='charmie_radar',
+                              executable='radar',
+                              name='radar_node',
+                              emulate_tty=True,
+                              output='screen',
+                              parameters=[
+                                    radar_params_yaml_path,
+                                    {
+                                        'use_sim_time': True,
+                                    }
+                                ]
+                          )
+        
         self.odometry_lidar = Node(package='rf2o_laser_odometry',
                 executable='rf2o_laser_odometry_node',
                 name='rf2o_laser_odometry',
@@ -500,9 +583,32 @@ class LaunchStdFunctions():
                     emulate_tty=True
                     )
         
+        # do not wait until costmaps are clear before starting navigation
+        self.charmie_navigation_unmapped = Node(package='charmie_navigation',
+                    executable='navigation',
+                    name='navigation',
+                    emulate_tty=True,
+                    parameters=[{"wait_for_clear_costmaps": False}],
+                    )
+        
+        sdnl_params_yaml_path = os.path.join(
+            get_package_share_path('charmie_description'),
+            'config',
+            'sdnl_nav_params.yaml'
+        )
+        self.sdnl_navigation = Node(package='charmie_sdnl_nav',
+                    executable='sdnl_nav',
+                    name='sdnl_nav',
+                    output='screen',
+                    emulate_tty=True,
+                    parameters=[
+                        sdnl_params_yaml_path,
+                        ]
+                    )
+
         ### JOY & GAMEPAD CONTROLLER
         # Compute config file path using LaunchConfiguration and TextSubstitution
-        '''self.config_filepath = LaunchConfiguration('config_filepath', default=[
+        self.config_filepath = LaunchConfiguration('config_filepath', default=[
             TextSubstitution(text=os.path.join(
                 get_package_share_directory('charmie_gamepad'), 'config', 'ps4')),
             TextSubstitution(text='.config.yaml')
@@ -538,7 +644,7 @@ class LaunchStdFunctions():
                 name='task_demonstration',
                 emulate_tty=True
                 )
-        '''
+        
         self.llm = Node(package='charmie_llm',
                     executable='llm',
                     name='llm',

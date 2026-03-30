@@ -9,12 +9,12 @@ from sensor_msgs.msg import Image, LaserScan, PointCloud2
 from sensor_msgs_py import point_cloud2
 from xarm_msgs.srv import MoveCartesian
 from nav2_msgs.action import NavigateToPose
-from charmie_interfaces.msg import NeckPosition, ListOfPoints, TarNavSDNL, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
-    TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData
+from charmie_interfaces.msg import NeckPosition, ListOfDetectedObject, ListOfDetectedPerson, DetectedPerson, DetectedObject, GamepadController, \
+    TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData, SDNLMarkerDebug
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
-    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, ActivateObstacles, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
-    SetRGB, GetMinRadarDistance
-from charmie_interfaces.action import AdjustNavigationAngle
+    TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
+    SetRGB, GetMinRadarDistance, ActivateYoloWorld
+from charmie_interfaces.action import AdjustNavigationAngle, NavigateSDNL
 from cv_bridge import CvBridge, CvBridgeError
 from realsense2_camera_msgs.msg import RGBD
 
@@ -27,6 +27,8 @@ import json
 import os
 import time
 from datetime import datetime
+import colorsys
+import hashlib
 
 import pygame_widgets
 import pygame
@@ -59,16 +61,16 @@ class DebugVisualNode(Node):
         # Robot Localisation
         self.robot_localisation_subscriber = self.create_subscription(Pose2D, "robot_localisation", self.robot_localisation_callback, 10)
         self.amcl_pose_subscriber = self.create_subscription(PoseWithCovarianceStamped, "amcl_pose", self.amcl_pose_callback, 10)
-        # Navigation
-        self.target_pos_subscriber = self.create_subscription(TarNavSDNL, "target_pos", self.target_pos_callback, 10)
-        self.flag_pos_reached_subscriber = self.create_subscription(Bool, "flag_pos_reached", self.flag_navigation_reached_callback, 10)  
+        # SDNL Nav
+        self.sdnl_marker_debug_subscriber = self.create_subscription(SDNLMarkerDebug, "sdnl/marker_debug", self.sdnl_marker_debug_callback, 10) 
         # search for person and object 
         self.search_for_person_subscriber = self.create_subscription(ListOfDetectedPerson, "search_for_person_detections", self.search_for_person_detections_callback, 10)
         self.search_for_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_object_detections", self.search_for_object_detections_callback, 10)
+        self.search_for_world_object_subscriber = self.create_subscription(ListOfDetectedObject, "search_for_world_object_detections", self.search_for_world_object_detections_callback, 10)
         # Low Level
-        # self.get_orientation_subscriber = self.create_subscription(Float32, "get_orientation", self.get_orientation_callback, 10) ### OLD
         self.vccs_low_level_subscriber = self.create_subscription(VCCsLowLevel, "vccs_low_level", self.vccs_low_level_callback, 10)
         # Livox 3D Lidar
+        self.livox_3dlidar_fullpc_subscriber = self.create_subscription(PointCloud2, "/livox/lidar", self.livox_full_pc_3dlidar_callback, 10) # just for node rect
         self.livox_3dlidar_subscriber = self.create_subscription(PointCloud2, "/livox/lidar/filtered", self.livox_3dlidar_callback, 10)
         # Gamepad Controller
         self.gamepad_controller_subscriber = self.create_subscription(GamepadController, "gamepad_controller", self.gamepad_controller_callback, 10)
@@ -79,6 +81,8 @@ class DebugVisualNode(Node):
         self.person_pose_filtered_subscriber = self.create_subscription(ListOfDetectedPerson, "person_pose_filtered", self.person_pose_filtered_callback, 10)
         # Yolo Objects
         self.objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'objects_all_detected_filtered', self.object_detected_filtered_callback, 10)
+        # Yolo Objects
+        self.world_objects_filtered_subscriber = self.create_subscription(ListOfDetectedObject, 'world_objects_all_detected_filtered', self.world_object_detected_filtered_callback, 10)
         # Tracking (SAM2)
         self.tracking_mask_subscriber = self.create_subscription(TrackingMask, 'tracking_mask', self.tracking_mask_callback, 10)
         # Task States Info
@@ -90,6 +94,7 @@ class DebugVisualNode(Node):
         self.set_position_client = self.create_client(MoveCartesian, '/xarm/set_position')
         # Speakers
         self.speech_command_client = self.create_client(SpeechCommand, "speech_command")
+        # Speakers Save
         self.save_speech_command_client = self.create_client(SaveSpeechCommand, "save_speech_command")
         # Audio
         self.get_audio_client = self.create_client(GetAudio, "audio_command")
@@ -108,12 +113,12 @@ class DebugVisualNode(Node):
         self.activate_yolo_pose_client = self.create_client(ActivateYoloPose, "activate_yolo_pose")
         # Yolo Objects
         self.activate_yolo_objects_client = self.create_client(ActivateYoloObjects, "activate_yolo_objects")
+        # Yolo World
+        self.activate_yolo_world_client = self.create_client(ActivateYoloWorld, "activate_yolo_world")
         # Arm (CHARMIE)
         self.arm_trigger_client = self.create_client(Trigger, "arm_trigger")
         # Radar
         self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance")
-        # Obstacles
-        self.activate_obstacles_client = self.create_client(ActivateObstacles, "activate_obstacles")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         # self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
@@ -126,18 +131,20 @@ class DebugVisualNode(Node):
         ### Actions (Clients) ###
         self.nav2_client_ = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self.adjust_navigation_angle_client = ActionClient(self, AdjustNavigationAngle, "adjust_navigation_angle")
+        self.sdnl_nav_client_ = ActionClient(self, NavigateSDNL, "sdnl_navigate_to_pose")
 
         self.nodes_used_server = self.create_service(NodesUsed, "nodes_used_gui", self.nodes_used_callback)
 
         self.is_yolo_pose_comm = False
         self.is_yolo_obj_comm = False
+        self.is_yolo_world_comm = False
 
         self.activate_yolo_pose_success = True
         self.activate_yolo_pose_message = ""
         self.activate_yolo_objects_success = True
         self.activate_yolo_objects_message = ""
-        self.activate_obstacles_success = True
-        self.activate_obstacles_message = ""
+        self.activate_yolo_world_success = True
+        self.activate_yolo_world_message = ""
         
         self.head_rgb = Image()
         self.hand_rgb = Image()
@@ -154,8 +161,10 @@ class DebugVisualNode(Node):
 
         self.detected_people = ListOfDetectedPerson()
         self.detected_objects = ListOfDetectedObject()
+        self.detected_world_objects = ListOfDetectedObject()
         self.new_detected_people = False
         self.new_detected_objects = False
+        self.new_detected_world_objects = False
 
         self.vccs = VCCsLowLevel()
         self.robot_pose = Pose2D()
@@ -189,10 +198,12 @@ class DebugVisualNode(Node):
 
         self.head_yp_fps = 0.0
         self.yolo_objects_fps = 0.0
+        self.yolo_world_fps = 0.0
         self.track_fps = 0.0
 
         self.head_yp_fps_ctr = 0
         self.yolo_objects_fps_ctr = 0
+        self.yolo_world_objects_fps_ctr = 0
         self.track_fps_ctr = 0
 
         self.all_pos_x_val = []
@@ -204,10 +215,12 @@ class DebugVisualNode(Node):
         self.radar = RadarData()
         self.search_for_person = ListOfDetectedPerson()
         self.search_for_object = ListOfDetectedObject()
+        self.search_for_world_object = ListOfDetectedObject()
         self.new_search_for_person = False
         self.new_search_for_object = False
-        self.navigation = TarNavSDNL()
-        self.is_navigating = False
+        self.new_search_for_world_object = False
+        self.sdnl_dbg = SDNLMarkerDebug()
+        self.sdnl_dbg.active = False
         self.tracking_mask = TrackingMask()
         self.new_tracking_mask_msg = False
         self.is_tracking_comm = False
@@ -243,6 +256,12 @@ class DebugVisualNode(Node):
             self.is_yolo_obj_comm = True
         else:
             self.is_yolo_obj_comm = False
+
+        if self.new_detected_world_objects:
+            self.new_detected_world_objects = False
+            self.is_yolo_world_comm = True
+        else:
+            self.is_yolo_world_comm = False
     
     def check_tracking_timer(self):
 
@@ -255,15 +274,16 @@ class DebugVisualNode(Node):
     def check_cameras_fps_timer(self):
 
         # temp time counter, for precision can add a time.time() everytime i enter here for more precision, but I only use integers showing so there is probably no point
-        self.head_rgb_fps       = self.head_rgb_fps_ctr     /self.time_for_cams_fps_verification
-        self.head_depth_fps     = self.head_depth_fps_ctr   /self.time_for_cams_fps_verification
-        self.hand_rgb_fps       = self.hand_rgb_fps_ctr     /self.time_for_cams_fps_verification
-        self.hand_depth_fps     = self.hand_depth_fps_ctr   /self.time_for_cams_fps_verification
-        self.base_rgb_fps       = self.base_rgb_fps_ctr     /self.time_for_cams_fps_verification
-        self.base_depth_fps     = self.base_depth_fps_ctr   /self.time_for_cams_fps_verification
-        self.head_yp_fps        = self.head_yp_fps_ctr      /self.time_for_cams_fps_verification
-        self.yolo_objects_fps   = self.yolo_objects_fps_ctr /self.time_for_cams_fps_verification
-        self.track_fps          = self.track_fps_ctr        /self.time_for_cams_fps_verification
+        self.head_rgb_fps       = self.head_rgb_fps_ctr             /self.time_for_cams_fps_verification
+        self.head_depth_fps     = self.head_depth_fps_ctr           /self.time_for_cams_fps_verification
+        self.hand_rgb_fps       = self.hand_rgb_fps_ctr             /self.time_for_cams_fps_verification
+        self.hand_depth_fps     = self.hand_depth_fps_ctr           /self.time_for_cams_fps_verification
+        self.base_rgb_fps       = self.base_rgb_fps_ctr             /self.time_for_cams_fps_verification
+        self.base_depth_fps     = self.base_depth_fps_ctr           /self.time_for_cams_fps_verification
+        self.head_yp_fps        = self.head_yp_fps_ctr              /self.time_for_cams_fps_verification
+        self.yolo_objects_fps   = self.yolo_objects_fps_ctr         /self.time_for_cams_fps_verification
+        self.yolo_world_fps     = self.yolo_world_objects_fps_ctr   /self.time_for_cams_fps_verification
+        self.track_fps          = self.track_fps_ctr                /self.time_for_cams_fps_verification
         
         self.head_rgb_fps_ctr = 0
         self.head_depth_fps_ctr = 0
@@ -273,6 +293,7 @@ class DebugVisualNode(Node):
         self.base_depth_fps_ctr = 0
         self.head_yp_fps_ctr = 0
         self.yolo_objects_fps_ctr = 0
+        self.yolo_world_objects_fps_ctr = 0
         self.track_fps_ctr = 0
 
     def nodes_used_callback(self, request, response): # this only exists to have a service where we can: "while not self.arm_trigger_client.wait_for_service(1.0):"
@@ -293,13 +314,16 @@ class DebugVisualNode(Node):
         # bool charmie_low_level
         # bool charmie_navigation
         # bool charmie_nav2
+        # bool charmie_nav_sdnl
         # bool charmie_neck
         # bool charmie_radar
         # bool charmie_sound_classification
         # bool charmie_speakers
+        # bool charmie_speakers_save
         # bool charmie_tracking
         # bool charmie_yolo_objects
         # bool charmie_yolo_pose
+        # bool charmie_yolo_world
         # ---
         # bool success    # indicate successful run of triggered service
         # string message  # informational, e.g. for error messages
@@ -368,25 +392,32 @@ class DebugVisualNode(Node):
     ### ACTIVATE YOLO OBJECTS SERVER FUNCTIONS ###
     def call_activate_yolo_objects_server(self, activate_objects=False, activate_furniture=False, activate_objects_hand=False, activate_furniture_hand=False, activate_objects_base=False, activate_furniture_base=False, minimum_objects_confidence=0.5, minimum_furniture_confidence=0.5):
         request = ActivateYoloObjects.Request()
-        request.activate_objects = activate_objects
-        request.activate_furniture = activate_furniture
-        request.activate_objects_hand = activate_objects_hand
-        request.activate_furniture_hand = activate_furniture_hand
-        request.activate_objects_base = activate_objects_base
-        request.activate_furniture_base = activate_furniture_base
-        request.minimum_objects_confidence = minimum_objects_confidence
-        request.minimum_furniture_confidence = minimum_furniture_confidence
+        request.activate_objects                 = activate_objects
+        request.activate_furniture               = activate_furniture
+        request.activate_objects_hand            = activate_objects_hand
+        request.activate_furniture_hand          = activate_furniture_hand
+        request.activate_objects_base            = activate_objects_base
+        request.activate_furniture_base          = activate_furniture_base
+        request.minimum_objects_confidence       = float(minimum_objects_confidence)
+        request.minimum_furniture_confidence     = float(minimum_furniture_confidence)
 
         self.activate_yolo_objects_client.call_async(request)
 
-    ### ACTIVATE OBSTACLES SERVER FUNCTIONS ###
-    def call_activate_obstacles_server(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False):
-        request = ActivateObstacles.Request()
-        request.activate_lidar_up = obstacles_lidar_up
-        request.activate_lidar_bottom = obstacles_lidar_bottom
-        request.activate_camera_head = obstacles_camera_head
+    ### ACTIVATE YOLO WORLD SERVER FUNCTIONS ###
+    def call_activate_yolo_world_server(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5, text_prompts=[], visual_prompts=[]):
+        request = ActivateYoloWorld.Request()
+        request.activate_prompt_free_head       = activate_prompt_free_head
+        request.activate_tv_prompt_head         = activate_tv_prompt_head
+        request.activate_prompt_free_hand       = activate_prompt_free_hand
+        request.activate_tv_prompt_hand         = activate_tv_prompt_hand
+        request.activate_prompt_free_base       = activate_prompt_free_base
+        request.activate_tv_prompt_base         = activate_tv_prompt_base
+        request.minimum_prompt_free_confidence  = float(minimum_prompt_free_confidence)
+        request.minimum_tv_prompt_confidence    = float(minimum_tv_prompt_confidence)
+        request.text_prompts = text_prompts
+        request.visual_prompts = visual_prompts
 
-        self.activate_obstacles_client.call_async(request)
+        self.activate_yolo_world_client.call_async(request)
 
     def person_pose_filtered_callback(self, det_people: ListOfDetectedPerson):
         self.detected_people = det_people
@@ -400,6 +431,14 @@ class DebugVisualNode(Node):
         # self.head_yo_time = time.time()
         self.yolo_objects_fps_ctr += 1
         # for obj in self.detected_objects.objects:
+        #     print(obj.object_name, "(", obj.position_cam.x, obj.position_cam.y, obj.position_cam.z, ") (", obj.position_relative.x, obj.position_relative.y, obj.position_relative.z, ") (", obj.position_absolute.x, obj.position_absolute.y, obj.position_absolute.z, ")" )
+
+    def world_object_detected_filtered_callback(self, det_world_object: ListOfDetectedObject):
+        self.detected_world_objects = det_world_object
+        self.new_detected_world_objects = True
+        # self.head_yw_time = time.time()
+        self.yolo_world_objects_fps_ctr += 1
+        # for obj in self.detected_world_objects.objects:
         #     print(obj.object_name, "(", obj.position_cam.x, obj.position_cam.y, obj.position_cam.z, ") (", obj.position_relative.x, obj.position_relative.y, obj.position_relative.z, ") (", obj.position_absolute.x, obj.position_absolute.y, obj.position_absolute.z, ")" )
 
     def tracking_mask_callback(self, mask: TrackingMask):
@@ -507,9 +546,15 @@ class DebugVisualNode(Node):
 
                 self.lidar_bottom_obstacle_points.append(target)
 
-    def livox_3dlidar_callback(self, points: PointCloud2):
+    def livox_full_pc_3dlidar_callback(self, points: PointCloud2):
         # print("Received Livox 3D Lidar Points")
         self.lidar_livox_time = time.time()
+        # self.livox_3dlidar = points
+        # print(points)
+
+    def livox_3dlidar_callback(self, points: PointCloud2):
+        # print("Received Livox 3D Lidar Points")
+        # self.lidar_livox_time = time.time()
         self.livox_3dlidar = points
         # print(points)
 
@@ -521,14 +566,10 @@ class DebugVisualNode(Node):
     
     def radar_data_callback(self, radar: RadarData):
         self.radar = radar
-
-    def target_pos_callback(self, nav: TarNavSDNL):
-        self.navigation = nav
-        self.is_navigating = True
-        print(nav)
-
-    def flag_navigation_reached_callback(self, flag: Bool):
-        self.is_navigating = False
+    
+    def sdnl_marker_debug_callback(self, msg: SDNLMarkerDebug):
+        self.sdnl_dbg = msg
+        # print(self.sdnl_dbg)
 
     def get_neck_position_callback(self, pose: NeckPosition):
         # print("Received new neck position. PAN = ", pose.pan, " TILT = ", pose.tilt)
@@ -555,6 +596,10 @@ class DebugVisualNode(Node):
     def search_for_object_detections_callback(self, points: ListOfDetectedObject):
         self.search_for_object = points
         self.new_search_for_object = True
+        
+    def search_for_world_object_detections_callback(self, points: ListOfDetectedObject):
+        self.search_for_world_object = points
+        self.new_search_for_world_object = True
 
     def task_states_info_callback(self, tsi: TaskStatesInfo):
         # print("Received Task States Info")
@@ -589,13 +634,16 @@ class CheckNodesMain():
         self.CHECK_LOW_LEVEL_NODE = False
         self.CHECK_NAVIGATION_NODE = False
         self.CHECK_NAV2_NODE = False
+        self.CHECK_NAV_SDNL_NODE = False
         self.CHECK_NECK_NODE = False
         self.CHECK_RADAR_NODE = False
         self.CHECK_SOUND_CLASSIFICATION_NODE = False
         self.CHECK_SPEAKERS_NODE = False
+        self.CHECK_SPEAKERS_SAVE_NODE = False
         self.CHECK_TRACKING_NODE = False
         self.CHECK_YOLO_OBJECTS_NODE = False
         self.CHECK_YOLO_POSE_NODE = False
+        self.CHECK_YOLO_WORLD_NODE = False
 
         self.WAIT_TIME_CHECK_NODE = 0.0
         self.MIN_TIMEOUT_FOR_CHECK_NODE = 1.0
@@ -715,6 +763,13 @@ class CheckNodesMain():
             else:
                 self.CHECK_NAV2_NODE = True
 
+            # NAV SDNL
+            if not self.node.sdnl_nav_client_.server_is_ready():
+                # self.node.get_logger().warn("Waiting for Server Navigation ...")
+                self.CHECK_NAV_SDNL_NODE = False
+            else:
+                self.CHECK_NAV_SDNL_NODE = True
+
             # NECK
             if not self.node.set_neck_position_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
                 # self.node.get_logger().warn("Waiting for Server Neck ...")
@@ -749,6 +804,13 @@ class CheckNodesMain():
             else:
                 self.CHECK_SPEAKERS_NODE = True
 
+            # SPEAKERS SAVE
+            if not self.node.save_speech_command_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Speech Save ...")
+                self.CHECK_SPEAKERS_SAVE_NODE = False
+            else:
+                self.CHECK_SPEAKERS_SAVE_NODE = True
+
             # TRACKING (SAM2)
             if not self.node.activate_tracking_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
                 # self.node.get_logger().warn("Waiting for Server Tracking ...")
@@ -769,6 +831,15 @@ class CheckNodesMain():
                 self.CHECK_YOLO_POSE_NODE = False
             else:
                 self.CHECK_YOLO_POSE_NODE = True
+
+            # YOLO WORLD
+            if not self.node.activate_yolo_world_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Yolo World ...")
+                self.CHECK_YOLO_WORLD_NODE = False
+            else:
+                self.CHECK_YOLO_WORLD_NODE = True
+
+
 
 
 def main(args=None):
@@ -974,12 +1045,15 @@ class DebugVisualMain():
         # the two navs have the same node rect for now, only nav2 will be used for now
         self.CHARMIE_NAVIGATION_NODE_RECT           = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NAV2_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_NAV_SDNL_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NECK_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*11, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_RADAR_NODE_RECT                = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*12, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*13, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_SPEAKERS_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_SPEAKERS_SAVE_NODE_RECT        = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*14, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_TRACKING_NODE_RECT             = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*15, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_YOLO_OBJECTS_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_YOLO_WORLD_NODE_RECT           = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*16, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_YOLO_POSE_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*17, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
 
         self.toggle_h_init = 21.0
@@ -1003,9 +1077,12 @@ class DebugVisualMain():
         self.toggle_pose_legs_visible =   Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+302, self.cams_initial_height+80+50, 40, 16)
         self.toggle_pose_characteristcs = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+427, self.cams_initial_height+80+50, 40, 16)
         
-        self.toggle_obstacles_lidar_top =    Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+160+50, 40, 16)
-        self.toggle_obstacles_lidar_bottom = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100,  self.cams_initial_height+160+50, 40, 16)
-        self.toggle_obstacles_head_camera =  Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233, self.cams_initial_height+160+50, 40, 16)
+        self.toggle_activate_prompt_free_head   = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height,     self.cams_initial_height+160+50, 40, 16)
+        self.toggle_activate_tv_prompt_head     = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90,  self.cams_initial_height+160+50, 40, 16)
+        self.toggle_activate_prompt_free_hand   = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192, self.cams_initial_height+160+50, 40, 16)
+        self.toggle_activate_tv_prompt_hand     = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+282, self.cams_initial_height+160+50, 40, 16)
+        self.toggle_activate_prompt_free_base   = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+384, self.cams_initial_height+160+50, 40, 16)
+        self.toggle_activate_tv_prompt_base     = Toggle(self.WIN, self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+474, self.cams_initial_height+160+50, 40, 16)
 
         self.last_toggle_record = False
 
@@ -1022,9 +1099,12 @@ class DebugVisualMain():
         self.last_toggle_pose_legs_visible =   False
         self.last_toggle_pose_characteristcs = False
         
-        self.last_toggle_obstacles_lidar_top =    False
-        self.last_toggle_obstacles_lidar_bottom = False
-        self.last_toggle_obstacles_head_camera =  False
+        self.last_toggle_activate_prompt_free_head   = False
+        self.last_toggle_activate_tv_prompt_head     = False
+        self.last_toggle_activate_prompt_free_hand   = False
+        self.last_toggle_activate_tv_prompt_hand     = False
+        self.last_toggle_activate_prompt_free_base   = False
+        self.last_toggle_activate_tv_prompt_base     = False
 
         self.curr_top_cam = Image()
         self.last_top_cam = Image()
@@ -1044,6 +1124,9 @@ class DebugVisualMain():
     
         self.curr_detected_objects = ListOfDetectedObject()
         self.last_detected_objects = ListOfDetectedObject()
+
+        self.curr_detected_world_objects = ListOfDetectedObject()
+        self.last_detected_world_objects = ListOfDetectedObject()
 
         self.curr_tracking = TrackingMask()
         self.last_tracking = TrackingMask()
@@ -1077,14 +1160,14 @@ class DebugVisualMain():
 
         return self.node.activate_yolo_objects_success, self.node.activate_yolo_objects_message
     
-    def activate_obstacles(self, obstacles_lidar_up=True, obstacles_lidar_bottom=False, obstacles_camera_head=False, wait_for_end_of=True):
+    def activate_yolo_world(self, activate_prompt_free_head=False, activate_tv_prompt_head=False, activate_prompt_free_hand=False, activate_tv_prompt_hand=False, activate_prompt_free_base=False, activate_tv_prompt_base=False, minimum_prompt_free_confidence=0.5, minimum_tv_prompt_confidence=0.5, text_prompts=[], visual_prompts=[], wait_for_end_of=True):
         
-        self.node.call_activate_obstacles_server(obstacles_lidar_up=obstacles_lidar_up, obstacles_lidar_bottom=obstacles_lidar_bottom, obstacles_camera_head=obstacles_camera_head)
+        self.node.call_activate_yolo_world_server(activate_prompt_free_head=activate_prompt_free_head, activate_tv_prompt_head=activate_tv_prompt_head, activate_prompt_free_hand=activate_prompt_free_hand, activate_tv_prompt_hand=activate_tv_prompt_hand, activate_prompt_free_base=activate_prompt_free_base, activate_tv_prompt_base=activate_tv_prompt_base, minimum_prompt_free_confidence=minimum_prompt_free_confidence, minimum_tv_prompt_confidence=minimum_tv_prompt_confidence, text_prompts=text_prompts, visual_prompts=visual_prompts)
 
-        self.node.activate_obstacles_success = True
-        self.node.activate_obstacles_message = "Activated with selected parameters"
+        self.node.activate_yolo_world_success = True
+        self.node.activate_yolo_world_message = "Activated with selected parameters"
 
-        return self.node.activate_obstacles_success, self.node.activate_obstacles_message
+        return self.node.activate_yolo_world_success, self.node.activate_yolo_world_message
 
     def button_zoom_in_function(self):
         # print(self.MAP_SCALE - self.MAP_ZOOM_INC)
@@ -1207,11 +1290,14 @@ class DebugVisualMain():
         # NAV2
         tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_nav2, self.check_nodes.CHECK_NAV2_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAV2_NODE_RECT)
-        if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
+        # SDNL
+        tc3, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_nav_sdnl, self.check_nodes.CHECK_NAV_SDNL_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_NAV_SDNL_NODE_RECT)
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L or tc3 == self.BLUE_L:
             tc = self.BLUE_L
         else:
             tc = self.WHITE
-        self.draw_text("Navigation/Nav2", self.text_font, tc, self.CHARMIE_NAV2_NODE_RECT.x+2*self.CHARMIE_NAV2_NODE_RECT.width, self.CHARMIE_NAV2_NODE_RECT.y-2)
+        self.draw_text("CNav/Nav2/SDNL", self.text_font, tc, self.CHARMIE_NAV_SDNL_NODE_RECT.x+2*self.CHARMIE_NAV_SDNL_NODE_RECT.width, self.CHARMIE_NAV_SDNL_NODE_RECT.y-2)
         
         # NECK
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_neck, self.check_nodes.CHECK_NECK_NODE)
@@ -1229,9 +1315,18 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_SOUND_CLASSIFICATION_NODE_RECT)
 
         # SPEAKERS
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
-        self.draw_text("Speakers", self.text_font, tc, self.CHARMIE_SPEAKERS_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_NODE_RECT.width, self.CHARMIE_SPEAKERS_NODE_RECT.y-2)
+        tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers, self.check_nodes.CHECK_SPEAKERS_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_SPEAKERS_NODE_RECT)
+        # SAVE SPEAKERS        
+        tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_speakers_save, self.check_nodes.CHECK_SPEAKERS_SAVE_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_SPEAKERS_SAVE_NODE_RECT)
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
+            tc = self.BLUE_L
+        else:
+            tc = self.WHITE
+        self.draw_text("Speakers/Save", self.text_font, tc, self.CHARMIE_SPEAKERS_SAVE_NODE_RECT.x+2*self.CHARMIE_SPEAKERS_SAVE_NODE_RECT.width, self.CHARMIE_SPEAKERS_SAVE_NODE_RECT.y-2)
+
+        ###########################################################
 
         # TRACKING
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_tracking, self.check_nodes.CHECK_TRACKING_NODE)
@@ -1239,10 +1334,17 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_TRACKING_NODE_RECT)
 
         # YOLO OBJECTS
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_objects, self.check_nodes.CHECK_YOLO_OBJECTS_NODE)
-        self.draw_text("YOLO Objects", self.text_font, tc, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.x+2*self.CHARMIE_YOLO_OBJECTS_NODE_RECT.width, self.CHARMIE_YOLO_OBJECTS_NODE_RECT.y-2)
+        tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_objects, self.check_nodes.CHECK_YOLO_OBJECTS_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_YOLO_OBJECTS_NODE_RECT)
-
+        # YOLO WORLD
+        tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_world, self.check_nodes.CHECK_YOLO_WORLD_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_YOLO_WORLD_NODE_RECT)
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
+            tc = self.BLUE_L
+        else:
+            tc = self.WHITE
+        self.draw_text("YOLO (Obj/World)", self.text_font, tc, self.CHARMIE_YOLO_WORLD_NODE_RECT.x+2*self.CHARMIE_YOLO_WORLD_NODE_RECT.width, self.CHARMIE_YOLO_WORLD_NODE_RECT.y-2)
+        
         # YOLO POSE
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_yolo_pose, self.check_nodes.CHECK_YOLO_POSE_NODE)
         self.draw_text("YOLO Pose", self.text_font, tc, self.CHARMIE_YOLO_POSE_NODE_RECT.x+2*self.CHARMIE_YOLO_POSE_NODE_RECT.width, self.CHARMIE_YOLO_POSE_NODE_RECT.y-2)
@@ -1597,9 +1699,10 @@ class DebugVisualMain():
         self.draw_text("RGB: "+str(int(self.node.base_rgb_fps)), self.text_font, self.fps_to_color(int(self.node.base_rgb_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23)
         self.draw_text("D: "+str(int(self.node.base_depth_fps)), self.text_font, self.fps_to_color(int(self.node.base_depth_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*23)
         self.draw_text("Detections (fps):", self.text_font, self.WHITE, self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*24)
-        self.draw_text("Y_P: "+str(int(self.node.head_yp_fps)), self.text_font, self.fps_to_color(int(self.node.head_yp_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
-        self.draw_text("Y: "+str(int(self.node.yolo_objects_fps)), self.text_font, self.fps_to_color(int(self.node.yolo_objects_fps)), self.init_pos_w_rect_check_nodes+82, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
-        self.draw_text("T: "+str(int(self.node.track_fps)), self.text_font, self.fps_to_color(int(self.node.track_fps)), self.init_pos_w_rect_check_nodes+138, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("YP: "+str(int(self.node.head_yp_fps)), self.text_font, self.fps_to_color(int(self.node.head_yp_fps)), self.init_pos_w_rect_check_nodes, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("YO: "+str(int(self.node.yolo_objects_fps)), self.text_font, self.fps_to_color(int(self.node.yolo_objects_fps)), self.init_pos_w_rect_check_nodes+55+2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("YW: "+str(int(self.node.yolo_world_fps)), self.text_font, self.fps_to_color(int(self.node.yolo_world_fps)), self.init_pos_w_rect_check_nodes+110+4, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
+        self.draw_text("T: "+str(int(self.node.track_fps)), self.text_font, self.fps_to_color(int(self.node.track_fps)), self.init_pos_w_rect_check_nodes+165+6, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*25)
         
         self.draw_text("Record Data:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.2*self.toggle_h_diff)))
         self.draw_text("Pause Cams:", self.text_font_t, self.WHITE, 10, int(self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*(self.toggle_h_init+2.8*self.toggle_h_diff)))
@@ -1621,11 +1724,11 @@ class DebugVisualMain():
 
         self.draw_text("Activate YOLO Objects: (Head/Gripper/Base)", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, self.cams_initial_height)
         self.draw_text("Activate YOLO Pose:", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+self.cams_initial_height)
-        self.draw_text("Activate Obstacles:", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+self.cams_initial_height)
+        self.draw_text("Activate YOLO World: (Head/Gripper/Base)", self.text_font_t, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+self.cams_initial_height)
         
         self.draw_text("Objects:     Furniture:   /   Objects:     Furniture:   /   Objects:     Furniture:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 25+self.cams_initial_height)
         self.draw_text("Activate:      Waving:      Front Close:      Legs Visible:      Characteristics:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 80+25+self.cams_initial_height)
-        self.draw_text("Lidar Top:      Lidar Bottom:      Head Camera:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+25+self.cams_initial_height)
+        self.draw_text("Prompt F:   T/V Prompt: /  Prompt F:   T/V Prompt: /  PromptF:    T/V Prompt:", self.text_font, self.WHITE, self.cams_initial_width+self.cam_width_+self.cams_initial_height, 160+25+self.cams_initial_height)
         
         # this is done to make sure that the same value used for checking pressed is the same used to attribute to last toggle
         # YOLO OBJECTS ACTIVATE
@@ -1643,10 +1746,13 @@ class DebugVisualMain():
         toggle_pose_legs_visible    = self.toggle_pose_legs_visible.getValue()
         toggle_pose_characteristcs  = self.toggle_pose_characteristcs.getValue()
 
-        # OBSTACLES ACTIVATE
-        toggle_obstacles_lidar_top      = self.toggle_obstacles_lidar_top.getValue()
-        toggle_obstacles_lidar_bottom   = self.toggle_obstacles_lidar_bottom.getValue()
-        toggle_obstacles_head_camera    = self.toggle_obstacles_head_camera.getValue()
+        # YOLO WORLD ACTIVATE ACTIVATE
+        toggle_activate_prompt_free_head   = self.toggle_activate_prompt_free_head.getValue()      
+        toggle_activate_tv_prompt_head     = self.toggle_activate_tv_prompt_head.getValue()
+        toggle_activate_prompt_free_hand   = self.toggle_activate_prompt_free_hand.getValue()
+        toggle_activate_tv_prompt_hand     = self.toggle_activate_tv_prompt_hand.getValue()
+        toggle_activate_prompt_free_base   = self.toggle_activate_prompt_free_base.getValue()
+        toggle_activate_tv_prompt_base     = self.toggle_activate_tv_prompt_base.getValue()
 
         if toggle_activate_objects_head    != self.last_toggle_activate_objects_head or \
            toggle_activate_furniture_head  != self.last_toggle_activate_furniture_head or \
@@ -1657,7 +1763,6 @@ class DebugVisualMain():
             
             print("YOLO OBJECTS - CHANGED STATUS.")
 
-            ############################################################################################################################################################################################
             self.activate_yolo_objects(activate_objects     =toggle_activate_objects_head, activate_furniture     =toggle_activate_furniture_head, \
                                        activate_objects_hand=toggle_activate_objects_hand, activate_furniture_hand=toggle_activate_furniture_hand, \
                                        activate_objects_base=toggle_activate_objects_base, activate_furniture_base=toggle_activate_furniture_base)
@@ -1676,15 +1781,19 @@ class DebugVisualMain():
                                     characteristics=toggle_pose_characteristcs)
         
 
-        if toggle_obstacles_lidar_top     != self.last_toggle_obstacles_lidar_top or \
-            toggle_obstacles_lidar_bottom != self.last_toggle_obstacles_lidar_bottom or \
-            toggle_obstacles_head_camera  != self.last_toggle_obstacles_head_camera:
-            
-            print("OBSTACLES - CHANGED STATUS.")
+        if toggle_activate_prompt_free_head  != self.last_toggle_activate_prompt_free_head or \
+           toggle_activate_tv_prompt_head    != self.last_toggle_activate_tv_prompt_head   or \
+           toggle_activate_prompt_free_hand  != self.last_toggle_activate_prompt_free_hand or \
+           toggle_activate_tv_prompt_hand    != self.last_toggle_activate_tv_prompt_hand   or \
+           toggle_activate_prompt_free_base  != self.last_toggle_activate_prompt_free_base or \
+           toggle_activate_tv_prompt_base    != self.last_toggle_activate_tv_prompt_base:
 
-            self.activate_obstacles(obstacles_lidar_up=toggle_obstacles_lidar_top, obstacles_lidar_bottom=toggle_obstacles_lidar_bottom, \
-                                    obstacles_camera_head=toggle_obstacles_head_camera)
+            print("YOLO WORLD - CHANGED STATUS.")
 
+            self.activate_yolo_world(activate_prompt_free_head = toggle_activate_prompt_free_head, activate_tv_prompt_head = toggle_activate_tv_prompt_head, \
+                                     activate_prompt_free_hand = toggle_activate_prompt_free_hand, activate_tv_prompt_hand = toggle_activate_tv_prompt_hand, \
+                                     activate_prompt_free_base = toggle_activate_prompt_free_base, activate_tv_prompt_base = toggle_activate_tv_prompt_base, \
+                                     text_prompts=["chair", "cabinet"], visual_prompts=[])
 
         self.last_toggle_activate_objects_head   = toggle_activate_objects_head 
         self.last_toggle_activate_furniture_head = toggle_activate_furniture_head
@@ -1693,15 +1802,18 @@ class DebugVisualMain():
         self.last_toggle_activate_objects_base   = toggle_activate_objects_base
         self.last_toggle_activate_furniture_base = toggle_activate_furniture_base
 
-        self.last_toggle_pose_activate =       toggle_pose_activate
-        self.last_toggle_pose_waving =         toggle_pose_waving
-        self.last_toggle_pose_front_close =    toggle_pose_front_close
-        self.last_toggle_pose_legs_visible =   toggle_pose_legs_visible
-        self.last_toggle_pose_characteristcs = toggle_pose_characteristcs
-        
-        self.last_toggle_obstacles_lidar_top =    toggle_obstacles_lidar_top
-        self.last_toggle_obstacles_lidar_bottom = toggle_obstacles_lidar_bottom
-        self.last_toggle_obstacles_head_camera =  toggle_obstacles_head_camera
+        self.last_toggle_pose_activate          = toggle_pose_activate
+        self.last_toggle_pose_waving            = toggle_pose_waving
+        self.last_toggle_pose_front_close       = toggle_pose_front_close
+        self.last_toggle_pose_legs_visible      = toggle_pose_legs_visible
+        self.last_toggle_pose_characteristcs    = toggle_pose_characteristcs
+
+        self.last_toggle_activate_prompt_free_head  = toggle_activate_prompt_free_head
+        self.last_toggle_activate_tv_prompt_head    = toggle_activate_tv_prompt_head
+        self.last_toggle_activate_prompt_free_hand  = toggle_activate_prompt_free_hand
+        self.last_toggle_activate_tv_prompt_hand    = toggle_activate_tv_prompt_hand
+        self.last_toggle_activate_prompt_free_base  = toggle_activate_prompt_free_base
+        self.last_toggle_activate_tv_prompt_base    = toggle_activate_tv_prompt_base
 
     def camera_selection_for_detection_drawings(self):
 
@@ -1714,6 +1826,9 @@ class DebugVisualMain():
 
         self.draw_object_detections("top", self.top_camera_id)
         self.draw_object_detections("bottom", self.bottom_camera_id)
+
+        self.draw_world_object_detections("top", self.top_camera_id)
+        self.draw_world_object_detections("bottom", self.bottom_camera_id)
 
     def draw_pose_detections(self, camera_select):
 
@@ -1885,6 +2000,45 @@ class DebugVisualMain():
             if camera_id == "base":
                 self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id)
 
+    def draw_world_object_detections(self, camera_select, camera_id):
+
+        if camera_select == "top":
+            camera_height = self.cams_initial_height
+        else: # bottom
+            camera_height = self.cam_height_+2*self.cams_initial_height
+
+        self.curr_detected_world_objects = self.node.detected_world_objects
+
+        if self.toggle_pause_cams.getValue():
+            used_detected_objects  = self.last_detected_world_objects
+        else:
+            used_detected_objects  = self.curr_detected_world_objects 
+        self.last_detected_world_objects = used_detected_objects 
+
+        temp_objects_head = ListOfDetectedObject()
+        temp_objects_hand = ListOfDetectedObject()
+        temp_objects_base = ListOfDetectedObject()
+
+        # Divides detections per camera (for visualization)
+        for obj in used_detected_objects.objects:
+            match obj.camera:
+                case "head":
+                    temp_objects_head.objects.append(obj)
+                case "hand":
+                    temp_objects_hand.objects.append(obj)
+                case "base":
+                    temp_objects_base.objects.append(obj)
+        
+        # Check number of detections of each camera
+        # print(len(temp_objects_head.objects), len(temp_objects_hand.objects), len(temp_objects_base.objects))
+
+        if self.node.is_yolo_world_comm:
+            if camera_id == "head":
+                self.draw_object_bounding_boxes(temp_objects_head, camera_height, camera_id)
+            if camera_id == "gripper":
+                self.draw_object_bounding_boxes(temp_objects_hand, camera_height, camera_id)
+            if camera_id == "base":
+                self.draw_object_bounding_boxes(temp_objects_base, camera_height, camera_id)
 
     def draw_object_bounding_boxes(self, objects, camera_height, camera_id):
 
@@ -1893,13 +2047,23 @@ class DebugVisualMain():
             pass
         
         for o in objects.objects:
-           
+        
+            # here we have an automatic detection whether objects are in configuration_files objects.json
+            # because objects from yolo_world may be in objects.json after latest update
+            non_dataset_objects = False
+            if o.object_class == "":
+                non_dataset_objects = True
+
+            
             if not o.mask.point: # if object does not have a mask, we show bounding box
                 # name_and_cat_str = str(o.object_name + " (" + o.object_class + ")")
                 # room_and_furn_str = str(o.room_location + " (" + o.furniture_location + ")")
                 # relative_coords_str = str("("+str(round(o.position_relative.x,2))+", "+str(round(o.position_relative.y,2))+", "+str(round(o.position_relative.z,2))+")")
                 # print("id:", o.index, "|", str(int(round(o.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
-                bb_color = self.object_class_to_bb_color(o.object_class)
+                if not non_dataset_objects:
+                    bb_color = self.object_class_to_bb_color(o.object_class)
+                else:
+                    bb_color = self.yolo_color_from_name(o.object_name)
                 if camera_id == "base": # special case for base camera different resolution
                     OBJECT_BB = pygame.Rect(int(self.cams_initial_width+(self.LEFT_PAD+o.box_top_left_x)*self.camera_resize_ratio), int(camera_height+(o.box_top_left_y)*self.camera_resize_ratio), int(o.box_width*self.camera_resize_ratio), int(o.box_height*self.camera_resize_ratio))
                 else:
@@ -1920,40 +2084,52 @@ class DebugVisualMain():
                     temp_mask.append(p_list)
 
                 np_mask = np.array(temp_mask)
-                bb_color = self.object_class_to_bb_color(o.object_class)
+                if not non_dataset_objects:
+                    bb_color = self.object_class_to_bb_color(o.object_class)
+                else:
+                    bb_color = self.yolo_color_from_name(o.object_name)
                 pygame.draw.polygon(self.WIN, bb_color, np_mask, self.BB_WIDTH) # outside line (darker)
                 self.draw_polygon_alpha(self.WIN, bb_color+(128,), np_mask) # inside fill with transparecny
 
-            ### draw object 2D orientation
-            if o.orientation is not None:
-                # Convert orientation to radians
-                theta_rad = math.radians(o.orientation)
+            if not non_dataset_objects:
+                ### draw object 2D orientation
+                if o.orientation is not None:
+                    # Convert orientation to radians
+                    theta_rad = math.radians(o.orientation)
 
-                # Compute center position (already given)
-                if camera_id == "base":
-                    center_x = int(self.cams_initial_width + (self.LEFT_PAD + o.box_center_x) * self.camera_resize_ratio)
-                else:
-                    center_x = int(self.cams_initial_width + o.box_center_x * self.camera_resize_ratio)
+                    # Compute center position (already given)
+                    if camera_id == "base":
+                        center_x = int(self.cams_initial_width + (self.LEFT_PAD + o.box_center_x) * self.camera_resize_ratio)
+                    else:
+                        center_x = int(self.cams_initial_width + o.box_center_x * self.camera_resize_ratio)
 
-                center_y = int(camera_height + o.box_center_y * self.camera_resize_ratio)
+                    center_y = int(camera_height + o.box_center_y * self.camera_resize_ratio)
 
-                line_length = 30*self.camera_resize_ratio
+                    line_length = 30*self.camera_resize_ratio
 
-                x_beg = int(center_x - line_length * math.cos(theta_rad))
-                y_beg = int(center_y - line_length * math.sin(theta_rad))
-                x_end = int(center_x + line_length * math.cos(theta_rad))
-                y_end = int(center_y + line_length * math.sin(theta_rad))
+                    x_beg = int(center_x - line_length * math.cos(theta_rad))
+                    y_beg = int(center_y - line_length * math.sin(theta_rad))
+                    x_end = int(center_x + line_length * math.cos(theta_rad))
+                    y_end = int(center_y + line_length * math.sin(theta_rad))
 
-                # Draw the orientation line (red color, width 2)
-                pygame.draw.line(self.WIN, (255, 255, 255), (x_beg, y_beg), (x_end, y_end), 4)
+                    # Draw the orientation line (red color, width 2)
+                    pygame.draw.line(self.WIN, (255, 255, 255), (x_beg, y_beg), (x_end, y_end), 4)
 
         # this is separated into two for loops so that no bounding box overlaps with the name of the object, making the name unreadable 
         for o in objects.objects:
 
-            # text = str(o.object_name)
-            text = str(o.object_name)+" ("+str(o.index)+")"
+            non_dataset_objects = False
+            if o.object_class == "":
+                non_dataset_objects = True
+
+            if not non_dataset_objects:
+                text = str(o.object_name)+" "+str(int(round(round(o.confidence,2)*100,0)))+"%"+" ("+str(o.index)+")"
+                bb_color = self.object_class_to_bb_color(o.object_class)
+            else:
+                text = str(o.object_name)+" "+str(int(round(round(o.confidence,2)*100,0)))+"%"
+                bb_color = self.yolo_color_from_name(o.object_name)
+            
             text_width, text_height = self.text_font_t.size(text)
-            bb_color = self.object_class_to_bb_color(o.object_class)
 
             if camera_id == "base": # special case for base camera different resolution
                 if int(o.box_top_left_y) < 30: # depending on the height of the box, so it is either inside or outside
@@ -2002,6 +2178,12 @@ class DebugVisualMain():
             bb_color = self.BLACK
 
         return bb_color
+    
+    def yolo_color_from_name(self, name: str, s: float = 0.85, v: float = 0.95):
+        # stable hash -> hue in [0,1)
+        h = int(hashlib.md5(name.encode("utf-8")).hexdigest()[:8], 16) / 0xFFFFFFFF
+        r, g, b = colorsys.hsv_to_rgb(h, s, v)
+        return (int(r * 255), int(g * 255), int(b * 255))
 
     def draw_tracking(self, camera_select):
 
@@ -2108,10 +2290,13 @@ class DebugVisualMain():
         self.toggle_pose_front_close.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+182)
         self.toggle_pose_legs_visible.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+302)
         self.toggle_pose_characteristcs.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+427)
-        
-        self.toggle_obstacles_lidar_top.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
-        self.toggle_obstacles_lidar_bottom.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+100)
-        self.toggle_obstacles_head_camera.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+233)
+              
+        self.toggle_activate_prompt_free_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height)
+        self.toggle_activate_tv_prompt_head.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+90)
+        self.toggle_activate_prompt_free_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+192)
+        self.toggle_activate_tv_prompt_hand.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+282)
+        self.toggle_activate_prompt_free_base.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+384)
+        self.toggle_activate_tv_prompt_base.setX(self.cams_initial_width+self.cam_width_+2*self.cams_initial_height+474)
 
         self.button_zoom_in.setX(self.map_init_width+self.MAP_SIDE-(5.5*self.button_size*self.camera_resize_ratio))
         self.button_zoom_out.setX(self.map_init_width+self.MAP_SIDE-(4.5*self.button_size*self.camera_resize_ratio))
@@ -2302,10 +2487,9 @@ class DebugVisualMain():
 
 
         ### NAVIGATION TARGETS
-        if self.node.is_navigating:
-            if self.node.navigation.move_or_rotate == "move" or self.node.navigation.move_or_rotate == "rotate":
-                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.robot_radius/2), width=0)
-                pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.navigation.target_coordinates.x, self.node.navigation.target_coordinates.y), radius=self.size_to_map(self.node.navigation.reached_radius), width=1)
+        if self.node.sdnl_dbg.active:
+            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.sdnl_dbg.target_pose.x, self.node.sdnl_dbg.target_pose.y), radius=self.size_to_map(self.robot_radius/2), width=0)
+            pygame.draw.circle(self.WIN, self.GREEN, self.coords_to_map(self.node.sdnl_dbg.target_pose.x, self.node.sdnl_dbg.target_pose.y), radius=self.size_to_map(self.node.sdnl_dbg.reached_radius), width=1)
 
         ### 3D LIDAR
         if self.node.livox_3dlidar.width > 0 and len(self.node.livox_3dlidar.data) > 0:
@@ -2413,6 +2597,32 @@ class DebugVisualMain():
          
         if self.node.new_search_for_object:
             self.node.new_search_for_object = False    
+
+        ### WORLD OBJECT_DETECTED
+        for object in self.node.detected_world_objects.objects:
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
+                                    2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))
+            pygame.draw.rect(self.WIN, self.CYAN, temp_rect, width=0)
+
+        ### SEARCH FOR WORLD OBJECT 
+        if self.node.new_search_for_world_object:
+            print("DETECTED SEARCH FOR OBJECT:")
+
+        for object in self.node.search_for_world_object.objects:
+            temp_rect = pygame.Rect(self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[0]-self.size_to_map(detected_object_radius), \
+                                    self.coords_to_map(object.position_absolute.x, object.position_absolute.y)[1]-self.size_to_map(detected_object_radius), \
+                                    2*self.size_to_map(detected_object_radius), 2*self.size_to_map(detected_object_radius))
+            pygame.draw.rect(self.WIN, self.MAGENTA, temp_rect, width=0)
+
+            if self.node.new_search_for_world_object:
+                name_and_cat_str = str(object.object_name)
+                room_and_furn_str = str(object.room_location + " (" + object.furniture_location + ")")
+                relative_coords_str = str("("+str(round(object.position_relative.x,2))+", "+str(round(object.position_relative.y,2))+", "+str(round(object.position_relative.z,2))+")")
+                print("id:", object.index, "|", str(int(round(object.confidence,2)*100)) + "%", "|", name_and_cat_str.ljust(22) ,"|", room_and_furn_str.ljust(22), "|", relative_coords_str)
+         
+        if self.node.new_search_for_world_object:
+            self.node.new_search_for_world_object = False    
 
         ### TRACKING
         if self.node.is_tracking_comm:

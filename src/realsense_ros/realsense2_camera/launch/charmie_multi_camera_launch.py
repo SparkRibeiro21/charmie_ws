@@ -39,12 +39,19 @@ import launch.logging
 
 ### TODO: If one of the cameras is not connected, make the serial_no of that camera equal to an empty string
 
+###
+# CHARMIE NOW HAS TWO D405 GRIPPER CAMERAS, MUST CHANGE THE SERIAL NUMBER DEPENDING ON WHICH CAMERA WE ARE USING; 
+# OLD: 230322276953
+# NEW: 352122271163
+###
+
 local_parameters = [{'name': 'camera_name1', 'default': 'D455_head', 'description': 'camera1 unique name'},
                     {'name': 'camera_name2', 'default': 'D405_hand', 'description': 'camera2 unique name'},
                     {'name': 'camera_namespace1', 'default': 'CHARMIE', 'description': 'camera1 namespace'},
                     {'name': 'camera_namespace2', 'default': 'CHARMIE', 'description': 'camera2 namespace'},
                     {'name': 'serial_no1', 'default': "'053122251067'", 'description': 'choose device by serial number'},
-                    {'name': 'serial_no2', 'default': "'230322276953'", 'description': 'choose device by serial number'},
+                    {'name': 'serial_no2', 'default': "'230322276953'", 'description': 'choose device by serial number'}, # OLD D405 SERIAL NUMBER
+                    #{'name': 'serial_no2', 'default': "'352122271163'", 'description': 'choose device by serial number'}, # NEW D405 SERIAL NUMBER
                     #{'name': 'camera_head_active', 'default': 'true', 'description': 'activate / desactivate head camera'},
                     #{'name': 'camera_hand_active', 'default': 'true', 'description': 'activate / desactivate hand camera'},
                     ]

@@ -1,0 +1,27 @@
+{
+  "type": "yoloe_visual_prompt",
+  "image": "bowl_dinner_table_head_cam.png",
+  "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
+  "width": 2560,
+  "height": 1440,
+  "classes": [
+    {
+      "cls": 0,
+      "name": "bowl"
+    }
+  ],
+  "bboxes": [
+    {
+      "cls": 0,
+      "xyxy": [
+        1196.0,
+        389.0,
+        1379.0,
+        504.0
+      ]
+    }
+  ],
+  "meta": {
+    "notes": ""
+  }
+}
