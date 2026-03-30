@@ -29,13 +29,16 @@ ros2_modules = {
     "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
+    "charmie_nav_sdnl":             False,
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             False,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
+    "charmie_yolo_world":           False,
 }
 
 
@@ -62,7 +65,7 @@ class TaskMain():
 
     def configurables(self):
         self.tetas = [[0, 20], [0, 0], [0, -35]]
-        self.SELECTED_OBJECT = "Tropical Juice"
+        self.SELECTED_OBJECT = "7Up"
         self.trys = 3
 
     # main state-machine function
@@ -201,21 +204,26 @@ class TaskMain():
 
                     # s,m = self.robot.set_simple_move_tool(-grab_x, -grab_y, -grab_z, duration_sec=3.0)
 
-                    s,m = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
-                    print(m)
+                    sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=0.0, duration_sec=3.0)
+                    sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
 
-                    if not s:
+                    print(my)
+                    print(mz)
+
+
+                    if not sy or not sz:
 
                         for i in range(self.trys):
 
-                            s,m = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
+                            sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=0.0, duration_sec=3.0)
+                            sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
 
-                            if s:
+                            if sy and sz:
 
                                 print(f"Pose planning succeeded on attempt{i+1}!")
                                 break
 
-                    if s:
+                    if sy and sz:
 
                         print("CLOSE GRIPPER")
 
