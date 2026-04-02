@@ -1,3 +1,0 @@
-[submodule "src/charmie_llm"]
-	path = src/charmie_llm
-	url = git@github.com:SparkRibeiro21/charmie_llm.git
