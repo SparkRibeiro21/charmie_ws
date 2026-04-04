@@ -50,24 +50,43 @@ class LLMNode(Node):
         self.get_logger().info("LLM DEMO REQUEST RECEIVED")
         print("Received:", request.command)
 
-        # FOR THE DEMO
-        # response.answer = self.llm_demo_description.run(request.command) 
+        command = request.command
 
-        # TEMPORARY IN HERE!!! FOR THE INFO EXTRACTION
-        request_command = request.command
+        request_type, command = command.split(" : ", 1)
+        
 
-        info_type, command = request_command.split(" - ", 1)
+        match request_type:
 
-        extracted_info = self.llm_info_extraction_description.extract_info(request=command, info_type=info_type)
-    
-        print("Extracted favorite drink:", extracted_info)
+            case "DEMO":
+                print ("RECEIVED DEMO REQUEST")
 
-        response.answer = extracted_info
+                response.answer = self.llm_demo_description.run(command)
+
+                pass
+
+            case "HRI":
+                print ("RECEIVED HRI REQUEST")
+
+                info_type, command = command.split(" - ", 1)
+
+                extracted_info = self.llm_info_extraction_description.extract_info(request=command, info_type=info_type)
+            
+                print("Extracted " + info_type + ":", extracted_info)
+
+                response.answer = extracted_info
+
+                pass 
+
+            case "HLP":
+                print ("RECEIVED HLP REQUEST")
+
+                response.answer = self.llm_planner_description.high_level_planner(command)
+
+                pass 
+
 
         return response
     
-
-
     def llm_confirm_command_callback(self, request, response):
         # Type of service received: 
         # 
@@ -96,10 +115,8 @@ class LLMNode(Node):
         print("Received:", request.command)
 
         # sends the command to the LLM and gets the response (the generated plan)
-        llm_response = self.llm_planner_description.handle_request(request.command)
+        llm_response = self.llm_planner_description.low_level_planner(request.command)
         
-        # print (f"LLM Output:", llm_response)
-        # print (f"LLM response.output_text:", llm_response.output)
         
         example = ListOfStrings()  # list of the subtasks in a structured format for the robot to execute (on the left of the '-' is the type of task and on the right the parameters)
 
