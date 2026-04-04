@@ -1139,6 +1139,7 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
 
+    ### LLM ONLINE GPT SERVER FUNCTIONS #####
     def call_llm_demonstration_server(self, request=GetLLMDemo.Request(), wait_for_end_of=True):
 
         future = self.llm_demonstration_client.call_async(request)
@@ -1194,6 +1195,58 @@ class ROS2TaskNode(Node):
             self.waited_for_end_of_llm_gpsr = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
+
+    ### LLM OFFLINE OLLAMA SERVER FUNCTIONS #####
+
+
+    def call_llm_ollama_demonstration_server(self, request=GetLLMResponse.Request(), wait_for_end_of=True):
+
+        future = self.llm_demonstration_client.call_async(request)
+        future.add_done_callback(self.callback_call_llm_demonstration)
+        
+    def callback_call_llm_demonstration(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.llm_demonstration_response = response.answer
+            self.get_logger().info("Received LLM Demo Answer:"+str(self.llm_demonstration_response))
+            self.waited_for_end_of_llm_demonstration = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def amcl_pose_callback(self, msg: PoseWithCovarianceStamped):
         self.amcl_pose = msg
@@ -3961,7 +4014,7 @@ class RobotStdFunctions():
 
         return self.node.llm_demonstration_response
 
-##  GETS AND CONFIRMS A GPSR COMMAND ##
+    ##  GETS AND CONFIRMS A GPSR COMMAND ##
     def get_llm_confirm_command(self, wait_for_end_of=True):
 
         command_confirmed = False
@@ -3999,7 +4052,7 @@ class RobotStdFunctions():
 
         return command
 
-##  GENERATES A PLAN FOR A GPSR COMMAND##
+    ##  GENERATES A PLAN FOR A GPSR COMMAND##
     def get_llm_gpsr(self, command= "", wait_for_end_of=True):
 
         # self.calibrate_audio(wait_for_end_of=True)
