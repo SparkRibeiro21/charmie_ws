@@ -27,6 +27,7 @@ def generate_launch_description():
         LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
         std_lf.arm,
         std_lf.speakers,
+        std_lf.save_speakers,
         std_lf.neck,
         std_lf.face,
         std_lf.low_level,
@@ -35,7 +36,7 @@ def generate_launch_description():
         # Sensors                                                           # 
         #####################################################################
         std_lf.lidar,
-        std_lf.lidar_bottom,
+        # std_lf.lidar_bottom,
         std_lf.livox_driver,
         std_lf.radar,
         std_lf.audio,
@@ -55,6 +56,7 @@ def generate_launch_description():
         std_lf.delayed_nav2_localization,        
         std_lf.nav2_navigation,
         std_lf.charmie_navigation,
+        # std_lf.sdnl_navigation,
 
         #####################################################################
         # Cameras                                                           # 
@@ -73,12 +75,11 @@ def generate_launch_description():
         #####################################################################
         # Detections                                                        # 
         #####################################################################
-        # std_lf.yolo_objects,
-        # std_lf.yolo_objects,
+        std_lf.yolo_objects,
         # std_lf.yolo_world_without_prompt_free,
         # std_lf.yolo_world_with_prompt_free,
         std_lf.yolo_pose,
         std_lf.tracking,
-        # std_lf.llm,
+        std_lf.llm,
 
     ])

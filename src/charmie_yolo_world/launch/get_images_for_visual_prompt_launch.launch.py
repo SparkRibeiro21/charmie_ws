@@ -17,7 +17,7 @@ def generate_launch_description():
         # Visualization and Debugging                                       # 
         #####################################################################
         # std_lf.rviz2_nav2_node,
-        std_lf.gui,
+        # std_lf.gui,
         # std_lf.marker_arrays_debug,
         # std_lf.task_with_gamepad, # debug mode where task is selected via gamepad
 
@@ -27,6 +27,7 @@ def generate_launch_description():
         # LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
         # std_lf.arm,
         # std_lf.speakers,
+        # std_lf.save_speakers,
         # std_lf.neck,
         # std_lf.face,
         # std_lf.low_level,
@@ -55,6 +56,7 @@ def generate_launch_description():
         # std_lf.delayed_nav2_localization,        
         # std_lf.nav2_navigation,
         # std_lf.charmie_navigation,
+        # std_lf.sdnl_navigation,
 
         #####################################################################
         # Cameras                                                           # 
