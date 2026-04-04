@@ -375,6 +375,10 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
         self.waited_for_end_of_get_minimum_radar_distance = False
+        self.waited_for_end_of_llm_ollama_demonstration = False
+        self.waited_for_end_of_llm_ollama_information = False
+        self.waited_for_end_of_llm_ollama_gpsr_high_level = False
+        self.waited_for_end_of_llm_ollama_gpsr_low_level = False
 
         self.br = CvBridge()
         self.rgb_head_img = Image()
@@ -484,6 +488,10 @@ class ROS2TaskNode(Node):
         self.radar = RadarData()
         self.cmd_vel = Twist()
         self.is_radar_initialized = False
+        self.llm_ollama_demonstration_response = ""
+        self.llm_ollama_information_response = ""
+        self.llm_ollama_gpsr_high_level_response = []
+        self.llm_ollama_gpsr_low_level_response = []
 
         self.goal_handle_ = None
         self.nav2_goal_accepted = None
@@ -1139,6 +1147,7 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))  
 
+    ### LLM ONLINE GPT SERVER FUNCTIONS #####
     def call_llm_demonstration_server(self, request=GetLLMDemo.Request(), wait_for_end_of=True):
 
         future = self.llm_demonstration_client.call_async(request)
@@ -1192,6 +1201,79 @@ class ROS2TaskNode(Node):
             # for cmd in self.llm_gpsr_response.strings:
             #     self.get_logger().info(str(cmd))
             self.waited_for_end_of_llm_gpsr = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    ### LLM OFFLINE OLLAMA SERVER FUNCTIONS #####
+    def call_llm_ollama_demonstration_server(self, request=GetLLMResponse.Request(), wait_for_end_of=True):
+
+        future = self.llm_ollama_demonstration_client.call_async(request)
+        future.add_done_callback(self.callback_call_llm_ollama_demonstration)
+        
+    def callback_call_llm_ollama_demonstration(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.llm_ollama_demonstration_response = response.answer.strings[0]
+            self.get_logger().info("Received LLM Ollama Demonstration Answer:"+str(self.llm_ollama_demonstration_response))
+            self.waited_for_end_of_llm_ollama_demonstration = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    def call_llm_ollama_information_server(self, request=GetLLMResponse.Request(), wait_for_end_of=True):
+
+        future = self.llm_ollama_information_client.call_async(request)
+        future.add_done_callback(self.callback_call_llm_ollama_information)
+        
+    def callback_call_llm_ollama_information(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.llm_ollama_information_response = response.answer.strings[0]
+            self.get_logger().info("Received LLM Ollama Information Answer:"+str(self.llm_ollama_information_response))
+            self.waited_for_end_of_llm_ollama_information = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    def call_llm_ollama_gpsr_high_level_server(self, request=GetLLMResponse.Request(), wait_for_end_of=True):
+
+        future = self.llm_ollama_gpsr_high_level_client.call_async(request)
+        future.add_done_callback(self.callback_call_llm_ollama_gpsr_high_level)
+        
+    def callback_call_llm_ollama_gpsr_high_level(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.llm_ollama_gpsr_high_level_response = response.answer.strings
+            self.get_logger().info("Received LLM Ollama GPSR High Level Answer:"+str(self.llm_ollama_gpsr_high_level_response))
+            self.waited_for_end_of_llm_ollama_gpsr_high_level = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))
+
+    def call_llm_ollama_gpsr_low_level_server(self, request=GetLLMResponse.Request(), wait_for_end_of=True):
+
+        future = self.llm_ollama_gpsr_low_level_client.call_async(request)
+        future.add_done_callback(self.callback_call_llm_ollama_gpsr_low_level)
+        
+    def callback_call_llm_ollama_gpsr_low_level(self, future):
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the flag raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.llm_ollama_gpsr_low_level_response = response.answer.strings
+            self.get_logger().info("Received LLM Ollama GPSR Low Level Answer:"+str(self.llm_ollama_gpsr_low_level_response))
+            self.waited_for_end_of_llm_ollama_gpsr_low_level = True
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
@@ -3909,7 +3991,69 @@ class RobotStdFunctions():
             case self.FALLING:
                 return not self.node.current_gamepad_controller_state.timeout \
                         and self.node.previous_gamepad_controller_state.timeout
+            
+    ### TEMP LLM OLLAMA OFFLINE TEST FUNCTIONS
+    def get_llm_ollama_demonstration(self, command="", mode="", wait_for_end_of=True):
 
+        request = GetLLMResponse.Request()
+        request.command = command
+        request.mode = mode
+        self.node.call_llm_ollama_demonstration_server(request=request, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_ollama_demonstration:
+                pass
+            self.node.waited_for_end_of_llm_ollama_demonstration = False
+
+        print(self.node.llm_ollama_demonstration_response)
+        return self.node.llm_ollama_demonstration_response
+    
+    def get_llm_ollama_information(self, command="", mode="", wait_for_end_of=True):
+
+        request = GetLLMResponse.Request()
+        request.command = command
+        request.mode = mode
+        self.node.call_llm_ollama_information_server(request=request, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_ollama_information:
+                pass
+            self.node.waited_for_end_of_llm_ollama_information = False
+
+        print(self.node.llm_ollama_information_response)
+        return self.node.llm_ollama_information_response
+    
+    def get_llm_ollama_gpsr_high_level(self, command="", mode="", wait_for_end_of=True):
+
+        request = GetLLMResponse.Request()
+        request.command = command
+        request.mode = mode
+        self.node.call_llm_ollama_gpsr_high_level_server(request=request, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_ollama_gpsr_high_level:
+                pass
+            self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False
+
+        print(self.node.llm_ollama_gpsr_high_level_response)
+        return self.node.llm_ollama_gpsr_high_level_response
+    
+    def get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
+
+        request = GetLLMResponse.Request()
+        request.command = command
+        request.mode = mode
+        self.node.call_llm_ollama_gpsr_low_level_server(request=request, wait_for_end_of=wait_for_end_of)
+        
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_llm_ollama_gpsr_low_level:
+                pass
+            self.node.waited_for_end_of_llm_ollama_gpsr_low_level = False
+
+        print(self.node.llm_ollama_gpsr_low_level_response)
+        return self.node.llm_ollama_gpsr_low_level_response
+
+    ### LLM
     def get_llm_demonstration(self, wait_for_end_of=True):
 
         resquest_type = "DEMO"
@@ -3966,8 +4110,8 @@ class RobotStdFunctions():
 
         return self.node.llm_demonstration_response
 
-##  GETS AND CONFIRMS A GPSR COMMAND ##
-    def get_llm_confirm_command(self):
+    ##  GETS AND CONFIRMS A GPSR COMMAND ##
+    def get_llm_confirm_command(self, wait_for_end_of=True):
 
         command_confirmed = False
         max_confirm_attempts = 3
@@ -4019,7 +4163,7 @@ class RobotStdFunctions():
 
         return gpsr_command
 
-##  HIGH-LEVEL PLANNER (GENERATES A HIGH-LEVEL PLAN FOR A GPSR COMMAND)
+    ##  HIGH-LEVEL PLANNER (GENERATES A HIGH-LEVEL PLAN FOR A GPSR COMMAND)
     def get_llm_high_level_plan(self, command= "", wait_for_end_of=True):
         
         resquest_type = "HLP"

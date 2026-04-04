@@ -64,10 +64,11 @@ class TaskMain():
         LLM_demo = 1
         LLM_gpsr = 2
         LLM_hri= 3
-        Final_State = 4
+        LLM_Ollama_first_tests = 4
+        Final_State = 5
 
         # VARS ...
-        self.state = LLM_gpsr
+        self.state = LLM_Ollama_first_tests
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -277,7 +278,24 @@ class TaskMain():
                 ##  END OF TESTING INFO EXTRACTION STANDARDFUNCTION ##
                 print("Finished LLM HRI")
                 time.sleep(5)
-                            
+            
+            if self.state == LLM_Ollama_first_tests:
+
+                resp = self.robot.get_llm_ollama_demonstration(command="Test D", mode="HRI X", wait_for_end_of=True)
+                print(resp)
+
+                resp = self.robot.get_llm_ollama_information(command="Test I", mode="HRI X", wait_for_end_of=True)
+                print(resp)
+
+                resp = self.robot.get_llm_ollama_gpsr_high_level(command="Test H", mode="HRI X", wait_for_end_of=True)
+                print(resp)
+
+                resp = self.robot.get_llm_ollama_gpsr_low_level(command="Test L", mode="HRI X", wait_for_end_of=True)
+                print(resp)
+
+                while True:
+                    pass
+                                           
             elif self.state == Final_State:
                 
                 self.state += 1

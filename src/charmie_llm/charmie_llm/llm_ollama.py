@@ -32,9 +32,9 @@ class LLMNode(Node):
         self.get_logger().info("Initialised CHARMIE LLM Offline Ollama Node")
 
         # LLM objects declaration must come before the service declaration, so that if there is any error, in GUI never shows that LLM was initialized 
-        self.llm_demo_description = LLM_demo_description() 
-        self.llm_planner_description = LLM_planner_description()
-        self.llm_info_extraction_description = LLM_info_extraction_description()
+        # self.llm_demo_description = LLM_demo_description() 
+        # self.llm_planner_description = LLM_planner_description()
+        # self.llm_info_extraction_description = LLM_info_extraction_description()
 
         ### HERE WE NEED TO ADD A DUMMY FUNCTION TO GET A FIRST RESPONSE FROM THE LLM
         ### THIS IS BECAUSE THE FIRST TIME WE CALL THE LLM IT TAKES A LONG TIME TO LOAD, SO WE WANT TO DO IT IN THE BEGINNING, SO THAT WHEN WE CALL IT LATER ON, IT IS ALREADY LOADED AND READY TO RESPOND QUICKLY
@@ -48,14 +48,14 @@ class LLMNode(Node):
     def llm_ollama_demonstration_callback(self, request, response):
         # Type of service received: 
         # string command          # The command to be sent to the LLM
-        # int32 mode              # defines the operation mode for the LLM
+        # string mode              # defines the operation mode for the LLM
         # ---
         # ListOfStrings answer    # List of sub tasks divisions the robot must perform to complete a task
         
         self.get_logger().info("LLM DEMO REQUEST RECEIVED")
         print("Received:", request.command)
 
-        # FOR THE DEMO
+        """ # FOR THE DEMO
         # response.answer = self.llm_demo_description.run(request.command) 
 
         # TEMPORARY IN HERE!!! FOR THE INFO EXTRACTION
@@ -66,8 +66,15 @@ class LLMNode(Node):
         extracted_info = self.llm_info_extraction_description.extract_info(request=command, info_type=info_type)
     
         print("Extracted favorite drink:", extracted_info)
-
-        response.answer = extracted_info
+ 
+        response.answer = extracted_info"""
+        
+        los = ListOfStrings()
+        los.strings.append("This is 1 demonstration response from the LLM.")
+        los.strings.append("This is 2 demonstration response from the LLM.")
+        los.strings.append("This is 3 demonstration response from the LLM.")
+        
+        response.answer = los
 
         return response
     
@@ -75,7 +82,7 @@ class LLMNode(Node):
     def llm_ollama_information_callback(self, request, response):
         # Type of service received: 
         # string command          # The command to be sent to the LLM
-        # int32 mode              # defines the operation mode for the LLM
+        # string mode              # defines the operation mode for the LLM
         # ---
         # ListOfStrings answer    # List of sub tasks divisions the robot must perform to complete a task
         
@@ -96,20 +103,27 @@ class LLMNode(Node):
 
         response.answer = extracted_info """
 
+        los = ListOfStrings()
+        los.strings.append("This is 4 demonstration response from the LLM.")
+        los.strings.append("This is 5 demonstration response from the LLM.")
+        los.strings.append("This is 6 demonstration response from the LLM.")
+        
+        response.answer = los
+
         return response
     
 
     def llm_ollama_gpsr_high_level_callback(self, request, response):
         # Type of service received: 
         # string command          # The command to be sent to the LLM
-        # int32 mode              # defines the operation mode for the LLM
+        # string mode              # defines the operation mode for the LLM
         # ---
         # ListOfStrings answer    # List of sub tasks divisions the robot must perform to complete a task
         
         self.get_logger().info("LLM GPSR HIGH LEVEL REQUEST RECEIVED")
         print("Received:", request.command)
 
-        # sends the command to the LLM and gets the response (the generated plan)
+        """ # sends the command to the LLM and gets the response (the generated plan)
         llm_response = self.llm_planner_description.handle_request(request.command)
         
         # print (f"LLM Output:", llm_response)
@@ -157,21 +171,29 @@ class LLMNode(Node):
 
                     example.strings.append(f"HandObject")
                 
-        response.answer = example  
+        response.answer = example   """
+
+        los = ListOfStrings()
+        los.strings.append("This is 7 demonstration response from the LLM.")
+        los.strings.append("This is 8 demonstration response from the LLM.")
+        los.strings.append("This is 9 demonstration response from the LLM.")
+        
+        response.answer = los
+
         return response
 
 
     def llm_ollama_gpsr_low_level_callback(self, request, response):
         # Type of service received: 
         # string command          # The command to be sent to the LLM
-        # int32 mode              # defines the operation mode for the LLM
+        # string mode              # defines the operation mode for the LLM
         # ---
         # ListOfStrings answer    # List of sub tasks divisions the robot must perform to complete a task
         
         self.get_logger().info("LLM GPSR LOW LEVEL REQUEST RECEIVED")
         print("Received:", request.command)
 
-        # sends the command to the LLM and gets the response (the generated plan)
+        """ # sends the command to the LLM and gets the response (the generated plan)
         llm_response = self.llm_planner_description.handle_request(request.command)
         
         # print (f"LLM Output:", llm_response)
@@ -219,6 +241,14 @@ class LLMNode(Node):
 
                     example.strings.append(f"HandObject")
                 
-        response.answer = example  
+        response.answer = example   """
+
+        los = ListOfStrings()
+        los.strings.append("This is 10 demonstration response from the LLM.")
+        los.strings.append("This is 11 demonstration response from the LLM.")
+        los.strings.append("This is 12 demonstration response from the LLM.")
+        
+        response.answer = los
+
         return response
 
