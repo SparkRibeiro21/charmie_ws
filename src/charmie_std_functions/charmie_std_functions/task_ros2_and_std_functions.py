@@ -18,7 +18,7 @@ from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, C
     SetNeckCoordinates, TrackObject, TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, SetFloat, \
     NodesUsed, ContinuousGetAudio, SetRGB, SetTorso, ActivateBool, GetLLMGPSR, GetLLMDemo, GetLLMConfirmCommand, TrackContinuous, \
     ActivateTracking, SetPoseWithCovarianceStamped, SetInt, GetFaceTouchscreenMenu, SetFaceTouchscreenMenu, GetSoundClassification, \
-    GetSoundClassificationContinuous, GetMinRadarDistance, ActivateYoloWorld
+    GetSoundClassificationContinuous, GetMinRadarDistance, ActivateYoloWorld, GetLLMResponse
 from charmie_interfaces.action import AdjustNavigationAngle, AdjustNavigationOmnidirectional, AdjustNavigationObstacles, NavigateSDNL
 
 from charmie_point_cloud.point_cloud_class import PointCloud
@@ -185,6 +185,11 @@ class ROS2TaskNode(Node):
         self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
         self.llm_confirm_command_client = self.create_client(GetLLMConfirmCommand, "llm_confirm_command")
         self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
+        # LLM Offline OLLAMA
+        self.llm_ollama_demonstration_client    = self.create_client(GetLLMResponse, "llm_ollama_demonstration")
+        self.llm_ollama_information_client      = self.create_client(GetLLMResponse, "llm_ollama_information")
+        self.llm_ollama_gpsr_high_level_client  = self.create_client(GetLLMResponse, "llm_ollama_gpsr_high_level")
+        self.llm_ollama_gpsr_low_level_client   = self.create_client(GetLLMResponse, "llm_ollama_gpsr_low_level")
         # Tracking (SAM2)
         self.activate_tracking_client = self.create_client(ActivateTracking, "activate_tracking")
         # Task State Demo 
@@ -254,13 +259,23 @@ class ROS2TaskNode(Node):
             while not self.face_command_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Face Command...")
 
+        # Deactivated the online llm, we will be using llm offline ollama 
+        # if self.ros2_modules["charmie_llm"]:
+        #     while not self.llm_demonstration_client.wait_for_service(1.0):
+        #         self.get_logger().warn("Waiting for Demo Server LLM ...")
+        #     while not self.llm_confirm_command_client.wait_for_service(1.0):
+        #         self.get_logger().warn("Waiting for Confirm Command Server LLM ...")
+        #     while not self.llm_gpsr_client.wait_for_service(1.0):
+        #         self.get_logger().warn("Waiting for GPSR Server LLM ...")
         if self.ros2_modules["charmie_llm"]:
-            while not self.llm_demonstration_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Demo Server LLM ...")
-            while not self.llm_confirm_command_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for Confirm Command Server LLM ...")
-            while not self.llm_gpsr_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for GPSR Server LLM ...")
+            while not self.llm_ollama_demonstration_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for LLM Ollama Demonstration Server ...")
+            while not self.llm_ollama_information_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for LLM Ollama Information Server ...")
+            while not self.llm_ollama_gpsr_high_level_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for LLM Ollama GPSR High Level Server ...")
+            while not self.llm_ollama_gpsr_low_level_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for LLM Ollama GPSR Low Level Server ...")
 
         if self.ros2_modules["charmie_low_level"]:
             while not self.set_rgb_client.wait_for_service(1.0):
