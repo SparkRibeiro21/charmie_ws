@@ -110,17 +110,17 @@ class LLM_planner_description:
             ],
         )
 
-        return response
+        return response.output_text
     
-    def handle_request(self, request: str):
+    # def handle_request(self, request: str):
 
-        high_level_plan = self.high_level_planner(request)
-        print("High-level plan: ", high_level_plan.output_text)
+    #     high_level_plan = self.high_level_planner(request)
+    #     print("High-level plan: ", high_level_plan.output_text)
 
-        low_level_plan = self.low_level_planner(high_level_plan.output_text)
-        print("Low-level plan: ", low_level_plan)
+    #     low_level_plan = self.low_level_planner(high_level_plan.output_text)
+    #     print("Low-level plan: ", low_level_plan)
 
-        return low_level_plan
+    #     return low_level_plan
 
 
 
