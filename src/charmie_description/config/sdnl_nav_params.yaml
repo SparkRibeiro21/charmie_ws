@@ -13,8 +13,8 @@ sdnl_nav:
     topic_sdnl_debug: "sdnl/debug"
 
     # SDNL major params
-    lambda_target_not_obs:  1.5
-    lambda_target_with_obs: 1.5
+    lambda_target_not_obs:  1.0
+    lambda_target_with_obs: 1.0
     beta1: 5.0
     beta2: 3.0
 

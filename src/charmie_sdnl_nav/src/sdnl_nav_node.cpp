@@ -457,10 +457,11 @@ void SDNLNavNode::controlLoop()
     {
       // Rotate in place to align robot heading with target position (x,y)
       cmd.linear.x  = 0.0;
-      cmd.angular.z = sdnl::clamp(2.0 * bearing_err, -w_max, w_max);
+      cmd.angular.z = sdnl::clamp(1.0 * bearing_err, -w_max, w_max);
 
       // Transition to MOVE phase once bearing error is within tolerance
       if (std::abs(bearing_err) <= yaw_tol) {
+        cmd.angular.z = 0.0;
         std::lock_guard<std::mutex> lk(phase_mutex_);
         exec_phase_ = ExecPhase::MOVE_TO_POSITION;
       }
@@ -518,9 +519,12 @@ void SDNLNavNode::controlLoop()
     case ExecPhase::FINAL_ORIENT:
     default:
     {
-      // Rotate in place to desired final orientation
-      cmd.linear.x  = 0.0;
-      cmd.angular.z = sdnl::clamp(2.0 * final_yaw_err, -w_max, w_max);
+      cmd.linear.x = 0.0;
+      if (std::abs(final_yaw_err) <= yaw_tol) {
+        cmd.angular.z = 0.0;
+      } else {
+        cmd.angular.z = sdnl::clamp(1.0 * final_yaw_err, -w_max, w_max);
+      }
       break;
     }
   }
