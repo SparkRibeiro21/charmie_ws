@@ -367,8 +367,8 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_set_joint_target_arm = False
         self.waited_for_end_of_set_pose_target_arm = False
         self.waited_for_end_of_set_move_tool_target_arm = False
-        self.waited_for_end_of_attach_object_arm = False
-        self.waited_for_end_of_detach_object_arm = False
+        self.waited_for_end_of_attach_object = False
+        self.waited_for_end_of_detach_object = False
         self.waited_for_end_of_set_gripper = False
         self.waited_for_end_of_set_simple_move_tool = False
         self.waited_for_end_of_face = False

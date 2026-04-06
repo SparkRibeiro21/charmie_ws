@@ -168,7 +168,7 @@ class TaskMain():
 
                     print("WAIT FOR START BUTTON")
 
-                    self.robot.wait_for_start_button()
+                    # self.robot.wait_for_start_button()
 
                     hand_objects_found = None
                     
@@ -200,34 +200,41 @@ class TaskMain():
 
                     # object_in_gripper = False
 
-                    self.robot.wait_for_start_button()
+                    # self.robot.wait_for_start_button()
 
                     # s,m = self.robot.set_simple_move_tool(-grab_x, -grab_y, -grab_z, duration_sec=3.0)
 
-                    sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=0.0, duration_sec=3.0)
-                    sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
+                    sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
+                    # self.robot.wait_for_start_button()
+                    # sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
 
                     print(my)
-                    print(mz)
+                    # print(mz)
 
 
-                    if not sy or not sz:
+                    # if not sy or not sz:
+                    if not sy:
 
                         for i in range(self.trys):
 
-                            sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=0.0, duration_sec=3.0)
-                            sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
+                            sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
+                            # self.robot.wait_for_start_button()
+                            # sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
 
-                            if sy and sz:
+                            # if sy and sz:
+                            if sy:
 
                                 print(f"Pose planning succeeded on attempt{i+1}!")
                                 break
 
-                    if sy and sz:
+                    # if sy and sz:
+                    if sy:
 
                         print("CLOSE GRIPPER")
 
                         self.robot.set_gripper(0.0, wait_for_end_of=True)
+                        self.robot.attach_object_to_gripper(object_id=o.object_name)
+
 
                         # self.robot.wait_for_start_button()
 
@@ -255,6 +262,10 @@ class TaskMain():
                 time.sleep(2.0)
 
                 self.robot.set_named_target_arm("home", wait_for_end_of=True)
+                self.robot.wait_for_start_button()
+
+                self.robot.detach_object_from_gripper(object_id=o.object_name)
+
 
                 pass
                     
