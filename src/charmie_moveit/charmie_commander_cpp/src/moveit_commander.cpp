@@ -4,6 +4,8 @@
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Vector3.h>
 
 #include <example_interfaces/msg/bool.hpp>
 #include <charmie_interfaces/msg/detected_object.hpp>
@@ -376,25 +378,38 @@ class Commander
             std::shared_ptr<PoseTargetSrv::Response> response)
 
         {
-            
 
             RCLCPP_INFO(
                 node_->get_logger(),
-                "Received MoveToolService request: position(%f, %f, %f), orientation(%f, %f, %f, %f)",
+                "Received MoveToolService request: position(%f, %f, %f), orientation(%f, %f, %f, %f), cartesian=%d",
                 request->x, request->y, request->z,
-                request->qx, request->qy, request->qz, request->qw
+                request->qx, request->qy, request->qz, request->qw,
+                request->cartesian
             );
 
             geometry_msgs::msg::PoseStamped current_pose = xarm_->getCurrentPose();
 
+            const auto &current_orientation = current_pose.pose.orientation;
+            tf2::Quaternion q_current(
+                current_orientation.x,
+                current_orientation.y,
+                current_orientation.z,
+                current_orientation.w
+            );
+            q_current.normalize();
+
+            tf2::Vector3 delta_tool(
+                request->x,
+                request->y,
+                request->z
+            );
+
+            tf2::Vector3 delta_world = tf2::quatRotate(q_current, delta_tool);
+
             geometry_msgs::msg::Pose target_pose = current_pose.pose;
-            target_pose.position.x += request->x;
-            target_pose.position.y += request->y;
-            target_pose.position.z += request->z;
-            target_pose.orientation.x = request->qx;
-            target_pose.orientation.y = request->qy;
-            target_pose.orientation.z = request->qz;
-            target_pose.orientation.w = request->qw;
+            target_pose.position.x += delta_world.x();
+            target_pose.position.y += delta_world.y();
+            target_pose.position.z += delta_world.z();
             
 
             xarm_->setStartStateToCurrentState();
@@ -409,19 +424,63 @@ class Commander
 
             double fraction = xarm_->computeCartesianPath(waypoints, resolution, jump_threshold, trajectory);
 
+            RCLCPP_INFO(node_->get_logger(),
+                "Current pose: p=(%f, %f, %f), o=(%f, %f, %f, %f)",
+                current_pose.pose.position.x,
+                current_pose.pose.position.y,
+                current_pose.pose.position.z,
+                current_pose.pose.orientation.x,
+                current_pose.pose.orientation.y,
+                current_pose.pose.orientation.z,
+                current_pose.pose.orientation.w
+            );
+
+            RCLCPP_INFO(node_->get_logger(),
+                "Delta tool: (%f, %f, %f)",
+                request->x, request->y, request->z
+            );
+
+            RCLCPP_INFO(node_->get_logger(),
+                "Delta world: (%f, %f, %f)",
+                delta_world.x(),
+                delta_world.y(),
+                delta_world.z()
+            );
+
+            RCLCPP_INFO(node_->get_logger(),
+                "Target pose: p=(%f, %f, %f), o=(%f, %f, %f, %f)",
+                target_pose.position.x,
+                target_pose.position.y,
+                target_pose.position.z,
+                target_pose.orientation.x,
+                target_pose.orientation.y,
+                target_pose.orientation.z,
+                target_pose.orientation.w
+            );
+
+            RCLCPP_INFO(node_->get_logger(),
+                "Computed Cartesian path with fraction: %f",
+                fraction
+            );
+
             if (fraction > 0.7){
-                xarm_->execute(trajectory);
+                moveit::core::MoveItErrorCode exec_result = xarm_->execute(trajectory);
+                if (exec_result == moveit::core::MoveItErrorCode::SUCCESS)
+                {
                 response->success = true;
                 response->message = "Tool movement executed successfully.";
+                }
+                else
+                {
+                    response->success = false;
+                    response->message = "Cartesian path computed but failed to execute.";
+                }
             }
             else
             {
                 response->success = false;
                 response->message = "Failed to compute Cartesian path for the tool movement.";
             }
-
-            RCLCPP_INFO(node_->get_logger(),"Current Pose:%f %f %f",current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z);
-            RCLCPP_INFO(node_->get_logger(),"Desired Pose:%f %f %f",target_pose.position.x, target_pose.position.y,target_pose.position.z);
         }
 
         void OpenGripperCallback(const Bool &msg)

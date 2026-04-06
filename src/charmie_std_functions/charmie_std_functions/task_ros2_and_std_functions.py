@@ -831,7 +831,7 @@ class ROS2TaskNode(Node):
         except Exception as e:
             self.get_logger().error("Service call failed %r" % (e,))
 
-    def call_set_simple_move_tool_server(self, request=SetPoseTarget.Request(), wait_for_end_of=True):
+    def call_set_simple_move_tool_server(self, request=SetSimpleMoveTool.Request(), wait_for_end_of=True):
 
         future = self.set_simple_move_tool_client.call_async(request)
 
@@ -2577,6 +2577,7 @@ class RobotStdFunctions():
         request.qy = float(qy)
         request.qz = float(qz)
         request.qw = float(qw)
+        request.cartesian = bool(cartesian)
         
         self.node.call_set_move_tool_target_arm_server(request=request, wait_for_end_of=wait_for_end_of)
 
