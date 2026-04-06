@@ -76,6 +76,16 @@ class Commander
                 "set_move_tool_target",
                 std::bind(&Commander::MoveToolService, this, _1, _2)
             );
+
+            attach_object_srv_ = node_ ->create_service<charmie_interfaces::srv::SetNamedTarget>(
+                "attach_object",
+                std::bind(&Commander::AttachObjectService, this, _1, _2)
+            );
+
+            detach_object_srv_ = node_ ->create_service<charmie_interfaces::srv::SetNamedTarget>(
+                "detach_object",
+                std::bind(&Commander::DetachObjectService, this, _1, _2)
+            );
         }
 
         void startMonitoring()
@@ -378,7 +388,7 @@ class Commander
             std::shared_ptr<PoseTargetSrv::Response> response)
 
         {
-
+            
             RCLCPP_INFO(
                 node_->get_logger(),
                 "Received MoveToolService request: position(%f, %f, %f), orientation(%f, %f, %f, %f), cartesian=%d",
@@ -410,7 +420,7 @@ class Commander
             target_pose.position.x += delta_world.x();
             target_pose.position.y += delta_world.y();
             target_pose.position.z += delta_world.z();
-            
+
 
             xarm_->setStartStateToCurrentState();
             
@@ -467,8 +477,8 @@ class Commander
                 moveit::core::MoveItErrorCode exec_result = xarm_->execute(trajectory);
                 if (exec_result == moveit::core::MoveItErrorCode::SUCCESS)
                 {
-                response->success = true;
-                response->message = "Tool movement executed successfully.";
+                    response->success = true;
+                    response->message = "Tool movement executed successfully.";
                 }
                 else
                 {
@@ -480,6 +490,81 @@ class Commander
             {
                 response->success = false;
                 response->message = "Failed to compute Cartesian path for the tool movement.";
+            }
+        }
+
+        void AttachObjectService(
+            const std::shared_ptr<NamedTargetSrv::Request> request,
+            std::shared_ptr<NamedTargetSrv::Response> response)
+        {
+            const std::string object_id = request->target_name;
+            
+            const std::string end_effector_link = xarm_->getEndEffectorLink();
+
+            std::vector<std::string> touch_links = {
+                "xarm_gripper_xarm_gripper_base_link",
+                "xarm_gripper_left_finger",
+                "xarm_gripper_right_finger",
+                "xarm_gripper_left_inner_knuckle",
+                "xarm_gripper_right_inner_knuckle",
+                "xarm_gripper_left_outer_knuckle",
+                "xarm_gripper_right_outer_knuckle"
+            };
+
+            try
+            {
+                xarm_->attachObject(object_id, end_effector_link, touch_links);
+
+                RCLCPP_INFO(node_->get_logger(),
+                    "Attached object '%s' to end effector link '%s'",
+                    object_id.c_str(),
+                    end_effector_link.c_str()
+                );
+
+                response->success = true;
+                response->message = "Attached: " + object_id;
+            }
+            catch (const std::exception &e)
+            {
+                RCLCPP_ERROR(node_->get_logger(),
+                    "Failed to attach object '%s': %s",
+                    object_id.c_str(),
+                    e.what()
+                );
+
+                response->success = false;
+                response->message = "Failed to attach: " + object_id + ". Error: " + e.what();
+            }
+        }
+
+        void DetachObjectService(
+            const std::shared_ptr<NamedTargetSrv::Request> request,
+            std::shared_ptr<NamedTargetSrv::Response> response)
+        {
+            const std::string object_id = request->target_name;
+
+            try
+            {
+                xarm_->detachObject(object_id);
+
+                RCLCPP_INFO(node_->get_logger(),
+                    "Detached object '%s' from end effector",
+                    object_id.c_str()
+                );
+
+                response->success = true;
+                response->message = "Detached: " + object_id;
+            }
+            catch (const std::exception &e)
+            {
+                RCLCPP_ERROR(node_->get_logger(),
+                    "Failed to detach object '%s': %s",
+                    object_id.c_str(),
+                    e.what()
+                );
+
+                response->success = false;
+                response->message = "Failed to detach: " + object_id + ". Error: " + e.what();
             }
         }
 
@@ -525,6 +610,9 @@ class Commander
         rclcpp::Service<charmie_interfaces::srv::SetJointTarget>::SharedPtr set_joint_target_srv_;
         rclcpp::Service<charmie_interfaces::srv::SetPoseTarget>::SharedPtr set_pose_target_srv_;
         rclcpp::Service<charmie_interfaces::srv::SetPoseTarget>::SharedPtr set_move_tool_srv_;
+
+        rclcpp::Service<charmie_interfaces::srv::SetNamedTarget>::SharedPtr attach_object_srv_;
+        rclcpp::Service<charmie_interfaces::srv::SetNamedTarget>::SharedPtr detach_object_srv_;
 };
 
 int main(int argc, char** argv)
