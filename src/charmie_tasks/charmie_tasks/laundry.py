@@ -30,7 +30,7 @@ ros2_modules = {
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
-    "charmie_yolo_pose":            True,
+    "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
 
@@ -101,6 +101,9 @@ class TaskMain():
 
         self.initial_position = [0.0, 0.0, 0.0]
 
+        # Name of the table where breakfast is served
+        self.NAME_TABLE_WHERE_LAUNDRY_IS_FOLDED = "Dinner Table"
+        self.NAME_TABLE_WHERE_LAUNDRY_IS_FOLDED = self.NAME_TABLE_WHERE_LAUNDRY_IS_FOLDED.lower().replace(" ", "_")
 
     def main(self):
 
@@ -144,9 +147,10 @@ class TaskMain():
 
                 self.robot.set_neck(position=[0, -30], wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/table", wait_for_end_of=False)
-                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("table"), wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_LAUNDRY_IS_FOLDED, wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_LAUNDRY_IS_FOLDED), wait_for_end_of=True)
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_LAUNDRY_IS_FOLDED, wait_for_end_of=False)
 
                 self.state = self.task_states["Place_CFM_on_table"]
 

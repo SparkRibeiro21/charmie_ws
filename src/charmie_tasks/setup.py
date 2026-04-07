@@ -29,6 +29,7 @@ setup(
         "pick_and_place_task_2026   = charmie_tasks.pick_and_place_task_2026:main",
         "gpsr_task_2026             = charmie_tasks.gpsr_task_2026:main",
         "manipulation_task_2026     = charmie_tasks.manipulation_task_2026:main",
+        "laundry                    = charmie_tasks.laundry:main",
         "restaurant                 = charmie_tasks.restaurant:main",
 		"finals_task_2026           = charmie_tasks.finals_task_2026:main",
         
