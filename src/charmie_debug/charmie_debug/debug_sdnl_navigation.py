@@ -18,12 +18,12 @@ ros2_modules = {
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         True,
-    "charmie_low_level":            True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
     "charmie_nav_sdnl":             True,
@@ -72,9 +72,9 @@ class TaskMain():
         self.NAVIGATION_TARGET = self.NAVIGATION_TARGET.replace(" ","_").lower()
         self.NAVIGATION_TARGET2 = "desk"
         self.NAVIGATION_TARGET3 = "Left Lounge Chair"
-        self.NAVIGATION_TARGET4 = [ 2.0,  2.0,   0.0]
-        self.NAVIGATION_TARGET5 = [ 2.0, -2.0,   0.0]
-        self.NAVIGATION_TARGET6 = [ 0.0, -0.0,   0.0]
+        self.NAVIGATION_TARGET4 = [ 4.0,  0.0,   0.0]
+        self.NAVIGATION_TARGET5 = [ 4.0,  0.0,   0.0]
+        self.NAVIGATION_TARGET6 = [ 0.0,  0.2,   0.0]
 
         # Neck Positions
         self.look_forward = [0, 0]
