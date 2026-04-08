@@ -6475,6 +6475,23 @@ class RobotStdFunctions():
 
 
     def open_door(self, push_pull="push", left_right="left", wait_for_end_of=True):
+        initial_position = [1.5, -1.45, 90.0]
+        neck_position = [15,-22]
+
+        self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+
+        door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, detect_prompt_free_head=True)
+        for h in door_handle:
+
+            conf = f"{h.confidence * 100:.0f}%"
+            hand_y_grab    = f"{h.position_cam.y:5.2f}"
+            hand_z_grab    = f"{h.position_cam.z:5.2f}"
+            hand_x_grab    = f"{h.position_cam.z:5.2f}"
+            correct_y_grab = (h.position_cam.y)*1000
+            correct_z_grab = (h.position_cam.z)*1000
+            
+        print("X: ", hand_x_grab,"Y:", hand_y_grab,"Z:", hand_z_grab)
+        self.wait_for_start_button()
         # placeholder for door opening std_function
         pass
         # arm movements and search for objects for furniture door_handle 
