@@ -76,7 +76,7 @@ def generate_launch_description():
         # Detections                                                        # 
         #####################################################################
         std_lf.yolo_objects,
-        # std_lf.yolo_world_without_prompt_free,
+        std_lf.yolo_world_without_prompt_free,
         std_lf.yolo_world_with_prompt_free,
         # std_lf.yolo_pose,
         # std_lf.tracking,

@@ -133,7 +133,7 @@ class TaskMain():
 
                 self.robot.set_initial_position(self.initial_position)
 
-                self.robot.open_door()
+                self.robot.open_door(push_pull="pull")
 
                 self.robot.wait_for_start_button()
                 

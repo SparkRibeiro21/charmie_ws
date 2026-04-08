@@ -12,7 +12,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 True,
+    "charmie_face":                 False,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
@@ -26,13 +26,13 @@ ros2_modules = {
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 True,
+    "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
-    "charmie_yolo_objects":         True,
+    "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           True,
 }
@@ -78,15 +78,15 @@ class TaskMain():
                 
  
                 # self.set_face(command="charmie_face")
-                self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
+                #self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=False)
 
                 time.sleep(2.0)
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[-30, -45], [0, -45], [30, -45]]
+                tetas = [[0.0,0.0]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
                 # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, detect_tv_prompt_head=True, visual_prompts=["red_wine_dinner_table_head_cam", "tomato_soup_dinner_table_head_cam"], minimum_tv_prompt_confidence=0.25)
+                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, detect_tv_prompt_hand=True, visual_prompts=["door_handle2_gripper_cam"], minimum_tv_prompt_confidence=0.25)
 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:

@@ -6475,22 +6475,54 @@ class RobotStdFunctions():
 
 
     def open_door(self, push_pull="push", left_right="left", wait_for_end_of=True):
-        initial_position = [1.5, -1.45, 90.0]
-        neck_position = [15,-22]
 
-        self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
 
-        door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, detect_prompt_free_head=True)
-        for h in door_handle:
+        arm_position_1 = [-189.7, 36.6, -78.1, 170.7, 45.5, 183.4]
 
-            conf = f"{h.confidence * 100:.0f}%"
-            hand_y_grab    = f"{h.position_cam.y:5.2f}"
-            hand_z_grab    = f"{h.position_cam.z:5.2f}"
-            hand_x_grab    = f"{h.position_cam.z:5.2f}"
-            correct_y_grab = (h.position_cam.y)*1000
-            correct_z_grab = (h.position_cam.z)*1000
+        tf_x = 0.210
+        tf_y = 0.008
+        tf_z = - 0.075
+
+        if push_pull == "pull":
+            initial_position = [1.5, -1.45, 178.0]
+            neck_position = [[15,-22]]
+
+
+            self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+
+            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle2_head_cam"], minimum_tv_prompt_confidence=0.50)
+        
+            for h in door_handle:
+
+                move_y = h.position_relative.y
+
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.25, wait_for_end_of=False)
+        if push_pull == "pull":
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_1, wait_for_end_of=True)
+
+            door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_hand=True, visual_prompts=["door_handlef_gripper_cam"], minimum_tv_prompt_confidence=0.50)
+            self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+            for g in door_handle:
+
+                gripper_position = self.get_gripper_localization()
+
+                move_z_gripper = (gripper_position.z - g.position_absolute.z)*1000
+                move_y_gripper = (gripper_position.y - g.position_absolute.y + tf_y + 0.02)*1000
+                move_x_gripper = (gripper_position.x - g.position_absolute.x - tf_z - 0.05)*1000
+                move_x_base = abs(gripper_position.x + tf_x - g.position_absolute.x)
+                print("Position x:", g.position_absolute.x, "Position y:", g.position_absolute.y, "Position z:", g.position_absolute.z)
+
+            lower_gripper = [move_x_gripper, - move_y_gripper , 0.0, 0.0, 0.0, 0.0]    
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = lower_gripper, wait_for_end_of=True)  
+            print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
+            self.adjust_omnidirectional_position(dx = move_x_base , dy = 0.0, wait_for_end_of=True, safety=False)
+            grab_door = [0.0, 0.06*1000, 0.02*1000, -20.0, 0.0, 0.0]
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_door, wait_for_end_of=True) 
+            self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.0, wait_for_end_of=True, safety=False) 
             
-        print("X: ", hand_x_grab,"Y:", hand_y_grab,"Z:", hand_z_grab)
+        
         self.wait_for_start_button()
         # placeholder for door opening std_function
         pass
