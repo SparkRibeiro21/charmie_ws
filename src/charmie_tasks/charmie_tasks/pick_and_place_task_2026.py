@@ -192,7 +192,7 @@ class TaskMain():
                     if not self.HELP_PICK_MILK:
                         self.robot.pick_object_risky(selected_object="Milk", return_arm_to_initial_position="collect_milk_to_tray")
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
-                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                        # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
                     else:
                         object_in_gripper = False
@@ -232,7 +232,7 @@ class TaskMain():
                     if not self.HELP_PICK_CORNFLAKES:
                         self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position="collect_cornflakes_to_tray")
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
-                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                        # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                     else:
                         object_in_gripper = False

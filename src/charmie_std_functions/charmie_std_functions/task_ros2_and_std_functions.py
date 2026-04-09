@@ -5879,6 +5879,7 @@ class RobotStdFunctions():
                     else:
                         if obj.object_name != "plate":    
                             self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
 
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
@@ -5950,12 +5951,12 @@ class RobotStdFunctions():
                         if obj.object_name == "spoon" or obj.object_name == "knife" or obj.object_name == "fork":    
                             ###
                             self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
-                            # self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
                             while not self.adjust_omnidirectional_position_is_done():
                                 pass
                         else:
                             self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                            # self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
+                            self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
                             while not self.adjust_omnidirectional_position_is_done():
                                 pass
                     #self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
