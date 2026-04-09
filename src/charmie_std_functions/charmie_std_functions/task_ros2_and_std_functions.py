@@ -5554,7 +5554,7 @@ class RobotStdFunctions():
 
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
-            DISTANCE_IN_FRONT_X     = 0.6 
+            DISTANCE_IN_FRONT_X     = 0.3 
             DISTANCE_IN_FRONT_Y     = 0.31
             DISTANCE_IN_TOP_X       = 0.58
             DISTANCE_IN_TOP_Y       = -0.05
@@ -5585,7 +5585,9 @@ class RobotStdFunctions():
 
                 # ADJUST ROBOT POSITION IN RELATION TO THE OBJECT
                 if navigation:
-                    self.adjust_x_      = valid_detected_object.position_relative.x - DISTANCE_IN_FRONT_X
+                    _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+
+                    self.adjust_x_      = furniture_distance - DISTANCE_IN_FRONT_X
 
                     self.adjust_y_      = valid_detected_object.position_relative.y + DISTANCE_IN_FRONT_Y
                     print("FINAL ADJUST:", self.adjust_x_, self.adjust_y_)
@@ -5877,7 +5879,6 @@ class RobotStdFunctions():
                     else:
                         if obj.object_name != "plate":    
                             self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                            self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
 
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
@@ -5949,12 +5950,12 @@ class RobotStdFunctions():
                         if obj.object_name == "spoon" or obj.object_name == "knife" or obj.object_name == "fork":    
                             ###
                             self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
-                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            # self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
                             while not self.adjust_omnidirectional_position_is_done():
                                 pass
                         else:
                             self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                            self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
+                            # self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
                             while not self.adjust_omnidirectional_position_is_done():
                                 pass
                     #self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
