@@ -7,7 +7,7 @@
   "classes": [
     {
       "cls": 0,
-      "name": "door_handle"
+      "name": "door_handle_gripper"
     }
   ],
   "bboxes": [

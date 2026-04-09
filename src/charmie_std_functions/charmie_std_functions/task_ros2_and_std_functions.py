@@ -3437,11 +3437,13 @@ class RobotStdFunctions():
                                         minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
             
             if yolo_world_activate:
+                aaa = time.time()
                 self.activate_yolo_world(activate_prompt_free_head=detect_prompt_free_head, activate_tv_prompt_head=detect_tv_prompt_head,
                                         activate_prompt_free_hand=detect_prompt_free_hand, activate_tv_prompt_hand=detect_tv_prompt_hand,
                                         activate_prompt_free_base=detect_prompt_free_base, activate_tv_prompt_base=detect_tv_prompt_base,
                                         minimum_prompt_free_confidence=minimum_prompt_free_confidence, minimum_tv_prompt_confidence=minimum_tv_prompt_confidence,
                                         text_prompts=text_prompts, visual_prompts=visual_prompts, wait_for_end_of=True)
+                print("YOLO ACT TIME:", time.time() - aaa)
 
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             
@@ -6490,7 +6492,7 @@ class RobotStdFunctions():
 
             self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
 
-            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle2_head_cam"], minimum_tv_prompt_confidence=0.50)
+            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle2_head_cam"], minimum_tv_prompt_confidence=0.50)
         
             for h in door_handle:
 
@@ -6499,8 +6501,10 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.25, wait_for_end_of=False)
         if push_pull == "pull":
             self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_1, wait_for_end_of=True)
+            while not self.adjust_omnidirectional_position_is_done():
+                time.sleep(0.1)
 
-            door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_hand=True, visual_prompts=["door_handlef_gripper_cam"], minimum_tv_prompt_confidence=0.50)
+            door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_handle_gripper"], detect_tv_prompt_hand=True, visual_prompts=["door_handlef_gripper_cam"], minimum_tv_prompt_confidence=0.50)
             self.set_arm(command="open_gripper", wait_for_end_of=True)
 
             for g in door_handle:
