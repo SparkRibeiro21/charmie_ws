@@ -1866,7 +1866,7 @@ class RobotStdFunctions():
         success = False
         message = ""
 
-        MAX_ERROR_LEGS_READING = 0.003
+        MAX_ERROR_LEGS_READING = 0.005
         MAX_ERROR_TORSO_READING = 3
 
         MIN_POSSIBLE_LEGS =  0.00 - (MAX_ERROR_LEGS_READING/2)
@@ -5976,7 +5976,7 @@ class RobotStdFunctions():
             #SEARCH FOR OBJECT
 
     
-    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True):
+    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True, navigation_distance = -1):
 
         # CHECK OBJECT NAME FOR SPECIAL CASES
         # CHECK PICK/PLACE MODE
@@ -6176,8 +6176,6 @@ class RobotStdFunctions():
             front_base_adjust_y = base_adjust_y
 
             top_base_adjust_x = 0.08
-            if furniture == "rack":
-                front_base_adjust_x = 0.16
             top_base_adjust_y = base_adjust_y
 
         else:
@@ -6247,10 +6245,14 @@ class RobotStdFunctions():
             dx = furniture_gap - top_base_adjust_x
             dy = top_base_adjust_y                                                                                                            
 
-            self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=True)     
-            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=False)                                                     
+            self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=True)
+            if navigation_distance != -1:
+                self.adjust_omnidirectional_position(dx=navigation_distance, dy=0.0, safety=False)  
+            else:    
+                self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=False)                                                     
 
-            final_x = (gripper_place_position.z - furniture_height - place_height - 0.02)*1000                                     
+            final_x = (gripper_place_position.z - furniture_height - place_height - 0.02)*1000
+            print( "Final X: ", final_x, "gripper position: ", gripper_place_position.z, "furniture height: ", furniture_height, " place_height :", place_height)                                     
 
             self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]                                                         
             self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]                                                       
@@ -6263,11 +6265,14 @@ class RobotStdFunctions():
 
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)    
 
-            self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)                                                                     
+            self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=False)                                                                     
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
 
             #self.set_arm(command="close_gripper", wait_for_end_of=True)
 
@@ -6511,7 +6516,7 @@ class RobotStdFunctions():
                 objects[1] = obj
         return objects
 
-    def close_dishwasher(self):
+    def close_dishwasher(self, task = "finals"):
 
         initial_position = [-194.1,65.3,-147.5,69.3,2.4,358.1]
         second_position = [-155.9,59.4,-130.6,69,50.5,358.1]
@@ -6523,14 +6528,20 @@ class RobotStdFunctions():
 
         self.move_to_position(move_coords=navigation_coords, wait_for_end_of=True)
 
+        self.set_speech(filename="clean_the_table/close_dishwasher_door", wait_for_end_of=False)
+
         self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=True)
-        _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
-        print("furdis", furniture_distance)
-        self.adjust_omnidirectional_position(dx = furniture_distance - 1.14, dy = 0.0,wait_for_end_of=False)
+        if task == "finals":
+            _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+            print("furdis", furniture_distance)
+            dx = furniture_distance - 1.14
+        elif task == "pp":
+            dx = -0.08
+        self.adjust_omnidirectional_position(dx = dx , dy = 0.0,wait_for_end_of=False)
         #self.wait_for_start_button()
         self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position, wait_for_end_of=False)
         #self.wait_for_start_button()
-        self.set_torso_position(legs=0.015, torso=53, wait_for_end_of=False)
+        self.set_torso_position(legs=0.015, torso=51, wait_for_end_of=False)
         while torso_wait:
             l, t = self.get_torso_position()
             print("l: ", l ,"t: ", t)
