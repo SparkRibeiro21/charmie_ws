@@ -149,7 +149,7 @@ class TaskMain():
         self.look_table_objects = [-45, -45]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
-        self.state = self.task_states["Waiting_for_task_start"]
+        self.state = self.task_states["Placing_cutlery"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -176,7 +176,7 @@ class TaskMain():
 
                 self.robot.enter_house_after_door_opening()
 
-                self.state = self.task_states["Move_milk_location"]
+                self.state = self.task_states["Move_kitchen_table"]
                 
 
             elif self.state == self.task_states["Move_milk_location"]:
@@ -409,6 +409,7 @@ class TaskMain():
 
                 if self.GET_DISHES:
                     self.robot.place_object(arm_command="place_spoon_table_funilocopo_v4", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 self.state = self.task_states["Move_cutlery_location"]
 
@@ -433,7 +434,7 @@ class TaskMain():
 
                 if self.GET_CUTLERY:
                     if not self.HELP_PICK_CUTLERY:
-                        self.robot.pick_object_risky(selected_object=self.CUTLERY_TO_PICK)
+                        pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=self.CUTLERY_TO_PICK)
                     else:
                         object_in_gripper = False
                         while not object_in_gripper:
@@ -457,7 +458,7 @@ class TaskMain():
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                     self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
 
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("dishwasher"), wait_for_end_of=True)
+                    self.robot.move_to_position(move_coords = [4.53, 2.74, 90], wait_for_end_of=True)
                     
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                     self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
@@ -471,14 +472,14 @@ class TaskMain():
 
                     self.robot.set_speech(filename="clean_the_table/can_not_open_dishwasher_door_quick", wait_for_end_of=True)
                     time.sleep(2.0)
-                    self.robot.set_arm() ### STILL NEED TO DO THIS
+                    self.robot.place_object_in_furniture(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = 0.18, furniture = "rack")
+                    self.robot.close_dishwasher()
                 
                 self.state = self.task_states["Final_State"]
 
 
             elif self.state == self.task_states["Final_State"]:
                 
-                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="pick_and_place_task/pp_finished", wait_for_end_of=False)
 

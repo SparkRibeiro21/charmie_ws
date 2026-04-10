@@ -5755,17 +5755,17 @@ class RobotStdFunctions():
                         if np.count_nonzero(red):
                             centroid_x = int(float(np.sum(cv2.bitwise_and(X, X, mask=red)))/np.count_nonzero(red))
                             centroid_y = int(float(np.sum(cv2.bitwise_and(Y, Y, mask=red)))/np.count_nonzero(red))
-                        print("Centroid x: ", centroid_x, " Centroid y: ", centroid_y, " Center y: ", obj.box_height/2)
+                            print("Centroid x: ", centroid_x, " Centroid y: ", centroid_y, " Center y: ", obj.box_height/2)
 
-                        #self.wait_for_start_button()
-                        print("Rotation", correct_rotation)
+                            #self.wait_for_start_button()
+                            print("Rotation", correct_rotation)
 
-                        if centroid_y < obj.box_height/2 and correct_rotation > 90:
-                            correct_rotation =correct_rotation - 180
-                        elif centroid_y > obj.box_height/2 and correct_rotation < 90:
-                            correct_rotation =correct_rotation - 180
+                            if centroid_y < obj.box_height/2 and correct_rotation > 90:
+                                correct_rotation =correct_rotation - 180
+                            elif centroid_y > obj.box_height/2 and correct_rotation < 90:
+                                correct_rotation =correct_rotation - 180
 
-                        print("Rotation", correct_rotation)
+                            print("Rotation", correct_rotation)
 
                     security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
                     initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
@@ -5996,12 +5996,15 @@ class RobotStdFunctions():
 
         self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
         self.arm_safe_first = [ -177.2, 72.8, -112.8, -47.3, 105.7, 258.5]
-        self.arm_safe_second = [-151.5, 75, -123.2, -72.4, 110.8, 41.7]
+        if furniture != "rack":
+            self.arm_safe_second = [-151.5, 75, -123.2, -72.4, 110.8, 41.7]
+        else:
+            self.arm_safe_second = [-177.9, 68.8, -112.1, -90.9, 91.2, 43.4]
 
 
         #### VARIABLES ####
 
-        if furniture == "" and furniture_height == -1:
+        if furniture == "":
             print(" YOU NEED TO DEFINE THE FURNITURE WHERE THE ROBOT IS GOING TO PLACE THE OBJECT !!!!!!!!!!")
             return
         elif furniture == "Tray":
@@ -6135,7 +6138,7 @@ class RobotStdFunctions():
                     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
                     return place_height
 
-        else:
+        elif furniture != "rack":
             verified = False
             for furn in self.node.furniture:
                 if str(furn["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():
@@ -6148,19 +6151,22 @@ class RobotStdFunctions():
         if place_mode == "":
             place_mode = self.get_standard_pick_from_object(selected_object)
             print("Place 2:", place_mode)
-        furniture_height = self.get_height_from_furniture(furniture)
+        if furniture != "rack":
+            furniture_height = self.get_height_from_furniture(furniture)
 
-        if shelf_number < 0:
-            furniture_height =  furniture_height[0]
+            if shelf_number < 0:
+                furniture_height =  furniture_height[0]
 
-        elif shelf_number <= len(furniture_height) - 1:
-            furniture_height = furniture_height[shelf_number]
+            elif shelf_number <= len(furniture_height) - 1:
+                furniture_height = furniture_height[shelf_number]
 
-        elif shelf_number > len(furniture_height) -1:
-            furniture_height = furniture_height[len(furniture_height)-1]
+            elif shelf_number > len(furniture_height) -1:
+                furniture_height = furniture_height[len(furniture_height)-1]
 
-        if place_height < 0.0:
-            asked_help = True
+            if place_height < 0.0:
+                asked_help = True
+        else:
+            furniture_height = 0.61
 
         #### CONSTANTS ####
 
@@ -6170,6 +6176,8 @@ class RobotStdFunctions():
             front_base_adjust_y = base_adjust_y
 
             top_base_adjust_x = 0.08
+            if furniture == "rack":
+                front_base_adjust_x = 0.16
             top_base_adjust_y = base_adjust_y
 
         else:
@@ -6502,4 +6510,56 @@ class RobotStdFunctions():
                 objects[0] = objects[1]
                 objects[1] = obj
         return objects
-        
+
+    def close_dishwasher(self):
+
+        initial_position = [-194.1,65.3,-147.5,69.3,2.4,358.1]
+        second_position = [-155.9,59.4,-130.6,69,50.5,358.1]
+        final_position = [-200.2,58.4,-139.7,67,28.3,358.1]
+        initial_position_joints = [ -224.8,   83.4,  -65.0,   -0.5,   74.9,  270.0] 
+
+        navigation_coords = [4.53, 2.74, 90]
+        torso_wait = True
+
+        self.move_to_position(move_coords=navigation_coords, wait_for_end_of=True)
+
+        self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=True)
+        _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+        print("furdis", furniture_distance)
+        self.adjust_omnidirectional_position(dx = furniture_distance - 1.14, dy = 0.0,wait_for_end_of=False)
+        #self.wait_for_start_button()
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position, wait_for_end_of=False)
+        #self.wait_for_start_button()
+        self.set_torso_position(legs=0.015, torso=53, wait_for_end_of=False)
+        while torso_wait:
+            l, t = self.get_torso_position()
+            print("l: ", l ,"t: ", t)
+            if l < 0.028 and t > 38:
+                torso_wait = False
+
+        #self.wait_for_start_button()
+        torso_wait = True
+        self.adjust_omnidirectional_position(dx = 0.20, dy = 0.0,wait_for_end_of=True, safety=False)
+        #self.wait_for_start_button()
+        self.set_torso_position(legs=0.095, torso=25, wait_for_end_of=False)
+        while torso_wait:
+            l, t = self.get_torso_position()
+            print("l: ", l ,"t: ", t)
+            if l > 0.070 and t < 35:
+                torso_wait = False
+
+        print("torso done")
+        torso_wait = True
+        #self.set_arm(command="adjust_joint_motion", joint_motion_values = second_position, wait_for_end_of=True)
+        #self.wait_for_start_button()
+        self.adjust_omnidirectional_position(dx = 0.42, dy = 0.0,wait_for_end_of=True, safety=False)
+        self.adjust_omnidirectional_position(dx = -0.20, dy = 0.0,wait_for_end_of=False, safety=False)
+        self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=False)
+        time.sleep(1)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=False)
+        #self.wait_for_start_button()
+
+
+        pass
+        # arm movements and search for objects for furniture door_handle 
+        # add safety and timeout mechanisms        
