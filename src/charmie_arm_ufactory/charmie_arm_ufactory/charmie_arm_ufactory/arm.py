@@ -354,6 +354,13 @@ class ArmUfactory(Node):
 		self.linear_above_funilocopov4_for_pick_aux = 	[-275.1,  387.1, -114.4, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
 		self.linear_at_funilocopov4_for_place = 		[-102.7,  425.0, -115.1, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
 		self.linear_at_funilocopov4_for_pick = 			[-125.2,  444.1, -114.5, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
+
+
+		# close dishwasher rack
+		self.close_rack_1_pose   = [-414.6, 251.4, 89.5, math.radians(-10.7), math.radians(88.4), math.radians(80.4)]
+		self.close_rack_2_pose	 = [-420.0, 535.5, 97.5, math.radians(-12.3), math.radians(88.4), math.radians(78.8)]
+		self.close_rack_3_pose	 = [-618.9, 531.7, 96.5, math.radians(-10.7), math.radians(88.4), math.radians(80.4)]
+
 		
 	def setup_arm_movement_services(self):
 
@@ -729,6 +736,39 @@ class ArmUfactory(Node):
 			case 1:
 				self.set_gripper_position_(pos=900, wait=True)
 			case 2:
+				self.finish_arm_movement_()
+
+	def open_gripper_fast(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=5000)
+			case 1:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
+
+	def close_dishwasher_rack(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 1:
+				self.set_position_values_(pose=self.close_rack_1_pose, speed=100, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.close_rack_2_pose, speed=100, wait=True)
+			case 3:
+				self.set_gripper_position_(pos=900, wait=False)
+			case 4:
+				self.set_position_values_(pose=self.close_rack_3_pose, speed=100, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.close_rack_2_pose, speed=100, wait=True)
+			case 6:
+				self.set_gripper_position_(pos=0, wait=False)
+			case 7:
+				self.set_position_values_(pose=self.close_rack_1_pose, speed=100, wait=True)
+			case 8:
+				self.set_joint_values_(angles=self.initial_position_joints, speed=60, wait=True)
+			case 9:
 				self.finish_arm_movement_()
 
 
@@ -1355,6 +1395,8 @@ class ArmUfactory(Node):
 				self.close_gripper_with_check_object(0)
 			case "open_gripper":
 				self.open_gripper()
+			case "open_gripper_fast":
+				self.open_gripper_fast()
 			case "slow_open_gripper":
 				self.slow_open_gripper()
 
@@ -1443,6 +1485,9 @@ class ArmUfactory(Node):
 				self.search_table_top_risky_to_initial_pose()
 			case "pick_plate_top":
 				self.pick_plate_top()
+
+			case "close_dishwasher_rack":
+				self.close_dishwasher_rack()
 			
 			# if there is an error regarding a movement
 			case _:

@@ -6234,22 +6234,25 @@ class RobotStdFunctions():
             # while not self.adjust_omnidirectional_position_is_done():
             #     pass  
 
-        elif place_mode == "top":
+        elif place_mode == "top":                                                                              
+
+            dx = furniture_gap - top_base_adjust_x
+            dy = top_base_adjust_y                                                                                                            
+
+            self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=True, wait_for_end_of=True)
+            if navigation_distance != -1:
+                self.adjust_omnidirectional_position(dx=navigation_distance, dy=0.0, safety=False, wait_for_end_of=False)  
+            else:    
+                self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=False, wait_for_end_of=False)
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
-            gripper_place_position = self.get_gripper_localization()                                                                    
+            gripper_place_position = self.get_gripper_localization()
 
-            dx = furniture_gap - top_base_adjust_x
-            dy = top_base_adjust_y                                                                                                            
-
-            self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=True)
-            if navigation_distance != -1:
-                self.adjust_omnidirectional_position(dx=navigation_distance, dy=0.0, safety=False)  
-            else:    
-                self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=False)                                                     
+            while not self.adjust_omnidirectional_position_is_done():
+                pass                                                     
 
             final_x = (gripper_place_position.z - furniture_height - place_height - 0.02)*1000
             print( "Final X: ", final_x, "gripper position: ", gripper_place_position.z, "furniture height: ", furniture_height, " place_height :", place_height)                                     
@@ -6259,24 +6262,34 @@ class RobotStdFunctions():
 
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)        
 
-            time.sleep(0.5)                                                                                                     
-            self.set_arm(command="slow_open_gripper", wait_for_end_of=True)                                                     
-            time.sleep(0.5)                                                                                                  
+            if furniture == "rack":
+                self.set_arm(command="open_gripper_fast", wait_for_end_of=True)
 
-            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)    
+                
+            else:
+                # time.sleep(0.5)                                                                                                     
+                self.set_arm(command="slow_open_gripper", wait_for_end_of=True)                                                     
+                # time.sleep(0.5)                                                                                                  
 
-            self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=False)                                                                     
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
-            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
-            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+            if furniture == "rack":
+                self.set_arm(command="close_dishwasher_rack", wait_for_end_of=True)
+                self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)   
+        
+            else:
+            
+                self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=False)                                                                     
 
-            while not self.adjust_omnidirectional_position_is_done():
-                pass
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+
+                while not self.adjust_omnidirectional_position_is_done():
+                    pass
 
             #self.set_arm(command="close_gripper", wait_for_end_of=True)
 
-            
         # while not self.adjust_omnidirectional_position_is_done():
         #     pass       
 
@@ -6526,33 +6539,40 @@ class RobotStdFunctions():
         navigation_coords = [4.53, 2.74, 90]
         torso_wait = True
 
-        self.move_to_position(move_coords=navigation_coords, wait_for_end_of=True)
+        if task == "finals":
+            self.move_to_position(move_coords=navigation_coords, wait_for_end_of=True)
 
         self.set_speech(filename="clean_the_table/close_dishwasher_door", wait_for_end_of=False)
-
         self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=True)
+
         if task == "finals":
             _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
             print("furdis", furniture_distance)
             dx = furniture_distance - 1.14
+            dy = 0.0
         elif task == "pp":
             dx = -0.08
-        self.adjust_omnidirectional_position(dx = dx , dy = 0.0,wait_for_end_of=False)
+            dy = 0.20
+
+        self.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=False)
         #self.wait_for_start_button()
         self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position, wait_for_end_of=False)
         #self.wait_for_start_button()
         self.set_torso_position(legs=0.015, torso=51, wait_for_end_of=False)
+
         while torso_wait:
             l, t = self.get_torso_position()
             print("l: ", l ,"t: ", t)
             if l < 0.028 and t > 38:
                 torso_wait = False
 
+        self.set_arm(command="open_gripper_fast", wait_for_end_of=False)
         #self.wait_for_start_button()
         torso_wait = True
         self.adjust_omnidirectional_position(dx = 0.20, dy = 0.0,wait_for_end_of=True, safety=False)
         #self.wait_for_start_button()
         self.set_torso_position(legs=0.095, torso=25, wait_for_end_of=False)
+
         while torso_wait:
             l, t = self.get_torso_position()
             print("l: ", l ,"t: ", t)
