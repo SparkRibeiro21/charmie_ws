@@ -2269,7 +2269,7 @@ class RobotStdFunctions():
         request.text_prompts = text_prompts
         request.visual_prompts = visual_prompts
 
-        self.node.call_activate_yolo_world_server(request=request)
+        self.node.call_activate_yolo_world_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
           while not self.node.waited_for_end_of_activate_yolo_world:
@@ -3437,13 +3437,13 @@ class RobotStdFunctions():
                                         minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
             
             if yolo_world_activate:
-                aaa = time.time()
+                ywat = time.time()
                 self.activate_yolo_world(activate_prompt_free_head=detect_prompt_free_head, activate_tv_prompt_head=detect_tv_prompt_head,
                                         activate_prompt_free_hand=detect_prompt_free_hand, activate_tv_prompt_hand=detect_tv_prompt_hand,
                                         activate_prompt_free_base=detect_prompt_free_base, activate_tv_prompt_base=detect_tv_prompt_base,
                                         minimum_prompt_free_confidence=minimum_prompt_free_confidence, minimum_tv_prompt_confidence=minimum_tv_prompt_confidence,
                                         text_prompts=text_prompts, visual_prompts=visual_prompts, wait_for_end_of=True)
-                print("YOLO ACT TIME:", time.time() - aaa)
+                print("YOLO WORLD ACTIVATION TIME:", time.time() - ywat)
 
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             
