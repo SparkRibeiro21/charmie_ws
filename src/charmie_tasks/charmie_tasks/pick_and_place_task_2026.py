@@ -105,6 +105,12 @@ class TaskMain():
         self.CUTLERY_TO_PICK = "Fork"
         self.CUTLERY_LOCATION = "Dinner Table"
 
+        # Objects picked furniture names
+        # self.MILK_LOCATION = "Pantry"
+        self.MILK_LOCATION = "Coffee Table"
+        self.CORNFLAKES_LOCATION = "Coffee Table"
+        self.DISHES_LOCATION = "Dishwasher"
+
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
         self.initial_position = [0.0, 0.0, 0.0]
@@ -121,6 +127,10 @@ class TaskMain():
 
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED.lower().replace(" ", "_")
         self.CUTLERY_LOCATION = self.CUTLERY_LOCATION.lower().replace(" ", "_")
+
+        self.MILK_LOCATION = self.MILK_LOCATION.lower().replace(" ", "_")
+        self.CORNFLAKES_LOCATION = self.CORNFLAKES_LOCATION.lower().replace(" ", "_")
+        self.DISHES_LOCATION = self.DISHES_LOCATION.lower().replace(" ", "_")
 
         # Checks if there is any error in the furniture variables:
         if self.robot.get_room_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED) == None:
@@ -175,12 +185,12 @@ class TaskMain():
 
                     self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.MILK_LOCATION, wait_for_end_of=False)
 
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk"))), wait_for_end_of=True)
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.MILK_LOCATION), wait_for_end_of=True)
                     
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.MILK_LOCATION, wait_for_end_of=False)
                 
                 self.state = self.task_states["Detect_and_pick_milk"]
 
@@ -212,16 +222,22 @@ class TaskMain():
             elif self.state == self.task_states["Move_cornflakes_location"]:
 
                 if self.GET_CORNFLAKES:
+
+                    if self.MILK_LOCATION == self.CORNFLAKES_LOCATION:
+
+                        self.state = self.task_states["Detect_and_pick_cornflakes"]
+
+                    else:
                     
-                    self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
+                        self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                        self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/"+self.CORNFLAKES_LOCATION , wait_for_end_of=False)
 
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes"))), wait_for_end_of=True)
+                        self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.CORNFLAKES_LOCATION), wait_for_end_of=True)
 
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
-                                    
+                        self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/"+self.CORNFLAKES_LOCATION, wait_for_end_of=False)
+                                        
                 self.state = self.task_states["Detect_and_pick_cornflakes"]
 
 
@@ -259,12 +275,12 @@ class TaskMain():
 
                     self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.DISHES_LOCATION, wait_for_end_of=False)
                     
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl"))), wait_for_end_of=True)
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.DISHES_LOCATION), wait_for_end_of=True)
 
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.DISHES_LOCATION, wait_for_end_of=False)
                 
                 self.state = self.task_states["Detect_and_pick_dishes"]
 

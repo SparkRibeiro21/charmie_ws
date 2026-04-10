@@ -5760,9 +5760,9 @@ class RobotStdFunctions():
                         #self.wait_for_start_button()
                         print("Rotation", correct_rotation)
 
-                        if centroid_y < obj.box_height/2 and correct_rotation < 90:
+                        if centroid_y < obj.box_height/2 and correct_rotation > 90:
                             correct_rotation =correct_rotation - 180
-                        elif centroid_y > obj.box_height/2 and correct_rotation > 90:
+                        elif centroid_y > obj.box_height/2 and correct_rotation < 90:
                             correct_rotation =correct_rotation - 180
 
                         print("Rotation", correct_rotation)
@@ -5815,6 +5815,8 @@ class RobotStdFunctions():
                         correct_x_grab -= 19
                     if obj.object_name == "rubiks cube":
                         correct_rotation -= 60
+                    if obj.object_name == "spoon" or obj.object_name == "knife" or obj.object_name == "fork":
+                        correct_x_grab -= 12
 
                     object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
 
