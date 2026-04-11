@@ -6335,15 +6335,14 @@ class RobotStdFunctions():
         self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]                                                         
         self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]                                                       
 
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)        
-        self.set_arm(command="open_gripper_fast", wait_for_end_of=True)                   
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)        
+        self.set_arm(command="adjust_move_tool_line_quick_with_open_gripper_first", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-        self.set_arm(command="close_dishwasher_rack", wait_for_end_of=True)
+        self.set_arm(command="close_dishwasher_rack_part1", wait_for_end_of=True)
+        self.set_arm(command="close_dishwasher_rack_part2", wait_for_end_of=False)
+        self.set_torso_position(legs=0.015, torso=8, wait_for_end_of=False)
         self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)   
     
-    
-
     def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
 
         #INITIATE VARIABLES REPRESENTING TIMER
@@ -6554,7 +6553,6 @@ class RobotStdFunctions():
 
         return success, message, nav_coords_ret
 
-
     def open_door(self, push_pull="push", left_right="left", wait_for_end_of=True):
         # placeholder for door opening std_function
         pass
@@ -6594,33 +6592,37 @@ class RobotStdFunctions():
             self.move_to_position(move_coords=navigation_coords, wait_for_end_of=True)
 
         self.set_speech(filename="clean_the_table/close_dishwasher_door", wait_for_end_of=False)
-        self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=True)
 
         if task == "finals":
+            self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=True)
             _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
             print("furdis", furniture_distance)
             dx = furniture_distance - 1.14
             dy = 0.0
         elif task == "pp":
             dx = -0.08
-            dy = 0.20
+            dy = 0.20 # center of robot is alligned with center of dishwasher, so we need to move a bit to the left, so the arm is alligned with the center of the dishwasher door
 
         self.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=False)
         #self.wait_for_start_button()
         self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position, wait_for_end_of=False)
         #self.wait_for_start_button()
-        self.set_torso_position(legs=0.015, torso=51, wait_for_end_of=False)
 
-        while torso_wait:
-            l, t = self.get_torso_position()
-            print("l: ", l ,"t: ", t)
-            if l < 0.028 and t > 38:
-                torso_wait = False
+        if task == "finals":
+            self.set_torso_position(legs=0.015, torso=51, wait_for_end_of=False)
+
+            while torso_wait:
+                l, t = self.get_torso_position()
+                print("l: ", l ,"t: ", t)
+                if l < 0.028 and t > 38:
+                    torso_wait = False
+        elif task == "pp":
+            self.set_torso_position(legs=0.015, torso=51, wait_for_end_of=True)
 
         self.set_arm(command="open_gripper_fast", wait_for_end_of=False)
         #self.wait_for_start_button()
         torso_wait = True
-        self.adjust_omnidirectional_position(dx = 0.20, dy = 0.0,wait_for_end_of=True, safety=False)
+        self.adjust_omnidirectional_position(dx = 0.25, dy = 0.0, safety=False, wait_for_end_of=True) # antigamente estava 0.2, pode ter de ser mudado novamente para 0.2 por causa das finais 
         #self.wait_for_start_button()
         self.set_torso_position(legs=0.095, torso=25, wait_for_end_of=False)
 
@@ -6634,13 +6636,13 @@ class RobotStdFunctions():
         torso_wait = True
         #self.set_arm(command="adjust_joint_motion", joint_motion_values = second_position, wait_for_end_of=True)
         #self.wait_for_start_button()
-        self.adjust_omnidirectional_position(dx = 0.42, dy = 0.0,wait_for_end_of=True, safety=False)
-        self.adjust_omnidirectional_position(dx = -0.20, dy = 0.0,wait_for_end_of=False, safety=False)
+        self.adjust_omnidirectional_position(dx = 0.42, dy = 0.0, safety=False, wait_for_end_of=True)
+        self.adjust_omnidirectional_position(dx = -0.20, dy = 0.0, safety=False, wait_for_end_of=False)
         self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=False)
-        time.sleep(1)
+        time.sleep(1)     
+        self.set_arm(command="close_gripper", wait_for_end_of=True)                   
         self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=False)
         #self.wait_for_start_button()
-
 
         pass
         # arm movements and search for objects for furniture door_handle 
