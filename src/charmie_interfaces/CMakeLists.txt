@@ -74,6 +74,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetLLMConfirmCommand.srv"
   "srv/GetLLMDemo.srv"
   "srv/GetLLMGPSR.srv"
+  "srv/GetLLMResponse.srv"
   "srv/GetLowLevelButtons.srv"
   "srv/GetMinRadarDistance.srv"
   "srv/GetNeckPosition.srv"
