@@ -3,7 +3,7 @@ from rclpy.node import Node
 import rclpy
 import time
 from charmie_interfaces.msg import ListOfStrings
-from charmie_interfaces.srv import GetLLMResponse\
+from charmie_interfaces.srv import GetLLMResponse
 
 import json
 
