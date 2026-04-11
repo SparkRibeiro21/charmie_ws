@@ -476,7 +476,8 @@ class TaskMain():
                 if self.GET_CUTLERY:
 
                     _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
-                    self.robot.set_speech(filename="clean_the_table/can_not_open_dishwasher_door_quick", wait_for_end_of=True)
+                    self.robot.set_neck(position=self.look_judge, wait_for_end_of=False) 
+                    self.robot.set_speech(filename="pick_and_place_task/help_open_dishwasher_door_and_top_rack", wait_for_end_of=True)
                     time.sleep(4.0)
                     # self.robot.place_object_in_furniture(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = 0.187, furniture = "rack", navigation_distance= furniture_distance - 0.60)
                     self.robot.place_object_in_dishwasher_top_rack_and_close_rack(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = 0.187, navigation_distance= furniture_distance - 0.60)
