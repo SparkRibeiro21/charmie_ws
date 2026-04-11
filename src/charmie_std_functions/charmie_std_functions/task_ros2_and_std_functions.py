@@ -6293,6 +6293,57 @@ class RobotStdFunctions():
         # while not self.adjust_omnidirectional_position_is_done():
         #     pass       
 
+
+    def place_object_in_dishwasher_top_rack_and_close_rack(self, selected_object="", place_mode="", asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True, navigation_distance = -1):
+
+        selected_object = selected_object.replace(" ","_").lower()
+
+        #### PLACE ARM POSITIONS ####
+        self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
+        self.arm_safe_first = [ -177.2, 72.8, -112.8, -47.3, 105.7, 258.5]
+        self.arm_safe_second = [-177.9, 68.8, -112.1, -90.9, 91.2, 43.4]
+
+        #### VARIABLES ####            
+        print("Place 1:", place_mode)
+        furniture_height = 0.61
+
+        #### CONSTANTS ####
+        top_base_adjust_x = 0.08
+        top_base_adjust_y = base_adjust_y
+
+        #### FUNCTION ####
+        _ , _ , furniture_gap = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                                                                        
+        dx = furniture_gap - top_base_adjust_x
+        dy = top_base_adjust_y                                                                                                            
+
+        self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=True, wait_for_end_of=True)
+        self.adjust_omnidirectional_position(dx=navigation_distance, dy=0.0, safety=False, wait_for_end_of=False)   
+
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+
+        gripper_place_position = self.get_gripper_localization()
+
+        while not self.adjust_omnidirectional_position_is_done():
+            pass                                                     
+
+        final_x = (gripper_place_position.z - furniture_height - place_height - 0.02)*1000
+        print( "Final X: ", final_x, "gripper position: ", gripper_place_position.z, "furniture height: ", furniture_height, " place_height :", place_height)                                     
+
+        self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]                                                         
+        self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]                                                       
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)        
+        self.set_arm(command="open_gripper_fast", wait_for_end_of=True)                   
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+
+        self.set_arm(command="close_dishwasher_rack", wait_for_end_of=True)
+        self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)   
+    
+    
+
     def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
 
         #INITIATE VARIABLES REPRESENTING TIMER

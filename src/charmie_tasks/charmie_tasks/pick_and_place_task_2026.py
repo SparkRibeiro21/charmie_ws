@@ -464,8 +464,9 @@ class TaskMain():
 
                     self.robot.move_to_position(move_coords = [4.53, 2.74, 90], wait_for_end_of=True)
                     
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
+                    # commented out for time optimization
+                    # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                    # self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
 
                 self.state = self.task_states["Placing_cutlery"]
 
@@ -477,7 +478,8 @@ class TaskMain():
                     _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
                     self.robot.set_speech(filename="clean_the_table/can_not_open_dishwasher_door_quick", wait_for_end_of=True)
                     time.sleep(4.0)
-                    self.robot.place_object_in_furniture(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = 0.187, furniture = "rack", navigation_distance= furniture_distance - 0.60)
+                    # self.robot.place_object_in_furniture(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = 0.187, furniture = "rack", navigation_distance= furniture_distance - 0.60)
+                    self.robot.place_object_in_dishwasher_top_rack_and_close_rack(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = 0.187, navigation_distance= furniture_distance - 0.60)
                     # self.robot.set_speech(filename="clean_the_table/ask_to_close_dishwasher_rack", wait_for_end_of=True)
                     # time.sleep(1.0)
                     self.robot.close_dishwasher(task = "pp")
