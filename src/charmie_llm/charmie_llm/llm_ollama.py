@@ -13,9 +13,9 @@ import json
 # - Que horas são (pode sair no GPSR)
 # - Onde é que o robô está, local, cidade e país, mas também o evento e o charmie saber dizer o que é o evento (RoboParty, RoboCup)
 
-from charmie_llm.llm_demo_description import LLM_demo_description
-from charmie_llm.llm_planner_desciption import LLM_planner_description
-from charmie_llm.llm_info_extraction_description import LLM_info_extraction_description
+# from charmie_llm.llm_demo_description import LLM_demo_description
+# from charmie_llm.llm_planner_desciption import LLM_planner_description
+# from charmie_llm.llm_info_extraction_description import LLM_info_extraction_description
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
