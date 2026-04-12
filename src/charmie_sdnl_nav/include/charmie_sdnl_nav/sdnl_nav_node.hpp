@@ -85,6 +85,10 @@ private:
   int stop_ticks_remaining_{0};
   int stop_ticks_default_{3};
 
+  // Final stop ticks management, after goal completion
+  int final_stop_ticks_remaining_{0};
+  int final_stop_ticks_default_{6};
+
   // Timing debug
   bool timing_debug_enabled_;
   int timing_debug_period_ms_;
@@ -109,7 +113,8 @@ private:
     ROTATE_TO_TARGET_BEARING = 0, // first_rotate (depends of first_rotate flag)
     MOVE_TO_POSITION         = 1,
     STOP_BEFORE_FINAL_ORIENT = 2, // stop and wait before final orientation
-    FINAL_ORIENT             = 3  // defined final orientation (depends of orientate_after_move flag)
+    FINAL_ORIENT             = 3, // defined final orientation (depends of orientate_after_move flag)
+    FINAL_STOP               = 4  // publish zero cmd_vel for N cycles before succeeding
   };
 
   std::mutex phase_mutex_;
