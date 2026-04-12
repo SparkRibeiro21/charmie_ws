@@ -20,7 +20,7 @@ ros2_modules = {
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
+    "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          True,
     "charmie_llm":                  False,
     "charmie_localisation":         True,
@@ -79,21 +79,8 @@ class TaskMain():
 
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
-        # Which objects should be acquired
-        # self.GET_MILK = True
-        # self.GET_CORNFLAKES = True
-        # self.GET_DISHES = True
-        # self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
+        self.BARMAN_SIDE = "left" # by default, but if barman is detected in code, it changes
 
-        # Name of the table where breakfast is served
-        # self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
-
-        # Initial Position
-
-        self.initial_position = [0.0, 0.0, 0.0]
-        # self.initial_position = [ 5.70,  3.62, 270.0]
-        # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        print(self.initial_position)
         
     def main(self):
 
@@ -114,10 +101,7 @@ class TaskMain():
         # # Set the height of the table where breakfast is served, so that the manual arm movements are adapted to this height (placing and pouring)
         # self.robot.set_height_furniture_for_arm_manual_movements(self.SB_TABLE_HEIGHT) #####
 
-        ####ADDED_VARIABLES######
-        place_furniture = "Dishwasher"
-        pick_furniture = "Dinner Table"
-        
+        ####ADDED_VARIABLES######        
         self.BARMAN_NAV_COORDS = [0.0, 0.0, 0.0] # x, y, theta
         self.CUSTOMER_NAV_COORDS = [0.0, 0.0, 0.0] # x, y, theta
 
@@ -126,12 +110,14 @@ class TaskMain():
 
         self.detected_customers = []
         self.DETECTED_CUSTOMER_INDEX = 0
-        #try self.all_orders = []
-        self.all_orders = ["Sugar","7Up", "Strawberry"]
+        self.all_orders = []
+        # self.all_orders = ["Sugar","7Up", "Strawberry"]
         # self.all_orders = ["Mustard","Cola", "Pringles"]
 
         # Neck Positions
         self.look_forward = [0, 0]
+        self.look_left = [90, 0]
+        self.look_right = [-90, 0]
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
@@ -148,8 +134,6 @@ class TaskMain():
             
             if self.state == self.task_states["Waiting_for_task_start"]:
 
-                self.robot.set_initial_position(self.initial_position)
-
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
@@ -158,7 +142,7 @@ class TaskMain():
 
                 self.robot.wait_for_start_button()
 
-                time.sleep(3.0) # time for person who pressed start button leave to not be shown in qualif video
+                # time.sleep(3.0) # time for person who pressed start button leave to not be shown in qualif video
 
                 self.state = self.task_states["Looking_for_barman"]
                 
@@ -171,48 +155,82 @@ class TaskMain():
                 # tetas = [[180, 0], [90, 0], [-90, 0]]
                 tetas = [[90, 0], [-90, 0]]
                 barman = []
+                barman_ctr = 0
+                correct_barman = False
 
                 # Check for people BACK, LEFT and RIGHT, to figure out who is the barman
-                while not barman:
-                    self.robot.set_speech(filename="restaurant/search_barman", wait_for_end_of=True)
-                    
-                    people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True) ### , only_detect_person_right_in_front=True)
+                while not correct_barman:
+                    barman.clear()
 
-                    print("FOUND:", len(people_found)) 
-                    for p in people_found:
+                    # if for some reason, after two attempts, the robot does not understand who the barman is, it goes back to the default barman side
+                    barman_ctr += 1
+                    if barman_ctr > 2:
 
-                        dist_to_robot = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
-                        if 0.1 <= dist_to_robot <= 2.0: # this filters for nearby people
-                            print("DIST:", dist_to_robot)
-                            barman.append(p)
-                        
-                            # all below can be commented
-                            self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
-                            print("ID:", p.index)
-                            print('Barman position', p.position_relative)
-                            # time.sleep(2.0)
-
-                    # this 'for' can be merged with the previous 'for'
-                    for b in barman:
-                        self.robot.set_neck_coords(position=[b.position_absolute.x, b.position_absolute.y, b.position_absolute.z], wait_for_end_of=True)
-
-                        self.robot.set_speech(filename="restaurant/confirm_barman_touchscreen", wait_for_end_of=True)
-                        answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], timeout=10, instruction="Are you the barman?", speak_results=False, wait_for_end_of=True)
-
-                        if answer == ["yes"]:
+                        if self.BARMAN_SIDE.lower() == "left":
+                            self.robot.set_neck(position=self.look_left, wait_for_end_of=True)
                             ### calculate barman angle and position to me 
-                            self.BARMAN_NAV_COORDS[2] = 0.0 ### CALCULATE ANGLE TO BARMAN, SO WHEN WE COME BACK WE ARE ALREADY FACING THE BARMAN
-                            self.BARMAN_COORDS = [b.position_absolute.x, b.position_absolute.y, b.position_absolute.z]
+                            self.BARMAN_NAV_COORDS = [-0.5, -0.5, 90.0]
+                            self.BARMAN_COORDS = [0.0, 1.5, 1.7]
 
-                            ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
-                            self.robot.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
+                        else:
+                            self.robot.set_neck(position=self.look_right, wait_for_end_of=True)
+                            ### calculate barman angle and position to me 
+                            self.BARMAN_NAV_COORDS = [-0.5, 0.5, -90.0]
+                            self.BARMAN_COORDS = [0.0, -1.5, 1.7]
 
-                            ##### SPEAK : I am going to turn around and search for possible customers. See you soon
-                            self.robot.set_speech(filename="restaurant/go_search", wait_for_end_of=True)
+                        ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
+                        self.robot.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
+                        ##### SPEAK : I am going to turn around and search for possible customers. See you soon
+                        self.robot.set_speech(filename="restaurant/go_search", wait_for_end_of=True)
+                        correct_barman = True
+                    
+                    else: 
+                        self.robot.set_speech(filename="restaurant/search_barman", wait_for_end_of=True)
+                        
+                        people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True) ### , only_detect_person_right_in_front=True)
 
-                            break
+                        print("FOUND:", len(people_found)) 
+                        for p in people_found:
 
-                
+                            dist_to_robot = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
+                            if 0.1 <= dist_to_robot <= 2.0: # this filters for nearby people
+                                print("DIST:", dist_to_robot)
+                                barman.append(p)
+                            
+                                # all below can be commented
+                                self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
+                                print("ID:", p.index)
+                                print('Barman position', p.position_relative)
+                                # time.sleep(2.0)
+
+                        # this 'for' can be merged with the previous 'for'
+                        for b in barman:
+                            self.robot.set_neck_coords(position=[b.position_absolute.x, b.position_absolute.y, b.position_absolute.z], wait_for_end_of=True)
+
+                            self.robot.set_speech(filename="restaurant/confirm_barman_touchscreen", wait_for_end_of=True)
+                            answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], timeout=10, instruction="Are you the barman?", speak_results=False, wait_for_end_of=True)
+
+                            if answer == ["yes"]:
+                                
+                                if b.position_absolute.y > 0:
+                                    self.BARMAN_SIDE = "left" 
+                                    self.BARMAN_NAV_COORDS = [-0.5, -0.5, 90.0]
+                                else:                                
+                                    self.BARMAN_SIDE = "right" 
+                                    self.BARMAN_NAV_COORDS = [-0.5, 0.5, -90.0]
+
+                                ### calculate barman angle and position to me 
+                                self.BARMAN_COORDS = [b.position_absolute.x, b.position_absolute.y, b.position_absolute.z]
+
+                                ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
+                                self.robot.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
+
+                                ##### SPEAK : I am going to turn around and search for possible customers. See you soon
+                                self.robot.set_speech(filename="restaurant/go_search", wait_for_end_of=True)
+
+                                correct_barman = True
+                                break
+
                 self.state = self.task_states["Detecting_waving_customers"]
 
 
@@ -221,11 +239,11 @@ class TaskMain():
                 ### TO DO:
                 ### SHOULD ONLY DETECT PERSON UNDER THE DETECTABLE DISTSANCE, BUT IF ONLY DETECTS PERSON ABOVE A CERTAIN DIST WE CAN SAVE THE ANGLE PERSON WAS DETECTED AND MOVE IN THAT DIRECTION AND SEARCH AGAIN
 
-
                 tetas = [[-60, 0], [0, 0], [60, 0]]
                 customers_list = []
                 self.detected_customers.clear()
                 NUMBER_OF_CUSTOMERS = 2
+                moved_to_find_customers = False
             
                 while not self.detected_customers:
 
@@ -236,24 +254,33 @@ class TaskMain():
 
                         dist_to_robot = math.sqrt(p.position_relative.x**2 + p.position_relative.y**2)
                         if 0.5 <= dist_to_robot <= 6.0: # this filters some errors from very far away customers
-
                             customers_list.append(p)
-                            
-                            # all below can be commented
-                            self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=True)
-                            print("ID:", p.index)
-                            print('Customer position', p.position_relative)
-
 
                     ### REORDER BY DISTANCE ###
+                    customers_list.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
 
+                    # Just to announce and look at the considered customers
+                    if len(customers_list) > 0:
+                        # TODO: say i think i have found some customers
+                        self.robot.set_speech(filename="generic/done", wait_for_end_of=True)
+                        for c in customers_list:
+                            self.robot.set_neck_coords(position=[c.position_absolute.x, c.position_absolute.y, c.position_absolute.z], wait_for_end_of=True)
+                            print("ID:", c.index)
+                            print('Customer position', c.position_relative)
+                            time.sleep(2.0)
 
                     print('Nr of detected customers waving: ', len(customers_list))
 
                     if len(customers_list) > 0:
                         
                         # moves back to barman and looks at barman, because it may not be in the position initial position because of move forward searches
-                        self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, first_rotate=True, wait_for_end_of=True)
+                        if moved_to_find_customers:
+                            self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, first_rotate=True, orient_after_move=True, reached_radius=1.0, wait_for_end_of=True)
+                            self.robot.adjust_obstacles(distance=0.10, direction=0.0, max_speed=0.1, wait_for_end_of=True)
+                            moved_to_find_customers = False
+                        else:
+                            self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, first_rotate=False, orient_after_move=True, reached_radius=1.0, wait_for_end_of=True)
+                        
                         self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
 
                         self.robot.set_speech(filename="restaurant/barman_help_confirm_customers", wait_for_end_of=True)
@@ -303,9 +330,23 @@ class TaskMain():
                         
                     else:
                         # if no customer is found, moves a little bit forward, with safety radar ON
-                        ### THIS CAN BE IMPROVED TO FORCE THE ROBOT TO MOVE TO THE SIDES OR SOMETHING LIKE THAT
                         self.robot.set_speech(filename="restaurant/no_customers", wait_for_end_of=False)
-                        self.robot.adjust_omnidirectional_position(dx=0.5, dy=0.0, wait_for_end_of=True) ### SHOULD HAVE A CASE WHERE IF RADAR IS CLOSER THAN 0.5, should go back to initial position, or something like that 
+                        if not moved_to_find_customers:
+                            if self.BARMAN_SIDE.lower() == "left":
+                                self.robot.adjust_angle(angle=-45, wait_for_end_of=True)
+                                s, m = self.robot.adjust_omnidirectional_position(dx=0.707, dy=0.0, safety=True, wait_for_end_of=True) # 0.707 = sqrt(0.5^2 + 0.5^2), to move diagonally
+                                self.robot.adjust_angle(angle=45, wait_for_end_of=True) # independently of the result of the forward movement, the robot should come back to its original angle
+                                if not s:
+                                    self.robot.adjust_omnidirectional_position(dx=0.5, dy=0.0, safety=True, wait_for_end_of=True)                     
+                            else:
+                                self.robot.adjust_angle(angle=45, wait_for_end_of=True)
+                                s, m = self.robot.adjust_omnidirectional_position(dx=0.707, dy=0.0, safety=True, wait_for_end_of=True) # 0.707 = sqrt(0.5^2 + 0.5^2), to move diagonally
+                                self.robot.adjust_angle(angle=-45, wait_for_end_of=True)
+                                if not s:
+                                    self.robot.adjust_omnidirectional_position(dx=0.5, dy=0.0, safety=True, wait_for_end_of=True)
+                        else:
+                                self.robot.adjust_omnidirectional_position(dx=0.5, dy=0.0, safety=True, wait_for_end_of=True)
+                        moved_to_find_customers = True
 
 
             elif self.state == self.task_states["Approach_customer"]:
@@ -314,7 +355,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
 
-                self.robot.sdnl_move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, wait_for_end_of=True)
+                self.robot.sdnl_move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, first_rotate=False, orient_after_move=False, reached_radius=2.0, wait_for_end_of=True)
+                self.robot.adjust_obstacles(distance=0.30, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
@@ -480,7 +522,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
 
-                self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True)
+                self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, first_rotate=True, orient_after_move=True, reached_radius=0.50, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
@@ -551,7 +593,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
 
-                self.robot.sdnl_move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, wait_for_end_of=True)
+                self.robot.sdnl_move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, first_rotate=False, orient_after_move=False, reached_radius=0.50, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
@@ -563,9 +605,9 @@ class TaskMain():
 
             elif self.state == self.task_states["Deliver_order"]:
 
-                #try
+                # PEDIR A PESSOA PARA RETIRAR O PEDIDO DO TABULEIRO E DA MAO !!!!!!!!
 
-                counter = 0
+                """ counter = 0
                 self.all_orders.reverse()
                 print("LIST: ", self.all_orders)
 
@@ -597,10 +639,8 @@ class TaskMain():
 
                     counter+=1
                 self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
-                self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
-
-                ### INVERT LIST ORDER
-                ### PLACE OBJECTS ON TABLE - FROM AUTO PICK DEMONSTRATION
+                self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True) 
+                """
 
                 self.state = self.task_states["Move_to_barman_after_delivery"] 
             
@@ -611,7 +651,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
 
-                self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, wait_for_end_of=True)
+                self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, first_rotate=True, orient_after_move=True, reached_radius=0.50, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
