@@ -3,7 +3,7 @@ from rclpy.node import Node
 import rclpy
 import time
 from charmie_interfaces.msg import ListOfStrings
-from charmie_interfaces.srv import GetLLMResponse\
+from charmie_interfaces.srv import GetLLMResponse
 
 import json
 
@@ -13,9 +13,9 @@ import json
 # - Que horas são (pode sair no GPSR)
 # - Onde é que o robô está, local, cidade e país, mas também o evento e o charmie saber dizer o que é o evento (RoboParty, RoboCup)
 
-from charmie_llm.llm_demo_description import LLM_demo_description
-from charmie_llm.llm_planner_desciption import LLM_planner_description
-from charmie_llm.llm_info_extraction_description import LLM_info_extraction_description
+# from charmie_llm.llm_demo_description import LLM_demo_description
+# from charmie_llm.llm_planner_desciption import LLM_planner_description
+# from charmie_llm.llm_info_extraction_description import LLM_info_extraction_description
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
@@ -44,6 +44,7 @@ class LLMNode(Node):
         self.llm_ollama_information_server      = self.create_service(GetLLMResponse, "llm_ollama_information",     self.llm_ollama_information_callback)
         self.llm_ollama_gpsr_high_level_server  = self.create_service(GetLLMResponse, "llm_ollama_gpsr_high_level", self.llm_ollama_gpsr_high_level_callback)
         self.llm_ollama_gpsr_low_level_server   = self.create_service(GetLLMResponse, "llm_ollama_gpsr_low_level",  self.llm_ollama_gpsr_low_level_callback)
+        self.get_logger().info("Initialised CHARMIE LLM Offline Ollama Response Servers")
 
     def llm_ollama_demonstration_callback(self, request, response):
         # Type of service received: 
