@@ -14,7 +14,7 @@ sdnl_nav:
 
     # SDNL major params
     lambda_target_not_obs:  1.0
-    lambda_target_with_obs: 0.5
+    lambda_target_with_obs: 0.8
     beta1: 2.0
     beta2: 5.0
 
