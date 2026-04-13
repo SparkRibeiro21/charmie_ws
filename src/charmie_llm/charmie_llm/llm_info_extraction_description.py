@@ -1,69 +1,69 @@
 import ollama
-from openai import OpenAI
+# from openai import OpenAI
 
 import sys
 from pathlib import Path
-
+import time
 import json
 
-class LLM_info_extraction_description:
+# class LLM_info_extraction_description:
 
-    # Initializinng the LLM (loads API key, creates client)
-    def __init__(self):
+#     # Initializinng the LLM (loads API key, creates client)
+#     def __init__(self):
 
-        self.openai_model= "gpt-4o-mini-2024-07-18"
+#         self.openai_model= "gpt-4o-mini-2024-07-18"
 
-        # preparing the api key
-        self.home = str(Path.home())
-        api_key_path = self.home+'/'+"charmie_ws/src/charmie_llm/charmie_llm/api_key/api_key.txt"
+#         # preparing the api key
+#         self.home = str(Path.home())
+#         api_key_path = self.home+'/'+"charmie_ws/src/charmie_llm/charmie_llm/api_key/api_key.txt"
         
-        try:
-            with open(api_key_path, "r") as file:
-                self.api_key = file.read().strip()
-            # print(self.api_key)
-            # print(type(self.api_key))
+#         try:
+#             with open(api_key_path, "r") as file:
+#                 self.api_key = file.read().strip()
+#             # print(self.api_key)
+#             # print(type(self.api_key))
 
-        except FileNotFoundError:
-            print(f"The file api_key.txt does not exist.")
-            sys.exit()  # Ends the program if the file is not found
+#         except FileNotFoundError:
+#             print(f"The file api_key.txt does not exist.")
+#             sys.exit()  # Ends the program if the file is not found
 
-        # fetching the client with the api key
-        self.client = OpenAI(api_key = self.api_key)
+#         # fetching the client with the api key
+#         self.client = OpenAI(api_key = self.api_key)
 
 
-    def extract_info(self, request: str, info_type: str):
+#     def extract_info(self, request: str, info_type: str):
 
-        info_extractor = [
-            {
-                "type": "function",
-                "function": {
-                    "name": "extract_info",
-                    "description": f"Extract the {info_type} from the sentence",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            info_type: {
-                                "type": "string",
-                                "description": f"The {info_type} extracted from the sentence"
-                            }
-                        },
-                        "required": [] 
-                    }
-                }
-            }
-        ]
+#         info_extractor = [
+#             {
+#                 "type": "function",
+#                 "function": {
+#                     "name": "extract_info",
+#                     "description": f"Extract the {info_type} from the sentence",
+#                     "parameters": {
+#                         "type": "object",
+#                         "properties": {
+#                             info_type: {
+#                                 "type": "string",
+#                                 "description": f"The {info_type} extracted from the sentence"
+#                             }
+#                         },
+#                         "required": [] 
+#                     }
+#                 }
+#             }
+#         ]
 
-        response = self.client.chat.completions.create(
-            model=self.openai_model,
-            messages=[{"role": "user", "content": request}],
-            tools=info_extractor,
-            tool_choice={"type": "function", "function": {"name": "extract_info"}}
-        )
+#         response = self.client.chat.completions.create(
+#             model=self.openai_model,
+#             messages=[{"role": "user", "content": request}],
+#             tools=info_extractor,
+#             tool_choice={"type": "function", "function": {"name": "extract_info"}}
+#         )
 
-        args = response.choices[0].message.tool_calls[0].function.arguments
-        parsed = json.loads(args)
+#         args = response.choices[0].message.tool_calls[0].function.arguments
+#         parsed = json.loads(args)
 
-        return parsed.get(info_type) or ""   
+#         return parsed.get(info_type) or ""   
     
 class Ollama_info_extraction_description:
 
@@ -92,10 +92,11 @@ class Ollama_info_extraction_description:
 
         print("Ollama info model initialized.")
 
-    def extract_info(self, request: str, info_type: str):
+    def normalize_command(self, command: str):
+        
+        start_time = time.time()
 
-        # pseudo normalization of the command
-        normalized_command = ollama.chat(
+        response = ollama.chat(
             model=self.ollama_info_model_creative,
             messages=[
                 {
@@ -108,19 +109,35 @@ class Ollama_info_extraction_description:
                 },
                 {
                     "role": "user",
-                    "content": request
+                    "content": f"""
+                        Command: "{command}"
+
+                        Normalized command:
+                        """
                 }
             ]
         )
 
-        # extract info 
-        extraction = ollama.chat(
+        end_time = time.time()
+
+        print ("Normalized command:", response["message"]["content"])
+        print(f"Time taken for normalization: {end_time - start_time} seconds")
+
+        return response["message"]["content"]
+    
+    def extract_info_structured(self, command: str, info_type: str):
+        
+        start_time = time.time()
+
+        response = ollama.chat(
             model=self.ollama_info_model_struct,
             messages=[
                 {
                     "role": "system",
                     "content": (
                         "You are an information extraction engine.\n"
+                        "You must correct speech recognition transcription.\n"
+                        "Fix spelling and phonetic errors.\n"
                         "Extract ONLY the requested information.\n"
                         "Return one word or short phrase.\n"
                         "No explanations."
@@ -129,14 +146,30 @@ class Ollama_info_extraction_description:
                 {
                     "role": "user",
                     "content": f"""
-                        Command: "{normalized_command["message"]["content"]}"
+                        Command: "{command}"
                         Information to extract: {info_type}
 
                         Answer:
                         """
                 }
             ],
-            options={"temperature": 0.0}
+            options={
+                        "temperature": 0.0
+                    }
         )
 
-        return extraction["message"]["content"]
+        end_time = time.time()
+
+        print ("Extracted command:", response["message"]["content"])
+        print(f"Time taken for extraction: {end_time - start_time} seconds")
+
+        return response["message"]["content"]
+
+    def extract_info(self, request: str, info_type: str):
+
+        normalized_command = self.normalize_command(request)
+        extracted_info = self.extract_info_structured(normalized_command, info_type)
+
+        return extracted_info
+
+ 

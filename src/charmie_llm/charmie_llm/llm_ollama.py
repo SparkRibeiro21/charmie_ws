@@ -39,7 +39,7 @@ class LLMNode(Node):
         # self.llm_planner_description = LLM_planner_description()
         # self.llm_info_extraction_description = LLM_info_extraction_description()
 
-        self.ollama_planner = Ollama_planner_description()
+        #self.ollama_planner = Ollama_planner_description()
         self.ollama_info_extraction = Ollama_info_extraction_description()
 
         ### HERE WE NEED TO ADD A DUMMY FUNCTION TO GET A FIRST RESPONSE FROM THE LLM

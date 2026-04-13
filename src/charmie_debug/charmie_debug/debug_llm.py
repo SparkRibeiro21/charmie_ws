@@ -283,33 +283,46 @@ class TaskMain():
 
                 # resp = self.robot.get_llm_ollama_demonstration(command="Test D", mode="HRI X", wait_for_end_of=True)
                 # print(resp)
-
+                start_time = time.time()
                 resp = self.robot.get_llm_ollama_information(command="Hi my name is Sarah I like orange juice", mode="name", wait_for_end_of=True)
-                print(resp)
+                end_time = time.time()
+                print(f"Response: {resp}, Time taken: {end_time - start_time}")
 
+                start_time = time.time()
                 resp = self.robot.get_llm_ollama_information(command="Hi my name is Sarah I like orange juice", mode="favorite drink", wait_for_end_of=True)
-                print(resp)
+                end_time = time.time()
+                print(f"Response: {resp}, Time taken: {end_time - start_time}")
 
+                start_time = time.time()
                 resp = self.robot.get_llm_ollama_information(command="I'm David and I drink coffee", mode="name", wait_for_end_of=True)
-                print(resp)
+                end_time = time.time()
+                print(f"Response: {resp}, Time taken: {end_time - start_time}")
 
+                start_time = time.time()
                 resp = self.robot.get_llm_ollama_information(command="I'm David and I drink coffee", mode="favorite drink", wait_for_end_of=True)
-                print(resp)
+                end_time = time.time()
+                print(f"Response: {resp}, Time taken: {end_time - start_time}")
 
 
-
+                start_time = time.time()
                 resp = self.robot.get_llm_ollama_information(command="Hello im Jhon and i like capachino", mode="name", wait_for_end_of=True)
-                print(resp)
+                end_time = time.time()
+                print(f"Response: {resp}, Time taken: {end_time - start_time}")
 
+                start_time = time.time()
                 resp = self.robot.get_llm_ollama_information(command="Hello im Jhon and i like capachino", mode="favorite drink", wait_for_end_of=True)
-                print(resp)
+                end_time = time.time()
+                print(f"Response: {resp}, Time taken: {end_time - start_time}")
 
-
+                start_time = time.time()
                 resp = self.robot.get_llm_ollama_information(command="Name is Maik and favorite drink ice tree", mode="name", wait_for_end_of=True)
-                print(resp)
+                end_time = time.time()
+                print(f"Response: {resp}, Time taken: {end_time - start_time}")
 
+                start_time = time.time()
                 resp = self.robot.get_llm_ollama_information(command="Name is Maik and favorite drink ice tree", mode="favorite drink", wait_for_end_of=True)
-                print(resp)
+                end_time = time.time()
+                print(f"Response: {resp}, Time taken: {end_time - start_time}")
 
                 # resp = self.robot.get_llm_ollama_gpsr_high_level(command="Test H", mode="HRI X", wait_for_end_of=True)
                 # print(resp)
