@@ -13,26 +13,27 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 True,
+    "charmie_face":                 False,
     "charmie_head_camera":          False,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         True,
-    "charmie_low_level":            True,
-    "charmie_navigation":           True,
-    "charmie_nav2":                 True,
-    "charmie_nav_sdnl":             False,
-    "charmie_neck":                 True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
+    "charmie_nav_sdnl":             True,
+    "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
-    "charmie_yolo_objects":         True,
+    "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
@@ -71,9 +72,9 @@ class TaskMain():
         self.NAVIGATION_TARGET = self.NAVIGATION_TARGET.replace(" ","_").lower()
         self.NAVIGATION_TARGET2 = "desk"
         self.NAVIGATION_TARGET3 = "Left Lounge Chair"
-        self.NAVIGATION_TARGET4 = [ 2.0,  2.0,   0.0]
-        self.NAVIGATION_TARGET5 = [ 2.0, -2.0,   0.0]
-        self.NAVIGATION_TARGET6 = [ 0.0, -0.0,  90.0]
+        self.NAVIGATION_TARGET4 = [ 4.0,  0.0,   0.0]
+        self.NAVIGATION_TARGET5 = [ 4.0,  0.0,   0.0]
+        self.NAVIGATION_TARGET6 = [ 0.0,  0.2,   0.0]
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -81,7 +82,7 @@ class TaskMain():
         self.look_judge = [-90, 0]
         
         # VARS ...
-        self.state = Move_to_pre_pick_position_after_search_for_objects
+        self.state = Waiting_for_start_button
 
         self.robot.set_rgb(RED+BACK_AND_FORTH_8)
 
@@ -116,15 +117,15 @@ class TaskMain():
 
                 while True:
 
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
-                    print("Moved to target 4")
+                    # self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                    # print("Moved to target 4")
                     # time.sleep(10.0)
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, ignore_obstacles=False, first_rotate=False, orient_after_move=True, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
                     print("Moved to target 5")
-                    # time.sleep(10.0)
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET6, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                    time.sleep(10.0)
+                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET6, ignore_obstacles=False, first_rotate=False, orient_after_move=True, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
                     print("Moved to target 6")
-                    # time.sleep(10.0)
+                    time.sleep(10.0)
                
 
                 # to test move_to_pre_pick_position_after_search_for_objects std_function

@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "llm = charmie_llm.llm:main"
+            "llm = charmie_llm.llm:main",
+            "llm_ollama = charmie_llm.llm_ollama:main"
         ],
     },
 )

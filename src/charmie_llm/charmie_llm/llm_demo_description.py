@@ -139,8 +139,8 @@ class LLM_demo_description:
 
         # Extract the assistant's reply
         reply = response.output_text
-        print (f"LLM response:", response)
-        # print (f"LLM output:", response.output)
-        print (f"LLM response.output_text:", reply)
+        # print (f"LLM response:", response)
+        # # print (f"LLM output:", response.output)
+        # print (f"LLM response.output_text:", reply)
 
         return reply
