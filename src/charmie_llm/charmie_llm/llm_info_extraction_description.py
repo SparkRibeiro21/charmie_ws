@@ -1,3 +1,4 @@
+import ollama
 from openai import OpenAI
 
 import sys
@@ -63,3 +64,79 @@ class LLM_info_extraction_description:
         parsed = json.loads(args)
 
         return parsed.get(info_type) or ""   
+    
+class Ollama_info_extraction_description:
+
+    def __init__(self):
+        
+        self.ollama_info_model_struct = "gemma3:1b"
+
+        response = ollama.chat(
+            model= self.ollama_info_model_struct,
+            messages=[{"role":"user",
+                       "content":" Your task is to extract info from the commands you are given. The command you'll receive are a transcription of a spoken command and they may contain some errors or misspels. The info you will need to extract will always be a common english word. When you receive the command, you will be also given the type of info you need to extract. Return ONLY the extracted info. Your output should only be one word or phrase, not a sentence. If you cannot find the info in the command, return an empty string."}]
+        )
+
+        print(response["message"]["content"])
+
+        self.ollama_info_model_creative = "llama3.2:1b"
+
+        response = ollama.chat(
+            model= self.ollama_info_model_creative,
+            messages=[{"role":"user",
+                       "content":" Your task is to extract info from the commands you are given. The command you'll receive are a transcription of a spoken command and they may contain some errors or misspels. The info you will need to extract will always be a common english word. When you receive the command, you will be also given the type of info you need to extract. Return ONLY the extracted info. Your output should only be one word or phrase, not a sentence. If you cannot find the info in the command, return an empty string."}]
+        )
+
+        print(response["message"]["content"])
+
+
+        print("Ollama info model initialized.")
+
+    def extract_info(self, request: str, info_type: str):
+
+        # pseudo normalization of the command
+        normalized_command = ollama.chat(
+            model=self.ollama_info_model_creative,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You correct speech recognition transcription.\n"
+                        "Fix spelling and phonetic errors.\n"
+                        "Return ONLY the corrected sentence."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": request
+                }
+            ]
+        )
+
+        # extract info 
+        extraction = ollama.chat(
+            model=self.ollama_info_model_struct,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an information extraction engine.\n"
+                        "Extract ONLY the requested information.\n"
+                        "Return one word or short phrase.\n"
+                        "No explanations."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+                        Command: "{normalized_command["message"]["content"]}"
+                        Information to extract: {info_type}
+
+                        Answer:
+                        """
+                }
+            ],
+            options={"temperature": 0.0}
+        )
+
+        return extraction["message"]["content"]

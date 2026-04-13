@@ -1,3 +1,4 @@
+import ollama
 from openai import OpenAI
 
 import sys
@@ -122,6 +123,70 @@ class LLM_planner_description:
 
     #     return low_level_plan
 
+
+class Ollama_planner_description:
+
+    # Initializinng the LLM (loads API key, creates client)
+    def __init__(self):
+
+        self.hlp_model= "llama3.2:3b"
+        response = ollama.chat(
+            model= self.hlp_model,
+            messages=[{"role":"user",
+                       "content":"You are a robot high~level your job is to break down a task into a clear, sequential high-level plan. "
+                       "Your output must be a high-level plan in the form of a paragraph describing the plan. "
+                       "Each step should be a sentence. "
+                       "Write in first person as if you are the robot executing the plan (e.g., 'I will move to the kitchen'). "
+                       "Keep each step simple and include only necessary information. "
+                       "Follow these rules strictly: "
+                       "1. People do not move unless explicitly instructed. "
+                       "2. Do not assume any furniture's location. "
+                       "3. You must be at the same location as a person to talk to or hand something to them. "
+                       "4. You must physically move to a location before interacting with anything or anyone there. "
+                       "5. When delivering to a named person, include a step to move to that person by name, then a step to hand the object. "
+                       "6. The environment will be prepared so that all necessary objects are easily visible and accessible (no need to search for objects or open doors/drawers)." }]
+        )
+        print(response["message"]["content"])
+
+        self.llp_model= "gemma3:1b"
+        response = ollama.chat(
+            model= self.llp_model,
+            messages=[{"role":"user",
+                       "content":"You are a low-level robot planner. "
+                       "You will be given a high-level plan as a paragraph where each sentence is one step. "
+                       "Your job is to translate every step into one or more sequential function calls with the correct parameters. "
+                       "To talk to a person you need to move to their location first. "
+                       "Follow these rules strictly: "
+                       "1. Process steps in order — do not skip or reorder them. "
+                       "2. The pick_object function already handles searching for the object, so if both appear, only call pick_object once. "
+                       # The move_to already handles figuring out the location of the target (person, furniture, object or room), so no need to specify that in the plan.
+                       "3. To interact with or hand something to a person, you must first call the appropriate move_to_person function. "
+                       "4. Use move_to_person_through_name when the person is identified by name. "
+                       "5. Use move_to_person_with_pose or move_to_person_with_clothing when the person is identified by appearance. "
+                       "6. Use move_to_initial_person_position to return to the person who made the original request. "
+                       "7. Use move_to_furniture when moving to a piece of furniture (e.g. cabinet, side table). "
+                       "8. Use move_to_room only when moving to a room without a specific furniture target. "
+                       # USE PICK_OBJECT TO SEARCH AND PICK
+                       "9. hand_object_to_person has no parameters — only call it after already being next to the person. "
+                       "10. To talk to a person you need to move to their location first."
+                       "11. Always complete ALL steps in the plan. Do not stop until every sentence has been translated into function calls." }]
+        )
+        print(response["message"]["content"])
+
+
+        
+        print("HLP model initialized")
+
+    def high_level_planner(self, request: str):
+
+        response = ollama.chat(
+            model= self.hlp_model,
+            messages=[{"role":"user",
+                       "content":"The request is: " + request }]
+        )
+
+        return response["message"]["content"]
+    
 
 
 

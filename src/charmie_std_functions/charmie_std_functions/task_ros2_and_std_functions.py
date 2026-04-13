@@ -4006,6 +4006,14 @@ class RobotStdFunctions():
             self.node.waited_for_end_of_llm_ollama_demonstration = False
 
         print(self.node.llm_ollama_demonstration_response)
+
+        # if self.node.llm_ollama_demonstration_response == "":
+            #IM SORRY, I COULD NOT UNDERSTAND YOUR INFO_TYPE, CAN YOU REPEAT?
+            # self.set_speech(filename="generic/", wait_for_end_of=True)
+            # get audio again (do for max 3 times) otherwise move on
+            # resend request to LLM
+
+
         return self.node.llm_ollama_demonstration_response
     
     def get_llm_ollama_information(self, command="", mode="", wait_for_end_of=True):
