@@ -12,7 +12,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 ros2_modules = {
     "charmie_arm":                  False,
-    "charmie_audio":                True,
+    "charmie_audio":                False,
     "charmie_face":                 False,
     "charmie_head_camera":          False,
     "charmie_hand_camera":          False,
@@ -30,7 +30,7 @@ ros2_modules = {
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,

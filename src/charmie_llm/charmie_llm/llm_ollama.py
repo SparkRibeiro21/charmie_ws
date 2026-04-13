@@ -4,7 +4,7 @@ from rclpy.node import Node
 import rclpy
 import time
 from charmie_interfaces.msg import ListOfStrings
-from charmie_interfaces.srv import GetLLMResponse\
+from charmie_interfaces.srv import GetLLMResponse
 
 import json
 
@@ -50,6 +50,7 @@ class LLMNode(Node):
         self.llm_ollama_information_server      = self.create_service(GetLLMResponse, "llm_ollama_information",     self.llm_ollama_information_callback)
         self.llm_ollama_gpsr_high_level_server  = self.create_service(GetLLMResponse, "llm_ollama_gpsr_high_level", self.llm_ollama_gpsr_high_level_callback)
         self.llm_ollama_gpsr_low_level_server   = self.create_service(GetLLMResponse, "llm_ollama_gpsr_low_level",  self.llm_ollama_gpsr_low_level_callback)
+        self.get_logger().info("Initialised CHARMIE LLM Offline Ollama Response Servers")
 
     def llm_ollama_demonstration_callback(self, request, response):
         # Type of service received: 
