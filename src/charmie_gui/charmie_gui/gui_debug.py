@@ -1812,7 +1812,7 @@ class DebugVisualMain():
             self.activate_yolo_world(activate_prompt_free_head = toggle_activate_prompt_free_head, activate_tv_prompt_head = toggle_activate_tv_prompt_head, \
                                      activate_prompt_free_hand = toggle_activate_prompt_free_hand, activate_tv_prompt_hand = toggle_activate_tv_prompt_hand, \
                                      activate_prompt_free_base = toggle_activate_prompt_free_base, activate_tv_prompt_base = toggle_activate_tv_prompt_base, \
-                                     text_prompts=["door_handle", "cabinet"], visual_prompts=[])
+                                     text_prompts=["chair", "cabinet"], visual_prompts=[])
 
         self.last_toggle_activate_objects_head   = toggle_activate_objects_head 
         self.last_toggle_activate_furniture_head = toggle_activate_furniture_head
