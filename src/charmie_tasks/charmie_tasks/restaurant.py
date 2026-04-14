@@ -614,6 +614,8 @@ class TaskMain():
                 time.sleep(1.0)
                 self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table_how_to", wait_for_end_of=True)
 
+                # TODO: I need you to inform the rest of the code if both objects are on the tray or if one of them is in the hand
+
                 """ tetas = [[0, -45], [-40, -45], [40, -45]]
                 ########## HERE YOU HAVE TO USE: current_order and not all.orders !!!!!!!!!!!!!!!!!!!!!!!!!
                 #try
@@ -664,7 +666,45 @@ class TaskMain():
             elif self.state == self.task_states["Deliver_order"]:
 
                 # PEDIR A PESSOA PARA RETIRAR O PEDIDO DO TABULEIRO E DA MAO !!!!!!!!
-                self.robot.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True)
+                self.robot.set_speech(filename="restaurant/start_restaurant", wait_for_end_of=True) # remove later
+
+                self.robot.detected_person_to_face_path(person=self.detected_customers[self.DETECTED_CUSTOMER_INDEX-1], send_to_face=True)
+                
+                # DEAR CUSTOMER, I HAVE YOU ORDER.
+                # PLEASE TAKE THE OBJECTS THAT ARE ON MY TRAY
+
+                self.is_object_in_hand = False ### remove later, i need this to be filled by the pick state
+                
+                if self.is_object_in_hand:
+                    time.sleep(5.0)
+                    ### LET ME GIVE YOU THE OBJECT THAT IS ON MY HAND
+                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                    ### I WILL OPEN MY HAND IN 3, 2, 1.
+                    self.set_arm(command="open_gripper", wait_for_end_of=True)
+                    time.sleep(3.0)
+                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    ### ENJOY YOUR ORDER. SEE YOU SOON
+                else:
+                    ### SAY: PLEASE PRESS YES ON MY FACE WHEN YOU HAVE TAKEN YOUR ORDER
+                    order_taken = False
+                    order_taken_ctr = 0
+                    max_attempts = 3
+                    while not order_taken and order_taken_ctr <= max_attempts:
+                        order_taken_ctr+=1
+                        self.robot.set_speech(filename="restaurant/confirm_barman_touchscreen", wait_for_end_of=True) ### DID YOU TAKE YOUR ORDER?
+                        answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], timeout=10, instruction="Did you take order?", speak_results=False, wait_for_end_of=True)
+
+                        if answer == ["yes"]:
+                            order_taken = True
+                            ### ENJOY YOUR ORDER. SEE YOU SOON
+                        else:
+                            pass                         
+                            ### SAY: OK I WILL WAIT A BIT LONGER
+
+                        if not order_taken_ctr and order_taken_ctr == max_attempts:
+                            pass
+                            ### SAY THERE SEEMS TO BE A PROBLEM, BUT I NEED TO KEEP SERVING THE OTHER CUSTOMER, SEE YOU SSON 
 
                 """ counter = 0
                 self.all_orders.reverse()
