@@ -6689,6 +6689,8 @@ class RobotStdFunctions():
             grab_door = [0.0, 0.06*1000, 0.02*1000, -20.0, 0.0, 0.0]
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_door, wait_for_end_of=True) 
             self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.0, wait_for_end_of=True, safety=False) 
+            self.adjust_omnidirectional_position(dx = -0.17 , dy = -0.1, wait_for_end_of=True, safety=False) 
+
             
         
         self.wait_for_start_button()
