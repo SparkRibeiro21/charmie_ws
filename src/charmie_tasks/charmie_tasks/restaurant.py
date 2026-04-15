@@ -142,6 +142,8 @@ class TaskMain():
 
                 self.robot.wait_for_start_button()
 
+                self.robot.set_speech(filename="restaurant/restaurant_introduction", wait_for_end_of=True)
+
                 # time.sleep(3.0) # time for person who pressed start button leave to not be shown in qualif video
 
                 self.state = self.task_states["Looking_for_barman"]
@@ -149,10 +151,10 @@ class TaskMain():
 
             elif self.state == self.task_states["Looking_for_barman"]:
                
-                ### TO DO:
-                ### AFTER X AMOUNT OF TIMES, SHOULD HAVE A PLAN B THAT WORKS 100% OF THE TIMES, EITHER BY DEFAULT OR ASK BARMAN TO PRESS SOMETHING ON THE SCREEN
+                self.robot.set_speech(filename="restaurant/customers_stop_waving", wait_for_end_of=True)
+                time.sleep(1.0)
+                self.robot.set_speech(filename="restaurant/barman_instructions", wait_for_end_of=True)
 
-                # tetas = [[180, 0], [90, 0], [-90, 0]]
                 tetas = [[90, 0], [-90, 0]]
                 barman = []
                 barman_ctr = 0
@@ -253,7 +255,9 @@ class TaskMain():
                 self.DETECTED_CUSTOMER_INDEX = 0
                 NUMBER_OF_CUSTOMERS = 2
                 moved_to_find_customers = False
-            
+
+                self.robot.set_speech(filename="restaurant/customers_wave", wait_for_end_of=True)
+
                 while not self.detected_customers:
 
                     customers_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
@@ -270,7 +274,8 @@ class TaskMain():
 
                     # Just to announce and look at the considered customers
                     if len(customers_list) > 0:
-                        # TODO: say i think i have found some customers
+                        # self.robot.set_speech(filename="restaurant/found_one_customer", wait_for_end_of=True)
+                        self.robot.set_speech(filename="restaurant/found_customers", wait_for_end_of=True)
                         for c in customers_list:
                             self.robot.detected_person_to_face_path(person=c, send_to_face=True)
                             self.robot.set_neck_coords(position=[c.position_absolute.x, c.position_absolute.y, c.position_absolute.z], wait_for_end_of=True)
