@@ -129,9 +129,28 @@ class Ollama_planner_description:
     # Initializinng the LLM (loads API key, creates client)
     def __init__(self):
 
-        self.hlp_model= "llama3.2:3b"
+        # self.hlp_model= "llama3.2:3b"
+        self.hlp_struct_model= "gemma3:1b"
         response = ollama.chat(
-            model= self.hlp_model,
+            model= self.hlp_struct_model,
+            messages=[{"role":"user",
+                       "content":"You are a robot high~level your job is to break down a task into a clear, sequential high-level plan. "
+                       "Your output must be a high-level plan in the form of a paragraph describing the plan. "
+                       "Each step should be a sentence. "
+                       "Write in first person as if you are the robot executing the plan (e.g., 'I will move to the kitchen'). "
+                       "Keep each step simple and include only necessary information. "
+                       "Follow these rules strictly: "
+                       "1. People do not move unless explicitly instructed. "
+                       "2. Do not assume any furniture's location. "
+                       "3. You must be at the same location as a person to talk to or hand something to them. "
+                       "4. You must physically move to a location before interacting with anything or anyone there. "
+                       "5. When delivering to a named person, include a step to move to that person by name, then a step to hand the object. "
+                       "6. The environment will be prepared so that all necessary objects are easily visible and accessible (no need to search for objects or open doors/drawers)." }]
+        )
+
+        self.hlp_creative_model= "llama3.2:3b"
+        response = ollama.chat(
+            model= self.hlp_creative_model,
             messages=[{"role":"user",
                        "content":"You are a robot high~level your job is to break down a task into a clear, sequential high-level plan. "
                        "Your output must be a high-level plan in the form of a paragraph describing the plan. "
@@ -148,31 +167,6 @@ class Ollama_planner_description:
         )
         print(response["message"]["content"])
 
-        self.llp_model= "gemma3:1b"
-        response = ollama.chat(
-            model= self.llp_model,
-            messages=[{"role":"user",
-                       "content":"You are a low-level robot planner. "
-                       "You will be given a high-level plan as a paragraph where each sentence is one step. "
-                       "Your job is to translate every step into one or more sequential function calls with the correct parameters. "
-                       "To talk to a person you need to move to their location first. "
-                       "Follow these rules strictly: "
-                       "1. Process steps in order — do not skip or reorder them. "
-                       "2. The pick_object function already handles searching for the object, so if both appear, only call pick_object once. "
-                       # The move_to already handles figuring out the location of the target (person, furniture, object or room), so no need to specify that in the plan.
-                       "3. To interact with or hand something to a person, you must first call the appropriate move_to_person function. "
-                       "4. Use move_to_person_through_name when the person is identified by name. "
-                       "5. Use move_to_person_with_pose or move_to_person_with_clothing when the person is identified by appearance. "
-                       "6. Use move_to_initial_person_position to return to the person who made the original request. "
-                       "7. Use move_to_furniture when moving to a piece of furniture (e.g. cabinet, side table). "
-                       "8. Use move_to_room only when moving to a room without a specific furniture target. "
-                       # USE PICK_OBJECT TO SEARCH AND PICK
-                       "9. hand_object_to_person has no parameters — only call it after already being next to the person. "
-                       "10. To talk to a person you need to move to their location first."
-                       "11. Always complete ALL steps in the plan. Do not stop until every sentence has been translated into function calls." }]
-        )
-        print(response["message"]["content"])
-
 
         
         print("HLP model initialized")
@@ -180,12 +174,83 @@ class Ollama_planner_description:
     def high_level_planner(self, request: str):
 
         response = ollama.chat(
-            model= self.hlp_model,
-            messages=[{"role":"user",
-                       "content":"The request is: " + request }]
+            model= self.hlp_creative_model,
+            messages= [{"role": "system",
+                        "content": (
+                            "You are a robot task planner. Convert a command into atomic steps separated by semicolons (;). "
+                            "Write in first person. One paragraph only. No explanations or reasoning.\n\n"
+
+                            "Follow these rules strictly:\n"
+                            "1. Never invent objects, people, or places not in the command.\n"
+                            "2. Always move before interacting with anything.\n"
+                            "3. After moving to a location, always look for the object or person before touching or addressing them.\n"
+                            "4. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
+
+                            "EXAMPLES:\n"
+                            "Command: find a toy in the living room and place it on the cabinet\n"
+                            "Answer: I will move to the living room; I will look for the toy; I will pick up the toy; I will move to the cabinet; I will place the toy on the cabinet.\n\n"
+
+                            "Command: take a fruit from the armchair and bring it to Robin in the bathroom\n"
+                            "Answer: I will move to the armchair; I will look for the fruit; I will pick up the fruit; I will move to the bathroom; I will look for Robin; I will move towards Robin; I will hand the fruit to Robin.\n\n"
+
+                            "Command: meet Paris at the sofa and follow them\n"
+                            "Answer: I will move to the sofa; I will look for Paris; I will move towards Paris; I will greet Paris; I will follow Paris.\n\n"
+
+                            "Command: tell me how many toys are on the bed\n"
+                            "Answer: I will move to the bed; I will count the toys on the bed; I will move to the initial position; I will speak the result.\n\n"
+
+                            "Command: tell me what is the heaviest object on the shelf\n"
+                            "Answer: I will move to the shelf; I will look for the heaviest object; I will move to the initial position; I will speak the result.\n\n"
+
+                            "Command: go to the kitchen then find the person pointing left and say your team name\n"
+                            "Answer: I will move to the kitchen; I will look for the person pointing left; I will move towards that person; I will tell my team name.\n\n"
+
+                            "Command: locate the waving person in the hallway and take them from hallway to the sofa\n"
+                            "Answer: I will move to the hallway; I will look for the waving person; I will move towards the waving person; I will guide them from hallway to the sofa.\n"
+                        )},
+                      {"role":"user",
+                       "content":f"""
+                        Command: "{request}"
+
+                        Answer:
+                        """}]
         )
 
+        print("1st Plan Generated:", response["message"]["content"])
+
         return response["message"]["content"]
+
+        # response_v2 = ollama.chat(
+        #     model= self.hlp_struct_model,
+        #     messages=[{"role":"system",
+        #                "content":"You are a robot high~level planner. "
+        #                          "Receive a high-level plan in the form of a paragraph describing the plan. Each step is a sentence seperated by a semicolon. "
+        #                          "You must correct any errors in the plan and return a corrected version of the plan. "
+        #                          "Your output must be a high-level plan in the form of a paragraph describing the plan. "
+        #                          "Each sentence should be an actionable step. "
+        #                          "The multiple steps should be seperated by a semicolon. "
+        #                          "Write in first person as if you are the robot executing the plan (e.g., 'I will move to the kitchen'). "
+        #                          "Keep each step simple and include only necessary information."
+        #                          "You only have these actions: move_to, pick:object"
+        #                          "Follow these rules strictly: "
+        #                          "1. People do not move unless explicitly instructed. "
+        #                          "2. Do not assume any furniture's location. "
+        #                          "3. You must physically move to a location before interacting with any furniture or anyone there. "
+        #                          "4. When delivering to a named person, include a step to move to that person by name, then a step to hand the object. "
+        #                          "5. The environment will be prepared so that all necessary objects are easily visible and accessible (no need to search for objects or open doors/drawers). "},
+        #               {"role":"user",
+        #                "content":f"""
+        #                 Request: "{request}"
+        #                 Plan generated: "{response["message"]["content"]}"
+        #                 Current location: Kitchen
+
+        #                 Answer:
+        #                 """}]
+        # )
+
+        # print("Corrected Plan Generated:", response_v2["message"]["content"])
+
+        # return response_v2["message"]["content"]
     
 
 

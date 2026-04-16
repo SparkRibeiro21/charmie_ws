@@ -39,8 +39,8 @@ class LLMNode(Node):
         # self.llm_planner_description = LLM_planner_description()
         # self.llm_info_extraction_description = LLM_info_extraction_description()
 
-        #self.ollama_planner = Ollama_planner_description()
-        self.ollama_info_extraction = Ollama_info_extraction_description()
+        self.ollama_planner = Ollama_planner_description()
+        # self.ollama_info_extraction = Ollama_info_extraction_description()
 
         ### HERE WE NEED TO ADD A DUMMY FUNCTION TO GET A FIRST RESPONSE FROM THE LLM
         ### THIS IS BECAUSE THE FIRST TIME WE CALL THE LLM IT TAKES A LONG TIME TO LOAD, SO WE WANT TO DO IT IN THE BEGINNING, SO THAT WHEN WE CALL IT LATER ON, IT IS ALREADY LOADED AND READY TO RESPOND QUICKLY
@@ -136,9 +136,18 @@ class LLMNode(Node):
         self.get_logger().info("LLM GPSR HIGH LEVEL REQUEST RECEIVED")
         print("Received:", request.command)
 
-        """ # sends the command to the LLM and gets the response (the generated plan)
-        llm_response = self.llm_planner_description.handle_request(request.command)
-        
+        # sends the command to the LLM and gets the response (the generated plan)
+        #llm_response = self.llm_planner_description.handle_request(request.command)
+
+        start_time = time.time()
+        generated_plan = self.ollama_planner.high_level_planner(request.command)
+        end_time = time.time()
+
+        print("Plan Generated:", generated_plan)
+        print("Time taken to generate the plan: ", end_time - start_time, "seconds")
+
+
+        """ 
         # print (f"LLM Output:", llm_response)
         # print (f"LLM response.output_text:", llm_response.output)
         
@@ -186,11 +195,15 @@ class LLMNode(Node):
                 
         response.answer = example   """
 
-        los = ListOfStrings()
-        los.strings.append("This is 7 demonstration response from the LLM.")
-        los.strings.append("This is 8 demonstration response from the LLM.")
-        los.strings.append("This is 9 demonstration response from the LLM.")
+        # los = ListOfStrings()
+        # los.strings.append("This is 7 demonstration response from the LLM.")
+        # los.strings.append("This is 8 demonstration response from the LLM.")
+        # los.strings.append("This is 9 demonstration response from the LLM.")
         
+        # response.answer = los
+        los = ListOfStrings()
+        los.strings.append(generated_plan)
+
         response.answer = los
 
         return response

@@ -68,7 +68,7 @@ class TaskMain():
         Final_State = 5
 
         # VARS ...
-        self.state = LLM_Ollama_first_tests
+        self.state = LLM_demo
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -90,22 +90,30 @@ class TaskMain():
 
                 print("New LLM Demo")
 
-                # self.robot.get_llm_demonstration()
-                # print("Finished LLM Demo")
-                # self.robot.get_llm_high_level_plan(command="Go to the kitchen", wait_for_end_of=True)
-                # print("Finished LLM HLP")
-                # self.robot.get_info_from_llm(command="Victor and rum",info_type="name", wait_for_end_of=True)
-                # self.robot.get_info_from_llm(command="Victor and rum",info_type="favorite drink", wait_for_end_of=True)
-                # print("Finished LLM HRI")
-                self.robot.save_speech(command="I have finished executing the first request.", filename= "finished_request1", wait_for_end_of= True)
-                self.robot.save_speech(command="I have finished executing the second request.", filename= "finished_request2", wait_for_end_of= True)
-                self.robot.save_speech(command="I have finished executing the third request.", filename= "finished_request3", wait_for_end_of= True)
-
-
-
+                self.robot.get_llm_ollama_gpsr_high_level(command="find a toy in the living room then take it and place it on the cabinet", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="navigate to the armchair then locate a fruit and take it and bring it to Robin in the bathroom", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="meet Paris at the sofa then locate them in the bathroom", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="go to the coatrack then find a cleaning supply and grasp it and deliver it to the person pointing to the right in the living room", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="locate a dish in the kitchen then grasp it and bring it to Simone in the kitchen", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="give me a rubiks cube from the side tables", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="locate a waving person in the kitchen and follow them to the bathroom", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="tell me how many toys there are on the bed", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="take a fruit from the storage rack and put it on the bed", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="tell me how many food there are on the storage rack", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="look for a lying person in the bathroom and tell the day of the month", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="take the person wearing a white coat from the chairs to the potted plant", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="navigate to the office then find a snack and fetch it and throw it in the trash", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="tell me how many food there are on the storage rack", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="say hello to Angel in the bathroom and follow them", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="go to the kitchen then meet Simone and follow them", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="meet Paris in the office and follow them to the bathroom", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="find a cola in the kitchen then grasp it and throw it in the trash", mode="", wait_for_end_of=True)
+                self.robot.get_llm_ollama_gpsr_high_level(command="tell me what is the lightest toy on the refrigerator", mode="", wait_for_end_of=True)
+ 
 
                 print("Finished first LLM Demo")
-                time.sleep(5)
+                while True:
+                    pass
                 
             if self.state == LLM_gpsr:
 
