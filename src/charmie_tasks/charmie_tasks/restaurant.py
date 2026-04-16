@@ -427,35 +427,60 @@ class TaskMain():
 
                 customer_has_order = False
                 customer_has_order_ctr = 0
-                max_asks_customer_has_order = 5
+                max_asks_customer_has_order = 3
                 while not customer_has_order:
                     customer_has_order_ctr+= 1
 
                     ##### TODO: ADD TOUCHSCREEN LOGIC TO CHECK IF CUSTOMER HAS ORDER
+                    if customer_has_order_ctr > max_asks_customer_has_order:
 
-                    # "Do you have an order?"
-                    confirmation = self.robot.get_audio(yes_or_no=True, question="restaurant/have_an_order", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                    print("Finished:", confirmation)
+                        # "Do you have an order?"
+                        confirmation = self.robot.get_audio(yes_or_no=True, question="restaurant/have_an_order", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                        print("Finished:", confirmation)
 
-                    if confirmation == "yes":
-                        customer_has_order = True
-                    elif confirmation == "no" or customer_has_order_ctr >= max_asks_customer_has_order:
+                        if confirmation == "yes":
+                            customer_has_order = True
+                        elif confirmation == "no":
 
-                        customer_has_order = True
-                        self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
+                            customer_has_order = True
+                            self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
 
-                        # jumps to next customer in list (if available)
-                        self.state = self.task_states["Approach_customer"]
-                        if self.DETECTED_CUSTOMER_INDEX < len(self.detected_customers):
-                            self.CUSTOMER_NAV_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
+                            # jumps to next customer in list (if available)
+                            self.state = self.task_states["Approach_customer"]
+                            if self.DETECTED_CUSTOMER_INDEX < len(self.detected_customers):
+                                self.CUSTOMER_NAV_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
+                                                            self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.y,
+                                                            0.0 ] ### should be changed later
+                                self.CUSTOMER_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
                                                         self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.y,
-                                                        0.0 ] ### should be changed later
-                            self.CUSTOMER_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
-                                                    self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.y,
-                                                    self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.z ] ### should be changed later
-                            self.DETECTED_CUSTOMER_INDEX += 1
-                        else:
-                            self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
+                                                        self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.z ] ### should be changed later
+                                self.DETECTED_CUSTOMER_INDEX += 1
+                            else:
+                                self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
+
+                    else:
+                        self.robot.set_speech(filename="restaurant/have_an_order_touchscreen", wait_for_end_of=True)
+                        answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], timeout=10, instruction="Do you have an order?", speak_results=False, wait_for_end_of=True)
+                        print("ANSWER:", answer)
+
+                        if answer == ["yes"]:
+                            customer_has_order = True
+                        elif answer == ["no"]:
+                            customer_has_order = True
+                            self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
+
+                            # jumps to next customer in list (if available)
+                            self.state = self.task_states["Approach_customer"]
+                            if self.DETECTED_CUSTOMER_INDEX < len(self.detected_customers):
+                                self.CUSTOMER_NAV_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
+                                                            self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.y,
+                                                            0.0 ] ### should be changed later
+                                self.CUSTOMER_COORDS = [self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.x,
+                                                        self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.y,
+                                                        self.detected_customers[self.DETECTED_CUSTOMER_INDEX].position_absolute.z ] ### should be changed later
+                                self.DETECTED_CUSTOMER_INDEX += 1
+                            else:
+                                self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
 
 
                 if self.state == self.task_states["Receive_order"]:
@@ -697,8 +722,8 @@ class TaskMain():
                     max_attempts = 3
                     while not order_taken and order_taken_ctr <= max_attempts:
                         order_taken_ctr+=1
-                        self.robot.set_speech(filename="restaurant/confirm_barman_touchscreen", wait_for_end_of=True) ### DID YOU TAKE YOUR ORDER?
-                        answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], timeout=10, instruction="Did you take order?", speak_results=False, wait_for_end_of=True)
+                        self.robot.set_speech(filename="restaurant/take_an_order_touchscreen", wait_for_end_of=True)
+                        answer = self.robot.set_face_touchscreen_menu(choice_category=["custom"], custom_options=["yes", "no"], timeout=10, instruction="Did you take your order?", speak_results=False, wait_for_end_of=True)
 
                         if answer == ["yes"]:
                             order_taken = True
