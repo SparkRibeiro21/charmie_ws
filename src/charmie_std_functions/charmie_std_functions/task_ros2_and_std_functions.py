@@ -5813,6 +5813,11 @@ class RobotStdFunctions():
         MIN_OBJECT_DISTANCE_Y = -1
         MAX_OBJECT_DISTANCE_Y = 1
 
+        t0 = None
+        t1 = None
+        t2 = None
+        t3 = None
+
 
         if furniture != "" and furniture != "Tray":
                 is_object_in_furniture_check = True
@@ -5977,7 +5982,8 @@ class RobotStdFunctions():
 
         ### While cycle to get a valid detected object ###
         while not_validated:
-
+            t0 = time.perf_counter()
+            print("INITIAL TIMESTAMP", t0)
             # If search_with_head_camera is true the first object detection will be made with the head camera, otherwise the robot will use the base camera instead
             if search_with_head_camera:
                 self.set_face(camera="head", show_detections=True)
@@ -6118,7 +6124,9 @@ class RobotStdFunctions():
 
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
-                    
+
+                    t1 = time.perf_counter()
+                    print("PRE-GRASP TIMESTAMP", t1)
 
             #BEGIN PICK TOP IF SELECTED
             elif pick_mode == "top":
@@ -6343,6 +6351,8 @@ class RobotStdFunctions():
                 if obj.object_name != "plate":
                     object_in_gripper = False
                     object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    t2 = time.perf_counter()
+                    print("GRASP TIMESTAMP", t2)
 
                     if not object_in_gripper:
 
@@ -6378,6 +6388,8 @@ class RobotStdFunctions():
 
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
+                    t3 = time.perf_counter()
+                    print("POST-GRASP TIMESTAMP", t3)
 
                 elif pick_mode == "top":
                     if obj.object_name != "plate":
@@ -6455,8 +6467,15 @@ class RobotStdFunctions():
                             while not self.adjust_omnidirectional_position_is_done():
                                 pass
                     #self.set_torso_position(legs=140, torso=8, wait_for_end_of=False) 
-                    #self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)            
-                
+                    #self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
+                pre_t  = t1 - t0
+                g_t    = t2 - t1
+                post_t = t3 - t2
+                full_t = t3 - t0            
+                print("Pre-Grasp time:", pre_t)
+                print("Grasp time:", g_t)
+                print("Post-Grasp time:", post_t)
+                print("Full time:", full_t)
                 print(f"Bring object to initial pose")
                 # Return the distance which the gripper was at in relation to the furniture
             
