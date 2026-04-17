@@ -85,9 +85,9 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
         # Which objects should be acquired
-        self.GET_MILK           = False
-        self.GET_CORNFLAKES     = False
-        self.GET_DISHES         = False
+        self.GET_MILK           = True
+        self.GET_CORNFLAKES     = True
+        self.GET_DISHES         = True
         self.GET_CUTLERY        = True
         self.IS_CORNFLAKES_BIG  = False # choose whether the cornflakes package is a big one (False) or a small one (True)
 
@@ -102,7 +102,7 @@ class TaskMain():
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
 
         # Name of cutlery to pick (only if GET_CUTLERY is True)
-        self.CUTLERY_TO_PICK = "Fork"
+        # self.CUTLERY_TO_PICK = "Fork"
         self.CUTLERY_LOCATION = "Dinner Table"
 
         # Objects picked furniture names
@@ -417,39 +417,32 @@ class TaskMain():
                     self.robot.place_object(arm_command="place_spoon_table_funilocopo_v4", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
-                self.state = self.task_states["Move_cutlery_location"]
-
-
-            elif self.state == self.task_states["Move_cutlery_location"]:
-
-                if self.GET_CUTLERY:
-
-                    self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.CUTLERY_LOCATION, wait_for_end_of=False)
-
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.CUTLERY_LOCATION), wait_for_end_of=True)
-                    
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.CUTLERY_LOCATION, wait_for_end_of=False)
-
                 self.state = self.task_states["Detect_and_pick_cutlery"]
 
 
             elif self.state == self.task_states["Detect_and_pick_cutlery"]:
 
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
                 if self.GET_CUTLERY:
                     if not self.HELP_PICK_CUTLERY:
+
+                        #VARIABLE TO ENSURE ONLY CUTLERY IS PICKED
+                        no_other_cutlery = True
+
                         for c in cutlery:
-                            if c.object_name == self.CUTLERY_TO_PICK:
+                            if c.object_name == "Fork" or c.object_name == "Spoon" or c.object_name == "Knife" and no_other_cutlery:
                                 self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.CUTLERY_LOCATION, object=c)
-                                pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=self.CUTLERY_TO_PICK)
-                            elif c.object_name == "Cup":
+                                pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=c.object_name)
+                                no_other_cutlery = False
+                            elif c.object_name == "Cup" and no_other_cutlery:
                                 self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.CUTLERY_LOCATION, object=c)
-                                pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object="Cup")
-                            else:
-                                print("NO OBJECT DETECTED")
-                                self.state = self.task_states["Final_State"]
+                                pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=c.object_name)
+                                no_other_cutlery = False
+
+                        if no_other_cutlery == True:
+                            print("NO OBJECT DETECTED")
+                            self.state = self.task_states["Final_State"]
 
                     else:
                         object_in_gripper = False
@@ -493,7 +486,7 @@ class TaskMain():
                     time.sleep(4.0)
                     self.robot.set_neck(position=self.look_forward, wait_for_end_of=False) 
                     # self.robot.place_object_in_furniture(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = 0.187, furniture = "rack", navigation_distance= furniture_distance - 0.60)
-                    self.robot.place_object_in_dishwasher_top_rack_and_close_rack(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = pick_height_cutlery, navigation_distance= furniture_distance - 0.60)
+                    self.robot.place_object_in_dishwasher_top_rack_and_close_rack(selected_object=c.object_name, place_mode = self.robot.get_standard_pick_from_object(object_name=c.object_name), place_height = pick_height_cutlery, navigation_distance= furniture_distance - 0.60)
                     # self.robot.set_speech(filename="clean_the_table/ask_to_close_dishwasher_rack", wait_for_end_of=True)
                     # time.sleep(1.0)
                     self.robot.close_dishwasher(task = "pp")

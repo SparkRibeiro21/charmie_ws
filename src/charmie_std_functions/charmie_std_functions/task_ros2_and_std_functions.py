@@ -6469,7 +6469,7 @@ class RobotStdFunctions():
 
         #### VARIABLES ####            
         print("Place 1:", place_mode)
-        furniture_height = 0.61
+        furniture_height = 0.58
 
         #### CONSTANTS ####
         top_base_adjust_x = 0.08
