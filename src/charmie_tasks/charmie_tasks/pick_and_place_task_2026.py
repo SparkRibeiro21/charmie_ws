@@ -59,7 +59,7 @@ class TaskMain():
         self.robot = robot
 
         # Task Name
-        self.TASK_NAME = "Serve Breakfast"
+        self.TASK_NAME = "Pick & Place"
 
         # Task States
         self.task_states ={
@@ -75,25 +75,41 @@ class TaskMain():
             "Placing_cornflakes":           9,
             "Placing_milk":                 10,
             "Placing_spoon":                11,
-            "Final_State":                  12,
+            "Move_cutlery_location":        12,
+            "Detect_and_pick_cutlery":      13,
+            "Move_dishwasher_location":     14,
+            "Placing_cutlery":              15,
+            "Final_State":                  16,
         }
 
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
         # Which objects should be acquired
-        self.GET_MILK = True
-        self.GET_CORNFLAKES = True
-        self.GET_DISHES = True
-        self.IS_CORNFLAKES_BIG = False # choose whether the cornflakes package is a big one (False) or a small one (True)
+        self.GET_MILK           = False
+        self.GET_CORNFLAKES     = False
+        self.GET_DISHES         = False
+        self.GET_CUTLERY        = True
+        self.IS_CORNFLAKES_BIG  = False # choose whether the cornflakes package is a big one (False) or a small one (True)
 
         # whether we know in advance that one of the objects we want the judge to help CHARMIE due to some physical constraint in picking the object
-        self.HELP_PICK_MILK = False
-        self.HELP_PICK_CORNFLAKES = False
-        self.HELP_PICK_SPOON = False
-        self.HELP_PICK_BOWL = False
+        self.HELP_PICK_MILK         = False
+        self.HELP_PICK_CORNFLAKES   = False
+        self.HELP_PICK_SPOON        = False
+        self.HELP_PICK_BOWL         = False
+        self.HELP_PICK_CUTLERY      = False
 
         # Name of the table where breakfast is served
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = "Dinner Table"
+
+        # Name of cutlery to pick (only if GET_CUTLERY is True)
+        self.CUTLERY_TO_PICK = "Fork"
+        self.CUTLERY_LOCATION = "Dinner Table"
+
+        # Objects picked furniture names
+        # self.MILK_LOCATION = "Pantry"
+        self.MILK_LOCATION = "Kitchen Cabinet"
+        self.CORNFLAKES_LOCATION = "Kitchen Cabinet"
+        self.DISHES_LOCATION = "Dishwasher"
 
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
@@ -110,6 +126,12 @@ class TaskMain():
         self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
 
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED.lower().replace(" ", "_")
+        self.CUTLERY_LOCATION = self.CUTLERY_LOCATION.lower().replace(" ", "_")
+
+        self.MILK_LOCATION = self.MILK_LOCATION.lower().replace(" ", "_")
+        self.CORNFLAKES_LOCATION = self.CORNFLAKES_LOCATION.lower().replace(" ", "_")
+        self.DISHES_LOCATION = self.DISHES_LOCATION.lower().replace(" ", "_")
+
         # Checks if there is any error in the furniture variables:
         if self.robot.get_room_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED) == None:
             print("ERROR!!! - FURNITURE:", self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, "DOES NOT EXIST IN furniture.json")
@@ -125,7 +147,8 @@ class TaskMain():
         self.look_navigation = [0, -30]
         self.look_judge = [45, 0]
         self.look_table_objects = [-45, -45]
-        self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
+        self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]]
+        self.search_for_cutlery_tetas =[[0, -20], [-40, -20], [40, -20]]
 
         self.state = self.task_states["Waiting_for_task_start"]
 
@@ -144,7 +167,7 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.robot.set_speech(filename="serve_breakfast/sb_ready_start", wait_for_end_of=True)
+                self.robot.set_speech(filename="pick_and_place_task/pp_ready_start", wait_for_end_of=True)
 
                 self.robot.wait_for_start_button()
                 
@@ -163,12 +186,12 @@ class TaskMain():
 
                     self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.MILK_LOCATION, wait_for_end_of=False)
 
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk"))), wait_for_end_of=True)
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.MILK_LOCATION), wait_for_end_of=True)
                     
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("milk")), wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.MILK_LOCATION, wait_for_end_of=False)
                 
                 self.state = self.task_states["Detect_and_pick_milk"]
 
@@ -180,7 +203,7 @@ class TaskMain():
                     if not self.HELP_PICK_MILK:
                         self.robot.pick_object_risky(selected_object="Milk", return_arm_to_initial_position="collect_milk_to_tray")
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
-                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                        # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
                     else:
                         object_in_gripper = False
@@ -200,16 +223,22 @@ class TaskMain():
             elif self.state == self.task_states["Move_cornflakes_location"]:
 
                 if self.GET_CORNFLAKES:
+
+                    if self.MILK_LOCATION == self.CORNFLAKES_LOCATION:
+
+                        self.state = self.task_states["Detect_and_pick_cornflakes"]
+
+                    else:
                     
-                    self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
+                        self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                        self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/"+self.CORNFLAKES_LOCATION , wait_for_end_of=False)
 
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes"))), wait_for_end_of=True)
+                        self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.CORNFLAKES_LOCATION), wait_for_end_of=True)
 
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("cornflakes")), wait_for_end_of=False)
-                                    
+                        self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/"+self.CORNFLAKES_LOCATION, wait_for_end_of=False)
+                                        
                 self.state = self.task_states["Detect_and_pick_cornflakes"]
 
 
@@ -220,7 +249,7 @@ class TaskMain():
                     if not self.HELP_PICK_CORNFLAKES:
                         self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position="collect_cornflakes_to_tray")
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
-                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                        # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                     else:
                         object_in_gripper = False
@@ -247,12 +276,12 @@ class TaskMain():
 
                     self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                     self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.DISHES_LOCATION, wait_for_end_of=False)
                     
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl"))), wait_for_end_of=True)
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.DISHES_LOCATION), wait_for_end_of=True)
 
                     self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object("bowl")), wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.DISHES_LOCATION, wait_for_end_of=False)
                 
                 self.state = self.task_states["Detect_and_pick_dishes"]
 
@@ -331,7 +360,12 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
 
-                move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))                
+                self.robot.move_to_position(move_coords=[4.45, 1.90, 0.0], wait_for_end_of=True)
+
+                cutlery = self.robot.search_for_objects(tetas=self.search_for_cutlery_tetas, list_of_objects=[], use_arm=True, detect_objects=True)
+
+                move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))
+                                
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
 
                 self.robot.adjust_obstacles(distance=0.3, direction=-45.0, wait_for_end_of=False)
@@ -381,15 +415,96 @@ class TaskMain():
 
                 if self.GET_DISHES:
                     self.robot.place_object(arm_command="place_spoon_table_funilocopo_v4", speak_before=False, speak_after=True, verb="place", object_name="spoon", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
+                self.state = self.task_states["Move_cutlery_location"]
+
+
+            elif self.state == self.task_states["Move_cutlery_location"]:
+
+                if self.GET_CUTLERY:
+
+                    self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.CUTLERY_LOCATION, wait_for_end_of=False)
+
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.CUTLERY_LOCATION), wait_for_end_of=True)
+                    
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/"+self.CUTLERY_LOCATION, wait_for_end_of=False)
+
+                self.state = self.task_states["Detect_and_pick_cutlery"]
+
+
+            elif self.state == self.task_states["Detect_and_pick_cutlery"]:
+
+                if self.GET_CUTLERY:
+                    if not self.HELP_PICK_CUTLERY:
+                        for c in cutlery:
+                            if c.object_name == self.CUTLERY_TO_PICK:
+                                self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.CUTLERY_LOCATION, object=c)
+                                pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=self.CUTLERY_TO_PICK)
+                            elif c.object_name == "Cup":
+                                self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.CUTLERY_LOCATION, object=c)
+                                pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object="Cup")
+                            else:
+                                print("NO OBJECT DETECTED")
+                                self.state = self.task_states["Final_State"]
+
+                    else:
+                        object_in_gripper = False
+                        while not object_in_gripper:
+                            objects_found = self.robot.search_for_objects(tetas=self.search_tetas, time_in_each_frame=2.0, list_of_objects=[self.CUTLERY_TO_PICK], use_arm=False, detect_objects=True, detect_furniture=False)
+                            
+                            object_in_gripper = self.robot.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge=self.look_judge, wait_time_show_detection=1.0, wait_time_show_help_face=1.0, attempts_at_receiving=2, bb_color=(0, 255, 0))
+                            
+                            if not object_in_gripper:
+                                self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
+
+                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
+                self.state = self.task_states["Move_dishwasher_location"]
+
+
+            elif self.state == self.task_states["Move_dishwasher_location"]:
+
+                if self.GET_CUTLERY:
+
+                    self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                    self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
+
+                    self.robot.move_to_position(move_coords = [4.53, 2.74, 90], wait_for_end_of=True)
+                    
+                    # commented out for time optimization
+                    # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                    # self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
+
+                self.state = self.task_states["Placing_cutlery"]
+
+
+            elif self.state == self.task_states["Placing_cutlery"]:
+
+                if self.GET_CUTLERY:
+
+                    _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+                    self.robot.set_neck(position=self.look_judge, wait_for_end_of=False) 
+                    self.robot.set_speech(filename="pick_and_place_task/help_open_dishwasher_door_and_top_rack", wait_for_end_of=True)
+                    time.sleep(4.0)
+                    self.robot.set_neck(position=self.look_forward, wait_for_end_of=False) 
+                    # self.robot.place_object_in_furniture(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = 0.187, furniture = "rack", navigation_distance= furniture_distance - 0.60)
+                    self.robot.place_object_in_dishwasher_top_rack_and_close_rack(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = pick_height_cutlery, navigation_distance= furniture_distance - 0.60)
+                    # self.robot.set_speech(filename="clean_the_table/ask_to_close_dishwasher_rack", wait_for_end_of=True)
+                    # time.sleep(1.0)
+                    self.robot.close_dishwasher(task = "pp")
                 
                 self.state = self.task_states["Final_State"]
 
 
             elif self.state == self.task_states["Final_State"]:
                 
-                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                self.robot.set_speech(filename="serve_breakfast/sb_finished", wait_for_end_of=False)
+                self.robot.set_speech(filename="pick_and_place_task/pp_finished", wait_for_end_of=False)
 
                 while True:
                     pass

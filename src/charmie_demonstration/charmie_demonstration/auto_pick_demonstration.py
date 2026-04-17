@@ -78,12 +78,12 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
 
-        #self.place_furniture = "Office Table"
-        self.home_furniture = "Pantry"        
+        self.home_furniture = "Dinner Table"
+        # self.home_furniture = "Dinner Table"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
-        self.GET_HEAR = True
+        self.GET_HEAR = False
 
         #Furniture which we cannot place with place_front
 
@@ -110,6 +110,9 @@ class TaskMain():
         self.DEMO_MODE = self.robot.get_demo_mode()
         self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
 
+        state = 1
+        return_to_initial_position = True
+
 
         self.state = self.task_states["Waiting_for_task_start"]
 
@@ -133,11 +136,14 @@ class TaskMain():
 
                 self.robot.set_initial_position(self.initial_position)
 
-                self.robot.wait_for_start_button()
+                # self.robot.wait_for_start_button()
                 
-                self.robot.set_initial_position(self.initial_position)
+                #self.robot.set_initial_position(self.initial_position)
                 
                 print("SET INITIAL POSITION")
+
+                self.robot.wait_for_start_button()
+
 
                 self.state = self.task_states["Select_object_to_pick"]
             
@@ -154,7 +160,7 @@ class TaskMain():
 
                     # self.object_name = selected_option
 
-                    self.object_name = "Plate"
+                    self.object_name = "Coffee Grounds"
 
                     # selected_room = self.robot.get_audio(gpsr=True, question="face_touchscreen_menu/menu_room", max_attempts=3, face_hearing = "charmie_face_green", wait_for_end_of=True)
                     # print(selected_room)
@@ -172,6 +178,14 @@ class TaskMain():
 
                 else:
 
+                    Object_menu = ["1","2"]
+
+                    while True:
+                        selected_number = self.robot.set_face_touchscreen_menu(["custom"], custom_options=Object_menu, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                        print(selected_number[0])
+                        if selected_number[0] != "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                            break
+
                     while True:
                         selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                         print(selected_category[0])
@@ -188,6 +202,34 @@ class TaskMain():
                     self.object_name = selected_option[0]
 
                     self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
+
+                    if selected_number[0] == "2":
+
+                        return_to_initial_position = False
+
+                        while True:
+                            selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                            print(selected_category[0])
+                            if selected_category[0] != "TIMEOUT" and self.robot.get_furniture_from_object_class(selected_category[0]) != "NONE": #THINK ABOUT REPEAT LIMIT
+                                break
+
+                        selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                        print(selected_option[0])
+
+                        while selected_option[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                            selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                            print(selected_option[0])
+
+                        self.object2_name = selected_option[0]
+                        objects = self.robot.sort_for_pick(objects=[self.object_name,self.object2_name])
+
+                        self.object_name = objects[0]
+                        self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
+
+                        self.object2_name = objects[1]
+                        self.object2_mode = self.robot.get_standard_pick_from_object(self.object2_name)
+                        print("Object 1 ", self.object_name, " Object 2 ", self.object2_name)
+
 
                     rooms = []
                     for obj in self.robot.node.rooms:
@@ -280,6 +322,9 @@ class TaskMain():
                 elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
                     self.tetas = [[0, 0], [0, 15], [0, -35]]
 
+                self.HORIZONTAL_TETAS = [[0, -45], [-40, -45], [40, -45]]
+                self.VERTICAL_TETAS = [[0, 0], [0, 15], [0, -35]]
+
                 self.state = self.task_states["Move_to_Location"]
 
 
@@ -291,34 +336,62 @@ class TaskMain():
 
                 self.robot.set_speech(filename="generic/careful", wait_for_end_of=True)                
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
+                if state == 1:
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
+                if state == 2:
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object2_name)), wait_for_end_of=False)
 
                 #As of now, we are going to make CHARMIE move to a location 
-                if self.object_mode == "front":
+                if state == 1:
                     self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))), wait_for_end_of=True)
                
-                if self.object_mode == "top":
-                    #rotate_coordinates = self.robot.add_rotation_to_pick_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))))
-                    #self.robot.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))), wait_for_end_of=True)
+                if state == 2:
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object2_name))), wait_for_end_of=True)
 
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
 
+                if state == 1:
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
+                if state == 2:
+                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object2_name)), wait_for_end_of=False)
 
                 self.state = self.task_states["Pick_Object"]
 
 
             elif self.state == self.task_states["Pick_Object"]:
 
-                if self.object_name == "Bowl":
-                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas, return_arm_to_initial_position=False)
-                else:
-                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
-                self.robot.set_face("charmie_face", wait_for_end_of=False)
+                # if self.object_name == "Bowl":
+                #     picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas, return_arm_to_initial_position=False)
+                # else:
+                #     picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
 
-                self.state = self.task_states["Move_to_place"]
+
+                if state == 2:
+                    picked_height_2, asked_help_tray = self.robot.pick_object_risky(selected_object=self.object2_name, pick_mode=self.object2_mode, first_search_tetas=self.HORIZONTAL_TETAS, return_arm_to_initial_position=True)
+                    print("SECOND PICK HEIGHT:", picked_height_2)
+
+                    self.robot.set_face("charmie_face", wait_for_end_of=False)
+                    return_to_initial_position = True
+
+
+                if state == 1:
+                    picked_height_1, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.VERTICAL_TETAS, return_arm_to_initial_position=return_to_initial_position)
+                    print("FIRST PICK HEIGHT:", picked_height_1)
+
+                    if return_to_initial_position == False:
+                        place_object_in_tray_height = self.robot.place_object_in_furniture(selected_object=self.object_name, place_mode=self.robot.get_standard_pick_from_object(object_name=self.object_name), furniture="Tray", place_height=picked_height_1)
+                        print("PLACE IN TRAY HEIGHT:", place_object_in_tray_height)
+
+                        state = 2
+
+                if return_to_initial_position == False:
+                    self.state = self.task_states["Move_to_Location"]
+                else:
+                    self.state = self.task_states["Move_to_place"]
+
+
+                
 
 
             elif self.state == self.task_states["Move_to_place"]:
@@ -361,30 +434,40 @@ class TaskMain():
 
                 #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
+                if selected_number[0] == "1":
+                    self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode=self.object_mode,furniture=self.place_furniture,asked_help=False,place_height=picked_height_1, return_to_initial_position=True)
+                if selected_number[0] == "2":
+                    self.robot.place_object_in_furniture(selected_object=self.object2_name,place_mode=self.object2_mode,furniture=self.place_furniture,asked_help=False,place_height=picked_height_2, return_to_initial_position=True)
+                    picked_height_3 = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, furniture="Tray", placed_in_tray_height = place_object_in_tray_height)
+                    print("THIRD PICK HEIGHT:", picked_height_3)
 
-                if self.object_mode == "front":
+                    self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode=self.object_mode,furniture=self.place_furniture,asked_help=False,place_height=picked_height_3, return_to_initial_position=True)
 
-                    _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                self.robot.wait_for_start_button()
 
-                    print("Furniture Distance: ", furniture_distance)
+                # if self.object_mode == "front":
 
-                    self.robot.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
-                    #self.robot.wait_for_start_button()
+                #     _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
 
-                    gripper_place_position = self.robot.get_gripper_localization()
-                    if asked_help:
-                        final_z = (gripper_place_position.z - self.selected_height - (self.robot.get_object_height_from_object(self.object_name)/1.25) - 0.02)*1000
-                    else:
-                        final_z = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
-                    print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
+                #     print("Furniture Distance: ", furniture_distance)
+
+                #     self.robot.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                #     #self.robot.wait_for_start_button()
+
+                #     gripper_place_position = self.robot.get_gripper_localization()
+                #     if asked_help:
+                #         final_z = (gripper_place_position.z - self.selected_height - (self.robot.get_object_height_from_object(self.object_name)/1.25) - 0.02)*1000
+                #     else:
+                #         final_z = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
+                #     print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
                     
-                    if final_z > 450:
-                        final_z = 450
+                #     if final_z > 450:
+                #         final_z = 450
 
-                    self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
-                    self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                #     self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                #     self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 
-                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                #     self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
                     
                     #top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
                     #bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
@@ -424,58 +507,58 @@ class TaskMain():
 #
                     #if furniture_distance >= dx:
 
-                    dx = furniture_distance - 0.15
-                    dy = 0.0                     
-                    self.robot.adjust_omnidirectional_position(dx=dx,dy=dy, safety=False)
-                    print("Moving dx: ", dx, " || Moving dy: ", dy)
-                    #self.robot.wait_for_start_button()
+                #     dx = furniture_distance - 0.15
+                #     dy = 0.0                     
+                #     self.robot.adjust_omnidirectional_position(dx=dx,dy=dy, safety=False)
+                #     print("Moving dx: ", dx, " || Moving dy: ", dy)
+                #     #self.robot.wait_for_start_button()
 
-                    time.sleep(0.5)
-                    self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
-                    time.sleep(0.5)
-                    self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
-                    # self.robot.adjust_omnidirectional_position(dx=-0.3,dy=0.0)
-                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                #     time.sleep(0.5)
+                #     self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                #     time.sleep(0.5)
+                #     self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
+                #     # self.robot.adjust_omnidirectional_position(dx=-0.3,dy=0.0)
+                #     self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-                    self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                #     self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
 
-                if self.object_mode == "top":
-                    self.arm_safe_start_position = [-215, 83.1, -74.8, 9.1, 65.8, 268.8]
-                    self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
-                    self.arm_safe_first = [ -177.2, 72.8, -112.8, -47.3, 105.7, 258.5]
-                    self.arm_safe_second = [-151.5, 75, -123.2, -72.4, 110.8, 41.7]
-                    #final_x = (1.075 - self.furniture_z - (self.object_z/1.5)) * 1000  
+                # if self.object_mode == "top":
+                #     self.arm_safe_start_position = [-215, 83.1, -74.8, 9.1, 65.8, 268.8]
+                #     self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
+                #     self.arm_safe_first = [ -177.2, 72.8, -112.8, -47.3, 105.7, 258.5]
+                #     self.arm_safe_second = [-151.5, 75, -123.2, -72.4, 110.8, 41.7]
+                #     #final_x = (1.075 - self.furniture_z - (self.object_z/1.5)) * 1000  
 
-                    #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_start_position, wait_for_end_of=True)
-                    if self.object_name == "Plate":
-                        _ , _ , furniture_plate_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+                #     #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_start_position, wait_for_end_of=True)
+                #     if self.object_name == "Plate":
+                #         _ , _ , furniture_plate_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                #         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
                         
-                        plate_place_first = [-194.3, 82.8, -86.6, 29.6, 69, 272.4]
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)
-                        plate_place_second = [-199.1, 34.3, -49.3, 159.7, 72.4, 180.8]
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_second, wait_for_end_of=True)
+                #         plate_place_first = [-194.3, 82.8, -86.6, 29.6, 69, 272.4]
+                #         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)
+                #         plate_place_second = [-199.1, 34.3, -49.3, 159.7, 72.4, 180.8]
+                #         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_second, wait_for_end_of=True)
 
-                    elif self.object_name != "Bowl":
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+                #     elif self.object_name != "Bowl":
+                #         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+                #         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                #         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
                     
 
-                        #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
-                        #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+                #         #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                #         #self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
-                    top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
-                    bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
+                #     top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
+                #     bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
 
-                    gripper_place_position = self.robot.get_gripper_localization()
+                #     gripper_place_position = self.robot.get_gripper_localization()
 
-                    _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
-                    dx = furniture_distance - 0.05
-                    if self.object_name == "Plate":
-                        dx = furniture_plate_distance - 0.06
-                    dy = 0.0
+                #     _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                #     dx = furniture_distance - 0.05
+                #     if self.object_name == "Plate":
+                #         dx = furniture_plate_distance - 0.06
+                #     dy = 0.0
                     
 
                     #x_min = min(top_furniture_points[0], bottom_furniture_points[0])
@@ -515,57 +598,57 @@ class TaskMain():
 
                     #print("Adjust Movement x:", dx," || y:", dy)
 
-                    self.robot.adjust_omnidirectional_position(dx=dx, dy=dy, safety=False)
+                    # self.robot.adjust_omnidirectional_position(dx=dx, dy=dy, safety=False)
 
-                    #MAKE SPECIAL CASE MORE IN LINE WITH REST OF CODE LATER:
+                    # #MAKE SPECIAL CASE MORE IN LINE WITH REST OF CODE LATER:
 
-                    if self.object_name == "Bowl":
-                        self.robot.set_height_furniture_for_arm_manual_movements(self.selected_height) #####
+                    # if self.object_name == "Bowl":
+                    #     self.robot.set_height_furniture_for_arm_manual_movements(self.selected_height) #####
 
-                        self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
-                        self.robot.set_arm(command="arm_go_rest", wait_for_end_of=True)
+                    #     self.robot.set_arm(command="place_bowl_table", wait_for_end_of=True)
+                    #     self.robot.set_arm(command="arm_go_rest", wait_for_end_of=True)
 
-                    elif self.object_name == "Plate":
-                            final_x = (gripper_place_position.z - self.selected_height - 0.10)*1000
-                            rise_x = - final_x - 50 
+                    # elif self.object_name == "Plate":
+                    #         final_x = (gripper_place_position.z - self.selected_height - 0.10)*1000
+                    #         rise_x = - final_x - 50 
 
-                            self.safe_place_final = [0.0 , final_x , 20.0 , 0.0 , 0.0 , 0.0]
-                            self.safe_rise_gripper = [0.0 , -10.0 , 0.0 , -80.0 , 0.0 , 0.0]  
-                            self.safe_pull_gripper = [0.0 , 0.0 , -40.0 , 0.0 , 0.0 , 0.0]  
+                    #         self.safe_place_final = [0.0 , final_x , 20.0 , 0.0 , 0.0 , 0.0]
+                    #         self.safe_rise_gripper = [0.0 , -10.0 , 0.0 , -80.0 , 0.0 , 0.0]  
+                    #         self.safe_pull_gripper = [0.0 , 0.0 , -40.0 , 0.0 , 0.0 , 0.0]  
 
-                            self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=False)
+                    #         self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=False)
 
-                            time.sleep(0.5)
-                            self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
-                            time.sleep(0.5)
+                    #         time.sleep(0.5)
+                    #         self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    #         time.sleep(0.5)
 
-                            self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
-                            self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_pull_gripper, wait_for_end_of=True)
+                    #         self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    #         self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_pull_gripper, wait_for_end_of=True)
 
-                            self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
-                            self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)
-                            self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)  
+                    #         self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
+                    #         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = plate_place_first, wait_for_end_of=True)
+                    #         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)  
 
-                    else:
-                        final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
-                        print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
-                        self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
-                        self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+                    # else:
+                    #     final_x = (gripper_place_position.z - self.selected_height - picked_height - 0.02)*1000
+                    #     print("Final_X: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " furniture z : ", self.selected_height, " picked height : ", picked_height)
+                    #     self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                    #     self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
 
-                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    #     self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
 
-                        time.sleep(0.5)
-                        self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
-                        time.sleep(0.5)
+                    #     time.sleep(0.5)
+                    #     self.robot.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    #     time.sleep(0.5)
 
-                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    #     self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-                        self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
-                        self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+                    #     self.robot.adjust_omnidirectional_position(dx=-dx,dy=-dy)
+                    #     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
+                    #     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
+                    #     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
 
-                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                    # self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
                     
                     #TEST PLACE  OBJ #final_objects = self.search_for_objects(tetas=[[-45, -30]], time_in_each_frame=0.5, time_wait_neck_move_pre_each_frame=0.5, list_of_objects=[self.object_name], use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
                     #for obj in final_objects:

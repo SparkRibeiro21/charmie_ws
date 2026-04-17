@@ -12,7 +12,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 ros2_modules = {
     "charmie_arm":                  False,
-    "charmie_audio":                True,
+    "charmie_audio":                False,
     "charmie_face":                 False,
     "charmie_head_camera":          False,
     "charmie_hand_camera":          False,
@@ -30,7 +30,7 @@ ros2_modules = {
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
@@ -64,10 +64,14 @@ class TaskMain():
         LLM_demo = 1
         LLM_gpsr = 2
         LLM_hri= 3
-        Final_State = 4
+        LLM_Ollama_first_tests = 4
+        Final_State = 5
 
         # VARS ...
-        self.state = LLM_gpsr
+        self.state = LLM_Ollama_first_tests
+
+        self.number_of_requests = 3
+        self.curr_request = 1
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")
@@ -86,7 +90,19 @@ class TaskMain():
 
                 print("New LLM Demo")
 
-                self.robot.get_llm_demonstration()
+                # self.robot.get_llm_demonstration()
+                # print("Finished LLM Demo")
+                # self.robot.get_llm_high_level_plan(command="Go to the kitchen", wait_for_end_of=True)
+                # print("Finished LLM HLP")
+                # self.robot.get_info_from_llm(command="Victor and rum",info_type="name", wait_for_end_of=True)
+                # self.robot.get_info_from_llm(command="Victor and rum",info_type="favorite drink", wait_for_end_of=True)
+                # print("Finished LLM HRI")
+                self.robot.save_speech(command="I have finished executing the first request.", filename= "finished_request1", wait_for_end_of= True)
+                self.robot.save_speech(command="I have finished executing the second request.", filename= "finished_request2", wait_for_end_of= True)
+                self.robot.save_speech(command="I have finished executing the third request.", filename= "finished_request3", wait_for_end_of= True)
+
+
+
 
                 print("Finished first LLM Demo")
                 time.sleep(5)
@@ -94,7 +110,156 @@ class TaskMain():
             if self.state == LLM_gpsr:
 
                 print("New LLM GPSR")
-                self.robot.get_llm_gpsr()
+                # self.robot.get_llm_gpsr()
+
+            ##Receive guest1
+                
+                ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."
+                self.robot.set_speech(filename="gpsr/gpsr_intro", wait_for_end_of=True)
+
+                self.curr_request = 1
+                # your code here ...
+
+                # Look at the judge
+                # self.robot.set_neck
+                
+                request = self.robot.get_llm_confirm_command()
+
+                # request = "Move to the living room and pick the milk"
+
+                if request == "ERROR":
+                    print("Error in request " + str(self.curr_request))
+                    ##### SPEAK: "I was not able to understand your request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
+
+                else:
+                    # Save current request
+                    self.request1 = request
+                    print("Request " + str(self.curr_request) + ": " + request)
+
+                    ##### SPEAK: "Okay, I understood your request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
+
+                    hlp_request = self.robot.get_llm_high_level_plan(command=request, wait_for_end_of=True)
+                    self.robot.save_speech(command=hlp_request, filename="gpsr_request"+str(self.curr_request), quick_voice=True ,wait_for_end_of=False)
+                    self.request1 = hlp_request
+
+            ##Receive guest2
+                
+                ##### SPEAK: "Let's move on to the second request"
+                #
+
+                self.curr_request = 2
+
+                # Look at the judge
+                # self.robot.set_neck
+                
+                request = self.robot.get_llm_confirm_command()
+
+                # request = "Go to the bedroom and then move to the bedside table"
+
+                if request == "ERROR":
+                    print("Error in request " + str(self.curr_request))
+                    ##### SPEAK: "I was not able to understand your request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
+
+                else:
+                    # Save current request
+                    self.request2 = request
+                    print("Request " + str(self.curr_request) + ": " + request)
+
+                    ##### SPEAK: "Okay, I understood your curr_request request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
+
+                    hlp_request = self.robot.get_llm_high_level_plan(command=request, wait_for_end_of=True)
+                    self.robot.save_speech(command=hlp_request, filename="gpsr_request"+str(self.curr_request), quick_voice=True ,wait_for_end_of=False)
+                    self.request2 = hlp_request
+
+            ##Receive guest3
+            
+                self.curr_request = 3
+                # your code here ...
+
+                # Look at the judge
+                # self.robot.set_neck
+                
+                request = self.robot.get_llm_confirm_command()
+
+                # request = "Move to the kitchen"
+
+                if request == "ERROR":
+                    print("Error in request " + str(self.curr_request))
+                    ##### SPEAK: "I was not able to understand your request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
+
+                else:
+                    # Save current request
+                    self.request3 = request
+                    print("Request " + str(self.curr_request + 1) + ": " + request)
+
+                    ##### SPEAK: "Okay, I understood your curr_request request. Let's move on."
+                    self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
+
+                    hlp_request = self.robot.get_llm_high_level_plan(command=request, wait_for_end_of=True)
+                    self.robot.save_speech(command=hlp_request, filename="gpsr_request"+str(self.curr_request), quick_voice=True ,wait_for_end_of=False)
+                    self.request3 = hlp_request
+
+            ##show plans 
+
+                ##### SPEAK: "Please give me a moment while I proccess your requests"
+                self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=True)
+                
+                ##### SPEAK: "To execute the first request"  
+                self.robot.set_speech(filename="gpsr/say_plan1", wait_for_end_of= True)
+                self.robot.set_speech(filename="temp/gpsr_request1", wait_for_end_of= True)
+
+                
+                ##### SPEAK: "To execute the second request"  
+                self.robot.set_speech(filename="gpsr/say_plan2", wait_for_end_of= True)
+                self.robot.set_speech(filename="temp/gpsr_request2", wait_for_end_of= True)
+                
+                ##### SPEAK: "To execute the first request"  
+                self.robot.set_speech(filename="gpsr/say_plan3", wait_for_end_of= True)
+                self.robot.set_speech(filename="temp/gpsr_request3", wait_for_end_of= True)
+                                        
+                # your code here ...
+
+            ##execute guest1
+
+                ##### SPEAK: "I will start by executing the first request."
+                self.robot.set_speech(filename="gpsr/execute_request1", wait_for_end_of=True)
+                self.robot.execute_gpsr_plan(command=self.request1,wait_for_end_of=True)
+
+                ##### SPEAK: "I have finished executing the first task."
+                self.robot.set_speech(filename="gpsr/finished_request1", wait_for_end_of=True)
+
+                
+
+            ##execute guest1
+                                        
+                ##### SPEAK: "I will start by executing the second request."
+                self.robot.set_speech(filename="gpsr/execute_request2", wait_for_end_of=True)
+
+                self.robot.execute_gpsr_plan(command=self.request2,wait_for_end_of=True)
+
+                ##### SPEAK: "I have finished executing the second task."
+                self.robot.set_speech(filename="gpsr/finished_request2", wait_for_end_of=True)
+
+                # your code here ...
+
+            ##execute guest1
+                                        
+                ##### SPEAK: "I will start by executing the third request."
+                self.robot.set_speech(filename="gpsr/execute_request3", wait_for_end_of=True)
+
+                self.robot.execute_gpsr_plan(command=self.request3,wait_for_end_of=True)
+
+                ##### SPEAK: "I have finished executing the third task."
+                self.robot.set_speech(filename="gpsr/finished_request3", wait_for_end_of=True)
+
+                self.state = self.task_states["Return_to_instruction_point"]
+                
+
                 print("Finished LLM GPSR")
                 time.sleep(5)
             
@@ -113,7 +278,24 @@ class TaskMain():
                 ##  END OF TESTING INFO EXTRACTION STANDARDFUNCTION ##
                 print("Finished LLM HRI")
                 time.sleep(5)
-                            
+            
+            if self.state == LLM_Ollama_first_tests:
+
+                resp = self.robot.get_llm_ollama_demonstration(command="Test D", mode="HRI X", wait_for_end_of=True)
+                print(resp)
+
+                resp = self.robot.get_llm_ollama_information(command="Test I", mode="HRI X", wait_for_end_of=True)
+                print(resp)
+
+                resp = self.robot.get_llm_ollama_gpsr_high_level(command="Test H", mode="HRI X", wait_for_end_of=True)
+                print(resp)
+
+                resp = self.robot.get_llm_ollama_gpsr_low_level(command="Test L", mode="HRI X", wait_for_end_of=True)
+                print(resp)
+
+                while True:
+                    pass
+                                           
             elif self.state == Final_State:
                 
                 self.state += 1

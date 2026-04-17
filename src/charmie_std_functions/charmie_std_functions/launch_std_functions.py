@@ -646,8 +646,8 @@ class LaunchStdFunctions():
                 )
         
         self.llm = Node(package='charmie_llm',
-                    executable='llm',
-                    name='llm',
+                    executable='llm_ollama',
+                    name='llm_ollama',
                     )
         
         ### SLAM

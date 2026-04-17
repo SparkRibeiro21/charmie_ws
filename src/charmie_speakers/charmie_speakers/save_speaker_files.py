@@ -74,7 +74,8 @@ class RobotSpeak():
         except:
             print("")
             print("ERROR: Could NOT import data from json configuration files. (save_speaker_files)")
-            print("Please check if you have already created save_speaker_files.json in charmie_ws/src/configuration_files/save_speaker")
+            print("ERROR: Please check if you have already created save_speaker_files.json in: "+ self.complete_path_configuration_save_speaker + 'save_speaker_files.json')
+            print("ERROR: Or if there is a syntax error in the file.")
             while True:
                 pass
 
