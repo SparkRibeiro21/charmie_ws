@@ -6662,7 +6662,7 @@ class RobotStdFunctions():
 
                 move_y = h.position_relative.y
 
-            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.25, wait_for_end_of=False)
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y, wait_for_end_of=False)
         if push_pull == "pull":
             self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_1, wait_for_end_of=True)
             while not self.adjust_omnidirectional_position_is_done():
@@ -6700,15 +6700,17 @@ class RobotStdFunctions():
             release_door = [0.0, -GRAB_DOOR_Y, -GRAB_DOOR_X, -GRAB_DOOR_ROTATE, 0.0, 0.0]
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_door, wait_for_end_of=True) 
             self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.0, wait_for_end_of=True, safety=False) 
-            self.adjust_omnidirectional_position(dx = -0.19 , dy = -0.12, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = -0.17 , dy = -0.12, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = -0.12 , dy = -0.08, wait_for_end_of=True, safety=False)
 
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = release_door, wait_for_end_of=True) 
             after_release_first = [-0.1*1000, 0.0, -0.1*1000, 0.0, 0.0, 0.0, 0.0]
             
             after_release_last = [-0.07*1000, -0.1*1000, 0.16*1000, 0.0, 0.0, -90.0]
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = after_release_first, wait_for_end_of=True)  
-            self.adjust_omnidirectional_position(dx = 0.00 , dy = 0.12, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = 0.00 , dy = 0.14, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = after_release_last, wait_for_end_of=True)
+            #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
             _,_ = self.adjust_angle(-45)
 
