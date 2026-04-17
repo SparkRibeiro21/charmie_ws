@@ -65,7 +65,7 @@ class TaskMain():
 
     def configurables(self):
         self.tetas = [[0, 20], [0, 0], [0, -35]]
-        self.SELECTED_OBJECT = "7Up"
+        self.SELECTED_OBJECT = "Milk"
         self.trys = 3
 
     # main state-machine function
@@ -74,6 +74,8 @@ class TaskMain():
         self.configurables()
 
         object_to_pick = None
+
+        mode = "std_pick"
 
         SAFE_DISTANCE_X = 0.20
         TCP_OFFSET_X = 0.145
@@ -97,179 +99,185 @@ class TaskMain():
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
 
-                while object_to_pick is None:
+                if mode == "moveit":
 
-                    print(f"Searching for {self.SELECTED_OBJECT}...")
+                    while object_to_pick is None:
 
-                    objects_found = self.robot.search_for_objects(tetas=self.tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, environment=True)
-                    
-                    print("LIST OF DETECTED OBJECTS:")
-                    for o in objects_found:
-                        conf = f"{o.confidence * 100:.0f}%"
+                        print(f"Searching for {self.SELECTED_OBJECT}...")
 
-                        relative_x_ = f"{o.position_relative.x:5.2f}"
-                        relative_y_ = f"{o.position_relative.y:5.2f}"
-                        relative_z_ = f"{o.position_relative.z:5.2f}"
-                        absolute_x_ = f"{o.position_absolute.x:5.2f}"
-                        absolute_y_ = f"{o.position_absolute.y:5.2f}"
-                        absolute_z_ = f"{o.position_absolute.z:5.2f}"
-
-
-                        print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({relative_x_},{relative_y_},{relative_z_}) || ({absolute_x_},{absolute_y_},{absolute_z_})")
-
-                        if o.object_name == self.SELECTED_OBJECT:
-
-                            object_to_pick = o
-                            break
-
-                    if object_to_pick is None:
-                        print(f"{self.SELECTED_OBJECT} not found, retrying...")
-                        time.sleep(1.0)
-
-                s,m = self.robot.set_pose_target_arm(
-                    o.position_absolute.x - TCP_OFFSET_X - SAFE_DISTANCE_X,
-                    o.position_absolute.y + TCP_OFFSET_Y,
-                    o.position_absolute.z + TCP_OFFSET_Z,
-                    0.7071,
-                    0.0,
-                    0.7071,
-                    0.0,
-                    cartesian=False,
-                )
-
-                print(m)
-
-                if not s:
-                    print("Planning failed...")
-
-                    for i in range(self.trys):
-                        s,m = self.robot.set_pose_target_arm(
-                            o.position_absolute.x - TCP_OFFSET_X - SAFE_DISTANCE_X,
-                            o.position_absolute.y + TCP_OFFSET_Y,
-                            o.position_absolute.z + TCP_OFFSET_Z,
-                            0.7071,
-                            0.0,
-                            0.7071,
-                            0.0,
-                            cartesian=False,
-                        )
-
-                        print(m)
-
-                        if s:
-                            print(f"Pose planning succeeded on attempt{i+1}!")
-                            break
-
-                if s:
-
-                    print("OPEN GRIPPER")
-
-                    self.robot.set_gripper(850.0, wait_for_end_of=True)
-
-                    print("WAIT FOR START BUTTON")
-
-                    # self.robot.wait_for_start_button()
-
-                    hand_objects_found = None
-                    
-                    while hand_objects_found is None:
-                        hand_objects = self.robot.search_for_objects(tetas= [[0.0,0.0]], list_of_objects=[self.SELECTED_OBJECT], list_of_objects_detected_as=[['Pringles', 'Cheezit', 'Sugar']], detect_objects_hand = True)
-
+                        objects_found = self.robot.search_for_objects(tetas=self.tetas, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[self.SELECTED_OBJECT], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, environment=True)
+                        
                         print("LIST OF DETECTED OBJECTS:")
-                        for o in hand_objects:
+                        for o in objects_found:
                             conf = f"{o.confidence * 100:.0f}%"
 
-                            final_cam_x_ = f"{o.position_cam.x:5.2f}"
-                            final_cam_y_ = f"{o.position_cam.y:5.2f}"
-                            final_cam_z_ = f"{o.position_cam.z:5.2f}"
-
-                            print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({final_cam_x_},{final_cam_y_},{final_cam_z_})")
-
-                        if o.object_name == self.SELECTED_OBJECT:
-
-                            hand_objects_found = o
-                            break
-
-                    ow = self.robot.get_object_width_from_object(o.object_name)
-
-                    grab_x = (o.position_cam.x + ow/1.5 - TCP_OFFSET_X)
-                    grab_y = (o.position_cam.y - TCP_OFFSET_Y)
-                    grab_z = (o.position_cam.z - TCP_OFFSET_Z)
-
-                    print("X:", grab_x, "Y:", grab_y, "Z:", grab_z)
-
-                    # object_in_gripper = False
-
-                    # self.robot.wait_for_start_button()
-
-                    # s,m = self.robot.set_simple_move_tool(-grab_x, -grab_y, -grab_z, duration_sec=3.0)
-
-                    sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
-                    # self.robot.wait_for_start_button()
-                    # sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
-
-                    print(my)
-                    # print(mz)
+                            relative_x_ = f"{o.position_relative.x:5.2f}"
+                            relative_y_ = f"{o.position_relative.y:5.2f}"
+                            relative_z_ = f"{o.position_relative.z:5.2f}"
+                            absolute_x_ = f"{o.position_absolute.x:5.2f}"
+                            absolute_y_ = f"{o.position_absolute.y:5.2f}"
+                            absolute_z_ = f"{o.position_absolute.z:5.2f}"
 
 
-                    # if not sy or not sz:
-                    if not sy:
+                            print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({relative_x_},{relative_y_},{relative_z_}) || ({absolute_x_},{absolute_y_},{absolute_z_})")
+
+                            if o.object_name == self.SELECTED_OBJECT:
+
+                                object_to_pick = o
+                                break
+
+                        if object_to_pick is None:
+                            print(f"{self.SELECTED_OBJECT} not found, retrying...")
+                            time.sleep(1.0)
+
+                    s,m = self.robot.set_pose_target_arm(
+                        o.position_absolute.x - TCP_OFFSET_X - SAFE_DISTANCE_X,
+                        o.position_absolute.y + TCP_OFFSET_Y,
+                        o.position_absolute.z + TCP_OFFSET_Z,
+                        0.7071,
+                        0.0,
+                        0.7071,
+                        0.0,
+                        cartesian=False,
+                    )
+
+                    print(m)
+
+                    if not s:
+                        print("Planning failed...")
 
                         for i in range(self.trys):
+                            s,m = self.robot.set_pose_target_arm(
+                                o.position_absolute.x - TCP_OFFSET_X - SAFE_DISTANCE_X,
+                                o.position_absolute.y + TCP_OFFSET_Y,
+                                o.position_absolute.z + TCP_OFFSET_Z,
+                                0.7071,
+                                0.0,
+                                0.7071,
+                                0.0,
+                                cartesian=False,
+                            )
 
-                            sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
-                            # self.robot.wait_for_start_button()
-                            # sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
+                            print(m)
 
-                            # if sy and sz:
-                            if sy:
-
+                            if s:
                                 print(f"Pose planning succeeded on attempt{i+1}!")
                                 break
 
-                    # if sy and sz:
-                    if sy:
+                    if s:
 
-                        print("CLOSE GRIPPER")
+                        print("OPEN GRIPPER")
 
-                        self.robot.set_gripper(0.0, wait_for_end_of=True)
-                        self.robot.attach_object_to_gripper(object_id=o.object_name)
+                        self.robot.set_gripper(850.0, wait_for_end_of=True)
 
+                        print("WAIT FOR START BUTTON")
 
                         # self.robot.wait_for_start_button()
 
-                        print("LIFT OBJECT")
+                        hand_objects_found = None
+                        
+                        while hand_objects_found is None:
+                            hand_objects = self.robot.search_for_objects(tetas= [[0.0,0.0]], list_of_objects=[self.SELECTED_OBJECT], list_of_objects_detected_as=[['Pringles', 'Cheezit', 'Sugar']], detect_objects_hand = True)
 
-                        s2, m2 = self.robot.set_simple_move_tool(dx=-grab_z, dy=grab_y, dz=-grab_x, duration_sec=5.0)
+                            print("LIST OF DETECTED OBJECTS:")
+                            for o in hand_objects:
+                                conf = f"{o.confidence * 100:.0f}%"
 
-                        print("DEBUG")
+                                final_cam_x_ = f"{o.position_cam.x:5.2f}"
+                                final_cam_y_ = f"{o.position_cam.y:5.2f}"
+                                final_cam_z_ = f"{o.position_cam.z:5.2f}"
 
-                        print(m2)
+                                print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({final_cam_x_},{final_cam_y_},{final_cam_z_})")
 
-                        if not s2:
+                            if o.object_name == self.SELECTED_OBJECT:
+
+                                hand_objects_found = o
+                                break
+
+                        ow = self.robot.get_object_width_from_object(o.object_name)
+
+                        grab_x = (o.position_cam.x + ow/1.5 - TCP_OFFSET_X)
+                        grab_y = (o.position_cam.y - TCP_OFFSET_Y)
+                        grab_z = (o.position_cam.z - TCP_OFFSET_Z)
+
+                        print("X:", grab_x, "Y:", grab_y, "Z:", grab_z)
+
+                        # object_in_gripper = False
+
+                        # self.robot.wait_for_start_button()
+
+                        # s,m = self.robot.set_simple_move_tool(-grab_x, -grab_y, -grab_z, duration_sec=3.0)
+
+                        sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
+                        # self.robot.wait_for_start_button()
+                        # sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
+
+                        print(my)
+                        # print(mz)
+
+
+                        # if not sy or not sz:
+                        if not sy:
 
                             for i in range(self.trys):
 
-                                s2, m2 = self.robot.set_simple_move_tool(dx=-grab_z, dy=grab_y, dz=-grab_x, duration_sec=5.0)
+                                sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
+                                # self.robot.wait_for_start_button()
+                                # sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
 
-                                if s2:
+                                # if sy and sz:
+                                if sy:
 
                                     print(f"Pose planning succeeded on attempt{i+1}!")
                                     break
 
-                print("GOING BACK TO HOME POSE")
+                        # if sy and sz:
+                        if sy:
 
-                time.sleep(2.0)
+                            print("CLOSE GRIPPER")
 
-                self.robot.set_named_target_arm("home", wait_for_end_of=True)
-                self.robot.wait_for_start_button()
-
-                self.robot.detach_object_from_gripper(object_id=o.object_name)
+                            self.robot.set_gripper(0.0, wait_for_end_of=True)
+                            self.robot.attach_object_to_gripper(object_id=o.object_name)
 
 
-                pass
-                    
-                    
+                            # self.robot.wait_for_start_button()
+
+                            print("LIFT OBJECT")
+
+                            s2, m2 = self.robot.set_simple_move_tool(dx=-grab_z, dy=grab_y, dz=-grab_x, duration_sec=5.0)
+
+                            print("DEBUG")
+
+                            print(m2)
+
+                            if not s2:
+
+                                for i in range(self.trys):
+
+                                    s2, m2 = self.robot.set_simple_move_tool(dx=-grab_z, dy=grab_y, dz=-grab_x, duration_sec=5.0)
+
+                                    if s2:
+
+                                        print(f"Pose planning succeeded on attempt{i+1}!")
+                                        break
+
+                    print("GOING BACK TO HOME POSE")
+
+                    time.sleep(2.0)
+
+                    self.robot.set_named_target_arm("home", wait_for_end_of=True)
+                    self.robot.wait_for_start_button()
+
+                    self.robot.detach_object_from_gripper(object_id=o.object_name)
+
+
+                    pass
+
+                elif mode == "std_pick":
+
+                    self.robot.pick_object_risky(selected_object=self.SELECTED_OBJECT)
+                        
+                        
 
             elif self.state == self.Final_State:
                 
