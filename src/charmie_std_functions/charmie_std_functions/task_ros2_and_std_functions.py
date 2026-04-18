@@ -5498,7 +5498,7 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_Y = 1
 
 
-        if furniture != "" and furniture != "Tray":
+        if furniture != "" and furniture != "tray":
                 is_object_in_furniture_check = True
         
         if first_search_tetas == [] and search_with_head_camera:
@@ -6795,15 +6795,18 @@ class RobotStdFunctions():
             obj2_shape = self.get_object_shape_from_object(objects[1])
             obj2_height = self.get_object_height_from_object(objects[1])
             changed = False
-            if obj1_shape == "sphere" and obj2_shape != "sphere":
+            print(" Original list ", objects)
+            if obj1_shape != "sphere" and obj2_shape == "sphere":
                 changed = True
                 obj = objects[0]
                 objects[0] = objects[1]
                 objects[1] = obj
-            if abs(obj1_height - 0.14) < abs (obj2_height - 0.14) and not changed:
+                print(" Changed ", objects[0], " with ", objects[1])
+            if abs(obj1_height - 0.14) > abs(obj2_height - 0.14) and not changed:
                 obj = objects[0]
                 objects[0] = objects[1]
                 objects[1] = obj
+                print(" Changed ", objects[0], " with ", objects[1])
         return objects
 
     def close_dishwasher(self, task = "finals"):

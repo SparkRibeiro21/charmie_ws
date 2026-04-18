@@ -23,7 +23,7 @@ names_dict = {
 }
 
 drinks_dict = {
-    "Red_Wine":       ["red", "wine", "edvin", "royce", "white", "ready", "headwind"],
+    "Red_Wine":       ["red wine", "wine", "edvin", "royce", "white", "ready", "headwind"],
     "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
                        "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
                        "peck", "druspek", "drip spec", "juicy pek", "juice but", "respect", " juspe ", "jeez park"],

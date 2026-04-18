@@ -563,7 +563,7 @@ class TaskMain():
                                     self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
                             else:
                                 self.robot.set_speech(filename="restaurant/what_is_your_order", wait_for_end_of=True)
-                                keyword_list = self.robot.set_face_touchscreen_menu(["foods", "drinks", "snacks", "fruits"], timeout=20, mode="multi")
+                                keyword_list = self.robot.set_face_touchscreen_menu(["foods", "drinks", "snacks", "fruits", "custom"], custom_options=["Red Bull"], timeout=30, mode="multi")
                                 self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
                                 
                                 # print(self.all_orders)

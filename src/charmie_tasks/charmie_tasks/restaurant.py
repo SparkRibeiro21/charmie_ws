@@ -12,7 +12,7 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  False,
+    "charmie_arm":                  True,
     "charmie_audio":                True,
     "charmie_face":                 True,
     "charmie_head_camera":          True,
@@ -645,22 +645,31 @@ class TaskMain():
 
                 # TODO: I need you to inform the rest of the code if both objects are on the tray or if one of them is in the hand
 
-                """ tetas = [[0, -45], [-40, -45], [40, -45]]
+                print(" CHECK FOR ALLO RDERS ", self.all_orders)
+                tetas = [[0, -45], [-40, -45], [40, -45]]
                 ########## HERE YOU HAVE TO USE: current_order and not all.orders !!!!!!!!!!!!!!!!!!!!!!!!!
                 #try
-                counter = len(self.all_orders) - 1
-                #try for o in current_order:
-                list_of_objects_detected_as = [[]]  
-                for o in self.all_orders:
 
-                    match counter:
-                        case 0:
-                            picked_height_0,asked_help_0 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
-                        case 1:
-                            picked_height_1,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position="collect_milk_to_tray",list_of_objects_detected_as=list_of_objects_detected_as)
-                            self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                for order_names in self.all_orders:
+                    if order_names[0] != "Red_Bull" and order_names[1] != "Red_Bull":
+                        self.all_orders = self.robot.sort_for_pick(objects= order_names)
+                        print("Order to pick ", order_names)
+                        #try for o in current_order:
+                        list_of_objects_detected_as = [[]]  
+                
+                        for o in order_names:
 
-                    counter-=1"""
+                                _ ,asked_help_0 = self.robot.pick_object_risky(selected_object=o, furniture= "tray", first_search_tetas=tetas,list_of_objects_detected_as=list_of_objects_detected_as)
+
+                                _ ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+                    else:
+                        #!!!!!!!!!!!!!!!# SAY PUT REDBULL IN TRAY
+                        print("PUT REDBULL IN TRAY")
+                        if order_names[0] == "Red_Bull":
+                            _ ,asked_help_1 = self.robot.pick_object_risky(selected_object=order_names[1], first_search_tetas=tetas)
+                        else:
+                            _ ,asked_help_1 = self.robot.pick_object_risky(selected_object=order_names[0], first_search_tetas=tetas)
+
 
 
                 self.state = self.task_states["Approch_customer_with_order"]
