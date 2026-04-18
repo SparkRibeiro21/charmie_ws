@@ -198,7 +198,7 @@ class TaskMain():
         self.look_right = [-90, 0]
         self.search_tetas = [[-60, -30], [0, -30], [60, -30]]
 
-        self.state = self.task_states["Waiting_for_task_start"]
+        self.state = self.task_states["Receive_guest1"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -294,11 +294,11 @@ class TaskMain():
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) 
 
                 a = time.time()
-                self.GUEST1_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                self.GUEST1_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
                 print("Name:", self.GUEST1_NAME, time.time()-a)
                 
                 b = time.time()
-                self.GUEST1_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                self.GUEST1_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
                 print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
 
                 self.robot.save_speech(command=self.GUEST1_NAME,  filename=self.GUEST1_NAME,  quick_voice=False, wait_for_end_of=False)
@@ -314,6 +314,17 @@ class TaskMain():
                 self.robot.deactivate_tracking_mask()
 
                 self.robot.set_speech(filename="hri/please_follow_me", wait_for_end_of=False)
+
+                time.sleep(10.0)
+
+                self.robot.set_speech(filename="receptionist/dear_second_guest", wait_for_end_of=True)
+                self.robot.set_speech(filename="receptionist/first_guest_name_is", wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST1_NAME.lower(), wait_for_end_of=True)
+                self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST1_DRINK.lower(), wait_for_end_of=True)
+
+                while True:
+                    pass
 
                 self.state = self.task_states["Move_guest1_to_sitting_area"]
 
@@ -502,11 +513,11 @@ class TaskMain():
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
 
                 a = time.time()
-                self.GUEST2_NAME = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
+                self.GUEST2_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
                 print("Name:", self.GUEST2_NAME, time.time()-a)
                 
                 b = time.time()
-                self.GUEST2_DRINK = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                self.GUEST2_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
                 print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
                 
                 self.robot.save_speech(command=self.GUEST2_NAME,  filename=self.GUEST2_NAME,  quick_voice=False, wait_for_end_of=False)
