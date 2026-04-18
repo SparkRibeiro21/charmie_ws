@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from rclpy.node import Node
 import rclpy
 import time
@@ -13,9 +14,11 @@ import json
 # - Que horas são (pode sair no GPSR)
 # - Onde é que o robô está, local, cidade e país, mas também o evento e o charmie saber dizer o que é o evento (RoboParty, RoboCup)
 
-# from charmie_llm.llm_demo_description import LLM_demo_description
-# from charmie_llm.llm_planner_desciption import LLM_planner_description
-# from charmie_llm.llm_info_extraction_description import LLM_info_extraction_description
+
+### Classes that handle the ollama LLMs 
+from charmie_llm.llm_planner_desciption import Ollama_planner_description
+from charmie_llm.llm_info_extraction_description import Ollama_info_extraction_description
+
 
 # main function that already creates the thread for the task state machine
 def main(args=None):
@@ -31,10 +34,24 @@ class LLMNode(Node):
         super().__init__("LLM")
         self.get_logger().info("Initialised CHARMIE LLM Offline Ollama Node")
 
+        self.declare_parameter("task", "gpsr") # hri, demo, gpsr
+        self.TASK = self.get_parameter("task").value
+
+        self.get_logger().info("TASK MODE: "+self.TASK)
+
         # LLM objects declaration must come before the service declaration, so that if there is any error, in GUI never shows that LLM was initialized 
         # self.llm_demo_description = LLM_demo_description() 
         # self.llm_planner_description = LLM_planner_description()
         # self.llm_info_extraction_description = LLM_info_extraction_description()
+        
+        match self.TASK:
+            case "hri":
+                self.get_logger().info("LLM DEMO MODE")
+                self.ollama_info_extraction = Ollama_info_extraction_description()
+            case "gpsr":
+                self.get_logger().info("LLM GPSR MODE")
+                self.ollama_planner = Ollama_planner_description()
+        
 
         ### HERE WE NEED TO ADD A DUMMY FUNCTION TO GET A FIRST RESPONSE FROM THE LLM
         ### THIS IS BECAUSE THE FIRST TIME WE CALL THE LLM IT TAKES A LONG TIME TO LOAD, SO WE WANT TO DO IT IN THE BEGINNING, SO THAT WHEN WE CALL IT LATER ON, IT IS ALREADY LOADED AND READY TO RESPOND QUICKLY
@@ -93,6 +110,7 @@ class LLMNode(Node):
         """ # FOR THE DEMO
         # response.answer = self.llm_demo_description.run(request.command) 
 
+
         # TEMPORARY IN HERE!!! FOR THE INFO EXTRACTION
         request_command = request.command
 
@@ -104,10 +122,15 @@ class LLMNode(Node):
 
         response.answer = extracted_info """
 
+        request_command = request.command
+        info_type = request.mode
+
+        extracted_info = self.ollama_info_extraction.extract_info(request=request_command, info_type=info_type)
+        print("Extracted " + info_type + ":", extracted_info)
+
+
         los = ListOfStrings()
-        los.strings.append("This is 4 demonstration response from the LLM.")
-        los.strings.append("This is 5 demonstration response from the LLM.")
-        los.strings.append("This is 6 demonstration response from the LLM.")
+        los.strings.append(extracted_info)
         
         response.answer = los
 
@@ -124,9 +147,18 @@ class LLMNode(Node):
         self.get_logger().info("LLM GPSR HIGH LEVEL REQUEST RECEIVED")
         print("Received:", request.command)
 
-        """ # sends the command to the LLM and gets the response (the generated plan)
-        llm_response = self.llm_planner_description.handle_request(request.command)
-        
+        # sends the command to the LLM and gets the response (the generated plan)
+        #llm_response = self.llm_planner_description.handle_request(request.command)
+
+        start_time = time.time()
+        generated_plan = self.ollama_planner.high_level_planner(request.command)
+        end_time = time.time()
+
+        print("Plan Generated:", generated_plan)
+        print("Time taken to generate the plan: ", end_time - start_time, "seconds")
+
+
+        """ 
         # print (f"LLM Output:", llm_response)
         # print (f"LLM response.output_text:", llm_response.output)
         
@@ -174,11 +206,15 @@ class LLMNode(Node):
                 
         response.answer = example   """
 
-        los = ListOfStrings()
-        los.strings.append("This is 7 demonstration response from the LLM.")
-        los.strings.append("This is 8 demonstration response from the LLM.")
-        los.strings.append("This is 9 demonstration response from the LLM.")
+        # los = ListOfStrings()
+        # los.strings.append("This is 7 demonstration response from the LLM.")
+        # los.strings.append("This is 8 demonstration response from the LLM.")
+        # los.strings.append("This is 9 demonstration response from the LLM.")
         
+        # response.answer = los
+        los = ListOfStrings()
+        los.strings.append(generated_plan)
+
         response.answer = los
 
         return response
