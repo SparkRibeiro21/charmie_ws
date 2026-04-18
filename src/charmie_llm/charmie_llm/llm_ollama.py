@@ -43,9 +43,15 @@ class LLMNode(Node):
         # self.llm_demo_description = LLM_demo_description() 
         # self.llm_planner_description = LLM_planner_description()
         # self.llm_info_extraction_description = LLM_info_extraction_description()
-
-        self.ollama_planner = Ollama_planner_description()
-        # self.ollama_info_extraction = Ollama_info_extraction_description()
+        
+        match self.TASK:
+            case "hri":
+                self.get_logger().info("LLM DEMO MODE")
+                self.ollama_info_extraction = Ollama_info_extraction_description()
+            case "gpsr":
+                self.get_logger().info("LLM GPSR MODE")
+                self.ollama_planner = Ollama_planner_description()
+        
 
         ### HERE WE NEED TO ADD A DUMMY FUNCTION TO GET A FIRST RESPONSE FROM THE LLM
         ### THIS IS BECAUSE THE FIRST TIME WE CALL THE LLM IT TAKES A LONG TIME TO LOAD, SO WE WANT TO DO IT IN THE BEGINNING, SO THAT WHEN WE CALL IT LATER ON, IT IS ALREADY LOADED AND READY TO RESPOND QUICKLY
