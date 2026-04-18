@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
 
+        "finals                     = charmie_tasks.finals_task_2026:main",
         "inspection                 = charmie_tasks.inspection:main",
 		"hri_task_2026              = charmie_tasks.hri_task_2026:main",
         "pick_and_place_task_2026   = charmie_tasks.pick_and_place_task_2026:main",
@@ -32,8 +33,7 @@ setup(
         "restaurant                 = charmie_tasks.restaurant:main",
         "restaurant_risky           = charmie_tasks.restaurant_risky:main",
 		"finals_task_2026           = charmie_tasks.finals_task_2026:main",
-        
-        "serve_breakfast = charmie_tasks.serve_breakfast:main",
+        "serve_breakfast            = charmie_tasks.serve_breakfast:main",
 		
         ],
     },
