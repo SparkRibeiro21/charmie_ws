@@ -4134,13 +4134,13 @@ class RobotStdFunctions():
             confirm_attempts_cntr += 1
 
             ##### SPEAK: "What is your request?"
-            # gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green_yes_no", wait_for_end_of= True)
-            self.set_speech(filename="gpsr/gpsr_question_2", wait_for_end_of=True)
-            gpsr_command = "Place the milk on the dining table"
+            gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green_yes_no", wait_for_end_of= True)
+            # self.set_speech(filename="gpsr/gpsr_question_2", wait_for_end_of=True)
+            # gpsr_command = "Place the milk on the dining table"
             print("Finished:", gpsr_command)
             # add step to normalize command
 
-            self.save_speech(command= gpsr_command, filename="gpsr_command", wait_for_end_of=False)
+            self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
             
             ##### SPEAK: "Please give me a moment to process your command"
             self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=True)
@@ -4148,9 +4148,9 @@ class RobotStdFunctions():
             self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
             self.set_speech(filename="temp/gpsr_command", wait_for_end_of=True)
             ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
-            self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
-            confirmation = "yes"
-            # confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+            # self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
+            # confirmation = "yes"
+            confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
             print("Finished:", confirmation)
 
             if confirmation.lower() == "yes":
