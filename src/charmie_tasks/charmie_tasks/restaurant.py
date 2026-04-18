@@ -563,7 +563,7 @@ class TaskMain():
                                     self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
                             else:
                                 self.robot.set_speech(filename="restaurant/what_is_your_order", wait_for_end_of=True)
-                                keyword_list = self.robot.set_face_touchscreen_menu(["foods", "drinks", "snacks", "fruits"], timeout=20, mode="multi")
+                                keyword_list = self.robot.set_face_touchscreen_menu(["foods", "drinks", "snacks", "fruits", "custom"], custom_options=["Red Bull"], timeout=30, mode="multi")
                                 self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
                                 
                                 # print(self.all_orders)
@@ -655,12 +655,17 @@ class TaskMain():
                         self.all_orders = self.robot.sort_for_pick(objects= order_names)
                         print("Order to pick ", order_names)
                         #try for o in current_order: 
+
+                        counter = 0
                 
                         for o in order_names:
+                                
+                                if counter == 0:
+                                    _ ,asked_help_0 = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position=, first_search_tetas=tetas)
+                                else:
 
-                                _ ,asked_help_0 = self.robot.pick_object_risky(selected_object=o, furniture= "tray", first_search_tetas=tetas)
 
-                                _ ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+                                
                     else:
                         #!!!!!!!!!!!!!!!# SAY PUT REDBULL IN TRAY
                         print("PUT REDBULL IN TRAY")
