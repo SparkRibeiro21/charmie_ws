@@ -1,0 +1,27 @@
+{
+  "type": "yoloe_visual_prompt",
+  "image": "door_handle2_lar_head_cam.jpg",
+  "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
+  "width": 848,
+  "height": 480,
+  "classes": [
+    {
+      "cls": 0,
+      "name": "door_handle"
+    }
+  ],
+  "bboxes": [
+    {
+      "cls": 0,
+      "xyxy": [
+        437.0,
+        261.0,
+        508.0,
+        289.0
+      ]
+    }
+  ],
+  "meta": {
+    "notes": ""
+  }
+}

@@ -13,25 +13,25 @@ sdnl_nav:
     topic_sdnl_debug: "sdnl/debug"
 
     # SDNL major params
-    lambda_target_not_obs:  1.5
-    lambda_target_with_obs: 1.5
-    beta1: 5.0
-    beta2: 3.0
+    lambda_target_not_obs:  1.0
+    lambda_target_with_obs: 0.5
+    beta1: 2.0
+    beta2: 5.0
 
     # SDNL minor params
     max_dist_for_obs: 2.0
-    robot_radius: 0.28
+    robot_radius: 0.32 # 0.28
     heading_offset_rad: 0.0
     use_obstacle_cutoff: false
         
     # Linear velocity control params
     # Target slowdown
-    tar_slow_dist: 1.00   # [m]   start slowing down distance from reached radius
+    tar_slow_dist: 1.0   # [m]   start slowing down distance from reached radius
     tar_min_dist: 0.20    # [m]   distance from reached radius at which we reach minimum speed due
     v_tar_min_frac: 0.20  # [m/s] min v fraction when for target slowdown
 
     # Obstacle slowdown
-    obs_slow_dist: 1.00   # [m]   start slowing down due to obstacles
+    obs_slow_dist: 1.0   # [m]   start slowing down due to obstacles
     obs_min_dist: 0.20    # [m]   distance at which we reach minimum speed due to obstacles
     v_obs_min_frac: 0.20  # [m/s] min v fraction when obstacles are present
 

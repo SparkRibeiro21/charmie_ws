@@ -36,7 +36,7 @@ ros2_modules = {
     "charmie_tracking":             False,
     "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            False,
-    "charmie_yolo_world":           False,
+    "charmie_yolo_world":           True,
 }
 
 # main function that already creates the thread for the task state machine
@@ -78,7 +78,7 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
 
-        self.home_furniture = "Dinner Table"
+        self.home_furniture = "Shelf"
         # self.home_furniture = "Dinner Table"        
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
@@ -136,7 +136,9 @@ class TaskMain():
 
                 self.robot.set_initial_position(self.initial_position)
 
-                # self.robot.wait_for_start_button()
+                self.robot.open_door(push_pull="pull")
+
+                self.robot.wait_for_start_button()
                 
                 #self.robot.set_initial_position(self.initial_position)
                 

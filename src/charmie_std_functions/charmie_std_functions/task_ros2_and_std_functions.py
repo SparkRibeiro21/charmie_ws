@@ -1963,7 +1963,7 @@ class RobotStdFunctions():
         success = False
         message = ""
 
-        MAX_ERROR_LEGS_READING = 0.005
+        MAX_ERROR_LEGS_READING = 0.003
         MAX_ERROR_TORSO_READING = 3
 
         MIN_POSSIBLE_LEGS =  0.00 - (MAX_ERROR_LEGS_READING/2)
@@ -2366,7 +2366,7 @@ class RobotStdFunctions():
         request.text_prompts = text_prompts
         request.visual_prompts = visual_prompts
 
-        self.node.call_activate_yolo_world_server(request=request)
+        self.node.call_activate_yolo_world_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
           while not self.node.waited_for_end_of_activate_yolo_world:
@@ -3187,7 +3187,7 @@ class RobotStdFunctions():
         
         return success, message, min_radar_distance_to_robot_edge
     
-    def sdnl_move_to_position(self, move_coords, ignore_obstacles=False, first_rotate=False, orient_after_move=False, reached_radius=0.50, yaw_tolerance_deg=3.0, max_linear_speed=0.42, max_angular_speed=0.90, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+    def sdnl_move_to_position(self, move_coords, ignore_obstacles=False, first_rotate=False, orient_after_move=False, reached_radius=0.50, yaw_tolerance_deg=3.0, max_linear_speed=0.42, max_angular_speed=0.50, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         # Create a goal
         goal_msg = NavigateSDNL.Goal()
@@ -3534,11 +3534,13 @@ class RobotStdFunctions():
                                         minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
             
             if yolo_world_activate:
+                ywat = time.time()
                 self.activate_yolo_world(activate_prompt_free_head=detect_prompt_free_head, activate_tv_prompt_head=detect_tv_prompt_head,
                                         activate_prompt_free_hand=detect_prompt_free_hand, activate_tv_prompt_hand=detect_tv_prompt_hand,
                                         activate_prompt_free_base=detect_prompt_free_base, activate_tv_prompt_base=detect_tv_prompt_base,
                                         minimum_prompt_free_confidence=minimum_prompt_free_confidence, minimum_tv_prompt_confidence=minimum_tv_prompt_confidence,
                                         text_prompts=text_prompts, visual_prompts=visual_prompts, wait_for_end_of=True)
+                print("YOLO WORLD ACTIVATION TIME:", time.time() - ywat)
 
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             
@@ -4006,6 +4008,14 @@ class RobotStdFunctions():
             self.node.waited_for_end_of_llm_ollama_demonstration = False
 
         print(self.node.llm_ollama_demonstration_response)
+
+        # if self.node.llm_ollama_demonstration_response == "":
+            #IM SORRY, I COULD NOT UNDERSTAND YOUR INFO_TYPE, CAN YOU REPEAT?
+            # self.set_speech(filename="generic/", wait_for_end_of=True)
+            # get audio again (do for max 3 times) otherwise move on
+            # resend request to LLM
+
+
         return self.node.llm_ollama_demonstration_response
     
     def get_llm_ollama_information(self, command="", mode="", wait_for_end_of=True):
@@ -4117,8 +4127,6 @@ class RobotStdFunctions():
         max_confirm_attempts = 3
         confirm_attempts_cntr = 0
 
-        self.calibrate_audio(wait_for_end_of=True)
-
         self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
 
         while not command_confirmed and confirm_attempts_cntr < max_confirm_attempts:
@@ -4126,23 +4134,24 @@ class RobotStdFunctions():
             confirm_attempts_cntr += 1
 
             ##### SPEAK: "What is your request?"
-            # gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green_yes_no", wait_for_end_of= True)
-            self.set_speech(filename="gpsr/gpsr_question_2", wait_for_end_of=True)
-            gpsr_command = "Place the milk on the dining table"
+            gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green", wait_for_end_of= True)
+            # self.set_speech(filename="gpsr/gpsr_question_2", wait_for_end_of=True)
+            # gpsr_command = "Place the milk on the dining table"
             print("Finished:", gpsr_command)
             # add step to normalize command
 
-            self.save_speech(command= gpsr_command, filename="gpsr_command", wait_for_end_of=False)
-            
             ##### SPEAK: "Please give me a moment to process your command"
-            self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=True)
+            self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
+
+            self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
+            
             ##### SPEAK: "I have understood the following command."
             self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
             self.set_speech(filename="temp/gpsr_command", wait_for_end_of=True)
             ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
-            self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
-            confirmation = "yes"
-            # confirmation = self.get_audio(yes_or_no=True, question="gpsr/confirm_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+            # self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
+            # confirmation = "yes"
+            confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
             print("Finished:", confirmation)
 
             if confirmation.lower() == "yes":
@@ -6718,6 +6727,57 @@ class RobotStdFunctions():
         return success, message, nav_coords_ret
 
     def open_door(self, push_pull="push", left_right="left", wait_for_end_of=True):
+
+
+        arm_position_1 = [-189.7, 36.6, -78.1, 170.7, 45.5, 183.4]
+
+        tf_x = 0.210
+        tf_y = 0.008
+        tf_z = - 0.075
+
+        if push_pull == "pull":
+            initial_position = [1.5, -1.45, 178.0]
+            neck_position = [[15,-22]]
+
+
+            self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+
+            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle2_head_cam"], minimum_tv_prompt_confidence=0.50)
+        
+            for h in door_handle:
+
+                move_y = h.position_relative.y
+
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.25, wait_for_end_of=False)
+        if push_pull == "pull":
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_1, wait_for_end_of=True)
+            while not self.adjust_omnidirectional_position_is_done():
+                time.sleep(0.1)
+
+            door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_handle_gripper"], detect_tv_prompt_hand=True, visual_prompts=["door_handlef_gripper_cam"], minimum_tv_prompt_confidence=0.50)
+            self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+            for g in door_handle:
+
+                gripper_position = self.get_gripper_localization()
+
+                move_z_gripper = (gripper_position.z - g.position_absolute.z)*1000
+                move_y_gripper = (gripper_position.y - g.position_absolute.y + tf_y + 0.02)*1000
+                move_x_gripper = (gripper_position.x - g.position_absolute.x - tf_z - 0.05)*1000
+                move_x_base = abs(gripper_position.x + tf_x - g.position_absolute.x)
+                print("Position x:", g.position_absolute.x, "Position y:", g.position_absolute.y, "Position z:", g.position_absolute.z)
+
+            lower_gripper = [move_x_gripper, - move_y_gripper , 0.0, 0.0, 0.0, 0.0]    
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = lower_gripper, wait_for_end_of=True)  
+            print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
+            self.adjust_omnidirectional_position(dx = move_x_base , dy = 0.0, wait_for_end_of=True, safety=False)
+            grab_door = [0.0, 0.06*1000, 0.02*1000, -20.0, 0.0, 0.0]
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_door, wait_for_end_of=True) 
+            self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.0, wait_for_end_of=True, safety=False) 
+            
+        
+        self.wait_for_start_button()
         # placeholder for door opening std_function
         pass
         # arm movements and search for objects for furniture door_handle 
