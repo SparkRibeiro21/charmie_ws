@@ -1518,7 +1518,7 @@ class DebugVisualMain():
                 elif self.top_camera_id == "head" or self.top_camera_id == "gripper": # special case for camera change resolution bug. Resolution changes if cable is very used, changes from USB3.0 to USB2.0.
                     rgb_h, rgb_w = opencv_image.shape[:2]
                     if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
-                        self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                        self.node.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
                         rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
                         opencv_image = rgb
 
@@ -1571,7 +1571,7 @@ class DebugVisualMain():
                 elif self.top_camera_id == "head" or self.top_camera_id == "gripper": # special case for camera change resolution bug. Resolution changes if cable is very used, changes from USB3.0 to USB2.0.
                     depth_h, depth_w = opencv_image.shape[:2]
                     if (depth_w, depth_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
-                        self.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                        self.node.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
                         depth = cv2.resize(depth, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
                         opencv_image = depth
 
@@ -1642,7 +1642,7 @@ class DebugVisualMain():
                 elif self.top_camera_id == "head" or self.top_camera_id == "gripper": # special case for camera change resolution bug. Resolution changes if cable is very used, changes from USB3.0 to USB2.0.
                     rgb_h, rgb_w = opencv_image.shape[:2]
                     if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
-                        self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                        self.node.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
                         rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
                         opencv_image = rgb
 
@@ -1696,7 +1696,7 @@ class DebugVisualMain():
                 elif self.top_camera_id == "head" or self.top_camera_id == "gripper": # special case for camera change resolution bug. Resolution changes if cable is very used, changes from USB3.0 to USB2.0.
                     depth_h, depth_w = opencv_image.shape[:2]
                     if (depth_w, depth_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
-                        self.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                        self.node.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
                         depth = cv2.resize(depth, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
                         opencv_image = depth
 
