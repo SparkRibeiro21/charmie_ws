@@ -4858,7 +4858,11 @@ class RobotStdFunctions():
                                         if not said:
                                             self.set_speech(filename=folder+"/"+so.replace(" ","_").lower())
                                             said = True
-
+                        
+                        for so in self.node.selected_list_options_touchscreen_menu:
+                            if so.replace(" ","_").lower() == "red_bull": # quick fix, to not wanting to add red_bull to configuration files because of objects detection
+                                self.set_speech(filename="objects_names/red_bull")
+                        
                 return self.node.selected_list_options_touchscreen_menu
         
         else:
