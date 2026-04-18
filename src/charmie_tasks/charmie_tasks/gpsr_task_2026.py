@@ -166,16 +166,16 @@ class TaskMain():
                 
                 # Announce navigation
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                ##ADICIONAR FALA PARA INSTRUCTION POINT
                 self.robot.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
                 
 
                 # Move to the instruction point
                 self.robot.move_to_position(move_coords=self.instruction_point, wait_for_end_of=True)
+                # Look at the judge
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 
                 # Announce arrival
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                ##ADICIONAR FALA PARA INSTRUCTION POINT
                 self.robot.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
                 
                 
@@ -183,18 +183,16 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Receive_request1"]:
+
+                self.curr_request = 1
                 
                 self.robot.calibrate_audio()
-                
+
                 ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."
                 self.robot.set_speech(filename="gpsr/gpsr_intro", wait_for_end_of=True)
 
                 self.curr_request = 1
-                # your code here ...
 
-                # Look at the judge
-                # self.robot.set_neck
-                
                 request = self.robot.get_llm_confirm_command()
 
                 if request == "ERROR":
@@ -204,7 +202,6 @@ class TaskMain():
 
                 else:
                     # Save current request
-                    # self.request1 = request
                     print("Request " + str(self.curr_request) + ": " + request)
 
                     ##### SPEAK: "Okay, I understood your request. Let's move on."
@@ -214,10 +211,13 @@ class TaskMain():
                     self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
 
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
-                    self.robot.set_speech(filename="gpsr/say_plan1", wait_for_end_of= False)
+
+                    ##### SPEAK: "I am almost done with your request, please wait a little bit more."
+                    self.robot.set_speech(filename="gpsr/please_wait", wait_for_end_of=False)
+                    
                     self.robot.save_speech(command=hlp_request[0], filename="gpsr_request1", quick_voice=True ,wait_for_end_of=True)
+                    self.robot.set_speech(filename="gpsr/say_plan1", wait_for_end_of= False)
                     self.robot.set_speech(filename="temp/gpsr_request1", wait_for_end_of= True)
-                    # self.request1 = hlp_request[0]
 
                 self.state = self.task_states["Receive_request2"]
 
@@ -251,8 +251,13 @@ class TaskMain():
                     self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
 
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
-                    self.robot.set_speech(filename="gpsr/say_plan2", wait_for_end_of= False)
+
+                    ##### SPEAK: "I am almost done with your request, please wait a little bit more."
+                    self.robot.set_speech(filename="gpsr/please_wait", wait_for_end_of=False)
+
                     self.robot.save_speech(command=hlp_request[0], filename="gpsr_request2", quick_voice=True ,wait_for_end_of=True)
+
+                    self.robot.set_speech(filename="gpsr/say_plan2", wait_for_end_of= False)
                     self.robot.set_speech(filename="temp/gpsr_request2", wait_for_end_of= True)
                     # self.request2 = hlp_request[0]
 
@@ -286,8 +291,13 @@ class TaskMain():
                     self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
 
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
-                    self.robot.set_speech(filename="gpsr/say_plan3", wait_for_end_of= False)
+
+                    ##### SPEAK: "I am almost done with your request, please wait a little bit more."
+                    self.robot.set_speech(filename="gpsr/please_wait", wait_for_end_of=False)
+
                     self.robot.save_speech(command=hlp_request[0], filename="gpsr_request3", quick_voice=True ,wait_for_end_of=True)
+
+                    self.robot.set_speech(filename="gpsr/say_plan3", wait_for_end_of= False)
                     self.robot.set_speech(filename="temp/gpsr_request3", wait_for_end_of= True)
                     # self.request3 = hlp_request[0]
 

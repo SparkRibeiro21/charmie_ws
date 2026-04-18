@@ -191,26 +191,28 @@ class Ollama_planner_description:
                             "1. Never invent objects, people, or places not in the command.\n"
                             "2. Always move before interacting with anything.\n"
                             "3. After moving to a location, always look for the object or person before touching or addressing them.\n"
-                            "4. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
+                            "4. The locutor is in the instruction point If you need to talk to them or hand them an object, move to them first.\n"
+                            "5. The verbs guide, escort, take mean the same, but they are different from the verb follow. \n"
+                            "5. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
 
                             "EXAMPLES:\n"
                             "Command: find a toy in the living room and place it on the cabinet\n"
-                            "Answer: I will move to the living room; I will look for the toy; I will pick up the toy; I will move to the cabinet; I will place the toy on the cabinet.\n\n"
+                            "Answer: I will move to the living room; Then, I will look for the toy; I will pick up the toy; I will move to the cabinet; I will place the toy on the cabinet.\n\n"
 
                             "Command: take a fruit from the armchair and bring it to Robin in the bathroom\n"
-                            "Answer: I will move to the armchair; I will look for the fruit; I will pick up the fruit; I will move to the bathroom; I will look for Robin; I will move towards Robin; I will hand the fruit to Robin.\n\n"
+                            "Answer: First, I will move to the armchair; I will look for the fruit; I will pick up the fruit; I will move to the bathroom; I will look for Robin; I will move towards Robin; I will hand the fruit to Robin.\n\n"
 
-                            "Command: meet Paris at the sofa and follow them\n"
-                            "Answer: I will move to the sofa; I will look for Paris; I will move towards Paris; I will greet Paris; I will follow Paris.\n\n"
+                            "Command: meet Paris at the sofa and follow them to the bathroom\n"
+                            "Answer: I will move to the sofa; I will look for Paris; If found, I will move towards Paris; I will greet Paris; I will follow Paris.\n\n"
 
                             "Command: tell me how many toys are on the bed\n"
-                            "Answer: I will move to the bed; I will count the toys on the bed; I will move to the initial position; I will speak the result.\n\n"
+                            "Answer: I will move to the bed; I will count the toys on the bed; I will move towards you; Lastly, I will tell you the result.\n\n"
 
                             "Command: tell me what is the heaviest object on the shelf\n"
-                            "Answer: I will move to the shelf; I will look for the heaviest object; I will move to the initial position; I will speak the result.\n\n"
+                            "Answer: I will move to the shelf; I will look for the heaviest object; Then, I will move towards you; I will tell you the result.\n\n"
 
-                            "Command: go to the kitchen then find the person pointing left and say your team name\n"
-                            "Answer: I will move to the kitchen; I will look for the person pointing left; I will move towards that person; I will tell my team name.\n\n"
+                            "Command: go to the kitchen then find the person pointing left and say your team's name\n"
+                            "Answer: I will move to the kitchen;I will look for the person pointing left; After that, I will move towards that person; I will tell my team's name.\n\n"
 
                             "Command: locate the waving person in the hallway and take them from hallway to the sofa\n"
                             "Answer: I will move to the hallway; I will look for the waving person; I will move towards the waving person; I will guide them from hallway to the sofa.\n"
