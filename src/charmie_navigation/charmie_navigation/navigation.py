@@ -1538,7 +1538,12 @@ class ROS2NavigationNode(Node):
 
         with self._img_lock:
             if self.first_depth_head_image_received:
-                current_frame_depth_head = self.br.imgmsg_to_cv2(self.depth_head_img, desired_encoding="passthrough")
+                depth = self.br.imgmsg_to_cv2(self.depth_head_img, desired_encoding="passthrough")
+                depth_h, depth_w = depth.shape[:2]
+                if (depth_w, depth_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                    self.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                    depth = cv2.resize(depth, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+                current_frame_depth_head = depth
             else:
                 current_frame_depth_head = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
