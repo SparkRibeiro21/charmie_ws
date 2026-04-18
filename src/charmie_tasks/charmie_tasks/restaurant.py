@@ -654,12 +654,11 @@ class TaskMain():
                     if order_names[0] != "Red_Bull" and order_names[1] != "Red_Bull":
                         self.all_orders = self.robot.sort_for_pick(objects= order_names)
                         print("Order to pick ", order_names)
-                        #try for o in current_order:
-                        list_of_objects_detected_as = [[]]  
+                        #try for o in current_order: 
                 
                         for o in order_names:
 
-                                _ ,asked_help_0 = self.robot.pick_object_risky(selected_object=o, furniture= "tray", first_search_tetas=tetas,list_of_objects_detected_as=list_of_objects_detected_as)
+                                _ ,asked_help_0 = self.robot.pick_object_risky(selected_object=o, furniture= "tray", first_search_tetas=tetas)
 
                                 _ ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
                     else:
