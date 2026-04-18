@@ -146,7 +146,7 @@ class TaskMain():
 
                 # time.sleep(3.0) # time for person who pressed start button leave to not be shown in qualif video
 
-                self.state = self.task_states["Looking_for_barman"]
+                self.state = self.task_states["Collect_order_from_barman"]
                 
 
             elif self.state == self.task_states["Looking_for_barman"]:
@@ -623,6 +623,7 @@ class TaskMain():
 
                 ##### SPEAK: Barman, please give me the following items:
                 self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
+                self.all_orders = [["Tropical Juice", "Pringles"]]
 
                 print("ALL ORDERS: ", self.all_orders)
                 current_order = []
@@ -660,12 +661,15 @@ class TaskMain():
                 
                         for o in order_names:
                                 
-                                if counter == 0:
-                                    _ ,asked_help_0 = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position=, first_search_tetas=tetas)
+                            if counter == 0:
+                                if self.robot.get_standard_pick_from_object(o) == "front":
+                                    _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)
                                 else:
-
-
-                                
+                                    _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)    
+                                self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
+                            else:
+                                picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+                            counter = counter + 1         
                     else:
                         #!!!!!!!!!!!!!!!# SAY PUT REDBULL IN TRAY
                         print("PUT REDBULL IN TRAY")
@@ -734,13 +738,14 @@ class TaskMain():
                         if not order_taken_ctr and order_taken_ctr == max_attempts:
                             self.robot.set_speech(filename="restaurant/problem_taking_order", wait_for_end_of=True)
 
-                """self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.set_speech(filename="arm/arm_open_gripper", wait_for_end_of=True)
                 # SAY PICK OBJECTS AND COUNTDOWN
                 self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
                 time.sleep(2)
                 self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                time.sleep(2)
                 self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-                """
                 """counter = 0
                 self.all_orders.reverse()
                 print("LIST: ", self.all_orders)

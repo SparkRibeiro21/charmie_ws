@@ -5630,8 +5630,10 @@ class RobotStdFunctions():
             elif pick_mode == "top":
                 if state == 0:
 
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_top, wait_for_end_of=True)
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_left_tray_top, wait_for_end_of=True)
+
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_to_safe_joints, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
 
                     gripper_place_position = self.get_gripper_localization()
 
@@ -5653,7 +5655,7 @@ class RobotStdFunctions():
                     
 
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = first_left_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = first_right_tray_top, wait_for_end_of=True)
                     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
                     return placed_height
                 
@@ -6234,11 +6236,15 @@ class RobotStdFunctions():
                 if state == 0:
 
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_front, wait_for_end_of=True)
+                    self.wait_for_start_button()
 
                     gripper_place_position = self.get_gripper_localization()
 
-
-                    final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    if not asked_help:
+                        final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    else:
+                        print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object(selected_object)/1.25) ," TOLERA ", TOLERANCE_ERROR)
+                        final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.25) - TOLERANCE_ERROR)*1000
 
                     print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
@@ -6265,7 +6271,10 @@ class RobotStdFunctions():
                     gripper_place_position = self.get_gripper_localization()
 
 
-                    final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    if not asked_help:
+                        final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    else:
+                        final_z = (gripper_place_position.z - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.25) - TOLERANCE_ERROR)*1000
 
                     print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
