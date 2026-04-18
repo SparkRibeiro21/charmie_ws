@@ -414,7 +414,7 @@ private:
         }
         else { // Simplified
 
-            RCLCPP_INFO(this->get_logger(),
+            RCLCPP_DEBUG(this->get_logger(),
                 "[%s] Points: %lu/%lu (range=%d, height=%d, robot=%d, back=%d)",
                 source_name.c_str(),
                 valid,
@@ -588,7 +588,7 @@ private:
         }
         else { // Simplified
 
-            RCLCPP_INFO(this->get_logger(),
+            RCLCPP_DEBUG(this->get_logger(),
                 "[%s] Points: %lu/%lu (range=%d, height=%d, robot=%d, back=%d)",
                 source_name.c_str(),
                 pcl_filtered->points.size(),
@@ -680,7 +680,7 @@ private:
                 double end_angle_deg   = (min_radar_angle_ + sector_size_ * (i + 1)) * 180.0 / M_PI;
 
                 if (sectors[i].has_point) {
-                    RCLCPP_INFO(this->get_logger(),
+                    RCLCPP_DEBUG(this->get_logger(),
                         "[radar] Sector %d [%.1f°, %.1f°]: Point (%.2f, %.2f, %.2f) d=%.2f m",
                         i, start_angle_deg, end_angle_deg,
                         sectors[i].closest_point.x,
@@ -689,7 +689,7 @@ private:
                         sectors[i].min_distance
                     );
                 } else {
-                    RCLCPP_INFO(this->get_logger(),
+                    RCLCPP_DEBUG(this->get_logger(),
                         "[radar] Sector %d [%.1f°, %.1f°]: No Points", 
                         i, start_angle_deg, end_angle_deg
                     );
@@ -755,8 +755,8 @@ private:
                 }
 
                 // Print both in INFO logs
-                RCLCPP_INFO(this->get_logger(), "%s", raw_stream.str().c_str());
-                RCLCPP_INFO(this->get_logger(), "%s", norm_stream.str().c_str());
+                RCLCPP_DEBUG(this->get_logger(), "%s", raw_stream.str().c_str());
+                RCLCPP_DEBUG(this->get_logger(), "%s", norm_stream.str().c_str());
             }
 
             // RADAR DATA
@@ -837,13 +837,13 @@ private:
         ros_merged.is_dense = true;
 
         radar_pointcloud_baseframe_publisher_->publish(ros_merged);
-        RCLCPP_INFO(this->get_logger(), "[radar] Published merged cloud with %lu points.", merged_cloud->points.size());
+        RCLCPP_DEBUG(this->get_logger(), "[radar] Published merged cloud with %lu points.", merged_cloud->points.size());
 
         auto t_end = std::chrono::high_resolution_clock::now();
         double total_elapsed_ms    = std::chrono::duration_cast<std::chrono::microseconds>(t_end    - t_start ).count() / 1000.0;
         double merging_elapsed_ms  = std::chrono::duration_cast<std::chrono::microseconds>(t_start2 - t_start ).count() / 1000.0;
         double checking_elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end    - t_start2).count() / 1000.0;
-        RCLCPP_INFO(this->get_logger(), "[radar] Total time: %.2f ms, Merging time %.2f ms, Checking time %.2f ms", total_elapsed_ms, merging_elapsed_ms, checking_elapsed_ms);
+        RCLCPP_DEBUG(this->get_logger(), "[radar] Total time: %.2f ms, Merging time %.2f ms, Checking time %.2f ms", total_elapsed_ms, merging_elapsed_ms, checking_elapsed_ms);
         
     }
 

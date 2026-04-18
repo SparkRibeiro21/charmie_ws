@@ -2366,7 +2366,7 @@ class RobotStdFunctions():
         request.text_prompts = text_prompts
         request.visual_prompts = visual_prompts
 
-        self.node.call_activate_yolo_world_server(request=request)
+        self.node.call_activate_yolo_world_server(request=request, wait_for_end_of=wait_for_end_of)
 
         if wait_for_end_of:
           while not self.node.waited_for_end_of_activate_yolo_world:
@@ -3534,11 +3534,13 @@ class RobotStdFunctions():
                                         minimum_objects_confidence=0.5,              minimum_furniture_confidence=0.5)
             
             if yolo_world_activate:
+                ywat = time.time()
                 self.activate_yolo_world(activate_prompt_free_head=detect_prompt_free_head, activate_tv_prompt_head=detect_tv_prompt_head,
                                         activate_prompt_free_hand=detect_prompt_free_hand, activate_tv_prompt_hand=detect_tv_prompt_hand,
                                         activate_prompt_free_base=detect_prompt_free_base, activate_tv_prompt_base=detect_tv_prompt_base,
                                         minimum_prompt_free_confidence=minimum_prompt_free_confidence, minimum_tv_prompt_confidence=minimum_tv_prompt_confidence,
                                         text_prompts=text_prompts, visual_prompts=visual_prompts, wait_for_end_of=True)
+                print("YOLO WORLD ACTIVATION TIME:", time.time() - ywat)
 
             self.set_speech(filename="generic/search_objects", wait_for_end_of=False)
             
@@ -5458,7 +5460,7 @@ class RobotStdFunctions():
                 self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Could not bring object to initial pose")
 
-    def pick_object_risky(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", navigation = True, search_with_head_camera = True, return_arm_to_initial_position = "", list_of_objects_detected_as = []):
+    def pick_object_risky(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, navigation = True, search_with_head_camera = True, return_arm_to_initial_position = "", list_of_objects_detected_as = [], placed_in_tray_height = 0.0):
 
         ###########
         # Inputs:
@@ -5484,6 +5486,8 @@ class RobotStdFunctions():
         not_validated = True
         is_object_in_furniture_check = False
         selected_object = selected_object.replace(" ","_").lower()
+        pick_mode = pick_mode.lower()
+        furniture = furniture.replace(" ","_").lower()
 
         MIN_OBJECT_DISTANCE_X = 0.05
         MAX_OBJECT_DISTANCE_X = 2
@@ -5491,10 +5495,10 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_Y = 1
 
 
-        if furniture != "":
+        if furniture != "" and furniture != "Tray":
                 is_object_in_furniture_check = True
         
-        if first_search_tetas == []:
+        if first_search_tetas == [] and search_with_head_camera:
 
             if self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "horizontal":
                 first_search_tetas = [[0, -45], [-40, -45], [40, -45]]
@@ -5502,12 +5506,154 @@ class RobotStdFunctions():
             elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
                 first_search_tetas = [[0, -15], [0, -35], [0, 15]]
 
-        if pick_mode == "":
+        if pick_mode == "" and search_with_head_camera:
             pick_mode = self.get_standard_pick_from_object(selected_object)
 
+        if furniture_height == -1 and furniture != "" and furniture != "tray":
+            furniture_height = self.get_height_from_furniture(furniture)
+            if furniture_height is None:
+                print("PICK FURNITURE DOES NOT EXIST OR HAS NO HEIGHT")
+        elif furniture_height < 0:
+            print("PICK FURNITURE HEIGHT IS NEGATIVE")
 
-        pick_mode = pick_mode.lower()
-        furniture = furniture.replace(" ","_").lower()
+        if furniture == "tray":
+            print("PICKING FROM TRAY !!!!!!!!")
+
+            first_safe_tray = [-206.8, 29, -74.7, -5.8, 51.9, 248.7]
+            first_right_tray_front = [-212.1, 7.5, -62.4, -27.3, 102.3, 246.5]
+            first_left_tray_front = [-209.5, 40.7, -71.3, -24.2, 85.3, 253.8]
+            first_left_tray_top = [-183.9,60.3,-68,-90.3,41.6,321.4]
+            second_left_tray_top = [-182.7, 59.5, -44.5, -89.2, 93.2, 84.3]
+            first_right_tray_top = [-177.6,9.8,-68.6,-54.1,68.4,128.7]
+            second_right_tray_top = [-184.1,-9.9,-6,-97.2,92.1,122.8]
+            initial_position_to_safe_joints = 	[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
+
+            TRAY_HEIGHT = 0.59
+            TOLERANCE_ERROR = 0.02
+            placed_height = placed_in_tray_height
+
+            state = 0
+
+            if pick_mode == "front":
+                if state == 0:
+
+                    self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_front, wait_for_end_of=True)
+
+                    gripper_place_position = self.get_gripper_localization()
+
+
+                    final_z = (gripper_place_position.z - TRAY_HEIGHT - placed_height - TOLERANCE_ERROR)*1000
+
+                    print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " placed height : ", placed_height)
+
+                    self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+                    self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                    time.sleep(0.5)
+                    self.set_arm(command="close_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                    self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
+                    return placed_height
+                elif state == 1:
+
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_front, wait_for_end_of=True)
+
+                    gripper_place_position = self.get_gripper_localization()
+
+
+                    final_z = (gripper_place_position.z - TRAY_HEIGHT - placed_height - TOLERANCE_ERROR)*1000
+
+                    print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " placed height : ", placed_height)
+
+                    self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+                    self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                    time.sleep(0.5)
+                    self.set_arm(command="close_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                    return placed_height
+                
+            elif pick_mode == "top":
+                if state == 0:
+
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_left_tray_top, wait_for_end_of=True)
+
+                    gripper_place_position = self.get_gripper_localization()
+
+
+                    final_x = (gripper_place_position.z - TRAY_HEIGHT - placed_height - TOLERANCE_ERROR)*1000
+
+                    print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " placed height : ", placed_height)
+
+                    self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+
+                    self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+                    time.sleep(0.5)
+                    self.set_arm(command="close_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
+                    
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = first_left_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                    return placed_height
+                
+                elif state == 1:
+
+                    #self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+
+
+                    gripper_place_position = self.get_gripper_localization()
+
+
+                    final_x = (gripper_place_position.z - 0.59 - placed_height - 0.145 - TOLERANCE_ERROR)*1000
+
+                    print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " placed height : ", placed_height)
+
+                    self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+
+                    self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                    time.sleep(0.5)
+                    self.set_arm(command="close_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.wait_for_start_button()
+                    
+                    self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                    return placed_height
+            else:
+                print("PICKING FROM FURNITURE OTHER THAN TRAY")
 
 
         ### While cycle to get a valid detected object ###
@@ -5539,7 +5685,7 @@ class RobotStdFunctions():
                 # In case the robot finds an object, if it is outside the designated furniture (verified if is_object_in_furniture_check = True) 
                 # , it will try to reverse the order in which it searches for the object so as to hopefully not always see the unwanted object first 
 
-                if selected_object == "" and obj.confidence >= 0.5 and cam_z_ < 0.4:
+                if selected_object == "" and obj.confidence >= 0.5 and (cam_z_ > 0.4 or search_with_head_camera == False):
                         valid_detected_object = obj
                         not_validated = False
 
@@ -5569,6 +5715,12 @@ class RobotStdFunctions():
             
         if not_validated == False:
 
+            if furniture_height == -1 and furniture == "":
+                furniture = valid_detected_object.furniture_location
+                print ("FURNITURE TEST :", furniture)
+                if furniture != "None":
+                    furniture_height = self.get_shelf_from_height(object_height= valid_detected_object.position_relative.z, furniture= valid_detected_object.furniture_location)
+
             # ANNOUNCE THE FOUND OBJECT
             self.set_speech(filename="generic/found_following_items", wait_for_end_of=False)
             self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
@@ -5577,7 +5729,7 @@ class RobotStdFunctions():
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
             DISTANCE_IN_FRONT_X     = 0.6 
-            DISTANCE_IN_FRONT_Y     = 0.3 
+            DISTANCE_IN_FRONT_Y     = 0.31
             DISTANCE_IN_TOP_X       = 0.58
             DISTANCE_IN_TOP_Y       = -0.05
             MINIMUM_FRONT_HEIGHT    = 0.55
@@ -5609,23 +5761,10 @@ class RobotStdFunctions():
                 if navigation:
                     self.adjust_x_      = valid_detected_object.position_relative.x - DISTANCE_IN_FRONT_X
 
-                    # if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
-                    #     self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE
-
-                    # elif self.adjust_x_ < -MAXIMUM_ADJUST_DISTANCE:
-                    #     self.adjust_x_  = -MAXIMUM_ADJUST_DISTANCE
-
                     self.adjust_y_      = valid_detected_object.position_relative.y + DISTANCE_IN_FRONT_Y
-
-                    # if self.adjust_y_   > MAXIMUM_ADJUST_DISTANCE:
-                    #     self.adjust_y_  = MAXIMUM_ADJUST_DISTANCE
-
-                    # elif self.adjust_y_ < -MAXIMUM_ADJUST_DISTANCE:
-                    #     self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
-
                     print("FINAL ADJUST:", self.adjust_x_, self.adjust_y_)
 
-                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False)
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False, safety=False)
 
                 # IF ADJUST IS NOT POSSIBLE DUE TO OBSTACLES ASK FOR HELP
                 if not s:
@@ -5643,16 +5782,21 @@ class RobotStdFunctions():
                     self.set_arm(command="search_front_risky", wait_for_end_of=True)
 
                     gripper_search_height = self.get_gripper_localization().z
-                    height_furniture = self.get_shelf_from_height(object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
                     object_height = self.get_object_height_from_object(valid_detected_object.object_name)
-                    adjust_z = (height_furniture + (object_height/2) - gripper_search_height)*1000
+                    if furniture_height < 0:
+                        adjust_z = (valid_detected_object.position_relative.z - (object_height/2) - gripper_search_height)*1000
+                    else:
+                        adjust_z = (furniture_height + (object_height/2) - gripper_search_height)*1000
 
                     print("GRIPPER HEIGHT",gripper_search_height)
-                    print("FURNITURE HEIGHT",height_furniture)
+                    print("FURNITURE HEIGHT",furniture_height)
                     print("OBJECT HEIGHT",object_height)
                     print("ADJUST Z", adjust_z)
 
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [adjust_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
+
+                    while not self.adjust_omnidirectional_position_is_done():
+                        pass
                     
 
             #BEGIN PICK TOP IF SELECTED
@@ -5660,23 +5804,11 @@ class RobotStdFunctions():
 
                 if navigation:
                     _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
-                    self.adjust_x_      = furniture_distance - 0.04 
-
-                    if self.adjust_x_   > MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_x_  = MAXIMUM_ADJUST_DISTANCE   
-
-                    elif self.adjust_x_ < -MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_x_  = -MAXIMUM_ADJUST_DISTANCE  
+                    self.adjust_x_      = furniture_distance - 0.03 
 
                     self.adjust_y_      = valid_detected_object.position_relative.y - DISTANCE_IN_TOP_Y 
 
-                    if self.adjust_y_   > MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_y_  = MAXIMUM_ADJUST_DISTANCE   
-
-                    elif self.adjust_y_ < -MAXIMUM_ADJUST_DISTANCE:
-                        self.adjust_y_  = -MAXIMUM_ADJUST_DISTANCE
-
-                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False)
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False, safety=False)
 
                 # ADJUST TORSO AND ARM DEPENDING ON OBJECT HEIGHT
                 if FLOOR_TOP_HEIGHT >= valid_detected_object.position_relative.z:
@@ -5687,21 +5819,24 @@ class RobotStdFunctions():
 
                     self.set_arm(command="initial_pose_to_search_table_top", wait_for_end_of=False)
                     self.set_torso_position(legs=80, torso=8, wait_for_end_of=False) 
-                    self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False)
+                    self.wait_until_camera_stable(timeout=120, check_interval=0.7, stable_duration=0.3, get_gripper=False, safety = False)
 
                 elif HALFWAY_TOP_HEIGHT < valid_detected_object.position_relative.z < MAXIMUM_TOP_HEIGHT:
-                    search_table_top_risky_joints =			[-146.5, 55.7, -88, -61.3, 109.5, 64.2]
-                    safe_top_second_joints    = [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
 
-                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = safe_top_second_joints, wait_for_end_of=True)
-                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_risky_joints, wait_for_end_of=True)
                     self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
 
 
                     gripper_position = self.get_gripper_localization()
-                    height_furniture = self.get_shelf_from_height( object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
-                    correct_x = (gripper_position.z - tf_x - oh - height_furniture)*1000 - 210
-                    print("Gripper Position z: ",gripper_position.z," || Tf_X: ", tf_x, " || OH : ", oh, " || height_furniture", height_furniture, " || Correct_X: ", correct_x )
+                    #height_furniture = self.get_shelf_from_height( object_height = valid_detected_object.position_relative.z, furniture = valid_detected_object.furniture_location)
+                    if furniture_height >= 0:
+                        correct_x = (gripper_position.z - tf_x - oh - furniture_height)*1000 - 210
+                    else:
+                        correct_x = (gripper_position.z - tf_x - oh - valid_detected_object.position_relative.z)*1000 - 150
+                        #HEIGHT = 0.04
+                        #if oh <= 0.044:
+                            #HEIGHT = oh/1.5 
+                        #correct_x = (gripper_position.z - valid_detected_object.position_relative.z + HEIGHT - tf_x)*1000
+                    #print("Gripper Position z: ",gripper_position.z," || Tf_X: ", tf_x, " || OH : ", oh, " || height_furniture", furniture_height, " || Correct_X: ", correct_x )
                     object_position = [0.0, 0.0, correct_x, 0.0, 0.0, 0.0]
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
                     
@@ -5719,77 +5854,104 @@ class RobotStdFunctions():
                         self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                         picked_height = 0.0
                         asked_help = True
-                
-                    #_, _ = self.adjust_angle(45)
-                    #rotate_coordinates = self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(o.object_name))))
-                    #self.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
-
-
-                # BEGIN HAND SEARCH AND OBJECT GRAB, AND RETURN THE PICKED HEIGHT OR IF IT ASKED FOR HELP
-                # return self.hand_search(selected_object, pick_mode, navigation, return_arm_to_initial_position)
 
             else:
                     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
 
             if not asked_help:
 
-                # if pick_mode == "front":
-                #     correct_x = ((obj.position_cam.x - tf_x)*1000) - 200
-                #     correct_z = tf_z*1000
-                    #if ((correct_x + 200) / 1000) <= self.get_height_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object))):
-                        #correct_x = ( (1.012 - (self.get_height_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))) + tf_x ) * 1000) - 200
-                
-                #CORRECT ROTATION CALCULATIONS
-                if valid_detected_object.orientation < 0.0:
-                    correct_rotation = valid_detected_object.orientation +90.0
-                else:
-                    correct_rotation = valid_detected_object.orientation -90.0
-
-                #DEFINE AND CALCULATE KEY ARM POSITIONS
-                #if pick_mode == "top":
-                # elif pick_mode == "front":
-                #     object_position = [correct_z, 0.0, 0.0, 0.0, 0.0, 0.0]
-                
-                security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
-                security_position_top     = [0.00, 0.0, -200.0, 0.0, 0.0, 0.0]
-                object_reajust            = [0.0, 0.0, 0.0, 0.0, 0.0, -correct_rotation]
-                initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
-                safe_top_second_joints    = [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
-                
-                search_table_top_joints   = [-151.5, 75, -123.2, -72.4, 110.8, 41.7]
-                search_table_front_joints = [-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
                 
                 #OPEN GRIPPER
                 if obj.object_name != "plate":
                     self.set_arm(command="open_gripper", wait_for_end_of=True)
-                #MOVE ARM IN THAT DIRECTION
-                #if pick_mode = "top":
-                #self.wait_until_camera_stable(timeout = 0.75, stable_duration = 0.03, check_interval= 0.01, get_gripper = True) # Temporary measure, while wait_for_end_of is not working for adjust_move finish
-                
-                while not self.adjust_omnidirectional_position_is_done():
-                    pass
 
                 #CALIBRATE GRIPPER BEFORE GRABBING
-                # self.wait_for_start_button()
-                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False, list_of_objects_detected_as=list_of_objects_detected_as)
+                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False, list_of_objects_detected_as=list_of_objects_detected_as)
+
                 self.set_face(camera="hand", show_detections=True)
-                #self.set_face(camera="hand",show_detections=True,wait_for_end_of=False)
                 
-                for obj in final_objects:
+                best_conf = 0.0
 
-                    conf = f"{obj.confidence * 100:.0f}%"
-                    hand_y_grab    = f"{obj.position_cam.y:5.2f}"
-                    hand_z_grab    = f"{obj.position_cam.z:5.2f}"
-                    hand_x_grab    = f"{obj.position_cam.z:5.2f}"
-                    correct_y_grab = (obj.position_cam.y - tf_y)*1000
-                    correct_z_grab = (obj.position_cam.z - tf_z)*1000
+                for o in final_objects:
 
-                    if pick_mode == "front":
-                        correct_x_grab = (obj.position_cam.x + ow/1.5 - tf_x)*1000
-                        print("OBJECT WIDTH:", ow)
-                    if pick_mode == "top":
-                        correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
+                    conf = f"{o.confidence * 100:.0f}%"
+                    hand_y_grab    = f"{o.position_cam.y:5.2f}"
+                    hand_z_grab    = f"{o.position_cam.z:5.2f}"
+                    hand_x_grab    = f"{o.position_cam.z:5.2f}"
+                    correct_y_grab = (o.position_cam.y - tf_y)*1000
+                    correct_z_grab = (o.position_cam.z - tf_z)*1000
+
+                    if o.confidence > best_conf:
+                        best_conf = o.confidence
+                        obj = o
+
+                #CORRECT ROTATION CALCULATIONS
+
+                if self.get_object_shape_from_object(obj.object_name) == "sphere":
+                    correct_rotation = 0.0
+                else:
+                    if obj.orientation < 0.0:
+                        correct_rotation = obj.orientation +90.0
+                    else:
+                        correct_rotation = obj.orientation -90.0
+                    if (selected_object == "spoon" or selected_object == "fork" or selected_object == "knife"):
+
+                        _, frame = self.get_hand_rgb_image()
+                        curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+                        h, w = curr_frame.shape[:2]
+                        yolo_mask = np.zeros((h, w),dtype=np.uint8)
+                        pts = np.array([[p.x, p.y] for p in obj.mask.point],dtype=np.int32)
+                        #yolo_mask = np.zeros((obj.box_width, obj.box_height), dtype=np.int16)
+                        #pts = ([p.x, p.y] for p in obj.mask.point)
+                        yolo_mask = cv2.fillConvexPoly(yolo_mask, pts, 255)
+                        curr_frame = cv2.bitwise_and(curr_frame, curr_frame, mask=yolo_mask)
+
+                        lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+                        lab = cv2.bitwise_and(lab, lab, mask=yolo_mask)
+
+                        #Otsu threshold -> A-channel 
+
+                        crop_img = curr_frame[obj.box_top_left_y:obj.box_top_left_y+obj.box_height, obj.box_top_left_x:obj.box_top_left_x+obj.box_width]
+                        crop_lab = lab[obj.box_top_left_y:obj.box_top_left_y+obj.box_height, obj.box_top_left_x:obj.box_top_left_x+obj.box_width]
+                        th = cv2.threshold(crop_lab[:,:,1], 127, 255, cv2.THRESH_BINARY)[1]
+
+                        lower_red = np.array([0,50,50])
+                        upper_red = np.array([10,255,255])
+
+                        red = cv2.inRange(crop_img, lower_red, upper_red)
                         
+                        #cv2.imshow('hsv', crop_img) #cv2.imshow('yolo', yolo_mask) #cv2.imshow('red', red) #cv2.imshow('otsu', th) #cv2.imshow('lab', crop_lab) #cv2.imshow('lab_red', crop_lab[:,:,1]) #cv2.waitKey(0) #self.wait_for_start_button()
+
+                        Y, X = np.mgrid[0:red.shape[0]:1, 0:red.shape[1]:1]
+
+                        if np.count_nonzero(red):
+                            centroid_x = int(float(np.sum(cv2.bitwise_and(X, X, mask=red)))/np.count_nonzero(red))
+                            centroid_y = int(float(np.sum(cv2.bitwise_and(Y, Y, mask=red)))/np.count_nonzero(red))
+                        print("Centroid x: ", centroid_x, " Centroid y: ", centroid_y, " Center y: ", obj.box_height/2)
+
+                        #self.wait_for_start_button()
+                        print("Rotation", correct_rotation)
+
+                        if centroid_y < obj.box_height/2 and correct_rotation < 90:
+                            correct_rotation =correct_rotation - 180
+                        elif centroid_y > obj.box_height/2 and correct_rotation > 90:
+                            correct_rotation =correct_rotation - 180
+
+                        print("Rotation", correct_rotation)
+
+                    security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
+                    initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
+                    safe_top_second_joints    = [-197.5, 85.4, -103.3, 28.7, 86.1, 279.5]
+                    search_table_front_joints = [-215.0, -70.0, -16.0, 80.0, 30.0, 182.0]
+
+
+                if pick_mode == "front":
+                    correct_x_grab = (obj.position_cam.x + ow/1.5 - tf_x)*1000
+                    print("OBJECT WIDTH:", ow)
+                if pick_mode == "top":
+                    if furniture_height >= 0:
+                        correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
+                    
                         # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established. DO NOT CHANGE UNLESS TESTED
                         if pick_mode == "front":
                             MAX_MOVE_LIMIT = 245
@@ -5799,28 +5961,34 @@ class RobotStdFunctions():
                             MAX_MOVE_LIMIT = 235
                             if correct_x_grab > MAX_MOVE_LIMIT:
                                 correct_x_grab = MAX_MOVE_LIMIT
-                    
-                    print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab})")
-                    
-                    if pick_mode == "front":
-                        object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
+                    else:
+                        HEIGHT = 0.04
+                        if oh <= 0.044:
+                            HEIGHT = oh/1.5 
+                        correct_x_grab = (obj.position_cam.x + HEIGHT - tf_x)*1000
+                
+                print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab})")
+                
+                if pick_mode == "front":
+                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
 
-                    if pick_mode == "top":
-                        # THE FOLLOWING ARE SPECIAL CASES WHERE DIFFERENT MANUAL INFORMATION IS USED TO PICK THEM, DO NOT CHANGE UNLESS NECESSARY !!!!
-                        if obj.object_name == "bowl":
-                            correct_y_grab += 90
-                            correct_rotation = 0.0
-                        if obj.object_name == "cup":
-                            correct_y_grab += 45
-                            correct_x_grab = 210
-                        if obj.object_name == "plate":
-                            correct_z_grab -= 20
-                            correct_rotation = 90.0
-                            correct_x_grab -= 19
-                            #navigation = gripper pos -  lowest y
+                if pick_mode == "top":
 
+                    # THE FOLLOWING ARE SPECIAL CASES WHERE DIFFERENT MANUAL INFORMATION IS USED TO PICK THEM, DO NOT CHANGE UNLESS NECESSARY !!!!
+                    if obj.object_name == "bowl":
+                        correct_y_grab += 90
+                        correct_rotation = 0.0
+                    if obj.object_name == "cup":
+                        correct_y_grab += 45
+                        correct_x_grab = 210
+                    if obj.object_name == "plate":
+                        correct_z_grab -= 20
+                        correct_rotation = 90.0
+                        correct_x_grab -= 19
+                    if obj.object_name == "rubiks cube":
+                        correct_rotation -= 60
 
-                        object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
+                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
 
                 #APPLY ADJUSTEMENT BEFORE GRABBING
                 if obj.object_name != "cup":
@@ -5834,14 +6002,18 @@ class RobotStdFunctions():
                 #MOVE ARM TO FINAL POSITION
                 current_gripper_height = self.get_gripper_localization()
 
-                height_furniture = self.get_shelf_from_height( object_height = current_gripper_height.z, furniture = self.get_furniture_from_object_class(self.get_object_class_from_object(object_name = selected_object)))
-                if (height_furniture >= 0):                              
+                if (furniture_height >= 0):                              
 
-                    picked_height = current_gripper_height.z - height_furniture
+                    picked_height = current_gripper_height.z - furniture_height
                 else:
-                    asked_help = True
+                    object_height = self.get_object_height_from_object(selected_object)*1.5
+                    if pick_mode == "front":
+                        object_height = self.get_object_height_from_object(selected_object)*0.75
+                    picked_height = (object_height)
+                    if picked_height < 0.1:
+                        picked_height = 0.1
 
-                print("HEIGHT FURNITURE:", height_furniture)
+                print("HEIGHT FURNITURE:", furniture_height)
                 print("Picked Height: ", picked_height)
                 #CHECK CLOSE GRIPPER
                 
@@ -5852,6 +6024,7 @@ class RobotStdFunctions():
                     if not object_in_gripper:
 
                         self.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+                        asked_help = True
                     
                 #MOVE TO SAFE POSITION DEPENDING ON MODE SELECTED
                 if pick_mode == "front":
@@ -5860,7 +6033,7 @@ class RobotStdFunctions():
                     if navigation:
                         self.adjust_x_ = - self.adjust_x_
                         self.adjust_y_ = - self.adjust_y_
-                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_,wait_for_end_of=False)
+                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False)
 
                     #MOVE TO SEARCH TABLE
                     #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_front_joints, wait_for_end_of=True)
@@ -5878,7 +6051,7 @@ class RobotStdFunctions():
                     else:
                         if obj.object_name != "plate":    
                             self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
 
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
@@ -5902,7 +6075,7 @@ class RobotStdFunctions():
                             self.set_arm(command="pick_plate_top", wait_for_end_of=True)
 
                             _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
-                            self.adjust_x_ = - 0.59 + furniture_distance
+                            self.adjust_x_ = - 0.55 + furniture_distance
                             self.adjust_y_ = - self.adjust_y_
 
                             plate_grab_fifth = [0.0, 0.0, 0.0, 00.0, -30.0, 120.0]
@@ -5918,8 +6091,6 @@ class RobotStdFunctions():
                             while not self.adjust_omnidirectional_position_is_done():
                                 pass
 
-                            #plate_grab_final = [-190.0, 69.3, -70.5, 31.5, 64.1, 271]
-                            #self.set_arm(command="adjust_joint_motion", joint_motion_values = plate_grab_final, wait_for_end_of=True)
                             object_in_gripper = True
                             #self.wait_for_start_button()
 
@@ -5929,17 +6100,11 @@ class RobotStdFunctions():
                             
 
                         else:
-                            #dx = self.adjust_x_
-                            #dy = self.adjust_y_
-                            #self.adjust_x_  = (- dx ) * math.cos(-math.radians(0)) - (- dy) * math.sin(-math.radians(0))
-                            #self.adjust_y_  = (- dx ) * math.sin(-math.radians(0)) + (- dy) * math.cos(-math.radians(0))
                             self.adjust_x_ = - self.adjust_x_
                             self.adjust_y_ = - self.adjust_y_
                             print("Reverse X:", self.adjust_x_, " Reverse y:", self.adjust_y_)
                             self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False)
 
-                    #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_reajust, wait_for_end_of=True)
-                    #self.set_torso_position(legs=140, torso=8) 
                     self.set_face("charmie_face", wait_for_end_of=False)
 
                     if not object_in_gripper and obj.object_name != "plate" :
@@ -5981,7 +6146,7 @@ class RobotStdFunctions():
             #SEARCH FOR OBJECT
 
     
-    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0):
+    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True):
 
         # CHECK OBJECT NAME FOR SPECIAL CASES
         # CHECK PICK/PLACE MODE
@@ -5990,6 +6155,10 @@ class RobotStdFunctions():
         # ADJUST BASE IN RELATION TO THE FURNITURE
         # PLACE OBJECT
         # MOVE ARM TO SAFE POSITION
+
+        TOLERANCE_ERROR = 0.02
+        FRONT_Z_ADJUST_LIMIT = 450
+        TRAY_HEIGHT = 0.59
 
         selected_object = selected_object.replace(" ","_").lower()
 
@@ -6002,10 +6171,140 @@ class RobotStdFunctions():
 
         #### VARIABLES ####
 
-        if furniture == "":
+        if furniture == "" and furniture_height == -1:
             print(" YOU NEED TO DEFINE THE FURNITURE WHERE THE ROBOT IS GOING TO PLACE THE OBJECT !!!!!!!!!!")
             return
-        
+        elif furniture == "Tray":
+            print("PLACING ON TRAY !!!!!!!!")
+
+            first_safe_tray = [-206.8, 29, -74.7, -5.8, 51.9, 248.7]
+            first_right_tray_front = [-212.1, 7.5, -62.4, -27.3, 102.3, 246.5]
+            first_left_tray_front = [-209.5, 40.7, -71.3, -24.2, 85.3, 253.8]
+            first_left_tray_top = [-183.9,60.3,-68,-90.3,41.6,321.4]
+            second_left_tray_top = [-182.7, 59.5, -44.5, -89.2, 93.2, 84.3]
+            first_right_tray_top = [-177.6,9.8,-68.6,-54.1,68.4,128.7]
+            second_right_tray_top = [-184.1,-9.9,-6,-97.2,92.1,122.8]
+            initial_position_to_safe_joints = 	[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
+
+            state = 0
+
+            if place_mode == "front":
+                if state == 0:
+
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_front, wait_for_end_of=True)
+
+                    gripper_place_position = self.get_gripper_localization()
+
+
+                    final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+
+                    print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                    self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                    time.sleep(0.5)
+                    self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                    self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
+                    return place_height
+                elif state == 1:
+
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_front, wait_for_end_of=True)
+
+                    gripper_place_position = self.get_gripper_localization()
+
+
+                    final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+
+                    print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                    self.safe_place_final = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                    time.sleep(0.5)
+                    self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                    return place_height
+                
+            elif place_mode == "top":
+                if state == 0:
+
+
+                    #self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+
+
+                    gripper_place_position = self.get_gripper_localization()
+
+
+                    final_x = (gripper_place_position.z - 0.59 - place_height - 0.145 - TOLERANCE_ERROR)*1000
+
+                    print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                    self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                    time.sleep(0.5)
+                    self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.wait_for_start_button()
+                    #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = , wait_for_end_of=True)
+                    self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                    return place_height
+
+
+
+                
+                elif state == 1:
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_left_tray_top, wait_for_end_of=True)
+
+                    gripper_place_position = self.get_gripper_localization()
+
+
+                    final_x = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+
+                    print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+
+                    self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                    self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+
+
+                    time.sleep(0.5)
+                    self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
+                    time.sleep(0.5)
+
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = first_left_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                    return place_height
+
         else:
             verified = False
             for furn in self.node.furniture:
@@ -6035,12 +6334,9 @@ class RobotStdFunctions():
 
         #### CONSTANTS ####
 
-        TOLERANCE_ERROR = 0.02
-        FRONT_Z_ADJUST_LIMIT = 450
-
         if furniture_distance == -1:
 
-            front_base_adjust_x = 0.15
+            front_base_adjust_x = 0.13
             front_base_adjust_y = base_adjust_y
 
             top_base_adjust_x = 0.08
@@ -6082,8 +6378,10 @@ class RobotStdFunctions():
 
             dx = furniture_gap - front_base_adjust_x
             dy = front_base_adjust_y 
-            self.adjust_omnidirectional_position(dx=0.0,dy=dy, safety=True)
-            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=True)  
+            self.adjust_omnidirectional_position(dx=0.0,dy=dy, safety=False)
+            self.adjust_omnidirectional_position(dx=dx, dy=0.0, safety=False)
+
+            print("ADJUSTED BASE IN X:", dx, "AND IN Y:", dy)
 
             time.sleep(0.5)
             self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
@@ -6094,7 +6392,11 @@ class RobotStdFunctions():
 
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-            #self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+            if return_to_initial_position:
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
+            # while not self.adjust_omnidirectional_position_is_done():
+            #     pass  
 
         elif place_mode == "top":
 
@@ -6130,7 +6432,10 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
 
             #self.set_arm(command="close_gripper", wait_for_end_of=True)
-        
+
+            
+        # while not self.adjust_omnidirectional_position_is_done():
+        #     pass       
 
     def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
 
@@ -6344,8 +6649,78 @@ class RobotStdFunctions():
 
 
     def open_door(self, push_pull="push", left_right="left", wait_for_end_of=True):
+
+
+        arm_position_1 = [-189.7, 36.6, -78.1, 170.7, 45.5, 183.4]
+
+        tf_x = 0.210
+        tf_y = 0.008
+        tf_z = - 0.075
+
+        if push_pull == "pull":
+            initial_position = [1.5, -1.45, 178.0]
+            neck_position = [[15,-22]]
+
+
+            self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+
+            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle2_head_cam"], minimum_tv_prompt_confidence=0.50)
+        
+            for h in door_handle:
+
+                move_y = h.position_relative.y
+
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.25, wait_for_end_of=False)
+        if push_pull == "pull":
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_1, wait_for_end_of=True)
+            while not self.adjust_omnidirectional_position_is_done():
+                time.sleep(0.1)
+
+            door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_handle_gripper"], detect_tv_prompt_hand=True, visual_prompts=["door_handlef_gripper_cam"], minimum_tv_prompt_confidence=0.50)
+            self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+            for g in door_handle:
+
+                gripper_position = self.get_gripper_localization()
+
+                move_z_gripper = (gripper_position.z - g.position_absolute.z)*1000
+                move_y_gripper = (gripper_position.y - g.position_absolute.y + tf_y + 0.02)*1000
+                move_x_gripper = (gripper_position.x - g.position_absolute.x - tf_z - 0.05)*1000
+                move_x_base = abs(gripper_position.x + tf_x - g.position_absolute.x)
+                print("Position x:", g.position_absolute.x, "Position y:", g.position_absolute.y, "Position z:", g.position_absolute.z)
+
+            lower_gripper = [move_x_gripper, - move_y_gripper , 0.0, 0.0, 0.0, 0.0]    
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = lower_gripper, wait_for_end_of=True)  
+            print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
+            self.adjust_omnidirectional_position(dx = move_x_base , dy = 0.0, wait_for_end_of=True, safety=False)
+            grab_door = [0.0, 0.06*1000, 0.02*1000, -20.0, 0.0, 0.0]
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_door, wait_for_end_of=True) 
+            self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.0, wait_for_end_of=True, safety=False) 
+            
+        
+        self.wait_for_start_button()
         # placeholder for door opening std_function
         pass
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms
+        
+    #def sort_for_pick(self, objects=[]):
+
+        #if len(objects) == 2:
+            #obj1_shape = self.get_object_shape_from_object(objects(0))
+            #obj1_height = self.get_object_height_from_object(objects(0))
+            #obj2_shape = self.get_object_shape_from_object(objects(1))
+            #obj2_height = self.get_object_height_from_object(objects(1))
+            #changed = False
+            #if obj1_shape == "sphere" and obj2_shape != "sphere":
+                #changed = True
+                #obj = objects(0)
+                #objects(0) = objects(1)
+                #objects(1) = obj
+            #if abs(obj1_height - 0.14) > abs (obj2_height - 0.14) and not changed:
+                #obj = objects(0)
+                #objects(0) = objects(1)
+                #objects(1) = obj
+        #return objects
         

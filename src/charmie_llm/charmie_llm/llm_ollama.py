@@ -34,6 +34,11 @@ class LLMNode(Node):
         super().__init__("LLM")
         self.get_logger().info("Initialised CHARMIE LLM Offline Ollama Node")
 
+        self.declare_parameter("task", "gpsr") # hri, demo, gpsr
+        self.TASK = self.get_parameter("task").value
+
+        self.get_logger().info("TASK MODE: "+self.TASK)
+
         # LLM objects declaration must come before the service declaration, so that if there is any error, in GUI never shows that LLM was initialized 
         # self.llm_demo_description = LLM_demo_description() 
         # self.llm_planner_description = LLM_planner_description()

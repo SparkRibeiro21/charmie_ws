@@ -464,8 +464,19 @@ void SDNLNavNode::controlLoop()
       cmd.linear.x  = 0.0;
       cmd.angular.z = sdnl::clamp(1.0 * bearing_err, -w_max, w_max);
 
+      if (out.dist_to_target <= reached_radius) {
+        // Target position reached -> transition to FINAL_ORIENT phase
+        cmd.linear.x  = 0.0;
+        cmd.angular.z = 0.0;
+        {
+          std::lock_guard<std::mutex> lk(phase_mutex_);
+          exec_phase_ = ExecPhase::FINAL_ORIENT; // so if 0, skips STOP_BEFORE_FINAL_ORIENT
+          stop_ticks_remaining_ = 0;
+        }
+      }
+
       // Transition to MOVE phase once bearing error is within tolerance
-      if (std::abs(bearing_err) <= yaw_tol) {
+      else if (std::abs(bearing_err) <= yaw_tol) {
         cmd.angular.z = 0.0;
         std::lock_guard<std::mutex> lk(phase_mutex_);
         exec_phase_ = ExecPhase::MOVE_TO_POSITION;
