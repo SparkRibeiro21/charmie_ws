@@ -580,11 +580,6 @@ class ROS2TaskNode(Node):
         self.detected_people = det_people
         self.new_person_frame_for_tracking = True
 
-        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-        # current_frame_draw = current_frame.copy()
-        # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-        # cv2.waitKey(10)
-
     def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
         self.new_object_frame_for_tracking = True
@@ -3439,8 +3434,16 @@ class RobotStdFunctions():
     def detected_person_to_face_path(self, person=DetectedPerson(), just_face=False, send_to_face=False):
 
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        
-        cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
+
+        if person.camera == "head" or person.camera == "hand":
+            rgb = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            cf = rgb
+        else:
+            cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
         img_path = ""
 
         if not just_face:
@@ -3838,7 +3841,16 @@ class RobotStdFunctions():
         thresh_v = 220
 
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        cf = self.node.br.imgmsg_to_cv2(object.image_rgb_frame, "bgr8")
+
+        if object.camera == "head" or object.camera == "hand":
+            rgb = self.node.br.imgmsg_to_cv2(object.image_rgb_frame, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            cf = rgb
+        else:
+            cf = self.node.br.imgmsg_to_cv2(object.image_rgb_frame, "bgr8")
         
         # checks whether the text has to start inside the bounding box or can start outside (image boundaries)
         start_point = (object.box_top_left_x, object.box_top_left_y)
@@ -3901,7 +3913,12 @@ class RobotStdFunctions():
     def get_head_rgb_image(self):
 
         if self.node.first_rgb_head_image_received:
-            current_frame_rgb_head = self.node.br.imgmsg_to_cv2(self.node.rgb_head_img, "bgr8")
+            rgb = self.node.br.imgmsg_to_cv2(self.node.rgb_head_img, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            current_frame_rgb_head = rgb
         else:
             current_frame_rgb_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
         
@@ -3910,7 +3927,12 @@ class RobotStdFunctions():
     def get_head_depth_image(self):
 
         if self.node.first_depth_head_image_received:
-            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
+            depth = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
+            depth_h, depth_w = depth.shape[:2]
+            if (depth_w, depth_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head Depth came with {depth_w}x{depth_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                depth = cv2.resize(depth, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+            current_frame_depth_head = depth
         else:
             current_frame_depth_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
@@ -3919,7 +3941,12 @@ class RobotStdFunctions():
     def get_hand_rgb_image(self):
 
         if self.node.first_rgb_hand_image_received:
-            current_frame_rgb_hand = self.node.br.imgmsg_to_cv2(self.node.rgb_hand_img, "bgr8")
+            rgb = self.node.br.imgmsg_to_cv2(self.node.rgb_hand_img, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Hand RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            current_frame_rgb_hand = rgb
         else:
             current_frame_rgb_hand = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
         
@@ -3928,7 +3955,12 @@ class RobotStdFunctions():
     def get_hand_depth_image(self):
 
         if self.node.first_depth_hand_image_received:
-            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
+            depth = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
+            depth_h, depth_w = depth.shape[:2]
+            if (depth_w, depth_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Hand Depth came with {depth_w}x{depth_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                depth = cv2.resize(depth, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+            current_frame_depth_hand = depth
         else:
             current_frame_depth_hand = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
