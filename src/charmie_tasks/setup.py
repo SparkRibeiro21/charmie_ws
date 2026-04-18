@@ -30,6 +30,7 @@ setup(
         "gpsr_task_2026             = charmie_tasks.gpsr_task_2026:main",
         "manipulation_task_2026     = charmie_tasks.manipulation_task_2026:main",
         "restaurant                 = charmie_tasks.restaurant:main",
+        "restaurant_risky           = charmie_tasks.restaurant_risky:main",
 		"finals_task_2026           = charmie_tasks.finals_task_2026:main",
         
         "serve_breakfast = charmie_tasks.serve_breakfast:main",

@@ -652,15 +652,23 @@ class TaskMain():
                 #try for o in current_order:
                 list_of_objects_detected_as = [[]]  
                 for o in self.all_orders:
+                    #try self.robot.pick_object(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position=False)
 
                     match counter:
                         case 0:
                             picked_height_0,asked_help_0 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
                         case 1:
+                            #if o == "7up":
+                                #list_of_objects_detected_as = [["Tuna"]]  
                             picked_height_1,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position="collect_milk_to_tray",list_of_objects_detected_as=list_of_objects_detected_as)
                             self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                        case 2:
+                            if o == "Sugar":
+                                list_of_objects_detected_as = [["Strawberry Jello"]]
+                            picked_height_2,asked_help_2 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas, return_arm_to_initial_position="collect_cornflakes_to_tray", list_of_objects_detected_as=list_of_objects_detected_as)
+                            self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
-                    counter-=1"""
+                    counter-=1 """
 
 
                 self.state = self.task_states["Approch_customer_with_order"]
@@ -721,14 +729,7 @@ class TaskMain():
                         if not order_taken_ctr and order_taken_ctr == max_attempts:
                             self.robot.set_speech(filename="restaurant/problem_taking_order", wait_for_end_of=True)
 
-                """self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                # SAY PICK OBJECTS AND COUNTDOWN
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
-                time.sleep(2)
-                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
-                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-                """
-                """counter = 0
+                """ counter = 0
                 self.all_orders.reverse()
                 print("LIST: ", self.all_orders)
 
