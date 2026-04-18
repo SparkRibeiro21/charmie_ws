@@ -3916,7 +3916,7 @@ class RobotStdFunctions():
             rgb = self.node.br.imgmsg_to_cv2(self.node.rgb_head_img, "bgr8")
             rgb_h, rgb_w = rgb.shape[:2]
             if (rgb_w, rgb_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
-                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                self.node.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
                 rgb = cv2.resize(rgb, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
             current_frame_rgb_head = rgb
         else:
@@ -3930,7 +3930,7 @@ class RobotStdFunctions():
             depth = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
             depth_h, depth_w = depth.shape[:2]
             if (depth_w, depth_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
-                self.get_logger().warn(f"Head Depth came with {depth_w}x{depth_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                self.node.get_logger().warn(f"Head Depth came with {depth_w}x{depth_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
                 depth = cv2.resize(depth, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
             current_frame_depth_head = depth
         else:
@@ -3944,7 +3944,7 @@ class RobotStdFunctions():
             rgb = self.node.br.imgmsg_to_cv2(self.node.rgb_hand_img, "bgr8")
             rgb_h, rgb_w = rgb.shape[:2]
             if (rgb_w, rgb_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
-                self.get_logger().warn(f"Hand RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                self.node.get_logger().warn(f"Hand RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
                 rgb = cv2.resize(rgb, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
             current_frame_rgb_hand = rgb
         else:
@@ -3958,7 +3958,7 @@ class RobotStdFunctions():
             depth = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
             depth_h, depth_w = depth.shape[:2]
             if (depth_w, depth_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
-                self.get_logger().warn(f"Hand Depth came with {depth_w}x{depth_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                self.node.get_logger().warn(f"Hand Depth came with {depth_w}x{depth_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
                 depth = cv2.resize(depth, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
             current_frame_depth_hand = depth
         else:
