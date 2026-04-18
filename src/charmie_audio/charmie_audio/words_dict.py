@@ -38,7 +38,8 @@ drinks_dict = {
     "Orange_Juice":   ["orange juice", "orangous", "orangels", "foreign", "autumn", "orandris", "our enjour", "northern juice", "orton julius",\
                        "orang joyce", "orang juiis", "orange joyce", "arun jus", "jordan jus", "oronschuss", "ortons ju"], # removed 'order' and all "just orange" so there is no conflict with orange 
     "7up":            ["seven", "up ", "7", "nope", "devanab", "savannah", "sabona", "sabanab"], # removed o "simon" cause it conflicts with th name Simon
-    "Water":          ["water", "laude"]
+    "Water":          ["water", "laude"],
+    "Red_Bull":       ["red bull", "redbull", "red b", "red boulder", "red bowl", "red ball", "red pull", "red poll", "red pole", "red bullseye"]
 }
 
 foods_dict = {
