@@ -6187,7 +6187,7 @@ class RobotStdFunctions():
             #SEARCH FOR OBJECT
 
     
-    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True, navigation_distance = -1):
+    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True, navigation_distance = -1, NCT = False):
 
         # CHECK OBJECT NAME FOR SPECIAL CASES
         # CHECK PICK/PLACE MODE
@@ -6202,6 +6202,8 @@ class RobotStdFunctions():
         TRAY_HEIGHT = 0.59
 
         selected_object = selected_object.replace(" ","_").lower()
+
+        tf_x = 0.17
 
         #### PLACE ARM POSITIONS ####
 
@@ -6229,6 +6231,9 @@ class RobotStdFunctions():
             first_right_tray_top = [-177.6,9.8,-68.6,-54.1,68.4,128.7]
             second_right_tray_top = [-184.1,-9.9,-6,-97.2,92.1,122.8]
             initial_position_to_safe_joints = 	[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
+
+            pre_rotation_place_top = [-171.2, 42.6, -101.6, 7.4, 79.2, 148.8]
+            NCT_place_joints = [-217.4, -0.8, -19.9, -128.6, 80.8, 37]
 
             state = 0
 
@@ -6273,7 +6278,8 @@ class RobotStdFunctions():
                     if not asked_help:
                         final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
                     else:
-                        final_z = (gripper_place_position.z - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.25) - TOLERANCE_ERROR)*1000
+                        print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object(selected_object)/1.25) ," TOLERA ", TOLERANCE_ERROR)
+                        final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.5) - TOLERANCE_ERROR)*1000
 
                     print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
@@ -6296,23 +6302,34 @@ class RobotStdFunctions():
                 if state == 0:
 
 
-                    #self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
-                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+                    # self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_rotation_place_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    if NCT == False:
+                        self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+                    else:
+                        self.set_arm(command="adjust_joint_motion", joint_motion_values = NCT_place_joints, wait_for_end_of=True)
 
-
+    
                     gripper_place_position = self.get_gripper_localization()
 
 
-                    final_x = (gripper_place_position.z - 0.59 - place_height - 0.145 - TOLERANCE_ERROR)*1000
+                    if not asked_help and NCT == False:
+                        final_x = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    elif NCT == False:
+                        print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object(selected_object)/1.25) ," TOLERA ", TOLERANCE_ERROR)
+                        final_x = (0.97 - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.5) - TOLERANCE_ERROR - tf_x)*1000
+                    if NCT == False:
 
-                    print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+                        print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
-                    self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
-                    self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+                        self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                        self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
 
 
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    else:
+                        self.safe_rise_gripper = [0.0 , 0.0 , -100 , 0.0 , 0.0 , 0.0]
 
 
                     time.sleep(0.5)
@@ -6320,9 +6337,14 @@ class RobotStdFunctions():
                     time.sleep(0.5)
 
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
-                    self.wait_for_start_button()
-                    #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = , wait_for_end_of=True)
+
+                    if NCT == False:
+                        self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_rotation_place_top, wait_for_end_of=True)
                     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
+                    
                     return place_height
 
 

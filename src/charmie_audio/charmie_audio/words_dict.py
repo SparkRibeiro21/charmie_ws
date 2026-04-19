@@ -61,7 +61,7 @@ foods_dict = {
     "Banana":           ["banana"],
     "Apple":            ["apple"],
 
-    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "fringles", "ringle"],
+    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "fringles", "ringle", "brangles"],
     "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex"],
     "Cheezit":          ["cheese", "cheezit", "she's it", "shisit"]
 }

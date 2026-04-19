@@ -113,6 +113,8 @@ class TaskMain():
         self.detected_customers = []
         self.DETECTED_CUSTOMER_INDEX = 0
         self.all_orders = []
+        self.NCP = ["Red_Bull", "Tuna"]
+        self.NCT = ["Red Wine","Orange Juice","Pringles","Cheezit"]
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -525,7 +527,7 @@ class TaskMain():
                             ##### Verifica a resposta recebida
                             if confirmation.lower() == "yes":
 
-                                if len(keyword_list) == 2:
+                                if len(keyword_list) != 2:
                                         # Speak: "Ohh, there seems to be a problem with your order. Please select exactly two items for your order. Let's try again."
                                     self.robot.set_speech(filename="restaurant/invalid_order", wait_for_end_of=True)
                                 else:
@@ -667,10 +669,12 @@ class TaskMain():
             elif self.state == self.task_states["Collect_order_from_barman"]:
 
                 # self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
+                self.is_object_in_hand = True
 
                 ##### SPEAK: Barman, please give me the following items:
                 self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
-                self.all_orders = [["Mustard", "Apple"]]
+                #  TEST PREDEFINED ORDERS:  
+                self.all_orders = [["Tuna", "Red_Bull"]]
 
                 print("ALL ORDERS: ", self.all_orders)
                 current_order = []
@@ -683,13 +687,13 @@ class TaskMain():
                         current_order.append(pedido.lower().replace(" ", "_"))
 
                         # SPEAK: Diz o pedido
-                        self.robot.set_speech(filename=filename, wait_for_end_of=True)
+                        self.robot.set_speech(filename=filename, wait_for_end_of=False)
 
                 time.sleep(1.0)
                 #### SPEAK: please place these object on the bar counter
-                self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table", wait_for_end_of=True)
+                self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table", wait_for_end_of=False)
                 time.sleep(1.0)
-                self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table_how_to", wait_for_end_of=True)
+                self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table_how_to", wait_for_end_of=False)
 
                 print(" CHECK FOR ALLO RDERS ", self.all_orders)
                 tetas = [[0, -45], [-40, -45], [40, -45]]
@@ -697,31 +701,70 @@ class TaskMain():
                 #try
 
                 for order_names in self.all_orders:
-                    if order_names[0] != "Red_Bull" and order_names[1] != "Red_Bull":
-                        self.all_orders = self.robot.sort_for_pick(objects= order_names)
-                        print("Order to pick ", order_names)
-                        #try for o in current_order: 
-
-                        counter = 0
-                
-                        for o in order_names:
-                                
-                            if counter == 0:
-                                if self.robot.get_standard_pick_from_object(o) == "front":
-                                    _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)
-                                else:
+                    NCP_check = set(self.NCP).intersection(order_names)
+                    NCT_check = set(self.NCT).intersection(order_names)
+                    counter = 0
+                    if len(NCP_check)==0:
+                        if len(NCT_check)==0:
+                            self.all_orders = self.robot.sort_for_pick(objects= order_names)
+                            print("Order to pick ", order_names)
+                            #try for o in current_order: 
+                    
+                            for o in order_names:
+                                    
+                                if counter == 0:
                                     _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)    
-                                self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
-                            else:
-                                picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
-                            counter = counter + 1         
-                    else:
-                        #!!!!!!!!!!!!!!!# SAY PUT REDBULL IN TRAY
-                        print("PUT REDBULL IN TRAY")
-                        if order_names[0] == "Red_Bull":
-                            _ ,asked_help_1 = self.robot.pick_object_risky(selected_object=order_names[1], first_search_tetas=tetas)
-                        else:
-                            _ ,asked_help_1 = self.robot.pick_object_risky(selected_object=order_names[0], first_search_tetas=tetas)
+                                    self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
+                                else:
+                                    picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+                                counter = counter + 1         
+                        elif len(NCT_check)==1:
+
+                            if list(NCT_check)[0] == order_names[0]:
+                                obj = order_names[0]
+                                order_names[0] = order_names[1]
+                                order_names[1] = obj
+
+                            for o in order_names:
+                                    
+                                if counter == 0:
+                                    _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)    
+                                    self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
+                                else:
+                                    picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+                                counter = counter + 1
+
+                        elif len(NCT_check)==2:
+
+                            for o in NCT_check:
+                                    
+                                    if counter == 0:
+                                        _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)    
+                                        self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = "top", NCT=True)
+                                    else:
+                                        picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+                                    counter = counter + 1
+
+
+                    elif len(NCP_check)==1:
+
+                        if list(NCP_check)[0] == order_names[0]:
+                            obj = order_names[0]
+                            order_names[0] = order_names[1]
+                            order_names[1] = obj
+
+                        picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=order_names[0], first_search_tetas=tetas)
+
+                        ## CREATE SPEECH
+                        print("PUT IN TRAY", order_names[1])
+
+                    elif len(NCP_check)==2:
+
+                        print("PUT IN TRAY", order_names[0])
+
+                        print("PUT IN TRAY", order_names[1])
+
+                        self.is_object_in_hand = False
 
 
 
@@ -753,7 +796,7 @@ class TaskMain():
                 self.robot.set_speech(filename="restaurant/i_have_your_order", wait_for_end_of=True)
                 self.robot.set_speech(filename="restaurant/please_take_order_from_tray", wait_for_end_of=True)
 
-                self.is_object_in_hand = True ### FOR PORTUGAL OPEN WE ASSUME THERE IS ALWAYS ONE OF THE ITEMS IN THE ROBOT HAND
+                # self.is_object_in_hand = True ### FOR PORTUGAL OPEN WE ASSUME THERE IS ALWAYS ONE OF THE ITEMS IN THE ROBOT HAND
                 
                 if self.is_object_in_hand:
                     # time.sleep(5.0)
