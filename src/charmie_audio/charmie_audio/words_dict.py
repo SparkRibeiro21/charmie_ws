@@ -39,7 +39,7 @@ drinks_dict = {
                        "orang joyce", "orang juiis", "orange joyce", "arun jus", "jordan jus", "oronschuss", "ortons ju"], # removed 'order' and all "just orange" so there is no conflict with orange 
     "7up":            ["seven", "up ", "7", "nope", "devanab", "savannah", "sabona", "sabanab"], # removed o "simon" cause it conflicts with th name Simon
     "Water":          ["water", "laude"],
-    "Red_Bull":       ["red bull", "redbull", "red b", "red boulder", "red bowl", "red ball", "red pull", "red poll", "red pole", "red bullseye"]
+    "Red_Bull":       ["red bull", "redbull", "red b", "red boulder", "red bowl", "red ball", "red pull", "red poll", "red pole", "red bullseye", "bread roll", "red wool", "redwell"]
 }
 
 foods_dict = {
@@ -52,7 +52,7 @@ foods_dict = {
     "Coffee_Grounds":   ["coffee", "grounds"],
     "Sugar":            ["sugar"],
 
-    "Pear":             ["pear", "pair", "pier", "beer", "bare"],
+    "Pear":             [" pear ", " pair ", " pier ", " beer ", " bare ", " bear ", " fair "],
     "Plum":             ["plum", "clump", "blam", "blum", "plumb"],
     "Peach":            ["peach"],
     "Lemon":            ["lemon", "lammon"],
@@ -61,7 +61,7 @@ foods_dict = {
     "Banana":           ["banana"],
     "Apple":            ["apple"],
 
-    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "fringles"],
+    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "fringles", "ringle"],
     "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex"],
     "Cheezit":          ["cheese", "cheezit", "she's it", "shisit"]
 }
