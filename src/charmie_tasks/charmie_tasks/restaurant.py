@@ -431,7 +431,7 @@ class TaskMain():
                 while not customer_has_order:
                     customer_has_order_ctr+= 1
 
-                    if customer_has_order_ctr > max_asks_customer_has_order:
+                    if customer_has_order_ctr < max_asks_customer_has_order:
 
                         # "Do you have an order?"
                         confirmation = self.robot.get_audio(yes_or_no=True, question="restaurant/have_an_order", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
@@ -464,7 +464,7 @@ class TaskMain():
 
                         if answer == ["yes"]:
                             customer_has_order = True
-                        elif answer == ["no"]:
+                        else: # elif answer == ["no"]: # it may also be a timeout
                             customer_has_order = True
                             self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
 
@@ -545,7 +545,28 @@ class TaskMain():
                             
                             print("ANSWER:", answer)
 
-                            if answer == ["no"]:
+                            if answer == ["yes"]:
+                                self.robot.set_speech(filename="restaurant/what_is_your_order", wait_for_end_of=True)
+                                keyword_list = self.robot.set_face_touchscreen_menu(["foods", "drinks", "snacks", "fruits", "custom"], custom_options=["Red Bull"], timeout=30, mode="multi")
+                                
+                                print("ORDER KEYWORDS:", keyword_list)
+                                ### IF TIMEOUT: 
+                                ### IF NO KEYWORDS
+                                
+                                self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                                
+                                # print(self.all_orders)
+                                self.robot.set_rgb(command=GREEN+BLINK_LONG)
+                                # print(self.all_orders)
+
+                                self.robot.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                                for kw in keyword_list:
+                                    print(kw)
+                                    self.robot.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                                
+                                order_received = True  # Sai do loop se a confirmação for "yes"
+                                self.state = self.task_states["Go_back_to_barman_with_order"]
+                            else: # if answer == ["no"]: # also consider timeout as a "no" answer, to not be stuck in this part 
                                 order_received = True
                                 self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
                                 self.state = self.task_states["Approach_customer"]
@@ -561,22 +582,7 @@ class TaskMain():
                                     self.DETECTED_CUSTOMER_INDEX += 1
                                 else:
                                     self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
-                            else:
-                                self.robot.set_speech(filename="restaurant/what_is_your_order", wait_for_end_of=True)
-                                keyword_list = self.robot.set_face_touchscreen_menu(["foods", "drinks", "snacks", "fruits", "custom"], custom_options=["Red Bull"], timeout=30, mode="multi")
-                                self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
-                                
-                                # print(self.all_orders)
-                                self.robot.set_rgb(command=GREEN+BLINK_LONG)
-                                # print(self.all_orders)
 
-                                self.robot.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
-                                for kw in keyword_list:
-                                    print(kw)
-                                    self.robot.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
-                                
-                                order_received = True  # Sai do loop se a confirmação for "yes"
-                                self.state = self.task_states["Go_back_to_barman_with_order"]
                         else:
 
                             ### SPEAK: Unfortunetely there was a problem with my understanding of your order. I am sorry for this. I have to move on to other customers.
