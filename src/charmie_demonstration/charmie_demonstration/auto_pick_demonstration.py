@@ -83,7 +83,7 @@ class TaskMain():
         self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
         print(self.initial_position)
 
-        self.GET_HEAR = True
+        self.GET_HEAR = False
 
         #Furniture which we cannot place with place_front
 
@@ -109,6 +109,9 @@ class TaskMain():
         self.robot.set_task_name_and_states(task_name=self.TASK_NAME, task_states=self.task_states) # Necessary to visualize states and task info in GUI
         self.DEMO_MODE = self.robot.get_demo_mode()
         self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
+
+        state = 1
+        return_to_initial_position = True
 
 
         self.state = self.task_states["Waiting_for_task_start"]
@@ -177,6 +180,14 @@ class TaskMain():
 
                 else:
 
+                    Object_menu = ["1","2"]
+
+                    while True:
+                        selected_number = self.robot.set_face_touchscreen_menu(["custom"], custom_options=Object_menu, timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                        print(selected_number[0])
+                        if selected_number[0] != "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                            break
+
                     while True:
                         selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
                         print(selected_category[0])
@@ -193,6 +204,34 @@ class TaskMain():
                     self.object_name = selected_option[0]
 
                     self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
+
+                    if selected_number[0] == "2":
+
+                        return_to_initial_position = False
+
+                        while True:
+                            selected_category = self.robot.set_face_touchscreen_menu(["object classes"], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_category", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                            print(selected_category[0])
+                            if selected_category[0] != "TIMEOUT" and self.robot.get_furniture_from_object_class(selected_category[0]) != "NONE": #THINK ABOUT REPEAT LIMIT
+                                break
+
+                        selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                        print(selected_option[0])
+
+                        while selected_option[0] == "TIMEOUT": #THINK ABOUT REPEAT LIMIT
+                            selected_option = self.robot.set_face_touchscreen_menu([selected_category[0]], timeout=10, mode="single", speak_results=True, start_speak_file = "face_touchscreen_menu/menu_object", end_speak_file_error = "sound_effects/you_have_to_pick_renata")
+                            print(selected_option[0])
+
+                        self.object2_name = selected_option[0]
+                        objects = self.robot.sort_for_pick(objects=[self.object_name,self.object2_name])
+
+                        self.object_name = objects[0]
+                        self.object_mode = self.robot.get_standard_pick_from_object(self.object_name)
+
+                        self.object2_name = objects[1]
+                        self.object2_mode = self.robot.get_standard_pick_from_object(self.object2_name)
+                        print("Object 1 ", self.object_name, " Object 2 ", self.object2_name)
+
 
                     rooms = []
                     for obj in self.robot.node.rooms:
@@ -299,21 +338,25 @@ class TaskMain():
 
                 self.robot.set_speech(filename="generic/careful", wait_for_end_of=True)                
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
+                if state == 1:
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
+                if state == 2:
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object2_name)), wait_for_end_of=False)
 
                 #As of now, we are going to make CHARMIE move to a location 
-                if self.object_mode == "front":
+                if state == 1:
                     self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))), wait_for_end_of=True)
                
-                if self.object_mode == "top":
-                    #rotate_coordinates = self.robot.add_rotation_to_pick_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))))
-                    #self.robot.move_to_position(move_coords=rotate_coordinates, wait_for_end_of=True)
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))), wait_for_end_of=True)
+                if state == 2:
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object2_name))), wait_for_end_of=True)
 
 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
 
+                if state == 1:
+                    self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name)), wait_for_end_of=False)
+                if state == 2:
+                     self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object2_name)), wait_for_end_of=False)
 
                 self.state = self.task_states["Pick_Object"]
 
@@ -325,18 +368,32 @@ class TaskMain():
                 # else:
                 #     picked_height, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.tetas)
 
-                picked_height_1, asked_help = self.robot.pick_object_risky(selected_object="Mustard", pick_mode=self.object_mode, first_search_tetas=self.VERTICAL_TETAS, return_arm_to_initial_position=False)
-                print("FIRST PICK HEIGHT:", picked_height_1)
 
-                place_object_in_tray_height = self.robot.place_object_in_furniture(selected_object=self.object_name, place_mode=self.robot.get_standard_pick_from_object(object_name=self.object_name), furniture="Tray", place_height=picked_height_1)
-                print("PLACE IN TRAY HEIGHT:", place_object_in_tray_height)
+                if state == 2:
+                    picked_height_2, asked_help_tray = self.robot.pick_object_risky(selected_object=self.object2_name, pick_mode=self.object2_mode, first_search_tetas=self.HORIZONTAL_TETAS, return_arm_to_initial_position=True)
+                    print("SECOND PICK HEIGHT:", picked_height_2)
 
-                picked_height_2, asked_help_tray = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.HORIZONTAL_TETAS)
-                print("SECOND PICK HEIGHT:", picked_height_2)
+                    self.robot.set_face("charmie_face", wait_for_end_of=False)
+                    return_to_initial_position = True
 
-                self.robot.set_face("charmie_face", wait_for_end_of=False)
 
-                self.state = self.task_states["Move_to_place"]
+                if state == 1:
+                    picked_height_1, asked_help = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, first_search_tetas=self.VERTICAL_TETAS, return_arm_to_initial_position=return_to_initial_position)
+                    print("FIRST PICK HEIGHT:", picked_height_1)
+
+                    if return_to_initial_position == False:
+                        place_object_in_tray_height = self.robot.place_object_in_furniture(selected_object=self.object_name, place_mode=self.robot.get_standard_pick_from_object(object_name=self.object_name), furniture="Tray", place_height=picked_height_1)
+                        print("PLACE IN TRAY HEIGHT:", place_object_in_tray_height)
+
+                        state = 2
+
+                if return_to_initial_position == False:
+                    self.state = self.task_states["Move_to_Location"]
+                else:
+                    self.state = self.task_states["Move_to_place"]
+
+
+                
 
 
             elif self.state == self.task_states["Move_to_place"]:
@@ -379,13 +436,14 @@ class TaskMain():
 
                 #self.furniture_z = self.robot.get_height_from_furniture(self.place_furniture)
                 #self.object_z = self.robot.get_object_height_from_object(self.object_name)
+                if selected_number[0] == "1":
+                    self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode=self.object_mode,furniture=self.place_furniture,asked_help=False,place_height=picked_height_1, return_to_initial_position=True)
+                if selected_number[0] == "2":
+                    self.robot.place_object_in_furniture(selected_object=self.object2_name,place_mode=self.object2_mode,furniture=self.place_furniture,asked_help=False,place_height=picked_height_2, return_to_initial_position=True)
+                    picked_height_3 = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, furniture="Tray", placed_in_tray_height = place_object_in_tray_height)
+                    print("THIRD PICK HEIGHT:", picked_height_3)
 
-                self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode="front",furniture=self.place_furniture,asked_help=False,place_height=picked_height_2, return_to_initial_position=True)
-
-                picked_height_3 = self.robot.pick_object_risky(selected_object=self.object_name, pick_mode=self.object_mode, furniture="Tray", placed_in_tray_height = place_object_in_tray_height)
-                print("THIRD PICK HEIGHT:", picked_height_3)
-
-                self.robot.place_object_in_furniture(selected_object="Coffee Grounds",place_mode="front",furniture=self.place_furniture,asked_help=False,place_height=picked_height_3, return_to_initial_position=True)
+                    self.robot.place_object_in_furniture(selected_object=self.object_name,place_mode=self.object_mode,furniture=self.place_furniture,asked_help=False,place_height=picked_height_3, return_to_initial_position=True)
 
                 self.robot.wait_for_start_button()
 
