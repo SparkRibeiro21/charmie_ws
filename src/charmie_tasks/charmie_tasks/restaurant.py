@@ -524,17 +524,22 @@ class TaskMain():
 
                             ##### Verifica a resposta recebida
                             if confirmation.lower() == "yes":
-                                self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
-                                self.robot.set_rgb(command=GREEN+BLINK_LONG)
-                                # print(self.all_orders)
 
-                                self.robot.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
-                                for kw in keyword_list:
-                                    print(kw)
-                                    self.robot.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
-                                
-                                order_received = True  # Sai do loop se a confirmação for "yes"
-                                self.state = self.task_states["Go_back_to_barman_with_order"]
+                                if len(keyword_list) == 2:
+                                        # Speak: "Ohh, there seems to be a problem with your order. Please select exactly two items for your order. Let's try again."
+                                    self.robot.set_speech(filename="restaurant/invalid_order", wait_for_end_of=True)
+                                else:
+                                    self.all_orders.append(keyword_list)  # Adiciona o pedido à lista de todos os pedidos
+                                    self.robot.set_rgb(command=GREEN+BLINK_LONG)
+                                    # print(self.all_orders)
+
+                                    self.robot.set_speech(filename="restaurant/reforce_order", wait_for_end_of=True)
+                                    for kw in keyword_list:
+                                        print(kw)
+                                        self.robot.set_speech(filename="objects_names/" + kw.lower().replace(" ", "_"), wait_for_end_of=True)
+                                    
+                                    order_received = True  # Sai do loop se a confirmação for "yes"
+                                    self.state = self.task_states["Go_back_to_barman_with_order"]
 
                             elif confirmation.lower() == "no":
                                 self.robot.set_rgb(command=RED+BLINK_LONG)
@@ -566,7 +571,6 @@ class TaskMain():
                                     elif len(keyword_list) != 2 or keyword_list == ['ERROR']:
                                         # Speak: "Ohh, there seems to be a problem with your order. Please select exactly two items for your order. Let's try again."
                                         self.robot.set_speech(filename="restaurant/invalid_order", wait_for_end_of=True)
-                                        pass
                                     else:
                                         valid_order = True
 
@@ -687,8 +691,6 @@ class TaskMain():
                 time.sleep(1.0)
                 self.robot.set_speech(filename="restaurant/barman_place_requested_objects_in_table_how_to", wait_for_end_of=True)
 
-                # TODO: I need you to inform the rest of the code if both objects are on the tray or if one of them is in the hand
-
                 print(" CHECK FOR ALLO RDERS ", self.all_orders)
                 tetas = [[0, -45], [-40, -45], [40, -45]]
                 ########## HERE YOU HAVE TO USE: current_order and not all.orders !!!!!!!!!!!!!!!!!!!!!!!!!
@@ -751,7 +753,7 @@ class TaskMain():
                 self.robot.set_speech(filename="restaurant/i_have_your_order", wait_for_end_of=True)
                 self.robot.set_speech(filename="restaurant/please_take_order_from_tray", wait_for_end_of=True)
 
-                self.is_object_in_hand = False ### remove later, i need this to be filled by the pick state
+                self.is_object_in_hand = True ### FOR PORTUGAL OPEN WE ASSUME THERE IS ALWAYS ONE OF THE ITEMS IN THE ROBOT HAND
                 
                 if self.is_object_in_hand:
                     # time.sleep(5.0)
@@ -781,48 +783,6 @@ class TaskMain():
                         if not order_taken_ctr and order_taken_ctr == max_attempts:
                             self.robot.set_speech(filename="restaurant/problem_taking_order", wait_for_end_of=True)
 
-                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                self.robot.set_speech(filename="arm/arm_open_gripper", wait_for_end_of=True)
-                # SAY PICK OBJECTS AND COUNTDOWN
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
-                time.sleep(2)
-                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
-                time.sleep(2)
-                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-                """counter = 0
-                self.all_orders.reverse()
-                print("LIST: ", self.all_orders)
-
-                for o in self.all_orders:
-
-                    match counter:
-                        case 0:
-                            self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_0,asked_help=asked_help_0)
-                        case 1:
-                            if o == "7up":
-                                # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
-                                self.robot.set_arm(command="milk_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=0.0,asked_help=asked_help_1)
-                            else:
-                                # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
-                                self.robot.set_arm(command="milk_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_1, base_adjust_y=-0.12,asked_help=asked_help_1)
-                    
-                        case 2:
-                            if o == "Sugar":
-                                # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
-                                self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = -0.12,asked_help=asked_help_2)
-                            else:
-                                # self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name=o, preposition="on", furniture_name=place_furniture)
-                                self.robot.set_arm(command="cereal_tray_location_grab", wait_for_end_of=True)
-                                self.robot.place_object_in_furniture(selected_object=o, furniture=place_furniture, place_height=picked_height_2, base_adjust_y = -0.24,asked_help=asked_help_2)
-                            
-
-                    counter+=1
-                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
-                self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True) 
-                """
 
                 self.state = self.task_states["Move_to_barman_after_delivery"] 
             
