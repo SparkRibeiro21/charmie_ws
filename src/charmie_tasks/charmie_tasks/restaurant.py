@@ -465,6 +465,7 @@ class TaskMain():
 
                         if answer == ["yes"]:
                             customer_has_order = True
+                            self.robot.set_speech(filename="restaurant/i_will_ask_you_for_your_order", wait_for_end_of=True)
                         else: # elif answer == ["no"]: # it may also be a timeout
                             customer_has_order = True
                             self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
@@ -500,6 +501,12 @@ class TaskMain():
                         order_received_ctr+=1
 
                         if order_received_ctr <= max_asks_audio_order_received:
+
+                            self.robot.set_speech(filename="restaurant/please_answer", wait_for_end_of=True)
+                            time.sleep(0.5)
+                            self.robot.set_speech(filename="restaurant/my_order_is", wait_for_end_of=True)
+                            time.sleep(0.5)
+                            self.robot.set_speech(filename="restaurant/and_then_say_your_order", wait_for_end_of=True)
                 
                             ##### AUDIO: Listen the order and repeat for confirmation
                             command = self.robot.get_audio(restaurant=True, question="restaurant/what_is_your_order", face_hearing="charmie_face_green_my_order", wait_for_end_of=True)
@@ -557,7 +564,8 @@ class TaskMain():
                                     if keyword_list == ['TIMEOUT']: # this is just so i can get out of this loop
                                         valid_order = True 
                                     elif len(keyword_list) != 2 or keyword_list == ['ERROR']:
-                                        ### SPEAK INVALID ORDER, PLEASE SELECT TWO ITEMS FROM THE MENU
+                                        # Speak: "Ohh, there seems to be a problem with your order. Please select exactly two items for your order. Let's try again."
+                                        self.robot.set_speech(filename="restaurant/invalid_order", wait_for_end_of=True)
                                         pass
                                     else:
                                         valid_order = True
@@ -594,7 +602,7 @@ class TaskMain():
                                     
                                     order_received = True  # Sai do loop se a confirmação for "yes"
                                     self.state = self.task_states["Go_back_to_barman_with_order"]
-                                    
+
                             else: # if answer == ["no"]: # also consider timeout as a "no" answer, to not be stuck in this part 
                                 order_received = True
                                 self.robot.set_speech(filename="restaurant/not_have_an_order", wait_for_end_of=True)
