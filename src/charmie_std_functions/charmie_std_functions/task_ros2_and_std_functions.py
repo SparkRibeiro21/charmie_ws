@@ -2219,7 +2219,7 @@ class RobotStdFunctions():
                                "ding-dong",
                                "doorbell",
                                "glockenspiel",
-                               "mains hum",
+                               # "mains hum",
                                "mallet percussion",
                                "marimba, xylophone",
                                "ringtone",
@@ -2235,6 +2235,7 @@ class RobotStdFunctions():
 
         # Call sound classification continuous(with list of possible doorbell break sounds)
         success, message, label, score = self.get_continuous_sound_classification(break_sounds=doorbell_break_sounds, timeout=timeout, score_threshold=score_threshold, speak_pre_hearing=False, speak_post_hearing=False, wait_for_end_of=True)
+        print(f"Doorbell Detection Result - Success: {success}, Message: {message}, Detected Label: {label}, Detected Score: {score}")
 
         # Speak specific for doorbell after starting listening for doorbell if success:
         if success:
