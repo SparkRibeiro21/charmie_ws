@@ -81,6 +81,9 @@ class TaskMain():
 
         self.BARMAN_SIDE = "left" # by default, but if barman is detected in code, it changes
 
+        self.MIN_DISTANCE_TO_CUSTOMER = 0.5 # 
+        self.MIN_DISTANCE_TO_BARMAN = 0.3
+
         
     def main(self):
 
@@ -393,7 +396,10 @@ class TaskMain():
                 self.robot.adjust_omnidirectional_position(dx=-0.2, dy=0.0, wait_for_end_of=True)
                 self.robot.sdnl_move_to_position(move_coords=self.SAFE_NAV_COORDS_TO_CUSTOMER, first_rotate=True, orient_after_move=True, reached_radius=0.7, wait_for_end_of=True)
                 self.robot.sdnl_move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, first_rotate=False, orient_after_move=False, reached_radius=2.0, wait_for_end_of=True)
-                self.robot.adjust_obstacles(distance=0.50, direction=0.0, max_speed=0.1, wait_for_end_of=True)
+
+                s, m, d = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                if d > self.MIN_DISTANCE_TO_CUSTOMER:
+                    self.robot.adjust_obstacles(distance=self.MIN_DISTANCE_TO_CUSTOMER, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
@@ -655,7 +661,7 @@ class TaskMain():
                 self.robot.adjust_omnidirectional_position(dx=-0.1, dy=0.0, wait_for_end_of=True)
                 self.robot.sdnl_move_to_position(move_coords=self.SAFE_NAV_COORDS_TO_BARMAN, first_rotate=True, orient_after_move=True, reached_radius=0.7, wait_for_end_of=True)
                 self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, first_rotate=True, orient_after_move=True, reached_radius=1.0, wait_for_end_of=True)
-                self.robot.adjust_obstacles(distance=0.30, direction=0.0, max_speed=0.1, wait_for_end_of=True)
+                self.robot.adjust_obstacles(distance=self.MIN_DISTANCE_TO_BARMAN, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
@@ -738,7 +744,10 @@ class TaskMain():
                 self.robot.adjust_omnidirectional_position(dx=-0.2, dy=0.0, wait_for_end_of=True)
                 self.robot.sdnl_move_to_position(move_coords=self.SAFE_NAV_COORDS_TO_CUSTOMER, first_rotate=True, orient_after_move=True, reached_radius=0.7, wait_for_end_of=True)
                 self.robot.sdnl_move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, first_rotate=False, orient_after_move=False, reached_radius=2.0, wait_for_end_of=True)
-                self.robot.adjust_obstacles(distance=0.50, direction=0.0, max_speed=0.1, wait_for_end_of=True)
+
+                s, m, d = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                if d > self.MIN_DISTANCE_TO_CUSTOMER:
+                    self.robot.adjust_obstacles(distance=self.MIN_DISTANCE_TO_CUSTOMER, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
