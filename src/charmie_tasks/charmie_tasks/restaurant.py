@@ -623,7 +623,7 @@ class TaskMain():
 
                 ##### SPEAK: Barman, please give me the following items:
                 self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
-                self.all_orders = [["Tropical Juice", "Pringles"]]
+                self.all_orders = [["Mustard", "Apple"]]
 
                 print("ALL ORDERS: ", self.all_orders)
                 current_order = []

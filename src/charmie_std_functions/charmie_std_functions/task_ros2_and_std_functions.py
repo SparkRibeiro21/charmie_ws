@@ -6236,7 +6236,6 @@ class RobotStdFunctions():
                 if state == 0:
 
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_front, wait_for_end_of=True)
-                    self.wait_for_start_button()
 
                     gripper_place_position = self.get_gripper_localization()
 
@@ -6244,7 +6243,7 @@ class RobotStdFunctions():
                         final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
                     else:
                         print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object(selected_object)/1.25) ," TOLERA ", TOLERANCE_ERROR)
-                        final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.25) - TOLERANCE_ERROR)*1000
+                        final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.5) - TOLERANCE_ERROR)*1000
 
                     print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
@@ -6837,12 +6836,12 @@ class RobotStdFunctions():
             obj2_height = self.get_object_height_from_object(objects[1])
             changed = False
             print(" Original list ", objects)
-            if obj1_shape != "sphere" and obj2_shape == "sphere":
+            if obj1_shape == "sphere" and obj2_shape != "sphere":
                 changed = True
                 obj = objects[0]
                 objects[0] = objects[1]
                 objects[1] = obj
-                print(" Changed ", objects[0], " with ", objects[1])
+                print(" Changed shape ", objects[0], obj1_shape,  " with ", objects[1], obj2_shape)
             if abs(obj1_height - 0.14) > abs(obj2_height - 0.14) and not changed:
                 obj = objects[0]
                 objects[0] = objects[1]
