@@ -1,7 +1,7 @@
 sdnl_nav:
   ros__parameters:
     # Rates
-    control_rate_hz: 30.0
+    control_rate_hz: 20.0
     debug_enabled: true
     debug_rate_hz: 10.0
     n_samples: 720
