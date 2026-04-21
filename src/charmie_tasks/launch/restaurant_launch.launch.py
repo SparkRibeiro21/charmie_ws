@@ -18,7 +18,7 @@ def generate_launch_description():
         # Visualization and Debugging                                       # 
         #####################################################################
         std_lf.rviz2_restaurant_node, ### this is different on purpose for restaurant task!
-        std_lf.gui,
+        # std_lf.gui,
         std_lf.marker_arrays_debug,
         std_lf.sdnl_debug, ### this is different on purpose for restaurant task!
         # std_lf.task_with_gamepad, # debug mode where task is selected via gamepad
@@ -38,7 +38,7 @@ def generate_launch_description():
         # Sensors                                                           # 
         #####################################################################
         std_lf.lidar,
-        std_lf.lidar_bottom,
+        # std_lf.lidar_bottom,
         std_lf.livox_driver,
         std_lf.radar,
         std_lf.audio,

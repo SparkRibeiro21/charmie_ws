@@ -1,7 +1,7 @@
 sdnl_nav:
   ros__parameters:
     # Rates
-    control_rate_hz: 30.0
+    control_rate_hz: 20.0
     debug_enabled: true
     debug_rate_hz: 10.0
     n_samples: 720
@@ -14,7 +14,7 @@ sdnl_nav:
 
     # SDNL major params
     lambda_target_not_obs:  1.0
-    lambda_target_with_obs: 0.5
+    lambda_target_with_obs: 0.8
     beta1: 2.0
     beta2: 5.0
 
