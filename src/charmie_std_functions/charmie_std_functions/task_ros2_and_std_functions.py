@@ -580,11 +580,6 @@ class ROS2TaskNode(Node):
         self.detected_people = det_people
         self.new_person_frame_for_tracking = True
 
-        # current_frame = self.br.imgmsg_to_cv2(self.detected_people.image_rgb, "bgr8")
-        # current_frame_draw = current_frame.copy()
-        # cv2.imshow("Yolo Pose TR Detection", current_frame_draw)
-        # cv2.waitKey(10)
-
     def object_detected_filtered_callback(self, det_object: ListOfDetectedObject):
         self.detected_objects = det_object
         self.new_object_frame_for_tracking = True
@@ -2224,7 +2219,7 @@ class RobotStdFunctions():
                                "ding-dong",
                                "doorbell",
                                "glockenspiel",
-                               "mains hum",
+                               # "mains hum",
                                "mallet percussion",
                                "marimba, xylophone",
                                "ringtone",
@@ -2240,6 +2235,7 @@ class RobotStdFunctions():
 
         # Call sound classification continuous(with list of possible doorbell break sounds)
         success, message, label, score = self.get_continuous_sound_classification(break_sounds=doorbell_break_sounds, timeout=timeout, score_threshold=score_threshold, speak_pre_hearing=False, speak_post_hearing=False, wait_for_end_of=True)
+        print(f"Doorbell Detection Result - Success: {success}, Message: {message}, Detected Label: {label}, Detected Score: {score}")
 
         # Speak specific for doorbell after starting listening for doorbell if success:
         if success:
@@ -3439,8 +3435,16 @@ class RobotStdFunctions():
     def detected_person_to_face_path(self, person=DetectedPerson(), just_face=False, send_to_face=False):
 
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        
-        cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
+
+        if person.camera == "head" or person.camera == "hand":
+            rgb = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            cf = rgb
+        else:
+            cf = self.node.br.imgmsg_to_cv2(person.image_rgb_frame, "bgr8")
         img_path = ""
 
         if not just_face:
@@ -3838,7 +3842,16 @@ class RobotStdFunctions():
         thresh_v = 220
 
         current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
-        cf = self.node.br.imgmsg_to_cv2(object.image_rgb_frame, "bgr8")
+
+        if object.camera == "head" or object.camera == "hand":
+            rgb = self.node.br.imgmsg_to_cv2(object.image_rgb_frame, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            cf = rgb
+        else:
+            cf = self.node.br.imgmsg_to_cv2(object.image_rgb_frame, "bgr8")
         
         # checks whether the text has to start inside the bounding box or can start outside (image boundaries)
         start_point = (object.box_top_left_x, object.box_top_left_y)
@@ -3901,7 +3914,12 @@ class RobotStdFunctions():
     def get_head_rgb_image(self):
 
         if self.node.first_rgb_head_image_received:
-            current_frame_rgb_head = self.node.br.imgmsg_to_cv2(self.node.rgb_head_img, "bgr8")
+            rgb = self.node.br.imgmsg_to_cv2(self.node.rgb_head_img, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.node.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            current_frame_rgb_head = rgb
         else:
             current_frame_rgb_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
         
@@ -3910,7 +3928,12 @@ class RobotStdFunctions():
     def get_head_depth_image(self):
 
         if self.node.first_depth_head_image_received:
-            current_frame_depth_head = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
+            depth = self.node.br.imgmsg_to_cv2(self.node.depth_head_img, desired_encoding="passthrough")
+            depth_h, depth_w = depth.shape[:2]
+            if (depth_w, depth_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.node.get_logger().warn(f"Head Depth came with {depth_w}x{depth_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                depth = cv2.resize(depth, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+            current_frame_depth_head = depth
         else:
             current_frame_depth_head = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
@@ -3919,7 +3942,12 @@ class RobotStdFunctions():
     def get_hand_rgb_image(self):
 
         if self.node.first_rgb_hand_image_received:
-            current_frame_rgb_hand = self.node.br.imgmsg_to_cv2(self.node.rgb_hand_img, "bgr8")
+            rgb = self.node.br.imgmsg_to_cv2(self.node.rgb_hand_img, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.node.get_logger().warn(f"Hand RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            current_frame_rgb_hand = rgb
         else:
             current_frame_rgb_hand = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH, 3), dtype=np.uint8)
         
@@ -3928,7 +3956,12 @@ class RobotStdFunctions():
     def get_hand_depth_image(self):
 
         if self.node.first_depth_hand_image_received:
-            current_frame_depth_hand = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
+            depth = self.node.br.imgmsg_to_cv2(self.node.depth_hand_img, desired_encoding="passthrough")
+            depth_h, depth_w = depth.shape[:2]
+            if (depth_w, depth_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+                self.node.get_logger().warn(f"Hand Depth came with {depth_w}x{depth_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+                depth = cv2.resize(depth, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+            current_frame_depth_hand = depth
         else:
             current_frame_depth_hand = np.zeros((self.node.CAM_IMAGE_HEIGHT, self.node.CAM_IMAGE_WIDTH), dtype=np.uint8)
         
@@ -4867,7 +4900,11 @@ class RobotStdFunctions():
                                         if not said:
                                             self.set_speech(filename=folder+"/"+so.replace(" ","_").lower())
                                             said = True
-
+                        
+                        for so in self.node.selected_list_options_touchscreen_menu:
+                            if so.replace(" ","_").lower() == "red_bull": # quick fix, to not wanting to add red_bull to configuration files because of objects detection
+                                self.set_speech(filename="objects_names/red_bull")
+                        
                 return self.node.selected_list_options_touchscreen_menu
         
         else:
@@ -5494,7 +5531,7 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_Y = 1
 
 
-        if furniture != "" and furniture != "Tray":
+        if furniture != "" and furniture != "tray":
                 is_object_in_furniture_check = True
         
         if first_search_tetas == [] and search_with_head_camera:
@@ -5594,8 +5631,10 @@ class RobotStdFunctions():
             elif pick_mode == "top":
                 if state == 0:
 
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_left_tray_top, wait_for_end_of=True)
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_left_tray_top, wait_for_end_of=True)
+
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_to_safe_joints, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
 
                     gripper_place_position = self.get_gripper_localization()
 
@@ -5617,7 +5656,7 @@ class RobotStdFunctions():
                     
 
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = first_left_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = first_right_tray_top, wait_for_end_of=True)
                     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
                     return placed_height
                 
@@ -6149,7 +6188,7 @@ class RobotStdFunctions():
             #SEARCH FOR OBJECT
 
     
-    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True, navigation_distance = -1):
+    def place_object_in_furniture(self, selected_object="", place_mode="", furniture="", shelf_number=0, asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True, navigation_distance = -1, NCT = False):
 
         # CHECK OBJECT NAME FOR SPECIAL CASES
         # CHECK PICK/PLACE MODE
@@ -6164,6 +6203,8 @@ class RobotStdFunctions():
         TRAY_HEIGHT = 0.59
 
         selected_object = selected_object.replace(" ","_").lower()
+
+        tf_x = 0.17
 
         #### PLACE ARM POSITIONS ####
 
@@ -6192,6 +6233,9 @@ class RobotStdFunctions():
             second_right_tray_top = [-184.1,-9.9,-6,-97.2,92.1,122.8]
             initial_position_to_safe_joints = 	[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
 
+            pre_rotation_place_top = [-171.2, 42.6, -101.6, 7.4, 79.2, 148.8]
+            NCT_place_joints = [-217.4, -0.8, -19.9, -128.6, 80.8, 37]
+
             state = 0
 
             if place_mode == "front":
@@ -6201,8 +6245,11 @@ class RobotStdFunctions():
 
                     gripper_place_position = self.get_gripper_localization()
 
-
-                    final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    if not asked_help:
+                        final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    else:
+                        print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object(selected_object)/1.25) ," TOLERA ", TOLERANCE_ERROR)
+                        final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.5) - TOLERANCE_ERROR)*1000
 
                     print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
@@ -6229,7 +6276,11 @@ class RobotStdFunctions():
                     gripper_place_position = self.get_gripper_localization()
 
 
-                    final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    if not asked_help:
+                        final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    else:
+                        print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object(selected_object)/1.25) ," TOLERA ", TOLERANCE_ERROR)
+                        final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.5) - TOLERANCE_ERROR)*1000
 
                     print("Final_Z: ", final_z," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
@@ -6252,23 +6303,34 @@ class RobotStdFunctions():
                 if state == 0:
 
 
-                    #self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
-                    #self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+                    # self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_rotation_place_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    if NCT == False:
+                        self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+                    else:
+                        self.set_arm(command="adjust_joint_motion", joint_motion_values = NCT_place_joints, wait_for_end_of=True)
 
-
+    
                     gripper_place_position = self.get_gripper_localization()
 
 
-                    final_x = (gripper_place_position.z - 0.59 - place_height - 0.145 - TOLERANCE_ERROR)*1000
+                    if not asked_help and NCT == False:
+                        final_x = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+                    elif NCT == False:
+                        print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object(selected_object)/1.25) ," TOLERA ", TOLERANCE_ERROR)
+                        final_x = (0.97 - TRAY_HEIGHT - (self.get_object_height_from_object(selected_object)/1.5) - TOLERANCE_ERROR - tf_x)*1000
+                    if NCT == False:
 
-                    print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
+                        print("Final_Z: ", final_x," Current Gripper Height:  ", gripper_place_position.z, " picked height : ", place_height)
 
-                    self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
-                    self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
+                        self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]
+                        self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
 
 
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    else:
+                        self.safe_rise_gripper = [0.0 , 0.0 , -100 , 0.0 , 0.0 , 0.0]
 
 
                     time.sleep(0.5)
@@ -6276,9 +6338,14 @@ class RobotStdFunctions():
                     time.sleep(0.5)
 
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
-                    self.wait_for_start_button()
-                    #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = , wait_for_end_of=True)
+
+                    if NCT == False:
+                        self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_rotation_place_top, wait_for_end_of=True)
                     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
+                    
                     return place_height
 
 
@@ -6737,12 +6804,12 @@ class RobotStdFunctions():
 
         if push_pull == "pull":
             initial_position = [1.5, -1.45, 178.0]
-            neck_position = [[15,-22]]
+            neck_position = [[12,-18]]
 
 
-            self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+            #self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
 
-            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle2_head_cam"], minimum_tv_prompt_confidence=0.50)
+            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_head_FNR"], minimum_tv_prompt_confidence=0.50)
         
             for h in door_handle:
 
@@ -6791,15 +6858,18 @@ class RobotStdFunctions():
             obj2_shape = self.get_object_shape_from_object(objects[1])
             obj2_height = self.get_object_height_from_object(objects[1])
             changed = False
+            print(" Original list ", objects)
             if obj1_shape == "sphere" and obj2_shape != "sphere":
                 changed = True
                 obj = objects[0]
                 objects[0] = objects[1]
                 objects[1] = obj
-            if abs(obj1_height - 0.14) < abs (obj2_height - 0.14) and not changed:
+                print(" Changed shape ", objects[0], obj1_shape,  " with ", objects[1], obj2_shape)
+            if abs(obj1_height - 0.14) > abs(obj2_height - 0.14) and not changed:
                 obj = objects[0]
                 objects[0] = objects[1]
                 objects[1] = obj
+                print(" Changed ", objects[0], " with ", objects[1])
         return objects
 
     def close_dishwasher(self, task = "finals"):
