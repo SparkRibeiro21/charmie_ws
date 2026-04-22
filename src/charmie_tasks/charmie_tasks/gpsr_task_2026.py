@@ -87,17 +87,10 @@ class TaskMain():
         # Initial Position
         self.initial_position = [0.0, 0.0, 0.0]
 
-        self.instruction_point =  [ 1.96, 2.60, 90]
+        self.instruction_point =  [ 7.36, 3.84, 0.0]
         print(self.initial_position)
         print(self.instruction_point)
         
-        # self.start_follow_position = self.initial_position
-        self.start_follow_position = [2.0, 4.0, 90.0] # position to start following host after introducing guests
-        # print(self.start_follow_position)
-
-        self.number_of_requests = 3
-        self.curr_request = 1
-
 
     def main(self):
 
@@ -111,6 +104,10 @@ class TaskMain():
         self.request1 = ""
         self.request2 = ""
         self.request3 = ""
+
+
+        self.number_of_requests = 3
+        self.curr_request = 1
 
         self.request_order = [self.request1, self.request2, self.request3]
         # End of added variables
