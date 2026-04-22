@@ -68,7 +68,7 @@ class TaskMain():
         Final_State = 5
 
         # VARS ...
-        self.state = LLM_gpsr
+        self.state = LLM_demo
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -90,38 +90,36 @@ class TaskMain():
 
                 print("New LLM Demo")
 
-                # self.robot.get_llm_ollama_gpsr_high_level(command="greet the person wearing a red sweater in the bedroom and guide them to the waste basket", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="find a cleaning supply in the bathroom then take it and deliver it to the sitting person in the bathroom", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="navigate to the bed then locate the sitting person and follow them to the kitchen", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="look for a red wine in the living room then get it and put it on the bed", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="tell me how many drinks there are on the shelf", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="locate a soccer ball in the office then take it and deliver it to Charlie in the office", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="go to the office then find the person pointing to the left and say your teams name", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="introduce yourself to Jane in the bedroom and follow them", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="greet Morgan in the living room and tell the day of the week", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="tell me what is the largest toy on the refrigerator", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="go to the living room then look for a fruit and fetch it and place it on the refrigerator", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="say your teams country to the person raising their left arm in the bathroom", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="go to the bathroom then find the standing person and tell the time", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="follow the waving person in the living room", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="tell me how many dishes there are on the sofa", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="locate a cleanser in the office then get it and put it on the side tables", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="tell me how many toys there are on the side tables", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="bring me a mustard from the refrigerator", mode="", wait_for_end_of=True)
-                # self.robot.get_llm_ollama_gpsr_high_level(command="escort the person wearing a black shirt from the chairs to the chairs", mode="", wait_for_end_of=True)
- 
-                gpsr_command = "Hello"
-                print("Hello")
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Please go get the milk on the refrigerator and then bring it to me.", mode="", wait_for_end_of=True)
+                
+                ### THIS IS GPSR TASK ###
+                llp_input = hlp[0].split(";")
 
-                self.robot.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
+                start_time = time.time()
 
-                print("Hello1")
+                for i, step in enumerate(llp_input):
+                    print(f"Step {i+1}: {step.strip()}")
+                    step_to_llm = step.strip()
+                    #call low_level std_func: get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
+                    llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
+                    # call gpsr_execution std_func:
+                    print(f"Action Generated: {llp_output[0]}")
+                    self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
 
-                self.robot.set_speech(filename="temp/gpsr_command", wait_for_end_of=True)
-
-                print("Hello2")
+                ### THIS IS GPSR TASK ###
+                    print(f"Action Generated: {llp_output[0]}")
+                    
+                end_time = time.time()
+                print(f"Total Time taken for llp GPSR task: {end_time - start_time}")
 
                 print("Finished first LLM Demo")
+
+
+
+
+
+
+
                 while True:
                     pass
                 
