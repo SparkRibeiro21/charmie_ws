@@ -6744,7 +6744,7 @@ class RobotStdFunctions():
 
                 # furniture validation
                 if not (x_min <= ox <= x_max and y_min <= oy <= y_max):
-                    success = Falseopen_door
+                    success = False
                     message = "Object is outside of rectangular shaped furniture"
 
                 else:
