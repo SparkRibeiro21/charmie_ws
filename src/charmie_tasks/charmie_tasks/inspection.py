@@ -73,7 +73,7 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
         # Name of the table where breakfast is served
-        self.INSPECTION_POINT_COORDS = [2.5, -4.0, 90.0] # Middle fo the Office
+        self.INSPECTION_POINT_COORDS = [4.07 , 4.03, 180.0] # Middle fo the Office
         self.EXIT_LOCATION_NAME = "Exit"
         
         # Initial Position

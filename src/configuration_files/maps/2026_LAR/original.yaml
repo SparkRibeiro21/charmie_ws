@@ -1,7 +1,7 @@
-image: manual_obstacles.pgm
+image: original.pgm
 mode: trinary
 resolution: 0.05
-origin: [-0.788, -7.11, 0]
+origin: [-2.41, -8.62, 0]
 negate: 0
 occupied_thresh: 0.65
 free_thresh: 0.25

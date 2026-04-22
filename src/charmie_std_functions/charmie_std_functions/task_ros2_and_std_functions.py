@@ -6804,12 +6804,12 @@ class RobotStdFunctions():
 
         if push_pull == "pull":
             initial_position = [1.5, -1.45, 178.0]
-            neck_position = [[15,-22]]
+            neck_position = [[12,-18]]
 
 
-            self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+            #self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
 
-            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle2_head_cam"], minimum_tv_prompt_confidence=0.50)
+            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_head_FNR"], minimum_tv_prompt_confidence=0.50)
         
             for h in door_handle:
 

@@ -1,0 +1,27 @@
+{
+  "type": "yoloe_visual_prompt",
+  "image": "door_handle_head_FNR.jpg",
+  "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
+  "width": 848,
+  "height": 480,
+  "classes": [
+    {
+      "cls": 0,
+      "name": "door_handle"
+    }
+  ],
+  "bboxes": [
+    {
+      "cls": 0,
+      "xyxy": [
+        324.0,
+        259.0,
+        385.0,
+        268.0
+      ]
+    }
+  ],
+  "meta": {
+    "notes": ""
+  }
+}
