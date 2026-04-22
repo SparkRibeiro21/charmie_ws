@@ -5,14 +5,15 @@
 {"name": "Shelf", 		            "height": [ ],                          "room": "",  "nav_coords": [ ], "top_left_coords": [], "bot_right_coords": [ ], "diameter":0.0, "look": "vertical",   "shape":"square"},
 {"name": "Coffee Table", 	        "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [], "bot_right_coords": [ ], "diameter":0.0, "look": "horizontal", "shape":"square"},
 {"name": "Living Room Trashcan",    "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [], "bot_right_coords": [ ], "diameter":0.0, "look": "horizontal", "shape":"circle"},
-
-{"name": "Dishwasher", 	            "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ ], "bot_right_coords": [ ], "diameter":0.0, "look": "horizontal", "shape":"square"},
-{"name": "Fridge", 		            "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ ], "bot_right_coords": [ ], "diameter":0.0, "look": "vertical",   "shape":"square"},
-{"name": "Dinner Table", 	        "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ ], "bot_right_coords": [ ], "diameter":0.0, "look": "horizontal", "shape":"square"},
-{"name": "Kitchen Counter",         "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ ], "bot_right_coords": [ ], "diameter":0.0, "look": "horizontal", "shape":"square"},
-{"name": "Kitchen Cabinet", 	    "height": [ ],                          "room": "",  "nav_coords": [ ], "top_left_coords": [ ], "bot_right_coords": [ ], "diameter":0.0, "look": "vertical",   "shape":"square"},
-{"name": "Kitchen Trashcan",	    "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ ], "bot_right_coords": [ ], "diameter":0.0, "look": "horizontal", "shape":"circle"},
-{"name": "Pantry", 		            "height": [ ], 		                    "room": "",  "nav_coords": [ ], "top_left_coords": [ ], "bot_right_coords": [ ], "diameter":0.0, "look": "vertical",   "shape":"square"},
+//Kitchen
+{"name": "Dishwasher", 	            "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ 5.47, -2.67], "bot_right_coords": [ 5.2, -3.31], "diameter":0.0, "look": "horizontal", "shape":"square"},
+{"name": "Fridge", 		            "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ 1.55, -3.8], "bot_right_coords": [ 0.94, -4.23], "diameter":0.0, "look": "vertical",   "shape":"square"},
+{"name": "Dinner Table", 	        "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ 3.63, -1.31], "bot_right_coords": [ 1.59, -2.15], "diameter":0.0, "look": "horizontal", "shape":"square"},
+{"name": "Kitchen Counter",         "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ 3.18, -3.81], "bot_right_coords": [ 1.59, -4.27], "diameter":0.0, "look": "horizontal", "shape":"square"},
+{"name": "Kitchen Cabinet", 	    "height": [ ],                          "room": "",  "nav_coords": [ ], "top_left_coords": [ 5.67, 0.84 ], "bot_right_coords": [ 5.1, -0.17], "diameter":0.0, "look": "vertical",   "shape":"square"},
+{"name": "Kitchen Trashcan",	    "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ 3.9, -3.92], "bot_right_coords": [ 3.59, -4.14], "diameter":0.0, "look": "horizontal", "shape":"circle"},
+{"name": "Pantry", 		            "height": [ ], 		                    "room": "",  "nav_coords": [ ], "top_left_coords": [ 1.52, 1.71], "bot_right_coords": [ 0.04, 1.38], "diameter":0.0, "look": "vertical",   "shape":"square"},
+{"name": "Side Table", 		        "height": [ ], 		                    "room": "",  "nav_coords": [ ], "top_left_coords": [ 4.6, 1.66], "bot_right_coords": [ 3.35, 1.14], "diameter":0.0, "look": "vertical",   "shape":"square"},
 
 {"name": "Reading Chair", 	        "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ ], "bot_right_coords": [ ], "diameter":0.0, "look": "horizontal", "shape":"square"},
 {"name": "Bed",     		        "height": [ ], 			                "room": "",  "nav_coords": [ ], "top_left_coords": [ ], "bot_right_coords": [ ], "diameter":0.0, "look": "horizontal", "shape":"square"},
