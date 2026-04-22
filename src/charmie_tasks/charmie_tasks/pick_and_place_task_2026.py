@@ -119,7 +119,7 @@ class TaskMain():
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
         self.initial_position = [0.0, 0.0, 0.0]
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        self.SEARCH_CUTLERY_COORDS = [2.58, -0.334, -90.0] # FNR position for where dining table's side is
+        self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
         print(self.initial_position)
         
     def main(self):
@@ -183,7 +183,7 @@ class TaskMain():
                 self.robot.enter_house_after_door_opening()
 
                 if self.MILK_BEFORE_CORNFLAKES:
-                    self.state = self.task_states["Move_milk_location"]
+                    self.state = self.task_states["Move_dishes_location"]
                 else:
                     self.state = self.task_states["Move_cornflakes_location"]
                 
@@ -308,7 +308,7 @@ class TaskMain():
                 if self.GET_BREAKFAST_SPOON:
 
                     if not self.HELP_PICK_SPOON:
-                        self.robot.pick_object_risky(selected_object="Spoon", return_arm_to_initial_position="collect_spoon_to_tray_funilocopo_v4")
+                        self.robot.pick_object_risky(selected_object="Spoon", list_of_objects_detected_as= [["Fork", "Knife"]], return_arm_to_initial_position="collect_spoon_to_tray_funilocopo_v4")
 
                     else:
                         object_in_gripper = False
@@ -378,7 +378,7 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
-                self.robot.set_speech(filename="pick_and_place_task/remove_chairs", wait_for_end_of=True)
+                # self.robot.set_speech(filename="pick_and_place_task/remove_chairs", wait_for_end_of=False)
 
                 self.robot.move_to_position(move_coords=self.SEARCH_CUTLERY_COORDS, wait_for_end_of=True)
 
