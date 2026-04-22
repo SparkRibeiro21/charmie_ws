@@ -22,7 +22,7 @@ ros2_modules = {
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          True,
-    "charmie_llm":                  True, # True (check name and fav. drink)
+    "charmie_llm":                  False, # True (check name and fav. drink)
     "charmie_localisation":         True,
     "charmie_low_level":            True,
     "charmie_navigation":           True,
@@ -166,7 +166,7 @@ class TaskMain():
         # for sf in self.SITTING_PLACES_IN_FURNITURE:
         #     print(" - ", sf["name"], " in ", sf["furniture"], " seats at ", sf["center_coords"])
 
-        self.ENTRANCE_DOOR_FURNITURE = "entrace"
+        self.ENTRANCE_DOOR_FURNITURE = "entrance"
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
@@ -177,7 +177,7 @@ class TaskMain():
         self.HANDOVER_GUEST2_BAG = False
         
         # Initial Position
-        self.initial_position = [9.35, 0.13, -135.0]
+        self.initial_position = [8.80, 0.13, -180.0]
         # print(self.initial_position)
         
         # self.start_follow_position = self.initial_position
@@ -190,6 +190,10 @@ class TaskMain():
         # print(self.guest_communication_position)
 
         self.min_dist_for_sitting_place_to_be_occupied = 0.4 # minimum distance from person to sitting place center coords to consider that place as occupied
+
+
+        self.DEBUG_WITHOUT_JETSON = True
+
         
     def main(self):
 
@@ -215,7 +219,7 @@ class TaskMain():
         self.look_judge = [45, 0]
         self.look_left = [90, 0]
         self.look_right = [-90, 0]
-        self.search_tetas = [[-60, -30], [0, -30], [60, -30]]
+        self.search_tetas = [[-60, -15], [0, -15], [60, -15]]
 
         self.state = self.task_states["Waiting_for_task_start"]
 
@@ -314,13 +318,17 @@ class TaskMain():
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) 
                 
 
-                # a = time.time()
-                self.GUEST1_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
-                # print("Name:", self.GUEST1_NAME, time.time()-a)
-                
-                # b = time.time()
-                self.GUEST1_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
-                # print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
+                if not self.DEBUG_WITHOUT_JETSON:
+                    # a = time.time()
+                    self.GUEST1_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
+                    # print("Name:", self.GUEST1_NAME, time.time()-a)
+                    
+                    # b = time.time()
+                    self.GUEST1_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
+                    # print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
+                else:
+                    self.GUEST1_NAME = "John"
+                    self.GUEST1_DRINK = "Coffee"
 
                 self.robot.save_speech(command=self.GUEST1_NAME,  filename=self.GUEST1_NAME,  quick_voice=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST1_DRINK, filename=self.GUEST1_DRINK, quick_voice=False, wait_for_end_of=False)
@@ -524,15 +532,18 @@ class TaskMain():
                 # self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=False) # placed here for time optimization # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
                 
+                if not self.DEBUG_WITHOUT_JETSON:
+                    # a = time.time()
+                    self.GUEST2_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
+                    # print("Name:", self.GUEST2_NAME, time.time()-a)
+                    
+                    # b = time.time()
+                    self.GUEST2_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
+                    # print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
+                else:
+                    self.GUEST2_NAME = "Mary"
+                    self.GUEST2_DRINK = "Tea"
 
-                # a = time.time()
-                self.GUEST2_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
-                # print("Name:", self.GUEST2_NAME, time.time()-a)
-                
-                # b = time.time()
-                self.GUEST2_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
-                # print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
-                
                 self.robot.save_speech(command=self.GUEST2_NAME,  filename=self.GUEST2_NAME,  quick_voice=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, wait_for_end_of=False)
                
