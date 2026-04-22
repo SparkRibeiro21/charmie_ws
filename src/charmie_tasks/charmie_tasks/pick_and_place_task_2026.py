@@ -87,7 +87,7 @@ class TaskMain():
         # Which objects should be acquired
         self.GET_MILK            = True
         self.GET_CORNFLAKES      = True
-        self.GET_BOWL          = True
+        self.GET_BOWL            = True
         self.GET_BREAKFAST_SPOON = True
         self.GET_CUTLERY         = True
         self.IS_CORNFLAKES_BIG   = False # choose whether the cornflakes package is a big one (False) or a small one (True)
@@ -107,12 +107,12 @@ class TaskMain():
         self.CUTLERY_LOCATION = "Dinner Table"
 
         # In case there is a need to reverse the order in which milk/cornflakes is picked
-        self.MILK_BEFORE_CORNFLAKES = False
+        self.MILK_BEFORE_CORNFLAKES = True
 
         # Objects picked furniture names
         # self.MILK_LOCATION = "Pantry"
         self.MILK_LOCATION = "Cabinet"
-        self.CORNFLAKES_LOCATION = "Pantry"
+        self.CORNFLAKES_LOCATION = "Cabinet"
         self.DISHES_LOCATION = "Kitchen Counter"
 
         # Initial Position
