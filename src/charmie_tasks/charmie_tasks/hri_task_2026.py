@@ -99,20 +99,37 @@ class TaskMain():
             # },
             ### FOR CASES WHERE COUCH IS HORIZONTAL IN 2D MAP
             {
-                "name": "couch_left",  
-                "furniture": "couch",
-                "center_coords": [(self.robot.get_top_coords_from_furniture("Couch")[0] + self.robot.get_bottom_coords_from_furniture("Couch")[0])/2.0, 
-                                  (self.robot.get_top_coords_from_furniture("Couch")[1] + (self.robot.get_top_coords_from_furniture("Couch")[1] + self.robot.get_bottom_coords_from_furniture("Couch")[1])/2.0)/2.0, 
-                                  self.robot.get_height_from_furniture("Couch")[0]], # manual values for now
-                "speak": "hri/couch_left"
+                "name": "grey_couch_left",  
+                "furniture": "Grey Couch",
+                "center_coords": [(self.robot.get_top_coords_from_furniture("Grey Couch")[0] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[0])/2.0, 
+                                  (self.robot.get_top_coords_from_furniture("Grey Couch")[1] + (self.robot.get_top_coords_from_furniture("Grey Couch")[1] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[1])/2.0)/2.0, 
+                                  self.robot.get_height_from_furniture("Grey Couch")[0]], # manual values for now
+                "speak": "hri/grey_couch_left"
             },
             {
-                "name": "couch_right", 
-                "furniture": "couch",
-                "center_coords": [(self.robot.get_top_coords_from_furniture("Couch")[0] + self.robot.get_bottom_coords_from_furniture("Couch")[0])/2.0, 
-                                  (self.robot.get_bottom_coords_from_furniture("Couch")[1] + (self.robot.get_top_coords_from_furniture("Couch")[1] + self.robot.get_bottom_coords_from_furniture("Couch")[1])/2.0)/2.0, 
-                                  self.robot.get_height_from_furniture("Couch")[0]], # manual values for now
-                "speak": "hri/couch_right"
+                "name": "grey_couch_right", 
+                "furniture": "Grey Couch",
+                "center_coords": [(self.robot.get_top_coords_from_furniture("Grey Couch")[0] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[0])/2.0, 
+                                  (self.robot.get_bottom_coords_from_furniture("Grey Couch")[1] + (self.robot.get_top_coords_from_furniture("Grey Couch")[1] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[1])/2.0)/2.0, 
+                                  self.robot.get_height_from_furniture("Grey Couch")[0]], # manual values for now
+                "speak": "hri/grey_couch_right"
+            },
+
+            {
+                "name": "coloured_couch_left",  
+                "furniture": "Coloured Couch",
+                "center_coords": [(self.robot.get_top_coords_from_furniture("Coloured Couch")[0] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[0])/2.0, 
+                                  (self.robot.get_top_coords_from_furniture("Coloured Couch")[1] + (self.robot.get_top_coords_from_furniture("Coloured Couch")[1] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[1])/2.0)/2.0, 
+                                  self.robot.get_height_from_furniture("Coloured Couch")[0]], # manual values for now
+                "speak": "hri/coloured_couch_left"
+            },
+            {
+                "name": "coloured_couch_right", 
+                "furniture": "Coloured Couch",
+                "center_coords": [(self.robot.get_top_coords_from_furniture("Coloured Couch")[0] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[0])/2.0, 
+                                  (self.robot.get_bottom_coords_from_furniture("Coloured Couch")[1] + (self.robot.get_top_coords_from_furniture("Coloured Couch")[1] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[1])/2.0)/2.0, 
+                                  self.robot.get_height_from_furniture("Coloured Couch")[0]], # manual values for now
+                "speak": "hri/coloured_couch_right"
             },
             ### FOR CASES WHERE COUCH IS VERTICAL IN 2D MAP
             # {
@@ -149,24 +166,26 @@ class TaskMain():
         # for sf in self.SITTING_PLACES_IN_FURNITURE:
         #     print(" - ", sf["name"], " in ", sf["furniture"], " seats at ", sf["center_coords"])
 
-        self.ENTRANCE_DOOR_FURNITURE = "exit"
+        self.ENTRANCE_DOOR_FURNITURE = "entrace"
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
+        self.default_speak_file = "hri/grey_couch_center"
         # Which objects should be acquired
         self.OPEN_DOOR_GUEST1 = False
         self.OPEN_DOOR_GUEST2 = False
         self.HANDOVER_GUEST2_BAG = False
         
         # Initial Position
-        self.initial_position = [2.0, 4.0, -45.0]
+        self.initial_position = [9.35, 0.13, -135.0]
         # print(self.initial_position)
         
         # self.start_follow_position = self.initial_position
         self.start_follow_position = [2.0, 4.0, -90.0] # position to start following host after introducing guests
         # print(self.start_follow_position)
 
-        self.guest_communication_position = self.robot.get_navigation_coords_from_furniture("couch")
+        # self.guest_communication_position = self.robot.get_navigation_coords_from_furniture("couch")
+        self.guest_communication_position = [6.96, -0.65, -45.0]
         # self.guest_communication_position = [2.0, 2.5, 0.0] # position to communicate with guests at sitting area
         # print(self.guest_communication_position)
 
@@ -381,7 +400,7 @@ class TaskMain():
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
                     neck_position = self.robot.get_location_coords_from_furniture("couch")
-                    speak_file = "hri/couch_center"
+                    speak_file = self.default_speak_file
 
                 else:
                     max_name = max(
@@ -651,7 +670,7 @@ class TaskMain():
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
                     neck_position = [self.robot.get_location_coords_from_furniture("couch")[0], self.robot.get_location_coords_from_furniture("couch")[1], 0.9]
-                    speak_file = "hri/couch_center"
+                    speak_file = self.default_speak_file
 
                 else:
                     max_name = max(
