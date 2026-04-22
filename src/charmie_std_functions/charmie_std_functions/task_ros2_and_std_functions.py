@@ -6803,25 +6803,29 @@ class RobotStdFunctions():
         tf_z = -0.075
 
         if push_pull == "pull":
-            initial_position = [1.5, -1.45, 178.0]
+            initial_position = [1.50, -0.27, 178.0]
             neck_position = [[12,-18]]
             neck_position = [[12,-18]]
 
 
-            # self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+            self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+            self.adjust_omnidirectional_position(dx = 0.20 , dy = 0.0, wait_for_end_of=False, safety=False)
 
-            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_head_FNR"], minimum_tv_prompt_confidence=0.50)
+
             door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_head_FNR"], minimum_tv_prompt_confidence=0.50)
         
             for h in door_handle:
 
                 move_y = h.position_relative.y
 
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+
             self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.21, wait_for_end_of=False)
         if push_pull == "pull":
             self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_1, wait_for_end_of=True)
             while not self.adjust_omnidirectional_position_is_done():
-                time.sleep(0.1)
+                pass
 
             validated = False
 
@@ -6834,8 +6838,8 @@ class RobotStdFunctions():
 
                     gripper_position = self.get_gripper_localization()
 
-                    move_z_gripper = (g.position_cam.z + tf_y - 0.06)*1000
-                    move_y_gripper = (g.position_cam.y + tf_z - 0.095)*1000
+                    move_z_gripper = (g.position_cam.z + tf_y - 0.05)*1000
+                    move_y_gripper = (g.position_cam.y + tf_z - 0.090)*1000
                     move_x_gripper = (g.position_cam.x - tf_x)*1000
                     move_x_base = abs(tf_x - g.position_cam.x)
                     print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
