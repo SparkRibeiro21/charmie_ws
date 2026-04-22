@@ -4239,46 +4239,54 @@ class RobotStdFunctions():
 
                 case "move_furniture":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to furniture" + task_info, quick_voice=True, wait_for_end_of=True)
+                    self.save_speech(command="Moving to furniture" + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
                     pass 
 
                 case "move_to_room":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to room" + task_info, wait_for_end_of=True)
+                    self.save_speech(command="Moving to room" + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
                     pass
                 
                 case "move_to_person":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to person" + task_info, wait_for_end_of=True)
+                    self.save_speech(command="Moving to person" + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
                     
                     pass
                 
                 case "look_for_object":
                     # temporary speech to show it is working
-                    self.set_speech(command="Looking for object " + task_info, wait_for_end_of=True)
-                    
+                    self.save_speech(command="Looking for object " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+
                     pass
                 
                 case "pick_up_object":
                     # temporary speech to show it is working
-                    self.set_speech(command="Picking up the " + task_info,  wait_for_end_of=True)
-                  
+                    self.save_speech(command="Picking up the " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+
                     pass
                 
                 case "hand_object":
                     # temporary speech to show it is working
-                    self.set_speech(command="Handing the object in my hand", wait_for_end_of=True)
+                    self.save_speech(command="Handing the object in my hand", filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
                     pass
 
                 case "place_object":
                     # temporary speech to show it is working
-                    self.set_speech(command="Placing the object in my hand on the  " + task_info, wait_for_end_of=True)
-                    
+                    self.save_speech(command="Placing the object in my hand on the  " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+
                     pass
 
                 #in case it is none of the above
                 case _:
-                    self.set_speech(command="Sorry, I could not understand the task" , wait_for_end_of=True)
+                    self.save_speech(command="Sorry, I could not understand the task" , filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
 
                
 
