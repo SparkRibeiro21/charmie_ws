@@ -407,7 +407,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = self.robot.get_location_coords_from_furniture("couch")
+                    neck_position = self.robot.get_location_coords_from_furniture("Grey Couch")
                     speak_file = self.default_speak_file
 
                 else:
@@ -680,7 +680,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = [self.robot.get_location_coords_from_furniture("couch")[0], self.robot.get_location_coords_from_furniture("couch")[1], 0.9]
+                    neck_position = [self.robot.get_location_coords_from_furniture("Grey Couch")[0], self.robot.get_location_coords_from_furniture("Grey Couch")[1], 0.9]
                     speak_file = self.default_speak_file
 
                 else:
@@ -720,7 +720,7 @@ class TaskMain():
                 if prediction_confidence == 0.0:
                     # caso em que não conseguiu reconhecer o guest1
                     print("COULD NOT RECOGNIZE GUEST1 FACE AGAIN")
-                    guest1_coords = [self.robot.get_location_coords_from_furniture("couch")[0], self.robot.get_location_coords_from_furniture("couch")[1], 0.9]
+                    guest1_coords = [self.robot.get_location_coords_from_furniture("Grey Couch")[0], self.robot.get_location_coords_from_furniture("Grey Couch")[1], 0.9]
 
                 # Introduce both guests
 
