@@ -207,6 +207,9 @@ class TaskMain():
                     ##### SPEAK: "Please give me a moment while I proccess your requests"
                     self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
 
+                    #### SPEAK: "This may take more than a minute"
+                    self.robot.set_speech(filename="gpsr/may_take_a_while", wait_for_end_of=False)
+
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
 
                     ##### SPEAK: "I am almost done with your request, please wait a little bit more."
@@ -247,6 +250,9 @@ class TaskMain():
                     ##### SPEAK: "Please give me a moment while I proccess your requests"
                     self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
 
+                    #### SPEAK: "This may take more than a minute"
+                    self.robot.set_speech(filename="gpsr/may_take_a_while", wait_for_end_of=False)
+
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
 
                     ##### SPEAK: "I am almost done with your request, please wait a little bit more."
@@ -286,6 +292,9 @@ class TaskMain():
 
                     ##### SPEAK: "Please give me a moment while I proccess your requests"
                     self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
+
+                    #### SPEAK: "This may take more than a minute"
+                    self.robot.set_speech(filename="gpsr/may_take_a_while", wait_for_end_of=False)
 
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
 
