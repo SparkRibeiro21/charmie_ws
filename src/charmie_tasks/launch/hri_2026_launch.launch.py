@@ -80,6 +80,6 @@ def generate_launch_description():
         # std_lf.yolo_world_with_prompt_free,
         std_lf.yolo_pose,
         std_lf.tracking,
-        # std_lf.llm,
+        std_lf.llm,
 
     ])

@@ -22,7 +22,7 @@ ros2_modules = {
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          True,
-    "charmie_llm":                  False, # True (check name and fav. drink)
+    "charmie_llm":                  True, # True (check name and fav. drink)
     "charmie_localisation":         True,
     "charmie_low_level":            True,
     "charmie_navigation":           True,
@@ -192,7 +192,7 @@ class TaskMain():
         self.min_dist_for_sitting_place_to_be_occupied = 0.4 # minimum distance from person to sitting place center coords to consider that place as occupied
 
 
-        self.DEBUG_WITHOUT_JETSON = True
+        self.DEBUG_WITHOUT_JETSON = False
 
         
     def main(self):
