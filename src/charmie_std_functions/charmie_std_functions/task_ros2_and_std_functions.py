@@ -3485,7 +3485,7 @@ class RobotStdFunctions():
                            detect_prompt_free_base  = False,
                            detect_tv_prompt_base    = False,
                            minimum_prompt_free_confidence = 0.5,
-                           minimum_tv_prompt_confidence = 0.5):
+                           minimum_tv_prompt_confidence = 0.5, say_cutlery=True):
         
         # TODO: delete furniture yolo_objects 
 
@@ -3804,7 +3804,10 @@ class RobotStdFunctions():
                     for obj in range(len(list_of_objects)):
                         if not mandatory_object_detected_flags[obj]:
                             # Speech: (Name of object)
-                            self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
+                            if say_cutlery and list_of_objects[obj].replace(" ","_").lower() in ["fork", "knife", "spoon"]:
+                                self.set_speech(filename="objects_names/cutlery", wait_for_end_of=True)
+                            else:
+                                self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
                 else:
                     DETECTED_ALL_LIST_OF_OBJECTS = True
                     # forces the change of objects name for possible detected_as_object 
@@ -5496,7 +5499,7 @@ class RobotStdFunctions():
                 self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                 print(f"Could not bring object to initial pose")
 
-    def pick_object_risky(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, navigation = True, search_with_head_camera = True, return_arm_to_initial_position = "", list_of_objects_detected_as = [], placed_in_tray_height = 0.0):
+    def pick_object_risky(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, navigation = True, search_with_head_camera = True, return_arm_to_initial_position = "", list_of_objects_detected_as = [], placed_in_tray_height = 0.0, say_cutlery = False): 
 
         ###########
         # Inputs:
@@ -5700,9 +5703,9 @@ class RobotStdFunctions():
             # If search_with_head_camera is true the first object detection will be made with the head camera, otherwise the robot will use the base camera instead
             if search_with_head_camera:
                 self.set_face(camera="head", show_detections=True)
-                objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], list_of_objects_detected_as=list_of_objects_detected_as, use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
             else:
-                objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
+                objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], list_of_objects_detected_as=list_of_objects_detected_as, use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
         
         
             print("LIST OF DETECTED OBJECTS:")
@@ -5761,7 +5764,11 @@ class RobotStdFunctions():
 
             # ANNOUNCE THE FOUND OBJECT
             self.set_speech(filename="generic/found_following_items", wait_for_end_of=False)
-            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+            #self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+            if say_cutlery and obj.object_name in ["fork", "knife", "spoon"]:
+                self.set_speech(filename="objects_names/cutlery", wait_for_end_of=False)
+            else:
+                self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
             print(f"Initial pose to search for objects")
 
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
@@ -6580,7 +6587,8 @@ class RobotStdFunctions():
 
         self.set_arm(command="close_dishwasher_rack_part1", wait_for_end_of=True)
         self.set_arm(command="close_dishwasher_rack_part2", wait_for_end_of=False)
-        self.set_torso_position(legs=0.015, torso=8, wait_for_end_of=False)
+        
+        # self.set_torso_position(legs=0.015, torso=8, wait_for_end_of=False)
         self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)   
     
     def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
