@@ -87,7 +87,7 @@ class TaskMain():
         # Initial Position
         self.initial_position = [0.0, 0.0, 0.0]
 
-        self.instruction_point =  [ 7.36, 3.84, 0.0]
+        self.instruction_point =  [ 7.80, 3.84, 180]
         print(self.initial_position)
         print(self.instruction_point)
         
