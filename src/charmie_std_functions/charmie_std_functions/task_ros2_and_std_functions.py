@@ -5540,7 +5540,7 @@ class RobotStdFunctions():
                 first_search_tetas = [[0, -45], [-40, -45], [40, -45]]
 
             elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
-                first_search_tetas = [[0, -15], [0, -35], [0, 15]]
+                first_search_tetas = [[0, 0], [0, -35], [0, 15]]
 
         if pick_mode == "" and search_with_head_camera:
             pick_mode = self.get_standard_pick_from_object(selected_object)
