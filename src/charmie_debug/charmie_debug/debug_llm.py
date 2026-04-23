@@ -68,7 +68,7 @@ class TaskMain():
         Final_State = 5
 
         # VARS ...
-        self.state = LLM_demo
+        self.state = LLM_hri
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -287,16 +287,22 @@ class TaskMain():
                 print("New LLM HRI")
                 ##  TESTING INFO EXTRACTION STANDARDFUNCTION ##
                 #self.robot.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
-                command = self.robot.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
-                # command = "My name is John and my favorite drink is coffee"
+                # command = self.robot.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
+                command = "My name is John and my favorite drink is redbull"
 
-                name = self.robot.get_info_from_llm(command, info_type="name", wait_for_end_of=True)
-                favorite_drink = self.robot.get_info_from_llm(command, info_type="favorite drink", wait_for_end_of=True)
+                name = self.robot.get_llm_ollama_information(command, mode="name", wait_for_end_of=True)
+                favorite_drink = self.robot.get_llm_ollama_information(command, mode="favorite drink", wait_for_end_of=True)
                 print ("GUEST INFO- name:"+name+", favorite drink:"+favorite_drink)
+                self.robot.save_speech(command=name, filename=name, quick_voice=False, wait_for_end_of=True)
+                self.robot.save_speech(command=favorite_drink, filename=favorite_drink, quick_voice=False, wait_for_end_of=True)
+
+                self.robot.set_speech(filename="temp/"+name, wait_for_end_of=False)
+                self.robot.set_speech(filename="temp/"+favorite_drink, wait_for_end_of=False)
 
                 ##  END OF TESTING INFO EXTRACTION STANDARDFUNCTION ##
                 print("Finished LLM HRI")
-                time.sleep(5)
+                while True:
+                    pass
             
             if self.state == LLM_Ollama_first_tests:
 
