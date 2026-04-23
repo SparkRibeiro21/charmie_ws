@@ -211,7 +211,7 @@ class TaskMain():
                     
                     if not self.HELP_PICK_MILK:
                         self.robot.set_speech(filename="pick_and_place_task/open_milk_lid", wait_for_end_of=True)
-                        time.sleep(10.0)
+                        time.sleep(8.0)
                         self.robot.pick_object_risky(selected_object="Milk", return_arm_to_initial_position="collect_milk_to_tray")
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                         # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
@@ -476,7 +476,7 @@ class TaskMain():
                                         self.robot.set_speech(filename="pick_and_place_task/remove_chair_laundry_room", wait_for_end_of=True)
                                     else:
                                         self.robot.set_speech(filename="pick_and_place_task/remove_chair_kitchen_counter", wait_for_end_of=True)
-                                    time.sleep(10.0)  
+                                    time.sleep(8.0)  
 
                                     self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.CUTLERY_LOCATION, object=c)
                                     pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=c.object_name)
