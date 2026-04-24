@@ -5766,8 +5766,8 @@ class RobotStdFunctions():
 
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
-            DISTANCE_IN_FRONT_X     = 0.3 
-            DISTANCE_IN_FRONT_Y     = 0.31
+            DISTANCE_IN_FRONT_X     = 0.25 
+            DISTANCE_IN_FRONT_Y     = 0.28
             DISTANCE_IN_TOP_X       = 0.58
             DISTANCE_IN_TOP_Y       = -0.05
             MINIMUM_FRONT_HEIGHT    = 0.55
@@ -5833,7 +5833,7 @@ class RobotStdFunctions():
                     print("OBJECT HEIGHT",object_height)
                     print("ADJUST Z", adjust_z)
 
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [adjust_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
+                    # FNR RESTAURANT CHANGE self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [adjust_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
 
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
@@ -5878,7 +5878,7 @@ class RobotStdFunctions():
                         #correct_x = (gripper_position.z - valid_detected_object.position_relative.z + HEIGHT - tf_x)*1000
                     #print("Gripper Position z: ",gripper_position.z," || Tf_X: ", tf_x, " || OH : ", oh, " || height_furniture", furniture_height, " || Correct_X: ", correct_x )
                     object_position = [0.0, 0.0, correct_x, 0.0, 0.0, 0.0]
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
+                    #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
                     
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
@@ -5988,15 +5988,16 @@ class RobotStdFunctions():
                 if pick_mode == "front":
                     correct_x_grab = (obj.position_cam.x + ow/1.5 - tf_x)*1000
                     print("OBJECT WIDTH:", ow)
+                    MAX_MOVE_LIMIT = 245
+                    if correct_x_grab > MAX_MOVE_LIMIT:
+                        correct_x_grab = MAX_MOVE_LIMIT
+
                 if pick_mode == "top":
                     if furniture_height >= 0:
                         correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
                     
                         # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established. DO NOT CHANGE UNLESS TESTED
-                        if pick_mode == "front":
-                            MAX_MOVE_LIMIT = 245
-                            if correct_x_grab > MAX_MOVE_LIMIT:
-                                correct_x_grab = MAX_MOVE_LIMIT
+                        
                         if pick_mode == "top":
                             MAX_MOVE_LIMIT = 235
                             if correct_x_grab > MAX_MOVE_LIMIT:

@@ -151,7 +151,7 @@ class TaskMain():
 
                 # time.sleep(3.0) # time for person who pressed start button leave to not be shown in qualif video
 
-                self.state = self.task_states["Collect_order_from_barman"]
+                self.state = self.task_states["Looking_for_barman"]
                 
 
             elif self.state == self.task_states["Looking_for_barman"]:
@@ -681,7 +681,7 @@ class TaskMain():
                 ##### SPEAK: Barman, please give me the following items:
                 self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
                 #  TEST PREDEFINED ORDERS:  
-                self.all_orders = [["Mustard", "Sugar"]]
+                # self.all_orders = [["Apple", "Cheezit"]]
 
                 print("ALL ORDERS: ", self.all_orders)
                 current_order = []
@@ -764,6 +764,7 @@ class TaskMain():
                                         o_aux = DetectedObject()
                                         o_aux.object_name = o.lower().replace(" ", "_")
                                         self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
+                                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                                 counter = counter + 1         
                         elif len(NCT_check)==1:

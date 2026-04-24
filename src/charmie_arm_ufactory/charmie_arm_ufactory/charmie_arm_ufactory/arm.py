@@ -209,7 +209,8 @@ class ArmUfactory(Node):
 		self.search_table_front_joints = 									[-259.7, -45.3, -31.0, 92.8, 77.0, 163.7]
 		#self.search_front_max_z_joints =									[-107.8, -51.6, -20.0, -101.3, 77.1, 16.7]
 		self.search_front_max_z_joints =									[-145, -33, -35.7, -122.9, 44.8, 33.2]
-		self.search_front_risky_joints =									[-207.1, -9.9, -38.8, 144.4, 47.2, 112.3]
+		# self.search_front_risky_joints =									[-207.1, -9.9, -38.8, 144.4, 47.2, 112.3]
+		self.search_front_risky_joints =									[-223, -6.5, -41.1, 123.1, 56.4, 127.5]
 
 		# PLACE OBJECT FRONT VARIABLES
 		self.initial_position_to_safe_joints = 								[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
@@ -219,7 +220,8 @@ class ArmUfactory(Node):
 
 		### SEARCH FOR OBJECT ON TABLE TOP JOINT VARIABLES###
 		self.search_table_top_joints =					[-147.5, 40.4, -91.8, -70.9, 114.9, 84.7]
-		self.search_table_top_risky_joints =			[-146.5, 55.7, -88, -61.3, 109.5, 64.2]
+		# CHANGE AFTER FNR self.search_table_top_risky_joints =			[-146.5, 55.7, -88, -61.3, 109.5, 64.2]
+		self.search_table_top_risky_joints =			[-145.7, 53.9, -87.7, -60.1, 111.6, 63.9]
 		self.search_table_top_safe_position =		    [-194.9, 69.4, -106.4, 23.2, 71.5, 264.8]
 		self.safe_top_second_joints =                   [-197.5, 85.4, -103.3, 28.7, 109.1, 279.5]
 		self.risky_move_tool =							[0.0, 0.0, -70.0, 0.0, 0.0, 0.0]
