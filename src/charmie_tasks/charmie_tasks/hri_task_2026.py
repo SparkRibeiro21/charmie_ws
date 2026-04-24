@@ -174,6 +174,7 @@ class TaskMain():
         # Which objects should be acquired
         self.OPEN_DOOR_GUEST1 = True
         self.OPEN_DOOR_GUEST2 = True
+
         self.HANDOVER_GUEST2_BAG = False
         
         # Initial Position
@@ -192,7 +193,7 @@ class TaskMain():
         self.min_dist_for_sitting_place_to_be_occupied = 0.4 # minimum distance from person to sitting place center coords to consider that place as occupied
 
 
-        self.DEBUG_WITHOUT_JETSON = True
+        self.DEBUG_WITHOUT_JETSON = False
 
         
     def main(self):
@@ -266,7 +267,6 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest1"]:
                                         
                 if self.OPEN_DOOR_GUEST1:
-                    self.robot.set_speech(filename="hri/opening_door", wait_for_end_of=False)
                     self.robot.open_door(push_pull="pull", left_right="left", wait_for_end_of=True)
                     self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
@@ -379,7 +379,7 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
 
-                self.robot.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
+                # self.robot.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
                 # self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
                 people_found = self.robot.search_for_person(tetas=self.search_tetas, time_in_each_frame=1.0)
 
@@ -476,9 +476,10 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
-                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
+                if not self.OPEN_DOOR_GUEST2:
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
                 
                 self.state = self.task_states["Open_door_guest2"]
 
@@ -486,8 +487,7 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest2"]:
                                         
                 if self.OPEN_DOOR_GUEST2:
-                    self.robot.set_speech(filename="hri/opening_door", wait_for_end_of=False)
-                    self.robot.open_door(push_pull="push", left_right="left", wait_for_end_of=True)
+                    self.robot.open_door(push_pull="pull", left_right="left", wait_for_end_of=True)
                     self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
                 self.state = self.task_states["Receive_guest2"]
@@ -660,7 +660,7 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
 
-                self.robot.set_speech(filename="receptionist/dear_first_guest", wait_for_end_of=True)
+                # self.robot.set_speech(filename="receptionist/dear_first_guest", wait_for_end_of=True)
                 # self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
                 people_found = self.robot.search_for_person(tetas=self.search_tetas, time_in_each_frame=1.0)
 

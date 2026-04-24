@@ -6809,7 +6809,11 @@ class RobotStdFunctions():
             neck_position = [[12,-18]]
 
 
+
+
+
             self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+            self.set_speech(filename="hri/opening_door", wait_for_end_of=False)
             _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
             print("Door Distance", furniture_distance)
             dx = furniture_distance - 0.6
@@ -6883,9 +6887,8 @@ class RobotStdFunctions():
 
             _,_ = self.adjust_angle(-40)
             
-            self.set_arm(command="close_gripper", wait_for_end_of=False)
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
-            self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
+            self.set_speech(filename="hri/door_open_finish", wait_for_end_of=True)
             
         
     def sort_for_pick(self, objects=[]):
