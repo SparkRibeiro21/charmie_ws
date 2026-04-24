@@ -6885,6 +6885,7 @@ class RobotStdFunctions():
             
             self.set_arm(command="close_gripper", wait_for_end_of=False)
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
+            self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
             
         
     def sort_for_pick(self, objects=[]):

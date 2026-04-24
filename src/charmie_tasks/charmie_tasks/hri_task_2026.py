@@ -266,6 +266,7 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest1"]:
                                         
                 if self.OPEN_DOOR_GUEST1:
+                    self.robot.set_speech(filename="hri/opening_door", wait_for_end_of=False)
                     self.robot.open_door(push_pull="pull", left_right="left", wait_for_end_of=True)
                     self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
@@ -288,7 +289,7 @@ class TaskMain():
                     if not self.OPEN_DOOR_GUEST1:
                         people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     else:
-                        people_found = self.robot.search_for_person(tetas=[[20, 0]], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
+                        people_found = self.robot.search_for_person(tetas=[[20, 10]], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     print("Number of people found:", len(people_found))
 
                     if len(people_found) == 0:
@@ -379,7 +380,7 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
 
                 self.robot.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
-                self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
+                # self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
                 people_found = self.robot.search_for_person(tetas=self.search_tetas, time_in_each_frame=1.0)
 
                 temp_min_dist_sitting_places_dict = {
@@ -446,7 +447,7 @@ class TaskMain():
                 self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
                 self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
                 
-                self.state = self.task_states["Move_to_initial_position"]
+                self.state = self.task_states["Wait_for_guest2_to_arrive"]
 
 
             elif self.state == self.task_states["Move_to_initial_position"]:
@@ -485,7 +486,9 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest2"]:
                                         
                 if self.OPEN_DOOR_GUEST2:
+                    self.robot.set_speech(filename="hri/opening_door", wait_for_end_of=False)
                     self.robot.open_door(push_pull="push", left_right="left", wait_for_end_of=True)
+                    self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
                 self.state = self.task_states["Receive_guest2"]
 
@@ -494,15 +497,21 @@ class TaskMain():
                 
                 time.sleep(1.0) # wait time for robot to stop and do an audio calibration
                 self.robot.calibrate_audio(wait_for_end_of=True)
-                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                if not self.OPEN_DOOR_GUEST2:
+                    self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
                 time.sleep(0.5)
                 
                 people_found = []
                 correct_person = DetectedPerson()
                 while len(people_found) == 0:
+
+                    if not self.OPEN_DOOR_GUEST2:
+                        people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
+                    else:
+                        people_found = self.robot.search_for_person(tetas=[[20, 10]], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
+                    
                     # still need to check for timeout, and decide what to do in that case
-                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     print("Number of people found:", len(people_found))
 
                     if len(people_found) == 0:
@@ -652,7 +661,7 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
 
                 self.robot.set_speech(filename="receptionist/dear_first_guest", wait_for_end_of=True)
-                self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
+                # self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
                 people_found = self.robot.search_for_person(tetas=self.search_tetas, time_in_each_frame=1.0)
 
                 temp_min_dist_sitting_places_dict = {
