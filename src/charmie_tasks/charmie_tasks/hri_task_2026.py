@@ -30,7 +30,7 @@ ros2_modules = {
     "charmie_nav_sdnl":             False,
     "charmie_neck":                 True,
     "charmie_radar":                True, 
-    "charmie_sound_classification": False,
+    "charmie_sound_classification": True,
     "charmie_speakers":             True,
     "charmie_speakers_save":        True,
     "charmie_tracking":             True,
@@ -245,8 +245,8 @@ class TaskMain():
 
             elif self.state == self.task_states["Wait_for_guest1_to_arrive"]:
                                         
-                # s, m, label, score = self.robot.wait_for_doorbell(timeout=20, score_threshold=0.1)
-                #print(s, m, label, score)
+                s, m, label, score = self.robot.wait_for_doorbell(timeout=20, score_threshold=0.1)
+                print(s, m, label, score)
                 
                 self.state = self.task_states["Move_to_entrance_door_guest1"]
 
@@ -465,8 +465,8 @@ class TaskMain():
 
             elif self.state == self.task_states["Wait_for_guest2_to_arrive"]:
                                         
-                # s, m, label, score = self.robot.wait_for_doorbell(timeout=20, score_threshold=0.1)
-                # print(s, m, label, score)
+                s, m, label, score = self.robot.wait_for_doorbell(timeout=20, score_threshold=0.1)
+                print(s, m, label, score)
                 
                 self.state = self.task_states["Move_to_entrance_door_guest2"]
 

@@ -40,7 +40,7 @@ def generate_launch_description():
         std_lf.livox_driver,
         std_lf.radar,
         std_lf.audio,
-        # std_lf.sound_classification,
+        std_lf.sound_classification,
         
         #####################################################################
         # Localization                                                      # 
