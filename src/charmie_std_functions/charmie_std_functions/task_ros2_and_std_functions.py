@@ -6886,9 +6886,9 @@ class RobotStdFunctions():
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
             _,_ = self.adjust_angle(-40)
-            
+
+            self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
-            self.set_speech(filename="hri/door_open_finish", wait_for_end_of=True)
             
         
     def sort_for_pick(self, objects=[]):
