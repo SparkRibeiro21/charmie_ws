@@ -1268,6 +1268,8 @@ class ArmUfactory(Node):
 				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=90, wait=True)
 			case 6:
 				self.set_position_values_(pose=self.reach_position_to_pour_milk_bowl, speed=90, wait=True)
+			case 7:
+				self.finish_arm_movement_()
 
 	def post_pour_milk_bowl_risky(self):
 		match self.estado_tr:
