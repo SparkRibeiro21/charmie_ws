@@ -4169,8 +4169,8 @@ class RobotStdFunctions():
             confirm_attempts_cntr += 1
 
             ##### SPEAK: "What is your request?"
-            # gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green", wait_for_end_of= True)
-            gpsr_command = "Please proceed to the living room, introduce yourself to the person wearing a black jacket, and thereafter follow them."
+            gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green", wait_for_end_of= True)
+            # gpsr_command = "Please proceed to the living room, introduce yourself to the person wearing a black jacket, and thereafter follow them."
             print("Finished:", gpsr_command)
 
             ##### SPEAK: "Please give me a moment to process your command"
