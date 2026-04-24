@@ -88,7 +88,7 @@ class TaskMain():
         self.GET_MILK            = True
         self.GET_CORNFLAKES      = True
         self.GET_BOWL            = True
-        self.GET_BREAKFAST_SPOON = True
+        self.GET_BREAKFAST_SPOON = False
         self.GET_CUTLERY         = True
         self.IS_CORNFLAKES_BIG   = False # choose whether the cornflakes package is a big one (False) or a small one (True)
 
@@ -210,9 +210,9 @@ class TaskMain():
                 if self.GET_MILK:
                     
                     if not self.HELP_PICK_MILK:
-                        self.robot.set_speech(filename="pick_and_place_task/open_milk_lid", wait_for_end_of=True)
-                        time.sleep(8.0)
-                        self.robot.pick_object_risky(selected_object="Milk", return_arm_to_initial_position="collect_milk_to_tray")
+                        #self.robot.set_speech(filename="pick_and_place_task/open_milk_lid", wait_for_end_of=True)
+                        #time.sleep(8.0)
+                        self.robot.pick_object_risky(selected_object="Milk", return_arm_to_initial_position="collect_milk_to_tray",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                         # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
@@ -249,7 +249,7 @@ class TaskMain():
                         self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                         self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                         self.robot.set_speech(filename="furniture/"+self.CORNFLAKES_LOCATION , wait_for_end_of=False)
-                        self.robot.set_speech(filename="pick_and_place_task/open_milk_lid", wait_for_end_of=True)
+                        #self.robot.set_speech(filename="pick_and_place_task/open_milk_lid", wait_for_end_of=True)
 
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.CORNFLAKES_LOCATION), wait_for_end_of=True)
 
@@ -264,7 +264,7 @@ class TaskMain():
                 if self.GET_CORNFLAKES:
 
                     if not self.HELP_PICK_CORNFLAKES:
-                        self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position="collect_cornflakes_to_tray")
+                        self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position="collect_cornflakes_to_tray",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                         # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
@@ -426,7 +426,10 @@ class TaskMain():
 
                 if self.GET_MILK:
                     ##### ARM POUR IN BOWL
-                    self.robot.place_object(arm_command="pour_milk_bowl", speak_before=False, speak_after=True, verb="pour", object_name="milk", preposition="into", furniture_name="bowl")
+                    self.robot.place_object(arm_command="pre_pour_milk_bowl_risky", speak_before=False, speak_after=False)
+                    self.robot.set_speech(filename="pick_and_place_task/milk_open_risky", wait_for_end_of=False)
+                    time.sleep(7.0)
+                    self.robot.place_object(arm_command="post_pour_milk_bowl_risky", speak_before=False, speak_after=True, verb="pour", object_name="milk", preposition="into", furniture_name="bowl")
                 
                     ##### ARM PLACE OBJECT
                     self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name="milk", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
