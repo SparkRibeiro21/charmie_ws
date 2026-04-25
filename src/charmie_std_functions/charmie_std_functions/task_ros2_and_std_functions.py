@@ -6558,13 +6558,13 @@ class RobotStdFunctions():
         top_base_adjust_y = base_adjust_y
 
         #### FUNCTION ####
-        _ , _ , furniture_gap = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+        _ , _ , furniture_gap = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
                                                                         
         dx = furniture_gap - top_base_adjust_x
         dy = top_base_adjust_y                                                                                                            
 
         self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=False, wait_for_end_of=True)
-        self.adjust_omnidirectional_position(dx=navigation_distance, dy=0.0, safety=False, wait_for_end_of=False)   
+        self.adjust_omnidirectional_position(dx=0.25, dy=0.0, safety=False, wait_for_end_of=False)   
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
@@ -6901,7 +6901,7 @@ class RobotStdFunctions():
             dx = furniture_distance - 1.14
             dy = 0.0
         elif task == "pp":
-            dx = -0.08
+            dx = -0.33
             dy = 0.20 # center of robot is alligned with center of dishwasher, so we need to move a bit to the left, so the arm is alligned with the center of the dishwasher door
 
         self.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=False)

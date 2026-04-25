@@ -120,7 +120,7 @@ class TaskMain():
         self.initial_position = [0.0, 0.0, 0.0]
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
-        self.DISHWASHER_LOCATION = [ 4.08, -3.15, 0]
+        self.DISHWASHER_LOCATION = [ 4.08, -3.0, -2]
 
         self.SELECTED_PICKED_DISH = DetectedObject()
 
@@ -182,12 +182,12 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                #self.robot.wait_for_door_opening()
+                self.robot.wait_for_door_opening()
 
-                # self.robot.enter_house_after_door_opening()
+                self.robot.enter_house_after_door_opening()
 
                 if self.MILK_BEFORE_CORNFLAKES:
-                    self.state = self.task_states["Move_dishwasher_location"]
+                    self.state = self.task_states["Move_milk_location"]
                 else:
                     self.state = self.task_states["Move_cornflakes_location"]
                 
@@ -542,6 +542,8 @@ class TaskMain():
                     print("furdis", furniture_distance)
                     dx = furniture_distance - 0.8
                     dy = 0.0
+                    print("dx", dx)
+                    print("furniture_distance", furniture_distance)
                     self.robot.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=False)
 
                     self.robot.set_neck(position=self.look_judge, wait_for_end_of=False) 
@@ -549,10 +551,13 @@ class TaskMain():
                     time.sleep(4.0)
                     self.robot.set_neck(position=self.look_forward, wait_for_end_of=False) 
                     # self.robot.place_object_in_furniture(selected_object=self.CUTLERY_TO_PICK, place_mode = self.robot.get_standard_pick_from_object(object_name=self.CUTLERY_TO_PICK), place_height = 0.187, furniture = "rack", navigation_distance= furniture_distance - 0.60)
+                    c = DetectedObject()
+                    c.object_name = "fork"
+                    pick_height_cutlery = 0.02 + 0.16
                     self.robot.place_object_in_dishwasher_top_rack_and_close_rack(selected_object=c.object_name, place_mode = self.robot.get_standard_pick_from_object(object_name=c.object_name), place_height = pick_height_cutlery, navigation_distance= furniture_distance - 0.60)
                     # self.robot.set_speech(filename="clean_the_table/ask_to_close_dishwasher_rack", wait_for_end_of=True)
                     # time.sleep(1.0)
-                    # self.robot.close_dishwasher(task = "pp")
+                    self.robot.close_dishwasher(task = "pp")
                 
                 self.state = self.task_states["Final_State"]
 
