@@ -182,12 +182,12 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                self.robot.wait_for_door_opening()
+                #self.robot.wait_for_door_opening()
 
-                self.robot.enter_house_after_door_opening()
+                # self.robot.enter_house_after_door_opening()
 
                 if self.MILK_BEFORE_CORNFLAKES:
-                    self.state = self.task_states["Move_milk_location"]
+                    self.state = self.task_states["Move_dishwasher_location"]
                 else:
                     self.state = self.task_states["Move_cornflakes_location"]
                 
@@ -537,6 +537,13 @@ class TaskMain():
                 if self.GET_CUTLERY:
 
                     _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+                    
+                    ### FALTA ADJUST
+                    print("furdis", furniture_distance)
+                    dx = furniture_distance - 0.8
+                    dy = 0.0
+                    self.robot.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=False)
+
                     self.robot.set_neck(position=self.look_judge, wait_for_end_of=False) 
                     self.robot.set_speech(filename="pick_and_place_task/help_open_dishwasher_door_and_top_rack", wait_for_end_of=True)
                     time.sleep(4.0)

@@ -6563,7 +6563,7 @@ class RobotStdFunctions():
         dx = furniture_gap - top_base_adjust_x
         dy = top_base_adjust_y                                                                                                            
 
-        self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=True, wait_for_end_of=True)
+        self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=False, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx=navigation_distance, dy=0.0, safety=False, wait_for_end_of=False)   
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
@@ -6587,7 +6587,7 @@ class RobotStdFunctions():
         self.set_arm(command="close_dishwasher_rack_part1", wait_for_end_of=True)
         self.set_arm(command="close_dishwasher_rack_part2", wait_for_end_of=False)
         
-        # self.set_torso_position(legs=0.015, torso=8, wait_for_end_of=False)
+        self.set_torso_position(legs=0.015, torso=8, wait_for_end_of=False)
         self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)   
     
     def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
