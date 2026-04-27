@@ -64,9 +64,9 @@ class TaskMain():
         self.robot = robot
 
     def configurables(self):
-        self.tetas = [[0, 20], [0, 0], [0, -35]]
+        self.tetas = [[0, -10],[0, 0], [0, 20]]
         self.SELECTED_OBJECT = "Milk"
-        self.trys = 3
+        self.trys = 10
 
     # main state-machine function
     def main(self):
@@ -75,12 +75,14 @@ class TaskMain():
 
         object_to_pick = None
 
-        mode = "std_pick"
+        mode = "moveit"
 
-        SAFE_DISTANCE_X = 0.20
+        SAFE_DISTANCE_X = 0.25
         TCP_OFFSET_X = 0.145
         TCP_OFFSET_Y = -0.006
         TCP_OFFSET_Z = -0.075
+
+        TEST_DISTANCE_Z = 0.0
         
         # States in DebugMoveit Task
         self.Waiting_for_task_start = 0
@@ -170,6 +172,8 @@ class TaskMain():
 
                         self.robot.set_gripper(850.0, wait_for_end_of=True)
 
+                        self.robot.set_simple_move_tool(dx=-0.05, dy=0.0, dz=0.0, duration_sec=3.0)
+
                         print("WAIT FOR START BUTTON")
 
                         # self.robot.wait_for_start_button()
@@ -198,7 +202,7 @@ class TaskMain():
 
                         grab_x = (o.position_cam.x + ow/1.5 - TCP_OFFSET_X)
                         grab_y = (o.position_cam.y - TCP_OFFSET_Y)
-                        grab_z = (o.position_cam.z - TCP_OFFSET_Z)
+                        grab_z = (o.position_cam.z - TCP_OFFSET_Z - TEST_DISTANCE_Z)
 
                         print("X:", grab_x, "Y:", grab_y, "Z:", grab_z)
 
@@ -207,32 +211,33 @@ class TaskMain():
                         # self.robot.wait_for_start_button()
 
                         # s,m = self.robot.set_simple_move_tool(-grab_x, -grab_y, -grab_z, duration_sec=3.0)
+                        t0 = time.perf_counter()
 
-                        sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
+                        # sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=0.0, duration_sec=5.0)
                         # self.robot.wait_for_start_button()
-                        # sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
+                        sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
 
-                        print(my)
+                        print(mz)
                         # print(mz)
 
 
                         # if not sy or not sz:
-                        if not sy:
+                        if not sz:
 
                             for i in range(self.trys):
 
-                                sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=-grab_y, dz=grab_x, duration_sec=5.0)
+                                sy,my = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=5.0)
                                 # self.robot.wait_for_start_button()
                                 # sz,mz = self.robot.set_simple_move_tool(dx=0.0, dy=0.0, dz=grab_x, duration_sec=3.0)
 
                                 # if sy and sz:
-                                if sy:
+                                if sz:
 
                                     print(f"Pose planning succeeded on attempt{i+1}!")
                                     break
 
                         # if sy and sz:
-                        if sy:
+                        if sz:
 
                             print("CLOSE GRIPPER")
 
@@ -261,9 +266,14 @@ class TaskMain():
                                         print(f"Pose planning succeeded on attempt{i+1}!")
                                         break
 
+                    t1 = time.perf_counter()
+
+                    total_time = t1 -t0
+                    print("Total time in grasp:",total_time)
+
                     print("GOING BACK TO HOME POSE")
 
-                    time.sleep(2.0)
+                    # time.sleep(2.0)
 
                     self.robot.set_named_target_arm("home", wait_for_end_of=True)
                     self.robot.wait_for_start_button()

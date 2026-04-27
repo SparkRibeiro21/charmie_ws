@@ -15,6 +15,8 @@
 #include <charmie_interfaces/srv/set_joint_target.hpp>
 #include <charmie_interfaces/srv/set_pose_target.hpp>
 
+#include <chrono>
+
 
 using MoveGroupInterface = moveit::planning_interface::MoveGroupInterface;
 
@@ -28,6 +30,8 @@ using namespace std::placeholders;
 using NamedTargetSrv = charmie_interfaces::srv::SetNamedTarget;
 using JointTargetSrv = charmie_interfaces::srv::SetJointTarget;
 using PoseTargetSrv = charmie_interfaces::srv::SetPoseTarget;
+
+using Clock = std::chrono::steady_clock;
 
 class Commander
 {
@@ -224,14 +228,38 @@ class Commander
     
     private:
 
+        double secondsBetween(const Clock::time_point &start, const Clock::time_point &end)
+        {
+            return std::chrono::duration<double>(end - start).count();
+        }
+
         void planAndExecute(const std::shared_ptr<MoveGroupInterface> &interface)
         {
             MoveGroupInterface::Plan plan;
+
+            auto t_plan_start = Clock::now();
             bool success = (interface->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+            auto t_plan_end = Clock::now();
+            double planning_time = secondsBetween(t_plan_start, t_plan_end);
+
+            bool exec_success = false;
+            double execution_time = 0.0;
+
             if (success)
             {
-                interface->execute(plan);
+                auto t_exec_start = Clock::now();
+                auto exec_result = interface->execute(plan);
+                auto t_exec_end = Clock::now();
+                execution_time = secondsBetween(t_exec_start, t_exec_end);
+                exec_success = (exec_result == moveit::core::MoveItErrorCode::SUCCESS);
             }
+
+            double total_time = execution_time + planning_time;
+
+            RCLCPP_INFO(
+                node_->get_logger(),
+                "[MEASURE] Planning time: %.4f |  Execution time: %.4f | Total time: %.4f | Planning success: %d | Execution success: %d",
+                planning_time, execution_time, total_time, success, exec_success);
         }
 
         void NamedTargetService(
@@ -253,11 +281,24 @@ class Commander
             xarm_->setNamedTarget(request->target_name);
 
             MoveGroupInterface::Plan plan;
+
+            auto t_plan_start = Clock::now();
             bool success = (xarm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+            auto t_plan_end = Clock::now();
+            double planning_time = secondsBetween(t_plan_start, t_plan_end);
+
+            bool exec_success = false;
+            double execution_time = 0.0;
 
             if (success)
             {
-                xarm_->execute(plan);
+                auto t_exec_start = Clock::now();
+                auto exec_result = xarm_->execute(plan);
+                auto t_exec_end = Clock::now();
+
+                execution_time = secondsBetween(t_exec_start, t_exec_end);
+                exec_success = (exec_result == moveit::core::MoveItErrorCode::SUCCESS);
+
                 response->success = true;
                 response->message = "Named target executed successfully.";
             }
@@ -266,6 +307,13 @@ class Commander
                 response->success = false;
                 response->message = "Failed to plan for the named target.";
             }
+
+            double total_time = execution_time + planning_time;
+
+            RCLCPP_INFO(
+                node_->get_logger(),
+                "[MEASURE] Planning time: %.4f |  Execution time: %.4f | Total time: %.4f | Planning success: %d | Execution success: %d",
+                planning_time, execution_time, total_time, success, exec_success);
 
             // stopMonitoring();
 
@@ -290,11 +338,24 @@ class Commander
             xarm_->setJointValueTarget(request->joint_positions);
 
             MoveGroupInterface::Plan plan;
+
+            auto t_plan_start = Clock::now();
             bool success = (xarm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+            auto t_plan_end = Clock::now();
+            double planning_time = secondsBetween(t_plan_start, t_plan_end);
+
+            bool exec_success = false;
+            double execution_time = 0.0;
 
             if (success)
             {
-                xarm_->execute(plan);
+                auto t_exec_start = Clock::now();
+                auto exec_result = xarm_->execute(plan);
+                auto t_exec_end = Clock::now();
+
+                execution_time = secondsBetween(t_exec_start, t_exec_end);
+                exec_success = (exec_result == moveit::core::MoveItErrorCode::SUCCESS);
+
                 response->success = true;
                 response->message = "Joint target executed successfully.";
             }
@@ -303,6 +364,13 @@ class Commander
                 response->success = false;
                 response->message = "Failed to plan for the joint target.";
             }
+
+            double total_time = execution_time + planning_time;
+
+            RCLCPP_INFO(
+                node_->get_logger(),
+                "[MEASURE] Planning time: %.4f |  Execution time: %.4f | Total time: %.4f | Planning success: %d | Execution success: %d",
+                planning_time, execution_time, total_time, success, exec_success);
 
             // stopMonitoring();
 
@@ -342,11 +410,23 @@ class Commander
                 xarm_->setPoseTarget(target_pose);
                 
                 MoveGroupInterface::Plan plan;
+
+                auto t_plan_start = Clock::now();
                 bool success = (xarm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
+                auto t_plan_end = Clock::now();
+                double planning_time = secondsBetween(t_plan_start, t_plan_end);
+
+                bool exec_success = false;
+                double execution_time = 0.0;
 
                 if (success)
                 {
-                    xarm_->execute(plan);
+                    auto t_exec_start = Clock::now();
+                    auto exec_result = xarm_->execute(plan);
+                    auto t_exec_end = Clock::now();
+
+                    execution_time = secondsBetween(t_exec_start, t_exec_end);
+                    exec_success = (exec_result == moveit::core::MoveItErrorCode::SUCCESS);
                     response->success = true;
                     response->message = "Pose target executed successfully.";
                 }
@@ -355,6 +435,13 @@ class Commander
                     response->success = false;
                     response->message = "Failed to plan for the pose target.";
                 }
+
+                double total_time = execution_time + planning_time;
+
+                RCLCPP_INFO(
+                    node_->get_logger(),
+                    "[MEASURE] Planning time: %.4f |  Execution time: %.4f | Total time: %.4f | Planning success: %d | Execution success: %d",
+                    planning_time, execution_time, total_time, success, exec_success);
             }
             else
             {
