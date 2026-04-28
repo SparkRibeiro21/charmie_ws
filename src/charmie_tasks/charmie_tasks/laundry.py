@@ -157,6 +157,11 @@ class TaskMain():
 
             elif self.state == self.task_states["Place_CFM_on_table"]:
 
+                _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+                self.adjust_x_      = furniture_distance - 0.04 
+                s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False)
+                self.robot.adjust_omnidirectional_position
+
                 self.state = self.task_states["Navigate_to_laundry_area"]
 
 
