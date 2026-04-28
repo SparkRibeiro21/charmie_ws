@@ -75,9 +75,6 @@ class ROS2TaskNode(Node):
             with open(self.home + configuration_files_midpath + 'furniture.json', encoding='utf-8') as json_file:
                 self.furniture = json.load(json_file)
             # print(self.house_furniture)
-            with open(self.home + configuration_files_midpath + 'names.json', encoding='utf-8') as json_file:
-                self.names = json.load(json_file)
-            # print(self.names)
             self.get_logger().info("Successfully imported data from json configuration files.")
         except:
             self.get_logger().error("Could NOT import data from json configuration files.")
@@ -4823,11 +4820,6 @@ class RobotStdFunctions():
                     for furnit in self.node.furniture:
                         if furnit["room"].lower() == c:
                             options.append(furnit["name"])
-                case "names":
-                    files_for_speech.append(self.node.names)
-                    folder_for_speech.append("person_names")
-                    for names in self.node.names:
-                        options.append(names["name"])
                 case "furniture":
                     files_for_speech.append(self.node.furniture)
                     folder_for_speech.append("furniture")
