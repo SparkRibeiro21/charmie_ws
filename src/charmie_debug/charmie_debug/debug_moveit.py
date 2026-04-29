@@ -66,7 +66,7 @@ class TaskMain():
     def configurables(self):
         # self.tetas = [[0, -10], [20, -20], [-20, -20]]
         self.tetas = [[0, -30],[0, 0], [0, 30]]
-        self.SELECTED_OBJECT = "Cornflakes"
+        self.SELECTED_OBJECT = "Coffee Grounds"
         self.trys = 10
 
     # main state-machine function
@@ -79,11 +79,14 @@ class TaskMain():
         mode = "moveit"
 
         SAFE_DISTANCE_X = 0.25
+        SAFE_DISTANCE_Y = 0.0
+        SAFE_DISTANCE_Z = 0.05
         TCP_OFFSET_X = 0.145
         TCP_OFFSET_Y = -0.006
         TCP_OFFSET_Z = -0.075
 
         TEST_DISTANCE_Z = 0.0
+        ERROR_CONST = 0.02
         
         # States in DebugMoveit Task
         self.Waiting_for_task_start = 0
@@ -135,8 +138,8 @@ class TaskMain():
 
                     s,m = self.robot.set_pose_target_arm(
                         o.position_absolute.x - TCP_OFFSET_X - SAFE_DISTANCE_X,
-                        o.position_absolute.y + TCP_OFFSET_Y,
-                        o.position_absolute.z + TCP_OFFSET_Z,
+                        o.position_absolute.y + TCP_OFFSET_Y - SAFE_DISTANCE_Y,
+                        o.position_absolute.z + TCP_OFFSET_Z - SAFE_DISTANCE_Z,
                         0.7071,
                         0.0,
                         0.7071,
@@ -152,8 +155,8 @@ class TaskMain():
                         for i in range(self.trys):
                             s,m = self.robot.set_pose_target_arm(
                                 o.position_absolute.x - TCP_OFFSET_X - SAFE_DISTANCE_X,
-                                o.position_absolute.y + TCP_OFFSET_Y,
-                                o.position_absolute.z + TCP_OFFSET_Z,
+                                o.position_absolute.y + TCP_OFFSET_Y - SAFE_DISTANCE_Y,
+                                o.position_absolute.z + TCP_OFFSET_Z - SAFE_DISTANCE_Z,
                                 0.7071,
                                 0.0,
                                 0.7071,
@@ -173,7 +176,7 @@ class TaskMain():
 
                         self.robot.set_gripper(850.0, wait_for_end_of=True)
 
-                        self.robot.set_simple_move_tool(dx=-0.05, dy=0.0, dz=0.0, duration_sec=3.0)
+                        # self.robot.set_simple_move_tool(dx=-0.05, dy=0.0, dz=0.0, duration_sec=3.0)
 
                         print("WAIT FOR START BUTTON")
 
@@ -201,7 +204,7 @@ class TaskMain():
 
                         ow = self.robot.get_object_width_from_object(o.object_name)
 
-                        grab_x = (o.position_cam.x + ow/1.5 - TCP_OFFSET_X)
+                        grab_x = (o.position_cam.x + ow/1.5 - TCP_OFFSET_X) + ERROR_CONST
                         grab_y = (o.position_cam.y - TCP_OFFSET_Y)
                         grab_z = (o.position_cam.z - TCP_OFFSET_Z - TEST_DISTANCE_Z)
 
