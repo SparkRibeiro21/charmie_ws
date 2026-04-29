@@ -6053,7 +6053,7 @@ class RobotStdFunctions():
 
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
             MAXIMUM_ADJUST_DISTANCE = 0.5 
-            DISTANCE_IN_FRONT_X     = 0.3 
+            DISTANCE_IN_FRONT_X     = 0.25
             DISTANCE_IN_FRONT_Y     = 0.31
             DISTANCE_IN_TOP_X       = 0.58
             DISTANCE_IN_TOP_Y       = -0.05
@@ -6277,19 +6277,18 @@ class RobotStdFunctions():
                 if pick_mode == "front":
                     correct_x_grab = (obj.position_cam.x + ow/1.5 - tf_x)*1000
                     print("OBJECT WIDTH:", ow)
+                    print("X ADJSUT:", correct_x_grab)
+                    MAX_MOVE_LIMIT = 245
+                    if correct_x_grab > MAX_MOVE_LIMIT:
+                        correct_x_grab = MAX_MOVE_LIMIT
                 if pick_mode == "top":
                     if furniture_height >= 0:
                         correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
                     
-                        # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established. DO NOT CHANGE UNLESS TESTED
-                        if pick_mode == "front":
-                            MAX_MOVE_LIMIT = 245
-                            if correct_x_grab > MAX_MOVE_LIMIT:
-                                correct_x_grab = MAX_MOVE_LIMIT
-                        if pick_mode == "top":
-                            MAX_MOVE_LIMIT = 235
-                            if correct_x_grab > MAX_MOVE_LIMIT:
-                                correct_x_grab = MAX_MOVE_LIMIT
+                    # To prevent the gripper from going so foward, the object would crash into the gripper itself, a limit is established. DO NOT CHANGE UNLESS TESTED
+                    MAX_MOVE_LIMIT = 235
+                    if correct_x_grab > MAX_MOVE_LIMIT:
+                        correct_x_grab = MAX_MOVE_LIMIT
                     else:
                         HEIGHT = 0.04
                         if oh <= 0.044:

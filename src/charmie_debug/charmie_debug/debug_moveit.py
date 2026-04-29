@@ -76,7 +76,7 @@ class TaskMain():
 
         object_to_pick = None
 
-        mode = "moveit"
+        mode = "std_pick"
 
         SAFE_DISTANCE_X = 0.25
         SAFE_DISTANCE_Y = 0.0
@@ -288,6 +288,8 @@ class TaskMain():
                     pass
 
                 elif mode == "std_pick":
+
+                    self.robot.set_initial_position(self.robot.get_navigation_coords_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(object_name=self.SELECTED_OBJECT))))
 
                     self.robot.pick_object_risky(selected_object=self.SELECTED_OBJECT)
                         
