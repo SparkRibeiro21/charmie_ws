@@ -64,8 +64,9 @@ class TaskMain():
         self.robot = robot
 
     def configurables(self):
-        self.tetas = [[0, -10],[0, 0], [0, 20]]
-        self.SELECTED_OBJECT = "Milk"
+        # self.tetas = [[0, -10], [20, -20], [-20, -20]]
+        self.tetas = [[0, -30],[0, 0], [0, 30]]
+        self.SELECTED_OBJECT = "Cornflakes"
         self.trys = 10
 
     # main state-machine function
@@ -181,7 +182,7 @@ class TaskMain():
                         hand_objects_found = None
                         
                         while hand_objects_found is None:
-                            hand_objects = self.robot.search_for_objects(tetas= [[0.0,0.0]], list_of_objects=[self.SELECTED_OBJECT], list_of_objects_detected_as=[['Pringles', 'Cheezit', 'Sugar']], detect_objects_hand = True)
+                            hand_objects = self.robot.search_for_objects(tetas= [[0.0,0.0]], time_in_each_frame = 10.0 ,list_of_objects=[self.SELECTED_OBJECT], list_of_objects_detected_as=[['Cheezit', 'Sugar']], detect_objects_hand = True)
 
                             print("LIST OF DETECTED OBJECTS:")
                             for o in hand_objects:
@@ -259,7 +260,7 @@ class TaskMain():
 
                                 for i in range(self.trys):
 
-                                    s2, m2 = self.robot.set_simple_move_tool(dx=-grab_z, dy=grab_y, dz=-grab_x, duration_sec=5.0)
+                                    s2, m2 = self.robot.set_simple_move_tool(dx=grab_z, dy=grab_y, dz=-grab_x, duration_sec=5.0)
 
                                     if s2:
 

@@ -20,19 +20,6 @@ import math
 
 from charmie_point_cloud.point_cloud_class import PointCloud
 
-# objects_filename = "segmentation_M_size_model_600_epochs.pt"
-# objects_filename = "epoch20.pt"
-# objects_filename = "new_best.pt"
-# objects_filename = "new_best_2.pt"
-objects_filename = "24_25_october_v1_LAR_seg.pt"
-# objects_filename = "detect_hands_2.pt"
-# objects_filename = "50_epochs.pt"
-# objects_filename = "slender_ycb_03_07_2024_v1.pt"
-# objects_filename = "lar_dataset_post_fnr2024.pt"
-shoes_filename = "shoes_socks_v1.pt"
-furniture_filename = "door_bruno_2.pt"
-# furniture_filename = "furniture_robocup.pt"
-
 MIN_OBJECT_CONF_VALUE = 0.5
 MIN_SHOES_CONF_VALUE = 0.5
 MIN_FURNITURE_CONF_VALUE = 0.5
@@ -333,9 +320,29 @@ class Yolo_obj(Node):
     def get_rgbd_head_callback(self, rgbd: RGBD):
         with data_lock: 
             self.head_rgb = rgbd.rgb
-            self.head_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
             self.head_depth = rgbd.depth
-            self.head_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
+            
+            rgb = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            depth = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
+
+            # aaa = time.perf_counter()
+
+            rgb_h, rgb_w = rgb.shape[:2]
+            depth_h, depth_w = depth.shape[:2]
+
+            if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+
+            if (depth_w, depth_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                depth = cv2.resize(depth, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+
+            self.head_rgb_cv2_frame = rgb
+            self.head_depth_cv2_frame = depth
+
+            # print("Time to convert and resize head frames:", time.perf_counter() - aaa)
+
         self.new_head_rgb = True
         self.new_head_depth = True
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
@@ -343,9 +350,26 @@ class Yolo_obj(Node):
     def get_rgbd_hand_callback(self, rgbd: RGBD):
         with data_lock: 
             self.hand_rgb = rgbd.rgb
-            self.hand_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
             self.hand_depth = rgbd.depth
-            self.hand_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
+
+            rgb = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            depth = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
+
+            rgb_h, rgb_w = rgb.shape[:2]
+            depth_h, depth_w = depth.shape[:2]
+
+            if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+
+            if (depth_w, depth_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                depth = cv2.resize(depth, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+
+
+            self.hand_rgb_cv2_frame = rgb
+            self.hand_depth_cv2_frame = depth
+
         self.new_hand_rgb = True
         self.new_hand_depth = True
         # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
