@@ -9,8 +9,7 @@ from pathlib import Path
 import subprocess
 
 # MODE can be the following commands:
-# "STANDARD": convert save_speaker command into wav(speaker) and txt(show face) 
-# "NAMES": reads names from json file and exports all names to list_of_sentences/person_names
+# "STANDARD": convert save_speaker command into wav(speaker) and txt(show face)
 # "OBJECTS": reads objects and objects_classe from json file and exports all objects to list_of_sentences/objects_names and objects_classes to list_of_sentences/objects_classes 
 # "HOUSE": reads rooms and furniture from json file and exports all rooms to list_of_sentences/rooms and furniture to list_of_sentences/furniture 
 # "COMPETITION": to improve time-efficiency in competitions, this mode does NAMES, OBJECTS and HOUSE modes 
