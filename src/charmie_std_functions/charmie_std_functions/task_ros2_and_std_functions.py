@@ -4835,6 +4835,12 @@ class RobotStdFunctions():
                     folder_for_speech.append("objects_classes")
                     for obj in self.node.objects_classes_file:
                         options.append(obj["name"])
+                case "yes or no":
+                    options.append("yes")
+                    options.append("no")
+                    files_for_speech.append([{'name': 'yes'}, {'name': 'no'}])
+                    folder_for_speech.append("generic")
+                    mode = "yes or no"
                 case "custom":
                     for opt in custom_options:
                         options.append(opt)
