@@ -774,7 +774,7 @@ class TaskMain():
                 
                 selected_option = None
                 while selected_option != ["Yes"]:
-                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Are you ready to be followed?", start_speak_file="hri/ready_to_follow", speak_results=False, wait_for_end_of=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, mode="single", instruction="Are you ready to be followed?", start_speak_file="hri/ready_to_follow", speak_results=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     
                 self.robot.set_speech(filename="hri/follow_host_track_instructions", wait_for_end_of=True)
@@ -798,7 +798,7 @@ class TaskMain():
 
                 selected_option = None
                 while selected_option != ["Yes"]:
-                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, speak_timeout=False, wait_for_end_of=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, speak_timeout=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     # NAVIGATION: STOP FOLLOWING HOST
 
