@@ -71,10 +71,10 @@ class ROS2TaskNode(Node):
             # print(self.objects_classes_file)
             with open(self.home + configuration_files_midpath + 'rooms.json', encoding='utf-8') as json_file:
                 self.rooms = json.load(json_file)
-            # print(self.house_rooms)
+            # print(self.rooms)
             with open(self.home + configuration_files_midpath + 'furniture.json', encoding='utf-8') as json_file:
                 self.furniture = json.load(json_file)
-            # print(self.house_furniture)
+            # print(self.furniture)
             self.get_logger().info("Successfully imported data from json configuration files.")
         except:
             self.get_logger().error("Could NOT import data from json configuration files.")

@@ -452,7 +452,24 @@ class Yolo_obj(Node):
 
         return new_object
 
-    def position_to_house_rooms_and_furniture(self, person_pos):
+    def point_inside_rotated_rectangle(self, px, py, cx, cy, size_x, size_y, angle_deg):
+        angle_rad = math.radians(angle_deg)
+
+        dx = px - cx
+        dy = py - cy
+
+        # Rotate point into furniture local frame
+        local_x =  math.cos(angle_rad) * dx + math.sin(angle_rad) * dy
+        local_y = -math.sin(angle_rad) * dx + math.cos(angle_rad) * dy
+
+        return abs(local_x) <= size_x / 2.0 and abs(local_y) <= size_y / 2.0
+
+    def point_inside_circle(self, px, py, cx, cy, diameter):
+        radius = diameter / 2.0
+        dist = math.sqrt((px - cx) ** 2 + (py - cy) ** 2)
+        return dist <= radius
+            
+    def position_to_house_rooms_and_furniture(self, position):
         
         room_location = "Outside"
         for room in self.house_rooms:
@@ -461,27 +478,21 @@ class Yolo_obj(Node):
             min_y = room['bot_right_coords'][1]
             max_y = room['top_left_coords'][1]
             # print(min_x, max_x, min_y, max_y)
-            if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
+            if min_x < position.x < max_x and min_y < position.y < max_y:
                 room_location = room['name'] 
 
         furniture_location = "None"
         for furniture in self.house_furniture:
 
-            if furniture['shape'] == "square":
-                min_x = furniture['bot_right_coords'][0]
-                max_x = furniture['top_left_coords'][0]
-                min_y = furniture['bot_right_coords'][1]
-                max_y = furniture['top_left_coords'][1]
-                # print(min_x, max_x, min_y, max_y)
-                if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
-                    furniture_location = furniture['name'] 
-            else: # if furniture['shape'] == "circle":
-                furniture_x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2
-                furniture_y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2
-                person_dist_to_furniture = math.sqrt((person_pos.x-furniture_x)**2 + (person_pos.y-furniture_y)**2)
+            cx = furniture["center_coords"][0]
+            cy = furniture["center_coords"][1]
 
-                if person_dist_to_furniture < furniture['diameter']/2:
-                    furniture_location = furniture['name'] 
+            if furniture['shape'] == "square":
+                if self.point_inside_rotated_rectangle(position.x,  position.y, cx, cy, furniture["size"][0], furniture["size"][1], furniture.get("angle", 0.0)):
+                    furniture_location = furniture["name"]
+            else: # if furniture['shape'] == "circle":
+                if self.point_inside_circle(position.x, position.y, cx, cy, furniture["diameter"]):
+                    furniture_location = furniture["name"]
 
         return room_location, furniture_location
         
