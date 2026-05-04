@@ -151,7 +151,7 @@ class TaskMain():
 
                 # time.sleep(3.0) # time for person who pressed start button leave to not be shown in qualif video
 
-                self.state = self.task_states["Collect_order_from_barman"]
+                self.state = self.task_states["Looking_for_barman"]
                 
 
             elif self.state == self.task_states["Looking_for_barman"]:
@@ -681,7 +681,7 @@ class TaskMain():
                 ##### SPEAK: Barman, please give me the following items:
                 self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
                 #  TEST PREDEFINED ORDERS:  
-                self.all_orders = [["Mustard", "Sugar"]]
+                # self.all_orders = [["Mustard", "Sugar"]]
 
                 print("ALL ORDERS: ", self.all_orders)
                 current_order = []
