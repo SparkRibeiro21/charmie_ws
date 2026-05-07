@@ -34,7 +34,7 @@ ros2_modules = {
     "charmie_speakers":             True,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
-    "charmie_yolo_objects":         True,
+    "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           True,
 }
@@ -80,8 +80,7 @@ class TaskMain():
 
         self.home_furniture = "Shelf"
         # self.home_furniture = "Dinner Table"        
-        self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
-        print(self.initial_position)
+        self.initial_position = [8.80, 0.13, -180.0]
 
         self.GET_HEAR = False
 

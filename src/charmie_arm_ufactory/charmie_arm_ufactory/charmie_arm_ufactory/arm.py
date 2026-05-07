@@ -1254,6 +1254,34 @@ class ArmUfactory(Node):
 			case 9:
 				self.finish_arm_movement_()
 
+	def pre_pour_milk_bowl_risky(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_milk_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=120, wait=True)
+			case 2:
+				self.set_gripper_speed_(speed=1000)
+			case 3:
+				self.set_gripper_position_(pos=0, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.pos_picking_milk_tray, speed=90, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=90, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.reach_position_to_pour_milk_bowl, speed=90, wait=True)
+			case 7:
+				self.finish_arm_movement_()
+
+	def post_pour_milk_bowl_risky(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.pour_milk_bowl_linear, speed=120, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.after_pouring_milk_at_bowl, speed=120, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
 	def place_milk_table(self):
 		match self.estado_tr:
 			case 0:
@@ -1448,6 +1476,10 @@ class ArmUfactory(Node):
 				self.place_cereal_table_alternative_robocup_cornflakes()
 			case "pour_milk_bowl":
 				self.pour_milk_bowl()
+			case "pre_pour_milk_bowl_risky":
+				self.pre_pour_milk_bowl_risky()
+			case "post_pour_milk_bowl_risky":
+				self.post_pour_milk_bowl_risky()
 			case "place_milk_table":
 				self.place_milk_table()
 			case "place_spoon_table":
