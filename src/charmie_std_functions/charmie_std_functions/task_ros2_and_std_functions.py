@@ -4156,6 +4156,8 @@ class RobotStdFunctions():
         command_confirmed = False
         max_confirm_attempts = 3
         confirm_attempts_cntr = 0
+        max_characters = 250
+        valid_command = False
 
         self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
 
@@ -4165,40 +4167,48 @@ class RobotStdFunctions():
 
             ##### SPEAK: "What is your request?"
             gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green", wait_for_end_of= True)
-            # self.set_speech(filename="gpsr/gpsr_question_2", wait_for_end_of=True)
-            # gpsr_command = "Place the milk on the dining table"
+            # gpsr_command = "Please proceed to the living room, introduce yourself to the person wearing a black jacket, and thereafter follow them."
             print("Finished:", gpsr_command)
-            # add step to normalize command
 
             ##### SPEAK: "Please give me a moment to process your command"
             self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
-
-            self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
             
-            ##### SPEAK: "I have understood the following command."
-            self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
-            self.set_speech(filename="temp/gpsr_command", wait_for_end_of=True)
-            ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
-            # self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
-            # confirmation = "yes"
-            confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-            print("Finished:", confirmation)
-
-            if confirmation.lower() == "yes":
-                self.set_rgb(command=GREEN+BLINK_LONG)
-                ##### SPEAK: "Great!"
-                command_confirmed = True
-
+            if len(gpsr_command) > max_characters:
+                valid_command = False
+                self.set_speech(filename="gpsr/could_not_process", wait_for_end_of=True)
             else:
-                self.set_rgb(command=RED+BLINK_LONG)
-
-                if confirm_attempts_cntr < max_confirm_attempts:
-                    ##### SPEAK: Sorry for my mistake, lets try again.
-                    self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
-                    command_confirmed = False
             
+                self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
+                
+                ##### SPEAK: "I have understood the following command."
+                self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
+                self.set_speech(filename="temp/gpsr_command",show_in_face=True, wait_for_end_of=True)
+                ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
+                self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
+                # confirmation = "yes"
+                confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                print("Finished:", confirmation)
+
+                if confirmation.lower() == "yes":
+                    self.set_rgb(command=GREEN+BLINK_LONG)
+                    ##### SPEAK: "Great!"
+                    valid_command = True
+                    command_confirmed = True
+
                 else:
-                    gpsr_command = "ERROR"
+                    self.set_rgb(command=RED+BLINK_LONG)
+
+                    if confirm_attempts_cntr < max_confirm_attempts:
+                        ##### SPEAK: Sorry for my mistake, lets try again.
+                        self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
+                        command_confirmed = False
+                        valid_command = False
+                
+                    else:
+                        gpsr_command = "ERROR"
+
+        if not valid_command:
+            gpsr_command = "ERROR"
 
         return gpsr_command
 
