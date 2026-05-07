@@ -28,6 +28,7 @@ setup(
         "inspection                 = charmie_tasks.inspection:main",
 		"hri_task_2026              = charmie_tasks.hri_task_2026:main",
         "pick_and_place_task_2026   = charmie_tasks.pick_and_place_task_2026:main",
+        "pick_and_place_task_risky_2026 = charmie_tasks.pick_and_place_task_risky_2026:main",
         "gpsr_task_2026             = charmie_tasks.gpsr_task_2026:main",
         "manipulation_task_2026     = charmie_tasks.manipulation_task_2026:main",
         "restaurant                 = charmie_tasks.restaurant:main",

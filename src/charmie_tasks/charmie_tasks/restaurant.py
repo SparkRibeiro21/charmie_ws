@@ -82,7 +82,7 @@ class TaskMain():
         self.BARMAN_SIDE = "left" # by default, but if barman is detected in code, it changes
 
         self.MIN_DISTANCE_TO_CUSTOMER = 0.5 # 
-        self.MIN_DISTANCE_TO_BARMAN = 0.3
+        self.MIN_DISTANCE_TO_BARMAN = 0.35
 
         
     def main(self):
@@ -314,6 +314,7 @@ class TaskMain():
                             self.robot.set_speech(filename="restaurant/found_customer_check_face", wait_for_end_of=True)
                             time.sleep(3.0)
                             self.robot.set_speech(filename="restaurant/is_person_customer", wait_for_end_of=True)
+                            self.robot.set_speech(filename="restaurant/duplicate_customer_select_no", wait_for_end_of=True)
                             answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], speak_results=False)
                             self.robot.set_face("charmie_face", wait_for_end_of=False)
                             print("ANSWER:", answer)
@@ -680,7 +681,7 @@ class TaskMain():
                 ##### SPEAK: Barman, please give me the following items:
                 self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
                 #  TEST PREDEFINED ORDERS:  
-                # self.all_orders = [["Tuna", "Red_Bull"]]
+                # self.all_orders = [["Apple", "Cheezit"]]
 
                 print("ALL ORDERS: ", self.all_orders)
                 current_order = []
@@ -734,8 +735,18 @@ class TaskMain():
                                     filename = "objects_names/" + o.lower().replace(" ", "_")
                                     self.robot.set_speech(filename=filename, wait_for_end_of=True)
                                     self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
-                                    time.sleep(1.0)
-                                    _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)    
+                                    time.sleep(5.0)
+
+                                    _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)
+
+                                    object_in_gripper = False
+                                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                    if not object_in_gripper:
+                                        self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+                                        o_aux = DetectedObject()
+                                        o_aux.object_name = o.lower().replace(" ", "_")
+                                        self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
+
                                     self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
                                 else:
                                     #### SPEAK: please place these object on the bar counter
@@ -743,8 +754,18 @@ class TaskMain():
                                     filename = "objects_names/" + o.lower().replace(" ", "_")
                                     self.robot.set_speech(filename=filename, wait_for_end_of=True)
                                     self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
-                                    time.sleep(1.0)
+                                    time.sleep(5.0)
                                     picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+        
+                                    object_in_gripper = False
+                                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                    if not object_in_gripper:
+                                        self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+                                        o_aux = DetectedObject()
+                                        o_aux.object_name = o.lower().replace(" ", "_")
+                                        self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
+                                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
                                 counter = counter + 1         
                         elif len(NCT_check)==1:
 
@@ -761,8 +782,18 @@ class TaskMain():
                                     filename = "objects_names/" + o.lower().replace(" ", "_")
                                     self.robot.set_speech(filename=filename, wait_for_end_of=True)
                                     self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
-                                    time.sleep(1.0)
-                                    _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)    
+                                    time.sleep(5.0)
+                                    _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas) 
+
+                                    object_in_gripper = False
+                                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                    if not object_in_gripper:
+                                        self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+                                        o_aux = DetectedObject()
+                                        o_aux.object_name = o.lower().replace(" ", "_")
+                                        self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
+
+
                                     self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
                                 else:
                                     #### SPEAK: please place these object on the bar counter
@@ -770,8 +801,17 @@ class TaskMain():
                                     filename = "objects_names/" + o.lower().replace(" ", "_")
                                     self.robot.set_speech(filename=filename, wait_for_end_of=True)
                                     self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
-                                    time.sleep(1.0)
+                                    time.sleep(5.0)
                                     picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+
+                                    object_in_gripper = False
+                                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                    if not object_in_gripper:
+                                        self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+                                        o_aux = DetectedObject()
+                                        o_aux.object_name = o.lower().replace(" ", "_")
+                                        self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
+
                                 counter = counter + 1
 
                         elif len(NCT_check)==2:
@@ -784,8 +824,18 @@ class TaskMain():
                                         filename = "objects_names/" + o.lower().replace(" ", "_")
                                         self.robot.set_speech(filename=filename, wait_for_end_of=True)
                                         self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
-                                        time.sleep(1.0)
-                                        _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)    
+                                        time.sleep(5.0)
+                                        _,_ = self.robot.pick_object_risky(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas) 
+
+                                        object_in_gripper = False
+                                        object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                        if not object_in_gripper:
+                                            self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+                                            o_aux = DetectedObject()
+                                            o_aux.object_name = o.lower().replace(" ", "_")
+                                            self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
+
+
                                         self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = "top", NCT=True)
                                     else:
                                         #### SPEAK: please place these object on the bar counter
@@ -793,8 +843,18 @@ class TaskMain():
                                         filename = "objects_names/" + o.lower().replace(" ", "_")
                                         self.robot.set_speech(filename=filename, wait_for_end_of=True)
                                         self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
-                                        time.sleep(1.0)
+                                        time.sleep(5.0)
                                         picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=o, first_search_tetas=tetas)
+
+                                        object_in_gripper = False
+                                        object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                        if not object_in_gripper:
+                                            self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+                                            o_aux = DetectedObject()
+                                            o_aux.object_name = o.lower().replace(" ", "_")
+                                            self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
+
+
                                     counter = counter + 1
 
 
@@ -810,16 +870,24 @@ class TaskMain():
                         filename = "objects_names/" + order_names[0].lower().replace(" ", "_")
                         self.robot.set_speech(filename=filename, wait_for_end_of=True)
                         self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
-                        time.sleep(1.0)
+                        time.sleep(5.0)
 
                         picked_height_1 ,asked_help_1 = self.robot.pick_object_risky(selected_object=order_names[0], first_search_tetas=tetas)
+
+                        object_in_gripper = False
+                        object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                        if not object_in_gripper:
+                            self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+                            o_aux = DetectedObject()
+                            o_aux.object_name = o.lower().replace(" ", "_")
+                            self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
 
                         ## CREATE SPEECH
                         self.robot.set_speech(filename="restaurant/please_place", wait_for_end_of=True)
                         filename = "objects_names/" + order_names[1].lower().replace(" ", "_")
                         self.robot.set_speech(filename=filename, wait_for_end_of=True)
                         self.robot.set_speech(filename="restaurant/on_my_tray", wait_for_end_of=True)
-                        time.sleep(2.0)
+                        time.sleep(5.0)
                         
                         print("PUT IN TRAY", order_names[1])
 
@@ -829,7 +897,7 @@ class TaskMain():
                         filename = "objects_names/" + order_names[0].lower().replace(" ", "_")
                         self.robot.set_speech(filename=filename, wait_for_end_of=True)
                         self.robot.set_speech(filename="restaurant/on_my_tray", wait_for_end_of=True)
-                        time.sleep(2.0)
+                        time.sleep(5.0)
 
 
                         print("PUT IN TRAY", order_names[0])
@@ -838,7 +906,7 @@ class TaskMain():
                         filename = "objects_names/" + order_names[1].lower().replace(" ", "_")
                         self.robot.set_speech(filename=filename, wait_for_end_of=True)
                         self.robot.set_speech(filename="restaurant/on_my_tray", wait_for_end_of=True)
-                        time.sleep(2.0)
+                        time.sleep(5.0)
 
                         print("PUT IN TRAY", order_names[1])
 
