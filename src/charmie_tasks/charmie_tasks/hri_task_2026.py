@@ -414,7 +414,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = self.robot.get_location_coords_from_furniture("Grey Couch")
+                    neck_position = self.robot.get_location_coords_from_furniture("grey_couch")
                     speak_file = self.default_speak_file
 
                 else:
@@ -695,7 +695,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = [self.robot.get_location_coords_from_furniture("Grey Couch")[0], self.robot.get_location_coords_from_furniture("Grey Couch")[1], 0.9]
+                    neck_position = [self.robot.get_location_coords_from_furniture("grey_couch")[0], self.robot.get_location_coords_from_furniture("grey_couch")[1], 0.9]
                     speak_file = self.default_speak_file
 
                 else:
@@ -735,7 +735,7 @@ class TaskMain():
                 if prediction_confidence == 0.0:
                     # caso em que não conseguiu reconhecer o guest1
                     print("COULD NOT RECOGNIZE GUEST1 FACE AGAIN")
-                    guest1_coords = [self.robot.get_location_coords_from_furniture("Grey Couch")[0], self.robot.get_location_coords_from_furniture("Grey Couch")[1], 0.9]
+                    guest1_coords = [self.robot.get_location_coords_from_furniture("grey_couch")[0], self.robot.get_location_coords_from_furniture("grey_couch")[1], 0.9]
 
                 # Introduce both guests
 
@@ -800,7 +800,7 @@ class TaskMain():
                 
                 selected_option = None
                 while selected_option != ["Yes"]:
-                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Are you ready to be followed?", start_speak_file="hri/ready_to_follow", speak_results=False, wait_for_end_of=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, mode="single", instruction="Are you ready to be followed?", start_speak_file="hri/ready_to_follow", speak_results=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     
                 self.robot.set_speech(filename="hri/follow_host_track_instructions", wait_for_end_of=True)
@@ -824,7 +824,7 @@ class TaskMain():
 
                 selected_option = None
                 while selected_option != ["Yes"]:
-                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, speak_timeout=False, wait_for_end_of=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, speak_timeout=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     # NAVIGATION: STOP FOLLOWING HOST
 
