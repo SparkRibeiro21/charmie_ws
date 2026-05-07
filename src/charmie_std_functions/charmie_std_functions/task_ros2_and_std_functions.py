@@ -4228,20 +4228,7 @@ class RobotStdFunctions():
 ##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)
     def execute_gpsr_plan(self, command ="", wait_for_end_of = True):
 
-        request = GetLLMGPSR.Request()
-        request.command = command
-
-        self.node.call_llm_gpsr_server(request=request, wait_for_end_of=wait_for_end_of)
-
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_llm_gpsr:
-                pass
-            self.node.waited_for_end_of_llm_gpsr = False
-
-        plan = self.node.llm_gpsr_response
-        
-        for task in plan.strings:
-            task_split = task.split("-")
+            task_split = command.split("-")
             
             task_type = task_split[0]
             task_info = task_split[1] if len(task_split) > 1 else ""
@@ -4250,58 +4237,58 @@ class RobotStdFunctions():
 
             match task_type:
 
-                case "MoveToRoom":
+                case "move_furniture":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to " + task_info, quick_voice=True, wait_for_end_of=True)
+                    self.save_speech(command="Moving to furniture" + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
                     pass 
 
-                case "MoveToFurniture":
+                case "move_to_room":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to " + task_info, quick_voice=True, wait_for_end_of=True)
+                    self.save_speech(command="Moving to room" + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
                     pass
                 
-                case "move_to_person_through_name":
+                case "move_to_person":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to person called" + task_info, quick_voice=True, wait_for_end_of=True)
+                    self.save_speech(command="Moving to person" + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
                     
                     pass
                 
-                case "MoveToPersonPose":
+                case "look_for_object":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to person with pose" + task_info, quick_voice=True, wait_for_end_of=True)
-                    
+                    self.save_speech(command="Looking for object " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+
                     pass
                 
-                case "MoveToPersonClothing":
+                case "pick_up_object":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to person with a" + task_info, quick_voice=True, wait_for_end_of=True)
-                  
+                    self.save_speech(command="Picking up the " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+
                     pass
                 
-                case "MoveToInitialPersonPosition":
+                case "hand_object":
                     # temporary speech to show it is working
-                    self.set_speech(command="Moving to the person who made the request", quick_voice=True, wait_for_end_of=True)
+                    self.save_speech(command="Handing the object in my hand", filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
                     pass
 
-                case "Pick":
+                case "place_object":
                     # temporary speech to show it is working
-                    self.set_speech(command="Picking the " + task_info, quick_voice=True, wait_for_end_of=True)
-                    
+                    self.save_speech(command="Placing the object in my hand on the  " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+
                     pass
 
-                case "Place":
-                    # temporary speech to show it is working
-                    task_split_2 = task_info.split(",")
-                    if len(task_split_2) >= 2:
-                        self.set_speech(command="Placing the " + task_split_2[0]+ " on the " + task_split_2[1], quick_voice=True, wait_for_end_of=True)
-                    
-                    pass
+                #in case it is none of the above
+                case _:
+                    self.save_speech(command="Sorry, I could not understand the task" , filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    self.set_speech(filename="temp/action", wait_for_end_of=True)
 
-                case "HandObject":
-                    # temporary speech to show it is working
-                    self.set_speech(command="Handing the object in my hand", quick_voice=True, wait_for_end_of=True)
-                    
-                    pass
+               
 
     def get_detected_person_characteristics(self, detected_person=DetectedPerson(), first_sentence="", ethnicity=False, age=False, gender=False, height=False, shirt_color=False, pants_color=False):
 
