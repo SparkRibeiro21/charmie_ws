@@ -1,23 +1,23 @@
 {
   "type": "yoloe_visual_prompt",
-  "image": "door_handle_head_FNR.jpg",
+  "image": "door_grip_hand_FNR.jpg",
   "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
   "width": 848,
   "height": 480,
   "classes": [
     {
       "cls": 0,
-      "name": "door_handle"
+      "name": "door_grip"
     }
   ],
   "bboxes": [
     {
       "cls": 0,
       "xyxy": [
-        321.0,
-        259.0,
-        382.0,
-        268.0
+        346.0,
+        103.0,
+        372.0,
+        273.0
       ]
     }
   ],
