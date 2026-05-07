@@ -5848,7 +5848,7 @@ class RobotStdFunctions():
                     print("OBJECT HEIGHT",object_height)
                     print("ADJUST Z", adjust_z)
 
-                    # FNR RESTAURANT CHANGE self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [adjust_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [adjust_z, 0.0, 0.0, 0.0, 0.0, 0.0], wait_for_end_of=True)
 
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
@@ -5893,7 +5893,7 @@ class RobotStdFunctions():
                         #correct_x = (gripper_position.z - valid_detected_object.position_relative.z + HEIGHT - tf_x)*1000
                     #print("Gripper Position z: ",gripper_position.z," || Tf_X: ", tf_x, " || OH : ", oh, " || height_furniture", furniture_height, " || Correct_X: ", correct_x )
                     object_position = [0.0, 0.0, correct_x, 0.0, 0.0, 0.0]
-                    #self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position, wait_for_end_of=True)
                     
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
@@ -5905,7 +5905,7 @@ class RobotStdFunctions():
                     # IF ADJUST IS NOT POSSIBLE DUE TO OBSTACLES ASK FOR HELP
                     if not s:
                         self.set_speech(filename="storing_groceries/cannot_reach_shelf", wait_for_end_of=False)
-                        self.ask_help_pick_object_gripper(object_d=objects_found[0], look_judge= [0,0])
+                        self.ask_help_pick_object_gripper(object_d=objects_found[0])
                         self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
                         picked_height = 0.0
                         asked_help = True

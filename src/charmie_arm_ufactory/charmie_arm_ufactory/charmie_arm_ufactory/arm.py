@@ -211,7 +211,6 @@ class ArmUfactory(Node):
 		self.search_front_max_z_joints =									[-145, -33, -35.7, -122.9, 44.8, 33.2]
 		self.search_front_risky_joints =									[-207.1, -9.9, -38.8, 144.4, 47.2, 112.3]
 
-
 		# PLACE OBJECT FRONT VARIABLES
 		self.initial_position_to_safe_joints = 								[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
 		self.safe_to_placing_linear = 										[-672.9, 98.2, 234.6, math.radians(90.7), math.radians(0.3), math.radians(-90.1)]
