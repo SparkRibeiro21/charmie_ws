@@ -71,23 +71,23 @@ class Ollama_info_extraction_description:
         
         self.ollama_info_model_struct = "gemma3:1b"
 
-        response = ollama.chat(
-            model= self.ollama_info_model_struct,
-            messages=[{"role":"user",
-                       "content":" Your task is to extract info from the commands you are given. The command you'll receive are a transcription of a spoken command and they may contain some errors or misspels. The info you will need to extract will always be a common english word. When you receive the command, you will be also given the type of info you need to extract. Return ONLY the extracted info. Your output should only be one word or phrase, not a sentence. If you cannot find the info in the command, return an empty string."}]
-        )
+        # response = ollama.chat(
+        #     model= self.ollama_info_model_struct,
+        #     messages=[{"role":"user",
+        #                "content":" Your task is to extract info from the commands you are given. The command you'll receive are a transcription of a spoken command and they may contain some errors or misspels. The info you will need to extract will always be a common english word. When you receive the command, you will be also given the type of info you need to extract. Return ONLY the extracted info. Your output should only be one word or phrase, not a sentence. If you cannot find the info in the command, return an empty string."}]
+        # )
 
-        print(response["message"]["content"])
+        # print(response["message"]["content"])
 
         self.ollama_info_model_creative = "llama3.2:1b"
 
-        response = ollama.chat(
-            model= self.ollama_info_model_creative,
-            messages=[{"role":"user",
-                       "content":" Your task is to extract info from the commands you are given. The command you'll receive are a transcription of a spoken command and they may contain some errors or misspels. The info you will need to extract will always be a common english word. When you receive the command, you will be also given the type of info you need to extract. Return ONLY the extracted info. Your output should only be one word or phrase, not a sentence. If you cannot find the info in the command, return an empty string."}]
-        )
+        # response = ollama.chat(
+        #     model= self.ollama_info_model_creative,
+        #     messages=[{"role":"user",
+        #                "content":" Your task is to extract info from the commands you are given. The command you'll receive are a transcription of a spoken command and they may contain some errors or misspels. The info you will need to extract will always be a common english word. When you receive the command, you will be also given the type of info you need to extract. Return ONLY the extracted info. Your output should only be one word or phrase, not a sentence. If you cannot find the info in the command, return an empty string."}]
+        # )
 
-        print(response["message"]["content"])
+        # print(response["message"]["content"])
 
 
         print("Ollama info model initialized.")

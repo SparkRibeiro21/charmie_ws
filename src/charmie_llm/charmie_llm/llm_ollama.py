@@ -48,9 +48,19 @@ class LLMNode(Node):
             case "hri":
                 self.get_logger().info("LLM DEMO MODE")
                 self.ollama_info_extraction = Ollama_info_extraction_description()
+                req = GetLLMResponse.Request()
+                req.command="My name is Peter and my favourite drink is coffee"
+                req.mode= "name"
+                self.llm_ollama_information_callback(request=req, response=GetLLMResponse.Response())
+
             case "gpsr":
                 self.get_logger().info("LLM GPSR MODE")
                 self.ollama_planner = Ollama_planner_description()
+                req = GetLLMResponse.Request()
+                req.command="Go to the kitchen and bring me the milk to the bed"   
+                req.mode = ""
+                self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
+                
         
 
         ### HERE WE NEED TO ADD A DUMMY FUNCTION TO GET A FIRST RESPONSE FROM THE LLM
@@ -280,10 +290,20 @@ class LLMNode(Node):
                 
         response.answer = example   """
 
+        # los = ListOfStrings()
+        # los.strings.append("This is 10 demonstration response from the LLM.")
+        # los.strings.append("This is 11 demonstration response from the LLM.")
+        # los.strings.append("This is 12 demonstration response from the LLM.")
+        
+        start_time = time.time()
+        generated_plan = self.ollama_planner.low_level_planner(request.command)
+        end_time = time.time()
+
+        print("Plan Generated:", generated_plan)
+        print("Time taken to generate the plan: ", end_time - start_time, "seconds")
+
         los = ListOfStrings()
-        los.strings.append("This is 10 demonstration response from the LLM.")
-        los.strings.append("This is 11 demonstration response from the LLM.")
-        los.strings.append("This is 12 demonstration response from the LLM.")
+        los.strings.append(generated_plan)
         
         response.answer = los
 

@@ -131,51 +131,100 @@ class Ollama_planner_description:
 
         self.hlp_creative_model= "llama3.2:3b"
 
-        response = ollama.chat(
-            model= self.hlp_creative_model,
-            messages=[{"role": "system",
-                        "content": (
-                            "You are a robot task planner. Convert a command into atomic steps separated by semicolons (;). "
-                            "Write in first person. One paragraph only. No explanations or reasoning.\n\n"
+        # response = ollama.chat(
+        #     model= self.hlp_creative_model,
+        #     messages=[{"role": "system",
+        #                 "content": (
+        #                     "You are a robot task planner. Convert a command into atomic steps separated by semicolons (;). "
+        #                     "Write in first person. One paragraph only. No explanations or reasoning.\n\n"
 
-                            "Follow these rules strictly:\n"
-                            "1. Never invent objects, people, or places not in the command.\n"
-                            "2. Always move before interacting with anything.\n"
-                            "3. After moving to a location, always look for the object or person before touching or addressing them.\n"
-                            "4. The locutor is in the instruction point If you need to talk to them or hand them an object, move to them first.\n"
-                            "5. The verbs guide, escort, take mean the same, but they are different from the verb follow. \n"
-                            "6. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
+        #                     "Follow these rules strictly:\n"
+        #                     "1. Never invent objects, people, or places not in the command.\n"
+        #                     "2. Always move before interacting with anything.\n"
+        #                     "3. After moving to a location, always look for the object or person before touching or addressing them.\n"
+        #                     "4. The locutor is in the instruction point If you need to talk to them or hand them an object, move to them first.\n"
+        #                     "5. The verbs guide, escort, take mean the same, but they are different from the verb follow. \n"
+        #                     "6. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
 
-                            "EXAMPLES:\n"
-                            "Command: find a toy in the living room and place it on the cabinet\n"
-                            "Answer: I will move to the living room; Then, I will look for the toy; I will pick up the toy; I will move to the cabinet; I will place the toy on the cabinet.\n\n"
+        #                     "EXAMPLES:\n"
+        #                     "Command: find a toy in the living room and place it on the cabinet\n"
+        #                     "Answer: I will move to the living room; Then, I will look for the toy; I will pick up the toy; I will move to the cabinet; I will place the toy on the cabinet.\n\n"
 
-                            "Command: take a fruit from the armchair and bring it to Robin in the bathroom\n"
-                            "Answer: First, I will move to the armchair; I will look for the fruit; I will pick up the fruit; I will move to the bathroom; I will look for Robin; I will move towards Robin; I will hand the fruit to Robin.\n\n"
+        #                     "Command: take a fruit from the armchair and bring it to Robin in the bathroom\n"
+        #                     "Answer: First, I will move to the armchair; I will look for the fruit; I will pick up the fruit; I will move to the bathroom; I will look for Robin; I will move towards Robin; I will hand the fruit to Robin.\n\n"
 
-                            "Command: meet Paris at the sofa and follow them\n"
-                            "Answer: I will move to the sofa; I will look for Paris; If found, I will move towards Paris; I will greet Paris; I will follow Paris.\n\n"
+        #                     "Command: meet Paris at the sofa and follow them\n"
+        #                     "Answer: I will move to the sofa; I will look for Paris; If found, I will move towards Paris; I will greet Paris; I will follow Paris.\n\n"
 
-                            "Command: tell me how many toys are on the bed\n"
-                            "Answer: I will move to the bed; I will count the toys on the bed; I will move to the initial position; Lastly, I will speak the result.\n\n"
+        #                     "Command: tell me how many toys are on the bed\n"
+        #                     "Answer: I will move to the bed; I will count the toys on the bed; I will move to the initial position; Lastly, I will speak the result.\n\n"
 
-                            "Command: tell me what is the heaviest object on the shelf\n"
-                            "Answer: I will move to the shelf; I will look for the heaviest object; Then, I will move to the initial position; I will speak the result.\n\n"
+        #                     "Command: tell me what is the heaviest object on the shelf\n"
+        #                     "Answer: I will move to the shelf; I will look for the heaviest object; Then, I will move to the initial position; I will speak the result.\n\n"
 
-                            "Command: go to the kitchen then find the person pointing left and say your team name\n"
-                            "Answer: I will move to the kitchen;I will look for the person pointing left; After that, I will move towards that person; I will tell my team name.\n\n"
+        #                     "Command: go to the kitchen then find the person pointing left and say your team name\n"
+        #                     "Answer: I will move to the kitchen;I will look for the person pointing left; After that, I will move towards that person; I will tell my team name.\n\n"
 
-                            "Command: locate the waving person in the hallway and take them from hallway to the sofa\n"
-                            "Answer: I will move to the hallway; I will look for the waving person; I will move towards the waving person; I will guide them from hallway to the sofa.\n"
-                        )},
-                      {"role":"user",
-                       "content":f"""
-                        Command: ""
+        #                     "Command: locate the waving person in the hallway and take them from hallway to the sofa\n"
+        #                     "Answer: I will move to the hallway; I will look for the waving person; I will move towards the waving person; I will guide them from hallway to the sofa.\n"
+        #                 )},
+        #               {"role":"user",
+        #                "content":f"""
+        #                 Command: ""
 
-                        Answer:
-                        """}]
-        )
-        print(response["message"]["content"])
+        #                 Answer:
+        #                 """}]
+        # )
+        # print(response["message"]["content"])
+
+
+        # # self.hlp_creative_model= "llama3.2:3b"
+        # self.hlp_creative_model= "gemma3:1b"
+
+        # response = ollama.chat(
+        #     model= self.hlp_creative_model,
+        #     messages=[{"role": "system",
+        #                 "content": (
+        #                     "You are a robot low-level planner."
+        #                     "Your job is to extract the relevant information from the command."
+        #                     "You must identify the action and the parameter."
+        #                     "Write the output in this format: 'action-parameter'"
+
+        #                     "Follow these rules strictly:\n"
+        #                     #TODO Ver se compensa ter os diferentes tipos de move aqui ou se é melhor fazer um prompt para ação geral e depois voltar a fazer para o tipo de ação+parametro
+        #                     "1. The only available actions are: move_to_furniture, move_to_room, move_to_person, look_for_object, look_for_person_pose, pick_up_object, hand_object, place_object.\n"
+        #                     "2. If the action is neither of the previous ones, return: 'ERROR'."
+
+        #                     "EXAMPLES:\n"
+        #                     "Command: I will move to the bed; \n"
+        #                     "Answer: move_to_furniture-bed\n\n"
+
+        #                     "Command: I will move to the kitchen; \n"
+        #                     "Answer: move_to_room-kitchen\n\n"
+
+        #                     "Command: I will look for the lemon; \n"
+        #                     "Answer: look_for_object-lemon\n\n"
+
+        #                     "Command: I will look for the standing person; \n"
+        #                     "Answer: look_for_person_pose-standing\n\n"
+
+        #                     "Command: I will move towards Robin; \n"
+        #                     "Answer: move_to_person-Robin\n\n"
+
+        #                     "Command: I will hand the lemon to Gary. \n"
+        #                     "Answer: move_to_person-Gary\n\n"
+
+
+        #                 )},
+        #               {"role":"user",
+        #                "content":f"""
+        #                 Command: 
+
+        #                 Answer:
+        #                 """}]
+        # )
+
+        # print(response["message"]["content"])
 
         print("HLP model initialized")
 
@@ -231,6 +280,58 @@ class Ollama_planner_description:
         )
 
         print("1st Plan Generated:", response["message"]["content"])
+
+        return response["message"]["content"]
+
+    def low_level_planner(self, request: str):
+
+        response = ollama.chat(
+            model= self.hlp_creative_model,
+            messages=[{"role": "system",
+                        "content": (
+                            "You are a robot low-level planner."
+                            "Your job is to extract the relevant information from the command."
+                            "You must identify the action and the parameter."
+                            "Write the output in this format: 'action-parameter'"
+
+                            "Follow these rules strictly:\n"
+                            #TODO Ver se compensa ter os diferentes tipos de move aqui ou se é melhor fazer um prompt para ação geral e depois voltar a fazer para o tipo de ação+parametro
+                            "1. The only available actions are: move_to_furniture, move_to_room, move_to_person, look_for_object, look_for_person_pose, pick_up_object, hand_object, place_object.\n"
+                            "2. If the action is neither of the previous ones, return: 'ERROR'."
+
+                            "EXAMPLES:\n"
+                            "Command: I will move to the bed; \n"
+                            "Answer: move_to_furniture-bed\n\n"
+
+                            "Command: I will move to the kitchen; \n"
+                            "Answer: move_to_room-kitchen\n\n"
+
+                            "Command: I will look for the lemon; \n"
+                            "Answer: look_for_object-lemon\n\n"
+
+                            "Command: I will look for the standing person; \n"
+                            "Answer: look_for_person_pose-standing\n\n"
+
+                            "Command: I will move towards Robin; \n"
+                            "Answer: move_to_person-Robin\n\n"
+
+                            "Command: I will hand the tropical juice to Gary. \n"
+                            "Answer: hand_object-Gary\n\n"
+
+                            "Command: I will place the biscuits in the shelf. \n"
+                            "Answer: place_object-shelf\n\n"
+
+
+                        )},
+                      {"role":"user",
+                       "content":f"""
+                        Command: "{request}"
+
+                        Answer:
+                        """}]
+        )
+
+        print("Action Generated:", response["message"]["content"])
 
         return response["message"]["content"]
     
