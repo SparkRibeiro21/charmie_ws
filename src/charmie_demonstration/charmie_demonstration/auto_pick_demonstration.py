@@ -80,8 +80,7 @@ class TaskMain():
 
         self.home_furniture = "Shelf"
         # self.home_furniture = "Dinner Table"        
-        self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
-        print(self.initial_position)
+        self.initial_position = [8.80, 0.13, -180.0]
 
         self.GET_HEAR = False
 
