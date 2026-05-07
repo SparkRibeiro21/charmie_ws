@@ -6097,9 +6097,9 @@ class RobotStdFunctions():
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
 
                     if not object_in_gripper:
-                        self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))))
-                        self.ask_help_pick_object_gripper(object_d=final_objects[0])
-                        self.set_neck([0.0,0.0],wait_for_end_of=False)
+                        # self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))))
+                        self.ask_help_pick_object_gripper(object_d=final_objects[0], look_judge= [0,0])
+                        # self.set_neck([0.0,0.0],wait_for_end_of=False)
 
                     #MOVE ARM TO INITIAL POSITION
                     if return_arm_to_initial_position == "":
@@ -6164,9 +6164,8 @@ class RobotStdFunctions():
                     self.set_face("charmie_face", wait_for_end_of=False)
 
                     if not object_in_gripper and obj.object_name != "plate" :
-                        self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))))
-                        self.ask_help_pick_object_gripper(object_d=final_objects[0])
-                        self.set_neck([0.0,0.0],wait_for_end_of=False)
+                        # self.add_rotation_to_pick_position(move_coords=self.get_navigation_coords_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))))
+                        self.ask_help_pick_object_gripper(object_d=final_objects[0], look_judge=[0, 0])
                     
                     if return_arm_to_initial_position == "":
                         self.set_arm(command="search_table_top_risky_to_initial_pose", wait_for_end_of=True)
