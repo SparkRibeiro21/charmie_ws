@@ -1291,6 +1291,129 @@ class FaceMain():
                     self.confirming_multi_button = None
             return
 
+    def handle_touchscreen_menu_yes_or_no(self):
+
+        """
+        One-click Yes/No menu.
+        Shows the instruction and two large buttons:
+        YES -> green
+        NO  -> red
+
+        Sends ["Yes"] or ["No"] through GetFaceTouchscreenMenu.
+        """
+
+        if not hasattr(self, "pressed_confirm_button"):
+            self.pressed_confirm_button = None
+
+        self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)
+
+        screen_w, screen_h = self.resolution
+
+        # ---------- Instruction ----------
+        instruction = getattr(self.node, "touchscreen_menu_instruction", "")
+
+        if instruction == "":
+            instruction = "Please select an option"
+
+        instr_font = pygame.font.SysFont(None, 76)
+        margin = 60
+        max_w = screen_w - 2 * margin
+
+        lines = self.wrap_text(instruction, instr_font, max_w)
+
+        total_text_height = len(lines) * instr_font.get_height()
+        start_y = int(screen_h * 0.20) - total_text_height // 2
+
+        y = start_y
+        for line in lines:
+            surf = instr_font.render(line, True, self.GREY_LAR_LOGO)
+            rect = surf.get_rect(center=(screen_w // 2, y + surf.get_height() // 2))
+            self.SCREEN.blit(surf, rect)
+            y += surf.get_height() + 8
+
+        # ---------- Buttons ----------
+        button_font = pygame.font.SysFont(None, 80)
+
+        button_width = 360
+        button_height = 120
+        gap = 80
+
+        center_x = screen_w // 2
+        button_y = int(screen_h * 0.58)
+
+        self.yes_button = pygame.Rect(
+            center_x - button_width - gap // 2,
+            button_y,
+            button_width,
+            button_height
+        )
+
+        self.no_button = pygame.Rect(
+            center_x + gap // 2,
+            button_y,
+            button_width,
+            button_height
+        )
+
+        yes_color = (
+            tuple(max(c - 30, 0) for c in self.GREEN_PASTEL)
+            if self.pressed_confirm_button == "yes"
+            else self.GREEN_PASTEL
+        )
+
+        no_color = (
+            tuple(max(c - 30, 0) for c in self.RED_PASTEL)
+            if self.pressed_confirm_button == "no"
+            else self.RED_PASTEL
+        )
+
+        pygame.draw.rect(self.SCREEN, yes_color, self.yes_button, border_radius=16)
+        pygame.draw.rect(self.SCREEN, no_color, self.no_button, border_radius=16)
+
+        yes_text = button_font.render("Yes", True, self.GREY_LAR_LOGO)
+        no_text = button_font.render("No", True, self.GREY_LAR_LOGO)
+
+        self.SCREEN.blit(yes_text, yes_text.get_rect(center=self.yes_button.center))
+        self.SCREEN.blit(no_text, no_text.get_rect(center=self.no_button.center))
+
+        pygame.display.update()
+
+        # ---------- Events ----------
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+
+                if self.yes_button.collidepoint(pos):
+                    self.pressed_confirm_button = "yes"
+                elif self.no_button.collidepoint(pos):
+                    self.pressed_confirm_button = "no"
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+
+                selected_answer = None
+
+                if self.yes_button.collidepoint(pos) and self.pressed_confirm_button == "yes":
+                    selected_answer = "yes"
+
+                elif self.no_button.collidepoint(pos) and self.pressed_confirm_button == "no":
+                    selected_answer = "no"
+
+                if selected_answer is not None:
+                    request = GetFaceTouchscreenMenu.Request()
+                    request.command = [selected_answer]
+                    self.node.call_face_get_touchscreen_menu_server(request=request)
+
+                    self.node.is_touchscreen_menu = False
+                    self.node.touchscreen_menu_start_time = None
+                    self.pressed_confirm_button = None
+
+                    print(f"Yes/No selected: {selected_answer}")
+
+                self.pressed_confirm_button = None
+
+        return
+                
     def handle_touchscreen_menu_keyboard(self):
         """
         QWERTY keyboard for name entry.
@@ -1743,6 +1866,8 @@ class FaceMain():
                         self.handle_touchscreen_menu()
                     elif self.node.touchscreen_menu_mode == "multi":
                         self.handle_touchscreen_menu_multiple_options()
+                    elif self.node.touchscreen_menu_mode == "yes or no":
+                        self.handle_touchscreen_menu_yes_or_no()
                     elif self.node.touchscreen_menu_mode == "keyboard":
                         self.handle_touchscreen_menu_keyboard()
                     elif self.node.touchscreen_menu_mode == "numpad":

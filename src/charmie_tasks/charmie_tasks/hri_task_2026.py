@@ -12,7 +12,7 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
+    "charmie_arm":                  False,
     "charmie_audio":                True,
     "charmie_face":                 True,
     "charmie_head_camera":          True,
@@ -34,7 +34,7 @@ ros2_modules = {
     "charmie_speakers":             True,
     "charmie_speakers_save":        True,
     "charmie_tracking":             True,
-    "charmie_yolo_objects":         True,
+    "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
 }
@@ -99,20 +99,37 @@ class TaskMain():
             # },
             ### FOR CASES WHERE COUCH IS HORIZONTAL IN 2D MAP
             {
-                "name": "couch_left",  
-                "furniture": "couch",
-                "center_coords": [(self.robot.get_top_coords_from_furniture("Couch")[0] + self.robot.get_bottom_coords_from_furniture("Couch")[0])/2.0, 
-                                  (self.robot.get_top_coords_from_furniture("Couch")[1] + (self.robot.get_top_coords_from_furniture("Couch")[1] + self.robot.get_bottom_coords_from_furniture("Couch")[1])/2.0)/2.0, 
-                                  self.robot.get_height_from_furniture("Couch")[0]], # manual values for now
-                "speak": "hri/couch_left"
+                "name": "grey_couch_left",  
+                "furniture": "Grey Couch",
+                "center_coords": [(self.robot.get_top_coords_from_furniture("Grey Couch")[0] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[0])/2.0, 
+                                  (self.robot.get_top_coords_from_furniture("Grey Couch")[1] + (self.robot.get_top_coords_from_furniture("Grey Couch")[1] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[1])/2.0)/2.0, 
+                                  self.robot.get_height_from_furniture("Grey Couch")[0]], # manual values for now
+                "speak": "hri/grey_couch_left"
             },
             {
-                "name": "couch_right", 
-                "furniture": "couch",
-                "center_coords": [(self.robot.get_top_coords_from_furniture("Couch")[0] + self.robot.get_bottom_coords_from_furniture("Couch")[0])/2.0, 
-                                  (self.robot.get_bottom_coords_from_furniture("Couch")[1] + (self.robot.get_top_coords_from_furniture("Couch")[1] + self.robot.get_bottom_coords_from_furniture("Couch")[1])/2.0)/2.0, 
-                                  self.robot.get_height_from_furniture("Couch")[0]], # manual values for now
-                "speak": "hri/couch_right"
+                "name": "grey_couch_right", 
+                "furniture": "Grey Couch",
+                "center_coords": [(self.robot.get_top_coords_from_furniture("Grey Couch")[0] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[0])/2.0, 
+                                  (self.robot.get_bottom_coords_from_furniture("Grey Couch")[1] + (self.robot.get_top_coords_from_furniture("Grey Couch")[1] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[1])/2.0)/2.0, 
+                                  self.robot.get_height_from_furniture("Grey Couch")[0]], # manual values for now
+                "speak": "hri/grey_couch_right"
+            },
+
+            {
+                "name": "coloured_couch_left",  
+                "furniture": "Coloured Couch",
+                "center_coords": [(self.robot.get_top_coords_from_furniture("Coloured Couch")[0] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[0])/2.0, 
+                                  (self.robot.get_top_coords_from_furniture("Coloured Couch")[1] + (self.robot.get_top_coords_from_furniture("Coloured Couch")[1] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[1])/2.0)/2.0, 
+                                  self.robot.get_height_from_furniture("Coloured Couch")[0]], # manual values for now
+                "speak": "hri/coloured_couch_left"
+            },
+            {
+                "name": "coloured_couch_right", 
+                "furniture": "Coloured Couch",
+                "center_coords": [(self.robot.get_top_coords_from_furniture("Coloured Couch")[0] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[0])/2.0, 
+                                  (self.robot.get_bottom_coords_from_furniture("Coloured Couch")[1] + (self.robot.get_top_coords_from_furniture("Coloured Couch")[1] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[1])/2.0)/2.0, 
+                                  self.robot.get_height_from_furniture("Coloured Couch")[0]], # manual values for now
+                "speak": "hri/coloured_couch_right"
             },
             ### FOR CASES WHERE COUCH IS VERTICAL IN 2D MAP
             # {
@@ -149,24 +166,26 @@ class TaskMain():
         # for sf in self.SITTING_PLACES_IN_FURNITURE:
         #     print(" - ", sf["name"], " in ", sf["furniture"], " seats at ", sf["center_coords"])
 
-        self.ENTRANCE_DOOR_FURNITURE = "exit"
+        self.ENTRANCE_DOOR_FURNITURE = "entrace"
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
+        self.default_speak_file = "hri/grey_couch_center"
         # Which objects should be acquired
         self.OPEN_DOOR_GUEST1 = False
         self.OPEN_DOOR_GUEST2 = False
         self.HANDOVER_GUEST2_BAG = False
         
         # Initial Position
-        self.initial_position = [2.0, 4.0, -45.0]
+        self.initial_position = [9.35, 0.13, -135.0]
         # print(self.initial_position)
         
         # self.start_follow_position = self.initial_position
         self.start_follow_position = [2.0, 4.0, -90.0] # position to start following host after introducing guests
         # print(self.start_follow_position)
 
-        self.guest_communication_position = self.robot.get_navigation_coords_from_furniture("couch")
+        # self.guest_communication_position = self.robot.get_navigation_coords_from_furniture("couch")
+        self.guest_communication_position = [6.96, -0.65, -45.0]
         # self.guest_communication_position = [2.0, 2.5, 0.0] # position to communicate with guests at sitting area
         # print(self.guest_communication_position)
 
@@ -198,7 +217,7 @@ class TaskMain():
         self.look_right = [-90, 0]
         self.search_tetas = [[-60, -30], [0, -30], [60, -30]]
 
-        self.state = self.task_states["Receive_guest1"]
+        self.state = self.task_states["Waiting_for_task_start"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -291,15 +310,17 @@ class TaskMain():
                 command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
 
                 self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=False)
+                self.robot.set_speech(filename="hri/remember_name_and_drink", wait_for_end_of=False)
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) 
-
-                a = time.time()
-                self.GUEST1_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
-                print("Name:", self.GUEST1_NAME, time.time()-a)
                 
-                b = time.time()
+
+                # a = time.time()
+                self.GUEST1_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
+                # print("Name:", self.GUEST1_NAME, time.time()-a)
+                
+                # b = time.time()
                 self.GUEST1_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
-                print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
+                # print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
 
                 self.robot.save_speech(command=self.GUEST1_NAME,  filename=self.GUEST1_NAME,  quick_voice=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST1_DRINK, filename=self.GUEST1_DRINK, quick_voice=False, wait_for_end_of=False)
@@ -315,16 +336,6 @@ class TaskMain():
 
                 self.robot.set_speech(filename="hri/please_follow_me", wait_for_end_of=False)
 
-                time.sleep(10.0)
-
-                self.robot.set_speech(filename="receptionist/dear_second_guest", wait_for_end_of=True)
-                self.robot.set_speech(filename="receptionist/first_guest_name_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="temp/"+self.GUEST1_NAME.lower(), wait_for_end_of=True)
-                self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="temp/"+self.GUEST1_DRINK.lower(), wait_for_end_of=True)
-
-                while True:
-                    pass
 
                 self.state = self.task_states["Move_guest1_to_sitting_area"]
 
@@ -389,7 +400,7 @@ class TaskMain():
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
                     neck_position = self.robot.get_location_coords_from_furniture("couch")
-                    speak_file = "hri/couch_center"
+                    speak_file = self.default_speak_file
 
                 else:
                     max_name = max(
@@ -410,7 +421,7 @@ class TaskMain():
                 #     print(f"{k}: {v}")
 
                 self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
-                self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
+                # self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
                 self.robot.set_speech(filename="hri/i_am_looking_at", wait_for_end_of=True)
                 self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
                 if self.SIDE_TO_LOOK.lower() == "right":
@@ -509,16 +520,18 @@ class TaskMain():
                 command = self.robot.get_audio(gpsr=True, question="receptionist/receptionist_question", face_hearing="charmie_face_green_receptionist", wait_for_end_of=True)
 
                 self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=False)
+                self.robot.set_speech(filename="hri/remember_name_and_drink", wait_for_end_of=False)
                 # self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=False) # placed here for time optimization # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
-
-                a = time.time()
-                self.GUEST2_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
-                print("Name:", self.GUEST2_NAME, time.time()-a)
                 
-                b = time.time()
+
+                # a = time.time()
+                self.GUEST2_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
+                # print("Name:", self.GUEST2_NAME, time.time()-a)
+                
+                # b = time.time()
                 self.GUEST2_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
-                print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
+                # print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
                 
                 self.robot.save_speech(command=self.GUEST2_NAME,  filename=self.GUEST2_NAME,  quick_voice=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, wait_for_end_of=False)
@@ -657,7 +670,7 @@ class TaskMain():
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
                     neck_position = [self.robot.get_location_coords_from_furniture("couch")[0], self.robot.get_location_coords_from_furniture("couch")[1], 0.9]
-                    speak_file = "hri/couch_center"
+                    speak_file = self.default_speak_file
 
                 else:
                     max_name = max(
@@ -701,21 +714,11 @@ class TaskMain():
                 # Introduce both guests
 
                 self.robot.set_speech(filename="hri/introduce_guests", wait_for_end_of=True)
-                self.robot.set_neck_coords(position=guest1_coords, wait_for_end_of=False)
-
-                self.robot.set_speech(filename="receptionist/dear_first_guest", wait_for_end_of=True)
-                self.robot.detected_person_to_face_path(person=self.GUEST2, just_face=True, send_to_face=True)
-                self.robot.set_speech(filename="receptionist/second_guest_name_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="temp/"+self.GUEST2_NAME.lower(), wait_for_end_of=True)
-                self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
-                self.robot.set_speech(filename="temp/"+self.GUEST2_DRINK.lower(), wait_for_end_of=True)
-                self.robot.set_face("charmie_face", wait_for_end_of=False)
                 
                 if self.SIDE_TO_LOOK.lower() == "right":
                     self.robot.set_neck(position=self.look_right, wait_for_end_of=False)
                 elif self.SIDE_TO_LOOK.lower() == "left":
                     self.robot.set_neck(position=self.look_left, wait_for_end_of=False)
-
                 self.robot.set_speech(filename="receptionist/dear_second_guest", wait_for_end_of=True)
                 self.robot.detected_person_to_face_path(person=self.GUEST1, just_face=True, send_to_face=True)
                 self.robot.set_speech(filename="receptionist/first_guest_name_is", wait_for_end_of=True)
@@ -725,7 +728,7 @@ class TaskMain():
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
-                self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
+                # self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
                 self.robot.set_speech(filename="hri/i_am_looking_at", wait_for_end_of=True)
                 self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
                 if self.SIDE_TO_LOOK.lower() == "right":
@@ -736,7 +739,17 @@ class TaskMain():
                 self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
                 self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
 
-                self.state = self.task_states["Move_to_start_follow_position"]
+                self.robot.set_neck_coords(position=guest1_coords, wait_for_end_of=False)
+                self.robot.set_speech(filename="receptionist/dear_first_guest", wait_for_end_of=True)
+                self.robot.detected_person_to_face_path(person=self.GUEST2, just_face=True, send_to_face=True)
+                self.robot.set_speech(filename="receptionist/second_guest_name_is", wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST2_NAME.lower(), wait_for_end_of=True)
+                self.robot.set_speech(filename="receptionist/favourite_drink_is", wait_for_end_of=True)
+                self.robot.set_speech(filename="temp/"+self.GUEST2_DRINK.lower(), wait_for_end_of=True)
+                self.robot.set_face("charmie_face", wait_for_end_of=False)
+
+                # self.state = self.task_states["Move_to_start_follow_position"] # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
+                self.state = self.task_states["Final_State"] # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
 
 
             elif self.state == self.task_states["Move_to_start_follow_position"]:
@@ -748,8 +761,7 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 self.robot.set_speech(filename="rooms/"+self.SITTING_AREA_ROOM.replace(" ","_").lower(), wait_for_end_of=False)
                 
-                # self.state = self.task_states["Follow_host_to_bag_drop"] # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
-                self.state = self.task_states["Final_State"] # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
+                self.state = self.task_states["Follow_host_to_bag_drop"] 
 
 
             elif self.state == self.task_states["Follow_host_to_bag_drop"]:
@@ -762,7 +774,7 @@ class TaskMain():
                 
                 selected_option = None
                 while selected_option != ["Yes"]:
-                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Are you ready to be followed?", start_speak_file="hri/ready_to_follow", speak_results=False, wait_for_end_of=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, mode="single", instruction="Are you ready to be followed?", start_speak_file="hri/ready_to_follow", speak_results=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     
                 self.robot.set_speech(filename="hri/follow_host_track_instructions", wait_for_end_of=True)
@@ -786,7 +798,7 @@ class TaskMain():
 
                 selected_option = None
                 while selected_option != ["Yes"]:
-                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, speak_timeout=False, wait_for_end_of=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, speak_timeout=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     # NAVIGATION: STOP FOLLOWING HOST
 
