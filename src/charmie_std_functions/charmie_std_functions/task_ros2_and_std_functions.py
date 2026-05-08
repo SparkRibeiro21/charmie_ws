@@ -4085,6 +4085,9 @@ class RobotStdFunctions():
         request = GetLLMResponse.Request()
         request.command = command
         request.mode = mode
+        
+        self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False # to prevent possible wfeo as false that did not have a _is_done() check that turned down the flag
+
         self.node.call_llm_ollama_gpsr_high_level_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
@@ -4092,9 +4095,20 @@ class RobotStdFunctions():
                 pass
             self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False
 
-        print(self.node.llm_ollama_gpsr_high_level_response)
+        ### if wfeo
+        ###     The result is returned by this function
+        ### else
+        ###     The task node must get the response command from: self.node.llm_ollama_gpsr_high_level_response
+
         return self.node.llm_ollama_gpsr_high_level_response
     
+    def get_llm_ollama_gpsr_high_level_is_done(self):
+        if self.node.waited_for_end_of_llm_ollama_gpsr_high_level:
+            self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False
+            return True
+        else:
+            return False
+
     def get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
 
         request = GetLLMResponse.Request()
