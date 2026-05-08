@@ -21,7 +21,7 @@ ros2_modules = {
     "charmie_lidar":                False,
     "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
-    "charmie_llm":                  False,
+    "charmie_llm":                  True,
     "charmie_localisation":         False,
     "charmie_low_level":            False,
     "charmie_navigation":           False,
@@ -359,8 +359,43 @@ class TaskMain():
 
                 ### 2 OPTIONS: MUSIC, OR PERIODIC SPEAKS
 
-                ### LOGIC FOR LLM
+                request = "Bring me the milk from the coffee table." 
+                request2 = "Bring me the wine from the coffee table." 
+                request3 = "Bring me the beer from the coffee table." 
 
+                ### LOGIC FOR LLM w/ MUSIC
+                # self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
+                """ hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=False)
+                self.robot.set_speech(filename="music/music_soy_el_fuego", breakable_play=True, wait_for_end_of=False)
+                
+                while not self.robot.get_llm_ollama_gpsr_high_level_is_done():
+                    print("checking llm")
+                    time.sleep(0.05)
+                
+                self.robot.set_speech(filename="generic/yes", break_play=True)
+                command = self.robot.node.llm_ollama_gpsr_high_level_response[0] """
+
+                hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request2, mode="", wait_for_end_of=True)
+
+                ### LOGIC FOR LLM w/ PERIODIC SPEAKS
+                # self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
+                hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=False)
+                
+                start_time = time.time()
+                speak_period = 3.0
+                self.robot.set_speech(filename="generic/waiting_start_button", breakable_play=True, wait_for_end_of=False)
+                while not self.robot.get_llm_ollama_gpsr_high_level_is_done():
+                    print("checking llm")
+                    if time.time() - start_time >= speak_period:
+                        start_time = time.time()
+                        self.robot.set_speech(filename="generic/waiting_start_button", breakable_play=True, wait_for_end_of=False)
+                    time.sleep(0.05)
+                    
+                self.robot.set_speech(filename="generic/yes", break_play=True)
+                command = self.robot.node.llm_ollama_gpsr_high_level_response[0]
+
+
+                hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request3, mode="", wait_for_end_of=True)
 
                 ### LOGIC FOR SAVE FILE W/ MUSIC
                 # SAVE SPEAKER: WFEO FALSE
@@ -368,7 +403,8 @@ class TaskMain():
                 # WHILE not self.robot.speaker_save_is_done()
                 #     time.sleep(0.05)
                 # SPEAK: w/ BREAK PLAY AS TRUE                    
-                """ command = "I will move to the kitchen, I will search for the cabinet. I will move to the cabinet. I will search for the milk. If found I will pick the milk. I will move to the instruction point. I will give you the milk."
+                """ 
+                # command = "I will move to the kitchen, I will search for the cabinet. I will move to the cabinet. I will search for the milk. If found I will pick the milk. I will move to the instruction point. I will give you the milk."
                 current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
                 self.robot.save_speech(command=command, filename=current_datetime, quick_voice=False, wait_for_end_of=False)
                 self.robot.set_speech(filename="music/music_soy_el_fuego", breakable_play=True, wait_for_end_of=False)
@@ -381,14 +417,15 @@ class TaskMain():
                 self.robot.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True) """
             
                 ### LOGIC FOR SAVE FILE WITH PERIODIC SPEAKS
-                command = "I will move to the kitchen, I will search for the cabinet. I will move to the cabinet. I will search for the milk. If found I will pick the milk. I will move to the instruction point. I will give you the milk."
+                # command = "I will move to the kitchen, I will search for the cabinet. I will move to the cabinet. I will search for the milk. If found I will pick the milk. I will move to the instruction point. I will give you the milk."
                 current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
                 self.robot.save_speech(command=command, filename=current_datetime, quick_voice=False, wait_for_end_of=False)
                 
                 start_time = time.time()
                 speak_period = 3.0
+                self.robot.set_speech(filename="generic/waiting_start_button", breakable_play=True, wait_for_end_of=False)
                 while not self.robot.save_speech_is_done():
-                    print("checking")
+                    print("checking save speak")
                     if time.time() - start_time >= speak_period:
                         start_time = time.time()
                         self.robot.set_speech(filename="generic/waiting_start_button", breakable_play=True, wait_for_end_of=False)
