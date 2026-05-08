@@ -21,7 +21,7 @@ ros2_modules = {
     "charmie_lidar":                False,
     "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
-    "charmie_llm":                  True,
+    "charmie_llm":                  False,
     "charmie_localisation":         False,
     "charmie_low_level":            False,
     "charmie_navigation":           False,
@@ -65,10 +65,11 @@ class TaskMain():
         LLM_gpsr = 2
         LLM_hri= 3
         LLM_Ollama_first_tests = 4
-        Final_State = 5
+        Test_speaks_with_breaks_for_gpsr = 5
+        Final_State = 6
 
         # VARS ...
-        self.state = LLM_gpsr
+        self.state = Test_speaks_with_breaks_for_gpsr
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -351,6 +352,51 @@ class TaskMain():
                 # resp = self.robot.get_llm_ollama_gpsr_low_level(command="Test L", mode="HRI X", wait_for_end_of=True)
                 # print(resp)
 
+                while True:
+                    pass
+
+            elif self.state == Test_speaks_with_breaks_for_gpsr:
+
+                ### 2 OPTIONS: MUSIC, OR PERIODIC SPEAKS
+
+                ### LOGIC FOR LLM
+
+
+                ### LOGIC FOR SAVE FILE W/ MUSIC
+                # SAVE SPEAKER: WFEO FALSE
+                # SPEAK: MUSIC WITH BREAKABLE PLAY AS TRUE
+                # WHILE not self.robot.speaker_save_is_done()
+                #     time.sleep(0.05)
+                # SPEAK: w/ BREAK PLAY AS TRUE                    
+                """ command = "I will move to the kitchen, I will search for the cabinet. I will move to the cabinet. I will search for the milk. If found I will pick the milk. I will move to the instruction point. I will give you the milk."
+                current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                self.robot.save_speech(command=command, filename=current_datetime, quick_voice=False, wait_for_end_of=False)
+                self.robot.set_speech(filename="music/music_soy_el_fuego", breakable_play=True, wait_for_end_of=False)
+                
+                while not self.robot.save_speech_is_done():
+                    print("checking")
+                    time.sleep(0.05)
+                
+                self.robot.set_speech(filename="generic/yes", break_play=True)
+                self.robot.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True) """
+            
+                ### LOGIC FOR SAVE FILE WITH PERIODIC SPEAKS
+                command = "I will move to the kitchen, I will search for the cabinet. I will move to the cabinet. I will search for the milk. If found I will pick the milk. I will move to the instruction point. I will give you the milk."
+                current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+                self.robot.save_speech(command=command, filename=current_datetime, quick_voice=False, wait_for_end_of=False)
+                
+                start_time = time.time()
+                speak_period = 3.0
+                while not self.robot.save_speech_is_done():
+                    print("checking")
+                    if time.time() - start_time >= speak_period:
+                        start_time = time.time()
+                        self.robot.set_speech(filename="generic/waiting_start_button", breakable_play=True, wait_for_end_of=False)
+                    time.sleep(0.05)
+                
+                self.robot.set_speech(filename="generic/yes", break_play=True)
+                self.robot.set_speech(filename="temp/"+current_datetime, wait_for_end_of=True)
+            
                 while True:
                     pass
                                            
