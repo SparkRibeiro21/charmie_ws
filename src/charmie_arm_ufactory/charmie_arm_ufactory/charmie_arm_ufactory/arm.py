@@ -1,7 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool
-from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint
+from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, \
+	SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, Call
 from charmie_interfaces.msg import ArmController
 from charmie_interfaces.srv import Trigger, SetFloat
 from functools import partial
@@ -38,6 +39,8 @@ class ArmUfactory(Node):
 		#self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
 		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
+		self.clean_error_client = self.create_client(Call, '/xarm/clean_error')
+		self.clean_warn_client = self.create_client(Call, '/xarm/clean_warn')
 
 		# ARM SERVICES SERVER:
 		self.set_table_height_service = self.create_service(SetFloat, 'set_table_height', self.set_table_height_callback)
@@ -75,7 +78,16 @@ class ArmUfactory(Node):
 
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
-		
+
+		while not self.set_state_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Set State Client...")
+
+		while not self.clean_error_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Clean Error...")
+
+		while not self.clean_warn_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Clean Warn...")
+				
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()
 		self.joint_values_req = MoveJoint.Request()
@@ -364,67 +376,76 @@ class ArmUfactory(Node):
 		
 	def setup_arm_movement_services(self):
 
-		########### EXPLANATION OF EACH MODE: ########### 
-		#   0: position mode
-		#   1: servo motion mode
-		#   2: joint teaching mode
-		#   4: joint velocity mode
-		#   5: cartesian velocity mode
-		#   6: joint online trajectory planning mode
-		#   7: cartesian online trajectory planning mode
-
-		set_mode_client_req = SetInt16.Request()
-		set_mode_client_req.data = 0
-		self.future = self.set_mode_client.call_async(set_mode_client_req)
+		# After an emergency stop, the arm may still have error/warning flags active.
+		# If these are not cleared, arm motion commands can fail even though gripper commands work.
+		clean_error_req = Call.Request()
+		self.future = self.clean_error_client.call_async(clean_error_req)
 		rclpy.spin_until_future_complete(self, self.future)
+		print("clean_error:", self.future.result())
 
-		print('mode_client')
+		time.sleep(0.2)
 
-		########### EXPLANATION OF EACH STATE: ###########
-		#   0: motion state
-		#   3: pause state
-		#   4: stop state
-
-		set_state_client_req = SetInt16.Request()
-		set_state_client_req.data = 0
-		self.future = self.set_state_client.call_async(set_state_client_req)
+		clean_warn_req = Call.Request()
+		self.future = self.clean_warn_client.call_async(clean_warn_req)
 		rclpy.spin_until_future_complete(self, self.future)
+		print("clean_warn:", self.future.result())
 
-		print('state_client')
+		time.sleep(0.2)
 
-		########### EXPLANATION OF MOTION ENABLE: ###########
-		#   enable: 1 means enable, 0 means disable
-
+		# Enable motion on all joints.
+		# id = 8 means all joints in xArm/UFactory convention.
 		motion_enable_req = SetInt16ById.Request()
 		motion_enable_req.id = 8
 		motion_enable_req.data = 1
 		self.future = self.motion_enable_client.call_async(motion_enable_req)
 		rclpy.spin_until_future_complete(self, self.future)
+		print("motion_enable:", self.future.result())
 
-		print('motion_enable')
+		time.sleep(0.2)
 
+		# Set arm to position mode.
+		# mode 0 = normal position control mode, used by set_servo_angle and set_position.
+		set_mode_client_req = SetInt16.Request()
+		set_mode_client_req.data = 0
+		self.future = self.set_mode_client.call_async(set_mode_client_req)
+		rclpy.spin_until_future_complete(self, self.future)
+		print("set_mode:", self.future.result())
+
+		time.sleep(0.2) # do not change this sleep time, as the controller needs a moment to fully accept the mode change before accepting the state change.
+
+		# Set arm state to ready/motion state.
+		# state 0 = ready to move.
+		set_state_client_req = SetInt16.Request()
+		set_state_client_req.data = 0
+		self.future = self.set_state_client.call_async(set_state_client_req)
+		rclpy.spin_until_future_complete(self, self.future)
+		print("set_state:", self.future.result())
+
+		# Give the controller a moment to fully accept the ready state before sending movement.
+		time.sleep(0.2)
+
+		# Enable the gripper.
 		set_gripper_enable_req = SetInt16.Request()
 		set_gripper_enable_req.data = 1
 		self.future = self.set_gripper_enable.call_async(set_gripper_enable_req)
 		rclpy.spin_until_future_complete(self, self.future)
+		print("gripper_enable:", self.future.result())
 
-		print('gripper_enable')
-
+		# Set gripper mode.
+		# mode 0 = normal position mode for gripper.
 		set_gripper_mode_req = SetInt16.Request()
 		set_gripper_mode_req.data = 0
 		self.future = self.set_gripper_mode.call_async(set_gripper_mode_req)
 		rclpy.spin_until_future_complete(self, self.future)
+		print("gripper_mode:", self.future.result())
 
-		print('gripper_mode')
-
-		# Velocidade do gripper varia entre 1.0 e 5000.0
-
-		set_gripper_speed_req= SetFloat32.Request()
+		# Set default gripper speed.
+		# Range is usually 1.0 to 5000.0.
+		set_gripper_speed_req = SetFloat32.Request()
 		set_gripper_speed_req.data = 1500.0
 		self.future = self.set_gripper_speed.call_async(set_gripper_speed_req)
 		rclpy.spin_until_future_complete(self, self.future)
-
-		print('gripper_speed')
+		print("gripper_speed:", self.future.result())
 
 	def deg_to_rad(self, deg):
 		rad = [deg[0] * math.pi / 180,
@@ -442,7 +463,21 @@ class ArmUfactory(Node):
 
 	def callback_service_tr(self, future):
 		try:
-			print(future.result())			
+			result = future.result()
+			print(result)
+
+			if result is None:
+				self.get_logger().error("Service returned None. Not advancing state.")
+				return
+
+			if hasattr(result, "ret") and result.ret != 0:
+				self.get_logger().error(
+					f"XARM command failed with ret={result.ret}. "
+					f"movement={self.next_arm_movement}, estado_tr={self.estado_tr}. "
+					"Not advancing state."
+				)
+				return
+
 			self.estado_tr += 1
 			print("ESTADO = ", self.estado_tr)
 			self.movement_selection()
@@ -452,7 +487,7 @@ class ArmUfactory(Node):
 			
 	def callback_service_tr_gripper(self, future):
 		try:
-			print(future.result())
+			# print(future.result())
 
 			self.gripper_tr = future.result().data
 			
@@ -461,7 +496,7 @@ class ArmUfactory(Node):
 				self.estado_tr += 1
 				self.gripper_reached_target.data = False
 			
-			print("ESTADO = ", self.estado_tr)
+			# print("ESTADO = ", self.estado_tr)
 			self.gripper_tr = future.result().data
 			self.movement_selection()
 
@@ -558,7 +593,7 @@ class ArmUfactory(Node):
 		self.get_logger().info("FINISHED MOVEMENT")	
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
-		print('Abertura gripper em mm =', current_gripper_pos)
+		# print('Abertura gripper em mm =', current_gripper_pos)
 		self.gripper_opening.append(current_gripper_pos)
 		if abs(current_gripper_pos - desired_gripper_pos) <= 5.0: #basicamente se a garra estiver no valor pretendido com uma diferença de 50mm aceito
 			print('Valor de gripper alcançado. Vou para o próximo estado. \n')
@@ -1411,7 +1446,7 @@ class ArmUfactory(Node):
 	def movement_selection(self):
 		
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
-		print('valor vindo do pick and place: ', self.next_arm_movement)
+		# print('valor vindo do pick and place: ', self.next_arm_movement)
 		
 		match self.next_arm_movement:
 			
