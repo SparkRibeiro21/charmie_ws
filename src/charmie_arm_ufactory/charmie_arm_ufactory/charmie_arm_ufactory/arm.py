@@ -41,6 +41,7 @@ class ArmUfactory(Node):
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
 		self.clean_error_client = self.create_client(Call, '/xarm/clean_error')
 		self.clean_warn_client = self.create_client(Call, '/xarm/clean_warn')
+		self.set_only_check_type_client = self.create_client(SetInt16, '/xarm/set_only_check_type')
 
 		# ARM SERVICES SERVER:
 		self.set_table_height_service = self.create_service(SetFloat, 'set_table_height', self.set_table_height_callback)
@@ -87,6 +88,9 @@ class ArmUfactory(Node):
 
 		while not self.clean_warn_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Clean Warn...")
+		
+		while not self.set_only_check_type_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Set Only Check Type...")
 				
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()
