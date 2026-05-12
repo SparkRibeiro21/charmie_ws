@@ -623,7 +623,7 @@ class ROS2TaskNode(Node):
         if flag.data:
             self.arm_message = "Arm successfully moved"
         else:
-            self.arm_message = "Wrong Movement Received"
+            self.arm_message = "Wrong Movement Received or Could not Perform Movement"
 
         self.get_logger().info("Received Arm Finished")
 

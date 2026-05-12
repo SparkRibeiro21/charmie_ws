@@ -34,7 +34,7 @@ ros2_modules = {
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
@@ -97,18 +97,51 @@ class TaskMain():
 
                 while True:
 
-                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                    
+                    print("MOVE 1")
+                    self.safe_place_final = [1000.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
+                    s, m = self.robot.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    print("success:", s)                    
                     time.sleep(3.0)
                     
-                    self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
-                    
-                    time.sleep(1.0)
-                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
-
+                    print("MOVE 2")
+                    self.safe_place_final = [100.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
+                    s, m = self.robot.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    print("success:", s)
                     time.sleep(3.0)
 
-                    pass
+                    """ print("MOVE 3")
+                    self.safe_place_final = [100.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
+                    s, m = self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    print("success:", s)
+                    time.sleep(3.0) """
+                    
+                    print("MOVE 3")
+                    self.safe_place_final = [-100.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
+                    s, m = self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    print("success:", s)                 
+                    time.sleep(3.0)
+
+                    print("MOVE 4")
+                    self.safe_place_final = [100.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
+                    s, m = self.robot.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    print("success:", s)              
+                    time.sleep(3.0)
+
+                    print("MOVE 5")
+                    self.safe_place_final = [1000.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
+                    s, m = self.robot.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    print("success:", s)                    
+                    time.sleep(3.0)
+
+                    print("MOVE 6")
+                    self.safe_place_final = [-100.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
+                    s, m = self.robot.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    print("success:", s)              
+                    time.sleep(3.0)
+
+    
+                    # while True:
+                    #     pass
                     
                     """ self.robot.wait_for_start_button()
 
