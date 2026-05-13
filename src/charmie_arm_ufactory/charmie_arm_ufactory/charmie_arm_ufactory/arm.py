@@ -42,6 +42,9 @@ class ArmUfactory(Node):
 		self.clean_error_client = self.create_client(Call, '/xarm/clean_error')
 		self.clean_warn_client = self.create_client(Call, '/xarm/clean_warn')
 		self.set_only_check_type_client = self.create_client(SetInt16, '/xarm/set_only_check_type')
+		self.get_state_client = self.create_client(GetInt16, '/xarm/get_state')
+		self.get_err_warn_code_client = self.create_client(GetInt16List, '/xarm/get_err_warn_code')
+
 
 		# ARM SERVICES SERVER:
 		self.set_table_height_service = self.create_service(SetFloat, 'set_table_height', self.set_table_height_callback)
@@ -92,6 +95,12 @@ class ArmUfactory(Node):
 		while not self.set_only_check_type_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set Only Check Type...")
 				
+		while not self.get_state_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Get State...")
+
+		while not self.get_err_warn_code_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Get Err Warn Code...")
+
 		self.gripper_reached_target = Bool()
 		self.set_gripper_req = GripperMove.Request()
 		self.joint_values_req = MoveJoint.Request()
@@ -380,6 +389,8 @@ class ArmUfactory(Node):
 		
 	def setup_arm_movement_services(self):
 
+		time.sleep(0.2)
+
 		# After an emergency stop, the arm may still have error/warning flags active.
 		# If these are not cleared, arm motion commands can fail even though gripper commands work.
 		clean_error_req = Call.Request()
@@ -393,6 +404,15 @@ class ArmUfactory(Node):
 		self.future = self.clean_warn_client.call_async(clean_warn_req)
 		rclpy.spin_until_future_complete(self, self.future)
 		print("clean_warn:", self.future.result())
+
+		time.sleep(0.2)
+
+		# Ensure check-only mode is off in case previous node died during a safety check
+		only_check_req = SetInt16.Request()
+		only_check_req.data = 0
+		self.future = self.set_only_check_type_client.call_async(only_check_req)
+		rclpy.spin_until_future_complete(self, self.future)
+		print("reset_only_check_type:", self.future.result())
 
 		time.sleep(0.2)
 
@@ -464,6 +484,34 @@ class ArmUfactory(Node):
 	def deg_to_rad_single(self, deg):
 		rad = deg * math.pi / 180,
 		return rad
+
+	def set_arm_ready_after_check_(self):
+		set_mode_req = SetInt16.Request()
+		set_mode_req.data = 0
+		self.future = self.set_mode_client.call_async(set_mode_req)
+		self.future.add_done_callback(partial(self.callback_service_tr))
+
+	def set_arm_state_ready_(self):
+		set_state_req = SetInt16.Request()
+		set_state_req.data = 0
+		self.future = self.set_state_client.call_async(set_state_req)
+		self.future.add_done_callback(partial(self.callback_service_tr))
+		
+	def set_pause_time_(self, seconds=0.2):
+		req = SetFloat32.Request()
+		req.data = float(seconds)
+		self.future = self.set_pause_time_client.call_async(req)
+		self.future.add_done_callback(partial(self.callback_service_tr))
+
+	def clean_error_(self):
+		req = Call.Request()
+		self.future = self.clean_error_client.call_async(req)
+		self.future.add_done_callback(partial(self.callback_service_tr))
+
+	def clean_warn_(self):
+		req = Call.Request()
+		self.future = self.clean_warn_client.call_async(req)
+		self.future.add_done_callback(partial(self.callback_service_tr))
 
 	def callback_service_tr(self, future):
 		try:
