@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from example_interfaces.msg import Bool
 from xarm_msgs.srv import MoveCartesian, MoveJoint, SetInt16ById, SetInt16, GripperMove, GetFloat32, \
-	SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, Call
+	SetTcpLoad, SetFloat32, PlanPose, PlanExec, PlanJoint, Call, GetInt16, GetInt16List
 from charmie_interfaces.msg import ArmController
 from charmie_interfaces.srv import Trigger, SetFloat
 from functools import partial
@@ -114,6 +114,8 @@ class ArmUfactory(Node):
 
 		self.wrong_movement_received = False
 		self.end_of_movement = False
+		self.safety_checking = False
+		self.is_safe_to_move = True
 		self.gripper_tr = 0.0
 		self.gripper_opening = []
 		self.estado_tr = 0
@@ -556,6 +558,13 @@ class ArmUfactory(Node):
 		except Exception as e:
 			self.get_logger().error("Service call failed: %r" % (e,))
 	
+	def callback_err_warn_code(self, future):
+		try:
+			result = future.result()
+			print(f"[err_warn_code] ret={result.ret} message='{result.message}' datas={result.datas}")
+			# datas[0] = error code, datas[1] = warn code
+		except Exception as e:
+			self.get_logger().error("get_err_warn_code failed: %r" % (e,))
 
 	### ARM STD FUNCTIONS ###
 
@@ -618,6 +627,13 @@ class ArmUfactory(Node):
 		self.future = self.set_joint_client.call_async(joint_values)
 		self.future.add_done_callback(partial(self.callback_service_tr))
 
+	def safety_check(self, flag=True):
+		self.safety_checking = flag
+		req = SetInt16.Request()
+		req.data = 2 if flag else 0
+		self.future = self.set_only_check_type_client.call_async(req)
+		self.future.add_done_callback(partial(self.callback_service_tr))
+		
 	def return_if_object_is_grabbed_finish_arm_movement_(self, min_object_grabbed_position=5.0):
 
 			temp = Bool()
@@ -635,13 +651,15 @@ class ArmUfactory(Node):
 		
 	def finish_arm_movement_(self):
 		temp = Bool()
-		temp.data = True
+		temp.data = self.is_safe_to_move
 		self.flag_arm_finish_publisher.publish(temp)
 		self.estado_tr = 0
 		self.finished_setup_movement = True
 		self.joint_motion_values = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		self.move_tool_line_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 		self.linear_motion_pose  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+		self.is_safe_to_move = True
+		self.safety_checking = False
 		self.get_logger().info("FINISHED MOVEMENT")	
 
 	def check_gripper(self, current_gripper_pos, desired_gripper_pos):
@@ -1541,6 +1559,8 @@ class ArmUfactory(Node):
 				self.adjust_linear_motion()
 			case "adjust_move_tool_line":
 				self.adjust_move_tool_line()
+			case "adjust_move_tool_line_with_safety":
+				self.adjust_move_tool_line_with_safety()
 			case "adjust_move_tool_line_quick":
 				self.adjust_move_tool_line_quick()
 			case "adjust_move_tool_line_quick_with_open_gripper_first":
