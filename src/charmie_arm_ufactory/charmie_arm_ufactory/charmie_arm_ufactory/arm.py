@@ -129,6 +129,7 @@ class ArmUfactory(Node):
 		self.setup_arm_movement_variables()
 		self.setup_arm_movement_services()
 		print('---------')
+		self.get_logger().info("Performing initial setup movement...")
 		self.movement_selection()
 
 		# this code forces the ROS2 component to wait for the models initialization with an empty frame, so that when turned ON does spend time with initializations and sends detections imediatly 
@@ -518,11 +519,11 @@ class ArmUfactory(Node):
 	def callback_service_tr(self, future):
 		try:
 			result = future.result()
-			print(f"[callback_service_tr] estado={self.estado_tr} movement={self.next_arm_movement} result={result}")
+			# print(f"[callback_service_tr] estado={self.estado_tr} movement={self.next_arm_movement} result={result}")
 
 			if self.safety_checking and hasattr(result, "ret") and result.ret != 0:
 				self.get_logger().error(
-					f"XARM command failed with ret={result.ret} during safety check. "
+					f"Failed safety check with ret={result.ret} during safety check. "
 					f"movement={self.next_arm_movement}, estado_tr={self.estado_tr}. "
 				)
 				self.is_safe_to_move = False
@@ -669,7 +670,7 @@ class ArmUfactory(Node):
 		# print('Abertura gripper em mm =', current_gripper_pos)
 		self.gripper_opening.append(current_gripper_pos)
 		if abs(current_gripper_pos - desired_gripper_pos) <= 5.0: #basicamente se a garra estiver no valor pretendido com uma diferença de 50mm aceito
-			print('Valor de gripper alcançado. Vou para o próximo estado. \n')
+			# print('Valor de gripper alcançado. Vou para o próximo estado. \n')
 			self.gripper_reached_target.data = True
 
 		elif len(self.gripper_opening) > 100:

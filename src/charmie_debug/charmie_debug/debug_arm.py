@@ -116,11 +116,12 @@ class TaskMain():
                     time.sleep(3.0) """
                     
                     print("MOVE 3")
-                    self.safe_place_final = [-100.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
-                    s, m = self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    # self.safe_place_final = [-100.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
+                    # s, m = self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    s, m = self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     print("success:", s)                 
                     time.sleep(3.0)
-
+                                        
                     print("MOVE 4")
                     self.safe_place_final = [100.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
                     s, m = self.robot.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
