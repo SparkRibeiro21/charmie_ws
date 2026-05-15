@@ -791,11 +791,16 @@ class ROS2TaskNode(Node):
     
         future = self.save_speech_command_client.call_async(request)
 
-        if wait_for_end_of:
-            future.add_done_callback(self.callback_call_save_speech_command)
-        else:
-            self.speech_success = True
-            self.speech_message = "Wait for answer not needed"
+        # if wait_for_end_of:
+        #     future.add_done_callback(self.callback_call_save_speech_command)
+        # else:
+        #     self.speech_success = True
+        #     self.speech_message = "Wait for answer not needed"
+
+        future.add_done_callback(self.callback_call_save_speech_command)
+        self.speech_success = True
+        self.speech_message = "Wait for answer not needed"
+        
     
     def callback_call_save_speech_command(self, future):
 
@@ -1839,6 +1844,8 @@ class RobotStdFunctions():
             request.show_in_face = show_in_face
             request.long_pause_show_in_face = long_pause_show_in_face
 
+            self.node.waited_for_end_of_save_speaking = False # to prevent possible wfeo as false that did not have a _is_done() check that turned down the flag 
+
             self.node.call_save_speech_command_server(request=request, wait_for_end_of=wait_for_end_of)
             
             if wait_for_end_of:
@@ -1852,6 +1859,13 @@ class RobotStdFunctions():
 
             self.node.get_logger().error("Could not generate save speech as as filename and command types are incompatible.")
             return False, "Could not generate save speech as as filename and command types are incompatible."
+
+    def save_speech_is_done(self):
+        if self.node.waited_for_end_of_save_speaking:
+            self.node.waited_for_end_of_save_speaking = False
+            return True
+        else:
+            return False
 
     def set_rgb(self, command=0, wait_for_end_of=True):
 
@@ -4071,6 +4085,9 @@ class RobotStdFunctions():
         request = GetLLMResponse.Request()
         request.command = command
         request.mode = mode
+        
+        self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False # to prevent possible wfeo as false that did not have a _is_done() check that turned down the flag
+
         self.node.call_llm_ollama_gpsr_high_level_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
@@ -4078,9 +4095,20 @@ class RobotStdFunctions():
                 pass
             self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False
 
-        print(self.node.llm_ollama_gpsr_high_level_response)
+        ### if wfeo
+        ###     The result is returned by this function
+        ### else
+        ###     The task node must get the response command from: self.node.llm_ollama_gpsr_high_level_response
+
         return self.node.llm_ollama_gpsr_high_level_response
     
+    def get_llm_ollama_gpsr_high_level_is_done(self):
+        if self.node.waited_for_end_of_llm_ollama_gpsr_high_level:
+            self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False
+            return True
+        else:
+            return False
+
     def get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
 
         request = GetLLMResponse.Request()
