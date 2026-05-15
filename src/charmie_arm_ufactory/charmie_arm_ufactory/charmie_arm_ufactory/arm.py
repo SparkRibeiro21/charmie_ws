@@ -518,22 +518,25 @@ class ArmUfactory(Node):
 	def callback_service_tr(self, future):
 		try:
 			result = future.result()
-			print(result)
+			print(f"[callback_service_tr] estado={self.estado_tr} movement={self.next_arm_movement} result={result}")
 
-			if result is None:
-				self.get_logger().error("Service returned None. Not advancing state.")
-				return
-
-			if hasattr(result, "ret") and result.ret != 0:
+			if self.safety_checking and hasattr(result, "ret") and result.ret != 0:
 				self.get_logger().error(
-					f"XARM command failed with ret={result.ret}. "
+					f"XARM command failed with ret={result.ret} during safety check. "
 					f"movement={self.next_arm_movement}, estado_tr={self.estado_tr}. "
-					"Not advancing state."
 				)
-				return
+				self.is_safe_to_move = False
+				
+				# JUST FOR DEBUGGING, TRY TO GET ERROR/WARNING CODES IF SAFETY CHECKING FAILS
+				# try:
+				# 	req = GetInt16List.Request()
+				# 	self.future2 = self.get_err_warn_code_client.call_async(req)
+				# 	self.future2.add_done_callback(self.callback_err_warn_code)
+				# except Exception as e2:
+				# 	self.get_logger().error(f"get_err_warn_code call failed: {e2}")
 
 			self.estado_tr += 1
-			print("ESTADO = ", self.estado_tr)
+			# print(f"[callback_service_tr] advancing to estado={self.estado_tr}")
 			self.movement_selection()
 
 		except Exception as e:
@@ -889,14 +892,39 @@ class ArmUfactory(Node):
 			case 2:
 				self.finish_arm_movement_()
 
-
 	def adjust_linear_motion(self):
 		match self.estado_tr:
 			case 0:
 				self.set_position_values_(pose=self.linear_motion_pose, speed=50, wait=True)
 			case 1:
 				self.finish_arm_movement_()
-
+	
+	def adjust_move_tool_line_with_safety(self):
+		# print(f"[safety] estado={self.estado_tr} safety_checking={self.safety_checking} is_safe_to_move={self.is_safe_to_move} pose={self.move_tool_line_pose}")
+		match self.estado_tr:
+			case 0:
+				self.safety_check(flag=True)
+			case 1:
+				# first check - always returns ret=1 due to controller warmup, discard result
+				self.safety_checking = False  # prevent callback_service_tr from setting is_safe_to_move=False
+				self.set_tool_position_values_(pose=self.move_tool_line_pose, speed=50, wait=True)
+			case 2:
+				# second check - reliable result
+				self.safety_checking = True
+				self.set_tool_position_values_(pose=self.move_tool_line_pose, speed=50, wait=True)
+			case 3:
+				self.safety_check(flag=False)
+			case 4:
+           		# dummy move to clear controller state after check-only cycle
+				self.set_tool_position_values_(pose=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], speed=50, wait=True, timeout=3.0) # this is necessary to clear some internal flags, regarding bugs in xArm API...
+			case 5:
+				if not self.is_safe_to_move:
+					self.finish_arm_movement_()
+				else:
+					self.set_tool_position_values_(pose=self.move_tool_line_pose, speed=50, wait=True)
+			case 6:
+				self.finish_arm_movement_()
+				
 	def adjust_move_tool_line(self):
 		match self.estado_tr:
 			case 0:
