@@ -3819,6 +3819,7 @@ class RobotStdFunctions():
                                 self.set_speech(filename="objects_names/cutlery", wait_for_end_of=True)
                             else:
                                 self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
+                    time.sleep(3.0) # to give time to the user to understand the request and move the objects before the next search starts
                 else:
                     DETECTED_ALL_LIST_OF_OBJECTS = True
                     # forces the change of objects name for possible detected_as_object 
