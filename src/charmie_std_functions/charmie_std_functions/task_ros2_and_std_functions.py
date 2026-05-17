@@ -3172,6 +3172,18 @@ class RobotStdFunctions():
         else:
             return False
 
+    def get_rotation_angle_to_map_coords(self, target_coords=[0.0, 0.0]):
+        
+        dx = target_coords[0] - self.node.robot_pose.position.x
+        dy = target_coords[1] - self.node.robot_pose.position.y
+
+        target_angle_deg = math.degrees(math.atan2(dy, dx))
+
+        # Normalize for interval [-180, 180]
+        rotation_deg = ((target_angle_deg - self.node.robot_pose.theta) + 180) % 360 - 180
+
+        return rotation_deg
+
     def get_minimum_radar_distance(self, direction=0.0, ang_obstacle_check=45):
 
         # success = False
