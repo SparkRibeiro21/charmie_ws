@@ -623,7 +623,7 @@ class ROS2TaskNode(Node):
         if flag.data:
             self.arm_message = "Arm successfully moved"
         else:
-            self.arm_message = "Wrong Movement Received"
+            self.arm_message = "Wrong Movement Received or Could not Perform Movement"
 
         self.get_logger().info("Received Arm Finished")
 
@@ -791,11 +791,16 @@ class ROS2TaskNode(Node):
     
         future = self.save_speech_command_client.call_async(request)
 
-        if wait_for_end_of:
-            future.add_done_callback(self.callback_call_save_speech_command)
-        else:
-            self.speech_success = True
-            self.speech_message = "Wait for answer not needed"
+        # if wait_for_end_of:
+        #     future.add_done_callback(self.callback_call_save_speech_command)
+        # else:
+        #     self.speech_success = True
+        #     self.speech_message = "Wait for answer not needed"
+
+        future.add_done_callback(self.callback_call_save_speech_command)
+        self.speech_success = True
+        self.speech_message = "Wait for answer not needed"
+        
     
     def callback_call_save_speech_command(self, future):
 
@@ -1839,6 +1844,8 @@ class RobotStdFunctions():
             request.show_in_face = show_in_face
             request.long_pause_show_in_face = long_pause_show_in_face
 
+            self.node.waited_for_end_of_save_speaking = False # to prevent possible wfeo as false that did not have a _is_done() check that turned down the flag 
+
             self.node.call_save_speech_command_server(request=request, wait_for_end_of=wait_for_end_of)
             
             if wait_for_end_of:
@@ -1852,6 +1859,13 @@ class RobotStdFunctions():
 
             self.node.get_logger().error("Could not generate save speech as as filename and command types are incompatible.")
             return False, "Could not generate save speech as as filename and command types are incompatible."
+
+    def save_speech_is_done(self):
+        if self.node.waited_for_end_of_save_speaking:
+            self.node.waited_for_end_of_save_speaking = False
+            return True
+        else:
+            return False
 
     def set_rgb(self, command=0, wait_for_end_of=True):
 
@@ -3466,8 +3480,14 @@ class RobotStdFunctions():
         
         return img_path
 
-    def search_for_objects(self, tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, 
-                           list_of_objects = [], list_of_objects_detected_as = [], use_arm=False, 
+    def search_for_objects(self, 
+                           tetas, 
+                           time_in_each_frame=2.0, 
+                           time_wait_neck_move_pre_each_frame=1.0, 
+                           list_of_objects = [], 
+                           list_of_objects_detected_as = [],
+                           max_search_attempts = 0,
+                           use_arm=False, 
                            detect_objects        = False, 
                            detect_furniture      = False, 
                            detect_objects_hand   = False, 
@@ -3482,7 +3502,8 @@ class RobotStdFunctions():
                            detect_prompt_free_base  = False,
                            detect_tv_prompt_base    = False,
                            minimum_prompt_free_confidence = 0.5,
-                           minimum_tv_prompt_confidence = 0.5, say_cutlery=True):
+                           minimum_tv_prompt_confidence = 0.5, 
+                           say_cutlery=True):
         
         # TODO: delete furniture yolo_objects 
 
@@ -3508,6 +3529,7 @@ class RobotStdFunctions():
         MIN_DIST_DIFFERENT_FRAMES = 0.3 # maximum distance for the robot to assume it is the same objects
         MIN_DIST_SAME_FRAME = 0.2
         is_break_list_of_objects = False
+        SEARCH_NO_COUNTER = 0
 
         merged_lists = []
         for obj, detected_as in zip(list_of_objects, list_of_objects_detected_as):
@@ -3520,12 +3542,13 @@ class RobotStdFunctions():
         # for merged_list in merged_lists:
         #     print(merged_list)
         
-        while not DETECTED_ALL_LIST_OF_OBJECTS:
+        while not DETECTED_ALL_LIST_OF_OBJECTS and (SEARCH_NO_COUNTER < max_search_attempts or max_search_attempts <= 0):
 
             total_objects_detected = []
             objects_detected = []
             objects_ctr = 0
-
+            SEARCH_NO_COUNTER += 1
+            
             self.set_rgb(WHITE+ALTERNATE_QUARTERS)
 
             if yolo_objects_activate:
@@ -3794,8 +3817,31 @@ class RobotStdFunctions():
                 
                 # print(list_of_objects)
                 # print(mandatory_object_detected_flags)
+
+                if all(mandatory_object_detected_flags): # successfully detected all the mandatory objects in the list 
+                    DETECTED_ALL_LIST_OF_OBJECTS = True
+                    # forces the change of objects name for possible detected_as_object 
+                    # (i.e. might detect cleanser as milk, but we need it as milk for the DEM show in face)
+                    for o in final_objects:
+                        for m in range(len(merged_lists)):
+                            if o.object_name.replace(" ","_").lower() in merged_lists[m]:
+                                o.object_name = list_of_objects[m]
                 
-                if not all(mandatory_object_detected_flags):
+                elif SEARCH_NO_COUNTER >= max_search_attempts:
+                                
+                    self.set_face("charmie_face")
+                    self.set_neck(position=[0, 0], wait_for_end_of=False)
+                    # Speech: "Unfortunately, I could not detect the following objects."
+                    self.set_speech(filename="generic/max_searches_could_not_detect_objects", wait_for_end_of=True) 
+                    for obj in range(len(list_of_objects)):
+                        if not mandatory_object_detected_flags[obj]:
+                            # Speech: (Name of object)
+                            if say_cutlery and list_of_objects[obj].replace(" ","_").lower() in ["fork", "knife", "spoon"]:
+                                self.set_speech(filename="objects_names/cutlery", wait_for_end_of=True)
+                            else:
+                                self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
+                    
+                else: # elif not all(mandatory_object_detected_flags):
                     # Speech: "There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?"
                     self.set_speech(filename="generic/problem_detecting_change_object", wait_for_end_of=True) 
                     for obj in range(len(list_of_objects)):
@@ -3805,20 +3851,13 @@ class RobotStdFunctions():
                                 self.set_speech(filename="objects_names/cutlery", wait_for_end_of=True)
                             else:
                                 self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
-                else:
-                    DETECTED_ALL_LIST_OF_OBJECTS = True
-                    # forces the change of objects name for possible detected_as_object 
-                    # (i.e. might detect cleanser as milk, but we need it as milk for the DEM show in face)
-                    for o in final_objects:
-                        for m in range(len(merged_lists)):
-                            if o.object_name.replace(" ","_").lower() in merged_lists[m]:
-                                o.object_name = list_of_objects[m]
+                    time.sleep(3.0) # to give time to the user to understand the request and move the objects before the next search starts
 
             else:
                 final_objects = filtered_objects
                 DETECTED_ALL_LIST_OF_OBJECTS = True
 
-        self.set_face("charmie_face")    
+        self.set_face("charmie_face")
         self.set_neck(position=[0, 0], wait_for_end_of=False)
         self.set_rgb(YELLOW+HALF_ROTATE)
 
@@ -4071,6 +4110,9 @@ class RobotStdFunctions():
         request = GetLLMResponse.Request()
         request.command = command
         request.mode = mode
+        
+        self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False # to prevent possible wfeo as false that did not have a _is_done() check that turned down the flag
+
         self.node.call_llm_ollama_gpsr_high_level_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
@@ -4078,9 +4120,20 @@ class RobotStdFunctions():
                 pass
             self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False
 
-        print(self.node.llm_ollama_gpsr_high_level_response)
+        ### if wfeo
+        ###     The result is returned by this function
+        ### else
+        ###     The task node must get the response command from: self.node.llm_ollama_gpsr_high_level_response
+
         return self.node.llm_ollama_gpsr_high_level_response
     
+    def get_llm_ollama_gpsr_high_level_is_done(self):
+        if self.node.waited_for_end_of_llm_ollama_gpsr_high_level:
+            self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False
+            return True
+        else:
+            return False
+
     def get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
 
         request = GetLLMResponse.Request()
