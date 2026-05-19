@@ -3174,15 +3174,21 @@ class RobotStdFunctions():
 
     def get_rotation_angle_to_map_coords(self, target_coords=[0.0, 0.0]):
         
-        dx = target_coords[0] - self.node.robot_pose.position.x
-        dy = target_coords[1] - self.node.robot_pose.position.y
+        dx = target_coords[0] - self.node.robot_pose.x
+        dy = target_coords[1] - self.node.robot_pose.y
 
-        target_angle_deg = math.degrees(math.atan2(dy, dx))
+        dist = math.sqrt(dx**2 + dy**2)
 
-        # Normalize for interval [-180, 180]
-        rotation_deg = ((target_angle_deg - self.node.robot_pose.theta) + 180) % 360 - 180
+        if dist <= self.ROBOT_RADIUS: # if too close, do not rotate, for safety
+            self.node.get_logger().warn("Target is very close to the robot, may be dangerous to rotate.")
+            return 0.0
+        else:
+            target_angle_deg = math.degrees(math.atan2(dy, dx))
 
-        return rotation_deg
+            # Normalize for interval [-180, 180]
+            rotation_deg = ((target_angle_deg - self.node.robot_pose.theta) + 180) % 360 - 180
+
+            return rotation_deg
 
     def get_minimum_radar_distance(self, direction=0.0, ang_obstacle_check=45):
 
