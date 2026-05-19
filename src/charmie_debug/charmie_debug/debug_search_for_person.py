@@ -31,9 +31,9 @@ ros2_modules = {
     "charmie_sound_classification": False,
     "charmie_speakers":             False,
     "charmie_speakers_save":        False,
-    "charmie_tracking":             True,
+    "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
-    "charmie_yolo_pose":            True,
+    "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
 
@@ -68,7 +68,7 @@ class TaskMain():
         Final_State = 7
 
         # VARS ...
-        self.state = Activate_track_mask_person
+        self.state = Search_for_objects
 
         print("IN NEW MAIN")
 
@@ -114,17 +114,32 @@ class TaskMain():
             
             elif self.state == Search_for_objects:
                 
+
+                self.robot.set_neck(position=[0, 0], wait_for_end_of=True)
+
+
+
+                """ while True:
+                    pass
+
+
+
+
                 ### SEARCH FOR OBJECTS EXAMPLE ###
                 
                 # self.set_face(command="charmie_face")
                 self.robot.set_neck(position=[0.0, 0.0], wait_for_end_of=True)
 
                 time.sleep(2.0)
-
+                """
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
-                tetas = [[-30, -45], [0, -45], [30, -45]]
+                # tetas = [[-30, -45], [0, -45], [30, -45]]
                 # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                
+                objects_found = self.robot.search_for_objects(tetas=[[-20, -40]], time_in_each_frame=2.0, use_arm=False, detect_tv_prompt_head=True, visual_prompts=["dobradeira_laundry_table_lar_head_cam"], minimum_tv_prompt_confidence=0.1)
+                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_prompt_free_head=True)
+
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
@@ -133,6 +148,7 @@ class TaskMain():
                     y_ = f"{o.position_absolute.y:5.2f}"
                     z_ = f"{o.position_absolute.z:5.2f}"
                     print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.camera} ({x_}, {y_}, {z_})")
+                    
                     
                 self.robot.set_rgb(CYAN+HALF_ROTATE)
                 time.sleep(0.5)

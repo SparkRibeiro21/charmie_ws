@@ -1,0 +1,27 @@
+{
+  "type": "yoloe_visual_prompt",
+  "image": "dobradeira_laundry_table_lar_head_cam.jpg",
+  "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
+  "width": 848,
+  "height": 480,
+  "classes": [
+    {
+      "cls": 0,
+      "name": "dobradeira"
+    }
+  ],
+  "bboxes": [
+    {
+      "cls": 0,
+      "xyxy": [
+        291.0,
+        205.0,
+        668.0,
+        478.0
+      ]
+    }
+  ],
+  "meta": {
+    "notes": ""
+  }
+}

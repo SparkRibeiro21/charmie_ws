@@ -97,14 +97,14 @@ class TaskMain():
 
                 while True:
 
-                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                    self.robot.set_arm(command="rotation_mid", wait_for_end_of=True)
                     
                     time.sleep(3.0)
                     
-                    self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
+                    #self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
                     
                     time.sleep(1.0)
-                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
+                    #self.robot.set_speech(filename="generic/moving", wait_for_end_of=True)
 
                     time.sleep(3.0)
 
