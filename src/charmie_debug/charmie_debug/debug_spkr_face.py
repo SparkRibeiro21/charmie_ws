@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 False,
+    "charmie_face":                 True,
     "charmie_head_camera":          False,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
@@ -31,7 +31,7 @@ ros2_modules = {
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
-    "charmie_speakers_save":        True,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
@@ -83,7 +83,12 @@ class TaskMain():
 
                 ### self.robot.set_speech(filename="serve_breakfast/sB_finished", wait_for_end_of=True)
 
-                command = "My name is Fernando and my favourite drink is strawberry juice"
+                answer = self.robot.set_face_touchscreen_menu(choice_category=["object_classes"], timeout=10, instruction="Are you the barman?", speak_results=True, wait_for_end_of=True)
+                answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Are you the barman?", speak_results=True, wait_for_end_of=True)
+                answer = self.robot.set_face_touchscreen_menu(choice_category=["object_classes"], timeout=10, instruction="Are you the barman?", speak_results=True, wait_for_end_of=True)
+                print("Answer yes or no:", answer)
+
+                """ command = "My name is Fernando and my favourite drink is strawberry juice"
 
                 self.robot.set_speech(filename="demonstration/nice_to_meet_you", wait_for_end_of=False)
 
@@ -120,7 +125,7 @@ class TaskMain():
                 # self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
-                
+                 """
 
                 # time.sleep(2.0)
 

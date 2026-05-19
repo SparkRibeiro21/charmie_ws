@@ -33,9 +33,9 @@ ros2_modules = {
     "charmie_sound_classification": True,
     "charmie_speakers":             True,
     "charmie_speakers_save":        True,
-    "charmie_tracking":             True,
-    "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            True,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
 
@@ -87,17 +87,10 @@ class TaskMain():
         # Initial Position
         self.initial_position = [0.0, 0.0, 0.0]
 
-        self.instruction_point =  [ 1.96, 2.60, 90]
+        self.instruction_point =  [ 7.80, 3.84, 180]
         print(self.initial_position)
         print(self.instruction_point)
         
-        # self.start_follow_position = self.initial_position
-        self.start_follow_position = [2.0, 4.0, 90.0] # position to start following host after introducing guests
-        # print(self.start_follow_position)
-
-        self.number_of_requests = 3
-        self.curr_request = 1
-
 
     def main(self):
 
@@ -111,6 +104,10 @@ class TaskMain():
         self.request1 = ""
         self.request2 = ""
         self.request3 = ""
+
+
+        self.number_of_requests = 3
+        self.curr_request = 1
 
         self.request_order = [self.request1, self.request2, self.request3]
         # End of added variables
@@ -210,6 +207,9 @@ class TaskMain():
                     ##### SPEAK: "Please give me a moment while I proccess your requests"
                     self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
 
+                    #### SPEAK: "This may take more than a minute"
+                    self.robot.set_speech(filename="gpsr/may_take_a_while", wait_for_end_of=False)
+
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
 
                     ##### SPEAK: "I am almost done with your request, please wait a little bit more."
@@ -250,6 +250,9 @@ class TaskMain():
                     ##### SPEAK: "Please give me a moment while I proccess your requests"
                     self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
 
+                    #### SPEAK: "This may take more than a minute"
+                    self.robot.set_speech(filename="gpsr/may_take_a_while", wait_for_end_of=False)
+
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
 
                     ##### SPEAK: "I am almost done with your request, please wait a little bit more."
@@ -289,6 +292,9 @@ class TaskMain():
 
                     ##### SPEAK: "Please give me a moment while I proccess your requests"
                     self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
+
+                    #### SPEAK: "This may take more than a minute"
+                    self.robot.set_speech(filename="gpsr/may_take_a_while", wait_for_end_of=False)
 
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
 

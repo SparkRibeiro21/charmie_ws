@@ -22,7 +22,7 @@ ros2_modules = {
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          True,
-    "charmie_llm":                  True, # True (check name and fav. drink)
+    "charmie_llm":                  False, # True (check name and fav. drink)
     "charmie_localisation":         True,
     "charmie_low_level":            True,
     "charmie_navigation":           True,
@@ -166,18 +166,19 @@ class TaskMain():
         # for sf in self.SITTING_PLACES_IN_FURNITURE:
         #     print(" - ", sf["name"], " in ", sf["furniture"], " seats at ", sf["center_coords"])
 
-        self.ENTRANCE_DOOR_FURNITURE = "entrace"
+        self.ENTRANCE_DOOR_FURNITURE = "entrance"
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
         self.default_speak_file = "hri/grey_couch_center"
         # Which objects should be acquired
-        self.OPEN_DOOR_GUEST1 = False
-        self.OPEN_DOOR_GUEST2 = False
+        self.OPEN_DOOR_GUEST1 = True
+        self.OPEN_DOOR_GUEST2 = True
+
         self.HANDOVER_GUEST2_BAG = False
         
         # Initial Position
-        self.initial_position = [9.35, 0.13, -135.0]
+        self.initial_position = [8.80, 0.13, -180.0]
         # print(self.initial_position)
         
         # self.start_follow_position = self.initial_position
@@ -190,6 +191,10 @@ class TaskMain():
         # print(self.guest_communication_position)
 
         self.min_dist_for_sitting_place_to_be_occupied = 0.4 # minimum distance from person to sitting place center coords to consider that place as occupied
+
+
+        self.DEBUG_WITHOUT_JETSON = False
+
         
     def main(self):
 
@@ -215,7 +220,7 @@ class TaskMain():
         self.look_judge = [45, 0]
         self.look_left = [90, 0]
         self.look_right = [-90, 0]
-        self.search_tetas = [[-60, -30], [0, -30], [60, -30]]
+        self.search_tetas = [[-60, -15], [0, -15], [60, -15]]
 
         self.state = self.task_states["Waiting_for_task_start"]
 
@@ -251,9 +256,10 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
-                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
+                if not self.OPEN_DOOR_GUEST1:
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
                 
                 self.state = self.task_states["Open_door_guest1"]
 
@@ -261,7 +267,8 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest1"]:
                                         
                 if self.OPEN_DOOR_GUEST1:
-                    self.robot.open_door(push_pull="push", left_right="left", wait_for_end_of=True)
+                    self.robot.open_door(push_pull="pull", left_right="left", wait_for_end_of=True)
+                    self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
                 self.state = self.task_states["Receive_guest1"]
 
@@ -270,7 +277,8 @@ class TaskMain():
 
                 time.sleep(1.0) # wait time for robot to stop and do an audio calibration
                 self.robot.calibrate_audio(wait_for_end_of=True)
-                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                if not self.OPEN_DOOR_GUEST1:
+                    self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
                 time.sleep(0.5)
 
@@ -278,7 +286,10 @@ class TaskMain():
                 correct_person = DetectedPerson()
                 while len(people_found) == 0:
                     # still need to check for timeout, and decide what to do in that case
-                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
+                    if not self.OPEN_DOOR_GUEST1:
+                        people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
+                    else:
+                        people_found = self.robot.search_for_person(tetas=[[20, 10]], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     print("Number of people found:", len(people_found))
 
                     if len(people_found) == 0:
@@ -314,13 +325,17 @@ class TaskMain():
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) 
                 
 
-                # a = time.time()
-                self.GUEST1_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
-                # print("Name:", self.GUEST1_NAME, time.time()-a)
-                
-                # b = time.time()
-                self.GUEST1_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
-                # print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
+                if not self.DEBUG_WITHOUT_JETSON:
+                    # a = time.time()
+                    self.GUEST1_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
+                    # print("Name:", self.GUEST1_NAME, time.time()-a)
+                    
+                    # b = time.time()
+                    self.GUEST1_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
+                    # print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
+                else:
+                    self.GUEST1_NAME = "John"
+                    self.GUEST1_DRINK = "Coffee"
 
                 self.robot.save_speech(command=self.GUEST1_NAME,  filename=self.GUEST1_NAME,  quick_voice=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST1_DRINK, filename=self.GUEST1_DRINK, quick_voice=False, wait_for_end_of=False)
@@ -364,8 +379,8 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
 
-                self.robot.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
-                self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
+                # self.robot.set_speech(filename="receptionist/dear_host", wait_for_end_of=True)
+                # self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
                 people_found = self.robot.search_for_person(tetas=self.search_tetas, time_in_each_frame=1.0)
 
                 temp_min_dist_sitting_places_dict = {
@@ -399,7 +414,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = self.robot.get_location_coords_from_furniture("couch")
+                    neck_position = self.robot.get_location_coords_from_furniture("grey_couch")
                     speak_file = self.default_speak_file
 
                 else:
@@ -432,7 +447,7 @@ class TaskMain():
                 self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
                 self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
                 
-                self.state = self.task_states["Move_to_initial_position"]
+                self.state = self.task_states["Wait_for_guest2_to_arrive"]
 
 
             elif self.state == self.task_states["Move_to_initial_position"]:
@@ -461,9 +476,10 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
-                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
+                if not self.OPEN_DOOR_GUEST2:
+                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
                 
                 self.state = self.task_states["Open_door_guest2"]
 
@@ -471,7 +487,8 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest2"]:
                                         
                 if self.OPEN_DOOR_GUEST2:
-                    self.robot.open_door(push_pull="push", left_right="left", wait_for_end_of=True)
+                    self.robot.open_door(push_pull="pull", left_right="left", wait_for_end_of=True)
+                    self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
                 self.state = self.task_states["Receive_guest2"]
 
@@ -480,15 +497,21 @@ class TaskMain():
                 
                 time.sleep(1.0) # wait time for robot to stop and do an audio calibration
                 self.robot.calibrate_audio(wait_for_end_of=True)
-                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                if not self.OPEN_DOOR_GUEST2:
+                    self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
                 time.sleep(0.5)
                 
                 people_found = []
                 correct_person = DetectedPerson()
                 while len(people_found) == 0:
+
+                    if not self.OPEN_DOOR_GUEST2:
+                        people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
+                    else:
+                        people_found = self.robot.search_for_person(tetas=[[20, 10]], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
+                    
                     # still need to check for timeout, and decide what to do in that case
-                    people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     print("Number of people found:", len(people_found))
 
                     if len(people_found) == 0:
@@ -524,15 +547,18 @@ class TaskMain():
                 # self.robot.set_speech(filename="hri/brought_a_bag", wait_for_end_of=False) # placed here for time optimization # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
                 self.robot.set_speech(filename="hri/guide_to_sitting_area", wait_for_end_of=False) # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
                 
+                if not self.DEBUG_WITHOUT_JETSON:
+                    # a = time.time()
+                    self.GUEST2_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
+                    # print("Name:", self.GUEST2_NAME, time.time()-a)
+                    
+                    # b = time.time()
+                    self.GUEST2_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
+                    # print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
+                else:
+                    self.GUEST2_NAME = "Mary"
+                    self.GUEST2_DRINK = "Tea"
 
-                # a = time.time()
-                self.GUEST2_NAME = self.robot.get_llm_ollama_information(command, mode = "name", wait_for_end_of=True)
-                # print("Name:", self.GUEST2_NAME, time.time()-a)
-                
-                # b = time.time()
-                self.GUEST2_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
-                # print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
-                
                 self.robot.save_speech(command=self.GUEST2_NAME,  filename=self.GUEST2_NAME,  quick_voice=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, wait_for_end_of=False)
                
@@ -634,8 +660,8 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
 
-                self.robot.set_speech(filename="receptionist/dear_first_guest", wait_for_end_of=True)
-                self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
+                # self.robot.set_speech(filename="receptionist/dear_first_guest", wait_for_end_of=True)
+                # self.robot.set_speech(filename="receptionist/keep_face_clear", wait_for_end_of=True)
                 people_found = self.robot.search_for_person(tetas=self.search_tetas, time_in_each_frame=1.0)
 
                 temp_min_dist_sitting_places_dict = {
@@ -669,7 +695,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = [self.robot.get_location_coords_from_furniture("couch")[0], self.robot.get_location_coords_from_furniture("couch")[1], 0.9]
+                    neck_position = [self.robot.get_location_coords_from_furniture("grey_couch")[0], self.robot.get_location_coords_from_furniture("grey_couch")[1], 0.9]
                     speak_file = self.default_speak_file
 
                 else:
@@ -709,7 +735,7 @@ class TaskMain():
                 if prediction_confidence == 0.0:
                     # caso em que não conseguiu reconhecer o guest1
                     print("COULD NOT RECOGNIZE GUEST1 FACE AGAIN")
-                    guest1_coords = [self.robot.get_location_coords_from_furniture("couch")[0], self.robot.get_location_coords_from_furniture("couch")[1], 0.9]
+                    guest1_coords = [self.robot.get_location_coords_from_furniture("grey_couch")[0], self.robot.get_location_coords_from_furniture("grey_couch")[1], 0.9]
 
                 # Introduce both guests
 
@@ -774,7 +800,7 @@ class TaskMain():
                 
                 selected_option = None
                 while selected_option != ["Yes"]:
-                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Are you ready to be followed?", start_speak_file="hri/ready_to_follow", speak_results=False, wait_for_end_of=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, mode="single", instruction="Are you ready to be followed?", start_speak_file="hri/ready_to_follow", speak_results=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     
                 self.robot.set_speech(filename="hri/follow_host_track_instructions", wait_for_end_of=True)
@@ -798,7 +824,7 @@ class TaskMain():
 
                 selected_option = None
                 while selected_option != ["Yes"]:
-                    selected_option = self.robot.set_face_touchscreen_menu(["custom"], custom_options=["Yes", "No"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, speak_timeout=False, wait_for_end_of=True)
+                    selected_option = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, mode="single", instruction="Have we arrived to the bag drop location?", start_speak_file="", speak_results=False, speak_timeout=False, wait_for_end_of=True)
                     print("SELECTED OPTION:", selected_option)
                     # NAVIGATION: STOP FOLLOWING HOST
 

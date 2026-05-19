@@ -9,8 +9,7 @@ from pathlib import Path
 import subprocess
 
 # MODE can be the following commands:
-# "STANDARD": convert save_speaker command into wav(speaker) and txt(show face) 
-# "NAMES": reads names from json file and exports all names to list_of_sentences/person_names
+# "STANDARD": convert save_speaker command into wav(speaker) and txt(show face)
 # "OBJECTS": reads objects and objects_classe from json file and exports all objects to list_of_sentences/objects_names and objects_classes to list_of_sentences/objects_classes 
 # "HOUSE": reads rooms and furniture from json file and exports all rooms to list_of_sentences/rooms and furniture to list_of_sentences/furniture 
 # "COMPETITION": to improve time-efficiency in competitions, this mode does NAMES, OBJECTS and HOUSE modes 
@@ -79,7 +78,7 @@ class RobotSpeak():
             while True:
                 pass
 
-        # Opens files with objects, objects_classes, rooms, furniture, names
+        # Opens files with objects, objects_classes, rooms, furniture
         try:
             with open(self.complete_path_configuration_files + 'objects.json', encoding='utf-8') as json_file:
                 self.objects_file = json.load(json_file)
@@ -93,12 +92,9 @@ class RobotSpeak():
             with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
                 self.furniture_file = json.load(json_file)
             # print(self.furniture_file)
-            with open(self.complete_path_configuration_files + 'names.json', encoding='utf-8') as json_file:
-                self.names_file = json.load(json_file)
-            # print(self.names_file)
-            print("Successfully Imported data from json configuration files. (objects, objects_classes, rooms, furniture, names)")
+            print("Successfully Imported data from json configuration files. (objects, objects_classes, rooms, furniture)")
         except:
-            print("Could NOT import data from json configuration files. (objects, objects_classes, rooms, furniture, names)")
+            print("Could NOT import data from json configuration files. (objects, objects_classes, rooms, furniture)")
         
         # TTS synthetiser models path 
         # by using self.home it automatically adjusts to all computers home file, which may differ since it depends on the username on the PC
@@ -162,9 +158,6 @@ def main(args=None):
 
     if MODE == "STANDARD": # from save_speaker_files
         charmie_speech.convert_command(commands=charmie_speech.json_commands, play_sound=True)
-    
-    elif MODE == "NAMES": # people names
-        charmie_speech.generate_speaker_files_from_configuration_files(folder="person_names", config_file=charmie_speech.names_file)
 
     elif MODE == "OBJECTS": # object names and classes
         charmie_speech.generate_speaker_files_from_configuration_files(folder="objects_names", config_file=charmie_speech.objects_file)
@@ -175,7 +168,6 @@ def main(args=None):
         charmie_speech.generate_speaker_files_from_configuration_files(folder="furniture", config_file=charmie_speech.furniture_file)
     
     elif MODE == "COMPETITION": # furniture and rooms
-        charmie_speech.generate_speaker_files_from_configuration_files(folder="person_names", config_file=charmie_speech.names_file)
         charmie_speech.generate_speaker_files_from_configuration_files(folder="objects_names", config_file=charmie_speech.objects_file)
         charmie_speech.generate_speaker_files_from_configuration_files(folder="objects_classes", config_file=charmie_speech.objects_classes_file)
         charmie_speech.generate_speaker_files_from_configuration_files(folder="rooms", config_file=charmie_speech.rooms_file)
