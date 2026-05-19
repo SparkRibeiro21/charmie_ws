@@ -29,11 +29,11 @@ ros2_modules = {
     "charmie_neck":                 True,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             False,
+    "charmie_speakers":             True,
     "charmie_speakers_save":        False,
-    "charmie_tracking":             True,
-    "charmie_yolo_objects":         False,
-    "charmie_yolo_pose":            True,
+    "charmie_tracking":             False,
+    "charmie_yolo_objects":         True,
+    "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
 
@@ -68,7 +68,7 @@ class TaskMain():
         Final_State = 7
 
         # VARS ...
-        self.state = Activate_track_mask_person
+        self.state = Search_for_objects
 
         print("IN NEW MAIN")
 
@@ -123,8 +123,9 @@ class TaskMain():
 
                 # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
                 tetas = [[-30, -45], [0, -45], [30, -45]]
-                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
-                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], max_search_attempts=3, detect_objects=True, detect_furniture=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk"], list_of_objects_detected_as=[["cleanser"]], max_search_attempts=3, detect_objects=True, detect_furniture=False)
+                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
                 
                 print("LIST OF DETECTED OBJECTS:")
                 for o in objects_found:
