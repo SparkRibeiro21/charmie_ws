@@ -3172,8 +3172,12 @@ class RobotStdFunctions():
         else:
             return False
 
-    def get_rotation_angle_to_map_coords(self, target_coords=[0.0, 0.0]):
+    def get_rotation_angle_to_map_coords(self, target_coords=[]):
         
+        if len(target_coords) < 2 or len(target_coords) > 3:
+            self.node.get_logger().warn("Invalid number of member on target_coords list. Only accepts 2 or 3 members.")
+            return 0.0
+
         dx = target_coords[0] - self.node.robot_pose.x
         dy = target_coords[1] - self.node.robot_pose.y
 
@@ -3186,7 +3190,8 @@ class RobotStdFunctions():
             target_angle_deg = math.degrees(math.atan2(dy, dx))
 
             # Normalize for interval [-180, 180]
-            rotation_deg = ((target_angle_deg - self.node.robot_pose.theta) + 180) % 360 - 180
+            rotation_deg = ((target_angle_deg - math.degrees(self.node.robot_pose.theta)) + 180) % 360 - 180
+            print("curr theta:", round(self.node.robot_pose.theta, 2), "target angle:", round(target_angle_deg, 2), "rotation:", round(rotation_deg, 2))
 
             return rotation_deg
 
