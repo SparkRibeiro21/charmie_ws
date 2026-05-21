@@ -4239,23 +4239,24 @@ class RobotStdFunctions():
             task_split = command.split("-")
             
             task_type = task_split[0]
-            task_info = task_split[1] if len(task_split) > 2 else ""
+            task_info = task_split[1] 
 
             parameter=task_info.replace(" ","_").lower()
             
-            print("Task type:", task_type, " Task info:", task_info)
+            print("Task type:", task_type, " Task info:", parameter)
 
             match task_type:
 
-                case "move_furniture":
+                case "move_to_furniture":
                     
                     self.set_speech(command="generic/moving")
                     self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
+                    print("Moving to:", parameter)
 
                     time.sleep(5)
                     # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
 
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.set_speech(filename="generic/arrived", wait_for_end_of=True)
                     self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
                     pass 
 
@@ -4263,61 +4264,82 @@ class RobotStdFunctions():
 
                     self.set_speech(command="generic/moving")
                     self.set_speech(filename="room/"+parameter, wait_for_end_of=True)
+                    print("Moving to:", parameter)
 
                     time.sleep(5)
                     # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
 
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.set_speech(filename="generic/arrived", wait_for_end_of=True)
                     self.set_speech(filename="room/"+parameter, wait_for_end_of=True)
                     pass
                 
                 case "move_to_person":
                     # temporary speech to show it is working
-                    self.save_speech(command="Moving to person" + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                    self.set_speech(filename="temp/action", wait_for_end_of=True)
-                    
+                    self.set_speech(command="generic/moving")
+                    print("Moving to:", parameter)
+
                     pass
                 
                 case "look_for_object":
-                    # temporary speech to show it is working
-                    # self.save_speech(command="Looking for object " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                    # self.set_speech(filename="temp/action", wait_for_end_of=True)
+                    search_tetas = [[0, 0-45], [-40, 45], [40, 45]]     #se for horizontal
+                    # search_tetas = [[0, 0], [0, -35], [0, 15]]          #se for vertical
+                    
+                    print("Looking for:", parameter)
 
+                    objects_found = self.search_for_objects(search_tetas,list_of_objects=[parameter], max_search_time=3, detect_objects=True)
+
+                    if objects_found:
+                        self.set_speech(command="generic/found_following_items", wait_for_end_of=True)
+                        for obj in objects_found:
+                            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                            print("Found:", obj.object_name)
+                    else:    
+                        self.set_speech(command="generic/could_not_find_any_objects", wait_for_end_of=True)
+
+                    print("Found:", objects_found)
                     pass
                 
                 case "pick_up_object":
                     # temporary speech to show it is working
 
-                    self.save_speech(command="Picking up the " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+                    # self.save_speech(command="Picking up the " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    # self.set_speech(filename="action", wait_for_end_of=True)
+
+                    print("Picking up:", parameter)
 
                     time.sleep(5)
                     # self.robot.pick_object_risky(selected_object= parameter)
 
-                    self.save_speech(command="Picking up the " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+                    # self.save_speech(command="Picking up the " + task_info, filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    # self.set_speech(filename="action", wait_for_end_of=True)
 
                     pass
-                
+                case "count_objects":
+
+                    
+                    pass
+
                 case "hand_object":
                     # temporary speech to show it is working
-                    self.save_speech(command="Handing the object in my hand", filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+                    # self.save_speech(command="Handing the object in my hand", filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    # self.set_speech(filename="action", wait_for_end_of=True)
+                    print("Handing:", parameter)
                     pass
 
                 case "place_object":
                     # temporary speech to show it is working
-                    self.save_speech(command=f"Placing the {parameter} on the {parameter}", filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                    self.set_speech(filename="temp/action", wait_for_end_of=True)
-
+                    # self.save_speech(command=f"Placing the {parameter} on the {parameter}", filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    # self.set_speech(filename="action", wait_for_end_of=True)
+                    print("Placing:", parameter)
                     # self.robot.place_object(arm_command="place_bowl_table", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
 
                     pass
 
                 #in case it is none of the above
                 case _:
-                    self.save_speech(command="Sorry, I could not understand the task" , filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                    self.set_speech(filename="temp/action", wait_for_end_of=True)
+                    # self.save_speech(command="Sorry, I cannot execute the task" , filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                    # self.set_speech(filename="temp/action", wait_for_end_of=True)
+                    print("Sorry, I cannot execute the task:", task_type)
 
                
 

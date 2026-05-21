@@ -63,9 +63,10 @@ class TaskMain():
         # Waiting_for_start_button = 0
         LLM_demo = 1
         LLM_gpsr = 2
-        LLM_hri= 3
-        LLM_Ollama_first_tests = 4
-        Final_State = 5
+        LLM_gpsr_llp= 3
+        LLM_hri= 4
+        LLM_Ollama_first_tests = 5
+        Final_State = 6
 
         # VARS ...
         self.state = LLM_hri
@@ -113,12 +114,6 @@ class TaskMain():
                 print(f"Total Time taken for llp GPSR task: {end_time - start_time}")
 
                 print("Finished first LLM Demo")
-
-
-
-
-
-
 
                 while True:
                     pass
@@ -282,22 +277,52 @@ class TaskMain():
                 print("Finished LLM GPSR")
                 time.sleep(5)
             
+            if self.state == LLM_gpsr_llp:
+                
+                print("New LLM GPSR LLP")
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Pick up the milk on the dinner table.", mode="", wait_for_end_of=True)
+                
+                ### THIS IS GPSR TASK ###
+                llp_input = hlp[0].split(";")
+
+                start_time = time.time()
+
+                for i, step in enumerate(llp_input):
+                    print(f"Step {i+1}: {step.strip()}")
+                    step_to_llm = step.strip()
+                    #call low_level std_func: get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
+                    llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
+                    # call gpsr_execution std_func:
+                    print(f"Action Generated: {llp_output[0]}")
+                    self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
+
+                ### THIS IS GPSR TASK ###
+                    print(f"Action Generated: {llp_output[0]}")
+                    
+                end_time = time.time()
+                print(f"Total Time taken for llp GPSR task: {end_time - start_time}")
+
+                print("Finished LLM GPSR LLP")
+                while True:
+                    pass
+
             if self.state == LLM_hri:
 
                 print("New LLM HRI")
                 ##  TESTING INFO EXTRACTION STANDARDFUNCTION ##
                 #self.robot.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
                 # command = self.robot.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
-                command = "My name is John and my favorite drink is redbull"
+                command = "Milk, iced tea, tennis ball, dice"
 
-                name = self.robot.get_llm_ollama_information(command, mode="name", wait_for_end_of=True)
-                favorite_drink = self.robot.get_llm_ollama_information(command, mode="favorite drink", wait_for_end_of=True)
-                print ("GUEST INFO- name:"+name+", favorite drink:"+favorite_drink)
-                self.robot.save_speech(command=name, filename=name, quick_voice=False, wait_for_end_of=True)
-                self.robot.save_speech(command=favorite_drink, filename=favorite_drink, quick_voice=False, wait_for_end_of=True)
+                heaviest_object = self.robot.get_llm_ollama_information(command, mode="smallest object", wait_for_end_of=True)
+                # favorite_drink = self.robot.get_llm_ollama_information(command, mode="favorite drink", wait_for_end_of=True)
+                print ("Heaviest object:"+ heaviest_object)
+                # print ("GUEST INFO- name:"+name+", favorite drink:"+favorite_drink)
+                # self.robot.save_speech(command=name, filename=name, quick_voice=False, wait_for_end_of=True)
+                # self.robot.save_speech(command=favorite_drink, filename=favorite_drink, quick_voice=False, wait_for_end_of=True)
 
-                self.robot.set_speech(filename="temp/"+name, wait_for_end_of=False)
-                self.robot.set_speech(filename="temp/"+favorite_drink, wait_for_end_of=False)
+                # self.robot.set_speech(filename="temp/"+name, wait_for_end_of=False)
+                # self.robot.set_speech(filename="temp/"+favorite_drink, wait_for_end_of=False)
 
                 ##  END OF TESTING INFO EXTRACTION STANDARDFUNCTION ##
                 print("Finished LLM HRI")

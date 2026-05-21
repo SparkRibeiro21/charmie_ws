@@ -209,8 +209,8 @@ class Ollama_planner_description:
                             "2. If the action is neither of the previous ones, return: 'ERROR'."
 
                             "EXAMPLES:\n"
-                            "Command: I will move to the bed; \n"
-                            "Answer: move_to_furniture-bed\n\n"
+                            "Command: I will move to the dinner table; \n"
+                            "Answer: move_to_furniture-dinner_table\n\n"
 
                             "Command: I will move to the kitchen; \n"
                             "Answer: move_to_room-kitchen\n\n"

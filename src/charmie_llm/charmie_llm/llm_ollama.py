@@ -43,11 +43,13 @@ class LLMNode(Node):
         # self.llm_demo_description = LLM_demo_description() 
         # self.llm_planner_description = LLM_planner_description()
         # self.llm_info_extraction_description = LLM_info_extraction_description()
+
+        self.ollama_info_extraction = Ollama_info_extraction_description()
+        self.ollama_planner = Ollama_planner_description()
         
         match self.TASK:
             case "hri":
                 self.get_logger().info("LLM DEMO MODE")
-                self.ollama_info_extraction = Ollama_info_extraction_description()
                 req = GetLLMResponse.Request()
                 req.command="My name is Peter and my favourite drink is coffee"
                 req.mode= "name"
@@ -55,7 +57,6 @@ class LLMNode(Node):
 
             case "gpsr":
                 self.get_logger().info("LLM GPSR MODE")
-                self.ollama_planner = Ollama_planner_description()
                 req = GetLLMResponse.Request()
                 req.command="Go to the kitchen and bring me the milk to the bed"   
                 req.mode = ""
