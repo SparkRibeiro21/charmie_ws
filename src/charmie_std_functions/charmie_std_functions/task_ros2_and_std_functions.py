@@ -4248,34 +4248,34 @@ class RobotStdFunctions():
             match task_type:
 
                 case "move_to_furniture":
-                    
-                    self.set_speech(command="generic/moving")
+                    self.set_neck(position=[0, -30], wait_for_end_of=False)
+                    self.set_speech(filename="generic/moving")
                     self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
                     print("Moving to:", parameter)
 
-                    time.sleep(5)
-                    # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                    self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
 
-                    # self.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                    # self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
+                    self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
                     pass 
 
                 case "move_to_room":
 
-                    self.set_speech(command="generic/moving")
-                    self.set_speech(filename="room/"+parameter, wait_for_end_of=True)
+                    self.set_neck(position=[0, -30], wait_for_end_of=False)
+                    self.set_speech(filename="generic/moving")
+                    self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
+                    self.set_neck(position=[0, -30], wait_for_end_of=False)
                     print("Moving to:", parameter)
 
-                    time.sleep(5)
-                    # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
+                    self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
 
-                    # self.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                    # self.set_speech(filename="room/"+parameter, wait_for_end_of=True)
+                    self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
                     pass
                 
                 case "move_to_person":
                     # temporary speech to show it is working
-                    self.set_speech(command="generic/moving")
+                    self.set_speech(filename="generic/moving")
                     print("Moving to:", parameter)
 
                     pass

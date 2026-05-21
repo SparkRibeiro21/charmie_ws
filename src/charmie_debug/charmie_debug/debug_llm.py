@@ -282,7 +282,7 @@ class TaskMain():
                 self.robot.wait_for_start_button()
                 
                 print("New LLM GPSR LLP")
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "go to the bed and search for the tennis ball.", mode="", wait_for_end_of=True)
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "go to the shelf and find a sprite.", mode="", wait_for_end_of=True)
                 
                 ### THIS IS GPSR TASK ###
                 llp_input = hlp[0].split(";")
@@ -296,7 +296,7 @@ class TaskMain():
                     llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
                     # call gpsr_execution std_func:
                     print(f"Action Generated: {llp_output[0]}")
-                    # self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
+                    self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
 
                 ### THIS IS GPSR TASK ###
                     print(f"Action Generated: {llp_output[0]}")
