@@ -31,7 +31,7 @@ ros2_modules = {
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
-    "charmie_speakers_save":        True,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
@@ -69,7 +69,7 @@ class TaskMain():
         Final_State = 6
 
         # VARS ...
-        self.state = LLM_hri
+        self.state = LLM_gpsr_llp
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -278,9 +278,11 @@ class TaskMain():
                 time.sleep(5)
             
             if self.state == LLM_gpsr_llp:
+
+                self.robot.wait_for_start_button()
                 
                 print("New LLM GPSR LLP")
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Pick up the milk on the dinner table.", mode="", wait_for_end_of=True)
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "go to the bed and search for the tennis ball.", mode="", wait_for_end_of=True)
                 
                 ### THIS IS GPSR TASK ###
                 llp_input = hlp[0].split(";")
@@ -294,13 +296,15 @@ class TaskMain():
                     llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
                     # call gpsr_execution std_func:
                     print(f"Action Generated: {llp_output[0]}")
-                    self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
+                    # self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
 
                 ### THIS IS GPSR TASK ###
                     print(f"Action Generated: {llp_output[0]}")
                     
                 end_time = time.time()
                 print(f"Total Time taken for llp GPSR task: {end_time - start_time}")
+
+                self.robot.set_rgb(command=GREEN+SET_COLOUR, wait_for_end_of=True)
 
                 print("Finished LLM GPSR LLP")
                 while True:

@@ -4256,8 +4256,8 @@ class RobotStdFunctions():
                     time.sleep(5)
                     # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
 
-                    self.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                    self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
+                    # self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    # self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
                     pass 
 
                 case "move_to_room":
@@ -4269,8 +4269,8 @@ class RobotStdFunctions():
                     time.sleep(5)
                     # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
 
-                    self.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                    self.set_speech(filename="room/"+parameter, wait_for_end_of=True)
+                    # self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    # self.set_speech(filename="room/"+parameter, wait_for_end_of=True)
                     pass
                 
                 case "move_to_person":
@@ -4281,9 +4281,16 @@ class RobotStdFunctions():
                     pass
                 
                 case "look_for_object":
-                    search_tetas = [[0, 0-45], [-40, 45], [40, 45]]     #se for horizontal
+                    # search_tetas = [[0, 0-45], [-40, 45], [40, 45]]     #se for horizontal
                     # search_tetas = [[0, 0], [0, -35], [0, 15]]          #se for vertical
-                    
+
+                    # TODO em vez de ir buscar o furniture from object class from object, receber info das variaveis de estados e saber qual a furniture em que esta
+                    if self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(parameter))) == "horizontal":
+                        search_tetas = [[0, -45], [-40, -45], [40, -45]]
+
+                    elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(parameter))) == "vertical":
+                        search_tetas = [[0, -15], [0, -35], [0, 15]]
+
                     print("Looking for:", parameter)
 
                     objects_found = self.search_for_objects(search_tetas,list_of_objects=[parameter], max_search_time=3, detect_objects=True)
