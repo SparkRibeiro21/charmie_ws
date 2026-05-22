@@ -135,7 +135,10 @@ class TaskMain():
 
                 self.robot.set_initial_position(self.initial_position)
 
-                self.robot.pick_object(selected_object="mustard")
+                pick_height, s= self.robot.pick_object(selected_object="cola")
+                #, arm_initial_position="initial_position_to_ask_for_objects")
+                #placed_height=self.robot.place_object_in_furniture(selected_object="mustard",place_mode = "front", furniture= "Tray", place_height=pick_height)
+                #self.robot.pick_from_tray(selected_object="mustard", placed_height=placed_height)
 
                 self.robot.wait_for_start_button()
                 
