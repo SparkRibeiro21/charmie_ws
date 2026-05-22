@@ -5097,7 +5097,7 @@ class RobotStdFunctions():
     # 
     # count obj/person e specific conditions (in living room, in sofa, in kitchen table, from a specific class...)
 
-    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", navigation = True, search_with_head_camera = True, return_arm_to_initial_position = True):
+    def old_pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", navigation = True, return_arm_to_initial_position = True):
 
         ###########
         # Inputs:
@@ -5153,12 +5153,9 @@ class RobotStdFunctions():
         while not_validated:
 
             # If search_with_head_camera is true the first object detection will be made with the head camera, otherwise the robot will use the base camera instead
-            if search_with_head_camera:
-                self.set_face(camera="head", show_detections=True)
-                objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
-            else:
-                objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=True)
-        
+            self.set_face(camera="head", show_detections=True)
+            objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+
         
             print("LIST OF DETECTED OBJECTS:")
 
@@ -7049,7 +7046,7 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms        
 
-    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, navigation = True, search_with_head_camera = True, return_arm_to_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False): 
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False): 
 
 
         # TODO: Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
@@ -7176,7 +7173,7 @@ class RobotStdFunctions():
 
 
         # IF NOT SEARCH TETAS ARE DECLARED, USE CONFIGURATION FILES "LOOK" PARAMETER
-        if first_search_tetas == [] and search_with_head_camera:
+        if first_search_tetas == []:
 
             if self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "horizontal":
                 first_search_tetas = [[0, -45], [-40, -45], [40, -45]]
@@ -7587,19 +7584,19 @@ class RobotStdFunctions():
                 if pick_mode == "front":
 
                     #MOVE ARM TO INITIAL POSITION
-                    if return_arm_to_initial_position == "" and not ask_help:
+                    if arm_initial_position == "" and not ask_help:
                         self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
                     elif not ask_help:
                         if obj.object_name != "plate":    
                             self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            self.set_arm(command=arm_initial_position, wait_for_end_of=True)
 
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
 
                 elif pick_mode == "top":
                     
-                    if return_arm_to_initial_position == "" and not ask_help:
+                    if arm_initial_position == "" and not ask_help:
                         self.set_arm(command="search_table_top_risky_to_initial_pose", wait_for_end_of=True)
                         while not self.adjust_omnidirectional_position_is_done():
                             pass
@@ -7608,7 +7605,7 @@ class RobotStdFunctions():
                         if obj.object_name == "spoon" or obj.object_name == "knife" or obj.object_name == "fork":    
                             ###
                             self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
-                            self.set_arm(command=return_arm_to_initial_position, wait_for_end_of=True)
+                            self.set_arm(command=arm_initial_position, wait_for_end_of=True)
                             while not self.adjust_omnidirectional_position_is_done():
                                 pass
                         else:
@@ -7642,40 +7639,24 @@ class RobotStdFunctions():
                 picked_height = 0
                 return picked_height, ask_help
 
-            
+    def pick_from_tray(self, selected_object="", pick_mode="", placed_height = -1):
 
+        pick_mode = pick_mode.replace(" ","_").lower()
 
+        if pick_mode == "":
+            pick_mode = self.get_standard_pick_from_object(selected_object)
 
+        print("PICKING FROM TRAY")
 
-
-
-
-
-
-
-
-"""
-
-
-
-    def place_in_tray(self):
-
-        print("PICKING FROM TRAY !!!!!!!!")
-
-        first_safe_tray = [-206.8, 29, -74.7, -5.8, 51.9, 248.7]
         first_right_tray_front = [-212.1, 7.5, -62.4, -27.3, 102.3, 246.5]
-        first_left_tray_front = [-209.5, 40.7, -71.3, -24.2, 85.3, 253.8]
-        first_left_tray_top = [-183.9,60.3,-68,-90.3,41.6,321.4]
-        second_left_tray_top = [-182.7, 59.5, -44.5, -89.2, 93.2, 84.3]
         first_right_tray_top = [-177.6,9.8,-68.6,-54.1,68.4,128.7]
         second_right_tray_top = [-184.1,-9.9,-6,-97.2,92.1,122.8]
         initial_position_to_safe_joints = 	[-172.2, -70.5, -13.7, 96, 33.1, 167.4]
 
         TRAY_HEIGHT = 0.59
         TOLERANCE_ERROR = 0.02
-        placed_height = placed_in_tray_height
 
-        state = 0
+
 
         if pick_mode == "front":
             if state == 0:
