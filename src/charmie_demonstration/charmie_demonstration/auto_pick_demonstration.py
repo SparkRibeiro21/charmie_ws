@@ -135,7 +135,7 @@ class TaskMain():
 
                 self.robot.set_initial_position(self.initial_position)
 
-                self.robot.pick_object(selected_object="Mustard")
+                self.robot.pick_object(selected_object="mustard")
 
                 self.robot.wait_for_start_button()
                 
