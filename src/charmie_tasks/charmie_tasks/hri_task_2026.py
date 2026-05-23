@@ -166,7 +166,7 @@ class TaskMain():
         # Which objects should be acquired
         self.OPEN_DOOR_GUEST1 = True
         self.OPEN_DOOR_GUEST2 = True
-
+        self.POINT_TO_FREE_SEAT = True # if False it will only say it is looking to the free seat
         self.HANDOVER_GUEST2_BAG = False
         
         # Initial Position
@@ -428,14 +428,52 @@ class TaskMain():
                 # for k, v in max_place_info.items():
                 #     print(f"{k}: {v}")
 
-                self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
-                # self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
-                self.robot.set_speech(filename="hri/i_am_looking_at", wait_for_end_of=True)
-                self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
-                if self.SIDE_TO_LOOK.lower() == "right":
-                    self.robot.set_neck(position=self.look_right, wait_for_end_of=False)
-                elif self.SIDE_TO_LOOK.lower() == "left":
-                    self.robot.set_neck(position=self.look_left, wait_for_end_of=False)
+
+                """
+                time.sleep(2.0)
+                spot = self.SITTING_PLACES_IN_FURNITURE[1] 
+                ### temp for testing hri pointing at a sitting place
+                print(spot["name"])
+
+                # self.robot.node.robot_pose.x = 0.0
+                # self.robot.node.robot_pose.y = 0.0
+                # self.robot.node.robot_pose.theta = -45.0
+                # 
+                # target_coords_x = -1.1
+                # target_coords_y = 1.0
+
+                # point to free seat for guest to have a sit
+                ang = self.robot.get_rotation_angle_to_map_coords()
+                self.robot.adjust_angle(angle=ang, wait_for_end_of=False)
+                self.robot.set_arm(command="initial_position_to_point_front", wait_for_end_of=True)
+                while not self.robot.adjust_angle_is_done():
+                    print("Waiting... untill pointing movements are done!")
+                    time.sleep(0.1)
+
+                time.sleep(5.0)
+                print("Pointing movement done!")
+                
+                self.robot.set_arm(command="point_front_to_initial_position", wait_for_end_of=False)
+                time.sleep(1.0) # does nor start movement right away, wait a little for arm to start being tucked in
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
+                self.robot.adjust_angle(angle=-ang, wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
+                """
+                ### self.robot.set_speech(filename="hri/i_am_pointing_at_the_free_seat_on_the", wait_for_end_of=True) # "I am looking at the free seat on the ..."
+
+                if self.POINT_TO_FREE_SEAT: # pointing at the free seat
+                    pass
+                else: # looking at the free seat
+                    self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
+                    # self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
+                    self.robot.set_speech(filename="hri/i_am_looking_at_the_free_seat_on_the", wait_for_end_of=True) # "I am looking at the free seat on the ..."
+                    self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
+                    if self.SIDE_TO_LOOK.lower() == "right":
+                        self.robot.set_neck(position=self.look_right, wait_for_end_of=False)
+                    elif self.SIDE_TO_LOOK.lower() == "left":
+                        self.robot.set_neck(position=self.look_left, wait_for_end_of=False)
+
                 self.robot.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
                 self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
                 self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
@@ -746,14 +784,18 @@ class TaskMain():
                 self.robot.set_speech(filename="temp/"+self.GUEST1_DRINK.lower(), wait_for_end_of=True)
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
-                self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
-                # self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
-                self.robot.set_speech(filename="hri/i_am_looking_at", wait_for_end_of=True)
-                self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
-                if self.SIDE_TO_LOOK.lower() == "right":
-                    self.robot.set_neck(position=self.look_right, wait_for_end_of=False)
-                elif self.SIDE_TO_LOOK.lower() == "left":
-                    self.robot.set_neck(position=self.look_left, wait_for_end_of=False)
+                if self.POINT_TO_FREE_SEAT: # pointing at the free seat
+                    pass
+                else: # looking at the free seat
+                    self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
+                    # self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
+                    self.robot.set_speech(filename="hri/i_am_looking_at_the_free_seat_on_the", wait_for_end_of=True)
+                    self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
+                    if self.SIDE_TO_LOOK.lower() == "right":
+                        self.robot.set_neck(position=self.look_right, wait_for_end_of=False)
+                    elif self.SIDE_TO_LOOK.lower() == "left":
+                        self.robot.set_neck(position=self.look_left, wait_for_end_of=False)
+                
                 self.robot.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
                 self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
                 self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
