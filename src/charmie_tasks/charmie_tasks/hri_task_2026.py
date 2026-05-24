@@ -157,30 +157,36 @@ class TaskMain():
         # while True:
         #     pass
         
-        self.ENTRANCE_DOOR_FURNITURE = "entrace"
+        self.ENTRANCE_DOOR_FURNITURE = "exit"
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
         self.default_speak_file = "hri/grey_couch_center"
         self.default_couch_to_look_center = "grey couch"
         # Which objects should be acquired
-        self.OPEN_DOOR_GUEST1 = True
-        self.OPEN_DOOR_GUEST2 = True
+        self.OPEN_DOOR_GUEST1 = False
+        self.OPEN_DOOR_GUEST2 = False
         self.POINT_TO_FREE_SEAT = True # if False it will only say it is looking to the free seat
         self.HANDOVER_GUEST2_BAG = False
-        
-        # Initial Position
-        self.initial_position = [8.80, 0.13, -180.0]
-        # print(self.initial_position)
-        
-        # position to start following host after introducing guests
-        # self.start_follow_position = self.initial_position
-        self.start_follow_position = [2.0, 4.0, -90.0] 
-        # print(self.start_follow_position)
 
-        # position to communicate with guests at sitting area
-        self.guest_communication_position = [6.96, -0.65, -45.0]
-        # self.guest_communication_position = [2.0, 2.5, 0.0] 
+        # LAR
+        # Initial position to start task
+        self.initial_position = [2.2, 2.5, 0.0] 
+        # Position to start following host after introducing guests
+        self.start_follow_position = [2.2, 3.5, -90.0] 
+        # Position to communicate with guests at sitting area
+        self.guest_communication_position = [2.2, 2.5, 0.0] 
+        
+        # RoboCup Portugal Open 2026
+        # Initial position to start task
+        # self.initial_position = [8.80, 0.13, -180.0]
+        # Position to start following host after introducing guests
+        # self.start_follow_position = [2.0, 4.0, -90.0] # not used
+        # Position to communicate with guests at sitting area
+        # self.guest_communication_position = [6.96, -0.65, -45.0]
+        
+        # print(self.initial_position)
+        # print(self.start_follow_position)
         # print(self.guest_communication_position)
 
         self.min_dist_for_sitting_place_to_be_occupied = 0.4 # minimum distance from person to sitting place center coords to consider that place as occupied
@@ -407,7 +413,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
+                    seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
                     speak_file = self.default_speak_file
 
                 else:
@@ -421,62 +427,44 @@ class TaskMain():
                         place for place in self.SITTING_PLACES_IN_FURNITURE
                         if place["name"] == max_name
                     )
-                    neck_position = [max_place_info["center_coords"][0], max_place_info["center_coords"][1], 0.9]
+                    seat_position = [max_place_info["center_coords"][0], max_place_info["center_coords"][1], 0.9]
                     speak_file = max_place_info["speak"]
 
                 # print("Closest sitting place:")
                 # for k, v in max_place_info.items():
                 #     print(f"{k}: {v}")
 
-
-                """
-                time.sleep(2.0)
-                spot = self.SITTING_PLACES_IN_FURNITURE[1] 
-                ### temp for testing hri pointing at a sitting place
-                print(spot["name"])
-
-                # self.robot.node.robot_pose.x = 0.0
-                # self.robot.node.robot_pose.y = 0.0
-                # self.robot.node.robot_pose.theta = -45.0
-                # 
-                # target_coords_x = -1.1
-                # target_coords_y = 1.0
-
-                # point to free seat for guest to have a sit
-                ang = self.robot.get_rotation_angle_to_map_coords()
-                self.robot.adjust_angle(angle=ang, wait_for_end_of=False)
-                self.robot.set_arm(command="initial_position_to_point_front", wait_for_end_of=True)
-                while not self.robot.adjust_angle_is_done():
-                    print("Waiting... untill pointing movements are done!")
-                    time.sleep(0.1)
-
-                time.sleep(5.0)
-                print("Pointing movement done!")
-                
-                self.robot.set_arm(command="point_front_to_initial_position", wait_for_end_of=False)
-                time.sleep(1.0) # does nor start movement right away, wait a little for arm to start being tucked in
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
-                self.robot.adjust_angle(angle=-ang, wait_for_end_of=True)
-                # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
-                """
-                ### self.robot.set_speech(filename="hri/i_am_pointing_at_the_free_seat_on_the", wait_for_end_of=True) # "I am looking at the free seat on the ..."
-
                 if self.POINT_TO_FREE_SEAT: # pointing at the free seat
-                    pass
+                    ang = self.robot.get_rotation_angle_to_map_coords(target_coords=seat_position)
+                    self.robot.adjust_angle(angle=ang, wait_for_end_of=False)
+                    self.robot.set_arm(command="initial_position_to_point_front", wait_for_end_of=True)
+                    while not self.robot.adjust_angle_is_done():
+                        print("Waiting... untill pointing movements are done!")
+                        time.sleep(0.1)
+
+                    self.robot.set_speech(filename="hri/i_am_pointing_at_the_free_seat_on_the", wait_for_end_of=True)
+                    self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
+
+                    self.robot.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
+                    self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
+                    self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
+
+                    time.sleep(2.0)
+                    self.robot.set_arm(command="point_front_to_initial_position", wait_for_end_of=False)
+                    time.sleep(1.0) # does not start movement right away, wait a little for arm to start being tucked in, but still saves some time
+
                 else: # looking at the free seat
-                    self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
+                    self.robot.set_neck_coords(position=seat_position, wait_for_end_of=False)
                     # self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
-                    self.robot.set_speech(filename="hri/i_am_looking_at_the_free_seat_on_the", wait_for_end_of=True) # "I am looking at the free seat on the ..."
+                    self.robot.set_speech(filename="hri/i_am_looking_at_the_free_seat_on_the", wait_for_end_of=True)
                     self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
                     if self.SIDE_TO_LOOK.lower() == "right":
                         self.robot.set_neck(position=self.look_right, wait_for_end_of=False)
                     elif self.SIDE_TO_LOOK.lower() == "left":
                         self.robot.set_neck(position=self.look_left, wait_for_end_of=False)
-
-                self.robot.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
-                self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
-                self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
+                    self.robot.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
+                    self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
+                    self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
                 
                 self.state = self.task_states["Wait_for_guest2_to_arrive"]
 
@@ -726,7 +714,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
+                    seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
                     speak_file = self.default_speak_file
 
                 else:
@@ -740,7 +728,7 @@ class TaskMain():
                         place for place in self.SITTING_PLACES_IN_FURNITURE
                         if place["name"] == max_name
                     )
-                    neck_position = [max_place_info["center_coords"][0], max_place_info["center_coords"][1], 0.9]
+                    seat_position = [max_place_info["center_coords"][0], max_place_info["center_coords"][1], 0.9]
                     speak_file = max_place_info["speak"]
 
                 # print("Closest sitting place:")
@@ -785,9 +773,25 @@ class TaskMain():
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 if self.POINT_TO_FREE_SEAT: # pointing at the free seat
-                    pass
+                    ang = self.robot.get_rotation_angle_to_map_coords(target_coords=seat_position)
+                    self.robot.adjust_angle(angle=ang, wait_for_end_of=False)
+                    self.robot.set_arm(command="initial_position_to_point_front", wait_for_end_of=True)
+                    while not self.robot.adjust_angle_is_done():
+                        print("Waiting... untill pointing movements are done!")
+                        time.sleep(0.1)
+
+                    self.robot.set_speech(filename="hri/i_am_pointing_at_the_free_seat_on_the", wait_for_end_of=True)
+                    self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
+
+                    self.robot.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
+                    self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
+                    self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
+
+                    time.sleep(2.0)
+                    self.robot.set_arm(command="point_front_to_initial_position", wait_for_end_of=False)
+                    time.sleep(1.0) # does not start movement right away, wait a little for arm to start being tucked in, but still saves some time
                 else: # looking at the free seat
-                    self.robot.set_neck_coords(position=neck_position, wait_for_end_of=False)
+                    self.robot.set_neck_coords(position=seat_position, wait_for_end_of=False)
                     # self.robot.set_speech(filename="hri/found_free_seat", wait_for_end_of=True)
                     self.robot.set_speech(filename="hri/i_am_looking_at_the_free_seat_on_the", wait_for_end_of=True)
                     self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
