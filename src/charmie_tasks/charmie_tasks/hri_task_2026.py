@@ -91,63 +91,51 @@ class TaskMain():
 
         # Which furniture will guests and host be sitting at, and how many seats these have
         self.SITTING_PLACES_IN_FURNITURE =[
+
+            # EXAMPLE
             # {
             #     "name": "couch",  
             #     "furniture": "couch",
             #     "center_coords": self.robot.get_location_coords_from_furniture("couch"),
             #     "speak": "123"
             # },
-            ### FOR CASES WHERE COUCH IS HORIZONTAL IN 2D MAP
+            
+            # couch that extends in the Y axis in the 2D map (horizontal in the map)
             {
                 "name": "grey_couch_left",  
-                "furniture": "Grey Couch",
-                "center_coords": [(self.robot.get_top_coords_from_furniture("Grey Couch")[0] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[0])/2.0, 
-                                  (self.robot.get_top_coords_from_furniture("Grey Couch")[1] + (self.robot.get_top_coords_from_furniture("Grey Couch")[1] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[1])/2.0)/2.0, 
-                                  self.robot.get_height_from_furniture("Grey Couch")[0]], # manual values for now
-                "speak": "hri/grey_couch_left"
+                "furniture": "Couch",
+                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
+                                  self.robot.get_location_coords_from_furniture("Couch")[1] + (self.robot.get_size_from_furniture("Couch")[1]/4.0),
+                                  self.robot.get_location_coords_from_furniture("Couch")[2]],
+                "speak": "hri/grey_couch_left",
             },
             {
                 "name": "grey_couch_right", 
-                "furniture": "Grey Couch",
-                "center_coords": [(self.robot.get_top_coords_from_furniture("Grey Couch")[0] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[0])/2.0, 
-                                  (self.robot.get_bottom_coords_from_furniture("Grey Couch")[1] + (self.robot.get_top_coords_from_furniture("Grey Couch")[1] + self.robot.get_bottom_coords_from_furniture("Grey Couch")[1])/2.0)/2.0, 
-                                  self.robot.get_height_from_furniture("Grey Couch")[0]], # manual values for now
+                "furniture": "Couch",
+                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
+                                  self.robot.get_location_coords_from_furniture("Couch")[1] - (self.robot.get_size_from_furniture("Couch")[1]/4.0),
+                                  self.robot.get_location_coords_from_furniture("Couch")[2]],
                 "speak": "hri/grey_couch_right"
             },
 
-            {
-                "name": "coloured_couch_left",  
-                "furniture": "Coloured Couch",
-                "center_coords": [(self.robot.get_top_coords_from_furniture("Coloured Couch")[0] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[0])/2.0, 
-                                  (self.robot.get_top_coords_from_furniture("Coloured Couch")[1] + (self.robot.get_top_coords_from_furniture("Coloured Couch")[1] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[1])/2.0)/2.0, 
-                                  self.robot.get_height_from_furniture("Coloured Couch")[0]], # manual values for now
-                "speak": "hri/coloured_couch_left"
-            },
-            {
-                "name": "coloured_couch_right", 
-                "furniture": "Coloured Couch",
-                "center_coords": [(self.robot.get_top_coords_from_furniture("Coloured Couch")[0] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[0])/2.0, 
-                                  (self.robot.get_bottom_coords_from_furniture("Coloured Couch")[1] + (self.robot.get_top_coords_from_furniture("Coloured Couch")[1] + self.robot.get_bottom_coords_from_furniture("Coloured Couch")[1])/2.0)/2.0, 
-                                  self.robot.get_height_from_furniture("Coloured Couch")[0]], # manual values for now
-                "speak": "hri/coloured_couch_right"
-            },
-            ### FOR CASES WHERE COUCH IS VERTICAL IN 2D MAP
+            # couch that extends in the X axis in the 2D map (vertical in the map)
             # {
-            #     "name": "couch_top",  
-            #     "furniture": "couch",
-            #     "center_coords": [(self.robot.get_top_coords_from_furniture("Couch")[0] + (self.robot.get_top_coords_from_furniture("Couch")[0] + self.robot.get_bottom_coords_from_furniture("Couch")[0])/2.0)/2.0, 
-            #                       (self.robot.get_top_coords_from_furniture("Couch")[1] + self.robot.get_bottom_coords_from_furniture("Couch")[1])/2.0,
-            #                       self.robot.get_height_from_furniture("Couch")[0]], # manual values for now
-            #     "speak": "123"
+            #     "name": "coloured_couch_left",  
+            #     "furniture": "Coloured Couch",
+            #     "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] + (self.robot.get_size_from_furniture("Couch")[0]/4.0), 
+            #                       self.robot.get_location_coords_from_furniture("Couch")[1],
+            #                       self.robot.get_location_coords_from_furniture("Couch")[2]],
+            #     "speak": "hri/coloured_couch_left"
             # },
             # {
-            #     "name": "couch_bottom", 
-            #     "furniture": "couch",
-            #     "center_coords": [(self.robot.get_bottom_coords_from_furniture("Couch")[0] + (self.robot.get_top_coords_from_furniture("Couch")[0] + self.robot.get_bottom_coords_from_furniture("Couch")[0])/2.0)/2.0, 
-            #                       (self.robot.get_top_coords_from_furniture("Couch")[1] + self.robot.get_bottom_coords_from_furniture("Couch")[1])/2.0,
-            #                       self.robot.get_height_from_furniture("Couch")[0]], # manual values for now
-            #     "speak": "123"
+            #     "name": "coloured_couch_right", 
+            #     "furniture": "Coloured Couch",
+            #     "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] - (self.robot.get_size_from_furniture("Couch")[0]/4.0), 
+            #                       self.robot.get_location_coords_from_furniture("Couch")[1],
+            #                       self.robot.get_location_coords_from_furniture("Couch")[2]],
+            #     "speak": "hri/coloured_couch_right"
             # },
+            
             {
                 "name": "left_lounge_chair",
                 "furniture": "left_lounge_chair",
@@ -162,15 +150,19 @@ class TaskMain():
             }
         ]
 
+        # # debug the sitting places coordinates
         # print("SITTING PLACES:")
         # for sf in self.SITTING_PLACES_IN_FURNITURE:
         #     print(" - ", sf["name"], " in ", sf["furniture"], " seats at ", sf["center_coords"])
-
-        self.ENTRANCE_DOOR_FURNITURE = "entrance"
+        # while True:
+        #     pass
+        
+        self.ENTRANCE_DOOR_FURNITURE = "entrace"
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
         self.default_speak_file = "hri/grey_couch_center"
+        self.default_couch_to_look_center = "grey couch"
         # Which objects should be acquired
         self.OPEN_DOOR_GUEST1 = True
         self.OPEN_DOOR_GUEST2 = True
@@ -181,13 +173,14 @@ class TaskMain():
         self.initial_position = [8.80, 0.13, -180.0]
         # print(self.initial_position)
         
+        # position to start following host after introducing guests
         # self.start_follow_position = self.initial_position
-        self.start_follow_position = [2.0, 4.0, -90.0] # position to start following host after introducing guests
+        self.start_follow_position = [2.0, 4.0, -90.0] 
         # print(self.start_follow_position)
 
-        # self.guest_communication_position = self.robot.get_navigation_coords_from_furniture("couch")
+        # position to communicate with guests at sitting area
         self.guest_communication_position = [6.96, -0.65, -45.0]
-        # self.guest_communication_position = [2.0, 2.5, 0.0] # position to communicate with guests at sitting area
+        # self.guest_communication_position = [2.0, 2.5, 0.0] 
         # print(self.guest_communication_position)
 
         self.min_dist_for_sitting_place_to_be_occupied = 0.4 # minimum distance from person to sitting place center coords to consider that place as occupied
@@ -414,7 +407,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = self.robot.get_location_coords_from_furniture("grey_couch")
+                    neck_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
                     speak_file = self.default_speak_file
 
                 else:
@@ -695,7 +688,7 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    neck_position = [self.robot.get_location_coords_from_furniture("grey_couch")[0], self.robot.get_location_coords_from_furniture("grey_couch")[1], 0.9]
+                    neck_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
                     speak_file = self.default_speak_file
 
                 else:
@@ -735,7 +728,7 @@ class TaskMain():
                 if prediction_confidence == 0.0:
                     # caso em que não conseguiu reconhecer o guest1
                     print("COULD NOT RECOGNIZE GUEST1 FACE AGAIN")
-                    guest1_coords = [self.robot.get_location_coords_from_furniture("grey_couch")[0], self.robot.get_location_coords_from_furniture("grey_couch")[1], 0.9]
+                    guest1_coords = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
 
                 # Introduce both guests
 

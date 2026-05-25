@@ -71,10 +71,10 @@ class ROS2TaskNode(Node):
             # print(self.objects_classes_file)
             with open(self.home + configuration_files_midpath + 'rooms.json', encoding='utf-8') as json_file:
                 self.rooms = json.load(json_file)
-            # print(self.house_rooms)
+            # print(self.rooms)
             with open(self.home + configuration_files_midpath + 'furniture.json', encoding='utf-8') as json_file:
                 self.furniture = json.load(json_file)
-            # print(self.house_furniture)
+            # print(self.furniture)
             self.get_logger().info("Successfully imported data from json configuration files.")
         except:
             self.get_logger().error("Could NOT import data from json configuration files.")
@@ -3172,6 +3172,24 @@ class RobotStdFunctions():
         else:
             return False
 
+    def get_rotation_angle_to_map_coords(self, target_coords=[0.0, 0.0]):
+        
+        dx = target_coords[0] - self.node.robot_pose.x
+        dy = target_coords[1] - self.node.robot_pose.y
+
+        dist = math.sqrt(dx**2 + dy**2)
+
+        if dist <= self.ROBOT_RADIUS: # if too close, do not rotate, for safety
+            self.node.get_logger().warn("Target is very close to the robot, may be dangerous to rotate.")
+            return 0.0
+        else:
+            target_angle_deg = math.degrees(math.atan2(dy, dx))
+
+            # Normalize for interval [-180, 180]
+            rotation_deg = ((target_angle_deg - self.node.robot_pose.theta) + 180) % 360 - 180
+
+            return rotation_deg
+
     def get_minimum_radar_distance(self, direction=0.0, ang_obstacle_check=45):
 
         # success = False
@@ -4683,25 +4701,26 @@ class RobotStdFunctions():
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return [round((obj['top_left_coords'][0] + obj['bot_right_coords'][0])/2, 2), round((obj['top_left_coords'][1] + obj['bot_right_coords'][1])/2, 2), obj['height'][0]] # Return the class
+                return [obj["center_coords"][0], obj["center_coords"][1], obj["height"][0]].copy()
+        
         return None  # Return None if the object is not found
     
-    def get_top_coords_from_furniture(self, furniture):
+    def get_size_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['top_left_coords'].copy()
+                return obj['size'].copy()
         return None  # Return None if the object is not found
     
-    def get_bottom_coords_from_furniture(self, furniture):
+    def get_angle_from_furniture(self, furniture):
 
         # Iterate through the list of dictionaries
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
-                return obj['bot_right_coords'].copy()
+                return obj['angle']
         return None  # Return None if the object is not found
 
     def get_height_from_furniture(self, furniture):
