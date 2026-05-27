@@ -6792,26 +6792,42 @@ class RobotStdFunctions():
 
         return success, message, nav_coords_ret
 
-    def open_door(self, push_pull="push", left_right="left", wait_for_end_of=True):
+    def open_door(self, push_pull="push", handle_side="", wait_for_end_of=True):
 
 
-        arm_position_1 = [-189.7, 36.6, -78.1, 170.7, 45.5, 183.4]
+        arm_position_pull_left = [-189.7, 36.6, -78.1, 170.7, 45.5, 183.4]
+        arm_position_pull_right = [-192.4, 71.8, -118.4, 160.6, 46.7, 191.8]
         arm_position_handle = [-184.3, 27.1, -81.7, 178, 32.1, 178.3]
+
+        initial_position_push = [1.50, 0, -178.0]
+        initial_position_pull = [1.77, -0.01, 179.0]
+
+        neck_position_push = [[12,-18]]
+        neck_position_pull = [[-15,-20]]
+
+
+        if handle_side == "":
+            if push_pull == "push":
+                handle_side = "right" #"left" or "right"
+            if push_pull == "pull":
+                handle_side = "left" #"left" or "right"
 
         tf_x = 0.145
         tf_y = -0.006
         tf_z = -0.075
 
-        if push_pull == "pull":
-            initial_position = [1.50, 0, -178.0]
-            neck_position = [[12,-18]]
-            neck_position = [[12,-18]]
+        if push_pull == "push" and handle_side == "left":
+        
+            pass
+        
+        if push_pull == "push" and handle_side == "right":
+
+            pass
+
+        if push_pull == "pull" and handle_side == "left":
 
 
-
-
-
-            self.move_to_position(move_coords=initial_position, wait_for_end_of=True)
+            self.move_to_position(move_coords=initial_position_pull, wait_for_end_of=True)
             self.set_speech(filename="hri/opening_door", wait_for_end_of=False)
             _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
             print("Door Distance", furniture_distance)
@@ -6821,7 +6837,7 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=True, safety=False)
 
 
-            door_handle = self.search_for_objects(tetas = neck_position, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_head_FNR"], minimum_tv_prompt_confidence=0.25)
+            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_head_FNR"], minimum_tv_prompt_confidence=0.25)
         
             for h in door_handle:
 
@@ -6831,38 +6847,39 @@ class RobotStdFunctions():
                 pass
 
             self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.21, wait_for_end_of=False)
-        if push_pull == "pull":
-            self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_1, wait_for_end_of=True)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_pull_left, wait_for_end_of=True)
+
             while not self.adjust_omnidirectional_position_is_done():
                 pass
             
 
-            #validated = False
+            validated = False
 
-            #while not validated:
+            while not validated:
 
-                # door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, visual_prompts=["door_grip_hand_FNR2"], minimum_tv_prompt_confidence=0.50)
-                #door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, text_prompt=["door handle"], minimum_tv_prompt_confidence=0.50)
-                #self.set_arm(command="open_gripper", wait_for_end_of=True)
+                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, text_prompt=["door handle"], minimum_tv_prompt_confidence=0.50)
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
 
-                #for g in door_handle:
+                for g in door_handle:
 
-                    #gripper_position = self.get_gripper_localization()
+                    gripper_position = self.get_gripper_localization()
 
-                    #move_z_gripper = (g.position_cam.z + tf_y - 0.05)*1000
-                    #move_y_gripper = (g.position_cam.y + tf_z - 0.085)*1000
-                    #move_x_gripper = (g.position_cam.x - tf_x)*1000
-                    #move_x_base = abs(tf_x - g.position_cam.x)
-                    #print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
-                    #print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
-                #if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
-                    #validated = True
+                    move_z_gripper = (g.position_cam.z + tf_y - 0.05)*1000
+                    move_y_gripper = (g.position_cam.y + tf_z - 0.085)*1000
+                    move_x_gripper = (g.position_cam.x - tf_x)*1000
+                    move_x_base = abs(tf_x - g.position_cam.x)
+                    print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
+                    print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
+                if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
+                    validated = True
 
-            #lower_gripper = [- move_y_gripper, move_z_gripper , 0.0, 0.0, 0.0, 0.0] 
-            # 
+            lower_gripper = [- move_y_gripper, move_z_gripper , 0.0, 0.0, 0.0, 0.0] 
+
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = lower_gripper, wait_for_end_of=True) 
+             
             self.set_arm(command="open_gripper", wait_for_end_of=True)   
 
-            self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_handle, wait_for_end_of=True)  
             #print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
             self.adjust_omnidirectional_position(dx = 0.15 , dy = 0.0, wait_for_end_of=True, safety=False)
             GRAB_DOOR_Y = 0.09*1000
@@ -6885,6 +6902,85 @@ class RobotStdFunctions():
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
             _,_ = self.adjust_angle(-40)
+
+            self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
+            self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
+
+        if push_pull == "pull" and handle_side == "right":
+
+            self.move_to_position(move_coords=initial_position_pull, wait_for_end_of=True)
+            self.set_speech(filename="hri/opening_door", wait_for_end_of=False)
+            _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+            print("Door Distance", furniture_distance)
+            dx = furniture_distance - 0.60
+            dy = 0.0
+
+            self.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=True, safety=False)
+
+
+            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
+        
+            for h in door_handle:
+
+                move_y = h.position_relative.y
+
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.26, wait_for_end_of=False)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_pull_left, wait_for_end_of=True)
+
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+            
+
+            validated = False
+            self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+            while not validated:
+
+                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, detect_tv_prompt_head=False, visual_prompts=["door_handle_pull_right_hand"], minimum_tv_prompt_confidence=0.25)
+
+                for g in door_handle:
+
+                    gripper_position = self.get_gripper_localization()
+
+                    move_z_gripper = (g.position_cam.z - tf_z - 0.04)*1000
+                    move_y_gripper = (g.position_cam.y + tf_y + 0.015)*1000
+                    move_x_gripper = (g.position_cam.x - tf_x)*1000
+                    move_x_base = abs(tf_x - g.position_cam.x)
+                    print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
+                    print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
+                if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
+                    validated = True
+
+            lower_gripper = [move_z_gripper, move_y_gripper , 0.0, 0.0, 0.0, 0.0] 
+
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = lower_gripper, wait_for_end_of=True) 
+
+            print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, " Position cam Z ",g.position_cam.z , " Position cam Y ",g.position_cam.y , " Position cam X ",g.position_cam.x)
+            self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.05 , dy = 0.0, wait_for_end_of=True, safety=False)
+            GRAB_DOOR_Y = 0.1*1000
+            GRAB_DOOR_X = 0.03*1000
+            GRAB_DOOR_ROTATE= -30
+            grab_door = [0.0, GRAB_DOOR_Y, GRAB_DOOR_X, GRAB_DOOR_ROTATE, 0.0, 0.0]
+            release_door = [0.0, -GRAB_DOOR_Y - 0.03*1000, 0.0, -GRAB_DOOR_ROTATE, 0.0, 0.0]
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True) 
+            self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.0, wait_for_end_of=True, safety=False) 
+            self.adjust_omnidirectional_position(dx = -0.17 , dy = 0.12, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = -0.12 , dy = 0.08, wait_for_end_of=True, safety=False)
+
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True) 
+            after_release_first = [-0.1*1000, 0.0, -0.15*1000, 0.0, 0.0, 0.0, 0.0]
+            #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
+            after_release_last = [0.12*1000, 0.12*1000, 0.16*1000, 0.0, 0.0, 0.0]
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_first, wait_for_end_of=True)  
+            self.adjust_omnidirectional_position(dx = 0.00 , dy = - 0.26, wait_for_end_of=True, safety=False)
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_last, wait_for_end_of=True)
+            #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
+
+            _,_ = self.adjust_angle(40)
 
             self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
@@ -7018,6 +7114,14 @@ class RobotStdFunctions():
         is_object_in_furniture_check = False
         check = False
         show_detection = True
+        correct_z_lock = False
+        correct_y_lock = False
+        correct_x_lock = False
+        rotation_lock  = False
+        correct_z_adjust = 0.0
+        correct_y_adjust = 0.0
+        correct_x_adjust = 0.0
+        correct_rotation_adjust = 0.0
         selected_object = selected_object.replace(" ","_").lower()
         pick_mode = pick_mode.replace(" ","_").lower()
         furniture = furniture.replace(" ","_").lower()
@@ -7073,37 +7177,7 @@ class RobotStdFunctions():
 
         # ****************************************************************************************
         # 
-        # A) Define special cases additional movements
-        # 
-        # **************************************************************************************** 
-
-        # THE FOLLOWING ARE SPECIAL CASES WHERE DIFFERENT MANUAL INFORMATION IS USED TO PICK THEM, DO NOT CHANGE UNLESS NECESSARY !!!!
-        if pick_mode == "top":
-            if obj.object_name == "bowl":
-                correct_y_adjust = 90 #mm
-                rotation_lock = True
-                correct_rotation = 0.0 #degree
-
-            if obj.object_name == "cup":
-                correct_y_adjust = 45
-                correct_x_lock = True
-                correct_x_grab = 210
-
-            if obj.object_name == "plate":
-                correct_z_adjust = -20
-                correct_rotation = 90.0
-                rotation_lock = True
-                correct_x_adjust = -19
-
-            if obj.object_name == "rubiks cube":
-                correct_rotation_adjust = -60
-
-            if obj.object_name == "spoon" or obj.object_name == "knife" or obj.object_name == "fork":
-                correct_x_adjust = -12
-
-        # ****************************************************************************************
-        # 
-        # B) Define standard necessary variables based on how much was declared 
+        # A) Define standard necessary variables based on how much was declared 
         # 
         # **************************************************************************************** 
 
@@ -7134,6 +7208,39 @@ class RobotStdFunctions():
             print("PICK FURNITURE HEIGHT IS NEGATIVE")
 
 
+        # ****************************************************************************************
+        # 
+        # B) Define special cases additional movements
+        # 
+        # **************************************************************************************** 
+
+        # THE FOLLOWING ARE SPECIAL CASES WHERE DIFFERENT MANUAL INFORMATION IS USED TO PICK THEM, DO NOT CHANGE UNLESS NECESSARY !!!!
+        if pick_mode == "top":
+            if selected_object == "bowl":
+                correct_y_adjust = 90 #mm
+                rotation_lock = True
+                correct_rotation_adjust = 0.0 #degree
+
+            if selected_object == "cup":
+                correct_y_adjust = 45 #mm
+                correct_x_lock = True
+                correct_x_adjust = 285 #mm
+                rotation_lock = True
+                correct_rotation_adjust = 0.0 #degree
+
+            if selected_object == "plate":
+                correct_z_adjust = -20 #mm
+                correct_rotation_adjust = 90.0 #degrees
+                rotation_lock = True
+                correct_x_adjust = -19 #mm
+
+            if selected_object == "rubiks cube":
+                correct_rotation_adjust = -60 #degrees
+
+            if selected_object == "spoon" or selected_object == "knife" or selected_object == "fork":
+                correct_x_adjust = -12 #mm
+
+
 
         # ***********************************************************************************************************************
         # 
@@ -7150,12 +7257,14 @@ class RobotStdFunctions():
             print(" NOW ENTERING STATE ", state)
             if state == HEAD_SEARCH_OBJECTS:
 
-                # If search_with_head_camera is true the first object detection will be made with the head camera, otherwise the robot will use the base camera instead
+                # The first object detection will be made with the head camera. Will look for selected_object or list_of_objects_detected_as if selected_object is not found. Will look at first_search_tetas until object found within a number of tries equal to max_search_attempts.
+                
                 self.set_face(camera="head", show_detections=True)
                 objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], list_of_objects_detected_as=list_of_objects_detected_as, use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts = max_search_attempts)
 
                 not_validated = True
 
+                # If no selected object is found go to ask for help, giving a placeholder DetectedObject() type as none was found
                 if not objects_found:
                     ask_help = True
                     obj = DetectedObject()
@@ -7414,10 +7523,39 @@ class RobotStdFunctions():
                             HEIGHT = oh/1.5 
                         correct_x_grab = (obj.position_cam.x + HEIGHT - tf_x)*1000
                 
-                print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab})")
+                print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab}, {correct_rotation})")
+
+                if correct_z_lock:
+                    correct_z_grab = correct_z_adjust
+                else:
+                    correct_z_grab = correct_z_grab + correct_z_adjust
+                
+                if correct_y_lock:
+                    print("lock_correct")
+                    correct_y_grab = correct_y_adjust
+                else:
+                    print("lock incorrect")
+                    correct_y_grab = correct_y_grab + correct_y_adjust
+
+                if correct_x_lock:
+                    correct_x_grab = correct_x_adjust
+                else:
+                    correct_x_grab = correct_x_grab + correct_x_adjust
+
+                if rotation_lock:
+                    correct_rotation = correct_rotation_adjust
+                else:
+                    correct_rotation = correct_rotation + correct_rotation_adjust
+
+                if pick_mode == "top" and (selected_object == "fork" or selected_object == "spoon" or selected_object == "knife"):
+                    correct_rotation = self.confirm_cutlery_rotation(obj = obj)
+
+
+                print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab}, {correct_rotation})")
+
                 
                 if pick_mode == "front":
-                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
+                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] #CHECK WITH PEDRO
 
                 if pick_mode == "top":
 
@@ -7446,6 +7584,7 @@ class RobotStdFunctions():
                 
             if state == GRASP_OBJECT:    
                 #MOVE ARM TO FINAL POSITION
+                #self.wait_for_start_button()
                 current_gripper_height = self.get_gripper_localization()
 
                 if (furniture_height > 0):                              
@@ -7661,8 +7800,7 @@ class RobotStdFunctions():
             return placed_height
 
 
-"""
-    def confirm_cutlery_rotation:
+    def confirm_cutlery_rotation(self, obj = DetectedObject()):
         
         _, frame = self.get_hand_rgb_image()
         curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
@@ -7671,6 +7809,16 @@ class RobotStdFunctions():
         pts = np.array([[p.x, p.y] for p in obj.mask.point],dtype=np.int32)
         #yolo_mask = np.zeros((obj.box_width, obj.box_height), dtype=np.int16)
         #pts = ([p.x, p.y] for p in obj.mask.point)
+        #rgb = self.node.br.imgmsg_to_cv2(obj.image_rgb_frame, "bgr8")
+        #rgb_h, rgb_w = rgb.shape[:2]
+        #if (rgb_w, rgb_h) != (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT):
+            #self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.node.CAM_IMAGE_WIDTH}x{self.node.CAM_IMAGE_HEIGHT}. Resizing.")
+            #rgb = cv2.resize(rgb, (self.node.CAM_IMAGE_WIDTH, self.node.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+        #cv2.imshow('cam', rgb)
+        #cv2.imshow('curr', curr_frame) 
+        #cv2.imshow('mask', yolo_mask) 
+        #cv2.imshow('pts', pts) #cv2.imshow('red', red) #cv2.imshow('otsu', th) #cv2.imshow('lab', crop_lab) #cv2.imshow('lab_red', crop_lab[:,:,1]) #cv2.waitKey(0) #self.wait_for_start_button()
+
         yolo_mask = cv2.fillConvexPoly(yolo_mask, pts, 255)
         curr_frame = cv2.bitwise_and(curr_frame, curr_frame, mask=yolo_mask)
 
@@ -7705,4 +7853,5 @@ class RobotStdFunctions():
                 correct_rotation =correct_rotation - 180
 
             print("Rotation", correct_rotation)
-"""
+
+            return correct_rotation
