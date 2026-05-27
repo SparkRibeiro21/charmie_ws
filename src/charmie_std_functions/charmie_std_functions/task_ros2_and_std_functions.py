@@ -4634,6 +4634,15 @@ class RobotStdFunctions():
                 return float(obj["height"])  # Return the value
         return None  # Return None if the object is not found
     
+    def get_object_weight_from_object(self, object_name):
+
+        # Iterate through the list of dictionaries
+        for obj in self.node.objects_file:
+            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            if str(obj["name"]).replace(" ","_").lower() == str(object_name).replace(" ","_").lower():  # Check if the name matches
+                return float(obj["weight"])  # Return the value
+        return None  # Return None if the object is not found
+    
     def get_object_shape_from_object(self, object_name):
 
         # Iterate through the list of dictionaries
