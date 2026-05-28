@@ -14,26 +14,26 @@ ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
     "charmie_face":                 False,
-    "charmie_head_camera":          False,
+    "charmie_head_camera":          True,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                False,
-    "charmie_lidar_bottom":         False,
+    "charmie_lidar":                True,
+    "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  True,
-    "charmie_localisation":         False,
-    "charmie_low_level":            False,
-    "charmie_navigation":           False,
-    "charmie_nav2":                 False,
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
+    "charmie_navigation":           True,
+    "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 False,
+    "charmie_neck":                 True,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
-    "charmie_speakers_save":        False,
+    "charmie_speakers_save":        True,
     "charmie_tracking":             False,
-    "charmie_yolo_objects":         False,
+    "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
@@ -284,12 +284,12 @@ class TaskMain():
             
             if self.state == LLM_gpsr_llp:
 
-                # self.robot.wait_for_start_button()
+                self.robot.wait_for_start_button()
                 
                 print("New LLM GPSR LLP")
 
                 start_time = time.time()
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "What snacks are there on the kitchen cabinent?", mode="", wait_for_end_of=True)
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to the shelf and count how many drinks there are and then tell the result.", mode="", wait_for_end_of=True)
                 
                 ### THIS IS GPSR TASK ###
                 llp_input = hlp[0].split(";")
@@ -297,7 +297,7 @@ class TaskMain():
                 start_llp_time = time.time()
 
                 self.curr_room = "living_room"
-                self.curr_furniture = "NONE"
+                self.curr_furniture = "shelf"
                 self.curr_result = "NONE"
                 self.curr_obj_list =[]
 
@@ -311,7 +311,7 @@ class TaskMain():
 
                         llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
                         print(f"Action Generated: {llp_output[0]}")
-                        # self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list = self.robot.execute_gpsr_plan(command=llp_output[0], curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, wait_for_end_of=True)
+                        self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list = self.robot.execute_gpsr_plan(command=llp_output[0], curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, wait_for_end_of=True)
                         print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
 
                 end_time = time.time()

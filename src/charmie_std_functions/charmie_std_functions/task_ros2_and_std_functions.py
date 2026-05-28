@@ -4237,6 +4237,9 @@ class RobotStdFunctions():
     def execute_gpsr_plan(self, command ="", curr_room="", curr_furniture="", curr_result="", curr_obj_list=[], wait_for_end_of = True):
             
         task_split = command.split("-")
+
+        self.look_navigation = [0, -30]
+        self.look_forward = [0, 0]
         
         task_type = task_split[0] if len(task_split) > 0 else ""
         task_info = task_split[1] if len(task_split) > 1 else ""
@@ -4256,11 +4259,14 @@ class RobotStdFunctions():
                 for obj in self.node.rooms:
                     if str(obj["name"]).replace(" ","_").lower() == parameter:
                         ### TASK TYPE====> move_to_room
+                        self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
-                        # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
 
+                        self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
                         self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
@@ -4275,11 +4281,14 @@ class RobotStdFunctions():
                 for obj in self.node.furniture:
                     if str(obj["name"]).replace(" ","_").lower() == parameter:
                         ### TASK TYPE====> move_to_furniture
+                        self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
 
-                        # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
                         
+                        self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
                         self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
                         
@@ -4384,6 +4393,7 @@ class RobotStdFunctions():
                     self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                 
                 curr_result = "I have found " + str(obj_counter) + " " + parameter.replace("_"," ") + "."
+                print(curr_result)
                 self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
                 
                 print ("Total count of ", parameter, ":", obj_counter)
