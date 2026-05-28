@@ -4322,13 +4322,14 @@ class RobotStdFunctions():
                     search_tetas = [[0, -15], [0, -35], [0, 15]]
                     print("Looking for:", parameter, "with vertical search")
 
-                search_list = self.get_list_of_objects_to_search(parameter=parameter)
-        
-                objects_found = self.search_for_objects(search_tetas,list_of_objects=search_list, detect_objects=True)
+                objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects=objects_found, parameter=parameter)
+                print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
 
-                if objects_found:
+                if filtered_objects_found:
                     self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
-                    for obj_found in objects_found:
+
+                    for obj_found in filtered_objects_found:
 
                         curr_obj_list.append(obj_found)
                         print("Found:", obj_found.object_name)
@@ -4381,17 +4382,19 @@ class RobotStdFunctions():
                     search_tetas = [[0, -15], [0, -35], [0, 15]]
                     print("Looking for:", parameter, "with vertical search")
 
-                search_list = self.get_list_of_objects_to_search(parameter=parameter)
+                objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects=objects_found, parameter=parameter)
+                print("Objects to count:", [obj.object_name for obj in filtered_objects_found])
 
-                objects_found = self.search_for_objects(search_tetas,list_of_objects=search_list, detect_objects=True)
+                if filtered_objects_found:
+                    self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
 
-                self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
-
-                for obj_found in objects_found:
-                    obj_counter += 1
-                    print("Found:", obj_found.object_name)
-                    self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
-                
+                    for obj_found in filtered_objects_found:
+            
+                        obj_counter += 1
+                        print("Found:", obj_found.object_name)
+                        self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    
                 curr_result = "I have found " + str(obj_counter) + " " + parameter.replace("_"," ") + "."
                 print(curr_result)
                 self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
@@ -4414,40 +4417,20 @@ class RobotStdFunctions():
                     search_tetas = [[0, -15], [0, -35], [0, 15]]
                     print("Looking for:", second_parameter, "with vertical search")
 
-                looking_for_class = False
+                objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects=objects_found, parameter=parameter)
+                print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
 
-                # IF WHAT WE ARE LOOKING FOR IS A CLASS OF OBJECTS OR A SPECIFIC ONE:
-                for class_obj in self.node.objects_classes_file:
+                # if filtered_objects_found:
 
-                    if class_obj["name"].replace(" ", "_").lower() == second_parameter:
-                        looking_for_class = True
-                        obj_class = class_obj["name"]
+                #     self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+                #     for obj_found in filtered_objects_found:
 
-                if looking_for_class:
+                #         curr_obj_list.append(obj_found)
+                #         print("Found:", obj_found.object_name)
 
-                        print("Looking for objects of class:", obj_class)
-                        search_list = []
-
-                        for obj in self.node.objects_file:
-                            if obj["class"].replace(" ", "_").lower() == obj_class.replace(" ", "_").lower():
-                                search_list.append(obj["name"].replace(" ","_").lower())
-                            
-                        objects_found = self.search_for_objects(search_tetas,list_of_objects=search_list, detect_objects=True)
-
-                else:
-                        print("Looking for objects of all classes")
-                        objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-
-                if objects_found:
-
-                    self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
-                    for obj_found in objects_found:
-
-                        curr_obj_list.append(obj_found)
-                        print("Found:", obj_found.object_name)
-
-                else:    
-                    self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+                # else:    
+                #     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
 
 
                 if parameter == "small":
@@ -4524,35 +4507,22 @@ class RobotStdFunctions():
 
         return curr_room, curr_furniture, curr_result, curr_obj_list
 
-    def get_list_of_objects_to_search(self, parameter):
+    def get_filtered_list_of_objects_found(self, list_of_objects_found, parameter):
 
-        search_list = []
+        filtered_objects_found = []
 
-        search_for_class = False
+        for obj_found in list_of_objects_found:
+            if obj_found.object_name.replace(" ","_").lower() == parameter:
+                filtered_objects_found.append(obj_found)
 
-        # Check if the parameter is a class of objects
-        for class_obj in self.node.objects_classes_file:
-            if class_obj["name"].replace(" ", "_").lower() == parameter:
-                print("Looking for objects of class:", class_obj["name"])
-                search_for_class = True
-                
+            else:
+                obj_found_class = self.get_object_class_from_object_name(obj_found.object_name)
+                if obj_found_class.replace(" ","_").lower() == parameter:
+                    filtered_objects_found.append(obj_found)
+        
+        print("Filtered objects found:", [obj.object_name for obj in filtered_objects_found])
 
-        # Check if the parameter is a specific object
-        for obj in self.node.objects_file:
-            if obj["name"].replace(" ", "_").lower() == parameter:
-                # If it is an object, save only that object in the search list
-                print("Looking for a specific object:", obj["name"])
-                search_list.append(parameter)
-
-
-        # If it is a class, save every object of that class in the search list
-        if search_for_class:
-            # Save every object of that class in the search list
-            for obj in self.node.objects_file:
-                    if obj["class"].replace(" ", "_").lower() == parameter:
-                        search_list.append(obj["name"].replace(" ","_").lower())
-
-        return search_list
+        return filtered_objects_found
         
     def get_object_size_from_object(self, object_name):
 
