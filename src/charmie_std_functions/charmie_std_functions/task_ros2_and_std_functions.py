@@ -4323,7 +4323,7 @@ class RobotStdFunctions():
                     print("Looking for:", parameter, "with vertical search")
 
                 objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects=objects_found, parameter=parameter)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
                 print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
 
                 if filtered_objects_found:
@@ -4383,7 +4383,7 @@ class RobotStdFunctions():
                     print("Looking for:", parameter, "with vertical search")
 
                 objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects=objects_found, parameter=parameter)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
                 print("Objects to count:", [obj.object_name for obj in filtered_objects_found])
 
                 if filtered_objects_found:
@@ -4397,8 +4397,7 @@ class RobotStdFunctions():
                     
                 curr_result = "I have found " + str(obj_counter) + " " + parameter.replace("_"," ") + "."
                 print(curr_result)
-                self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
-                
+                self.save_speech(command=curr_result, filename="result", quick_voice=True, wait_for_end_of=True)
                 print ("Total count of ", parameter, ":", obj_counter)
 
                 pass
@@ -4418,7 +4417,7 @@ class RobotStdFunctions():
                     print("Looking for:", second_parameter, "with vertical search")
 
                 objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects=objects_found, parameter=parameter)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
                 print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
 
                 # if filtered_objects_found:
@@ -4507,7 +4506,7 @@ class RobotStdFunctions():
 
         return curr_room, curr_furniture, curr_result, curr_obj_list
 
-    def get_filtered_list_of_objects_found(self, list_of_objects_found, parameter):
+    def get_filtered_list_of_objects_found(self, list_of_objects_found= [], parameter=""):
 
         filtered_objects_found = []
 
@@ -4516,7 +4515,7 @@ class RobotStdFunctions():
                 filtered_objects_found.append(obj_found)
 
             else:
-                obj_found_class = self.get_object_class_from_object_name(obj_found.object_name)
+                obj_found_class = self.get_object_class_from_object(obj_found.object_name)
                 if obj_found_class.replace(" ","_").lower() == parameter:
                     filtered_objects_found.append(obj_found)
         

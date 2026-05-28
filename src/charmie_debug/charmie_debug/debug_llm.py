@@ -289,7 +289,7 @@ class TaskMain():
                 print("New LLM GPSR LLP")
 
                 start_time = time.time()
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to the shelf and count how many drinks there are and then tell the result.", mode="", wait_for_end_of=True)
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to the shelf and count the number of drinks and then tell the result.", mode="", wait_for_end_of=True)
                 
                 ### THIS IS GPSR TASK ###
                 llp_input = hlp[0].split(";")
