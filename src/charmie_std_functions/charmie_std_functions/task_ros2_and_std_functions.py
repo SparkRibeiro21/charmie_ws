@@ -6692,11 +6692,12 @@ class RobotStdFunctions():
         else:
         
             furniture_dict = {
-                "name":             furniture,
-                "top_left_coords":  self.get_top_coords_from_furniture(furniture),
-                "bot_right_coords": self.get_bottom_coords_from_furniture(furniture),
-                "radius":           self.get_radius_from_furniture(furniture),
-                "shape":            self.get_furniture_shape_from_furniture(furniture)
+                "name": furniture,
+                "center_coords": self.get_center_coords_from_furniture(furniture),
+                "size": self.get_size_from_furniture(furniture),
+                "angle": self.get_angle_from_furniture(furniture),
+                "radius": self.get_radius_from_furniture(furniture),
+                "shape": self.get_furniture_shape_from_furniture(furniture)
             }
             object_coords = [object.position_absolute.x, object.position_absolute.y]
 
@@ -6706,8 +6707,7 @@ class RobotStdFunctions():
             if furniture_dict["shape"] == "circle":
 
                 # helpers
-                table_center = [(furniture_dict["top_left_coords"][0]+furniture_dict["bot_right_coords"][0])/2, 
-                                (furniture_dict["top_left_coords"][1]+furniture_dict["bot_right_coords"][1])/2]
+                table_center = furniture_dict["center_coords"]
                 table_radius = furniture_dict["radius"]
 
                 if table_radius < 1e-9: # safer to use tiny tolerance, to avoid floating point issues
