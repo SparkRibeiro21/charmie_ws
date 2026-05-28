@@ -91,21 +91,26 @@ class TaskMain():
 
                 print("New LLM Demo")
 
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Please go get the milk on the refrigerator and then bring it to me.", mode="", wait_for_end_of=True)
+                # hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Please go get the milk on the refrigerator and then bring it to me.", mode="", wait_for_end_of=True)
                 
                 ### THIS IS GPSR TASK ###
                 llp_input = hlp[0].split(";")
+                llp_input[0]= " "
+                llp_input[1]= ""
 
                 start_time = time.time()
 
                 for i, step in enumerate(llp_input):
                     print(f"Step {i+1}: {step.strip()}")
-                    step_to_llm = step.strip()
-                    #call low_level std_func: get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
-                    llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
-                    # call gpsr_execution std_func:
-                    print(f"Action Generated: {llp_output[0]}")
-                    self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
+                    if step.strip() == "" or step.strip() == " ":
+                        continue
+                    else:
+                        step_to_llm = step.strip()
+                        #call low_level std_func: get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
+                        llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
+                        # call gpsr_execution std_func:
+                        print(f"Action Generated: {llp_output[0]}")
+                        self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
 
                 ### THIS IS GPSR TASK ###
                     print(f"Action Generated: {llp_output[0]}")
@@ -279,30 +284,40 @@ class TaskMain():
             
             if self.state == LLM_gpsr_llp:
 
-                self.robot.wait_for_start_button()
+                # self.robot.wait_for_start_button()
                 
                 print("New LLM GPSR LLP")
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "go to the bed and search for the tennis ball.", mode="", wait_for_end_of=True)
+
+                start_time = time.time()
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "What snacks are there on the kitchen cabinent?", mode="", wait_for_end_of=True)
                 
                 ### THIS IS GPSR TASK ###
                 llp_input = hlp[0].split(";")
 
-                start_time = time.time()
+                start_llp_time = time.time()
+
+                self.curr_room = "living_room"
+                self.curr_furniture = "NONE"
+                self.curr_result = "NONE"
+                self.curr_obj_list =[]
 
                 for i, step in enumerate(llp_input):
                     print(f"Step {i+1}: {step.strip()}")
                     step_to_llm = step.strip()
-                    #call low_level std_func: get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
-                    llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
-                    # call gpsr_execution std_func:
-                    print(f"Action Generated: {llp_output[0]}")
-                    # self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
 
-                ### THIS IS GPSR TASK ###
-                    print(f"Action Generated: {llp_output[0]}")
-                    
+                    if step_to_llm == "" or step_to_llm == " ":
+                        print("Skipping empty step")
+                    else:
+
+                        llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
+                        print(f"Action Generated: {llp_output[0]}")
+                        # self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list = self.robot.execute_gpsr_plan(command=llp_output[0], curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, wait_for_end_of=True)
+                        print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
+
                 end_time = time.time()
-                print(f"Total Time taken for llp GPSR task: {end_time - start_time}")
+                print(f"Total Time taken for GPSR task: {end_time - start_time}")
+                print(f"Total Time taken for HLP task: {start_llp_time - start_time}")
+                print(f"Total Time taken for LLP task: {end_time - start_llp_time}")
 
                 self.robot.set_rgb(command=GREEN+SET_COLOUR, wait_for_end_of=True)
 
