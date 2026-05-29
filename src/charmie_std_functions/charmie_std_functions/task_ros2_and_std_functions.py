@@ -7081,7 +7081,9 @@ class RobotStdFunctions():
     def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False): 
 
 
-        # TODO: Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
+        # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
+        # TODO: 2) Check with Pedro Rotation
+
 
 
         ###########
@@ -7128,26 +7130,26 @@ class RobotStdFunctions():
         furniture = furniture.replace(" ","_").lower()
 
         # HOW CLOSE OR FAR THE OBJECT HAS TO BE TO BE DETECTED BY HEAD
-        MIN_OBJECT_DISTANCE_X = 0.05
-        MAX_OBJECT_DISTANCE_X = 2
-        MIN_OBJECT_DISTANCE_Y = -1
-        MAX_OBJECT_DISTANCE_Y = 1
+        MIN_OBJECT_DISTANCE_X =  0.05
+        MAX_OBJECT_DISTANCE_X =  2.00
+        MIN_OBJECT_DISTANCE_Y = -1.00
+        MAX_OBJECT_DISTANCE_Y =  1.00
 
         # HOW FAR AWAY FROM THE FURNITURE THE ROBOT WILL BE BEFORE PICKING OBJECT (ADJUSTS)
-        DISTANCE_IN_FRONT_X     = 0.26 
-        DISTANCE_IN_FRONT_Y     = 0.31
-        DISTANCE_IN_TOP_X       = 0.03
+        DISTANCE_IN_FRONT_X     =  0.26 
+        DISTANCE_IN_FRONT_Y     =  0.31
+        DISTANCE_IN_TOP_X       =  0.03
         DISTANCE_IN_TOP_Y       = -0.05
  
         # MAX AND MIN HEIGHTS ALLOWED FOR OBJECTS TO BE CONSIDERED PICKABLE (WORKSPACE LIMITATION)
         MINIMUM_FRONT_HEIGHT    = 0.55
         MAXIMUM_FRONT_HEIGHT    = 1.70
-        HALFWAY_TOP_HEIGHT      = 0.6 
+        HALFWAY_TOP_HEIGHT      = 0.60
         MAXIMUM_TOP_HEIGHT      = 1.10
 
         # DISTANCE FROM GRIPPER CAM TO GRIPPER'S TIP (DO NOT CHANGE UNLESS RE-MEASURED !!!!)
-        tf_x = 0.145
-        tf_y = -0.006
+        tf_x =  0.145
+        tf_y = -0.060
         tf_z = -0.075
 
         # ASK FOR HELP STATES
@@ -7163,7 +7165,6 @@ class RobotStdFunctions():
         ERROR_HANDLING_ASK_FOR_HELP = 9
 
         state = HEAD_SEARCH_OBJECTS
-
 
         """ 
         # MAKE SURE ALL STATES ARE DECLARED, NO NEED TO CHANGE EXCEPT FOR TESTING PURPOSES
@@ -7181,7 +7182,6 @@ class RobotStdFunctions():
         # A) Define standard necessary variables based on how much was declared 
         # 
         # **************************************************************************************** 
-
 
         # IF NOT SEARCH TETAS ARE DECLARED, USE CONFIGURATION FILES "LOOK" PARAMETER
         if first_search_tetas == []:
@@ -7229,7 +7229,7 @@ class RobotStdFunctions():
                 rotation_lock = True
                 correct_rotation_adjust = 0.0 #degree
 
-            if selected_object == "plate":
+            if selected_object == "plate": # TODO: plate is not fully complete
                 correct_z_adjust = -20 #mm
                 correct_rotation_adjust = 90.0 #degrees
                 rotation_lock = True
@@ -7242,7 +7242,6 @@ class RobotStdFunctions():
                 correct_x_adjust = -12 #mm
 
 
-
         # ***********************************************************************************************************************
         # 
         # 0) HEAD SEARCH OBJECTS: State that will try to look for the selected object within X attempts and filter the object of
@@ -7250,16 +7249,12 @@ class RobotStdFunctions():
         # 
         # ***********************************************************************************************************************
 
-
-
         ### While cycle to get a valid detected object ###
-
         while True:
             print(" NOW ENTERING STATE ", state)
             if state == HEAD_SEARCH_OBJECTS:
 
-                not_validated = False
-
+                not_validated = False 
                 # The first object detection will be made with the head camera. Will look for selected_object or list_of_objects_detected_as if selected_object is not found. Will look at first_search_tetas until object found within a number of tries equal to max_search_attempts.
                 
                 self.set_face(camera="head", show_detections=True)
@@ -7365,6 +7360,7 @@ class RobotStdFunctions():
                         ask_help = True
                         state = ERROR_HANDLING_ASK_FOR_HELP
 
+
         # ***********************************************************************************************************************
         # 
         # 1) ADJUST TO FURNITURE: State that moves the robot closer to the furniture until the specified distances
@@ -7400,6 +7396,7 @@ class RobotStdFunctions():
                 s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False, safety=False)
                 state = MOVE_ARM_PRE_HAND_SEARCH_OBJECT
     
+
         # ***********************************************************************************************************************
         # 
         # 2) MOVE ARM PRE HAND SEARCH: State that raises gripper to appropriate height depending on object height
@@ -7455,6 +7452,7 @@ class RobotStdFunctions():
                     ask_help = True
                     state = ADJUST_TO_INITIAL_POSITION
 
+
         # ***********************************************************************************************************************
         # 
         # 3) HAND SEARCH OBJECT: State that will try to look for the selected object with gripper cam within X attempts and filter 
@@ -7493,6 +7491,7 @@ class RobotStdFunctions():
                     state = ADJUST_TO_INITIAL_POSITION
                 else:
                     state = MOVE_ARM_APROACH_OBJECT
+
 
         # ***********************************************************************************************************************
         # 
@@ -7560,7 +7559,7 @@ class RobotStdFunctions():
 
                 # Put all grab movement calculations together
                 if pick_mode == "front":
-                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] #CHECK WITH PEDRO
+                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] # TODO: 2)
 
                 if pick_mode == "top":
                     object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
@@ -7579,6 +7578,7 @@ class RobotStdFunctions():
                     ask_help = True
                     print("Out of workspace")
                     state = RETURN_ARM_TO_END_PLACE_POSITION
+
 
         # ***********************************************************************************************************************
         # 
@@ -7622,6 +7622,7 @@ class RobotStdFunctions():
 
                     self.set_speech("generic/problem_pick_object", wait_for_end_of=False)
                     ask_help = True
+
 
         # ***********************************************************************************************************************
         # 
@@ -7718,11 +7719,13 @@ class RobotStdFunctions():
                 else:
                     return picked_height, ask_help
 
+
         # ***********************************************************************************************************************
         # 
         # 9) ERROR HANDLING ASK FOR HELP: How does the robot handle finding an error? Could be asking for judge help, or ignoring and continuing on, etc.
         # 
         # ***********************************************************************************************************************
+        
             if state == ERROR_HANDLING_ASK_FOR_HELP:
                 print(" Asked for Help ")
                 self.ask_help_pick_object_gripper(object_d = obj, look_judge= [0,0], show_detection = show_detection)
