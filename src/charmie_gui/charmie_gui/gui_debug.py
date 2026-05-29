@@ -2457,16 +2457,30 @@ class DebugVisualMain():
         ### DRAWS THE HOUSE FURNITURE ###
         for furniture in self.house_furniture:
 
-            if furniture['shape'] == "square":
-                temp_rect = pygame.Rect(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0], \
-                                        self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1], \
-                                        abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[0] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[0]), \
-                                        abs(self.coords_to_map(furniture['top_left_coords'][0], furniture['top_left_coords'][1])[1] - self.coords_to_map(furniture['bot_right_coords'][0], furniture['bot_right_coords'][1])[1]))
-                pygame.draw.rect(self.WIN, self.GREY, temp_rect, width=0)
+            shape = furniture['shape']
+            cx = furniture["center_coords"][0]
+            cy = furniture["center_coords"][1]
+            center_map = self.coords_to_map(cx, cy)
+
+            if shape == "square":
+
+                height_map = self.size_to_map(furniture["size"][0])
+                width_map = self.size_to_map(furniture["size"][1])
+                angle_deg = furniture.get("angle", 0.0)
+
+                rect_surf = pygame.Surface((width_map, height_map), pygame.SRCALPHA)
+                rect_surf.fill(self.GREY)
+
+                # Pygame rotation is visually opposite depending on your map y-axis.
+                # If rotation appears inverted, change angle_deg to -angle_deg here.
+                rotated_surf = pygame.transform.rotate(rect_surf, angle_deg)
+
+                rotated_rect = rotated_surf.get_rect(center=center_map)
+                self.WIN.blit(rotated_surf, rotated_rect)
             
-            elif furniture['shape'] == "circle":
-                furniture_center_map_coords = self.coords_to_map((furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2, (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2)
-                pygame.draw.circle(self.WIN, self.GREY, furniture_center_map_coords, radius=self.size_to_map(furniture['diameter']/2), width=0)
+            elif shape == "circle":
+                radius_map = self.size_to_map(furniture["diameter"] / 2.0)
+                pygame.draw.circle(self.WIN, self.GREY, center_map, radius=radius_map, width=0)
 
         ### DRAWS THE HOUSE WALLS ###
         for room in self.house_rooms:
@@ -2480,9 +2494,9 @@ class DebugVisualMain():
         if self.show_navigation_locations:
             for furniture in self.house_furniture:
 
-                furniture_center_map_coords = self.coords_to_map((furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2, (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2)
-                pygame.draw.circle(self.WIN, self.ORANGE, furniture_center_map_coords, radius=self.size_to_map(self.robot_radius/2), width=0)
-                self.draw_text(str(furniture['name']), self.text_map_font, self.ORANGE, furniture_center_map_coords[0]-(3*len(str(furniture['name']))), furniture_center_map_coords[1]+13)
+                furniture_center_map_coords = self.coords_to_map(furniture["center_coords"][0], furniture["center_coords"][1])
+                pygame.draw.circle(self.WIN, self.ORANGE, furniture_center_map_coords, radius=self.size_to_map(self.robot_radius / 2.0), width=0)
+                self.draw_text(str(furniture["name"]), self.text_map_font, self.ORANGE, furniture_center_map_coords[0] - (3 * len(str(furniture["name"]))), furniture_center_map_coords[1] + 13)
 
                 furniture_nav_map_coords = self.coords_to_map(furniture['nav_coords'][0], furniture['nav_coords'][1])
                 pygame.draw.circle(self.WIN, self.GREEN, furniture_nav_map_coords, radius=self.size_to_map(self.robot_radius/2), width=0)

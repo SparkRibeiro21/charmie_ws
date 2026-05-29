@@ -383,11 +383,13 @@ class ArmUfactory(Node):
 		self.linear_at_funilocopov4_for_place = 		[-102.7,  425.0, -115.1, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
 		self.linear_at_funilocopov4_for_pick = 			[-125.2,  444.1, -114.5, math.radians(-89.4), math.radians(0.9), math.radians( -33.7)]
 
-
 		# close dishwasher rack
 		self.close_rack_1_pose   = [-414.6, 251.4, 89.5, math.radians(-10.7), math.radians(88.4), math.radians(80.4)]
 		self.close_rack_2_pose	 = [-420.0, 535.5, 97.5, math.radians(-12.3), math.radians(88.4), math.radians(78.8)]
 		self.close_rack_3_pose	 = [-618.9, 531.7, 96.5, math.radians(-10.7), math.radians(88.4), math.radians(80.4)]
+
+		# point to coords, front of robot
+		self.point_front_of_robot_joints = [-201.2, 52.9, -91.6, 154.1, 57.9, 105.2]
 
 		
 	def setup_arm_movement_services(self):
@@ -1542,6 +1544,20 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
+	def point_front_to_initial_position(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.initial_position, speed=60, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def initial_position_to_point_front(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.point_front_of_robot_joints, speed=60, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
 	def movement_selection(self):
 		
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
@@ -1683,6 +1699,11 @@ class ArmUfactory(Node):
 				self.close_dishwasher_rack_part1()
 			case "close_dishwasher_rack_part2":
 				self.close_dishwasher_rack_part2()
+
+			case "point_front_to_initial_position":
+				self.point_front_to_initial_position()
+			case "initial_position_to_point_front":
+				self.initial_position_to_point_front()
 
 			# if there is an error regarding a movement
 			case _:
