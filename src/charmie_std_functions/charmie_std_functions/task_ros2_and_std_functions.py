@@ -6689,14 +6689,17 @@ class RobotStdFunctions():
         if shape == None: # checks if furniture exists
             success = False
             message = "Furniture shape not found, cannot move to pre-pick position"
+            self.node.get_logger().warn("Furniture shape not found, cannot move to pre-pick position")
+            
         else:
         
             furniture_dict = {
-                "name":             furniture,
-                "top_left_coords":  self.get_top_coords_from_furniture(furniture),
-                "bot_right_coords": self.get_bottom_coords_from_furniture(furniture),
-                "radius":           self.get_radius_from_furniture(furniture),
-                "shape":            self.get_furniture_shape_from_furniture(furniture)
+                "name": furniture,
+                "center_coords": [self.get_location_coords_from_furniture(furniture)[0], self.get_location_coords_from_furniture(furniture)[1]],
+                "size": self.get_size_from_furniture(furniture),
+                "angle": self.get_angle_from_furniture(furniture),
+                "radius": self.get_radius_from_furniture(furniture),
+                "shape": self.get_furniture_shape_from_furniture(furniture)
             }
             object_coords = [object.position_absolute.x, object.position_absolute.y]
 
@@ -6706,8 +6709,7 @@ class RobotStdFunctions():
             if furniture_dict["shape"] == "circle":
 
                 # helpers
-                table_center = [(furniture_dict["top_left_coords"][0]+furniture_dict["bot_right_coords"][0])/2, 
-                                (furniture_dict["top_left_coords"][1]+furniture_dict["bot_right_coords"][1])/2]
+                table_center = furniture_dict["center_coords"]
                 table_radius = furniture_dict["radius"]
 
                 if table_radius < 1e-9: # safer to use tiny tolerance, to avoid floating point issues
@@ -6728,6 +6730,8 @@ class RobotStdFunctions():
                 if dco > table_radius:
                     success = False
                     message = "Object is outside of circular shaped furniture"
+                    self.node.get_logger().warn("Object is outside of circular shaped furniture")
+                    
                 else: # did not use elif to not repeat attribution code and prints
                     if dco < 1e-9: # safer to use tiny tolerance, to avoid floating point issues
                         # special case: object exactly at the center of the circular furniture 
@@ -6763,52 +6767,79 @@ class RobotStdFunctions():
                     nav_coords_ret = nav_coords
 
             ### SQUARED FURNITURES
-            elif furniture_dict ["shape"] == "square":
+            elif furniture_dict["shape"] == "square":
 
                 # helpers
-                x_min = min(furniture_dict["top_left_coords"][0], furniture_dict["bot_right_coords"][0])  # bottom
-                x_max = max(furniture_dict["top_left_coords"][0], furniture_dict["bot_right_coords"][0])  # top
-                y_min = min(furniture_dict["top_left_coords"][1], furniture_dict["bot_right_coords"][1])  # right
-                y_max = max(furniture_dict["top_left_coords"][1], furniture_dict["bot_right_coords"][1])  # left
+                cx, cy = furniture_dict["center_coords"]
+                size_x, size_y = furniture_dict["size"]
+                angle_deg_furniture = furniture_dict["angle"]
+
+                half_x = size_x / 2.0
+                half_y = size_y / 2.0
 
                 # attributions
                 ox, oy = object_coords
 
-                # furniture validation
-                if not (x_min <= ox <= x_max and y_min <= oy <= y_max):
+                # Convert object world/map coords into furniture local coords
+                angle_rad = math.radians(angle_deg_furniture)
+
+                dx = ox - cx
+                dy = oy - cy
+
+                local_ox =  math.cos(angle_rad) * dx + math.sin(angle_rad) * dy
+                local_oy = -math.sin(angle_rad) * dx + math.cos(angle_rad) * dy
+
+                # furniture validation in local frame
+                if not (-half_x <= local_ox <= half_x and -half_y <= local_oy <= half_y):
                     success = False
                     message = "Object is outside of rectangular shaped furniture"
+                    self.node.get_logger().warn("Object is outside of rectangular shaped furniture")
 
                 else:
                     # checks min distance to four sides of furniture select closest
                     distances = {
-                        "bottom":   abs(ox - x_min),
-                        "top":      abs(x_max - ox),
-                        "right":    abs(oy - y_min),
-                        "left":     abs(y_max - oy)
+                        "bottom": abs(local_ox + half_x),
+                        "top":    abs(half_x - local_ox),
+                        "right":  abs(local_oy + half_y),
+                        "left":   abs(half_y - local_oy)
                     }
 
                     closest_side = min(distances, key=distances.get)
+
                     if closest_side == "bottom":
-                        nav_x = x_min - approach_offset
-                        nav_y = oy
-                        angle_deg = 0.0
+                        nav_lx = -half_x - approach_offset
+                        nav_ly = local_oy
+                        angle_deg = angle_deg_furniture + 0.0
+
                     elif closest_side == "top":
-                        nav_x = x_max + approach_offset
-                        nav_y = oy
-                        angle_deg = 180.0
+                        nav_lx = half_x + approach_offset
+                        nav_ly = local_oy
+                        angle_deg = angle_deg_furniture + 180.0
+
                     elif closest_side == "right":
-                        nav_x = ox
-                        nav_y = y_min - approach_offset
-                        angle_deg = 90.0
+                        nav_lx = local_ox
+                        nav_ly = -half_y - approach_offset
+                        angle_deg = angle_deg_furniture + 90.0
+
                     elif closest_side == "left":
-                        nav_x = ox
-                        nav_y = y_max + approach_offset
-                        angle_deg = 270.0
+                        nav_lx = local_ox
+                        nav_ly = half_y + approach_offset
+                        angle_deg = angle_deg_furniture + 270.0
+
+                    # Convert robot local coords back into world/map coords
+                    nav_x = cx + math.cos(angle_rad) * nav_lx - math.sin(angle_rad) * nav_ly
+                    nav_y = cy + math.sin(angle_rad) * nav_lx + math.cos(angle_rad) * nav_ly
+
+                    # Robot should face perpendicular to the closest furniture side
+                    angle_deg = angle_deg % 360.0
 
                     nav_coords = [nav_x, nav_y, angle_deg]
 
                     print("Object coords:", object_coords)
+                    print("Furniture center:", furniture_dict["center_coords"])
+                    print("Furniture size:", furniture_dict["size"])
+                    print("Furniture angle:", angle_deg_furniture)
+                    print("Object local coords:", [local_ox, local_oy])
                     print("Closest side:", closest_side)
                     print("Robot nav coords:", nav_coords)
 
@@ -6819,7 +6850,8 @@ class RobotStdFunctions():
             else:
                 success = False
                 message = "Furniture shape not recognized, cannot move to pre-pick position"
-
+                self.node.get_logger().warn("Furniture shape not recognized, cannot move to pre-pick position")
+                
         if nav_coords_ret and move_to:
             self.move_to_position(move_coords=nav_coords_ret, wait_for_end_of=wait_for_end_of)
 
