@@ -4317,9 +4317,18 @@ class RobotStdFunctions():
             
         task_split = command.split("-")
 
+        ### CONFIGURATIONS FOR GPSR EXECUTION ###
+
+        # Neck positions
         self.look_navigation = [0, -30]
         self.look_forward = [0, 0]
-        
+
+        # Timers for handing objects
+        self.release_timer = 0.3
+        self.gripper_release_timer = 2
+
+
+        ### Parsing the command ###
         task_type = task_split[0] if len(task_split) > 0 else ""
         task_info = task_split[1] if len(task_split) > 1 else ""
         task_info_2 = task_split[2] if len(task_split) > 2 else ""
@@ -4434,14 +4443,30 @@ class RobotStdFunctions():
                 # self.save_speech(command="Handing the object in my hand", filename="temp/action", quick_voice=True, wait_for_end_of=True)
                 # self.set_speech(filename="action", wait_for_end_of=True)
                 print("Handing:", parameter)
+
+                # ### SPEAK: "Hello"
+
+                # ### SPEAK: "I will hand you the " + parameter + "."
+
+                # ### SET ARM
+                # self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+
+                # ### SPEAK: "I will release the object in my hand after counting to 3. Please hold it."
+
+                # ### SPEAK: "Are we ready? 1. 2. 3."
+
+                # ### SET ARM TO RELEASE OBJECT
+                # time.sleep(self.release_timer)
+                # self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                # time.sleep(self.gripper_release_timer)
+
                 pass
 
             case "place_object":
-                # temporary speech to show it is working
-                # self.save_speech(command=f"Placing the {parameter} on the {parameter}", filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                # self.set_speech(filename="action", wait_for_end_of=True)
+              
                 print("Placing:", parameter)
-                # self.robot.place_object(arm_command="place_bowl_table", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+
+                # self.robot.place_object()
 
                 pass
             
@@ -4517,7 +4542,7 @@ class RobotStdFunctions():
                     smallest_object = None
 
                     for obj in objects_found:
-                        obj_volume = self.get_object_size_from_object(obj.object_name)
+                        obj_volume = self.get_object_volume_from_object(obj.object_name)
                         if obj_volume < smallest_volume:
                             smallest_volume = obj_volume
                             smallest_object = obj
@@ -4531,7 +4556,7 @@ class RobotStdFunctions():
                     biggest_object = None
 
                     for obj in objects_found:
-                        obj_volume = self.get_object_size_from_object(obj.object_name)
+                        obj_volume = self.get_object_volume_from_object(obj.object_name)
                         if obj_volume > biggest_volume:
                             biggest_volume = obj_volume
                             biggest_object = obj
@@ -4545,9 +4570,9 @@ class RobotStdFunctions():
                     biggest_object = None
 
                     for obj in objects_found:
-                        obj_volume = self.get_object_size_from_object(obj.object_name)
-                        if obj_volume > biggest_volume:
-                            biggest_volume = obj_volume
+                        obj_weight = self.get_object_weight_from_object(obj.object_name)
+                        if obj_weight > biggest_volume:
+                            biggest_volume = obj_weight
                             biggest_object = obj
 
                     curr_result = "The heaviest " + second_parameter.replace("_"," ") + " is the " + biggest_object.object_name.replace("_"," ") + "."
@@ -4560,9 +4585,9 @@ class RobotStdFunctions():
                     smallest_object = None
 
                     for obj in objects_found:
-                        obj_volume = self.get_object_size_from_object(obj.object_name)
-                        if obj_volume < smallest_volume:
-                            smallest_volume = obj_volume
+                        obj_weight = self.get_object_weight_from_object(obj.object_name)
+                        if obj_weight < smallest_volume:
+                            smallest_volume = obj_weight
                             smallest_object = obj
 
                     curr_result = "The lightest " + second_parameter.replace("_"," ") + " is the " + smallest_object.object_name.replace("_"," ") + "."
@@ -4602,25 +4627,26 @@ class RobotStdFunctions():
 
         return filtered_objects_found
         
-    def get_object_size_from_object(self, object_name):
+    def get_object_volume_from_object(self, object_name):
 
         obj_volume = 0.0
+
 
         for obj in self.node.objects_file:
             if obj["name"].replace(" ", "_").lower() == object_name:
 
                 if obj["shape"]== "cylinder":
-                    radius = obj["width"] / 2
-                    height = obj["height"]
+                    radius = float(obj["width"]) / 2
+                    height = float(obj["height"])
                     obj_volume = math.pi * radius**2 * height
 
                 elif obj["shape"]== "sphere":
-                    radius = obj["width"] / 2
+                    radius = float(obj["width"]) / 2
                     obj_volume = (4/3) * math.pi * radius**3
 
                 # Every other object we assume it is a cuboid
                 else:
-                    obj_volume = obj["width"] * obj["height"] * obj["length"]
+                    obj_volume = float(obj["width"]) * float(obj["height"]) * float(obj["length"])
 
         return obj_volume
 
