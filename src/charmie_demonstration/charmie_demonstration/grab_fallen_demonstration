@@ -212,6 +212,8 @@ class TaskMain():
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
                     self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_second, wait_for_end_of=True)
 
+                    ### THIS NEEDS TO BE REDONE, BECAUSE THE FOLLOWING STANDARD FUCNTIONS NO LONGER EXIST ###
+                    ### PLEASE USE get_location_coords_from_furniture TO GET CENTER_COORDS ### 
                     top_furniture_points = self.robot.get_top_coords_from_furniture(self.place_furniture)
                     bottom_furniture_points = self.robot.get_bottom_coords_from_furniture(self.place_furniture)
 

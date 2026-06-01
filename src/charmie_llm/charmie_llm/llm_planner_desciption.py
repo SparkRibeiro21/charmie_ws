@@ -150,14 +150,10 @@ class Ollama_planner_description:
                             "5. The verbs guide, escort, take mean the same. \n"
                             "6. The verbs follow and stick with mean the same. \n"
                             "7. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
-                            "5. The verbs guide, escort, take mean the same. \n"
-                            "6. The verbs follow and stick with mean the same. \n"
-                            "7. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
 
                             "EXAMPLES:\n"
                             "Command: Retrieve a dish from the refrigerator and subsequently position it on the storage rack.\n"
                             "Answer: I will move to the refrigerator; Then, I will look for the dish; I will pick up the dish; I will move to the storage rack; I will place the dish on the storage rack.\n\n"
-                            
                             "Command: Could you take a fruit from the armchair and bring it to Robin in the bathroom\n"
                             "Answer: First, I will move to the armchair; I will look for the fruit; I will pick up the fruit; I will move to the bathroom; I will look for Robin; I will move towards Robin; I will hand the fruit to Robin.\n\n"
 
@@ -166,7 +162,7 @@ class Ollama_planner_description:
 
                             "Command: please proceed to the living room, introduce yourself to the person wearing a black jacket, and stick with them\n"
                             "Answer: I will move to the living room; I will look for the person wearing a black jacket; If found, I will move towards them; I will greet the person wearing a black jacket; I will follow the person wearing a black jacket.\n\n"
-                            
+
                             "Command: kindly ascertain the number of snacks on the cabinet and inform me\n"
                             "Answer: I will move to the cabinet; I will count the snacks on the cabinet; I will move towards you; Lastly, I will tell you the result.\n\n"
 
@@ -184,11 +180,10 @@ class Ollama_planner_description:
                         Command: "{request}"
 
                         Answer:
-                        """}],
-                        keep_alive=-1
+                        """}]
         )
 
-        print("1st Plan Generated:", response["message"]["content"])
+        print("Action Generated:", response["message"]["content"])
 
         return response["message"]["content"]
 
@@ -209,8 +204,8 @@ class Ollama_planner_description:
                             "2. If the action is neither of the previous ones, return: 'ERROR'."
 
                             "EXAMPLES:\n"
-                            "Command: I will move to the dinner table; \n"
-                            "Answer: move_to_furniture-dinner_table\n\n"
+                            "Command: I will move to the bed; \n"
+                            "Answer: move_to_furniture-bed\n\n"
 
                             "Command: I will move to the kitchen; \n"
                             "Answer: move_to_room-kitchen\n\n"

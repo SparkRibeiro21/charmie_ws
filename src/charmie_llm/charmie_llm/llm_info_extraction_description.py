@@ -71,7 +71,7 @@ class Ollama_info_extraction_description:
         
         self.ollama_info_model_struct = "gemma3:1b"
         self.ollama_info_model_creative = "llama3.2:1b"
-
+        
         print("Ollama info model initialized.")
 
     def normalize_command(self, command: str):

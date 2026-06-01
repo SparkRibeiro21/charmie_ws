@@ -61,6 +61,7 @@ class TaskMain():
     def main(self):
         Waiting_for_start_button = 0
         Move_to_pre_pick_position_after_search_for_objects = 1
+        Move_to_pre_pick_position_after_search_for_objects_quick_test = 2
         Final_State = 2
         
         # self.initial_position = [0.0, 0.0, 0.0]
@@ -215,6 +216,23 @@ class TaskMain():
                 #     print(self.robot.get_robot_localization())
                 #     time.sleep(0.5)
                 #     pass    
+
+                # next state
+                self.state = Final_State
+
+
+            elif self.state == Move_to_pre_pick_position_after_search_for_objects_quick_test:
+                print('State 1 = Move to pre pick position after search for objects quick test')
+
+                
+                o = DetectedObject()
+                o.position_absolute.x = 5.18 # 5.55 - 0.1
+                o.position_absolute.y = 2.60 # 1.78 + 0.1
+
+                self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.NAVIGATION_TARGET, object=o, approach_offset=0.5, move_to=False, wait_for_end_of=True)
+
+                while True:
+                    pass
 
                 # next state
                 self.state = Final_State

@@ -76,11 +76,15 @@ class TaskMain():
             if self.state == Prompt_free_yolo_world:
 
                 while True:
-                    neck_position = [[15,-22]]
-                    print("START")
-                    door_handle = self.robot.search_for_objects(tetas = neck_position, time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle2_head_cam"], minimum_tv_prompt_confidence=0.50)
-                    time.sleep(5.0)
-                    print("DONE HEAD PROMPT")
+                    # neck_position = [[15,-22]]
+                    # print("START")
+                    # door_handle = self.robot.search_for_objects(tetas = neck_position, time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle2_head_cam"], minimum_tv_prompt_confidence=0.50)
+                    # time.sleep(5.0)
+                    # print("DONE HEAD PROMPT")
+
+                    door_handle = self.robot.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, detect_tv_prompt_hand=True, text_prompts=["door handle"], minimum_tv_prompt_confidence=0.50)
+                    print("DONE HAND PROMPT")
+                
 
                     # door_handle = self.robot.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_handle_gripper"], detect_tv_prompt_hand=True, visual_prompts=["door_handlef_gripper_cam"], minimum_tv_prompt_confidence=0.50)
                     # print("DONE GRIPPER PROMPT")

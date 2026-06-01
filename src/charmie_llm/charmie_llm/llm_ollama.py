@@ -50,6 +50,7 @@ class LLMNode(Node):
         match self.TASK:
             case "hri":
                 self.get_logger().info("LLM DEMO MODE")
+                self.ollama_info_extraction = Ollama_info_extraction_description()
                 req = GetLLMResponse.Request()
                 req.command="My name is Peter and my favourite drink is coffee"
                 req.mode= "name"
@@ -57,6 +58,7 @@ class LLMNode(Node):
 
             case "gpsr":
                 self.get_logger().info("LLM GPSR MODE")
+                self.ollama_planner = Ollama_planner_description()
                 req = GetLLMResponse.Request()
                 req.command="Go to the kitchen and bring me the milk to the bed"   
                 req.mode = ""
@@ -72,6 +74,7 @@ class LLMNode(Node):
         self.llm_ollama_information_server      = self.create_service(GetLLMResponse, "llm_ollama_information",     self.llm_ollama_information_callback)
         self.llm_ollama_gpsr_high_level_server  = self.create_service(GetLLMResponse, "llm_ollama_gpsr_high_level", self.llm_ollama_gpsr_high_level_callback)
         self.llm_ollama_gpsr_low_level_server   = self.create_service(GetLLMResponse, "llm_ollama_gpsr_low_level",  self.llm_ollama_gpsr_low_level_callback)
+        
         self.get_logger().info("Initialised CHARMIE LLM Offline Ollama Response Servers")
 
     def llm_ollama_demonstration_callback(self, request, response):
@@ -309,4 +312,3 @@ class LLMNode(Node):
         response.answer = los
 
         return response
-
