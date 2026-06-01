@@ -12,7 +12,7 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
+    "charmie_arm":                  False,
     "charmie_audio":                False,
     "charmie_face":                 True,
     "charmie_gamepad":              False,
@@ -133,7 +133,11 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.robot.open_door(push_pull="pull", handle_side="right")
+                door_handle = self.robot.search_for_objects(tetas = [[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
+
+                #self.robot.open_door(push_pull="pull", handle_side="right")
+
+                self.robot.wait_for_start_button()
 
                 self.robot.set_initial_position(self.initial_position)
 
