@@ -4521,22 +4521,22 @@ class RobotStdFunctions():
                     print("Looking for:", second_parameter, "with vertical search")
 
                 objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=second_parameter)
                 print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
 
-                # if filtered_objects_found:
+                if filtered_objects_found:
 
-                #     self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
-                #     for obj_found in filtered_objects_found:
+                    self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+                    for obj_found in filtered_objects_found:
 
-                #         curr_obj_list.append(obj_found)
-                #         print("Found:", obj_found.object_name)
+                        curr_obj_list.append(obj_found)
+                        print("Found:", obj_found.object_name)
 
-                # else:    
-                #     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+                else:    
+                    self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
 
 
-                if parameter == "small":
+                if parameter == "smallest":
                     print("Finding the smallest ", second_parameter)
                     smallest_volume = float('inf')
                     smallest_object = None
@@ -4550,7 +4550,7 @@ class RobotStdFunctions():
                     curr_result = "The smallest " + second_parameter.replace("_"," ") + " is the " + smallest_object.object_name.replace("_"," ") + "."
                     self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
                 
-                elif parameter == "big":
+                elif parameter == "biggest":
                     print("Finding the biggest ", second_parameter)
                     biggest_volume = float('-inf')
                     biggest_object = None
@@ -4564,7 +4564,7 @@ class RobotStdFunctions():
                     curr_result = "The biggest " + second_parameter.replace("_"," ") + " is the " + biggest_object.object_name.replace("_"," ") + "."
                     self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
 
-                elif parameter == "heavy":
+                elif parameter == "heaviest":
                     print("Finding the heaviest ", second_parameter)
                     biggest_volume = float('-inf')
                     biggest_object = None
@@ -4578,7 +4578,7 @@ class RobotStdFunctions():
                     curr_result = "The heaviest " + second_parameter.replace("_"," ") + " is the " + biggest_object.object_name.replace("_"," ") + "."
                     self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
 
-                elif parameter == "light":
+                elif parameter == "lightest":
                     print("Finding the lightest ", second_parameter)
                     
                     smallest_volume = float('inf')
@@ -4596,7 +4596,7 @@ class RobotStdFunctions():
                 
                 pass
 
-            case "speak_result":
+            case "say_result":
 
                 self.set_speech(filename="temp/result", wait_for_end_of=True)
 
