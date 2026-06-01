@@ -2,7 +2,7 @@
 import rclpy
 import threading
 import time
-from charmie_interfaces.msg import DetectedObject
+from charmie_interfaces.msg import DetectedObject, ListOfDetectedObject
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
@@ -26,7 +26,7 @@ ros2_modules = {
     "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
-    "charmie_nav_sdnl":             True,
+    "charmie_nav_sdnl":             False,
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
@@ -62,8 +62,9 @@ class TaskMain():
         Waiting_for_start_button = 0
         Move_to_pre_pick_position_after_search_for_objects = 1
         Move_to_pre_pick_position_after_search_for_objects_quick_test = 2
-        Final_State = 2
-        
+        Move_to_pre_place_position = 3
+        Final_State = 4
+
         # self.initial_position = [0.0, 0.0, 0.0]
         self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         # self.initial_position = [2.5, -4.50, 0.0] # temp (near Tiago desk for testing)
@@ -83,7 +84,7 @@ class TaskMain():
         self.look_judge = [-90, 0]
         
         # VARS ...
-        self.state = Waiting_for_start_button
+        self.state = Move_to_pre_place_position
 
         self.robot.set_rgb(RED+BACK_AND_FORTH_8)
 
@@ -231,6 +232,43 @@ class TaskMain():
 
                 self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.NAVIGATION_TARGET, object=o, approach_offset=0.5, move_to=False, wait_for_end_of=True)
 
+                while True:
+                    pass
+
+                # next state
+                self.state = Final_State
+            
+            elif self.state == Move_to_pre_place_position:
+
+                lob = ListOfDetectedObject()
+
+                o1 = DetectedObject()
+                o1.position_absolute.x = 5.9
+                o1.position_absolute.y = 1.30
+                o1.index = 1
+
+                o2 = DetectedObject()
+                o2.position_absolute.x = 5.18
+                o2.position_absolute.y = 2.0
+                o2.index = 2
+
+                o3 = DetectedObject()
+                o3.position_absolute.x = 5.18
+                o3.position_absolute.y = 2.0
+                o3.index = 3
+
+                o4 = DetectedObject()
+                o4.position_absolute.x = 5.18
+                o4.position_absolute.y = 2.0
+                o4.index = 4
+
+                lob.objects.append(o1)
+                lob.objects.append(o2)
+                lob.objects.append(o3)
+                lob.objects.append(o4)
+
+                self.robot.move_to_free_place_position(furniture=self.NAVIGATION_TARGET, list_of_objects=lob.objects, heads_of_the_table=True, move_to=False, wait_for_end_of=True)                
+                        
                 while True:
                     pass
 
