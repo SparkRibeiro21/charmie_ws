@@ -4310,7 +4310,6 @@ class RobotStdFunctions():
         print(self.node.llm_demonstration_response)
 
         return self.node.llm_demonstration_response
-        # self.execute_gpsr_plan(plan=self.node.llm_demonstration_response)
 
 ##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)
     def execute_gpsr_plan(self, command ="", curr_room="", curr_furniture="", curr_result="", curr_obj_list=[], wait_for_end_of = True):
@@ -4326,6 +4325,8 @@ class RobotStdFunctions():
         # Timers for handing objects
         self.release_timer = 0.3
         self.gripper_release_timer = 2
+
+        self.min_distance_to_person = 0.5
 
 
         ### Parsing the command ###
@@ -4347,14 +4348,14 @@ class RobotStdFunctions():
                 for obj in self.node.rooms:
                     if str(obj["name"]).replace(" ","_").lower() == parameter:
                         ### TASK TYPE====> move_to_room
-                        self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                        # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
-                        self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
+                        # self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
 
-                        self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                        # self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
                         self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
@@ -4369,12 +4370,12 @@ class RobotStdFunctions():
                 for obj in self.node.furniture:
                     if str(obj["name"]).replace(" ","_").lower() == parameter:
                         ### TASK TYPE====> move_to_furniture
-                        self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                        # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
 
-                        self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                        # self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
                         
                         self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -4389,42 +4390,85 @@ class RobotStdFunctions():
 
                 pass
                 
-            case "move_to_person":
-                # temporary speech to show it is working
-                self.set_speech(filename="generic/moving", wait_for_end_of=True)
-                print("Moving to:", parameter)
+            case "go_to_person":
+                
+                print("Moving to person")
+                print(parameter)
+                print(second_parameter)
+
+                people_list = []
+
+                if parameter == "pose":
+
+
+                    if second_parameter == "sitting":
+                        pass
+
+                    if second_parameter == "raising_hand":
+
+                        for room in self.node.objects_file:
+                            # To make sure there are no errors due to spaces/underscores and upper/lower cases
+                            if str(room["name"]).replace(" ","_").lower() == str(curr_room).replace(" ","_").lower():  # Check if the name matches
+                                curr_room_top_left_x, curr_room_top_left_y = float(room["top_left_coords"])
+                                curr_room_bottom_right_x, curr_room_bottom_right_y = float(room["bottom_right_coords"])
+  
+                        tetas = [[-60, 0], [0, 0], [60, 0]]
+
+                        people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
+                        print("FOUND:", len(people_found)) 
+
+                        for p in people_found:
+                            if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
+                                curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
+                                people_list.append(p)
+                      
+
+                    if second_parameter == "standing":
+                        pass
+
+                    if second_parameter == "lying_down":
+                        pass
+
+                    if second_parameter == "pointing_right":
+                        pass
+
+                    if second_parameter == "pointing_left":
+                        pass
+
+                    
+                    person_coords = (p.position_relative.x, p.position_relative.y)
 
                 pass
             
             case "look_for_object":
 
-                search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                # search_tetas = [[0, -45], [-40, -45], [40, -45]]
 
-                orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
-                print("Orientation to search:", orientation_to_search)
+                # orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                # print("Orientation to search:", orientation_to_search)
 
-                if orientation_to_search == "horizontal":
-                    search_tetas = [[0, -45], [-40, -45], [40, -45]]
-                    print("Looking for:", parameter, "with horizontal search")
-                elif orientation_to_search == "vertical":
-                    search_tetas = [[0, -15], [0, -35], [0, 15]]
-                    print("Looking for:", parameter, "with vertical search")
+                # if orientation_to_search == "horizontal":
+                #     search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                #     print("Looking for:", parameter, "with horizontal search")
+                # elif orientation_to_search == "vertical":
+                #     search_tetas = [[0, -15], [0, -35], [0, 15]]
+                #     print("Looking for:", parameter, "with vertical search")
 
-                objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
-                print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
+                # objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
+                # filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
+                # print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
 
-                if filtered_objects_found:
-                    self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+                # if filtered_objects_found:
+                #     self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
 
-                    for obj_found in filtered_objects_found:
+                #     for obj_found in filtered_objects_found:
 
-                        curr_obj_list.append(obj_found)
-                        print("Found:", obj_found.object_name)
-                        self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                #         curr_obj_list.append(obj_found)
+                #         print("Found:", obj_found.object_name)
+                #         self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
 
-                else:    
-                    self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+                # else:    
+                #     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
 
                 pass
             
@@ -4466,34 +4510,34 @@ class RobotStdFunctions():
 
                 obj_counter = 0
                 
-                search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                # search_tetas = [[0, -45], [-40, -45], [40, -45]]
 
-                orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
-                print("Orientation to search:", orientation_to_search)
+                # orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                # print("Orientation to search:", orientation_to_search)
 
-                if orientation_to_search == "horizontal":
-                    search_tetas = [[0, -45], [-40, -45], [40, -45]]
-                    print("Looking for:", parameter, "with horizontal search")
-                elif orientation_to_search == "vertical":
-                    search_tetas = [[0, -15], [0, -35], [0, 15]]
-                    print("Looking for:", parameter, "with vertical search")
+                # if orientation_to_search == "horizontal":
+                #     search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                #     print("Looking for:", parameter, "with horizontal search")
+                # elif orientation_to_search == "vertical":
+                #     search_tetas = [[0, -15], [0, -35], [0, 15]]
+                #     print("Looking for:", parameter, "with vertical search")
 
-                objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
-                print("Objects to count:", [obj.object_name for obj in filtered_objects_found])
+                # objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
+                # filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
+                # print("Objects to count:", [obj.object_name for obj in filtered_objects_found])
 
-                if filtered_objects_found:
-                    self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+                # if filtered_objects_found:
+                #     self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
 
-                    for obj_found in filtered_objects_found:
+                #     for obj_found in filtered_objects_found:
             
-                        obj_counter += 1
-                        print("Found:", obj_found.object_name)
-                        self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                #         obj_counter += 1
+                #         print("Found:", obj_found.object_name)
+                #         self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                 curr_result = "I have found " + str(obj_counter) + " " + parameter.replace("_"," ") + "."
                 print(curr_result)
-                self.save_speech(command=curr_result, filename="result", quick_voice=True, wait_for_end_of=True)
+                self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
                 print ("Total count of ", parameter, ":", obj_counter)
 
                 pass
@@ -4590,6 +4634,7 @@ class RobotStdFunctions():
 
             case "say_result":
 
+                time.sleep(5) 
                 self.set_speech(filename="temp/result", wait_for_end_of=True)
 
                 pass
