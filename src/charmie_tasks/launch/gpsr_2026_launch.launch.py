@@ -24,8 +24,8 @@ def generate_launch_description():
         ######################################################################
         # Actuators                                                          #
         ######################################################################
-        # LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
-        # std_lf.arm,
+        LaunchDescription(std_lf.declared_arm_arguments + [std_lf.robot_arm_driver_launch]),
+        std_lf.arm,
         std_lf.speakers,
         std_lf.save_speakers,
         std_lf.neck,
@@ -36,8 +36,8 @@ def generate_launch_description():
         # Sensors                                                           # 
         #####################################################################
         std_lf.lidar,
-        std_lf.lidar_bottom,
-        # std_lf.livox_driver,
+        # std_lf.lidar_bottom,
+        std_lf.livox_driver,
         std_lf.radar,
         std_lf.audio,
         std_lf.sound_classification,

@@ -11,16 +11,16 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  False,
+    "charmie_arm":                  True,
     "charmie_audio":                False,
-    "charmie_face":                 False,
+    "charmie_face":                 True,
     "charmie_head_camera":          True,
-    "charmie_hand_camera":          False,
+    "charmie_hand_camera":          True,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
-    "charmie_lidar_livox":          False,
+    "charmie_lidar_livox":          True,
     "charmie_llm":                  True,
     "charmie_localisation":         True,
     "charmie_low_level":            True,
@@ -291,7 +291,7 @@ class TaskMain():
                 print("New LLM GPSR LLP")
 
                 start_time = time.time()
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to the shelf and count the number of drinks and then tell the result.", mode="", wait_for_end_of=True)
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to the office table and pick the milk and place it on the office table.", mode="", wait_for_end_of=True)
                 
                 ### THIS IS GPSR TASK ###
                 llp_input = hlp[0].split(";")
@@ -302,6 +302,8 @@ class TaskMain():
                 self.curr_furniture = "shelf"
                 self.curr_result = "NONE"
                 self.curr_obj_list =[]
+                self.curr_picked_height= 0.0
+                self.curr_asked_help = False
 
                 for i, step in enumerate(llp_input):
                     print(f"Step {i+1}: {step.strip()}")

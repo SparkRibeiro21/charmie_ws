@@ -4353,7 +4353,7 @@ class RobotStdFunctions():
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
-                        # self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
 
                         # self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -4375,7 +4375,7 @@ class RobotStdFunctions():
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
 
-                        # self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
                         
                         self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -4476,10 +4476,10 @@ class RobotStdFunctions():
 
                 print("Picking up:", parameter)
 
-                picked_height, asked_help = self.robot.pick_object(selected_object= parameter)
+                picked_height, asked_help = self.pick_object(selected_object= parameter)
 
                 object_in_gripper = False
-                object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
                 if object_in_gripper:
                     curr_obj_list.append(parameter)
                     curr_picked_height = picked_height
@@ -4507,7 +4507,7 @@ class RobotStdFunctions():
               
                 print("Placing:", parameter)
 
-                self.place_object_in_furniture(selected_object=parameter, furniture=curr_furniture, shelf_number=0, placed_height=curr_picked_height, asked_help=curr_asked_help)
+                self.place_object_in_furniture(selected_object=curr_obj_list[0], furniture=curr_furniture, shelf_number=0, place_height=curr_picked_height, asked_help=curr_asked_help)
 
                 object_in_gripper = False
                 object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
@@ -7931,7 +7931,7 @@ class RobotStdFunctions():
 
                 # Put all grab movement calculations together
                 if pick_mode == "front":
-                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] # TODO: 2)
+                    object_position_grab = [correct_z_grab, correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] # TODO: 2)
 
                 if pick_mode == "top":
                     object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
