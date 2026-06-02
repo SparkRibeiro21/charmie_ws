@@ -4434,7 +4434,7 @@ class RobotStdFunctions():
                 print("Picking up:", parameter)
 
                 time.sleep(5)
-                # self.robot.pick_object_risky(selected_object= parameter)
+                # self.robot.pick_object(selected_object= parameter)
 
                 pass
 
@@ -4444,21 +4444,13 @@ class RobotStdFunctions():
                 # self.set_speech(filename="action", wait_for_end_of=True)
                 print("Handing:", parameter)
 
-                # ### SPEAK: "Hello"
-
-                # ### SPEAK: "I will hand you the " + parameter + "."
-
-                # ### SET ARM
-                # self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-
-                # ### SPEAK: "I will release the object in my hand after counting to 3. Please hold it."
-
-                # ### SPEAK: "Are we ready? 1. 2. 3."
-
-                # ### SET ARM TO RELEASE OBJECT
-                # time.sleep(self.release_timer)
-                # self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
-                # time.sleep(self.gripper_release_timer)
+                self.set_speech(filename="restaurant/give_order_from_gripper", wait_for_end_of=True)
+                self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.set_speech(filename="restaurant/open_gripper_3_2_1", wait_for_end_of=True)
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
+                time.sleep(3.0)
+                self.set_arm(command="close_gripper", wait_for_end_of=True)
+                self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 pass
 
@@ -6678,10 +6670,8 @@ class RobotStdFunctions():
                 print("THAT FURNITURE DOES NOT EXIST, UNABLE TO PLACE OBJECT !!!")
                 return
             
-        print("Place 1:", place_mode)
         if place_mode == "":
             place_mode = self.get_standard_pick_from_object(selected_object)
-            print("Place 2:", place_mode)
         if furniture != "rack":
             furniture_height = self.get_height_from_furniture(furniture)
 
