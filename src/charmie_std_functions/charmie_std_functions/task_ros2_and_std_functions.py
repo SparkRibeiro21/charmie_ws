@@ -7214,7 +7214,7 @@ class RobotStdFunctions():
 
         # DISTANCE FROM GRIPPER CAM TO GRIPPER'S TIP (DO NOT CHANGE UNLESS RE-MEASURED !!!!)
         tf_x =  0.145
-        tf_y = -0.060
+        tf_y = -0.006
         tf_z = -0.075
 
         # ASK FOR HELP STATES
@@ -7624,16 +7624,16 @@ class RobotStdFunctions():
 
                 # Put all grab movement calculations together
                 if pick_mode == "front":
-                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] # TODO: 2)
+                    object_position_grab = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] # TODO: 2)
 
                 if pick_mode == "top":
-                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
+                    object_position_grab = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
 
                 #APPLY ADJUSTEMENT BEFORE GRABBING
                 if obj.object_name != "cup":
                     check, m = self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
                 else:
-                    object_position_grab = [correct_z_grab, -correct_y_grab, 0.0, 0.0, 0.0, correct_rotation]
+                    object_position_grab = [correct_z_grab, - correct_y_grab, 0.0, 0.0, 0.0, correct_rotation]
                     self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
                     object_position_grab = [0.0, 0.0, correct_x_grab, 0.0, 0.0, 0.0]
                     self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
@@ -7704,7 +7704,7 @@ class RobotStdFunctions():
                     self.adjust_x_ = 0
 
                 self.adjust_y_ = - self.adjust_y_
-                self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False)
+                # self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False)
 
                 self.set_face("charmie_face", wait_for_end_of=False)
 
@@ -7741,6 +7741,7 @@ class RobotStdFunctions():
 
                     #MOVE ARM TO INITIAL POSITION
                     if arm_initial_position == "" and not ask_help:
+                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=True, safety=False)
                         self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
                     elif not ask_help:
                         if obj.object_name != "plate":    
@@ -7753,6 +7754,7 @@ class RobotStdFunctions():
                 elif pick_mode == "top":
                     
                     if arm_initial_position == "" and not ask_help:
+                        self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=True, safety=False)
                         self.set_arm(command="search_table_top_risky_to_initial_pose", wait_for_end_of=True)
                         while not self.adjust_omnidirectional_position_is_done():
                             pass
