@@ -4312,7 +4312,7 @@ class RobotStdFunctions():
         return self.node.llm_demonstration_response
 
 ##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)
-    def execute_gpsr_plan(self, command ="", curr_room="", curr_furniture="", curr_result="", curr_obj_list=[], wait_for_end_of = True):
+    def execute_gpsr_plan(self, command ="", curr_room="", curr_furniture="", curr_result="", curr_obj_list=[], curr_picked_height = 0.0, curr_asked_help = False, wait_for_end_of = True):
             
         task_split = command.split("-")
 
@@ -4473,12 +4473,17 @@ class RobotStdFunctions():
                 pass
             
             case "pick_up_object":
-                # temporary speech to show it is working
 
                 print("Picking up:", parameter)
 
-                time.sleep(5)
-                # self.robot.pick_object(selected_object= parameter)
+                picked_height, asked_help = self.robot.pick_object(selected_object= parameter)
+
+                object_in_gripper = False
+                object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                if object_in_gripper:
+                    curr_obj_list.append(parameter)
+                    curr_picked_height = picked_height
+                    curr_asked_help = asked_help
 
                 pass
 
@@ -4502,7 +4507,14 @@ class RobotStdFunctions():
               
                 print("Placing:", parameter)
 
-                # self.robot.place_object()
+                self.place_object_in_furniture(selected_object=parameter, furniture=curr_furniture, shelf_number=0, placed_height=curr_picked_height, asked_help=curr_asked_help)
+
+                object_in_gripper = False
+                object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                if not object_in_gripper:
+                    curr_obj_list.clear()
+                    curr_picked_height = 0.0
+                    curr_asked_help = False
 
                 pass
             
@@ -4645,7 +4657,7 @@ class RobotStdFunctions():
                 # self.set_speech(filename="temp/action", wait_for_end_of=True)
                 print("Sorry, I cannot execute the task:", task_type)
 
-        return curr_room, curr_furniture, curr_result, curr_obj_list
+        return curr_room, curr_furniture, curr_result, curr_obj_list, curr_picked_height, curr_asked_help
 
     def get_filtered_list_of_objects_found(self, list_of_objects_found= [], parameter=""):
 
