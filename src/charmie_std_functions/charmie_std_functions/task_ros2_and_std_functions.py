@@ -6857,6 +6857,281 @@ class RobotStdFunctions():
 
         return success, message, nav_coords_ret
 
+    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, move_to=True, wait_for_end_of=True):
+        
+        DEBUG_PRINTS = True
+        success = False
+        message = ""
+        nav_coords_ret = []
+        place_coords_ret = []
+
+        placement_depth = 0.50      # first 40 cm from table border must be free
+        placement_margin = 0.20     # place object 20 cm from table border
+        approach_offset = 0.50      # robot distance outside table border
+
+        print("\n[PLACE] --- move_to_free_place_position ---")
+        print("[PLACE] Furniture:", furniture)
+        print("[PLACE] heads_of_the_table:", heads_of_the_table)
+
+        shape = self.get_furniture_shape_from_furniture(furniture)
+
+        if shape is None:
+            success = False
+            message = "Furniture shape not found, cannot move to free place position"
+            print("[PLACE][ERROR]", message)
+            return success, message, nav_coords_ret, place_coords_ret
+
+        if shape != "square":
+            success = False
+            message = "For now this function only supports square/rectangular furniture"
+            print("[PLACE][ERROR]", message)
+            return success, message, nav_coords_ret, place_coords_ret
+
+        furniture_dict = {
+            "name": furniture,
+            "center_coords": [self.get_location_coords_from_furniture(furniture)[0], self.get_location_coords_from_furniture(furniture)[1]],
+            "size": self.get_size_from_furniture(furniture),
+            "angle": self.get_angle_from_furniture(furniture),
+            "radius": self.get_radius_from_furniture(furniture),
+            "shape": self.get_furniture_shape_from_furniture(furniture)
+        }
+
+        cx, cy = furniture_dict["center_coords"]
+        size_x, size_y = furniture_dict["size"]
+        angle_deg_furniture = furniture_dict["angle"]
+        radius = furniture_dict["radius"]
+
+        half_x = size_x / 2.0
+        half_y = size_y / 2.0
+        angle_rad = math.radians(angle_deg_furniture)
+
+        if DEBUG_PRINTS:
+            print("[PLACE] Furniture dict:", furniture_dict)
+            print("[PLACE] Center:", [cx, cy])
+            print("[PLACE] Size:", [size_x, size_y])
+            print("[PLACE] Half size:", [half_x, half_y])
+            print("[PLACE] Radius:", radius)
+            print("[PLACE] Angle deg:", angle_deg_furniture)
+
+        # ------------------------------------------------------------------
+        # Decide which sides are the "heads of the table"
+        # These are the two smaller sides of the rectangle.
+        #
+        # If size_x < size_y:
+        #   heads are local x sides: x = -half_x and x = +half_x
+        #
+        # If size_y < size_x:
+        #   heads are local y sides: y = -half_y and y = +half_y
+        # ------------------------------------------------------------------
+
+        if not heads_of_the_table:
+            success = False
+            message = "Only heads_of_the_table=True is implemented for now"
+            print("[PLACE][ERROR]", message)
+            return success, message, nav_coords_ret, place_coords_ret
+
+        # Change the candidate order for prefered side (both options are available for placing)
+        if size_x <= size_y:
+            candidate_sides = ["right", "left"]
+        else:
+            candidate_sides = ["bottom", "top"]
+
+        if DEBUG_PRINTS:
+            print("[PLACE] Candidate head sides:", candidate_sides)
+
+        # ------------------------------------------------------------------
+        # Convert detected object positions into furniture-local coordinates.
+        # Only objects inside this furniture footprint are considered.
+        # ------------------------------------------------------------------
+
+        objects_local = []
+
+        for obj in list_of_objects:
+            if obj.index <= 0:
+                continue
+
+            ox = obj.position_absolute.x
+            oy = obj.position_absolute.y
+
+            dx = ox - cx
+            dy = oy - cy
+
+            local_ox =  math.cos(angle_rad) * dx + math.sin(angle_rad) * dy
+            local_oy = -math.sin(angle_rad) * dx + math.cos(angle_rad) * dy
+
+            inside_furniture = (
+                -half_x <= local_ox <= half_x and
+                -half_y <= local_oy <= half_y
+            )
+
+            if DEBUG_PRINTS:
+                print(
+                    f"[PLACE][OBJ] {obj.object_name:<15}"
+                    f" world=({ox:.2f},{oy:.2f})"
+                    f" local=({local_ox:.2f},{local_oy:.2f})"
+                    f" inside={inside_furniture}"
+                    f" db={local_ox + half_x:.2f}"
+                    f" dt={half_x - local_ox:.2f}"
+                    f" dr={local_oy + half_y:.2f}"
+                    f" dl={half_y - local_oy:.2f}"
+                )
+
+            if inside_furniture:
+                objects_local.append({
+                    "name": obj.object_name,
+                    "local": [local_ox, local_oy],
+                    "world": [ox, oy]
+                })
+
+        if DEBUG_PRINTS:
+            print("[PLACE] Objects inside furniture:", len(objects_local))
+
+        # ------------------------------------------------------------------
+        # Check whether the first 40 cm inward from each candidate head side
+        # contains an object.
+        # ------------------------------------------------------------------
+
+        free_side = None
+
+        for side in candidate_sides:
+
+            side_has_object = False
+
+            print("\n[PLACE] Checking side:", side)
+
+            for obj in objects_local:
+                obj_lx, obj_ly = obj["local"]
+
+                if side == "bottom":
+                    object_in_strip = (
+                        -half_x <= obj_lx <= -half_x + placement_depth and
+                        -half_y <= obj_ly <= half_y
+                    )
+
+                elif side == "top":
+                    object_in_strip = (
+                        half_x - placement_depth <= obj_lx <= half_x and
+                        -half_y <= obj_ly <= half_y
+                    )
+
+                elif side == "right":
+                    object_in_strip = (
+                        -half_x <= obj_lx <= half_x and
+                        -half_y <= obj_ly <= -half_y + placement_depth
+                    )
+
+                elif side == "left":
+                    object_in_strip = (
+                        -half_x <= obj_lx <= half_x and
+                        half_y - placement_depth <= obj_ly <= half_y
+                    )
+
+                else:
+                    object_in_strip = False
+
+
+                if DEBUG_PRINTS:
+                    print(
+                        "[PLACE]   Object:",
+                        obj["name"],
+                        "local:",
+                        [round(obj_lx, 3), round(obj_ly, 3)],
+                        "in first 40cm strip:",
+                        object_in_strip
+                    )
+
+                if object_in_strip:
+                    side_has_object = True
+                    break
+
+            if not side_has_object:
+                free_side = side
+                print("[PLACE] Free head side found:", free_side)
+                break
+            else:
+                print("[PLACE] Side occupied:", side)
+
+        if free_side is None:
+            success = False
+            message = "No free head side found"
+            print("[PLACE][WARN]", message)
+            return success, message, nav_coords_ret, place_coords_ret
+
+        # ------------------------------------------------------------------
+        # Compute placement point and robot navigation point in furniture-local
+        # coordinates.
+        # ------------------------------------------------------------------
+
+        if free_side == "bottom":
+            place_lx = -half_x + placement_margin
+            place_ly = 0.0
+
+            nav_lx = -half_x - approach_offset
+            nav_ly = 0.0
+
+            angle_deg = angle_deg_furniture + 0.0
+
+        elif free_side == "top":
+            place_lx = half_x - placement_margin
+            place_ly = 0.0
+
+            nav_lx = half_x + approach_offset
+            nav_ly = 0.0
+
+            angle_deg = angle_deg_furniture + 180.0
+
+        elif free_side == "right":
+            place_lx = 0.0
+            place_ly = -half_y + placement_margin
+
+            nav_lx = 0.0
+            nav_ly = -half_y - approach_offset
+
+            angle_deg = angle_deg_furniture + 90.0
+
+        elif free_side == "left":
+            place_lx = 0.0
+            place_ly = half_y - placement_margin
+
+            nav_lx = 0.0
+            nav_ly = half_y + approach_offset
+
+            angle_deg = angle_deg_furniture + 270.0
+
+        angle_deg = angle_deg % 360.0
+
+        # ------------------------------------------------------------------
+        # Convert local placement/nav coordinates back into map/world coords.
+        # ------------------------------------------------------------------
+
+        place_x = cx + math.cos(angle_rad) * place_lx - math.sin(angle_rad) * place_ly
+        place_y = cy + math.sin(angle_rad) * place_lx + math.cos(angle_rad) * place_ly
+
+        nav_x = cx + math.cos(angle_rad) * nav_lx - math.sin(angle_rad) * nav_ly
+        nav_y = cy + math.sin(angle_rad) * nav_lx + math.cos(angle_rad) * nav_ly
+
+        place_coords_ret = [place_x, place_y]
+        nav_coords_ret = [nav_x, nav_y, angle_deg]
+
+        print("\n[PLACE] --- RESULT ---")
+        print("[PLACE] Selected free side:", free_side)
+        print("[PLACE] Place local coords:", [round(place_lx, 3), round(place_ly, 3)])
+        print("[PLACE] Place map coords:", [round(place_x, 3), round(place_y, 3)])
+        print("[PLACE] Nav local coords:", [round(nav_lx, 3), round(nav_ly, 3)])
+        print("[PLACE] Nav map coords:", [round(nav_x, 3), round(nav_y, 3), round(angle_deg, 3)])
+
+        success = True
+        message = "Found free head side and computed place/nav position"
+
+        if nav_coords_ret and move_to:
+            self.move_to_position(
+                move_coords=nav_coords_ret,
+                wait_for_end_of=wait_for_end_of
+            )
+
+        return success, message, nav_coords_ret, place_coords_ret
+                
+
     def open_door(self, push_pull="push", handle_side="", wait_for_end_of=True):
 
 
