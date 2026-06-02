@@ -30,7 +30,7 @@ ros2_modules = {
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             False,
+    "charmie_speakers":             True,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
@@ -267,7 +267,8 @@ class TaskMain():
                 lob.objects.append(o3)
                 lob.objects.append(o4)
 
-                self.robot.move_to_free_place_position(furniture=self.NAVIGATION_TARGET, list_of_objects=lob.objects, heads_of_the_table=True, move_to=False, wait_for_end_of=True)                
+                self.robot.set_speech(filename="pick_and_place_task/remove_decorations_front_of_me", wait_for_end_of=True)
+                self.robot.move_to_free_place_position(furniture=self.NAVIGATION_TARGET, list_of_objects=lob.objects, heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=False, wait_for_end_of=True)                
                         
                 while True:
                     pass

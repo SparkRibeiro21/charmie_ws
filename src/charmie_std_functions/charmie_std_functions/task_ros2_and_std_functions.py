@@ -6857,7 +6857,7 @@ class RobotStdFunctions():
 
         return success, message, nav_coords_ret
 
-    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, move_to=True, wait_for_end_of=True):
+    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True):
         
         DEBUG_PRINTS = True
         success = False
@@ -7124,10 +7124,14 @@ class RobotStdFunctions():
         message = "Found free head side and computed place/nav position"
 
         if nav_coords_ret and move_to:
-            self.move_to_position(
-                move_coords=nav_coords_ret,
-                wait_for_end_of=wait_for_end_of
-            )
+            self.move_to_position(move_coords=nav_coords_ret, wait_for_end_of=wait_for_end_of)
+            if wait_for_end_of:
+                if speak_remove_chairs:
+                    self.set_speech(filename="pick_and_place_task/remove_chair_front_of_me", wait_for_end_of=True)
+                    time.sleep(5.0)
+                if speak_remove_decorations:
+                    self.set_speech(filename="pick_and_place_task/remove_decorations_front_of_me", wait_for_end_of=True)
+                    time.sleep(5.0)
 
         return success, message, nav_coords_ret, place_coords_ret
                 
