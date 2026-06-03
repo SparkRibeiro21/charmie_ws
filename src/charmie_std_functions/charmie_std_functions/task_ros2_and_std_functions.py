@@ -6859,6 +6859,8 @@ class RobotStdFunctions():
 
     def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True):
         
+        # TODO: this function still does not consider the object height for comparing which is the best spot to place object (multiple shelves)
+
         DEBUG_PRINTS = True
         success = False
         message = ""
@@ -6912,32 +6914,10 @@ class RobotStdFunctions():
             print("[PLACE] Half size:", [half_x, half_y])
             print("[PLACE] Radius:", radius)
             print("[PLACE] Angle deg:", angle_deg_furniture)
-
-        # ------------------------------------------------------------------
-        # Decide which sides are the "heads of the table"
-        # These are the two smaller sides of the rectangle.
-        #
-        # If size_x < size_y:
-        #   heads are local x sides: x = -half_x and x = +half_x
-        #
-        # If size_y < size_x:
-        #   heads are local y sides: y = -half_y and y = +half_y
-        # ------------------------------------------------------------------
-
-        if not heads_of_the_table:
-            success = False
-            message = "Only heads_of_the_table=True is implemented for now"
-            print("[PLACE][ERROR]", message)
-            return success, message, nav_coords_ret, place_coords_ret
-
-        # Change the candidate order for prefered side (both options are available for placing)
-        if size_x <= size_y:
-            candidate_sides = ["right", "left"]
-        else:
-            candidate_sides = ["bottom", "top"]
-
-        if DEBUG_PRINTS:
-            print("[PLACE] Candidate head sides:", candidate_sides)
+        
+        free_side = None
+        place_lx = None
+        place_ly = None
 
         # ------------------------------------------------------------------
         # Convert detected object positions into furniture-local coordinates.
@@ -6987,75 +6967,113 @@ class RobotStdFunctions():
             print("[PLACE] Objects inside furniture:", len(objects_local))
 
         # ------------------------------------------------------------------
-        # Check whether the first 40 cm inward from each candidate head side
-        # contains an object.
+        # Decide which sides are the "heads of the table"
+        # These are the two smaller sides of the rectangle.
+        #
+        # If size_x < size_y:
+        #   heads are local x sides: x = -half_x and x = +half_x
+        #
+        # If size_y < size_x:
+        #   heads are local y sides: y = -half_y and y = +half_y
         # ------------------------------------------------------------------
 
-        free_side = None
+        if heads_of_the_table and shape == "square":
 
-        for side in candidate_sides:
-
-            side_has_object = False
-
-            print("\n[PLACE] Checking side:", side)
-
-            for obj in objects_local:
-                obj_lx, obj_ly = obj["local"]
-
-                if side == "bottom":
-                    object_in_strip = (
-                        -half_x <= obj_lx <= -half_x + placement_depth and
-                        -half_y <= obj_ly <= half_y
-                    )
-
-                elif side == "top":
-                    object_in_strip = (
-                        half_x - placement_depth <= obj_lx <= half_x and
-                        -half_y <= obj_ly <= half_y
-                    )
-
-                elif side == "right":
-                    object_in_strip = (
-                        -half_x <= obj_lx <= half_x and
-                        -half_y <= obj_ly <= -half_y + placement_depth
-                    )
-
-                elif side == "left":
-                    object_in_strip = (
-                        -half_x <= obj_lx <= half_x and
-                        half_y - placement_depth <= obj_ly <= half_y
-                    )
-
-                else:
-                    object_in_strip = False
-
-
-                if DEBUG_PRINTS:
-                    print(
-                        "[PLACE]   Object:",
-                        obj["name"],
-                        "local:",
-                        [round(obj_lx, 3), round(obj_ly, 3)],
-                        "in first 40cm strip:",
-                        object_in_strip
-                    )
-
-                if object_in_strip:
-                    side_has_object = True
-                    break
-
-            if not side_has_object:
-                free_side = side
-                print("[PLACE] Free head side found:", free_side)
-                break
+            # Change the candidate order for prefered side (both options are available for placing)
+            if size_x <= size_y:
+                candidate_sides = ["right", "left"]
             else:
-                print("[PLACE] Side occupied:", side)
+                candidate_sides = ["bottom", "top"]
+
+            if DEBUG_PRINTS:
+                print("[PLACE] Candidate head sides:", candidate_sides)
+
+
+            # ------------------------------------------------------------------
+            # Check whether the first 50 cm inward from each candidate head side
+            # contains an object.
+            # ------------------------------------------------------------------
+
+            for side in candidate_sides:
+
+                side_has_object = False
+
+                print("\n[PLACE] Checking side:", side)
+
+                for obj in objects_local:
+                    obj_lx, obj_ly = obj["local"]
+
+                    if side == "bottom":
+                        object_in_strip = (
+                            -half_x <= obj_lx <= -half_x + placement_depth and
+                            -half_y <= obj_ly <= half_y
+                        )
+
+                    elif side == "top":
+                        object_in_strip = (
+                            half_x - placement_depth <= obj_lx <= half_x and
+                            -half_y <= obj_ly <= half_y
+                        )
+
+                    elif side == "right":
+                        object_in_strip = (
+                            -half_x <= obj_lx <= half_x and
+                            -half_y <= obj_ly <= -half_y + placement_depth
+                        )
+
+                    elif side == "left":
+                        object_in_strip = (
+                            -half_x <= obj_lx <= half_x and
+                            half_y - placement_depth <= obj_ly <= half_y
+                        )
+
+                    else:
+                        object_in_strip = False
+
+
+                    if DEBUG_PRINTS:
+                        print(
+                            "[PLACE]   Object:",
+                            obj["name"],
+                            "local:",
+                            [round(obj_lx, 3), round(obj_ly, 3)],
+                            "in first 40cm strip:",
+                            object_in_strip
+                        )
+
+                    if object_in_strip:
+                        side_has_object = True
+                        break
+
+                if not side_has_object:
+                    free_side = side
+                    print("[PLACE] Free head side found:", free_side)
+                    break
+                else:
+                    print("[PLACE] Side occupied:", side)
+
 
         if free_side is None:
-            success = False
-            message = "No free head side found"
-            print("[PLACE][WARN]", message)
-            return success, message, nav_coords_ret, place_coords_ret
+            
+            print("[PLACE] Strategy 1 did not find a free head side.")
+            print("[PLACE] Strategy 2 should run here.")
+
+            if shape == "square":
+                print("[PLACE] Strategy 2 for square/rectangle furniture is not implemented yet.")
+                success = False
+                message = "Strategy 2 for circular furniture is not implemented yet"
+                return success, message, nav_coords_ret, place_coords_ret
+
+            elif shape == "circle":
+                print("[PLACE] Strategy 2 for circular furniture is not implemented yet.")
+                success = False
+                message = "Strategy 2 for circular furniture is not implemented yet"
+                return success, message, nav_coords_ret, place_coords_ret
+
+            else:
+                success = False
+                message = "Furniture shape not recognized for Strategy 2"
+                return success, message, nav_coords_ret, place_coords_ret
 
         # ------------------------------------------------------------------
         # Compute placement point and robot navigation point in furniture-local
@@ -7063,39 +7081,43 @@ class RobotStdFunctions():
         # ------------------------------------------------------------------
 
         if free_side == "bottom":
-            place_lx = -half_x + placement_margin
-            place_ly = 0.0
+
+            if place_lx is None or place_ly is None:
+                place_lx = -half_x + placement_margin
+                place_ly = 0.0
 
             nav_lx = -half_x - approach_offset
-            nav_ly = 0.0
-
+            nav_ly = place_ly
             angle_deg = angle_deg_furniture + 0.0
 
         elif free_side == "top":
-            place_lx = half_x - placement_margin
-            place_ly = 0.0
+
+            if place_lx is None or place_ly is None:
+                place_lx = half_x - placement_margin
+                place_ly = 0.0
 
             nav_lx = half_x + approach_offset
-            nav_ly = 0.0
-
+            nav_ly = place_ly
             angle_deg = angle_deg_furniture + 180.0
 
         elif free_side == "right":
-            place_lx = 0.0
-            place_ly = -half_y + placement_margin
 
-            nav_lx = 0.0
+            if place_lx is None or place_ly is None:
+                place_lx = 0.0
+                place_ly = -half_y + placement_margin
+
+            nav_lx = place_lx
             nav_ly = -half_y - approach_offset
-
             angle_deg = angle_deg_furniture + 90.0
 
         elif free_side == "left":
-            place_lx = 0.0
-            place_ly = half_y - placement_margin
 
-            nav_lx = 0.0
+            if place_lx is None or place_ly is None:
+                place_lx = 0.0
+                place_ly = half_y - placement_margin
+
+            nav_lx = place_lx
             nav_ly = half_y + approach_offset
-
             angle_deg = angle_deg_furniture + 270.0
 
         angle_deg = angle_deg % 360.0
