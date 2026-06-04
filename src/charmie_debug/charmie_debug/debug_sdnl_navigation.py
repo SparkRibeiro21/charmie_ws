@@ -30,7 +30,7 @@ ros2_modules = {
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
@@ -248,8 +248,8 @@ class TaskMain():
                 o1.index = 1
 
                 o2 = DetectedObject()
-                o2.position_absolute.x = 5.18
-                o2.position_absolute.y = 2.0
+                o2.position_absolute.x = 5.9
+                o2.position_absolute.y = 2.45
                 o2.index = 2
 
                 o3 = DetectedObject()
@@ -259,16 +259,27 @@ class TaskMain():
 
                 o4 = DetectedObject()
                 o4.position_absolute.x = 5.18
-                o4.position_absolute.y = 2.0
+                o4.position_absolute.y = 1.2
                 o4.index = 4
 
-                lob.objects.append(o1)
-                lob.objects.append(o2)
-                lob.objects.append(o3)
-                lob.objects.append(o4)
+                o5 = DetectedObject()
+                o5.position_absolute.x = 5.9
+                o5.position_absolute.y = 1.86
+                o5.index = 5
 
-                self.robot.set_speech(filename="pick_and_place_task/remove_decorations_front_of_me", wait_for_end_of=True)
-                self.robot.move_to_free_place_position(furniture=self.NAVIGATION_TARGET, list_of_objects=lob.objects, heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=False, wait_for_end_of=True)                
+                o6 = DetectedObject()
+                o6.position_absolute.x = 5.35
+                o6.position_absolute.y = 2.5
+                o6.index = 6
+
+                # lob.objects.append(o1)
+                # lob.objects.append(o2)
+                # lob.objects.append(o3)
+                # lob.objects.append(o4)
+                # lob.objects.append(o5)
+                # lob.objects.append(o6)
+
+                self.robot.move_to_free_place_position(furniture=self.NAVIGATION_TARGET, list_of_objects=lob.objects, heads_of_the_table=False, speak_remove_chairs=False, speak_remove_decorations=False, move_to=False, wait_for_end_of=True)                
                         
                 while True:
                     pass

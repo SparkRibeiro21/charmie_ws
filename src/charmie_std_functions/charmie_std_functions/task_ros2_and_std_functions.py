@@ -6861,14 +6861,15 @@ class RobotStdFunctions():
         
         # TODO: this function still does not consider the object height for comparing which is the best spot to place object (multiple shelves)
 
-        DEBUG_PRINTS = True
+        DEBUG_PRINTS = False
         success = False
         message = ""
+        empty_table_side="left"
         nav_coords_ret = []
         place_coords_ret = []
 
         placement_depth = 0.50      # first 40 cm from table border must be free
-        placement_margin = 0.20     # place object 20 cm from table border
+        placement_margin = 0.30     # place object 20 cm from table border
         approach_offset = 0.50      # robot distance outside table border
 
         print("\n[PLACE] --- move_to_free_place_position ---")
@@ -6981,7 +6982,7 @@ class RobotStdFunctions():
 
             # Change the candidate order for prefered side (both options are available for placing)
             if size_x <= size_y:
-                candidate_sides = ["right", "left"]
+                candidate_sides = ["left", "right"]
             else:
                 candidate_sides = ["bottom", "top"]
 
@@ -7054,25 +7055,159 @@ class RobotStdFunctions():
 
 
         if free_side is None:
-            
-            print("[PLACE] Strategy 1 did not find a free head side.")
-            print("[PLACE] Strategy 2 should run here.")
+
+            if heads_of_the_table and shape == "square": # simple debug print
+                print("[PLACE] Heads of the table strategy did not find a free head side.")
+
+            print("[PLACE] Running highest minimum distance to all objects strategy.")
 
             if shape == "square":
-                print("[PLACE] Strategy 2 for square/rectangle furniture is not implemented yet.")
-                success = False
-                message = "Strategy 2 for circular furniture is not implemented yet"
-                return success, message, nav_coords_ret, place_coords_ret
+
+                grid_step = 0.05
+
+                best_score = -1.0
+                best_side = None
+                best_place_lx = None
+                best_place_ly = None
+                best_closest_object_name = "None"
+
+                if len(objects_local) == 0: # case where there are no objects on the furniture, user can choose the center of which side
+
+                    valid_empty_sides = ["bottom", "top", "right", "left"]
+
+                    if empty_table_side not in valid_empty_sides:
+                        print("[PLACE][WARN] Invalid empty_table_side:", empty_table_side)
+                        print("[PLACE][WARN] Defaulting to right")
+                        empty_table_side = "right"
+
+                    free_side = empty_table_side
+                    place_lx = None
+                    place_ly = None
+
+                    print("[PLACE] Empty table detected.")
+                    print("[PLACE] Empty table selected side:", free_side)
+
+                else: 
+
+                    candidate_points = []
+
+                    if DEBUG_PRINTS:
+                        print("\n[PLACE][STRAT2] --- SQUARE FURNITURE SEARCH ---")
+                        print("[PLACE][STRAT2] grid_step:", grid_step)
+                        print("[PLACE][STRAT2] placement_margin:", placement_margin)
+                        print("[PLACE][STRAT2] local limits:")
+                        print("    x:", round(-half_x, 3), "to", round(half_x, 3))
+                        print("    y:", round(-half_y, 3), "to", round(half_y, 3))
+                        print("[PLACE][STRAT2] searchable inner lines:")
+                        print("    bottom x =", round(-half_x + placement_margin, 3))
+                        print("    top    x =", round(half_x - placement_margin, 3))
+                        print("    right  y =", round(-half_y + placement_margin, 3))
+                        print("    left   y =", round(half_y - placement_margin, 3))
+
+                    # bottom side candidates
+                    x = -half_x + placement_margin
+                    y = -half_y + placement_margin
+                    while y <= half_y - placement_margin:
+                        candidate_points.append((x, y, "bottom"))
+                        y += grid_step
+
+                    # top side candidates
+                    x = half_x - placement_margin
+                    y = -half_y + placement_margin
+                    while y <= half_y - placement_margin:
+                        candidate_points.append((x, y, "top"))
+                        y += grid_step
+
+                    # right side candidates
+                    y = -half_y + placement_margin
+                    x = -half_x + placement_margin
+                    while x <= half_x - placement_margin:
+                        candidate_points.append((x, y, "right"))
+                        x += grid_step
+
+                    # left side candidates
+                    y = half_y - placement_margin
+                    x = -half_x + placement_margin
+                    while x <= half_x - placement_margin:
+                        candidate_points.append((x, y, "left"))
+                        x += grid_step
+
+                    if DEBUG_PRINTS:
+                        side_counts = {"bottom": 0, "top": 0, "right": 0, "left": 0}
+                        for _, _, side in candidate_points:
+                            side_counts[side] += 1
+
+                        print("[PLACE][STRAT2] Total candidate points:", len(candidate_points))
+                        print("[PLACE][STRAT2] Candidate counts by side:", side_counts)
+                        print("[PLACE][STRAT2] Objects considered:", len(objects_local))
+
+                        for obj in objects_local:
+                            obj_lx, obj_ly = obj["local"]
+                            print(
+                                f"[PLACE][STRAT2][OBJ] {obj['name']:<15}"
+                                f" local=({obj_lx:.3f},{obj_ly:.3f})"
+                                f" world=({obj['world'][0]:.3f},{obj['world'][1]:.3f})"
+                            )
+
+                    for cand_lx, cand_ly, cand_side in enumerate(candidate_points):
+
+                        min_dist_to_object = float("inf")
+                        closest_object_name = "None"
+
+                        for obj in objects_local:
+                            obj_lx, obj_ly = obj["local"]
+
+                            dist = math.sqrt(
+                                (cand_lx - obj_lx) ** 2 +
+                                (cand_ly - obj_ly) ** 2
+                            )
+
+                            if dist < min_dist_to_object:
+                                min_dist_to_object = dist
+                                closest_object_name = obj["name"]
+
+                        if min_dist_to_object > best_score:
+                            best_score = min_dist_to_object
+                            best_side = cand_side
+                            best_place_lx = cand_lx
+                            best_place_ly = cand_ly
+                            best_closest_object_name = closest_object_name
+
+                    if best_side is None:
+                        success = False
+                        message = "Strategy 2 could not find a valid place position"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
+                    free_side = best_side
+                    place_lx = best_place_lx
+                    place_ly = best_place_ly
+
+                    best_place_x = cx + math.cos(angle_rad) * place_lx - math.sin(angle_rad) * place_ly
+                    best_place_y = cy + math.sin(angle_rad) * place_lx + math.cos(angle_rad) * place_ly
+
+                    print("\n[PLACE][STRAT2] --- FINAL SELECTION ---")
+                    print("[PLACE][STRAT2] selected side:", free_side)
+                    print("[PLACE][STRAT2] selected local coords:", [round(place_lx, 3), round(place_ly, 3)])
+                    print("[PLACE][STRAT2] selected map coords:", [round(best_place_x, 3), round(best_place_y, 3)])
+                    print("[PLACE][STRAT2] best minimum distance:", round(best_score, 3))
+                    print("[PLACE][STRAT2] closest object to best point:", best_closest_object_name)
 
             elif shape == "circle":
+
+                print("[PLACE] Running highest minimum distance to all objects strategy.")
                 print("[PLACE] Strategy 2 for circular furniture is not implemented yet.")
+
                 success = False
                 message = "Strategy 2 for circular furniture is not implemented yet"
+                print("[PLACE][ERROR]", message)
                 return success, message, nav_coords_ret, place_coords_ret
 
             else:
+
                 success = False
                 message = "Furniture shape not recognized for Strategy 2"
+                print("[PLACE][ERROR]", message)
                 return success, message, nav_coords_ret, place_coords_ret
 
         # ------------------------------------------------------------------
