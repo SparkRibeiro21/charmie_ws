@@ -13,27 +13,27 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 False,
-    "charmie_head_camera":          False,
+    "charmie_face":                 True,
+    "charmie_head_camera":          True,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                False,
+    "charmie_lidar":                True,
     "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         False,
-    "charmie_low_level":            False,
-    "charmie_navigation":           False,
-    "charmie_nav2":                 False,
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
+    "charmie_navigation":           True,
+    "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 False,
-    "charmie_radar":                False,
+    "charmie_neck":                 True,
+    "charmie_radar":                True,
     "charmie_sound_classification": False,
-    "charmie_speakers":             False,
+    "charmie_speakers":             True,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
-    "charmie_yolo_objects":         False,
+    "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
@@ -63,7 +63,8 @@ class TaskMain():
         Move_to_pre_pick_position_after_search_for_objects = 1
         Move_to_pre_pick_position_after_search_for_objects_quick_test = 2
         Move_to_pre_place_position = 3
-        Final_State = 4
+        Move_to_pre_place_position_quick_test = 4
+        Final_State = 5
 
         # self.initial_position = [0.0, 0.0, 0.0]
         self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
@@ -239,6 +240,57 @@ class TaskMain():
                 self.state = Final_State
             
             elif self.state == Move_to_pre_place_position:
+                print('State 1 = Move to pre pick position after search for objects')
+
+                ### MOVE TO DINNER TABLE POSITION TO SEARCH FOR OBJECTS
+
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=False)
+
+                # must be removed after the update to minimize as much as possivle the final orientation error 
+                move_coords = self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET)                
+                # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
+                self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
+
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=True)
+
+                ### SEARCH FOR OBJECTS EXAMPLE     
+                
+                # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
+                # tetas = [[-30, -45], [0, -45], [30, -45]]
+                tetas = [[0, -30]]
+                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                
+                print("LIST OF DETECTED OBJECTS:")
+                for o in objects_found:
+                    conf = f"{o.confidence * 100:.0f}%"
+                    x_ = f"{o.position_absolute.x:4.2f}"
+                    y_ = f"{o.position_absolute.y:5.2f}"
+                    z_ = f"{o.position_absolute.z:5.2f}"
+                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.furniture_location} ({x_}, {y_}, {z_})")
+
+                time.sleep(0.5)
+                self.robot.set_face("charmie_face", wait_for_end_of=False)
+
+                self.robot.wait_for_start_button()
+                    
+                self.robot.move_to_free_place_position(furniture=self.NAVIGATION_TARGET, list_of_objects=objects_found, heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True)                
+                            
+                # self.robot.set_neck(position=self.look_table_objects, wait_for_end_of=False)
+
+                # while True:
+                #     print(self.robot.get_robot_localization())
+                #     time.sleep(0.5)
+                #     pass    
+
+                # next state
+                self.state = Final_State
+
+
+            elif self.state == Move_to_pre_place_position_quick_test:
 
                 lob = ListOfDetectedObject()
 
