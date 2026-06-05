@@ -7149,7 +7149,7 @@ class RobotStdFunctions():
                                 f" world=({obj['world'][0]:.3f},{obj['world'][1]:.3f})"
                             )
 
-                    for cand_lx, cand_ly, cand_side in enumerate(candidate_points):
+                    for cand_lx, cand_ly, cand_side in candidate_points:
 
                         min_dist_to_object = float("inf")
                         closest_object_name = "None"
