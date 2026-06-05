@@ -7704,7 +7704,7 @@ class RobotStdFunctions():
                     self.adjust_x_ = 0
 
                 self.adjust_y_ = - self.adjust_y_
-                self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False)
+                #self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False)
 
                 self.set_face("charmie_face", wait_for_end_of=False)
 
@@ -7725,7 +7725,11 @@ class RobotStdFunctions():
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
                 if pick_mode == "top" and not ask_help:
                     object_position_grab = [0.0, 0.0, -correct_x_grab, 0.0, 0.0, -correct_rotation]
-                    check, m = self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                    check, m = self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                    if not check:
+                        object_position_grab = [-correct_z_grab, correct_y_grab, -correct_x_grab, 0.0, 0.0, -correct_rotation]
+                        check, m = self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=True, safety=False)
 
                 state = RETURN_ARM_TO_END_PLACE_POSITION
 
