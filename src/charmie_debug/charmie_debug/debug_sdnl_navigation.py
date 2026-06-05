@@ -243,37 +243,37 @@ class TaskMain():
                 lob = ListOfDetectedObject()
 
                 o1 = DetectedObject()
-                o1.position_absolute.x = 5.9
-                o1.position_absolute.y = 1.30
+                o1.position_absolute.x = 5.55
+                o1.position_absolute.y = 2.1
                 o1.index = 1
 
                 o2 = DetectedObject()
-                o2.position_absolute.x = 5.9
-                o2.position_absolute.y = 2.45
+                o2.position_absolute.x = 5.22
+                o2.position_absolute.y = 1.47
                 o2.index = 2
 
                 o3 = DetectedObject()
-                o3.position_absolute.x = 5.18
-                o3.position_absolute.y = 2.0
+                o3.position_absolute.x = 5.6
+                o3.position_absolute.y = 0.98
                 o3.index = 3
 
                 o4 = DetectedObject()
-                o4.position_absolute.x = 5.18
-                o4.position_absolute.y = 1.2
+                o4.position_absolute.x = 4.88
+                o4.position_absolute.y = 2.22
                 o4.index = 4
 
                 o5 = DetectedObject()
-                o5.position_absolute.x = 5.9
-                o5.position_absolute.y = 1.86
+                o5.position_absolute.x = 6.1
+                o5.position_absolute.y = 1.8
                 o5.index = 5
 
                 o6 = DetectedObject()
-                o6.position_absolute.x = 5.35
-                o6.position_absolute.y = 2.5
+                o6.position_absolute.x = 5.25
+                o6.position_absolute.y = 1.58
                 o6.index = 6
 
-                # lob.objects.append(o1)
-                # lob.objects.append(o2)
+                lob.objects.append(o1)
+                lob.objects.append(o2)
                 # lob.objects.append(o3)
                 # lob.objects.append(o4)
                 # lob.objects.append(o5)

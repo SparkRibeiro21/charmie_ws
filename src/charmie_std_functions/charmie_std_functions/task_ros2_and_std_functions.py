@@ -6868,8 +6868,8 @@ class RobotStdFunctions():
         nav_coords_ret = []
         place_coords_ret = []
 
-        placement_depth = 0.50      # first 40 cm from table border must be free
-        placement_margin = 0.30     # place object 20 cm from table border
+        placement_depth = 0.50      # first X cm from table border must be free
+        placement_margin = 0.30     # place object X cm from table border
         approach_offset = 0.50      # robot distance outside table border
 
         print("\n[PLACE] --- move_to_free_place_position ---")
@@ -6881,12 +6881,6 @@ class RobotStdFunctions():
         if shape is None:
             success = False
             message = "Furniture shape not found, cannot move to free place position"
-            print("[PLACE][ERROR]", message)
-            return success, message, nav_coords_ret, place_coords_ret
-
-        if shape != "square":
-            success = False
-            message = "For now this function only supports square/rectangular furniture"
             print("[PLACE][ERROR]", message)
             return success, message, nav_coords_ret, place_coords_ret
 
@@ -6940,10 +6934,17 @@ class RobotStdFunctions():
             local_ox =  math.cos(angle_rad) * dx + math.sin(angle_rad) * dy
             local_oy = -math.sin(angle_rad) * dx + math.cos(angle_rad) * dy
 
-            inside_furniture = (
-                -half_x <= local_ox <= half_x and
-                -half_y <= local_oy <= half_y
-            )
+            if shape == "square":
+                inside_furniture = (
+                    -half_x <= local_ox <= half_x and
+                    -half_y <= local_oy <= half_y
+                )
+
+            elif shape == "circle":
+                inside_furniture = math.sqrt(local_ox**2 + local_oy**2) <= radius
+
+            else:
+                inside_furniture = False
 
             if DEBUG_PRINTS:
                 print(
@@ -7195,13 +7196,95 @@ class RobotStdFunctions():
 
             elif shape == "circle":
 
-                print("[PLACE] Running highest minimum distance to all objects strategy.")
-                print("[PLACE] Strategy 2 for circular furniture is not implemented yet.")
+                angle_step_deg = 10.0
+                placement_radius = radius - placement_margin
 
-                success = False
-                message = "Strategy 2 for circular furniture is not implemented yet"
-                print("[PLACE][ERROR]", message)
-                return success, message, nav_coords_ret, place_coords_ret
+                if placement_radius <= 0.0:
+                    success = False
+                    message = "Circular furniture is too small for placement margin"
+                    print("[PLACE][ERROR]", message)
+                    return success, message, nav_coords_ret, place_coords_ret
+
+                if len(objects_local) == 0:
+
+                    side_to_angle = {
+                        "bottom": 180.0,
+                        "top": 0.0,
+                        "right": 270.0,
+                        "left": 90.0
+                    }
+
+                    if empty_table_side not in side_to_angle:
+                        print("[PLACE][WARN] Invalid empty_table_side:", empty_table_side)
+                        print("[PLACE][WARN] Defaulting to left")
+                        empty_table_side = "left"
+
+                    place_angle_rad = math.radians(side_to_angle[empty_table_side])
+
+                    place_lx = placement_radius * math.cos(place_angle_rad)
+                    place_ly = placement_radius * math.sin(place_angle_rad)
+
+                    free_side = empty_table_side
+
+                    print("[PLACE] Empty circular furniture detected.")
+                    print("[PLACE] Empty circular selected side:", empty_table_side)
+                    print("[PLACE] Empty circular selected local coords:", [round(place_lx, 3), round(place_ly, 3)])
+
+                else:
+
+                    best_score = -1.0
+                    best_place_lx = None
+                    best_place_ly = None
+                    best_angle_rad = None
+                    best_closest_object_name = "None"
+
+                    candidate_angle_deg = 0.0
+
+                    while candidate_angle_deg < 360.0:
+                        candidate_angle_rad = math.radians(candidate_angle_deg)
+
+                        cand_lx = placement_radius * math.cos(candidate_angle_rad)
+                        cand_ly = placement_radius * math.sin(candidate_angle_rad)
+
+                        min_dist_to_object = float("inf")
+                        closest_object_name = "None"
+
+                        for obj in objects_local:
+                            obj_lx, obj_ly = obj["local"]
+
+                            dist = math.sqrt(
+                                (cand_lx - obj_lx) ** 2 +
+                                (cand_ly - obj_ly) ** 2
+                            )
+
+                            if dist < min_dist_to_object:
+                                min_dist_to_object = dist
+                                closest_object_name = obj["name"]
+
+                        if min_dist_to_object > best_score:
+                            best_score = min_dist_to_object
+                            best_place_lx = cand_lx
+                            best_place_ly = cand_ly
+                            best_angle_rad = candidate_angle_rad
+                            best_closest_object_name = closest_object_name
+
+                        candidate_angle_deg += angle_step_deg
+
+                    if best_place_lx is None or best_place_ly is None:
+                        success = False
+                        message = "Strategy 2 could not find a valid circular place position"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
+                    free_side = "circle"
+                    place_lx = best_place_lx
+                    place_ly = best_place_ly
+
+                    print("\n[PLACE][STRAT2][CIRCLE] --- FINAL SELECTION ---")
+                    print("[PLACE][STRAT2][CIRCLE] selected local coords:", [round(place_lx, 3), round(place_ly, 3)])
+                    print("[PLACE][STRAT2][CIRCLE] selected angle deg:", round(math.degrees(best_angle_rad), 3))
+                    print("[PLACE][STRAT2][CIRCLE] best minimum distance:", round(best_score, 3))
+                    print("[PLACE][STRAT2][CIRCLE] closest object to best point:", best_closest_object_name)
 
             else:
 
@@ -7215,47 +7298,78 @@ class RobotStdFunctions():
         # coordinates.
         # ------------------------------------------------------------------
 
-        if free_side == "bottom":
+        if shape == "square":
+            if free_side == "bottom":
 
-            if place_lx is None or place_ly is None:
-                place_lx = -half_x + placement_margin
+                if place_lx is None or place_ly is None:
+                    place_lx = -half_x + placement_margin
+                    place_ly = 0.0
+
+                nav_lx = -half_x - approach_offset
+                nav_ly = place_ly
+                angle_deg = angle_deg_furniture + 0.0
+
+            elif free_side == "top":
+
+                if place_lx is None or place_ly is None:
+                    place_lx = half_x - placement_margin
+                    place_ly = 0.0
+
+                nav_lx = half_x + approach_offset
+                nav_ly = place_ly
+                angle_deg = angle_deg_furniture + 180.0
+
+            elif free_side == "right":
+
+                if place_lx is None or place_ly is None:
+                    place_lx = 0.0
+                    place_ly = -half_y + placement_margin
+
+                nav_lx = place_lx
+                nav_ly = -half_y - approach_offset
+                angle_deg = angle_deg_furniture + 90.0
+
+            elif free_side == "left":
+
+                if place_lx is None or place_ly is None:
+                    place_lx = 0.0
+                    place_ly = half_y - placement_margin
+
+                nav_lx = place_lx
+                nav_ly = half_y + approach_offset
+                angle_deg = angle_deg_furniture + 270.0
+
+            angle_deg = angle_deg % 360.0
+        
+        elif shape == "circle":
+
+            place_dist = math.sqrt(place_lx**2 + place_ly**2)
+
+            if place_dist < 1e-9:
+                place_lx = radius - placement_margin
                 place_ly = 0.0
+                place_dist = math.sqrt(place_lx**2 + place_ly**2)
 
-            nav_lx = -half_x - approach_offset
-            nav_ly = place_ly
-            angle_deg = angle_deg_furniture + 0.0
+            ux = place_lx / place_dist
+            uy = place_ly / place_dist
 
-        elif free_side == "top":
+            nav_lx = (radius + approach_offset) * ux
+            nav_ly = (radius + approach_offset) * uy
 
-            if place_lx is None or place_ly is None:
-                place_lx = half_x - placement_margin
-                place_ly = 0.0
+            place_x_temp = cx + math.cos(angle_rad) * place_lx - math.sin(angle_rad) * place_ly
+            place_y_temp = cy + math.sin(angle_rad) * place_lx + math.cos(angle_rad) * place_ly
 
-            nav_lx = half_x + approach_offset
-            nav_ly = place_ly
-            angle_deg = angle_deg_furniture + 180.0
+            nav_x_temp = cx + math.cos(angle_rad) * nav_lx - math.sin(angle_rad) * nav_ly
+            nav_y_temp = cy + math.sin(angle_rad) * nav_lx + math.cos(angle_rad) * nav_ly
 
-        elif free_side == "right":
+            angle_rad_robot = math.atan2(place_y_temp - nav_y_temp, place_x_temp - nav_x_temp)
+            angle_deg = (math.degrees(angle_rad_robot) + 360.0) % 360.0
 
-            if place_lx is None or place_ly is None:
-                place_lx = 0.0
-                place_ly = -half_y + placement_margin
-
-            nav_lx = place_lx
-            nav_ly = -half_y - approach_offset
-            angle_deg = angle_deg_furniture + 90.0
-
-        elif free_side == "left":
-
-            if place_lx is None or place_ly is None:
-                place_lx = 0.0
-                place_ly = half_y - placement_margin
-
-            nav_lx = place_lx
-            nav_ly = half_y + approach_offset
-            angle_deg = angle_deg_furniture + 270.0
-
-        angle_deg = angle_deg % 360.0
+        else:
+            success = False
+            message = "Furniture shape not recognized when computing final nav position"
+            print("[PLACE][ERROR]", message)
+            return success, message, nav_coords_ret, place_coords_ret
 
         # ------------------------------------------------------------------
         # Convert local placement/nav coordinates back into map/world coords.
