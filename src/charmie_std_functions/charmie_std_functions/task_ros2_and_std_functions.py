@@ -4326,7 +4326,7 @@ class RobotStdFunctions():
         self.release_timer = 0.3
         self.gripper_release_timer = 2
 
-        self.min_distance_to_person = 0.5
+        self.min_distance_to_person = 1
 
 
         ### Parsing the command ###
@@ -4353,7 +4353,7 @@ class RobotStdFunctions():
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
-                        self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
+                        # self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
 
                         # self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -4375,7 +4375,7 @@ class RobotStdFunctions():
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
 
-                        self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                        # self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
                         
                         self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -4398,21 +4398,26 @@ class RobotStdFunctions():
 
                 people_list = []
 
-                if parameter == "pose":
-
-
-                    if second_parameter == "sitting":
-                        pass
-
-                    if second_parameter == "raising_hand":
-
-                        for room in self.node.objects_file:
+                for room in self.node.objects_file:
                             # To make sure there are no errors due to spaces/underscores and upper/lower cases
                             if str(room["name"]).replace(" ","_").lower() == str(curr_room).replace(" ","_").lower():  # Check if the name matches
                                 curr_room_top_left_x, curr_room_top_left_y = float(room["top_left_coords"])
                                 curr_room_bottom_right_x, curr_room_bottom_right_y = float(room["bottom_right_coords"])
   
-                        tetas = [[-60, 0], [0, 0], [60, 0]]
+                tetas = [[-60, 0], [0, 0], [60, 0]]
+
+                if parameter == "pose":
+
+                    if second_parameter == "sitting":
+                        pass
+
+                    if second_parameter == "standing":
+                        pass
+
+                    if second_parameter == "lying_down":
+                        pass
+
+                    if second_parameter == "raising_hand":
 
                         people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
                         print("FOUND:", len(people_found)) 
@@ -4422,21 +4427,44 @@ class RobotStdFunctions():
                                 curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
                                 people_list.append(p)
                       
-
-                    if second_parameter == "standing":
-                        pass
-
-                    if second_parameter == "lying_down":
-                        pass
-
                     if second_parameter == "pointing_right":
+
+                        people_found=self.search_for_person(tetas=tetas)
+                        print("FOUND:", len(people_found)) 
+                        
+                        for p in people_found:
+                            print(p.pointing_at)
+                            if p.pointing_at == "right":
+                                if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
+                                curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
+                                    people_list.append(p)
+
                         pass
 
                     if second_parameter == "pointing_left":
-                        pass
 
+                        people_found=self.search_for_person(tetas=tetas)
+                        print("FOUND:", len(people_found)) 
+                        
+                        for p in people_found:
+                            print(p.pointing_at)
+                            if p.pointing_at == "left":
+                                if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
+                                curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
+                                    people_list.append(p)
+
+                        pass
+                
+                    robot_pose= self.get_robot_localization()
                     
-                    person_coords = (p.position_relative.x, p.position_relative.y)
+                    dx = p.position_relative.x - robot_pose.x
+                    dy = p.position_relative.y - robot_pose.y
+                    distance = math.sqrt(dx**2 + dy**2)
+
+                    target_x = p.position_relative.x - (dx / distance) * self.min_distance_to_person
+                    target_y = p.position_relative.y - (dy / distance) * self.min_distance_to_person
+
+                    self.move_to_position(move_coords=(target_x, target_y), wait_for_end_of=True)
 
                 pass
             
@@ -4476,7 +4504,19 @@ class RobotStdFunctions():
 
                 print("Picking up:", parameter)
 
-                picked_height, asked_help = self.pick_object(selected_object= parameter)
+                search_tetas = [[0, -45], [-40, -45], [40, -45]]
+
+                orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                print("Orientation to search:", orientation_to_search)
+
+                if orientation_to_search == "horizontal":
+                    search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                    print("Looking for:", parameter, "with horizontal search")
+                elif orientation_to_search == "vertical":
+                    search_tetas = [[0, -15], [0, -35], [0, 15]]
+                    print("Looking for:", parameter, "with vertical search")
+
+                picked_height, asked_help = self.pick_object(selected_object= parameter, first_search_tetas=search_tetas)
 
                 object_in_gripper = False
                 object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
@@ -4522,30 +4562,30 @@ class RobotStdFunctions():
 
                 obj_counter = 0
                 
-                # search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                search_tetas = [[0, -45], [-40, -45], [40, -45]]
 
-                # orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
-                # print("Orientation to search:", orientation_to_search)
+                orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                print("Orientation to search:", orientation_to_search)
 
-                # if orientation_to_search == "horizontal":
-                #     search_tetas = [[0, -45], [-40, -45], [40, -45]]
-                #     print("Looking for:", parameter, "with horizontal search")
-                # elif orientation_to_search == "vertical":
-                #     search_tetas = [[0, -15], [0, -35], [0, 15]]
-                #     print("Looking for:", parameter, "with vertical search")
+                if orientation_to_search == "horizontal":
+                    search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                    print("Looking for:", parameter, "with horizontal search")
+                elif orientation_to_search == "vertical":
+                    search_tetas = [[0, -15], [0, -35], [0, 15]]
+                    print("Looking for:", parameter, "with vertical search")
 
-                # objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                # filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
-                # print("Objects to count:", [obj.object_name for obj in filtered_objects_found])
+                objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
+                print("Objects to count:", [obj.object_name for obj in filtered_objects_found])
 
-                # if filtered_objects_found:
-                #     self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+                if filtered_objects_found:
+                    self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
 
-                #     for obj_found in filtered_objects_found:
+                    for obj_found in filtered_objects_found:
             
-                #         obj_counter += 1
-                #         print("Found:", obj_found.object_name)
-                #         self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                        obj_counter += 1
+                        print("Found:", obj_found.object_name)
+                        self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                     
                 curr_result = "I have found " + str(obj_counter) + " " + parameter.replace("_"," ") + "."
                 print(curr_result)
@@ -4557,6 +4597,8 @@ class RobotStdFunctions():
             case "compare_objects":
 
                 search_tetas = [[0, -45], [-40, -45], [40, -45]]
+
+                curr_obj_list.clear()
 
                 orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
                 print("Orientation to search:", orientation_to_search)
@@ -4577,11 +4619,12 @@ class RobotStdFunctions():
                     self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
                     for obj_found in filtered_objects_found:
 
-                        curr_obj_list.append(obj_found)
+                        curr_obj_list.append(obj_found.object_name)
                         print("Found:", obj_found.object_name)
 
                 else:    
                     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+
 
 
                 if parameter == "smallest":
@@ -4589,59 +4632,80 @@ class RobotStdFunctions():
                     smallest_volume = float('inf')
                     smallest_object = None
 
-                    for obj in objects_found:
-                        obj_volume = self.get_object_volume_from_object(obj.object_name)
+                    for obj in curr_obj_list:
+                        print("getting size of: ", obj)
+                        obj_volume = self.get_object_volume_from_object(obj)
+                        print("size of ", obj,": ",obj_volume)
                         if obj_volume < smallest_volume:
                             smallest_volume = obj_volume
                             smallest_object = obj
+                    
+                    print("smallest object is: ", smallest_object)
 
-                    curr_result = "The smallest " + second_parameter.replace("_"," ") + " is the " + smallest_object.object_name.replace("_"," ") + "."
-                    self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
+                    curr_result = "The smallest " + second_parameter.replace("_"," ") + " is the " + smallest_object.replace("_"," ") + "."
+                    print(curr_result)
+                    self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
                 
                 elif parameter == "biggest":
                     print("Finding the biggest ", second_parameter)
                     biggest_volume = float('-inf')
                     biggest_object = None
 
-                    for obj in objects_found:
-                        obj_volume = self.get_object_volume_from_object(obj.object_name)
+                    for obj in curr_obj_list:
+                        print("getting size of: ", obj)
+                        obj_volume = self.get_object_volume_from_object(obj)
+                        print("size of ", obj,": ",obj_volume)
                         if obj_volume > biggest_volume:
                             biggest_volume = obj_volume
                             biggest_object = obj
 
-                    curr_result = "The biggest " + second_parameter.replace("_"," ") + " is the " + biggest_object.object_name.replace("_"," ") + "."
-                    self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
+                    print("biggest object is: ", biggest_object)
+
+                    curr_result = "The biggest " + second_parameter.replace("_"," ") + " is the " + biggest_object.replace("_"," ") + "."
+                    print(curr_result)
+                    self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
 
                 elif parameter == "heaviest":
                     print("Finding the heaviest ", second_parameter)
-                    biggest_volume = float('-inf')
-                    biggest_object = None
+                    heaviest_weight_so_far = float('-inf')
+                    heaviest_object = None
 
-                    for obj in objects_found:
-                        obj_weight = self.get_object_weight_from_object(obj.object_name)
-                        if obj_weight > biggest_volume:
-                            biggest_volume = obj_weight
-                            biggest_object = obj
+                    for obj in curr_obj_list:
+                        print("getting weight of: ", obj)
+                        obj_weight = self.get_object_weight_from_object(obj)
+                        print("size of ", obj,": ",obj_weight)
+                        if obj_weight > heaviest_weight_so_far:
+                            heaviest_weight_so_far = obj_weight
+                            heaviest_object = obj
 
-                    curr_result = "The heaviest " + second_parameter.replace("_"," ") + " is the " + biggest_object.object_name.replace("_"," ") + "."
-                    self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
+                    print("heaviest object is: ", heaviest_object)
+
+                    curr_result = "The heaviest " + second_parameter.replace("_"," ") + " is the " + heaviest_object.replace("_"," ") + "."
+                    print(curr_result)
+                    self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
 
                 elif parameter == "lightest":
                     print("Finding the lightest ", second_parameter)
                     
-                    smallest_volume = float('inf')
-                    smallest_object = None
+                    lightest_weight_so_far = float('inf')
+                    lightest_object = None
 
-                    for obj in objects_found:
-                        obj_weight = self.get_object_weight_from_object(obj.object_name)
-                        if obj_weight < smallest_volume:
-                            smallest_volume = obj_weight
-                            smallest_object = obj
+                    for obj in curr_obj_list:
+                        print("getting weight of: ", obj)
+                        obj_weight = self.get_object_weight_from_object(obj)
+                        print("size of ", obj,": ",obj_weight)
+                        if obj_weight < lightest_weight_so_far:
+                            lightest_weight_so_far = obj_weight
+                            lightest_object = obj
 
-                    curr_result = "The lightest " + second_parameter.replace("_"," ") + " is the " + smallest_object.object_name.replace("_"," ") + "."
-                    self.save_speech(command=curr_result, filename="temp/result", quick_voice=True, wait_for_end_of=True)
+                    print("lightest object is: ", lightest_object)
+
+                    curr_result = "The lightest " + second_parameter.replace("_"," ") + " is the " + lightest_object.replace("_"," ") + "."
+                    print(curr_result)
+                    self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
                 
-                
+                curr_obj_list.clear()
+                    
                 pass
 
             case "say_result":
