@@ -2648,6 +2648,41 @@ class RobotStdFunctions():
         else:
             return False
         
+    def move_to_person(self, person=DetectedPerson(), dist_to_person=2.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        if person.furniture_location == "None" or person.furniture_location == None: # if the person is not in a specific furniture, assume we can navigate there and have generic logic
+
+            print("Person detected is NOT in a furniture.")
+            move_coords = [person.position_absolute.x, person.position_absolute.y, 0.0]
+
+            self.move_to_position(move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, wait_for_end_of=False)
+
+            is_person_radius_reached = False
+            while not is_person_radius_reached:
+                robot_pos = self.get_robot_localization()
+                dist = math.sqrt((move_coords[0] - robot_pos.x)**2 + (move_coords[1] - robot_pos.y)**2)
+                print("Distance to person: " + str(round(dist, 2)) + " m")
+                if dist <= dist_to_person:
+                    is_person_radius_reached = True
+                else:
+                    time.sleep(0.05)
+            
+            self.move_to_position_cancel()
+            time.sleep(1.5)
+            self.adjust_angle(angle=self.get_rotation_angle_to_map_coords(target_coords=move_coords), wait_for_end_of=True)
+
+            robot_pos = self.get_robot_localization()
+            dist = math.sqrt((move_coords[0] - robot_pos.x)**2 + (move_coords[1] - robot_pos.y)**2)
+            print("Distance to person: " + str(round(dist, 2)) + " m")
+
+        else: # if person is in a furniture, it may not be phisically acessible to navigate to the coordinates, because this may be blocked in the map, if so, we navigate the navigation coords of that furniture
+            
+            print("Person detected is in furniture:" + person.furniture_location)
+            
+            move_coords = self.get_navigation_coords_from_furniture(person.furniture_location) 
+            self.move_to_position(move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, wait_for_end_of=False)
+
+
     def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         if move_coords:
