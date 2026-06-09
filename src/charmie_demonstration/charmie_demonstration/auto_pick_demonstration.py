@@ -133,13 +133,13 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                #self.robot.open_door(push_pull="pull", handle_side="right")
+                self.robot.open_door(push_pull="pull", handle_side="right")
 
                 # self.robot.set_initial_position(self.initial_position)
 
-                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("coffee table"), wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("coffee table"), wait_for_end_of=True)
 
-                self.robot.pick_object(selected_object="strawberry", pick_mode= "top")
+                # self.robot.pick_object(selected_object="strawberry", pick_mode= "top")
 
                 #pick_height, s= self.robot.pick_object(selected_object="cup")
                 self.robot.wait_for_start_button()

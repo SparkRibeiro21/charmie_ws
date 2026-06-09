@@ -7147,7 +7147,7 @@ class RobotStdFunctions():
 
 
         # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
-        # TODO: 2) Check with Pedro Rotation
+        # TODO 3) Comment/uncomment line for faster adjusts
 
 
 
@@ -7180,6 +7180,7 @@ class RobotStdFunctions():
         valid_detected_object = DetectedObject()
         is_object_in_furniture_check = False
         check = False
+        ask_help = False
         reversed_tetas = False
         show_detection = True
         correct_z_lock = False
@@ -7226,20 +7227,10 @@ class RobotStdFunctions():
         GRASP_OBJECT = 5
         ADJUST_TO_INITIAL_POSITION = 6
         PICK_TO_SAFE_ARM_POSITION = 7
-        RETURN_ARM_TO_END_PLACE_POSITION = 8 #LEMBRAR A DIFERENÇA DE TESTAR O TOP
+        RETURN_ARM_TO_END_PLACE_POSITION = 8 
         ERROR_HANDLING_ASK_FOR_HELP = 9
 
         state = HEAD_SEARCH_OBJECTS
-
-        """ 
-        # MAKE SURE ALL STATES ARE DECLARED, NO NEED TO CHANGE EXCEPT FOR TESTING PURPOSES
-        head_search = True     # STATE SEARCHING FOR OBJECTS WITH HEAD
-        hand_pre_pick = False  # STATE PREPARING THE PRE SEARCH WITH HAND POSITION 
-        hand_search = False    # STATE SEARCHING FOR OBJECTS WITH HAND CAMERA
-        pick_object = False    # STATE FOR PICKING OBJECT AFTER FOUND WITH HAND CAMERA
-        object_gripped = False # STATE AFTER OBJECT PICK BEFORE RETURNING TO INITIAL POSITION
-        """
-        ask_help = False
 
 
         # ****************************************************************************************
@@ -7624,7 +7615,7 @@ class RobotStdFunctions():
 
                 # Put all grab movement calculations together
                 if pick_mode == "front":
-                    object_position_grab = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] # TODO: 2)
+                    object_position_grab = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
 
                 if pick_mode == "top":
                     object_position_grab = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
@@ -7704,7 +7695,7 @@ class RobotStdFunctions():
                     self.adjust_x_ = 0
 
                 self.adjust_y_ = - self.adjust_y_
-                #self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False)
+                #self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False) #TODO 3) Uncomment this line
 
                 self.set_face("charmie_face", wait_for_end_of=False)
 
@@ -7729,7 +7720,7 @@ class RobotStdFunctions():
                     if not check:
                         object_position_grab = [-correct_z_grab, correct_y_grab, -correct_x_grab, 0.0, 0.0, -correct_rotation]
                         check, m = self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
-                self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=True, safety=False)
+                self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=True, safety=False) #TODO 3) Comment this line
 
                 state = RETURN_ARM_TO_END_PLACE_POSITION
 
