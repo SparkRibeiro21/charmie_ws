@@ -12,13 +12,13 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  False,
+    "charmie_arm":                  True,
     "charmie_audio":                False,
     "charmie_face":                 True,
     "charmie_gamepad":              False,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          True,
-    "charmie_base_camera":          False,
+    "charmie_base_camera":          True,
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          True,
@@ -133,9 +133,10 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                door_handle = self.robot.search_for_objects(tetas = [[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
+                # door_handle = self.robot.search_for_objects(tetas = [[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
 
                 #self.robot.open_door(push_pull="pull", handle_side="right")
+                
 
                 self.robot.wait_for_start_button()
 
@@ -144,6 +145,8 @@ class TaskMain():
                 # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("coffee table"), wait_for_end_of=True)
 
                 # self.robot.pick_object(selected_object="strawberry", pick_mode= "top")
+
+                self.robot.floor_pick()
 
                 #pick_height, s= self.robot.pick_object(selected_object="cup")
                 self.robot.wait_for_start_button()

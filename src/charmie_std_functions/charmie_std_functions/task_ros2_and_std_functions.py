@@ -8451,3 +8451,284 @@ class RobotStdFunctions():
             print("Rotation", correct_rotation)
 
             return correct_rotation
+
+    def floor_pick(self):
+
+        ###########
+        # Inputs:
+        #
+        # selected_object -> object name to grab
+        # pick_mode -> if the robot should pick from the front or top, should be only "top" or "front"
+        # first_search_tetas -> only relevant for using the head camera, will define what angles the head camera looks at to look for object
+        # navigation -> if True the robot will use navigation to get closer to the object, should be left at True unless testing purposes or special cases
+        # is_object_in_furniture_check -> if True will verify and ONLY PICK UP OBJECTS IN THEIR OBJECT CLASS' USUAL LOCATION, turn False only if dealing with objects on the ground or expected objects outside furniture, otherwise there can be false positives
+        # search_with_head_camera -> if True the robot will use the head camera to locate objects, otherwise it will use base camera, turn to False if dealing with objects on floor. IF FALSE ALSO TURN PREVIOUS FLAG TO FALSE AS OBJECTS ON FLOOR WILL NEVER BE IN EXACT FURNITURE
+        # return_arm_to_initial_position -> if True will return arm to initial position at the end, otherwise will leave gripper at ask_for_object position
+        #
+        # Outputs, in order of output:
+        #
+        # picked_height -> at which height the gripper picked the object at, ONLY CORRECT IF is_object_in_furniture_check AND ROBOT DIDNT RETURN asked_help TRUE
+        # asked_help -> if robot asked for help anytime during the routine, IF TRUE picked_height WILL BE INCORRECT AS THERE WAS NOT A PICKED HEIGHT, ROBOT WAS HANDED THE OBJECT
+        #
+        ############
+        
+        # 1) Detect if the selected object is around and filter out additionals of the same in case of multiple being detected 
+
+        valid_detected_object = DetectedObject()
+        not_validated = True
+        cycle = 1
+        more_objects = False
+        names = []
+
+        MIN_OBJECT_DISTANCE_X = 0.05
+        MAX_OBJECT_DISTANCE_X = 1.5
+        MIN_OBJECT_DISTANCE_Y = -1
+        MAX_OBJECT_DISTANCE_Y = 0.5
+
+        ### While cycle to get a valid detected object ###
+
+        while not_validated:
+            objects_found = self.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+
+            if objects_found:
+
+                for obj in objects_found:
+                    conf   = f"{obj.confidence * 100:.0f}%"
+                    cam_x_ = f"{obj.position_relative.x:5.2f}"
+                    cam_y_ = f"{obj.position_relative.y:5.2f}"
+                    cam_z_ = f"{obj.position_relative.z:5.2f}"
+
+                    print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
+
+                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.get_object_height_from_object(obj.object_name) * 1.1 or obj.position_absolute.z < self.get_object_length_from_object(obj.object_name) * 1.1 or obj.position_absolute.z < self.get_object_width_from_object(obj.object_name) * 1.1):
+                        if not_validated == False:
+
+                            if (abs(valid_detected_object.position_relative.x - obj.position_relative.x) < 0.2  and (valid_detected_object.position_relative.y - obj.position_relative.y) < 0.2 and obj.camera == "base"):
+                                valid_detected_object = obj
+
+                            if obj.object_name not in names and valid_detected_object.position_relative.x+valid_detected_object.position_relative.y > obj.position_relative.x+obj.position_relative.y:
+                                valid_detected_object = obj
+                                names.append(obj.object_name)
+
+                        else:
+                            valid_detected_object = obj
+                            names.append(obj.object_name)
+                            not_validated = False
+
+            if not_validated:
+                match cycle:
+
+                    case 1: 
+                        self.adjust_angle(angle = 45.0, tolerance = 10)
+                        cycle=2
+                    case 2: 
+                        self.adjust_angle(angle = -90.0, tolerance = 10)
+                        cycle=3
+                    case 3: 
+                        self.adjust_angle(angle = 180.0, tolerance = 10)
+                        #self.adjust_angle(90)
+                        cycle=4
+                    case 4: 
+                        self.adjust_angle(angle = -180, tolerance = 10)
+                        #self.adjust_angle(-90)
+                        cycle=5
+                    case 5:
+                        self.adjust_angle(angle= 90.0, tolerance = 10)
+                        cycle=1
+
+        if len(names) > 1:
+            more_objects = True
+
+        # 2) DEPENDING ON DETECTED OBJECT LOCATION, MOVE TOWARDS OBJECT (IF NAVIGATION = TRUE) AND POSITON ARM DEPENDING ON OBJECT HEIGHT
+
+        print("MORE OBJECTS:", more_objects)
+            
+        if not_validated == False:
+
+            # ANNOUNCE THE FOUND OBJECT
+            self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+            print(f"Initial pose to search for objects")
+
+            # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
+            MAXIMUM_ADJUST_DISTANCE = 0.5 
+            DISTANCE_X       = 0.55
+            DISTANCE_Y       = 0.16
+
+            tf_x = 0.145
+            tf_y = -0.006
+            tf_z = -0.075
+            ow = self.get_object_width_from_object(valid_detected_object.object_name)
+            oh = self.get_object_height_from_object(valid_detected_object.object_name)
+
+            if valid_detected_object.position_absolute.z - 0.05 > 0 and valid_detected_object.camera == "head":
+                picked_height = valid_detected_object.position_absolute.z + 0.2 - 0.05
+            elif valid_detected_object.position_absolute.z * 2 - 0.05 > 0 and valid_detected_object.camera == "base":
+                picked_height = valid_detected_object.position_absolute.z * 2 + 0.2 - 0.05
+            else:
+                picked_height = 0.2
+
+            #self.wait_for_start_button()
+
+            security_position_top   = [-154.3,63,-74,-63.2,92.9,263.5] #Rise the gripper in table orientation
+            pick_position = [-151.8, 39.1, -56.5, -107.2, 91.6, 77.3]
+            final_pick_position = [-162.4, 30.8, -37.9, -117, 93.2, 87.8]
+            initial_position_joints   = [-225.0, 83.0, -65.0, -1.0, 75.0, 270.0] 
+            object_angle = math.atan2(valid_detected_object.position_relative.y,valid_detected_object.position_relative.x) * 180 / math.pi
+            self.adjust_angle(angle = object_angle, tolerance= 3.0)
+
+            self.adjust_x_      = (valid_detected_object.position_relative.x**2 + valid_detected_object.position_relative.y**2)**0.5 - DISTANCE_X 
+            self.adjust_y_      = DISTANCE_Y 
+
+            s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=True, safety=True)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_position, wait_for_end_of=True)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = final_pick_position, wait_for_end_of=True)
+
+            self.set_torso_position(legs=0.015, torso=50) 
+
+
+            self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+            final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[valid_detected_object.object_name], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+
+            self.set_face(camera="hand", show_detections=True)
+                
+            #best_conf = 0.0
+#
+            #    for o in final_objects:
+#
+            #        conf = f"{o.confidence * 100:.0f}%"
+            #        hand_y_grab    = f"{o.position_cam.y:5.2f}"
+            #        hand_z_grab    = f"{o.position_cam.z:5.2f}"
+            #        hand_x_grab    = f"{o.position_cam.z:5.2f}"
+            #        correct_y_grab = (o.position_cam.y - tf_y)*1000
+            #        correct_z_grab = (o.position_cam.z - tf_z)*1000
+#
+            #        if o.confidence > best_conf:
+            #            best_conf = o.confidence
+            #            obj = o
+
+                #CORRECT ROTATION CALCULATIONS
+
+            if self.get_object_shape_from_object(obj.object_name) == "sphere":
+                correct_rotation = 0.0
+            else:
+                if obj.orientation < 0.0:
+                    correct_rotation = obj.orientation +90.0
+                else:
+                    correct_rotation = obj.orientation -90.0
+
+            for o in final_objects:
+
+                conf = f"{o.confidence * 100:.0f}%"
+                hand_y_grab    = f"{o.position_cam.y:5.2f}"
+                hand_z_grab    = f"{o.position_cam.z:5.2f}"
+                hand_x_grab    = f"{o.position_cam.z:5.2f}"
+                correct_y_grab = (o.position_cam.y + 0.04 - tf_y)*1000
+                correct_z_grab = (o.position_cam.z - 0.05 - tf_z)*1000
+
+                valid_detected_object = o
+
+            correct_x_grab = (valid_detected_object.position_cam.x - tf_x)*1000 - 220
+
+            object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
+
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+
+            final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[valid_detected_object.object_name], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False)
+
+            for o in final_objects:
+
+                conf = f"{o.confidence * 100:.0f}%"
+                hand_y_grab    = f"{o.position_cam.y:5.2f}"
+                hand_z_grab    = f"{o.position_cam.z:5.2f}"
+                hand_x_grab    = f"{o.position_cam.z:5.2f}"
+                correct_y_grab = (o.position_cam.y - tf_y)*1000
+                correct_z_grab = (o.position_cam.z - tf_z)*1000
+
+                valid_detected_object = o
+
+            HEIGHT = 0.04
+
+            if oh <= 0.044:
+                HEIGHT = oh/1.5 
+
+
+            correct_x_grab = (valid_detected_object.position_cam.x + HEIGHT - tf_x)*1000
+
+            MAX_MOVE_LIMIT = 260
+            if correct_x_grab > MAX_MOVE_LIMIT:
+                correct_x_grab = MAX_MOVE_LIMIT
+
+            if obj.object_name == "bowl":
+                correct_y_grab += 90
+                correct_rotation = 0.0
+            if obj.object_name == "cup":
+                correct_y_grab += 45
+                correct_x_grab = 210
+            if obj.object_name == "plate":
+                correct_z_grab -= 20
+                correct_rotation = 90.0
+                correct_x_grab -= 19
+            if obj.object_name == "rubiks cube":
+                correct_x_grab -= 45
+
+            object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
+
+            if obj.object_name != "cup":
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+            else:
+                object_position_grab = [correct_z_grab, -correct_y_grab, 0.0, 0.0, 0.0, correct_rotation]
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                object_position_grab = [0.0, 0.0, correct_x_grab, 0.0, 0.0, 0.0]
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                
+                #MOVE ARM TO FINAL POSITION
+
+            print("Picked Height: ", picked_height)
+                #CHECK CLOSE GRIPPER
+                
+            self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = final_pick_position, wait_for_end_of=True)
+
+            #self.set_arm(command="adjust_joint_motion", joint_motion_values = security_position_top, wait_for_end_of=True)
+
+            self.set_torso_position(legs=0.14, torso=8, wait_for_end_of=False) 
+
+            time.sleep(4)
+
+            plate_grab_sixth = [-176.5, 78.3, -98.2, -34.5, 92.2, 265.3]
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = plate_grab_sixth, wait_for_end_of=True)
+
+            time.sleep(4)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = initial_position_joints, wait_for_end_of=True)
+
+            while True:
+                legs, torso = self.get_torso_position()
+                if legs > 0.13 and torso < 9:
+                    return valid_detected_object.object_name, picked_height, more_objects
+
+
+
+            #if not object_in_gripper:
+            
+            #    self.set_speech("generic/problem_pick_object", wait_for_end_of=False)
+            #    asked_help = True
+                    
+                #MOVE TO SAFE POSITION DEPENDING ON MODE SELECTED
+            #    if obj.object_name != "plate":
+           #         print("OBJ NAME:", valid_detected_object.object_name)
+            #        self.set_arm(command="search_table_top_risky", wait_for_end_of=True)
+                #self.set_arm(command="adjust_joint_motion", joint_motion_values = search_table_top_risky_joints, wait_for_end_of=True)
+            #    print(f"Bring object to initial pose")
+                # Return the distance which the gripper was at in relation to the furniture
+
+                #IF AN OBJECT WAS NOT FOUND
+        else:
+            self.set_arm(command="search_table_to_initial_pose", wait_for_end_of=True)
+            print(f"Could not bring object to initial pose")
+        #SEARCH FOR OBJECT
