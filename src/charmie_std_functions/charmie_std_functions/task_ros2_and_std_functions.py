@@ -6992,7 +6992,7 @@ class RobotStdFunctions():
             while not self.adjust_omnidirectional_position_is_done():
                 pass
 
-            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.26, wait_for_end_of=False)
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.25, wait_for_end_of=False)
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_pull_left, wait_for_end_of=True)
 
@@ -7011,8 +7011,8 @@ class RobotStdFunctions():
 
                     gripper_position = self.get_gripper_localization()
 
-                    move_z_gripper = (g.position_cam.z - tf_z - 0.04)*1000
-                    move_y_gripper = (g.position_cam.y + tf_y + 0.015)*1000
+                    move_z_gripper = (g.position_cam.z - tf_z - 0.05)*1000
+                    move_y_gripper = (g.position_cam.y + tf_y + 0.01)*1000
                     move_x_gripper = (g.position_cam.x - tf_x)*1000
                     move_x_base = abs(tf_x - g.position_cam.x)
                     print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
@@ -7022,15 +7022,15 @@ class RobotStdFunctions():
 
             lower_gripper = [move_z_gripper, move_y_gripper , 0.0, 0.0, 0.0, 0.0] 
 
-            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = lower_gripper, wait_for_end_of=True) 
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = lower_gripper, wait_for_end_of=True)
 
             print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, " Position cam Z ",g.position_cam.z , " Position cam Y ",g.position_cam.y , " Position cam X ",g.position_cam.x)
-            self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.05 , dy = 0.0, wait_for_end_of=True, safety=False)
-            GRAB_DOOR_Y = 0.1*1000
-            GRAB_DOOR_X = 0.03*1000
+            self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.035 , dy = 0.0, wait_for_end_of=True, safety=False)
+            GRAB_DOOR_Y = 0.08*1000
+            GRAB_DOOR_X = 0.018*1000
             GRAB_DOOR_ROTATE= -30
-            grab_door = [0.0, GRAB_DOOR_Y, GRAB_DOOR_X, GRAB_DOOR_ROTATE, 0.0, 0.0]
-            release_door = [0.0, -GRAB_DOOR_Y - 0.03*1000, 0.0, -GRAB_DOOR_ROTATE, 0.0, 0.0]
+            grab_door = [0.0, GRAB_DOOR_Y, 0.0, GRAB_DOOR_ROTATE, 0.0, 0.0]
+            release_door = [0.0, -GRAB_DOOR_Y, 0.0, -GRAB_DOOR_ROTATE, 0.0, 0.0]
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True) 
             self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.0, wait_for_end_of=True, safety=False) 
             self.adjust_omnidirectional_position(dx = -0.17 , dy = 0.12, wait_for_end_of=True, safety=False)
@@ -7039,9 +7039,9 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True) 
             after_release_first = [-0.1*1000, 0.0, -0.15*1000, 0.0, 0.0, 0.0, 0.0]
             #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
-            after_release_last = [0.12*1000, 0.12*1000, 0.16*1000, 0.0, 0.0, 0.0]
+            after_release_last = [0.12*1000, - 0.12*1000, 0.18*1000, 0.0, 0.0, 0.0]
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_first, wait_for_end_of=True)  
-            self.adjust_omnidirectional_position(dx = 0.00 , dy = - 0.26, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = 0.00 , dy = - 0.28, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_last, wait_for_end_of=True)
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
@@ -7307,8 +7307,9 @@ class RobotStdFunctions():
 
         ### While cycle to get a valid detected object ###
         while True:
-            print(" NOW ENTERING STATE ", state)
             if state == HEAD_SEARCH_OBJECTS:
+                print(" NOW ENTERING STATE ", state)
+
 
                 not_validated = False 
                 # The first object detection will be made with the head camera. Will look for selected_object or list_of_objects_detected_as if selected_object is not found. Will look at first_search_tetas until object found within a number of tries equal to max_search_attempts.
@@ -7397,7 +7398,7 @@ class RobotStdFunctions():
                     show_detection = False
                     ask_help = True
                     state = ERROR_HANDLING_ASK_FOR_HELP
-                else:
+                elif objects_found:
                     # ANNOUNCE THE FOUND OBJECT
 
                     self.set_speech(filename="generic/found_following_items", wait_for_end_of=False)
@@ -7424,6 +7425,7 @@ class RobotStdFunctions():
         # ***********************************************************************************************************************
                 
             if state == ADJUST_TO_FURNITURE:
+                print(" NOW ENTERING STATE ", state)
 
                 # IF object is inside a furniture, will retrieve furniture height
                 if furniture_height == -1 and furniture == "":
@@ -7460,6 +7462,7 @@ class RobotStdFunctions():
         # ***********************************************************************************************************************
         
             if state == MOVE_ARM_PRE_HAND_SEARCH_OBJECT:
+                print(" NOW ENTERING STATE ", state)
                 
                 if pick_mode == "front":
                     # ADJUST ARM POSITION DEPENDING ON OBJECT HEIGHT
@@ -7516,6 +7519,7 @@ class RobotStdFunctions():
         # 
         # ***********************************************************************************************************************
             if state == HAND_SEARCH_OBJECT:
+                print(" NOW ENTERING STATE ", state)
 
                 #OPEN GRIPPER
                 if obj.object_name != "plate":
@@ -7557,6 +7561,8 @@ class RobotStdFunctions():
         # ***********************************************************************************************************************
 
             if state == MOVE_ARM_APROACH_OBJECT:
+                print(" NOW ENTERING STATE ", state)
+
 
                 #CORRECT ROTATION CALCULATIONS
 
@@ -7579,9 +7585,10 @@ class RobotStdFunctions():
                         #correct_x_grab = MAX_MOVE_LIMIT
                 if pick_mode == "top":
                     correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
-                    #MAX_MOVE_LIMIT = 235
-                    #if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320:
-                        #correct_x_grab = MAX_MOVE_LIMIT
+                    if obj.object_name != "cup":
+                        MAX_MOVE_LIMIT = 235
+                        if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320:
+                            correct_x_grab = MAX_MOVE_LIMIT
                 
                 print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab}, {correct_rotation})")
 
@@ -7643,6 +7650,8 @@ class RobotStdFunctions():
         # ***********************************************************************************************************************
                 
             if state == GRASP_OBJECT:    
+                print(" NOW ENTERING STATE ", state)
+
                 #MOVE ARM TO FINAL POSITION
                 #self.wait_for_start_button()
                 current_gripper_height = self.get_gripper_localization()
@@ -7688,6 +7697,8 @@ class RobotStdFunctions():
                 
             # Undo adjusts
             if state == ADJUST_TO_INITIAL_POSITION:
+                print(" NOW ENTERING STATE ", state)
+
                     
                 self.adjust_x_ = - self.adjust_x_
                 # If adjust_x is positive there is no reason to move positively
@@ -7711,6 +7722,8 @@ class RobotStdFunctions():
             # Return arm to safe position right after grabbing object
 
             if state == PICK_TO_SAFE_ARM_POSITION:
+                print(" NOW ENTERING STATE ", state)
+
                 if pick_mode == "front" and not ask_help:
                     security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
@@ -7733,6 +7746,8 @@ class RobotStdFunctions():
             
             if state == RETURN_ARM_TO_END_PLACE_POSITION:
                 if pick_mode == "front":
+                    print(" NOW ENTERING STATE ", state)
+
 
                     #MOVE ARM TO INITIAL POSITION
                     if arm_initial_position == "" and not ask_help:
@@ -7787,6 +7802,8 @@ class RobotStdFunctions():
         # ***********************************************************************************************************************
         
             if state == ERROR_HANDLING_ASK_FOR_HELP:
+                print(" NOW ENTERING STATE ", state)
+
                 print(" Asked for Help ")
                 self.ask_help_pick_object_gripper(object_d = obj, look_judge= [0,0], show_detection = show_detection)
                 picked_height = 0
