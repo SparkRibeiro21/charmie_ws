@@ -7722,6 +7722,8 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_X =  2.00
         MIN_OBJECT_DISTANCE_Y = -1.00
         MAX_OBJECT_DISTANCE_Y =  1.00
+        MIN_OBJECT_Z =  0.65
+        MAX_OBJECT_Z =  1.40
 
         # HOW FAR AWAY FROM THE FURNITURE THE ROBOT WILL BE BEFORE PICKING OBJECT (ADJUSTS)
         DISTANCE_IN_FRONT_X     =  0.26 
@@ -7765,7 +7767,7 @@ class RobotStdFunctions():
         if first_search_tetas == []:
 
             if self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "horizontal":
-                first_search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                first_search_tetas = [[0, 35], [-40, -45], [40, -45]]
 
             elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
                 first_search_tetas = [[0, 0], [0, -35], [0, 15]]
@@ -7887,7 +7889,7 @@ class RobotStdFunctions():
                                 state = ERROR_HANDLING_ASK_FOR_HELP
                                 
                         # IF the object is within the specified distances, then hand_search is complete and will move on to the next state
-                        if obj.object_name == selected_object and MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y :
+                        if obj.object_name == selected_object and MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and MIN_OBJECT_Z < obj.position_absolute.z < MAX_OBJECT_Z:
                             
                             if  (object_location == furniture and is_object_in_furniture_check) \
                                 or is_object_in_furniture_check == False: 
@@ -8101,9 +8103,9 @@ class RobotStdFunctions():
                         #correct_x_grab = MAX_MOVE_LIMIT
                 if pick_mode == "top":
                     correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
-                    #MAX_MOVE_LIMIT = 235
-                    #if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320:
-                        #correct_x_grab = MAX_MOVE_LIMIT
+                    MAX_MOVE_LIMIT = 235
+                    if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320:
+                        correct_x_grab = MAX_MOVE_LIMIT
                 
                 print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab}, {correct_rotation})")
 
