@@ -176,6 +176,7 @@ class ROS2TaskNode(Node):
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
         self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
+        self.set_tray_gripper_client = self.create_client(SetInt, "tray_gripper_command")
         # GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
         # LLM
@@ -236,6 +237,7 @@ class ROS2TaskNode(Node):
             "charmie_speakers":             True,
             "charmie_speakers_save":        False,
             "charmie_tracking":             False,
+            "charmie_tray_gripper":         False,
             "charmie_yolo_objects":         True,
             "charmie_yolo_pose":            False,
             "charmie_yolo_world":           False,
@@ -325,6 +327,10 @@ class ROS2TaskNode(Node):
             while not self.activate_tracking_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Activate Tracking Command...")
 
+        if self.ros2_modules["charmie_tray_gripper"]:
+            while not self.set_tray_gripper_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Set Tray Gripper Command...")
+
         if self.ros2_modules["charmie_yolo_objects"]:
             while not self.activate_yolo_objects_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
@@ -368,6 +374,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_face = False
         self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
+        self.waited_for_end_of_set_tray_gripper = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
@@ -421,6 +428,8 @@ class ROS2TaskNode(Node):
         self.rgb_message = ""
         self.torso_success = True
         self.torso_message = ""
+        self.tray_gripper_success = True
+        self.tray_gripper_message = ""
         self.audio_success = True
         self.audio_message = ""
         self.continuous_audio_success = True
@@ -567,6 +576,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_speakers_save        = self.ros2_modules["charmie_speakers_save"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
+        nodes_used.charmie_tray_gripper         = self.ros2_modules["charmie_tray_gripper"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
         nodes_used.charmie_yolo_world           = self.ros2_modules["charmie_yolo_world"]
@@ -1100,6 +1110,24 @@ class ROS2TaskNode(Node):
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
+    def call_set_tray_gripper_server(self, request=SetInt.Request(), wait_for_end_of=True):
+    
+        future = self.set_tray_gripper_client.call_async(request)
+        future.add_done_callback(self.callback_call_set_tray_gripper)
+        
+    def callback_call_set_tray_gripper(self, future): 
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.tray_gripper_success = response.success
+            self.tray_gripper_message = response.message
+            self.waited_for_end_of_set_tray_gripper = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
 
     def call_set_torso_position_server(self, request=SetTorso.Request()):
     
@@ -1875,6 +1903,30 @@ class RobotStdFunctions():
         self.node.call_rgb_command_server(request=request, wait_for_end_of=wait_for_end_of)
 
         return self.node.rgb_success, self.node.rgb_message
+
+    def close_tray_gripper(self, wait_for_end_of=True):
+
+        self.set_tray_gripper_position(command=0, wait_for_end_of=wait_for_end_of) # 0 is open position
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
+    def open_tray_gripper(self, wait_for_end_of=True):
+
+        self.set_tray_gripper_position(command=100, wait_for_end_of=wait_for_end_of) # 0 is open position
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
+    def set_tray_gripper_position(self, command=0, wait_for_end_of=True):
+
+        request = SetInt.Request()
+        request.data = int(command)
+
+        self.node.call_set_tray_gripper_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_set_tray_gripper:
+                pass
+        self.node.waited_for_end_of_set_tray_gripper = False
+
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
 
     def get_vccs(self, wait_for_end_of=True):
 
