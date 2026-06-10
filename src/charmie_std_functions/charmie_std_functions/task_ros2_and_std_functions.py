@@ -576,6 +576,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_speakers_save        = self.ros2_modules["charmie_speakers_save"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
+        nodes_used.charmie_tray_gripper         = self.ros2_modules["charmie_tray_gripper"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
         nodes_used.charmie_yolo_world           = self.ros2_modules["charmie_yolo_world"]
