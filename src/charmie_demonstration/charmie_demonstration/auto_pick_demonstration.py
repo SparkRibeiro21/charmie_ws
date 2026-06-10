@@ -133,7 +133,11 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.robot.open_door(push_pull="pull", handle_side="right")
+                # self.robot.open_door(push_pull="pull", handle_side="right")
+
+                # self.robot.set_torso_position(legs=0.035, torso=8, wait_for_end_of=False)
+
+                self.robot.open_washing_machine()
 
                 # self.robot.set_initial_position(self.initial_position)
 
