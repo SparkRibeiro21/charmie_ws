@@ -8482,9 +8482,10 @@ class RobotStdFunctions():
         
     def open_washing_machine(self):
 
-        # self.robot.set_torso_position(legs=0.035, torso=8, wait_for_end_of=False) necessary in the future
+        # self.set_torso_position(legs=0.035, torso=8, wait_for_end_of=False) #necessary in the future
         # h-15 v-45
         open_tab_position = [-225.6, 79.3, -141.1, -0.6, -85.1, 302.1]
+        release_tab_position = [-225.6, 79.3, -141.1, -0.6, -73.5, 302.1]
         continue_opening_door = [-176, 31.3, -66.8, 70.2, -88.9, 343.6]
 
         objects = self.search_for_objects(tetas = [[-15.0,-45.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["washing_tab_head"], detect_tv_prompt_head=True, visual_prompts=["washing_machine_head"], minimum_tv_prompt_confidence=0.20)
@@ -8513,10 +8514,11 @@ class RobotStdFunctions():
 
         self.set_arm(command="open_gripper", wait_for_end_of=True)
 
-        self.adjust_omnidirectional_position(dx = -0.13, dy = 0.0, wait_for_end_of=True, safety=False)
+        self.adjust_omnidirectional_position(dx = -0.12, dy = 0.0, wait_for_end_of=True, safety=False)
 
-        self.adjust_omnidirectional_position(dx = 0.035, dy = 0.0, wait_for_end_of=True, safety=False)
-        self.adjust_omnidirectional_position(dx = 0.0, dy = 0.035, wait_for_end_of=True, safety=False)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = release_tab_position, wait_for_end_of=True)
+        self.adjust_omnidirectional_position(dx = 0.015, dy = 0.0, wait_for_end_of=True, safety=False)
+        self.adjust_omnidirectional_position(dx = 0.0, dy = 0.045, wait_for_end_of=True, safety=False)
         self.adjust_omnidirectional_position(dx = - 0.135, dy = 0.0, wait_for_end_of=True, safety=False)
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = continue_opening_door, wait_for_end_of=True)
