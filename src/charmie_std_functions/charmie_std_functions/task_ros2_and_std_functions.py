@@ -7913,7 +7913,7 @@ class RobotStdFunctions():
 
         # DISTANCE FROM GRIPPER CAM TO GRIPPER'S TIP (DO NOT CHANGE UNLESS RE-MEASURED !!!!)
         tf_x =  0.145
-        tf_y = -0.060
+        tf_y = -0.006
         tf_z = -0.075
 
         # ASK FOR HELP STATES
@@ -8633,3 +8633,36 @@ class RobotStdFunctions():
             print("Rotation", correct_rotation)
 
             return correct_rotation
+        
+    def place_milk_in_tray(self, place_height = -1):
+        self.set_arm(command="milk_above_tray_v2", wait_for_end_of=True)
+
+        TRAY_HEIGHT = 0.59
+        TOLERANCE_ERROR = 0.005
+        PUSH_MILK_DISTANCE = 0.04
+
+        milk_push = [0.0 , 0.0 , PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
+        after_push = [0.0 , 0.0 , -PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
+
+        gripper_place_position = self.get_gripper_localization()
+
+        if place_height >= 0:
+            final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+        else:
+            print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object("milk")/1.25) ," TOLERA ", TOLERANCE_ERROR)
+            final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object("milk")/1.5) - TOLERANCE_ERROR)*1000
+
+        safe_place = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+        safe_rise = [self.get_object_height_from_object("milk")*1.2*1000 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_place, wait_for_end_of=True)
+
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = milk_push, wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = after_push, wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_rise, wait_for_end_of=True)
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+        self.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+
+
