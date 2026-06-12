@@ -22,7 +22,7 @@ import colorsys
 import hashlib
 
 
-DEBUG_WITHOUT_DISPLAY = True
+DEBUG_WITHOUT_DISPLAY = False
 
 # ROS2 Face Node
 class FaceNode(Node):
