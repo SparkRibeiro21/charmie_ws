@@ -221,7 +221,7 @@ class TaskMain():
         self.look_left = [90, 0]
         self.look_right = [-90, 0]
         self.search_tetas = [[-60, -15], [0, -15], [60, -15]]
-        self.search_for_guest_tetas=[[-10, 10]]
+        self.search_for_guest_tetas=[[0, 10]]
 
         self.state = self.task_states["Waiting_for_task_start"]
 
