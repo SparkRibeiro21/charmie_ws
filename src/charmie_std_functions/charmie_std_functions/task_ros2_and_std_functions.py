@@ -7569,6 +7569,8 @@ class RobotStdFunctions():
         neck_position_push = [[12,-18]]
         neck_position_pull = [[-15,-20]]
 
+        ADJUST_TO_DOOR = -35
+
 
         if handle_side == "":
             if push_pull == "push":
@@ -7668,6 +7670,10 @@ class RobotStdFunctions():
             _,_ = self.adjust_angle(-40)
 
             self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
+
+            _,_ = self.adjust_angle(ADJUST_TO_DOOR)
+
+            self.set_arm(command="close_gripper", wait_for_end_of=False)
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
 
         if push_pull == "pull" and handle_side == "right":
@@ -7747,7 +7753,8 @@ class RobotStdFunctions():
             _,_ = self.adjust_angle(45)
 
             self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
-            _,_ = self.adjust_angle(-35)
+            _,_ = self.adjust_angle(ADJUST_TO_DOOR)
+            self.set_arm(command="close_gripper", wait_for_end_of=False)
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
             
         
