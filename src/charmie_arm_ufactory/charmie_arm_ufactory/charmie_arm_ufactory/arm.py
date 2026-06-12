@@ -241,21 +241,53 @@ class ArmUfactory(Node):
 		self.pre_pick_cereals_tray_joints = 			[-193.2, 37.6, -74.9, -16.7, 126.5, 262.8]
 		self.pre_pick_milk_tray_joints = 				[-203.4, 35.4, -61.2, -19.4, 74.5, 261.5]
 		self.pre_pick_spoon_tray_joints = 				[-207.7, 48.4, -86.1, -21.8, 84.9, 255.2]
+
 	
 
-		#SET CFM MIDDLE JOINT VARIABLES
-		self.cfm_first_movement = 					[ -184.4,	15.8,  -65,   -0.5,  74.9, 270]
-		self.cfm_second_movement = 					[ -197.1,	58.7,  -102.4,   -26.2,  -51.7, 195.1]
+		#SET CFM Right_to_Left JOINT VARIABLES
+		self.cfm_R_to_L_first_movement = 				[ -184.4,	15.8,  -65.0    ,   -0.5  ,   74.9 , 270]
+		self.cfm_R_to_L_second_movement = 				[ -197.1,	58.7,  -102.4   ,   -26.2 ,  -51.7 , 195.1]
+		self.cfm_R_to_L_eighth_movement = 				[ -224.9,	8.6 ,  -66.0    ,   -60.5 ,  -47.4 , 117.9]
+		self.cfm_R_to_L_ninth_movement = 				[ -224.9,	8.6 ,  -75.4    ,   -60.5 ,  -47.4 , 117.9]
+		self.cfm_R_to_L_twelfth_movement = 				[ -216.5,	28.4,  -51.4    ,   -40.2 ,  -79.2 , 139.8]
 
-		#SET CFM MIDDLE POSITION VARIABLES
-		self.cfm_thrid_movement = 				[ -571.9, 190.2,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
-		self.cfm_fourth_movement = 				[ -571.9, 334.1,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
-		self.cfm_fifth_movement = 				[ -681.9, 334.3,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
-		self.cfm_sixth_movement = 				[ -681.9, 225.0,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
-		self.cfm_seventh_movement = 			[ -729.2, 225.0,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
-		self.cfm_eighth_movement = 				[ -729.2, 164.5,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
-		self.cfm_ninth_movement = 				[ -852.8, 155.0,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
-		self.cfm_tenth_movement = 				[ -649.7, 140.0,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
+
+
+		#SET CFM Right_to_Left POSITION VARIABLES
+		self.cfm_R_to_L_thrid_movement = 				[ -495.5, 190.2,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
+		self.cfm_R_to_L_fourth_movement = 				[ -495.5, 334.1,  274.8, math.radians( -45.4), math.radians(85.9), math.radians(132.1)]
+		self.cfm_R_to_L_fifth_movement = 				[ -546.7, 335.7,  554.5, math.radians( -37.8), math.radians(74.8), math.radians(134.4)]
+		self.cfm_R_to_L_sixth_movement = 				[ -546.7, 276.6,  545.9, math.radians( -38.9), math.radians(75.6), math.radians(134.3)]
+		self.cfm_R_to_L_seventh_movement = 			    [ -549.0, 276.6,  541.4, math.radians( -37.8), math.radians(74.8), math.radians(134.4)]
+		self.cfm_R_to_L_tenth_movement = 				[ -565.6, 227.5,  419.2, math.radians( -87.5), math.radians(-30.6),math.radians(89.4)]
+		self.cfm_R_to_L_eleventh_movement = 			[ -565.6, 204.3,  230.0, math.radians( -40.2), math.radians(-79.2),math.radians(139.8)]
+		self.cfm_R_to_L_thirteenth_movement = 			[ -565.3, 203.1,  400.0, math.radians( -80.9), math.radians(34.2), math.radians(96.2)]
+
+
+
+
+
+		#SET CFM Left_to_Right JOINT VARIABLES
+		self.cfm_L_to_R_second_movement = 				[ -223.4,	80.6,  -76.0  ,   -29.9 ,  -79.6 , 1.4]
+		self.cfm_L_to_R_ninth_movement = 				[ -219.7,	69.6 , -78.4  ,   -46.1 ,  -76.4 , 142]
+		self.cfm_L_to_R_eleventh_movement = 			[ -218.2,	51.9 , -64.2  ,   -41.4 ,  -76.6 , 54.9]
+
+
+
+		#SET CFM Left_to_Right POSITION VARIABLES
+		self.cfm_L_to_R_first_movement = 				[ -522.8, 203.1,  400.0  , math.radians( -80.9)  , math.radians(34.2)   ,math.radians(96.2)]
+		self.cfm_L_to_R_third_movement = 				[ -517.2, 311.3,  -69.5  , math.radians( -98.2)  , math.radians(-84.2)  ,math.radians(83.4)]
+		self.cfm_L_to_R_fourth_movement = 				[ -512.0, 315.1,  -55.6  , math.radians(  45.6)  , math.radians(-84.1)  ,math.radians(-49.6)]
+		self.cfm_L_to_R_fifth_movement = 				[ -579.3, 371.5,  46.1   , math.radians( 35.8)   , math.radians(-81.1)  ,math.radians(-38.3)]
+		self.cfm_L_to_R_sixth_movement = 				[ -579.3, 299.6,  46.1   , math.radians( 35.8)   , math.radians(-81.1)  ,math.radians(-38.3)]
+		self.cfm_L_to_R_seventh_movement = 			    [ -594.2, 279.5,  46.1   , math.radians( 35.8)   , math.radians(-81.1)  ,math.radians(-38.3)]
+		self.cfm_L_to_R_eighth_movement = 				[ -594.2, 279.5,  46.1   , math.radians( -98.5)  , math.radians(39.0)   ,math.radians(81.0)]
+		self.cfm_L_to_R_tenth_movement = 			    [ -594.1, 240.9,  131.1  , math.radians( -100.3) , math.radians(43.9)   ,math.radians(85.8)]
+		self.cfm_L_to_R_twelfth_movement = 			    [ -590.5, 238.4,  18.8   , math.radians( -95.2)  , math.radians(-44.2)  ,math.radians(93.5)]
+		self.cfm_L_to_R_thirteenth_movement = 			[ -546.4, 238.4,  18.8   , math.radians( -95.2)  , math.radians(-44.2)  ,math.radians(93.5)]
+
+
+
 
 		# SET POSITIONS VARIABLES
 		self.get_order_position_linear = 				[ -581.4, -211.5,  121.8, math.radians( 132.1), math.radians(   1.9), math.radians( -87.1)]
@@ -1273,34 +1305,79 @@ class ArmUfactory(Node):
 			case 11:
 				self.finish_arm_movement_()
 
-	def rotation_mid(self):
+	def rotation_Right_to_Left(self):
 		match self.estado_tr:
 			case 0:
 				self.set_gripper_speed_(speed=5000)
 			case 1:
-				self.set_gripper_position_(pos=449, wait=True)
+				self.set_gripper_position_(pos=663, wait=True)
 			case 2:
-				self.set_joint_values_(angles=self.cfm_first_movement, speed=15, wait=True)
+				self.set_joint_values_(angles=self.cfm_R_to_L_first_movement, speed=15, wait=True)
 			case 3:
-				self.set_joint_values_(angles=self.cfm_second_movement, speed=15, wait=True)
+				self.set_joint_values_(angles=self.cfm_R_to_L_second_movement, speed=15, wait=True)
 			case 4:
-				self.set_position_values_(pose=self.cfm_thrid_movement, speed=100, wait=True)
+				self.set_position_values_(pose=self.cfm_R_to_L_thrid_movement, speed=100, wait=True)
 			case 5:
-				self.set_position_values_(pose=self.cfm_fourth_movement, speed=100, wait=True)
+				self.set_position_values_(pose=self.cfm_R_to_L_fourth_movement, speed=100, wait=True)
 			case 6:
-				self.set_position_values_(pose=self.cfm_fifth_movement, speed=100, wait=True)
+				self.set_position_values_(pose=self.cfm_R_to_L_fifth_movement, speed=100, wait=True)
 			case 7:
-				self.set_position_values_(pose=self.cfm_sixth_movement, speed=100, wait=True)
+				self.set_position_values_(pose=self.cfm_R_to_L_sixth_movement, speed=100, wait=True)
 			case 8:
-				self.set_position_values_(pose=self.cfm_seventh_movement, speed=100, wait=True)
+				self.set_position_values_(pose=self.cfm_R_to_L_seventh_movement, speed=100, wait=True)
 			case 9:
-				self.set_position_values_(pose=self.cfm_eighth_movement, speed=100, wait=True)
+				self.set_joint_values_(angles=self.cfm_R_to_L_eighth_movement, speed=15, wait=True)
 			case 10:
-				self.set_position_values_(pose=self.cfm_ninth_movement, speed=100, wait=True)
+				self.set_joint_values_(angles=self.cfm_R_to_L_ninth_movement, speed=15, wait=True)
 			case 11:
-				self.set_position_values_(pose=self.cfm_tenth_movement, speed=100, wait=True)
+				self.set_position_values_(pose=self.cfm_R_to_L_tenth_movement, speed=100, wait=True)
 			case 12:
+				self.set_position_values_(pose=self.cfm_R_to_L_eleventh_movement, speed=100, wait=True)
+			case 13:
+				self.set_joint_values_(angles=self.cfm_R_to_L_twelfth_movement, speed=15, wait=True)
+			case 14:
+				self.set_position_values_(pose=self.cfm_R_to_L_thirteenth_movement, speed=100, wait=True)
+			case 15:
 				self.finish_arm_movement_()
+
+
+
+	def rotation_Left_to_Right(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=5000)
+			case 1:
+				self.set_gripper_position_(pos=663, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.cfm_L_to_R_first_movement, speed=100, wait=True)
+			case 3:
+				self.set_joint_values_(angles=self.cfm_L_to_R_second_movement, speed=15, wait=True)
+			case 4:
+				self.set_position_values_(pose=self.cfm_L_to_R_third_movement, speed=100, wait=True)
+			case 5:
+				self.set_position_values_(pose=self.cfm_L_to_R_fourth_movement, speed=100, wait=True)
+			case 6:
+				self.set_position_values_(pose=self.cfm_L_to_R_fifth_movement, speed=100, wait=True)
+			case 7:
+				self.set_position_values_(pose=self.cfm_L_to_R_sixth_movement, speed=100, wait=True)
+			case 8:
+				self.set_position_values_(pose=self.cfm_L_to_R_seventh_movement, speed=100, wait=True)
+			case 9:
+				self.set_position_values_(pose=self.cfm_L_to_R_eighth_movement, speed=100, wait=True)
+			case 10:
+				self.set_joint_values_(angles=self.cfm_L_to_R_ninth_movement, speed=15, wait=True)
+			case 11:
+				self.set_position_values_(pose=self.cfm_L_to_R_tenth_movement, speed=100, wait=True)
+			case 12:
+				self.set_joint_values_(angles=self.cfm_L_to_R_eleventh_movement, speed=15, wait=True)
+			case 13:
+				self.set_position_values_(pose=self.cfm_L_to_R_twelfth_movement, speed=100, wait=True)
+			case 14:
+				self.set_position_values_(pose=self.cfm_L_to_R_thirteenth_movement, speed=100, wait=True)
+			case 15:
+				self.finish_arm_movement_()
+
+				
 
 	def place_spoon_table_funilocopo_v2_facing_other_side(self):
 		match self.estado_tr:
@@ -1375,8 +1452,11 @@ class ArmUfactory(Node):
 				self.start_debug()
 				# self.start_debug_move_tool_line_test()
 
-			case "rotation_mid":
-				self.rotation_mid()
+			case "rotation_Right_to_Left":
+				self.rotation_Right_to_Left()
+
+			case "rotation_Left_to_Right":
+				self.rotation_Left_to_Right()
 
 			case  "hello":
 				self.hello()
