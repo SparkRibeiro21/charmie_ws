@@ -84,7 +84,11 @@ class TaskMain():
                 while True:
                     self.robot.set_face("charmie_face_green")
                     time.sleep(5.0)
-                    self.robot.set_face(loadbar=5.0)
+                    self.robot.set_face(loadbar=5.0, command="Go to the dinner table and bring me the red wine.")
+                    time.sleep(8.0)
+                    self.robot.set_face(loadbar=5.0, command="Go to the dinner table and bring me the red wine. Then bring the drink to me at the entrance.")
+                    time.sleep(3.0)
+                    self.robot.set_face("charmie_face")
                     time.sleep(5.0)
                 
 
