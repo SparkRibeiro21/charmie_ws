@@ -7666,6 +7666,7 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx = 0.00 , dy = 0.14, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_last, wait_for_end_of=True)
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
+            self.set_arm(command="close_gripper", wait_for_end_of=False)
 
             _,_ = self.adjust_angle(-40)
 
@@ -7673,7 +7674,6 @@ class RobotStdFunctions():
 
             _,_ = self.adjust_angle(ADJUST_TO_DOOR)
 
-            self.set_arm(command="close_gripper", wait_for_end_of=False)
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
 
         if push_pull == "pull" and handle_side == "right":
@@ -7748,13 +7748,15 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_first, wait_for_end_of=True)  
             self.adjust_omnidirectional_position(dx = 0.05 , dy = - 0.28, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_last, wait_for_end_of=True)
+            self.set_arm(command="close_gripper", wait_for_end_of=False)
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
             _,_ = self.adjust_angle(45)
 
             self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
+
             _,_ = self.adjust_angle(ADJUST_TO_DOOR)
-            self.set_arm(command="close_gripper", wait_for_end_of=False)
+            
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
             
         
