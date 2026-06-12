@@ -7738,15 +7738,16 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True) 
             after_release_first = [-0.1*1000, 0.0, -0.15*1000, 0.0, 0.0, 0.0, 0.0]
             #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
-            after_release_last = [0.12*1000, - 0.12*1000, 0.18*1000, 0.0, 0.0, 0.0]
+            after_release_last = [0.12*1000, - 0.12*1000, 0.195*1000, 0.0, 0.0, 0.0]
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_first, wait_for_end_of=True)  
-            self.adjust_omnidirectional_position(dx = 0.00 , dy = - 0.28, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = 0.05 , dy = - 0.28, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_last, wait_for_end_of=True)
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
-            _,_ = self.adjust_angle(40)
+            _,_ = self.adjust_angle(45)
 
             self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
+            _,_ = self.adjust_angle(-35)
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
             
         
