@@ -30,7 +30,7 @@ ros2_modules = {
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_yolo_objects":         False,
@@ -80,6 +80,14 @@ class TaskMain():
             # State 6 = Final Speech
 
             if self.state == Waiting_for_start_button:
+
+                while True:
+                    self.robot.set_face("charmie_face_green")
+                    time.sleep(5.0)
+                    self.robot.set_face(loadbar=5.0)
+                    time.sleep(5.0)
+                
+
 
                 ### self.robot.set_speech(filename="serve_breakfast/sB_finished", wait_for_end_of=True)
 

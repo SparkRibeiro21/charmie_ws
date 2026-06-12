@@ -22,7 +22,7 @@ import colorsys
 import hashlib
 
 
-DEBUG_WITHOUT_DISPLAY = False
+DEBUG_WITHOUT_DISPLAY = True
 
 # ROS2 Face Node
 class FaceNode(Node):
@@ -146,10 +146,16 @@ class FaceNode(Node):
         # string custom           # type of face that is custom, not previously in face (i.e. show detected person or object in the moment)
         # string camera           # select which camera must be shown in face (can be rgb or depth)
         # bool show_detections    # select if in addition to show the camera on the face, shows the detections being used with that camera
+        # float32 loadbar         # set loadbar in seconds ( > 0.0)
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages. 
 
         self.cams_flag = False
         self.show_camera_detections = False
-        if request.command != "":
+        if request.loadbar > 0.0:
+            response.success, response.message = self.loadbar_to_face(command=request.loadbar)
+        elif request.command != "":
             response.success, response.message = self.image_to_face(command=request.command)
         elif request.custom != "":
             response.success, response.message = self.custom_image_to_face(command=request.custom)
@@ -162,7 +168,7 @@ class FaceNode(Node):
             response.success = False
             response.message = "No standard or custom face received."
 
-        print("Face Request:", request.command, request.custom, request.camera, request.show_detections)
+        print("Face Request:", request.command, request.custom, request.camera, request.show_detections, request.loadbar)
 
         return response
 
@@ -386,6 +392,11 @@ class FaceNode(Node):
         else:
             self.get_logger().error("FACE received (custom) does not exist! - %s" %command)
             return False, "FACE received (custom) does not exist."
+        
+    def loadbar_to_face(self, command):
+
+        print("Loadbar Command Received:", command)
+        return True, "Loadbar received and started."
     
     def get_cv2_cvtColor_from_depth_image(self, cam, name):
 
