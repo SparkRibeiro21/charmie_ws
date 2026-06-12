@@ -176,6 +176,7 @@ class ROS2TaskNode(Node):
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
         self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
+        self.set_tray_gripper_client = self.create_client(SetInt, "tray_gripper_command")
         # GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
         # LLM
@@ -236,6 +237,7 @@ class ROS2TaskNode(Node):
             "charmie_speakers":             True,
             "charmie_speakers_save":        False,
             "charmie_tracking":             False,
+            "charmie_tray_gripper":         False,
             "charmie_yolo_objects":         True,
             "charmie_yolo_pose":            False,
             "charmie_yolo_world":           False,
@@ -325,6 +327,10 @@ class ROS2TaskNode(Node):
             while not self.activate_tracking_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Activate Tracking Command...")
 
+        if self.ros2_modules["charmie_tray_gripper"]:
+            while not self.set_tray_gripper_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Set Tray Gripper Command...")
+
         if self.ros2_modules["charmie_yolo_objects"]:
             while not self.activate_yolo_objects_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
@@ -368,6 +374,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_face = False
         self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
+        self.waited_for_end_of_set_tray_gripper = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
@@ -421,6 +428,8 @@ class ROS2TaskNode(Node):
         self.rgb_message = ""
         self.torso_success = True
         self.torso_message = ""
+        self.tray_gripper_success = True
+        self.tray_gripper_message = ""
         self.audio_success = True
         self.audio_message = ""
         self.continuous_audio_success = True
@@ -567,6 +576,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_speakers_save        = self.ros2_modules["charmie_speakers_save"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
+        nodes_used.charmie_tray_gripper         = self.ros2_modules["charmie_tray_gripper"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
         nodes_used.charmie_yolo_world           = self.ros2_modules["charmie_yolo_world"]
@@ -1100,6 +1110,24 @@ class ROS2TaskNode(Node):
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
+    def call_set_tray_gripper_server(self, request=SetInt.Request(), wait_for_end_of=True):
+    
+        future = self.set_tray_gripper_client.call_async(request)
+        future.add_done_callback(self.callback_call_set_tray_gripper)
+        
+    def callback_call_set_tray_gripper(self, future): 
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.tray_gripper_success = response.success
+            self.tray_gripper_message = response.message
+            self.waited_for_end_of_set_tray_gripper = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
 
     def call_set_torso_position_server(self, request=SetTorso.Request()):
     
@@ -1876,6 +1904,30 @@ class RobotStdFunctions():
 
         return self.node.rgb_success, self.node.rgb_message
 
+    def close_tray_gripper(self, wait_for_end_of=True):
+
+        self.set_tray_gripper_position(command=0, wait_for_end_of=wait_for_end_of) # 0 is open position
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
+    def open_tray_gripper(self, wait_for_end_of=True):
+
+        self.set_tray_gripper_position(command=100, wait_for_end_of=wait_for_end_of) # 0 is open position
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
+    def set_tray_gripper_position(self, command=0, wait_for_end_of=True):
+
+        request = SetInt.Request()
+        request.data = int(command)
+
+        self.node.call_set_tray_gripper_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_set_tray_gripper:
+                pass
+        self.node.waited_for_end_of_set_tray_gripper = False
+
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
     def get_vccs(self, wait_for_end_of=True):
 
         return self.node.vccs.battery_voltage, self.node.vccs.emergency_stop
@@ -2648,6 +2700,42 @@ class RobotStdFunctions():
         else:
             return False
         
+    def move_to_person(self, person=DetectedPerson(), dist_to_person=2.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        move_coords = [person.position_absolute.x, person.position_absolute.y, 0.0]
+
+        if person.furniture_location == "None" or person.furniture_location == None: # if the person is not in a specific furniture, assume we can navigate there and have generic logic
+
+            print("Person detected is NOT in a furniture.")
+
+            self.move_to_position(move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, wait_for_end_of=False)
+            is_person_radius_reached = False
+            while not is_person_radius_reached:
+                robot_pos = self.get_robot_localization()
+                dist = math.sqrt((move_coords[0] - robot_pos.x)**2 + (move_coords[1] - robot_pos.y)**2)
+                print("Distance to person: " + str(round(dist, 2)) + " m")
+                if dist <= dist_to_person:
+                    is_person_radius_reached = True
+                else:
+                    time.sleep(0.05)
+            
+            self.move_to_position_cancel()
+            time.sleep(1.5)
+            self.adjust_angle(angle=self.get_rotation_angle_to_map_coords(target_coords=move_coords), wait_for_end_of=True)
+
+            robot_pos = self.get_robot_localization()
+            dist = math.sqrt((move_coords[0] - robot_pos.x)**2 + (move_coords[1] - robot_pos.y)**2)
+            print("Distance to person: " + str(round(dist, 2)) + " m")
+
+        else: # if person is in a furniture, it may not be phisically acessible to navigate to the coordinates, because this may be blocked in the map, if so, we navigate the navigation coords of that furniture
+            
+            print("Person detected is in furniture:" + person.furniture_location)
+            # move to nav_coords of the furniture where the person is, which are accessible in the map
+            move_coords = self.get_navigation_coords_from_furniture(person.furniture_location) 
+            self.move_to_position(move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, wait_for_end_of=True)
+            # rotate to person position (most furnitures not necessary but for sofa must be done)
+            self.adjust_angle(angle=self.get_rotation_angle_to_map_coords(target_coords=move_coords), wait_for_end_of=True)
+
     def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         if move_coords:
@@ -6857,7 +6945,7 @@ class RobotStdFunctions():
 
         return success, message, nav_coords_ret
 
-    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True):
+    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, forbidden_sides=["top", "right"], speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True):
         
         # TODO: this function still does not consider the object height for comparing which is the best spot to place object (multiple shelves)
 
@@ -6914,6 +7002,18 @@ class RobotStdFunctions():
         place_lx = None
         place_ly = None
 
+        # if forbidden_sides is None:
+        #     forbidden_sides = []
+
+        valid_sides = ["bottom", "top", "right", "left"]
+
+        for side in forbidden_sides:
+            if side not in valid_sides:
+                print("[PLACE][WARN] Ignoring invalid forbidden side:", side)
+
+        forbidden_sides = [side for side in forbidden_sides if side in valid_sides]
+
+        print("[PLACE] Forbidden sides:", forbidden_sides)
         # ------------------------------------------------------------------
         # Convert detected object positions into furniture-local coordinates.
         # Only objects inside this furniture footprint are considered.
@@ -7076,6 +7176,17 @@ class RobotStdFunctions():
 
                     valid_empty_sides = ["bottom", "top", "right", "left"]
 
+                    available_empty_sides = [
+                        side for side in valid_empty_sides
+                        if side not in forbidden_sides
+                    ]
+
+                    if len(available_empty_sides) == 0:
+                        success = False
+                        message = "All sides are forbidden for empty square furniture"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
                     if empty_table_side not in valid_empty_sides:
                         print("[PLACE][WARN] Invalid empty_table_side:", empty_table_side)
                         print("[PLACE][WARN] Defaulting to right")
@@ -7109,29 +7220,39 @@ class RobotStdFunctions():
                     x = -half_x + placement_margin
                     y = -half_y + placement_margin
                     while y <= half_y - placement_margin:
-                        candidate_points.append((x, y, "bottom"))
+                        if "bottom" not in forbidden_sides:
+                            candidate_points.append((x, y, "bottom"))
                         y += grid_step
 
                     # top side candidates
                     x = half_x - placement_margin
                     y = -half_y + placement_margin
                     while y <= half_y - placement_margin:
-                        candidate_points.append((x, y, "top"))
+                        if "top" not in forbidden_sides:
+                            candidate_points.append((x, y, "top"))
                         y += grid_step
 
                     # right side candidates
                     y = -half_y + placement_margin
                     x = -half_x + placement_margin
                     while x <= half_x - placement_margin:
-                        candidate_points.append((x, y, "right"))
+                        if "right" not in forbidden_sides:
+                            candidate_points.append((x, y, "right"))
                         x += grid_step
 
                     # left side candidates
                     y = half_y - placement_margin
                     x = -half_x + placement_margin
                     while x <= half_x - placement_margin:
-                        candidate_points.append((x, y, "left"))
+                        if "left" not in forbidden_sides:
+                            candidate_points.append((x, y, "left"))
                         x += grid_step
+
+                    if len(candidate_points) == 0:
+                        success = False
+                        message = "No Strategy 2 square candidates available because all sides are forbidden"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
 
                     if DEBUG_PRINTS:
                         side_counts = {"bottom": 0, "top": 0, "right": 0, "left": 0}
@@ -7214,6 +7335,21 @@ class RobotStdFunctions():
                         "left": 90.0
                     }
 
+                    available_empty_sides = [
+                        side for side in side_to_angle.keys()
+                        if side not in forbidden_sides
+                    ]
+
+                    if len(available_empty_sides) == 0:
+                        success = False
+                        message = "All sides are forbidden for empty circular furniture"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
+                    if empty_table_side not in available_empty_sides:
+                        print("[PLACE][WARN] Invalid or forbidden empty_table_side:", empty_table_side)
+                        print("[PLACE][WARN] Defaulting to:", available_empty_sides[0])
+                        
                     if empty_table_side not in side_to_angle:
                         print("[PLACE][WARN] Invalid empty_table_side:", empty_table_side)
                         print("[PLACE][WARN] Defaulting to left")
@@ -7242,6 +7378,19 @@ class RobotStdFunctions():
 
                     while candidate_angle_deg < 360.0:
                         candidate_angle_rad = math.radians(candidate_angle_deg)
+
+                        if 315.0 <= candidate_angle_deg or candidate_angle_deg < 45.0:
+                            cand_side = "top"
+                        elif 45.0 <= candidate_angle_deg < 135.0:
+                            cand_side = "left"
+                        elif 135.0 <= candidate_angle_deg < 225.0:
+                            cand_side = "bottom"
+                        else:
+                            cand_side = "right"
+
+                        if cand_side in forbidden_sides:
+                            candidate_angle_deg += angle_step_deg
+                            continue
 
                         cand_lx = placement_radius * math.cos(candidate_angle_rad)
                         cand_ly = placement_radius * math.sin(candidate_angle_rad)

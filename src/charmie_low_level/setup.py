@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             "low_level = charmie_low_level.low_level:main",
-            "low_level_stream = charmie_low_level.low_level_stream:main"
+            "low_level_stream = charmie_low_level.low_level_stream:main",
+            "tray_gripper = charmie_low_level.tray_gripper:main"
         ],
     },
 )
