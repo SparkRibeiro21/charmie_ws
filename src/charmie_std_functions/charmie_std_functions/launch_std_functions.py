@@ -343,6 +343,12 @@ class LaunchStdFunctions():
                     emulate_tty=True
                     )
         
+        self.tray_gripper = Node(package='charmie_low_level',
+                    executable='tray_gripper',
+                    name='tray_gripper',
+                    emulate_tty=True
+                    )
+        
         self.charmie_localisation = Node(package='charmie_localisation',
                     executable='localisation',
                     name='localisation',

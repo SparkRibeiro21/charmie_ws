@@ -176,6 +176,7 @@ class ROS2TaskNode(Node):
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
         self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
+        self.set_tray_gripper_client = self.create_client(SetInt, "tray_gripper_command")
         # GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
         # LLM
@@ -236,6 +237,7 @@ class ROS2TaskNode(Node):
             "charmie_speakers":             True,
             "charmie_speakers_save":        False,
             "charmie_tracking":             False,
+            "charmie_tray_gripper":         False,
             "charmie_yolo_objects":         True,
             "charmie_yolo_pose":            False,
             "charmie_yolo_world":           False,
@@ -325,6 +327,10 @@ class ROS2TaskNode(Node):
             while not self.activate_tracking_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Activate Tracking Command...")
 
+        if self.ros2_modules["charmie_tray_gripper"]:
+            while not self.set_tray_gripper_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Set Tray Gripper Command...")
+
         if self.ros2_modules["charmie_yolo_objects"]:
             while not self.activate_yolo_objects_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
@@ -368,6 +374,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_face = False
         self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
+        self.waited_for_end_of_set_tray_gripper = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
@@ -421,6 +428,8 @@ class ROS2TaskNode(Node):
         self.rgb_message = ""
         self.torso_success = True
         self.torso_message = ""
+        self.tray_gripper_success = True
+        self.tray_gripper_message = ""
         self.audio_success = True
         self.audio_message = ""
         self.continuous_audio_success = True
@@ -567,6 +576,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_speakers_save        = self.ros2_modules["charmie_speakers_save"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
+        nodes_used.charmie_tray_gripper         = self.ros2_modules["charmie_tray_gripper"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
         nodes_used.charmie_yolo_world           = self.ros2_modules["charmie_yolo_world"]
@@ -1100,6 +1110,24 @@ class ROS2TaskNode(Node):
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
+    def call_set_tray_gripper_server(self, request=SetInt.Request(), wait_for_end_of=True):
+    
+        future = self.set_tray_gripper_client.call_async(request)
+        future.add_done_callback(self.callback_call_set_tray_gripper)
+        
+    def callback_call_set_tray_gripper(self, future): 
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.tray_gripper_success = response.success
+            self.tray_gripper_message = response.message
+            self.waited_for_end_of_set_tray_gripper = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
 
     def call_set_torso_position_server(self, request=SetTorso.Request()):
     
@@ -1876,6 +1904,30 @@ class RobotStdFunctions():
 
         return self.node.rgb_success, self.node.rgb_message
 
+    def close_tray_gripper(self, wait_for_end_of=True):
+
+        self.set_tray_gripper_position(command=0, wait_for_end_of=wait_for_end_of) # 0 is open position
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
+    def open_tray_gripper(self, wait_for_end_of=True):
+
+        self.set_tray_gripper_position(command=100, wait_for_end_of=wait_for_end_of) # 0 is open position
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
+    def set_tray_gripper_position(self, command=0, wait_for_end_of=True):
+
+        request = SetInt.Request()
+        request.data = int(command)
+
+        self.node.call_set_tray_gripper_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_set_tray_gripper:
+                pass
+        self.node.waited_for_end_of_set_tray_gripper = False
+
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
     def get_vccs(self, wait_for_end_of=True):
 
         return self.node.vccs.battery_voltage, self.node.vccs.emergency_stop
@@ -2648,6 +2700,42 @@ class RobotStdFunctions():
         else:
             return False
         
+    def move_to_person(self, person=DetectedPerson(), dist_to_person=2.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        move_coords = [person.position_absolute.x, person.position_absolute.y, 0.0]
+
+        if person.furniture_location == "None" or person.furniture_location == None: # if the person is not in a specific furniture, assume we can navigate there and have generic logic
+
+            print("Person detected is NOT in a furniture.")
+
+            self.move_to_position(move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, wait_for_end_of=False)
+            is_person_radius_reached = False
+            while not is_person_radius_reached:
+                robot_pos = self.get_robot_localization()
+                dist = math.sqrt((move_coords[0] - robot_pos.x)**2 + (move_coords[1] - robot_pos.y)**2)
+                print("Distance to person: " + str(round(dist, 2)) + " m")
+                if dist <= dist_to_person:
+                    is_person_radius_reached = True
+                else:
+                    time.sleep(0.05)
+            
+            self.move_to_position_cancel()
+            time.sleep(1.5)
+            self.adjust_angle(angle=self.get_rotation_angle_to_map_coords(target_coords=move_coords), wait_for_end_of=True)
+
+            robot_pos = self.get_robot_localization()
+            dist = math.sqrt((move_coords[0] - robot_pos.x)**2 + (move_coords[1] - robot_pos.y)**2)
+            print("Distance to person: " + str(round(dist, 2)) + " m")
+
+        else: # if person is in a furniture, it may not be phisically acessible to navigate to the coordinates, because this may be blocked in the map, if so, we navigate the navigation coords of that furniture
+            
+            print("Person detected is in furniture:" + person.furniture_location)
+            # move to nav_coords of the furniture where the person is, which are accessible in the map
+            move_coords = self.get_navigation_coords_from_furniture(person.furniture_location) 
+            self.move_to_position(move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, wait_for_end_of=True)
+            # rotate to person position (most furnitures not necessary but for sofa must be done)
+            self.adjust_angle(angle=self.get_rotation_angle_to_map_coords(target_coords=move_coords), wait_for_end_of=True)
+
     def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         if move_coords:
@@ -6856,6 +6944,617 @@ class RobotStdFunctions():
             self.move_to_position(move_coords=nav_coords_ret, wait_for_end_of=wait_for_end_of)
 
         return success, message, nav_coords_ret
+
+    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, forbidden_sides=["top", "right"], speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True):
+        
+        # TODO: this function still does not consider the object height for comparing which is the best spot to place object (multiple shelves)
+
+        DEBUG_PRINTS = False
+        success = False
+        message = ""
+        empty_table_side="left"
+        nav_coords_ret = []
+        place_coords_ret = []
+
+        placement_depth = 0.50      # first X cm from table border must be free
+        placement_margin = 0.30     # place object X cm from table border
+        approach_offset = 0.50      # robot distance outside table border
+
+        print("\n[PLACE] --- move_to_free_place_position ---")
+        print("[PLACE] Furniture:", furniture)
+        print("[PLACE] heads_of_the_table:", heads_of_the_table)
+
+        shape = self.get_furniture_shape_from_furniture(furniture)
+
+        if shape is None:
+            success = False
+            message = "Furniture shape not found, cannot move to free place position"
+            print("[PLACE][ERROR]", message)
+            return success, message, nav_coords_ret, place_coords_ret
+
+        furniture_dict = {
+            "name": furniture,
+            "center_coords": [self.get_location_coords_from_furniture(furniture)[0], self.get_location_coords_from_furniture(furniture)[1]],
+            "size": self.get_size_from_furniture(furniture),
+            "angle": self.get_angle_from_furniture(furniture),
+            "radius": self.get_radius_from_furniture(furniture),
+            "shape": self.get_furniture_shape_from_furniture(furniture)
+        }
+
+        cx, cy = furniture_dict["center_coords"]
+        size_x, size_y = furniture_dict["size"]
+        angle_deg_furniture = furniture_dict["angle"]
+        radius = furniture_dict["radius"]
+
+        half_x = size_x / 2.0
+        half_y = size_y / 2.0
+        angle_rad = math.radians(angle_deg_furniture)
+
+        if DEBUG_PRINTS:
+            print("[PLACE] Furniture dict:", furniture_dict)
+            print("[PLACE] Center:", [cx, cy])
+            print("[PLACE] Size:", [size_x, size_y])
+            print("[PLACE] Half size:", [half_x, half_y])
+            print("[PLACE] Radius:", radius)
+            print("[PLACE] Angle deg:", angle_deg_furniture)
+        
+        free_side = None
+        place_lx = None
+        place_ly = None
+
+        # if forbidden_sides is None:
+        #     forbidden_sides = []
+
+        valid_sides = ["bottom", "top", "right", "left"]
+
+        for side in forbidden_sides:
+            if side not in valid_sides:
+                print("[PLACE][WARN] Ignoring invalid forbidden side:", side)
+
+        forbidden_sides = [side for side in forbidden_sides if side in valid_sides]
+
+        print("[PLACE] Forbidden sides:", forbidden_sides)
+        # ------------------------------------------------------------------
+        # Convert detected object positions into furniture-local coordinates.
+        # Only objects inside this furniture footprint are considered.
+        # ------------------------------------------------------------------
+
+        objects_local = []
+
+        for obj in list_of_objects:
+            if obj.index <= 0:
+                continue
+
+            ox = obj.position_absolute.x
+            oy = obj.position_absolute.y
+
+            dx = ox - cx
+            dy = oy - cy
+
+            local_ox =  math.cos(angle_rad) * dx + math.sin(angle_rad) * dy
+            local_oy = -math.sin(angle_rad) * dx + math.cos(angle_rad) * dy
+
+            if shape == "square":
+                inside_furniture = (
+                    -half_x <= local_ox <= half_x and
+                    -half_y <= local_oy <= half_y
+                )
+
+            elif shape == "circle":
+                inside_furniture = math.sqrt(local_ox**2 + local_oy**2) <= radius
+
+            else:
+                inside_furniture = False
+
+            if DEBUG_PRINTS:
+                print(
+                    f"[PLACE][OBJ] {obj.object_name:<15}"
+                    f" world=({ox:.2f},{oy:.2f})"
+                    f" local=({local_ox:.2f},{local_oy:.2f})"
+                    f" inside={inside_furniture}"
+                    f" db={local_ox + half_x:.2f}"
+                    f" dt={half_x - local_ox:.2f}"
+                    f" dr={local_oy + half_y:.2f}"
+                    f" dl={half_y - local_oy:.2f}"
+                )
+
+            if inside_furniture:
+                objects_local.append({
+                    "name": obj.object_name,
+                    "local": [local_ox, local_oy],
+                    "world": [ox, oy]
+                })
+
+        if DEBUG_PRINTS:
+            print("[PLACE] Objects inside furniture:", len(objects_local))
+
+        # ------------------------------------------------------------------
+        # Decide which sides are the "heads of the table"
+        # These are the two smaller sides of the rectangle.
+        #
+        # If size_x < size_y:
+        #   heads are local x sides: x = -half_x and x = +half_x
+        #
+        # If size_y < size_x:
+        #   heads are local y sides: y = -half_y and y = +half_y
+        # ------------------------------------------------------------------
+
+        if heads_of_the_table and shape == "square":
+
+            # Change the candidate order for prefered side (both options are available for placing)
+            if size_x <= size_y:
+                candidate_sides = ["left", "right"]
+            else:
+                candidate_sides = ["bottom", "top"]
+
+            if DEBUG_PRINTS:
+                print("[PLACE] Candidate head sides:", candidate_sides)
+
+
+            # ------------------------------------------------------------------
+            # Check whether the first 50 cm inward from each candidate head side
+            # contains an object.
+            # ------------------------------------------------------------------
+
+            for side in candidate_sides:
+
+                side_has_object = False
+
+                print("\n[PLACE] Checking side:", side)
+
+                for obj in objects_local:
+                    obj_lx, obj_ly = obj["local"]
+
+                    if side == "bottom":
+                        object_in_strip = (
+                            -half_x <= obj_lx <= -half_x + placement_depth and
+                            -half_y <= obj_ly <= half_y
+                        )
+
+                    elif side == "top":
+                        object_in_strip = (
+                            half_x - placement_depth <= obj_lx <= half_x and
+                            -half_y <= obj_ly <= half_y
+                        )
+
+                    elif side == "right":
+                        object_in_strip = (
+                            -half_x <= obj_lx <= half_x and
+                            -half_y <= obj_ly <= -half_y + placement_depth
+                        )
+
+                    elif side == "left":
+                        object_in_strip = (
+                            -half_x <= obj_lx <= half_x and
+                            half_y - placement_depth <= obj_ly <= half_y
+                        )
+
+                    else:
+                        object_in_strip = False
+
+
+                    if DEBUG_PRINTS:
+                        print(
+                            "[PLACE]   Object:",
+                            obj["name"],
+                            "local:",
+                            [round(obj_lx, 3), round(obj_ly, 3)],
+                            "in first 40cm strip:",
+                            object_in_strip
+                        )
+
+                    if object_in_strip:
+                        side_has_object = True
+                        break
+
+                if not side_has_object:
+                    free_side = side
+                    print("[PLACE] Free head side found:", free_side)
+                    break
+                else:
+                    print("[PLACE] Side occupied:", side)
+
+
+        if free_side is None:
+
+            if heads_of_the_table and shape == "square": # simple debug print
+                print("[PLACE] Heads of the table strategy did not find a free head side.")
+
+            print("[PLACE] Running highest minimum distance to all objects strategy.")
+
+            if shape == "square":
+
+                grid_step = 0.05
+
+                best_score = -1.0
+                best_side = None
+                best_place_lx = None
+                best_place_ly = None
+                best_closest_object_name = "None"
+
+                if len(objects_local) == 0: # case where there are no objects on the furniture, user can choose the center of which side
+
+                    valid_empty_sides = ["bottom", "top", "right", "left"]
+
+                    available_empty_sides = [
+                        side for side in valid_empty_sides
+                        if side not in forbidden_sides
+                    ]
+
+                    if len(available_empty_sides) == 0:
+                        success = False
+                        message = "All sides are forbidden for empty square furniture"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
+                    if empty_table_side not in valid_empty_sides:
+                        print("[PLACE][WARN] Invalid empty_table_side:", empty_table_side)
+                        print("[PLACE][WARN] Defaulting to right")
+                        empty_table_side = "right"
+
+                    free_side = empty_table_side
+                    place_lx = None
+                    place_ly = None
+
+                    print("[PLACE] Empty table detected.")
+                    print("[PLACE] Empty table selected side:", free_side)
+
+                else: 
+
+                    candidate_points = []
+
+                    if DEBUG_PRINTS:
+                        print("\n[PLACE][STRAT2] --- SQUARE FURNITURE SEARCH ---")
+                        print("[PLACE][STRAT2] grid_step:", grid_step)
+                        print("[PLACE][STRAT2] placement_margin:", placement_margin)
+                        print("[PLACE][STRAT2] local limits:")
+                        print("    x:", round(-half_x, 3), "to", round(half_x, 3))
+                        print("    y:", round(-half_y, 3), "to", round(half_y, 3))
+                        print("[PLACE][STRAT2] searchable inner lines:")
+                        print("    bottom x =", round(-half_x + placement_margin, 3))
+                        print("    top    x =", round(half_x - placement_margin, 3))
+                        print("    right  y =", round(-half_y + placement_margin, 3))
+                        print("    left   y =", round(half_y - placement_margin, 3))
+
+                    # bottom side candidates
+                    x = -half_x + placement_margin
+                    y = -half_y + placement_margin
+                    while y <= half_y - placement_margin:
+                        if "bottom" not in forbidden_sides:
+                            candidate_points.append((x, y, "bottom"))
+                        y += grid_step
+
+                    # top side candidates
+                    x = half_x - placement_margin
+                    y = -half_y + placement_margin
+                    while y <= half_y - placement_margin:
+                        if "top" not in forbidden_sides:
+                            candidate_points.append((x, y, "top"))
+                        y += grid_step
+
+                    # right side candidates
+                    y = -half_y + placement_margin
+                    x = -half_x + placement_margin
+                    while x <= half_x - placement_margin:
+                        if "right" not in forbidden_sides:
+                            candidate_points.append((x, y, "right"))
+                        x += grid_step
+
+                    # left side candidates
+                    y = half_y - placement_margin
+                    x = -half_x + placement_margin
+                    while x <= half_x - placement_margin:
+                        if "left" not in forbidden_sides:
+                            candidate_points.append((x, y, "left"))
+                        x += grid_step
+
+                    if len(candidate_points) == 0:
+                        success = False
+                        message = "No Strategy 2 square candidates available because all sides are forbidden"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
+                    if DEBUG_PRINTS:
+                        side_counts = {"bottom": 0, "top": 0, "right": 0, "left": 0}
+                        for _, _, side in candidate_points:
+                            side_counts[side] += 1
+
+                        print("[PLACE][STRAT2] Total candidate points:", len(candidate_points))
+                        print("[PLACE][STRAT2] Candidate counts by side:", side_counts)
+                        print("[PLACE][STRAT2] Objects considered:", len(objects_local))
+
+                        for obj in objects_local:
+                            obj_lx, obj_ly = obj["local"]
+                            print(
+                                f"[PLACE][STRAT2][OBJ] {obj['name']:<15}"
+                                f" local=({obj_lx:.3f},{obj_ly:.3f})"
+                                f" world=({obj['world'][0]:.3f},{obj['world'][1]:.3f})"
+                            )
+
+                    for cand_lx, cand_ly, cand_side in candidate_points:
+
+                        min_dist_to_object = float("inf")
+                        closest_object_name = "None"
+
+                        for obj in objects_local:
+                            obj_lx, obj_ly = obj["local"]
+
+                            dist = math.sqrt(
+                                (cand_lx - obj_lx) ** 2 +
+                                (cand_ly - obj_ly) ** 2
+                            )
+
+                            if dist < min_dist_to_object:
+                                min_dist_to_object = dist
+                                closest_object_name = obj["name"]
+
+                        if min_dist_to_object > best_score:
+                            best_score = min_dist_to_object
+                            best_side = cand_side
+                            best_place_lx = cand_lx
+                            best_place_ly = cand_ly
+                            best_closest_object_name = closest_object_name
+
+                    if best_side is None:
+                        success = False
+                        message = "Strategy 2 could not find a valid place position"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
+                    free_side = best_side
+                    place_lx = best_place_lx
+                    place_ly = best_place_ly
+
+                    best_place_x = cx + math.cos(angle_rad) * place_lx - math.sin(angle_rad) * place_ly
+                    best_place_y = cy + math.sin(angle_rad) * place_lx + math.cos(angle_rad) * place_ly
+
+                    print("\n[PLACE][STRAT2] --- FINAL SELECTION ---")
+                    print("[PLACE][STRAT2] selected side:", free_side)
+                    print("[PLACE][STRAT2] selected local coords:", [round(place_lx, 3), round(place_ly, 3)])
+                    print("[PLACE][STRAT2] selected map coords:", [round(best_place_x, 3), round(best_place_y, 3)])
+                    print("[PLACE][STRAT2] best minimum distance:", round(best_score, 3))
+                    print("[PLACE][STRAT2] closest object to best point:", best_closest_object_name)
+
+            elif shape == "circle":
+
+                angle_step_deg = 10.0
+                placement_radius = radius - placement_margin
+
+                if placement_radius <= 0.0:
+                    success = False
+                    message = "Circular furniture is too small for placement margin"
+                    print("[PLACE][ERROR]", message)
+                    return success, message, nav_coords_ret, place_coords_ret
+
+                if len(objects_local) == 0:
+
+                    side_to_angle = {
+                        "bottom": 180.0,
+                        "top": 0.0,
+                        "right": 270.0,
+                        "left": 90.0
+                    }
+
+                    available_empty_sides = [
+                        side for side in side_to_angle.keys()
+                        if side not in forbidden_sides
+                    ]
+
+                    if len(available_empty_sides) == 0:
+                        success = False
+                        message = "All sides are forbidden for empty circular furniture"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
+                    if empty_table_side not in available_empty_sides:
+                        print("[PLACE][WARN] Invalid or forbidden empty_table_side:", empty_table_side)
+                        print("[PLACE][WARN] Defaulting to:", available_empty_sides[0])
+                        
+                    if empty_table_side not in side_to_angle:
+                        print("[PLACE][WARN] Invalid empty_table_side:", empty_table_side)
+                        print("[PLACE][WARN] Defaulting to left")
+                        empty_table_side = "left"
+
+                    place_angle_rad = math.radians(side_to_angle[empty_table_side])
+
+                    place_lx = placement_radius * math.cos(place_angle_rad)
+                    place_ly = placement_radius * math.sin(place_angle_rad)
+
+                    free_side = empty_table_side
+
+                    print("[PLACE] Empty circular furniture detected.")
+                    print("[PLACE] Empty circular selected side:", empty_table_side)
+                    print("[PLACE] Empty circular selected local coords:", [round(place_lx, 3), round(place_ly, 3)])
+
+                else:
+
+                    best_score = -1.0
+                    best_place_lx = None
+                    best_place_ly = None
+                    best_angle_rad = None
+                    best_closest_object_name = "None"
+
+                    candidate_angle_deg = 0.0
+
+                    while candidate_angle_deg < 360.0:
+                        candidate_angle_rad = math.radians(candidate_angle_deg)
+
+                        if 315.0 <= candidate_angle_deg or candidate_angle_deg < 45.0:
+                            cand_side = "top"
+                        elif 45.0 <= candidate_angle_deg < 135.0:
+                            cand_side = "left"
+                        elif 135.0 <= candidate_angle_deg < 225.0:
+                            cand_side = "bottom"
+                        else:
+                            cand_side = "right"
+
+                        if cand_side in forbidden_sides:
+                            candidate_angle_deg += angle_step_deg
+                            continue
+
+                        cand_lx = placement_radius * math.cos(candidate_angle_rad)
+                        cand_ly = placement_radius * math.sin(candidate_angle_rad)
+
+                        min_dist_to_object = float("inf")
+                        closest_object_name = "None"
+
+                        for obj in objects_local:
+                            obj_lx, obj_ly = obj["local"]
+
+                            dist = math.sqrt(
+                                (cand_lx - obj_lx) ** 2 +
+                                (cand_ly - obj_ly) ** 2
+                            )
+
+                            if dist < min_dist_to_object:
+                                min_dist_to_object = dist
+                                closest_object_name = obj["name"]
+
+                        if min_dist_to_object > best_score:
+                            best_score = min_dist_to_object
+                            best_place_lx = cand_lx
+                            best_place_ly = cand_ly
+                            best_angle_rad = candidate_angle_rad
+                            best_closest_object_name = closest_object_name
+
+                        candidate_angle_deg += angle_step_deg
+
+                    if best_place_lx is None or best_place_ly is None:
+                        success = False
+                        message = "Strategy 2 could not find a valid circular place position"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
+                    free_side = "circle"
+                    place_lx = best_place_lx
+                    place_ly = best_place_ly
+
+                    print("\n[PLACE][STRAT2][CIRCLE] --- FINAL SELECTION ---")
+                    print("[PLACE][STRAT2][CIRCLE] selected local coords:", [round(place_lx, 3), round(place_ly, 3)])
+                    print("[PLACE][STRAT2][CIRCLE] selected angle deg:", round(math.degrees(best_angle_rad), 3))
+                    print("[PLACE][STRAT2][CIRCLE] best minimum distance:", round(best_score, 3))
+                    print("[PLACE][STRAT2][CIRCLE] closest object to best point:", best_closest_object_name)
+
+            else:
+
+                success = False
+                message = "Furniture shape not recognized for Strategy 2"
+                print("[PLACE][ERROR]", message)
+                return success, message, nav_coords_ret, place_coords_ret
+
+        # ------------------------------------------------------------------
+        # Compute placement point and robot navigation point in furniture-local
+        # coordinates.
+        # ------------------------------------------------------------------
+
+        if shape == "square":
+            if free_side == "bottom":
+
+                if place_lx is None or place_ly is None:
+                    place_lx = -half_x + placement_margin
+                    place_ly = 0.0
+
+                nav_lx = -half_x - approach_offset
+                nav_ly = place_ly
+                angle_deg = angle_deg_furniture + 0.0
+
+            elif free_side == "top":
+
+                if place_lx is None or place_ly is None:
+                    place_lx = half_x - placement_margin
+                    place_ly = 0.0
+
+                nav_lx = half_x + approach_offset
+                nav_ly = place_ly
+                angle_deg = angle_deg_furniture + 180.0
+
+            elif free_side == "right":
+
+                if place_lx is None or place_ly is None:
+                    place_lx = 0.0
+                    place_ly = -half_y + placement_margin
+
+                nav_lx = place_lx
+                nav_ly = -half_y - approach_offset
+                angle_deg = angle_deg_furniture + 90.0
+
+            elif free_side == "left":
+
+                if place_lx is None or place_ly is None:
+                    place_lx = 0.0
+                    place_ly = half_y - placement_margin
+
+                nav_lx = place_lx
+                nav_ly = half_y + approach_offset
+                angle_deg = angle_deg_furniture + 270.0
+
+            angle_deg = angle_deg % 360.0
+        
+        elif shape == "circle":
+
+            place_dist = math.sqrt(place_lx**2 + place_ly**2)
+
+            if place_dist < 1e-9:
+                place_lx = radius - placement_margin
+                place_ly = 0.0
+                place_dist = math.sqrt(place_lx**2 + place_ly**2)
+
+            ux = place_lx / place_dist
+            uy = place_ly / place_dist
+
+            nav_lx = (radius + approach_offset) * ux
+            nav_ly = (radius + approach_offset) * uy
+
+            place_x_temp = cx + math.cos(angle_rad) * place_lx - math.sin(angle_rad) * place_ly
+            place_y_temp = cy + math.sin(angle_rad) * place_lx + math.cos(angle_rad) * place_ly
+
+            nav_x_temp = cx + math.cos(angle_rad) * nav_lx - math.sin(angle_rad) * nav_ly
+            nav_y_temp = cy + math.sin(angle_rad) * nav_lx + math.cos(angle_rad) * nav_ly
+
+            angle_rad_robot = math.atan2(place_y_temp - nav_y_temp, place_x_temp - nav_x_temp)
+            angle_deg = (math.degrees(angle_rad_robot) + 360.0) % 360.0
+
+        else:
+            success = False
+            message = "Furniture shape not recognized when computing final nav position"
+            print("[PLACE][ERROR]", message)
+            return success, message, nav_coords_ret, place_coords_ret
+
+        # ------------------------------------------------------------------
+        # Convert local placement/nav coordinates back into map/world coords.
+        # ------------------------------------------------------------------
+
+        place_x = cx + math.cos(angle_rad) * place_lx - math.sin(angle_rad) * place_ly
+        place_y = cy + math.sin(angle_rad) * place_lx + math.cos(angle_rad) * place_ly
+
+        nav_x = cx + math.cos(angle_rad) * nav_lx - math.sin(angle_rad) * nav_ly
+        nav_y = cy + math.sin(angle_rad) * nav_lx + math.cos(angle_rad) * nav_ly
+
+        place_coords_ret = [place_x, place_y]
+        nav_coords_ret = [nav_x, nav_y, angle_deg]
+
+        print("\n[PLACE] --- RESULT ---")
+        print("[PLACE] Selected free side:", free_side)
+        print("[PLACE] Place local coords:", [round(place_lx, 3), round(place_ly, 3)])
+        print("[PLACE] Place map coords:", [round(place_x, 3), round(place_y, 3)])
+        print("[PLACE] Nav local coords:", [round(nav_lx, 3), round(nav_ly, 3)])
+        print("[PLACE] Nav map coords:", [round(nav_x, 3), round(nav_y, 3), round(angle_deg, 3)])
+
+        success = True
+        message = "Found free head side and computed place/nav position"
+
+        if nav_coords_ret and move_to:
+            self.move_to_position(move_coords=nav_coords_ret, wait_for_end_of=wait_for_end_of)
+            if wait_for_end_of:
+                if speak_remove_chairs:
+                    self.set_speech(filename="pick_and_place_task/remove_chair_front_of_me", wait_for_end_of=True)
+                    time.sleep(5.0)
+                if speak_remove_decorations:
+                    self.set_speech(filename="pick_and_place_task/remove_decorations_front_of_me", wait_for_end_of=True)
+                    time.sleep(5.0)
+
+        return success, message, nav_coords_ret, place_coords_ret
+                
 
     def open_door(self, push_pull="push", handle_side="", wait_for_end_of=True):
 

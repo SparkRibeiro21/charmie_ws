@@ -267,7 +267,8 @@ class ArmUfactory(Node):
 		# self.pre_place_bowl_joint = 					[ -171.3,	33.6,  -98.3,   245.1,  92.4, - 15.9]
 		self.pre_place_bowl_joint = 					[ -169.8,	28.0,  -81.8,   246.9,  97.9, - 6.3]
 		self.pre_pick_cereals_tray_joints = 			[-193.2, 37.6, -74.9, -16.7, 126.5, 262.8]
-		self.pre_pick_milk_tray_joints = 				[-203.4, 35.4, -61.2, -19.4, 74.5, 261.5]
+		# self.pre_pick_milk_tray_joints = 				[-203.4, 35.4, -61.2, -19.4, 74.5, 261.5]
+		self.pre_pick_milk_tray_joints = 				[-200.5, 49.2, -78.1, -19.9, 96.1, 262.2]
 		self.pre_pick_spoon_tray_joints = 				[-207.7, 48.4, -86.1, -21.8, 84.9, 255.2]
 	
 		# SET POSITIONS VARIABLES
@@ -280,11 +281,16 @@ class ArmUfactory(Node):
 		self.place_in_cuttlery_cup =					[ -135.0,  345.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		self.step_away_from_cuttlery_cup =				[ -135.0,  260.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		
-		self.above_milk_place_spot = 					[ -230.0,  380.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		# pre tray_gripper <> self.above_milk_place_spot = 					[ -230.0,  380.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.above_milk_place_spot = 					[ -226.9,  380.0,   -6.3, math.radians(-111.4), math.radians(   0.0), math.radians( -90.0)]
 		# self.place_milk_in_tray =						[ -230.0,  430.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		self.place_milk_in_tray =						[ -230.0,  445.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		self.step_away_from_milk_in_tray =				[ -230.0,  200.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		
+		# pre tray_gripper <> self.place_milk_in_tray =						[ -230.0,  445.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.place_milk_in_tray =						[ -226.9,  445.0,   -6.3, math.radians(-111.4), math.radians(   0.0), math.radians( -90.0)]
+		# pre tray_gripper <> self.step_away_from_milk_in_tray =				[ -230.0,  200.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.step_away_from_milk_in_tray =				[ -226.9,  180.0,   -6.3, math.radians(-111.4), math.radians(   0.0), math.radians( -90.0)]
+
+
 		self.above_cornflakes_place_spot = 				[ -198.0,  350.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_cornflakes_in_tray =					[ -198.0,  420.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 		self.step_away_from_cornflakes_in_tray =		[ -286.0,  128.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
@@ -1363,7 +1369,7 @@ class ArmUfactory(Node):
 				self.set_position_values_(pose=self.pos_pick_cereals_tray, speed=120, wait=True)
 			case 7:
 				self.finish_arm_movement_()
-
+				
 
 	def pour_milk_bowl(self):
 		match self.estado_tr:
