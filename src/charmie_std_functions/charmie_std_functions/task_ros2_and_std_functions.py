@@ -7913,7 +7913,7 @@ class RobotStdFunctions():
 
         # DISTANCE FROM GRIPPER CAM TO GRIPPER'S TIP (DO NOT CHANGE UNLESS RE-MEASURED !!!!)
         tf_x =  0.145
-        tf_y = -0.060
+        tf_y = -0.006
         tf_z = -0.075
 
         # ASK FOR HELP STATES

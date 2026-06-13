@@ -190,6 +190,7 @@ class TaskMain():
 
                         ##### SPEAK : Hello! Nice to meet you! My name is charmie and I am here to help you serve the customers.
                         # QUICK UPDATE: self.robot.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
+                        self.robot.set_speech(filename="restaurant/barman_meeting", wait_for_end_of=True)
                         ##### SPEAK : I will look for customers. See you soon
                         self.robot.set_speech(filename="restaurant/go_search", wait_for_end_of=True)
                         correct_barman = True
@@ -446,7 +447,7 @@ class TaskMain():
                     if customer_has_order_ctr < max_asks_customer_has_order:
 
                         # "Do you have an order?"
-                        confirmation = self.robot.get_audio(yes_or_no=True, question="restaurant/have_an_order", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                        confirmation = self.robot.get_audio(yes_or_no=True, question="restaurant/have_an_order", max_attempts=max_asks_customer_has_order, face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                         print("Finished:", confirmation)
 
                         if confirmation == "yes":
@@ -468,7 +469,8 @@ class TaskMain():
                                 self.DETECTED_CUSTOMER_INDEX += 1
                             else:
                                 self.state = self.task_states["Move_to_barman_after_delivery"] # to restart the searching process
-
+                        else:
+                            customer_has_order_ctr += max_asks_customer_has_order
                     else:
                         # QUICK UPDATE: self.robot.set_speech(filename="restaurant/have_an_order_touchscreen", wait_for_end_of=True)
                         answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have an order?", speak_results=False, start_speak_file="restaurant/have_an_order_touchscreen", wait_for_end_of=True)
