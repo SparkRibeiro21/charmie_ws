@@ -744,16 +744,7 @@ class TaskMain():
                                     time.sleep(5.0)
                                     self.robot.set_face("charmie_face", wait_for_end_of=False)
 
-                                    _,_ = self.robot.pick_object(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)
-
-                                    object_in_gripper = False
-                                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                                    if not object_in_gripper:
-                                        self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
-                                        o_aux = DetectedObject()
-                                        o_aux.object_name = o.lower().replace(" ", "_")
-                                        self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
-
+                                    _,_ = self.robot.pick_object(selected_object=o, arm_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas)
                                     self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
                                 else:
                                     self.robot.set_face("barman_place_object_restaurant_res", wait_for_end_of=False)
@@ -765,15 +756,6 @@ class TaskMain():
                                     time.sleep(5.0)
                                     self.robot.set_face("charmie_face", wait_for_end_of=False)
                                     picked_height_1 ,asked_help_1 = self.robot.pick_object(selected_object=o, first_search_tetas=tetas)
-        
-                                    object_in_gripper = False
-                                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                                    if not object_in_gripper:
-                                        self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
-                                        o_aux = DetectedObject()
-                                        o_aux.object_name = o.lower().replace(" ", "_")
-                                        self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
-                                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                                 counter = counter + 1         
                         elif len(NCT_check)==1:
@@ -794,16 +776,7 @@ class TaskMain():
                                     self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
                                     time.sleep(5.0)
                                     self.robot.set_face("charmie_face", wait_for_end_of=False)
-                                    _,_ = self.robot.pick_object(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas) 
-
-                                    object_in_gripper = False
-                                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                                    if not object_in_gripper:
-                                        self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
-                                        o_aux = DetectedObject()
-                                        o_aux.object_name = o.lower().replace(" ", "_")
-                                        self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
-
+                                    _,_ = self.robot.pick_object(selected_object=o, arm_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas) 
 
                                     self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
                                 else:
@@ -816,14 +789,6 @@ class TaskMain():
                                     time.sleep(5.0)
                                     self.robot.set_face("charmie_face", wait_for_end_of=False)
                                     picked_height_1 ,asked_help_1 = self.robot.pick_object(selected_object=o, first_search_tetas=tetas)
-
-                                    object_in_gripper = False
-                                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                                    if not object_in_gripper:
-                                        self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
-                                        o_aux = DetectedObject()
-                                        o_aux.object_name = o.lower().replace(" ", "_")
-                                        self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
 
                                 counter = counter + 1
 
@@ -840,15 +805,7 @@ class TaskMain():
                                         self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
                                         time.sleep(5.0)
                                         self.robot.set_face("charmie_face", wait_for_end_of=False)
-                                        _,_ = self.robot.pick_object(selected_object=o, return_arm_to_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas) 
-
-                                        object_in_gripper = False
-                                        object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                                        if not object_in_gripper:
-                                            self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
-                                            o_aux = DetectedObject()
-                                            o_aux.object_name = o.lower().replace(" ", "_")
-                                            self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
+                                        _,_ = self.robot.pick_object(selected_object=o, arm_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas) 
 
 
                                         self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = "top", NCT=True)
@@ -863,13 +820,6 @@ class TaskMain():
                                         self.robot.set_face("charmie_face", wait_for_end_of=False)
                                         picked_height_1 ,asked_help_1 = self.robot.pick_object(selected_object=o, first_search_tetas=tetas)
 
-                                        object_in_gripper = False
-                                        object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                                        if not object_in_gripper:
-                                            self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
-                                            o_aux = DetectedObject()
-                                            o_aux.object_name = o.lower().replace(" ", "_")
-                                            self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
 
 
                                     counter = counter + 1
@@ -892,15 +842,6 @@ class TaskMain():
                         self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                         picked_height_1 ,asked_help_1 = self.robot.pick_object(selected_object=order_names[0], first_search_tetas=tetas)
-
-                        object_in_gripper = False
-                        object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                        if not object_in_gripper:
-                            self.robot.set_speech("generic/problem_pick_object", wait_for_end_of=False)
-                            o_aux = DetectedObject()
-                            o_aux.object_name = o.lower().replace(" ", "_")
-                            self.robot.ask_help_pick_object_gripper(object_d=o_aux, look_judge=[0,0], show_detection=False)
-
                         ## CREATE SPEECH
                         self.robot.set_speech(filename="restaurant/please_place", wait_for_end_of=True)
                         filename = "objects_names/" + order_names[1].lower().replace(" ", "_")
