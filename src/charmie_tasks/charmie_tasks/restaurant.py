@@ -472,10 +472,8 @@ class TaskMain():
                         else:
                             customer_has_order_ctr += max_asks_customer_has_order
                     else:
-                        ### QUICK UPDATE ###
-                        # por no start speak file
-                        self.robot.set_speech(filename="restaurant/have_an_order_touchscreen", wait_for_end_of=True)
-                        answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have an order?", speak_results=False, wait_for_end_of=True)
+                        # QUICK UPDATE: self.robot.set_speech(filename="restaurant/have_an_order_touchscreen", wait_for_end_of=True)
+                        answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have an order?", speak_results=False, start_speak_file="restaurant/have_an_order_touchscreen", wait_for_end_of=True)
                         print("ANSWER:", answer)
 
                         if answer == ["yes"]:
@@ -568,11 +566,8 @@ class TaskMain():
 
                         elif order_received_ctr <= max_asks_audio_order_received + max_asks_touchscreen_order_received:
                             
-                            ### QUICK UPDATE ###
-                            # have_an_order -> have_an_order_touchscreen
-                            # por no start_speak_file
-                            self.robot.set_speech(filename="restaurant/have_an_order", wait_for_end_of=True)
-                            answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], speak_results=False)
+                            # QUICK UPDATE: self.robot.set_speech(filename="restaurant/have_an_order", wait_for_end_of=True)
+                            answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], start_speak_file="restaurant/have_an_order_touchscreen", speak_results=False)
                             
                             print("ANSWER:", answer)
 
@@ -986,10 +981,8 @@ class TaskMain():
                     max_attempts = 3
                     while not order_taken and order_taken_ctr <= max_attempts:
                         order_taken_ctr+=1
-                        ### QUICK UPDATE ###
-                        # add to start_speak_file
-                        self.robot.set_speech(filename="restaurant/take_an_order_touchscreen", wait_for_end_of=True)
-                        answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Did you take your order?", speak_results=False, wait_for_end_of=True)
+                        # QUICK UPDATE: self.robot.set_speech(filename="restaurant/take_an_order_touchscreen", wait_for_end_of=True)
+                        answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Did you take your order?", speak_results=False, start_speak_file="restaurant/take_an_order_touchscreen", wait_for_end_of=True)
 
                         if answer == ["yes"]:
                             order_taken = True
