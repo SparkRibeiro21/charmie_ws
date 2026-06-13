@@ -306,8 +306,8 @@ class TaskMain():
                             self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                             self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, first_rotate=False, orient_after_move=True, reached_radius=5.0, wait_for_end_of=True)
                         
-                        self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
-
+                        ### self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True) # this is correct in theory, but it has happened, that the robot got kind of lost and started looking away from the barman
+                        self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
                         self.robot.set_speech(filename="restaurant/barman_help_confirm_customers", wait_for_end_of=True)
 
                         for p in customers_list:
@@ -682,6 +682,7 @@ class TaskMain():
                 # self.robot.set_neck_coords(position=self.BARMAN_COORDS, wait_for_end_of=True)
                 self.is_object_in_hand = True
 
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
                 ##### SPEAK: Barman, please give me the following items:
                 self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
                 #  TEST PREDEFINED ORDERS:  
