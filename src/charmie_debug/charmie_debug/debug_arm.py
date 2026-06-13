@@ -97,6 +97,21 @@ class TaskMain():
 
                 while True:
 
+                    print("GO")
+                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_arm(command="ask_for_objects_to_check_milk_cap", wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_arm(command="check_milk_cap_to_ask_for_objects", wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    time.sleep(5.0)
+
+                    
+
+
+                while True:
+
                     print("MOVE 1")
                     self.safe_place_final = [1000.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0] # em mm
                     s, m = self.robot.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
