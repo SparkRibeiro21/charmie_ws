@@ -959,6 +959,7 @@ class TaskMain():
 
             elif self.state == self.task_states["Deliver_order"]:
 
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.detected_person_to_face_path(person=self.detected_customers[self.DETECTED_CUSTOMER_INDEX-1], send_to_face=True)
                 
                 self.robot.set_speech(filename="restaurant/i_have_your_order", wait_for_end_of=True)
