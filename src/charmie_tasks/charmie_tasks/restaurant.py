@@ -976,24 +976,24 @@ class TaskMain():
                     time.sleep(3.0)
                     self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-                    self.robot.set_speech(filename="restaurant/enjoy_your_order", wait_for_end_of=True)
-                else:
-                    order_taken = False
-                    order_taken_ctr = 0
-                    max_attempts = 3
-                    while not order_taken and order_taken_ctr <= max_attempts:
-                        order_taken_ctr+=1
-                        # QUICK UPDATE: self.robot.set_speech(filename="restaurant/take_an_order_touchscreen", wait_for_end_of=True)
-                        answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Did you take your order?", speak_results=False, start_speak_file="restaurant/take_an_order_touchscreen", wait_for_end_of=True)
+                    # self.robot.set_speech(filename="restaurant/enjoy_your_order", wait_for_end_of=True)
+                
+                order_taken = False
+                order_taken_ctr = 0
+                max_attempts = 2
+                while not order_taken and order_taken_ctr <= max_attempts:
+                    order_taken_ctr+=1
+                    # QUICK UPDATE: self.robot.set_speech(filename="restaurant/take_an_order_touchscreen", wait_for_end_of=True)
+                    answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Did you take your order?", speak_results=False, start_speak_file="restaurant/take_an_order_touchscreen", wait_for_end_of=True)
 
-                        if answer == ["yes"]:
-                            order_taken = True
-                            self.robot.set_speech(filename="restaurant/enjoy_your_order", wait_for_end_of=True)
-                        else:
-                            self.robot.set_speech(filename="restaurant/i_will_wait_longer", wait_for_end_of=True)
+                    if answer == ["yes"]:
+                        order_taken = True
+                        self.robot.set_speech(filename="restaurant/enjoy_your_order", wait_for_end_of=True)
+                    else:
+                        self.robot.set_speech(filename="restaurant/i_will_wait_longer", wait_for_end_of=True)
 
-                        if not order_taken_ctr and order_taken_ctr == max_attempts:
-                            self.robot.set_speech(filename="restaurant/problem_taking_order", wait_for_end_of=True)
+                    if not order_taken_ctr and order_taken_ctr == max_attempts:
+                        self.robot.set_speech(filename="restaurant/problem_taking_order", wait_for_end_of=True)
 
 
                 self.state = self.task_states["Move_to_barman_after_delivery"] 
