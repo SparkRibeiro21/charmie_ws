@@ -684,7 +684,7 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
                 ##### SPEAK: Barman, please give me the following items:
-                self.robot.set_speech(filename="restaurant/say_order_to_barman", wait_for_end_of=True)
+                self.robot.set_speech(filename="restaurant/say_order_to_barman", show_in_face=True, wait_for_end_of=True)
                 #  TEST PREDEFINED ORDERS:  
                 # self.all_orders = [["Apple", "Cheezit"]]
 
@@ -699,7 +699,7 @@ class TaskMain():
                         current_order.append(pedido.lower().replace(" ", "_"))
 
                         # SPEAK: Diz o pedido
-                        self.robot.set_speech(filename=filename, wait_for_end_of=True)
+                        self.robot.set_speech(filename=filename, show_in_face=True, wait_for_end_of=True)
 
                 print(" CHECK FOR ALLO RDERS ", self.all_orders)
                 tetas = [[0, -45], [-40, -45], [40, -45]]
