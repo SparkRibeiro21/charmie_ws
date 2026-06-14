@@ -33,6 +33,7 @@ setup(
             "debug_move_to_position_all_furnitures = charmie_debug.debug_move_to_position_all_furnitures:main",
             "debug_navigation_localization = charmie_debug.debug_navigation_localization:main",
             "debug_neck = charmie_debug.debug_neck:main",
+            "debug_open_milk = charmie_debug.debug_open_milk:main",
             "debug_pick_front = charmie_debug.debug_pick_front:main",
             "debug_pick_object_depth = charmie_debug.debug_pick_object_depth:main",
             "debug_pick_top = charmie_debug.debug_pick_top:main",
