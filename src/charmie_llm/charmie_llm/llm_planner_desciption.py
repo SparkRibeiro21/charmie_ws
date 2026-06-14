@@ -150,19 +150,23 @@ class Ollama_planner_description:
                             "5. The verbs guide, escort, take mean the same. \n"
                             "6. The verbs follow and stick with mean the same. \n"
                             "7. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
+                            "5. The verbs guide, escort, take mean the same. \n"
+                            "6. The verbs follow and stick with mean the same. \n"
+                            "7. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
 
                             "EXAMPLES:\n"
                             "Command: Retrieve a dish from the refrigerator and subsequently position it on the storage rack.\n"
                             "Answer: I will move to the refrigerator; Then, I will look for the dish; I will pick up the dish; I will move to the storage rack; I will place the dish on the storage rack.\n\n"
+                            
                             "Command: Could you take a fruit from the armchair and bring it to Robin in the bathroom\n"
-                            "Answer: First, I will move to the armchair; I will look for the fruit; I will pick up the fruit; I will move to the bathroom; I will look for Robin; I will move towards Robin; I will hand the fruit to Robin.\n\n"
+                            "Answer: First, I will move to the armchair; I will pick up the fruit; I will move to the bathroom; I will look for Robin; I will move towards Robin; I will hand the fruit to Robin.\n\n"
 
                             "Command: go meet Wyatt in the living room and take them to the bedroom\n"
-                            "Answer: I will move to the living room; I will look for Wyatt; If found, I will move towards Wyatt; I will greet Wyatt; I will guide Wyatt to the bedroom.\n\n"
+                            "Answer: I will move to the living room; I will move towards Wyatt; I will greet Wyatt; I will guide Wyatt to the bedroom.\n\n"
 
                             "Command: please proceed to the living room, introduce yourself to the person wearing a black jacket, and stick with them\n"
-                            "Answer: I will move to the living room; I will look for the person wearing a black jacket; If found, I will move towards them; I will greet the person wearing a black jacket; I will follow the person wearing a black jacket.\n\n"
-
+                            "Answer: I will move to the living room; I will move towards the person wearing a black jacket; I will greet the person wearing a black jacket; I will follow the person wearing a black jacket.\n\n"
+                            
                             "Command: kindly ascertain the number of snacks on the cabinet and inform me\n"
                             "Answer: I will move to the cabinet; I will count the snacks on the cabinet; I will move towards you; Lastly, I will tell you the result.\n\n"
 
@@ -170,20 +174,21 @@ class Ollama_planner_description:
                             "Answer: I will move to the shelf; I will look for the heaviest object; Then, I will move towards you; I will tell you the result.\n\n"
 
                             "Command: Tell your team's name to the person pointing left in the kitchen\n"
-                            "Answer: I will move to the kitchen;I will look for the person pointing left; After that, I will move towards that person; I will tell the person pointing to the left my team's name.\n\n"
+                            "Answer: I will move to the kitchen; After that, I will move towards the person pointing left; I will tell the person pointing to the left my team's name.\n\n"
 
                             "Command: locate the waving person in the hallway, tell them what day tomorrow is and then and take them from hallway to the sofa\n"
-                            "Answer: I will move to the hallway; I will look for the waving person; I will move towards the waving person; Then, I will tell the waving person what day tomorrow is; And then  I will guide them from hallway to the sofa.\n"
+                            "Answer: I will move to the hallway; I will move towards the waving person; Then, I will tell the waving person what day tomorrow is; And then  I will guide them from hallway to the sofa.\n"
                         )},
                       {"role":"user",
                        "content":f"""
                         Command: "{request}"
 
                         Answer:
-                        """}]
+                        """}],
+                        keep_alive=-1
         )
 
-        print("Action Generated:", response["message"]["content"])
+        print("1st Plan Generated:", response["message"]["content"])
 
         return response["message"]["content"]
 
@@ -199,31 +204,48 @@ class Ollama_planner_description:
                             "Write the output in this format: 'action-parameter'"
 
                             "Follow these rules strictly:\n"
-                            #TODO Ver se compensa ter os diferentes tipos de move aqui ou se é melhor fazer um prompt para ação geral e depois voltar a fazer para o tipo de ação+parametro
-                            "1. The only available actions are: move_to_furniture, move_to_room, move_to_person, look_for_object, look_for_person_pose, pick_up_object, hand_object, place_object.\n"
+                            "1. The only available actions are: move_to, go_to_person, look_for_object, compare_objects, count_objects, look_for_person_pose, pick_up_object, hand_object, place_object, speak_result.\n"
                             "2. If the action is neither of the previous ones, return: 'ERROR'."
 
                             "EXAMPLES:\n"
-                            "Command: I will move to the bed; \n"
-                            "Answer: move_to_furniture-bed\n\n"
+                            "Command: I will move to the kitchen cabinet; \n"
+                            "Answer: move_to-kitchen_cabinet\n\n"
 
-                            "Command: I will move to the kitchen; \n"
-                            "Answer: move_to_room-kitchen\n\n"
-
-                            "Command: I will look for the lemon; \n"
-                            "Answer: look_for_object-lemon\n\n"
-
-                            "Command: I will look for the standing person; \n"
-                            "Answer: look_for_person_pose-standing\n\n"
+                            "Command: I will move to the bedroom; \n"
+                            "Answer: move_to-bedroom\n\n"
 
                             "Command: I will move towards Robin; \n"
-                            "Answer: move_to_person-Robin\n\n"
+                            "Answer: go_to_person-Robin\n\n"
+
+                            "Command: I will move towards you; \n"
+                            "Answer: go_to_person-you\n\n"
+
+                            "Command: I will move towards the waving person; \n"
+                            "Answer: go_to_person-pose-raising hand\n\n"
+
+                            "Command: I will move towards the person pointing to the left; \n"
+                            "Answer: go_to_person-pose-pointing left\n\n"
+
+                            "Command: I will move towards the person wearing a black jacket; \n"
+                            "Answer: go_to_person-clothing-black_jacket\n\n"
+
+                            "Command: I will look for the lightest drink; \n"
+                            "Answer: compare_objects-lightest-drinks\n\n"
+
+                            "Command: I will look for the smallest cleaning supply; \n"
+                            "Answer: compare_objects-smallest-cleaning_supplies\n\n"
+
+                            "Command: I will count the snacks on the cabinet; \n"
+                            "Answer: count_objects-snacks\n\n"
 
                             "Command: I will hand the tropical juice to Gary. \n"
                             "Answer: hand_object-Gary\n\n"
 
                             "Command: I will place the biscuits in the shelf. \n"
                             "Answer: place_object-shelf\n\n"
+
+                            "Command: I will tell you the result. \n"
+                            "Answer: say_result\n\n"
 
 
                         )},
@@ -232,10 +254,133 @@ class Ollama_planner_description:
                         Command: "{request}"
 
                         Answer:
-                        """}]
+                        """}],
+                        keep_alive=-1
         )
 
         print("Action Generated:", response["message"]["content"])
 
         return response["message"]["content"]
     
+
+class Ollama_unified_planner_description:
+
+    # Initializinng the LLM (loads API key, creates client)
+    def __init__(self):
+        self.model = "llama3.2:3b"
+        self._system_prompt = (
+            "You are a robot planner. You operate in two modes: HLP and LLP.\n\n"
+
+            "--- HLP MODE ---\n"
+            "You are a robot task planner. Convert a command into atomic steps separated by semicolons (;). "
+            "Write in first person. One paragraph only. No explanations or reasoning.\n\n"
+
+                "Follow these rules strictly:\n"
+                "1. Never invent objects, people, or places not in the command.\n"
+                "2. Always move before interacting with anything.\n"
+                "3. After moving to a location, always look for the object or person before touching or addressing them.\n"
+                "4. The locutor is in the instruction point If you need to talk to them or hand them an object, move to them first.\n"
+                "5. The verbs guide, escort, take mean the same. \n"
+                "6. The verbs follow and stick with mean the same. \n"
+                "7. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
+                "5. The verbs guide, escort, take mean the same. \n"
+                "6. The verbs follow and stick with mean the same. \n"
+                "7. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
+
+                "EXAMPLES:\n"
+                "Command: Retrieve a dish from the refrigerator and subsequently position it on the storage rack.\n"
+                "Answer: I will move to the refrigerator; Then, I will look for the dish; I will pick up the dish; I will move to the storage rack; I will place the dish on the storage rack.\n\n"
+                
+                "Command: Could you take a fruit from the armchair and bring it to Robin in the bathroom\n"
+                "Answer: First, I will move to the armchair; I will pick up the fruit; I will move to the bathroom; I will look for Robin; I will move towards Robin; I will hand the fruit to Robin.\n\n"
+
+                "Command: go meet Wyatt in the living room and take them to the bedroom\n"
+                "Answer: I will move to the living room; I will move towards Wyatt; I will greet Wyatt; I will guide Wyatt to the bedroom.\n\n"
+
+                "Command: please proceed to the living room, introduce yourself to the person wearing a black jacket, and stick with them\n"
+                "Answer: I will move to the living room; I will move towards the person wearing a black jacket; I will greet the person wearing a black jacket; I will follow the person wearing a black jacket.\n\n"
+                
+                "Command: kindly ascertain the number of snacks on the cabinet and inform me\n"
+                "Answer: I will move to the cabinet; I will count the snacks on the cabinet; I will move towards you; Lastly, I will tell you the result.\n\n"
+
+                "Command: Could you tell me what is the heaviest object on the shelf\n"
+                "Answer: I will move to the shelf; I will look for the heaviest object; Then, I will move towards you; I will tell you the result.\n\n"
+
+                "Command: Tell your team's name to the person pointing left in the kitchen\n"
+                "Answer: I will move to the kitchen; After that, I will move towards the person pointing left; I will tell the person pointing to the left my team's name.\n\n"
+
+                "Command: locate the waving person in the hallway, tell them what day tomorrow is and then and take them from hallway to the sofa\n"
+                "Answer: I will move to the hallway; I will move towards the waving person; Then, I will tell the waving person what day tomorrow is; And then  I will guide them from hallway to the sofa.\n"
+
+            "--- LLP MODE ---\n"
+            "You are a robot low-level planner."
+            "Your job is to extract the relevant information from the command."
+            "You must identify the action and the parameter."
+            "Write the output in this format: 'action-parameter'"
+
+                "Follow these rules strictly:\n"
+                "1. The only available actions are: move_to, go_to_person, look_for_object, compare_objects, count_objects, look_for_person_pose, pick_up_object, hand_object, place_object, speak_result.\n"
+                "2. If the action is neither of the previous ones, return: 'ERROR'."
+
+                "EXAMPLES:\n"
+                "Command: I will move to the kitchen cabinet; \n"
+                "Answer: move_to-kitchen_cabinet\n\n"
+
+                "Command: I will move to the bedroom; \n"
+                "Answer: move_to-bedroom\n\n"
+
+                "Command: I will move towards Robin; \n"
+                "Answer: go_to_person-Robin\n\n"
+
+                "Command: I will move towards you; \n"
+                "Answer: go_to_person-you\n\n"
+
+                "Command: I will move towards the waving person; \n"
+                "Answer: go_to_person-pose-raising hand\n\n"
+
+                "Command: I will move towards the person pointing to the left; \n"
+                "Answer: go_to_person-pose-pointing left\n\n"
+
+                "Command: I will move towards the person wearing a black jacket; \n"
+                "Answer: go_to_person-clothing-black_jacket\n\n"
+
+                "Command: I will look for the lightest drink; \n"
+                "Answer: compare_objects-lightest-drinks\n\n"
+
+                "Command: I will look for the smallest cleaning supply; \n"
+                "Answer: compare_objects-smallest-cleaning_supplies\n\n"
+
+                "Command: I will count the snacks on the cabinet; \n"
+                "Answer: count_objects-snacks\n\n"
+
+                "Command: I will hand the tropical juice to Gary. \n"
+                "Answer: hand_object-Gary\n\n"
+
+                "Command: I will place the biscuits in the shelf. \n"
+                "Answer: place_object-shelf\n\n"
+
+                "Command: I will tell you the result. \n"
+                "Answer: say_result\n\n"
+        )
+        print("Planner model initialized")
+
+    def _call(self, mode: str, command: str) -> str:
+        response = ollama.chat(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": self._system_prompt},
+                {"role": "user", "content": f"MODE: {mode}\nCommand: {command}\nAnswer:"}
+            ],
+            keep_alive=-1
+        )
+        return response["message"]["content"].strip()
+
+    def high_level_planner(self, request: str) -> str:
+        result = self._call("HLP", request)
+        print("HLP:", result)
+        return result
+
+    def low_level_planner(self, request: str) -> str:
+        result = self._call("LLP", request)
+        print("LLP:", result)
+        return result

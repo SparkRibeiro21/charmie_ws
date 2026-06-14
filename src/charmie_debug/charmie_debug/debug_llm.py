@@ -11,29 +11,29 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
+    "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 True,
-    "charmie_head_camera":          True,
-    "charmie_hand_camera":          True,
+    "charmie_face":                 False,
+    "charmie_head_camera":          False,
+    "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
-    "charmie_lidar_livox":          True,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
     "charmie_llm":                  True,
-    "charmie_localisation":         True,
-    "charmie_low_level":            True,
-    "charmie_navigation":           True,
-    "charmie_nav2":                 True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 True,
+    "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
     "charmie_speakers_save":        True,
     "charmie_tracking":             False,
-    "charmie_yolo_objects":         True,
+    "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
@@ -71,7 +71,7 @@ class TaskMain():
         Final_State = 8
 
         # VARS ...
-        self.state = LLM_gpsr_llp
+        self.state = LLM_demo
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -93,35 +93,23 @@ class TaskMain():
 
                 print("New LLM Demo")
 
-                # hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Please go get the milk on the refrigerator and then bring it to me.", mode="", wait_for_end_of=True)
-                
-                ### THIS IS GPSR TASK ###
-                llp_input = hlp[0].split(";")
-                llp_input[0]= " "
-                llp_input[1]= ""
-
                 start_time = time.time()
 
-                for i, step in enumerate(llp_input):
-                    print(f"Step {i+1}: {step.strip()}")
-                    if step.strip() == "" or step.strip() == " ":
-                        continue
-                    else:
-                        step_to_llm = step.strip()
-                        #call low_level std_func: get_llm_ollama_gpsr_low_level(self, command="", mode="", wait_for_end_of=True):
-                        llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
-                        # call gpsr_execution std_func:
-                        print(f"Action Generated: {llp_output[0]}")
-                        self.robot.execute_gpsr_plan(command=llp_output[0], wait_for_end_of=True)
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Bring me the milk from the coffee table", mode="", wait_for_end_of=True)
 
-                ### THIS IS GPSR TASK ###
-                    print(f"Action Generated: {llp_output[0]}")
-                    
+                start_llp_time = time.time()
+
+                llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=hlp[0], mode="", wait_for_end_of=True)
+
                 end_time = time.time()
-                print(f"Total Time taken for llp GPSR task: {end_time - start_time}")
 
-                print("Finished first LLM Demo")
 
+                print(f"Total Time taken for 1st GPSR task: {end_time - start_time}")
+                print(f"Total Time taken for 1st HLP task: {start_llp_time - start_time}")
+                print(f"Total Time taken for 1st LLP task: {end_time - start_llp_time}")
+
+
+                print("Finished LLM GPSR LLP")
                 while True:
                     pass
                 
@@ -160,7 +148,9 @@ class TaskMain():
                     self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
 
                     hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
+                    #TODO: get low-level planner with wfeo a falso
                     self.robot.save_speech(command=hlp_request[0], filename="gpsr_request"+str(self.curr_request), quick_voice=True ,wait_for_end_of=False)
+                    
                     self.request1 = hlp_request
 
             ##Receive guest2
@@ -286,12 +276,17 @@ class TaskMain():
             
             if self.state == LLM_gpsr_llp:
 
-                self.robot.wait_for_start_button()
+                # self.robot.wait_for_start_button()
                 
                 print("New LLM GPSR LLP")
 
                 start_time = time.time()
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to the office table and pick the milk and place it on the office table.", mode="", wait_for_end_of=True)
+
+                robot_pose= self.robot.get_robot_localization()
+                initial_position = [robot_pose.x, robot_pose.y, robot_pose.theta]
+                print(f"Initial Robot Position: {initial_position}")
+
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Tell me what is the heaviest object on the shelf", mode="", wait_for_end_of=True)
                 
                 ### THIS IS GPSR TASK ###
                 llp_input = hlp[0].split(";")
@@ -315,7 +310,7 @@ class TaskMain():
 
                         llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
                         print(f"Action Generated: {llp_output[0]}")
-                        self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=llp_output[0], curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
+                        self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=llp_output[0], instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
                         print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
 
                 end_time = time.time()
@@ -488,7 +483,6 @@ class TaskMain():
                 while True:
                     pass
    
-
             elif self.state == Test_together_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr:
 
                 MUSIC_OR_PERIODIC_SPEAKS = "periodic_speaks" # OPTIONS: "music", "periodic_speaks"

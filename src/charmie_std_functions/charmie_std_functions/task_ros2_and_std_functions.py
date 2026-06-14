@@ -4312,7 +4312,7 @@ class RobotStdFunctions():
         return self.node.llm_demonstration_response
 
 ##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)
-    def execute_gpsr_plan(self, command ="", curr_room="", curr_furniture="", curr_result="", curr_obj_list=[], curr_picked_height = 0.0, curr_asked_help = False, wait_for_end_of = True):
+    def execute_gpsr_plan(self, command ="", instruction_point=[0, 0, 0], curr_room="", curr_furniture="", curr_result="", curr_obj_list=[], curr_picked_height = 0.0, curr_asked_help = False, wait_for_end_of = True):
             
         task_split = command.split("-")
 
@@ -4326,7 +4326,7 @@ class RobotStdFunctions():
         self.release_timer = 0.3
         self.gripper_release_timer = 2
 
-        self.min_distance_to_person = 1
+        self.min_distance_to_person = 0.8
 
 
         ### Parsing the command ###
@@ -4348,14 +4348,14 @@ class RobotStdFunctions():
                 for obj in self.node.rooms:
                     if str(obj["name"]).replace(" ","_").lower() == parameter:
                         ### TASK TYPE====> move_to_room
-                        # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                        self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
-                        # self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
 
-                        # self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                        self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
                         self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
@@ -4370,12 +4370,12 @@ class RobotStdFunctions():
                 for obj in self.node.furniture:
                     if str(obj["name"]).replace(" ","_").lower() == parameter:
                         ### TASK TYPE====> move_to_furniture
-                        # self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                        self.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
 
-                        # self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
                         
                         self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -4397,10 +4397,11 @@ class RobotStdFunctions():
                 print(second_parameter)
 
                 people_list = []
+                correct_person = DetectedPerson()
 
                 for room in self.node.objects_file:
-                            # To make sure there are no errors due to spaces/underscores and upper/lower cases
-                            if str(room["name"]).replace(" ","_").lower() == str(curr_room).replace(" ","_").lower():  # Check if the name matches
+                            
+                            if str(room["name"]).replace(" ","_").lower() == str(curr_room).replace(" ","_").lower(): 
                                 curr_room_top_left_x, curr_room_top_left_y = float(room["top_left_coords"])
                                 curr_room_bottom_right_x, curr_room_bottom_right_y = float(room["bottom_right_coords"])
   
@@ -4408,27 +4409,54 @@ class RobotStdFunctions():
 
                 if parameter == "pose":
 
+                    people_found=self.search_for_person(tetas=tetas)
+
+                    for p in people_found:
+                            if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
+                                curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
+                                
+                                people_list.append(p)
+
                     if second_parameter == "sitting":
+
+                        for p in people_list:
+                            
+                            if (0.8 <= p.height <1.4):
+                                correct_person = p
+
                         pass
 
                     if second_parameter == "standing":
+
+                        for p in people_list:
+                            
+                            if (1.4 <= p.height):
+                                correct_person = p
+                        
                         pass
 
                     if second_parameter == "lying_down":
+
+                        for p in people_list:
+                            
+                            if (p.height > 0.8):
+                                correct_person = p
                         pass
 
                     if second_parameter == "raising_hand":
 
+                        ### Search for person with hand raised in the current room
                         people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
                         print("FOUND:", len(people_found)) 
 
                         for p in people_found:
                             if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
                                 curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
-                                people_list.append(p)
+                                correct_person = p
                       
                     if second_parameter == "pointing_right":
-
+                        
+                        ### Search for person in the current room
                         people_found=self.search_for_person(tetas=tetas)
                         print("FOUND:", len(people_found)) 
                         
@@ -4437,12 +4465,13 @@ class RobotStdFunctions():
                             if p.pointing_at == "right":
                                 if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
                                 curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
-                                    people_list.append(p)
+                                    correct_person = p
 
                         pass
 
                     if second_parameter == "pointing_left":
 
+                        ### Search for person in the current room
                         people_found=self.search_for_person(tetas=tetas)
                         print("FOUND:", len(people_found)) 
                         
@@ -4451,23 +4480,94 @@ class RobotStdFunctions():
                             if p.pointing_at == "left":
                                 if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
                                 curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
-                                    people_list.append(p)
+                                    correct_person = p
 
                         pass
+                ###MOVE TO PERSON HERE
                 
+
+                if parameter == "name":
+
+                    ### Speak: "[name] could you please raise your hand so I can find you?"
+
+                    ### Search for person with hand raised in the current room
+                    people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
+                    print("FOUND:", len(people_found)) 
+
+                    for p in people_found:
+                        if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
+                            curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
+                            people_list.append(p)
+
+                    ### If found, move to the person
                     robot_pose= self.get_robot_localization()
                     
-                    dx = p.position_relative.x - robot_pose.x
-                    dy = p.position_relative.y - robot_pose.y
+                    dx = people_list[0].position_relative.x - robot_pose.x
+                    dy = people_list[0].position_relative.y - robot_pose.y
                     distance = math.sqrt(dx**2 + dy**2)
 
-                    target_x = p.position_relative.x - (dx / distance) * self.min_distance_to_person
-                    target_y = p.position_relative.y - (dy / distance) * self.min_distance_to_person
+                    target_x = people_list[0].position_relative.x - (dx / distance) * self.min_distance_to_person
+                    target_y = people_list[0].position_relative.y - (dy / distance) * self.min_distance_to_person
 
                     self.move_to_position(move_coords=(target_x, target_y), wait_for_end_of=True)
 
-                pass
-            
+                    ### Speak: "Hello [name], my name is Charmie!"
+
+                    pass
+
+                if parameter == "clothing":
+
+                    ### Search for person with characteristics
+                    people_found=self.search_for_person(tetas=tetas)
+                    print("FOUND:", len(people_found)) 
+
+                    ### If found, search for the desired characteristic
+                    for p in people_found:
+
+                        print(p.shirt_color)
+                        person_shirt_color = p.shirt_color
+
+                        if person_shirt_color.lower() == second_parameter.lower():
+                            people_list.append(p)
+
+
+                    ### Move to the person
+                    robot_pose= self.get_robot_localization()
+                    
+                    dx = people_list[0].position_relative.x - robot_pose.x
+                    dy = people_list[0].position_relative.y - robot_pose.y
+                    distance = math.sqrt(dx**2 + dy**2)
+
+                    target_x = people_list[0].position_relative.x - (dx / distance) * self.min_distance_to_person
+                    target_y = people_list[0].position_relative.y - (dy / distance) * self.min_distance_to_person
+
+                    self.move_to_position(move_coords=(target_x, target_y), wait_for_end_of=True)
+
+                    ### Speak: "Hello [name], my name is Charmie!"
+
+                    pass
+                
+                if parameter == "you":
+
+                    ### Set neck: navigation
+                    self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
+                    ### Speak: "Moving to the instruction point"
+                    self.set_speech(filename="generic/moving", wait_for_end_of=False)
+                    self.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
+
+                    ### Move to: instruction_point
+                    self.move_to_position(move_coords=instruction_point, wait_for_end_of=True)
+
+                    ### Set neck: look forward
+                    self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                    ### Speak: "Arrived at the instruction point"
+                    self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
+
+                    pass
+          
             case "look_for_object":
 
                 # search_tetas = [[0, -45], [-40, -45], [40, -45]]
@@ -4642,7 +4742,7 @@ class RobotStdFunctions():
                     
                     print("smallest object is: ", smallest_object)
 
-                    curr_result = "The smallest " + second_parameter.replace("_"," ") + " is the " + smallest_object.replace("_"," ") + "."
+                    curr_result = "Of all the " + second_parameter.replace("_"," ") + " I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
                     print(curr_result)
                     self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
                 
@@ -4661,7 +4761,7 @@ class RobotStdFunctions():
 
                     print("biggest object is: ", biggest_object)
 
-                    curr_result = "The biggest " + second_parameter.replace("_"," ") + " is the " + biggest_object.replace("_"," ") + "."
+                    curr_result = "Of all the " + second_parameter.replace("_"," ") + " I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
                     print(curr_result)
                     self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
 
@@ -4680,7 +4780,7 @@ class RobotStdFunctions():
 
                     print("heaviest object is: ", heaviest_object)
 
-                    curr_result = "The heaviest " + second_parameter.replace("_"," ") + " is the " + heaviest_object.replace("_"," ") + "."
+                    curr_result = "Of all the " + second_parameter.replace("_"," ") + " I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "."
                     print(curr_result)
                     self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
 
@@ -4700,8 +4800,9 @@ class RobotStdFunctions():
 
                     print("lightest object is: ", lightest_object)
 
-                    curr_result = "The lightest " + second_parameter.replace("_"," ") + " is the " + lightest_object.replace("_"," ") + "."
+                    curr_result = "Of all the " + second_parameter.replace("_"," ") + " I found, the lightest one is the " + lightest_object.replace("_"," ") + "."
                     print(curr_result)
+
                     self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
                 
                 curr_obj_list.clear()
@@ -4710,10 +4811,27 @@ class RobotStdFunctions():
 
             case "say_result":
 
-                time.sleep(5) 
+                while not self.save_speech_is_done():
+                    pass
+                
                 self.set_speech(filename="temp/result", wait_for_end_of=True)
 
                 pass
+
+            case "guide_person":
+
+                print("Guiding the person to:", parameter)
+
+                ### Speak: "I will guide you to the [parameter]"
+
+                ### Please follow me.
+
+                ### Move to the [parameter]
+                # self.execute_gpsr_plan(command="move_to-"+parameter, instruction_point=instruction_point, curr_room=curr_room, curr_furniture=curr_furniture, curr_result=curr_result, curr_obj_list=curr_obj_list, curr_picked_height=curr_picked_height, curr_asked_help=curr_asked_help, wait_for_end_of=True)
+
+                ### Speak: "We have arrived to the [parameter]."
+
+                print("Finished guiding the person to:", parameter)
 
             #in case it is none of the above
             case _:

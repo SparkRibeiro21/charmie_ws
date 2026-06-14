@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from flask import request
+
 from rclpy.node import Node
 import rclpy
 import time
@@ -16,8 +18,9 @@ import json
 
 
 ### Classes that handle the ollama LLMs 
-from charmie_llm.llm_planner_desciption import Ollama_planner_description
+from charmie_llm.llm_planner_desciption import Ollama_planner_description, Ollama_unified_planner_description
 from charmie_llm.llm_info_extraction_description import Ollama_info_extraction_description
+
 
 
 # main function that already creates the thread for the task state machine
@@ -46,6 +49,7 @@ class LLMNode(Node):
 
         self.ollama_info_extraction = Ollama_info_extraction_description()
         self.ollama_planner = Ollama_planner_description()
+        self.ollama_unified_planner = Ollama_unified_planner_description()
         
         match self.TASK:
             case "hri":
@@ -58,13 +62,25 @@ class LLMNode(Node):
 
             case "gpsr":
                 self.get_logger().info("LLM GPSR MODE")
-                self.ollama_planner = Ollama_planner_description()
+                # self.ollama_planner = Ollama_planner_description()
+                # req = GetLLMResponse.Request()
+                # req.command="Go to the kitchen and bring me the milk to the bed"   
+                # req.mode = ""
+                # self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
+
+
+                self.ollama_unified_planner = Ollama_unified_planner_description()
                 req = GetLLMResponse.Request()
-                req.command="Go to the kitchen and bring me the milk to the bed"   
+                req.command="Go to the kitchen and bring me the milk to the bed"
                 req.mode = ""
-                self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
-                
-        
+                self.llm_ollama_gpsr_hlp_level_callback(request=req, response=GetLLMResponse.Response())
+
+                req = GetLLMResponse.Request()
+                req.command="Move to the kitchen"
+                req.mode = ""
+                self.llm_ollama_gpsr_llp_level_callback(request=req, response=GetLLMResponse.Response())
+
+
 
         ### HERE WE NEED TO ADD A DUMMY FUNCTION TO GET A FIRST RESPONSE FROM THE LLM
         ### THIS IS BECAUSE THE FIRST TIME WE CALL THE LLM IT TAKES A LONG TIME TO LOAD, SO WE WANT TO DO IT IN THE BEGINNING, SO THAT WHEN WE CALL IT LATER ON, IT IS ALREADY LOADED AND READY TO RESPOND QUICKLY
@@ -165,10 +181,11 @@ class LLMNode(Node):
         #llm_response = self.llm_planner_description.handle_request(request.command)
 
         start_time = time.time()
-        generated_plan = self.ollama_planner.high_level_planner(request.command)
+        # generated_plan = self.ollama_planner.high_level_planner(request.command)
+        generated_unified_plan = self.ollama_unified_planner.high_level_planner(request.command)
         end_time = time.time()
 
-        print("Plan Generated:", generated_plan)
+        print("Plan Generated:", generated_unified_plan)
         print("Time taken to generate the plan: ", end_time - start_time, "seconds")
 
 
@@ -227,7 +244,7 @@ class LLMNode(Node):
         
         # response.answer = los
         los = ListOfStrings()
-        los.strings.append(generated_plan)
+        los.strings.append(generated_unified_plan)
 
         response.answer = los
 
@@ -298,16 +315,38 @@ class LLMNode(Node):
         # los.strings.append("This is 10 demonstration response from the LLM.")
         # los.strings.append("This is 11 demonstration response from the LLM.")
         # los.strings.append("This is 12 demonstration response from the LLM.")
-        
+
+        llp_input = request.command.split(";")
+        los = ListOfStrings()
+
+
         start_time = time.time()
-        generated_plan = self.ollama_planner.low_level_planner(request.command)
+
+        for i, step in enumerate(llp_input):
+                    print(f"Step {i+1}: {step.strip()}")
+                    step_to_llm = step.strip()
+
+                    if step_to_llm == "" or step_to_llm == " ":
+                        print("Skipping empty step")
+                    else:
+                        generated_unified_plan = self.ollama_unified_planner.low_level_planner(step.strip())
+                        los.strings.append(generated_unified_plan)
+
         end_time = time.time()
 
-        print("Plan Generated:", generated_plan)
-        print("Time taken to generate the plan: ", end_time - start_time, "seconds")
+        print("Time taken to generate the full LLP: ", end_time - start_time, "seconds")
 
-        los = ListOfStrings()
-        los.strings.append(generated_plan)
+
+        # start_time = time.time()
+        # # generated_plan = self.ollama_planner.low_level_planner(request.command)
+        # generated_unified_plan = self.ollama_unified_planner.low_level_planner(request.command)
+        # end_time = time.time()
+
+        # # print("Plan Generated:", generated_unified_plan)
+        # print("Time taken to generate the full LLP: ", end_time - start_time, "seconds")
+
+        # los = ListOfStrings()
+        # los.strings.append(generated_unified_plan)
         
         response.answer = los
 
