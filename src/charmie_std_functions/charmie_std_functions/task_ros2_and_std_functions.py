@@ -4463,7 +4463,7 @@ class RobotStdFunctions():
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
 
-                        self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                        # self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
                         
                         self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -4487,60 +4487,88 @@ class RobotStdFunctions():
                 people_list = []
                 correct_person = DetectedPerson()
 
-                for room in self.node.objects_file:
-                            
-                            if str(room["name"]).replace(" ","_").lower() == str(curr_room).replace(" ","_").lower(): 
-                                curr_room_top_left_x, curr_room_top_left_y = float(room["top_left_coords"])
-                                curr_room_bottom_right_x, curr_room_bottom_right_y = float(room["bottom_right_coords"])
-  
+                curr_room_top_left = []
+                curr_room_bottom_right = []
+
+                for room in self.node.rooms:
+                    print("checking:", str(repr(room["name"])))
+
+                    if str(room["name"]).replace(" ","_").lower() == str(curr_room).replace(" ","_").lower():
+                        print("Currently in the room: ", room["name"])
+                        curr_room_top_left = room["top_left_coords"]
+                        curr_room_bottom_right = (room["bot_right_coords"])
+                        print ("Top left x:", curr_room_top_left[0])
+                        print ("Top left y:", curr_room_top_left[1])
+                        print ("Bottom right x:", curr_room_bottom_right[0])
+                        print ("Bottom tright y:", curr_room_bottom_right[1])
+
                 tetas = [[-60, 0], [0, 0], [60, 0]]
+
+                curr_room_top_left_x = curr_room_top_left[0]
+                curr_room_top_left_y = curr_room_top_left[1]
+                curr_room_bottom_right_x = curr_room_bottom_right[0]
+                curr_room_bottom_right_y = curr_room_bottom_right[1]
 
                 if parameter == "pose":
 
-                    people_found=self.search_for_person(tetas=tetas)
-
-                    for p in people_found:
-                            if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
-                                curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
-                                
-                                people_list.append(p)
-
                     if second_parameter == "sitting":
 
-                        for p in people_list:
-                            
-                            if (0.8 <= p.height <1.4):
-                                correct_person = p
+                        people_found=self.search_for_person(tetas=tetas)
+
+                        for p in people_found:
+                            if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
+                                curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
+                                
+                                if (0.8 <= p.height <1.4):
+                                    correct_person = p
 
                         pass
 
                     if second_parameter == "standing":
 
-                        for p in people_list:
-                            
-                            if (1.4 <= p.height):
-                                correct_person = p
+                        people_found=self.search_for_person(tetas=tetas)
+
+                        for p in people_found:
+                            if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
+                                curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
+                                
+                                if (1.4 <= p.height):
+                                    correct_person = p
                         
                         pass
 
                     if second_parameter == "lying_down":
 
-                        for p in people_list:
-                            
-                            if (p.height > 0.8):
-                                correct_person = p
+                        people_found=self.search_for_person(tetas=tetas)
+
+                        for p in people_found:
+                            if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
+                                curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
+                                
+                                if (p.height > 0.8):
+                                    correct_person = p
                         pass
 
                     if second_parameter == "raising_hand":
 
                         ### Search for person with hand raised in the current room
-                        people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
+                        people_found = self.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
                         print("FOUND:", len(people_found)) 
 
                         for p in people_found:
-                            if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
-                                curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
+
+                            print("p room: ", p.room_location) 
+                            print("current room: ", curr_room)
+
+                            print("p x coords absolut: ", p.position_absolute.x) 
+                            print("p y coords absolut: ", p.position_absolute.y) 
+                            print("p x coords relative: ", p.position_absolute.x) 
+                            print("p y coords relative: ", p.position_absolute.y) 
+
+                            if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                 correct_person = p
+                                print("p x coords: ", p.position_absolute.x) 
+                                print("p y coords: ", p.position_absolute.y) 
                       
                     if second_parameter == "pointing_right":
                         
@@ -4551,8 +4579,8 @@ class RobotStdFunctions():
                         for p in people_found:
                             print(p.pointing_at)
                             if p.pointing_at == "right":
-                                if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
-                                curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
+                                if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
+                                    curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
                                     correct_person = p
 
                         pass
@@ -4566,20 +4594,28 @@ class RobotStdFunctions():
                         for p in people_found:
                             print(p.pointing_at)
                             if p.pointing_at == "left":
-                                if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
-                                curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
+                                if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
+                                    curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
                                     correct_person = p
 
                         pass
+                    print("correct x coords relative: ", correct_person.position_relative.x) 
+                    print("correct y coords relative: ", correct_person.position_relative.y) 
+                    print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                    print("correct y coords absolut: ", correct_person.position_absolute.y) 
 
+                    self.set_neck(self.look_navigation)
                     self.move_to_person(person = correct_person)
+                    self.set_neck(self.look_forward)
+
+                    self.set_speech(filename= "gpsr/gpsr_intro")
 
                 if parameter == "name":
 
                     ### Speak: "[name] could you please raise your hand so I can find you?"
 
                     ### Search for person with hand raised in the current room
-                    people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
+                    people_found = self.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
                     print("FOUND:", len(people_found)) 
 
                     for p in people_found:

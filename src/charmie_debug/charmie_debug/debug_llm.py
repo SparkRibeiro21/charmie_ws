@@ -13,29 +13,29 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 False,
+    "charmie_face":                 True,
     "charmie_head_camera":          False,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                False,
+    "charmie_lidar":                True,
     "charmie_lidar_bottom":         False,
-    "charmie_lidar_livox":          False,
+    "charmie_lidar_livox":          True,
     "charmie_llm":                  True,
-    "charmie_localisation":         False,
-    "charmie_low_level":            False,
-    "charmie_navigation":           False,
-    "charmie_nav2":                 False,
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
+    "charmie_navigation":           True,
+    "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 False,
+    "charmie_neck":                 True,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
     "charmie_speakers_save":        True,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
-    "charmie_yolo_objects":         False,
-    "charmie_yolo_pose":            False,
+    "charmie_yolo_objects":         True,
+    "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
 }
 
@@ -72,7 +72,7 @@ class TaskMain():
         Final_State = 8
 
         # VARS ...
-        self.state = LLM_demo
+        self.state = LLM_gpsr_llp
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -277,22 +277,22 @@ class TaskMain():
             
             if self.state == LLM_gpsr_llp:
 
-                # self.robot.wait_for_start_button()
+                self.robot.wait_for_start_button()
                 
                 print("New LLM GPSR LLP")
 
                 start_time = time.time()
 
-                robot_pose= self.robot.get_robot_localization()
-                initial_position = [robot_pose.x, robot_pose.y, robot_pose.theta]
-                print(f"Initial Robot Position: {initial_position}")
+                # robot_pose= self.robot.get_robot_localization()
+                # initial_position = [robot_pose.x, robot_pose.y, robot_pose.theta]
+                initial_position = [0, 0, 0]
+                # print(f"Initial Robot Position: {initial_position}")
 
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Tell me what is the heaviest object on the shelf", mode="", wait_for_end_of=True)
-                
-                ### THIS IS GPSR TASK ###
-                llp_input = hlp[0].split(";")
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to the person sitting in the living room", mode="", wait_for_end_of=True)
 
                 start_llp_time = time.time()
+
+                llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=hlp[0], mode="", wait_for_end_of=True)
 
                 self.curr_room = "living_room"
                 self.curr_furniture = "shelf"
@@ -301,18 +301,10 @@ class TaskMain():
                 self.curr_picked_height= 0.0
                 self.curr_asked_help = False
 
-                for i, step in enumerate(llp_input):
+                for i, step in enumerate(llp_output):
                     print(f"Step {i+1}: {step.strip()}")
-                    step_to_llm = step.strip()
-
-                    if step_to_llm == "" or step_to_llm == " ":
-                        print("Skipping empty step")
-                    else:
-
-                        llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=step_to_llm, mode="", wait_for_end_of=True)
-                        print(f"Action Generated: {llp_output[0]}")
-                        self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=llp_output[0], instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
-                        print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
+                    self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=step.strip(), instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
+                    print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
 
                 end_time = time.time()
                 print(f"Total Time taken for GPSR task: {end_time - start_time}")
