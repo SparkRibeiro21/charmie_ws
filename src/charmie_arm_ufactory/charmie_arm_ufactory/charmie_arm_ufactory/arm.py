@@ -966,6 +966,13 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
+	def adjust_joint_motion_quick(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.joint_motion_values, speed=60, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
 	### PICK OBJECT FRONT###
 	def initial_pose_to_search_table_front(self):
 		match self.estado_tr:
@@ -1031,7 +1038,7 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				#self.set_position_values_(pose=self.placing_to_safe_linear, speed=100, wait=True)
-				self.set_gripper_position_(pos=0,wait=True)
+				self.set_gripper_position_(pos=0,wait=False)
 			case 1:
 				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
 			case 2:
@@ -1618,6 +1625,8 @@ class ArmUfactory(Node):
 				self.adjust_move_tool_line_quick_with_open_gripper_first()
 			case "adjust_joint_motion":
 				self.adjust_joint_motion()
+			case "adjust_joint_motion_quick":
+				self.adjust_joint_motion_quick()
 
 			# SERVE BREAKFAST	
 			case "place_bowl_table":
