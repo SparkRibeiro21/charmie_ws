@@ -4571,8 +4571,8 @@ class RobotStdFunctions():
                                     correct_person = p
 
                         pass
-                ###MOVE TO PERSON HERE
-                
+
+                    self.move_to_person(person = correct_person)
 
                 if parameter == "name":
 
