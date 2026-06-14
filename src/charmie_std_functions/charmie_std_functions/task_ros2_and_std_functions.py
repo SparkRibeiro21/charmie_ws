@@ -2308,12 +2308,13 @@ class RobotStdFunctions():
 
         return success, message, label, score
 
-    def set_face(self, command="", custom="", camera="", show_detections=False, wait_for_end_of=False):
+    def set_face(self, command="", custom="", camera="", show_detections=False, loadbar=0.0, wait_for_end_of=False):
         
         request = SetFace.Request()
         request.command = command
         request.custom = custom
         request.camera = camera
+        request.loadbar = loadbar
         request.show_detections = show_detections
         
         self.node.call_face_command_server(request=request, wait_for_end_of=wait_for_end_of)
