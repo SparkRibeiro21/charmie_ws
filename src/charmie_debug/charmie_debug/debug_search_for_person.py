@@ -32,6 +32,7 @@ ros2_modules = {
     "charmie_speakers":             True,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
+    "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,

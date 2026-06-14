@@ -13,7 +13,7 @@ from charmie_interfaces.msg import NeckPosition, ListOfDetectedObject, ListOfDet
     TrackingMask, VCCsLowLevel, TaskStatesInfo, RadarData, SDNLMarkerDebug
 from charmie_interfaces.srv import SpeechCommand, SaveSpeechCommand, GetAudio, CalibrateAudio, SetNeckPosition, GetNeckPosition, SetNeckCoordinates, TrackObject, \
     TrackPerson, ActivateYoloPose, ActivateYoloObjects, Trigger, SetFace, NodesUsed, GetLLMGPSR, GetLLMDemo, ActivateTracking, GetSoundClassification, \
-    SetRGB, GetMinRadarDistance, ActivateYoloWorld, GetLLMResponse
+    SetRGB, GetMinRadarDistance, ActivateYoloWorld, GetLLMResponse, SetInt
 from charmie_interfaces.action import AdjustNavigationAngle, NavigateSDNL
 from cv_bridge import CvBridge, CvBridgeError
 from realsense2_camera_msgs.msg import RGBD
@@ -121,6 +121,7 @@ class DebugVisualNode(Node):
         self.get_minimum_radar_distance_client = self.create_client(GetMinRadarDistance, "get_min_radar_distance")
         # Low level
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
+        self.set_tray_gripper_client = self.create_client(SetInt, "tray_gripper_command")
         # self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
         # LLM
         self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
@@ -326,6 +327,7 @@ class DebugVisualNode(Node):
         # bool charmie_speakers
         # bool charmie_speakers_save
         # bool charmie_tracking
+        # bool charmie_tray_gripper
         # bool charmie_yolo_objects
         # bool charmie_yolo_pose
         # bool charmie_yolo_world
@@ -647,6 +649,7 @@ class CheckNodesMain():
         self.CHECK_SPEAKERS_NODE = False
         self.CHECK_SPEAKERS_SAVE_NODE = False
         self.CHECK_TRACKING_NODE = False
+        self.CHECK_TRAY_GRIPPER_NODE = False
         self.CHECK_YOLO_OBJECTS_NODE = False
         self.CHECK_YOLO_POSE_NODE = False
         self.CHECK_YOLO_WORLD_NODE = False
@@ -830,6 +833,13 @@ class CheckNodesMain():
                 self.CHECK_TRACKING_NODE = False
             else:
                 self.CHECK_TRACKING_NODE = True
+
+            # TRAY GRIPPER
+            if not self.node.set_tray_gripper_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for Server Tray Gripper ...")
+                self.CHECK_TRAY_GRIPPER_NODE = False
+            else:
+                self.CHECK_TRAY_GRIPPER_NODE = True
 
             # YOLO OBJECTS
             if not self.node.activate_yolo_objects_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
@@ -1056,6 +1066,7 @@ class DebugVisualMain():
         self.CHARMIE_LLM_OLLAMA_NODE_RECT           = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOCALISATION_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes,                                         self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOW_LEVEL_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes,                                         self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_TRAY_GRIPPER_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         # the two navs have the same node rect for now, only nav2 will be used for now
         self.CHARMIE_NAVIGATION_NODE_RECT           = pygame.Rect(self.init_pos_w_rect_check_nodes,                                         self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_NAV2_NODE_RECT                 = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*10, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1301,9 +1312,16 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_LOCALISATION_NODE_RECT)
 
         # LOW LEVEL
-        tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_low_level, self.check_nodes.CHECK_LOW_LEVEL_NODE)
-        self.draw_text("Low Level", self.text_font, tc, self.CHARMIE_LOW_LEVEL_NODE_RECT.x+2*self.CHARMIE_LOW_LEVEL_NODE_RECT.width, self.CHARMIE_LOW_LEVEL_NODE_RECT.y-2)
+        tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_low_level, self.check_nodes.CHECK_LOW_LEVEL_NODE)
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_LOW_LEVEL_NODE_RECT)
+        # TRAY GRIPPER
+        tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_tray_gripper, self.check_nodes.CHECK_TRAY_GRIPPER_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_TRAY_GRIPPER_NODE_RECT)
+        if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
+            tc = self.BLUE_L
+        else:
+            tc = self.WHITE
+        self.draw_text("Low Level/Tray Grip.", self.text_font, tc, self.CHARMIE_TRAY_GRIPPER_NODE_RECT.x+2*self.CHARMIE_TRAY_GRIPPER_NODE_RECT.width, self.CHARMIE_TRAY_GRIPPER_NODE_RECT.y-2)
         
         # NAVIGATION
         tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_navigation, self.check_nodes.CHECK_NAVIGATION_NODE)

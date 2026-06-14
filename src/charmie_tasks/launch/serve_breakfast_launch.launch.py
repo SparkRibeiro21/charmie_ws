@@ -31,6 +31,7 @@ def generate_launch_description():
         std_lf.neck,
         std_lf.face,
         std_lf.low_level,
+        std_lf.tray_gripper,
         
         #####################################################################
         # Sensors                                                           # 
