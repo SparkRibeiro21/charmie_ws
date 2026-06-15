@@ -19,7 +19,7 @@ ros2_modules = {
     "charmie_audio":                False,
     "charmie_face":                 False,
     "charmie_head_camera":          False,
-    "charmie_hand_camera":          False,
+    "charmie_hand_camera":          True,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                False,
@@ -37,7 +37,6 @@ ros2_modules = {
     "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
-    "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
@@ -107,8 +106,6 @@ class TaskMain():
                     time.sleep(5.0)
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     time.sleep(5.0)
-
-                    
 
 
                 while True:
