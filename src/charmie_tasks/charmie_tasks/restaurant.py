@@ -911,9 +911,6 @@ class TaskMain():
                 self.robot.detected_person_to_face_path(person=self.detected_customers[self.DETECTED_CUSTOMER_INDEX-1], send_to_face=True)
                 
                 self.robot.set_speech(filename="restaurant/i_have_your_order", wait_for_end_of=True)
-                self.robot.set_speech(filename="restaurant/please_take_order_from_tray", wait_for_end_of=True)
-
-                # self.is_object_in_hand = True ### FOR PORTUGAL OPEN WE ASSUME THERE IS ALWAYS ONE OF THE ITEMS IN THE ROBOT HAND
                 
                 if self.is_object_in_hand:
                     # time.sleep(5.0)
@@ -923,9 +920,11 @@ class TaskMain():
                     self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
                     time.sleep(3.0)
                     self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
-                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                     # self.robot.set_speech(filename="restaurant/enjoy_your_order", wait_for_end_of=True)
                 
+                self.robot.set_speech(filename="restaurant/please_take_order_from_tray", wait_for_end_of=True)
+
                 order_taken = False
                 order_taken_ctr = 0
                 max_attempts = 2
