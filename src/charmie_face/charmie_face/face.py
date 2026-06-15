@@ -83,6 +83,12 @@ class FaceNode(Node):
         self.new_face_received_name = ""
         self.last_face_command = ""
 
+        # Loadbar mode
+        self.loadbar_flag = False
+        self.loadbar_total_time = 0.0
+        self.loadbar_start_time = None
+        self.loadbar_text = "Please wait..."
+
         self.new_text_received = False
         self.new_text_received_name = ""
         self.new_text_received_delay = self.AFTER_SPEECH_TIMER_SHORT
@@ -146,10 +152,18 @@ class FaceNode(Node):
         # string custom           # type of face that is custom, not previously in face (i.e. show detected person or object in the moment)
         # string camera           # select which camera must be shown in face (can be rgb or depth)
         # bool show_detections    # select if in addition to show the camera on the face, shows the detections being used with that camera
+        # float32 loadbar         # set loadbar in seconds ( > 0.0)
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages. 
 
         self.cams_flag = False
         self.show_camera_detections = False
-        if request.command != "":
+        self.loadbar_flag = False
+
+        if request.loadbar > 0.0:
+            response.success, response.message = self.loadbar_to_face(command=request.loadbar, text=request.command)
+        elif request.command != "":
             response.success, response.message = self.image_to_face(command=request.command)
         elif request.custom != "":
             response.success, response.message = self.custom_image_to_face(command=request.custom)
@@ -162,7 +176,7 @@ class FaceNode(Node):
             response.success = False
             response.message = "No standard or custom face received."
 
-        print("Face Request:", request.command, request.custom, request.camera, request.show_detections)
+        print("Face Request:", request.command, request.custom, request.camera, request.show_detections, request.loadbar)
 
         return response
 
@@ -386,6 +400,23 @@ class FaceNode(Node):
         else:
             self.get_logger().error("FACE received (custom) does not exist! - %s" %command)
             return False, "FACE received (custom) does not exist."
+        
+    def loadbar_to_face(self, command, text="Please wait..."):
+
+        print("Loadbar Command Received:", command)
+        print("Loadbar Text Received:", text)
+
+        self.loadbar_total_time = float(command)
+        self.loadbar_start_time = None
+        self.loadbar_text = text if text != "" else "Please wait..."
+        self.loadbar_flag = True
+
+        self.get_logger().info(
+            "FACE received loadbar for %.2f seconds with text: %s"
+            % (self.loadbar_total_time, self.loadbar_text)
+        )
+
+        return True, "Loadbar received and started."
     
     def get_cv2_cvtColor_from_depth_image(self, cam, name):
 
@@ -1814,6 +1845,122 @@ class FaceMain():
         return
 
 
+    def handle_loadbar(self):
+        """
+        Displays a timed loading/progress bar using the same visual style
+        as the touchscreen menus.
+        """
+
+        # Initialize start time on first frame
+        if self.node.loadbar_start_time is None:
+            self.node.loadbar_start_time = time.time()
+
+        elapsed_time = time.time() - self.node.loadbar_start_time
+        total_time = max(self.node.loadbar_total_time, 0.001)
+        progress = min(elapsed_time / total_time, 1.0)
+
+        screen_w, screen_h = self.resolution
+
+        # Background
+        self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)
+
+        # Text
+        title_font = pygame.font.SysFont(None, 90)
+        subtitle_font = pygame.font.SysFont(None, 48)
+
+        title_surface = title_font.render("Processing...", True, self.GREY_LAR_LOGO)
+        title_rect = title_surface.get_rect(center=(screen_w // 2, int(screen_h * 0.32)))
+        self.SCREEN.blit(title_surface, title_rect)
+
+        # Loadbar message received through SetFace.command
+        loadbar_message = f'"{self.node.loadbar_text}"'
+
+        max_text_width = int(screen_w * 0.85)
+        message_lines = self.wrap_text(loadbar_message, subtitle_font, max_text_width)
+
+        line_height = subtitle_font.get_height() + 6
+
+        # Keep the FIRST line always at the same height
+        first_line_center_y = int(screen_h * 0.42)
+
+        for i, line in enumerate(message_lines):
+            subtitle_surface = subtitle_font.render(line, True, self.GREY_LAR_LOGO)
+            subtitle_rect = subtitle_surface.get_rect(
+                center=(screen_w // 2, first_line_center_y + i * line_height)
+            )
+            self.SCREEN.blit(subtitle_surface, subtitle_rect)
+
+        # Loadbar geometry
+        bar_width = int(screen_w * 0.70)
+        bar_height = 70
+        bar_x = (screen_w - bar_width) // 2
+        bar_y = int(screen_h * 0.55)
+
+        outer_rect = pygame.Rect(bar_x, bar_y, bar_width, bar_height)
+
+        # Outer rounded bar
+        pygame.draw.rect(
+            self.SCREEN,
+            self.GREY_LAR_LOGO,
+            outer_rect,
+            border_radius=18
+        )
+
+        # Inner background
+        inner_margin = 8
+        inner_rect = pygame.Rect(
+            bar_x + inner_margin,
+            bar_y + inner_margin,
+            bar_width - 2 * inner_margin,
+            bar_height - 2 * inner_margin
+        )
+
+        pygame.draw.rect(
+            self.SCREEN,
+            self.LIGHT_BLUE_CHARMIE_FACE,
+            inner_rect,
+            border_radius=14
+        )
+
+        # Filled progress
+        fill_width = int(inner_rect.width * progress)
+
+        if fill_width > 0:
+            fill_rect = pygame.Rect(
+                inner_rect.x,
+                inner_rect.y,
+                fill_width,
+                inner_rect.height
+            )
+
+            pygame.draw.rect(
+                self.SCREEN,
+                self.GREEN_PASTEL,
+                fill_rect,
+                border_radius=14
+            )
+
+        # Percentage text
+        percentage = int(progress * 100)
+        percent_font = pygame.font.SysFont(None, 44)
+        percent_surface = percent_font.render(f"{percentage}%", True, self.GREY_LAR_LOGO)
+        percent_rect = percent_surface.get_rect(center=(screen_w // 2, bar_y + bar_height + 45))
+        self.SCREEN.blit(percent_surface, percent_rect)
+
+        pygame.display.update()
+
+        # Finish loadbar
+        if progress >= 1.0:
+            self.node.loadbar_flag = False
+            self.node.loadbar_start_time = None
+            self.node.loadbar_total_time = 0.0
+
+            if self.node.last_face_command != "":
+                self.node.image_to_face(self.node.last_face_command)
+            else:
+                self.node.image_to_face(self.node.INITIAL_FACE)
+
+
     def main(self):
         
         while self.running:
@@ -1878,6 +2025,9 @@ class FaceMain():
                         self.node.call_face_get_touchscreen_menu_server(request=request)
                         self.node.is_touchscreen_menu = False
                         self.node.touchscreen_menu_start_time = None
+
+            elif self.node.loadbar_flag:
+                self.handle_loadbar()
 
             elif self.node.cams_flag:
 
