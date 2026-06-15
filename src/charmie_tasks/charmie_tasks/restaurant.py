@@ -119,6 +119,7 @@ class TaskMain():
         self.all_orders = []
         self.NCP = ["Red_Bull", "Tuna"]
         self.NCT = ["Red Wine","Orange Juice","Pringles","Cheezit"]
+        self.number_of_customers_served = 0
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -259,8 +260,13 @@ class TaskMain():
                 customers_list = []
                 self.detected_customers.clear()
                 self.DETECTED_CUSTOMER_INDEX = 0
-                NUMBER_OF_CUSTOMERS = 2
                 moved_to_find_customers = False
+
+                # update to avoid confirmations on second guest, to save time
+                if self.number_of_customers_served == 0:
+                    NUMBER_OF_CUSTOMERS = 2
+                else:
+                    NUMBER_OF_CUSTOMERS = 1
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
                 self.robot.set_speech(filename="restaurant/customers_wave", wait_for_end_of=True)
@@ -332,11 +338,12 @@ class TaskMain():
 
                         if self.detected_customers:
             
-                            # final customer confirmation
-                            self.robot.set_speech(filename="restaurant/final_check_saved_customers", wait_for_end_of=True)
-                            for p in self.detected_customers:
-                                self.robot.detected_person_to_face_path(person=p, send_to_face=True)
-                                time.sleep(3.0)
+                            if self.number_of_customers_served == 0: # only confirmas for the first order, to save time
+                                # final customer confirmation
+                                self.robot.set_speech(filename="restaurant/final_check_saved_customers", wait_for_end_of=True)
+                                for p in self.detected_customers:
+                                    self.robot.detected_person_to_face_path(person=p, send_to_face=True)
+                                    time.sleep(3.0)
                                                         
                             # jumps to next customer in list (if available)
                             self.state = self.task_states["Approach_customer"]
@@ -936,6 +943,7 @@ class TaskMain():
                     if not order_taken_ctr and order_taken_ctr == max_attempts:
                         self.robot.set_speech(filename="restaurant/problem_taking_order", wait_for_end_of=True)
 
+                self.number_of_customers_served += 1
 
                 self.state = self.task_states["Move_to_barman_after_delivery"] 
             
