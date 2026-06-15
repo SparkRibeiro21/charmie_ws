@@ -407,8 +407,8 @@ class TaskMain():
                 if d > self.MIN_DISTANCE_TO_CUSTOMER:
                     self.robot.adjust_obstacles(distance=self.MIN_DISTANCE_TO_CUSTOMER, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
                 
                 self.state = self.task_states["Receive_order"]
                 # self.state = self.task_states["Go_back_to_barman_with_order"] # for debug
@@ -670,8 +670,8 @@ class TaskMain():
                 self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, first_rotate=True, orient_after_move=True, reached_radius=1.0, wait_for_end_of=True)
                 self.robot.adjust_obstacles(distance=self.MIN_DISTANCE_TO_BARMAN, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
                         
                 self.state = self.task_states["Collect_order_from_barman"]
                 # self.state = self.task_states["Approch_customer_with_order"] # debug
@@ -892,8 +892,8 @@ class TaskMain():
                 if d > self.MIN_DISTANCE_TO_CUSTOMER:
                     self.robot.adjust_obstacles(distance=self.MIN_DISTANCE_TO_CUSTOMER, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
                         
                 self.state = self.task_states["Deliver_order"]
                 # self.state = self.task_states["Move_to_barman_after_delivery"] # debug
@@ -956,8 +956,8 @@ class TaskMain():
                 else:
                     self.robot.adjust_angle(angle=90, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
                         
                 self.state = self.task_states["Detecting_waving_customers"]
 
