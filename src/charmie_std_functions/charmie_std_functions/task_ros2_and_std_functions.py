@@ -8676,4 +8676,24 @@ class RobotStdFunctions():
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         self.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
 
+    def pour_milk(self, milk_height=0.0):
 
+        POUR_ROTATION = -90.0
+        CENTRE_LID_DISTANCE = 0.0
+
+        if milk_height == 0.0:
+            milk_height = self.get_object_height_from_object(object_name="milk")
+            if milk_height is None:
+                print("Milk not found")
+        
+        adjust_pouring_y = milk_height - 0.17
+
+        if adjust_pouring_y != 0.0 :
+            self.pouring_distance = [0.0, adjust_pouring_y*1000, CENTRE_LID_DISTANCE*1000, 0.0, 0.0, 0.0]
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.pouring_distance, wait_for_end_of=True)
+        
+        self.pouring_angle = [0.0, 0.0, 0.0, 0.0, 0.0, POUR_ROTATION]
+        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.pouring_angle, wait_for_end_of=True)
+        self.after_pouring_angle = [0.0, 0.0, 0.0, 0.0, 0.0, -POUR_ROTATION]
+        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.after_pouring_angle, wait_for_end_of=True)
+        
