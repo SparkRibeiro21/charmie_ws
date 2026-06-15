@@ -7595,7 +7595,7 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_last, wait_for_end_of=True)
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
-            _,_ = self.adjust_angle(40)
+            _,_ = self.adjust_angle(45)
 
             self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
@@ -8482,7 +8482,7 @@ class RobotStdFunctions():
         
     def open_washing_machine(self):
 
-        # self.set_torso_position(legs=0.035, torso=8, wait_for_end_of=False) #necessary in the future
+        # self.set_torso_position(legs=0.035, torso=8, wait_for_end_of=True) #necessary in the future
         # h-15 v-45
         open_tab_position = [-225.6, 79.3, -141.1, -0.6, -85.1, 302.1]
         release_tab_position = [-225.6, 79.3, -141.1, -0.6, -73.5, 302.1]
@@ -8522,3 +8522,30 @@ class RobotStdFunctions():
         self.adjust_omnidirectional_position(dx = - 0.135, dy = 0.0, wait_for_end_of=True, safety=False)
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = continue_opening_door, wait_for_end_of=True)
+
+        self.adjust_omnidirectional_position(dx = 0.015, dy = -0.019, wait_for_end_of=False, safety=False)
+
+        above_door = [-184.4, 58.2, -132.5, 75.8, -59.7, 322.2]
+
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = above_door, wait_for_end_of=True)
+        pre_pull_door = [-188.9, 57, -134.4, 75.8, -52.6, 322.2]
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_pull_door, wait_for_end_of=True)
+        pull_door = [-187.0, 64.8, -134.4, 141.9, -52.6, 322.2]
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = pull_door, wait_for_end_of=True)
+
+        pre_inside_pick = [-239.8, 86.4, -181.6, -69.1, -54.6, 328.7]
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
+        _,_ = self.adjust_angle(18)
+        self.adjust_omnidirectional_position(dx=0.0,dy=-0.16, wait_for_end_of=True, safety=False)
+        self.adjust_omnidirectional_position(dx=0.37,dy=0.0, wait_for_end_of=True, safety=False)
+        inside_pick = [-237.5, 82.4, -170.1, -49.1, -23.2, 328.7]
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = inside_pick, wait_for_end_of=True)
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
+        self.adjust_omnidirectional_position(dx=-0.30,dy=0.0, wait_for_end_of=True, safety=False)
+        pull_door = [-230.1, 74.5, -122.9, -69.1, -83.4, 328.7]
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = pull_door, wait_for_end_of=True)
+        self.adjust_omnidirectional_position(dx=-0.27,dy=0.0, wait_for_end_of=True, safety=False)
+        self.set_arm(command="point_front_to_initial_position", wait_for_end_of=True)
+        
+
