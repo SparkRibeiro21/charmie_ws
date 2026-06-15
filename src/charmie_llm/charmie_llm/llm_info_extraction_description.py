@@ -97,7 +97,8 @@ class Ollama_info_extraction_description:
                         Normalized command:
                         """
                 }
-            ]
+            ],
+            keep_alive=-1
         )
 
         end_time = time.time()
@@ -135,6 +136,7 @@ class Ollama_info_extraction_description:
                         """
                 }
             ],
+            keep_alive=-1,
             options={
                         "temperature": 0.0
                     }
