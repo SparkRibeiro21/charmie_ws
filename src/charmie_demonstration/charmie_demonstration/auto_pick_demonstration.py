@@ -78,7 +78,7 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
 
-        self.home_furniture = "Shelf"
+        self.home_furniture = "Entrance"
         # self.home_furniture = "Dinner Table"        
         self.initial_position = [8.80, 0.13, -180.0]
 
@@ -136,6 +136,9 @@ class TaskMain():
                 # door_handle = self.robot.search_for_objects(tetas = [[0, 0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
 
                 #self.robot.open_door(push_pull="pull", handle_side="right")
+                self.robot.set_initial_position(self.initial_position)
+
+                self.robot.floor_pick()
                 
 
                 self.robot.wait_for_start_button()

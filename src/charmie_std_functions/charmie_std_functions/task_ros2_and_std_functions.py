@@ -8483,7 +8483,7 @@ class RobotStdFunctions():
         names = []
 
         MIN_OBJECT_DISTANCE_X = 0.05
-        MAX_OBJECT_DISTANCE_X = 1.5
+        MAX_OBJECT_DISTANCE_X = 2
         MIN_OBJECT_DISTANCE_Y = -1
         MAX_OBJECT_DISTANCE_Y = 0.5
 
@@ -8500,9 +8500,9 @@ class RobotStdFunctions():
                     cam_y_ = f"{obj.position_relative.y:5.2f}"
                     cam_z_ = f"{obj.position_relative.z:5.2f}"
 
-                    print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
+                    print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.position_absolute.z}{obj.furniture_location})")
 
-                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.get_object_height_from_object(obj.object_name) * 1.1 or obj.position_absolute.z < self.get_object_length_from_object(obj.object_name) * 1.1 or obj.position_absolute.z < self.get_object_width_from_object(obj.object_name) * 1.1):
+                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.get_object_width_from_object(obj.object_name) * 2):
                         if not_validated == False:
 
                             if (abs(valid_detected_object.position_relative.x - obj.position_relative.x) < 0.2  and (valid_detected_object.position_relative.y - obj.position_relative.y) < 0.2 and obj.camera == "base"):
@@ -8549,7 +8549,7 @@ class RobotStdFunctions():
 
             # ANNOUNCE THE FOUND OBJECT
             self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
-            self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+            self.set_speech(filename="objects_names/"+valid_detected_object.object_name.replace(" ","_").lower(), wait_for_end_of=True)
             print(f"Initial pose to search for objects")
 
             # CONSTANTS NEEDED TO DECIDE ARM POSITIONS AND NAVIGATION, VALUES GOTTEN THROUGH TESTING, DO NOT CHANGE UNLESS NECESSARY !!!!!
