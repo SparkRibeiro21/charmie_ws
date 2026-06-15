@@ -8848,7 +8848,7 @@ class RobotStdFunctions():
 
                 # Put all grab movement calculations together
                 if pick_mode == "front":
-                    object_position_grab = [correct_z_grab, correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] # TODO: 2)
+                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] # TODO: 2)
 
                 if pick_mode == "top":
                     object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
