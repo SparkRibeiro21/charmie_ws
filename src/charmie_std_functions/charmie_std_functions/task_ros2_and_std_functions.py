@@ -8588,7 +8588,7 @@ class RobotStdFunctions():
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = final_pick_position, wait_for_end_of=True)
 
-            self.set_torso_position(legs=0.015, torso=50) 
+            self.set_torso_position(legs=0.018, torso=50) 
 
 
             self.set_arm(command="open_gripper", wait_for_end_of=True)
