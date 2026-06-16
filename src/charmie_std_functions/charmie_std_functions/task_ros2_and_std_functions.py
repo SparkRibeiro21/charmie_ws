@@ -4463,7 +4463,7 @@ class RobotStdFunctions():
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
 
-                        # self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
                         
                         self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -4503,11 +4503,6 @@ class RobotStdFunctions():
                         print ("Bottom tright y:", curr_room_bottom_right[1])
 
                 tetas = [[-60, 0], [0, 0], [60, 0]]
-
-                curr_room_top_left_x = curr_room_top_left[0]
-                curr_room_top_left_y = curr_room_top_left[1]
-                curr_room_bottom_right_x = curr_room_bottom_right[0]
-                curr_room_bottom_right_y = curr_room_bottom_right[1]
 
                 if parameter == "pose":
 
@@ -4642,31 +4637,40 @@ class RobotStdFunctions():
                     self.set_speech(filename= "gpsr/gpsr_intro")
 
                 if parameter == "name":
-
+                    
+                    ### Speak: "I am lookig for someone named [name]"
                     ### Speak: "[name] could you please raise your hand so I can find you?"
+                    self.save_speech(command=second_parameter.replace("_"," ").lower(), filename="person_name", quick_voice=False, wait_for_end_of=False)
+
+                    self.set_speech(filename="gpsr/looking_for", wait_for_end_of=True)
+                    while not self.save_speech_is_done():
+                        pass
+                    self.set_speech(filename="temp/person_name", wait_for_end_of=True)
+                    time.sleep(0.5)
+                    self.set_speech(filename="gpsr/raise_your_hand", wait_for_end_of=True)
+                    time.sleep(0.5)
 
                     ### Search for person with hand raised in the current room
                     people_found = self.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
                     print("FOUND:", len(people_found)) 
 
                     for p in people_found:
-                        if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
-                            curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
-                            people_list.append(p)
+                        if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                            correct_person=p
 
-                    ### If found, move to the person
-                    robot_pose= self.get_robot_localization()
-                    
-                    dx = people_list[0].position_relative.x - robot_pose.x
-                    dy = people_list[0].position_relative.y - robot_pose.y
-                    distance = math.sqrt(dx**2 + dy**2)
 
-                    target_x = people_list[0].position_relative.x - (dx / distance) * self.min_distance_to_person
-                    target_y = people_list[0].position_relative.y - (dy / distance) * self.min_distance_to_person
+                    print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                    print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                    print("Correct person's height", correct_person.height)
 
-                    self.move_to_position(move_coords=(target_x, target_y), wait_for_end_of=True)
+                    self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+
+                    self.set_neck(self.look_navigation)
+                    self.move_to_person(person = correct_person)
+                    self.set_neck(self.look_forward)
 
                     ### Speak: "Hello [name], my name is Charmie!"
+                    self.set_speech(filename= "gpsr/gpsr_intro")
 
                     pass
 
@@ -4685,20 +4689,27 @@ class RobotStdFunctions():
                         if person_shirt_color.lower() == second_parameter.lower():
                             people_list.append(p)
 
+                    for p in people_found:
 
-                    ### Move to the person
-                    robot_pose= self.get_robot_localization()
-                    
-                    dx = people_list[0].position_relative.x - robot_pose.x
-                    dy = people_list[0].position_relative.y - robot_pose.y
-                    distance = math.sqrt(dx**2 + dy**2)
+                        if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
 
-                    target_x = people_list[0].position_relative.x - (dx / distance) * self.min_distance_to_person
-                    target_y = people_list[0].position_relative.y - (dy / distance) * self.min_distance_to_person
+                            if person_shirt_color.lower() == second_parameter.lower():
 
-                    self.move_to_position(move_coords=(target_x, target_y), wait_for_end_of=True)
+                                correct_person=p
+
+
+                    print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                    print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                    print("Correct person's height", correct_person.height)
+
+                    self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+
+                    self.set_neck(self.look_navigation)
+                    self.move_to_person(person = correct_person)
+                    self.set_neck(self.look_forward)
 
                     ### Speak: "Hello [name], my name is Charmie!"
+                    self.set_speech(filename= "gpsr/gpsr_intro")
 
                     pass
                 
@@ -4719,7 +4730,7 @@ class RobotStdFunctions():
 
                     ### Speak: "Arrived at the instruction point"
                     self.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                    self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
+                    self.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
 
                     pass
           
@@ -4783,9 +4794,7 @@ class RobotStdFunctions():
                 pass
 
             case "hand_object":
-                # temporary speech to show it is working
-                # self.save_speech(command="Handing the object in my hand", filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                # self.set_speech(filename="action", wait_for_end_of=True)
+                
                 print("Handing:", parameter)
 
                 self.set_speech(filename="restaurant/give_order_from_gripper", wait_for_end_of=True)
@@ -4879,7 +4888,6 @@ class RobotStdFunctions():
 
                 else:    
                     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
-
 
 
                 if parameter == "smallest":
@@ -4977,14 +4985,16 @@ class RobotStdFunctions():
 
                 print("Guiding the person to:", parameter)
 
-                ### Speak: "I will guide you to the [parameter]"
-
-                ### Please follow me.
+                ### Speak: "Please follow me while I guide you to the [parameter]"
+                self.set_speech(filename="gpsr/follow_me", wait_for_end_of=True)
+                self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
                 ### Move to the [parameter]
-                # self.execute_gpsr_plan(command="move_to-"+parameter, instruction_point=instruction_point, curr_room=curr_room, curr_furniture=curr_furniture, curr_result=curr_result, curr_obj_list=curr_obj_list, curr_picked_height=curr_picked_height, curr_asked_help=curr_asked_help, wait_for_end_of=True)
+                self.execute_gpsr_plan(command="move_to-"+parameter, instruction_point=instruction_point, curr_room=curr_room, curr_furniture=curr_furniture, curr_result=curr_result, curr_obj_list=curr_obj_list, curr_picked_height=curr_picked_height, curr_asked_help=curr_asked_help, wait_for_end_of=True)
 
                 ### Speak: "We have arrived to the [parameter]."
+                self.set_speech(filename="gpsr/end_of_guide", wait_for_end_of=True)
+                self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
                 print("Finished guiding the person to:", parameter)
 
