@@ -14,7 +14,7 @@ ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
     "charmie_face":                 True,
-    "charmie_head_camera":          False,
+    "charmie_head_camera":          True,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
@@ -28,7 +28,7 @@ ros2_modules = {
     "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
     "charmie_neck":                 True,
-    "charmie_radar":                False,
+    "charmie_radar":                True,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
     "charmie_speakers_save":        True,
@@ -64,15 +64,16 @@ class TaskMain():
         # Waiting_for_start_button = 0
         LLM_demo = 1
         LLM_gpsr = 2
-        LLM_gpsr_llp= 3
-        LLM_hri= 4
-        LLM_Ollama_first_tests = 5
-        Test_individual_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 6
-        Test_together_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 7
-        Final_State = 8
+        LLM_person_pose = 3
+        LLM_gpsr_llp= 4
+        LLM_hri= 5
+        LLM_Ollama_first_tests = 6
+        Test_individual_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 7
+        Test_together_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 8
+        Final_State = 9
 
         # VARS ...
-        self.state = LLM_gpsr_llp
+        self.state = LLM_person_pose
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -274,6 +275,30 @@ class TaskMain():
 
                 print("Finished LLM GPSR")
                 time.sleep(5)
+
+            if self.state == LLM_person_pose:
+
+                self.robot.wait_for_start_button()
+
+                time.sleep(5)
+
+                llp = "go_to_person-pose-pointing left"
+
+                self.curr_room = "living_room"
+                self.curr_furniture = "shelf"
+                self.curr_result = "NONE"
+                self.curr_obj_list =[]
+                self.curr_picked_height= 0.0
+                self.curr_asked_help = False
+                initial_position = [0, 0, 0]
+
+                print(f"Step: {llp}")
+                self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=llp, instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
+                print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
+
+                while True:
+                    pass
+
             
             if self.state == LLM_gpsr_llp:
 
@@ -288,7 +313,7 @@ class TaskMain():
                 initial_position = [0, 0, 0]
                 # print(f"Initial Robot Position: {initial_position}")
 
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to the person sitting in the living room", mode="", wait_for_end_of=True)
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to the person pointing to the left in the living room", mode="", wait_for_end_of=True)
 
                 start_llp_time = time.time()
 
