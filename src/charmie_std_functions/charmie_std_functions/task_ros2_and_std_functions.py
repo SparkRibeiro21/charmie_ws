@@ -9171,3 +9171,89 @@ class RobotStdFunctions():
             print("Rotation", correct_rotation)
 
             return correct_rotation
+
+    def detect_milk_cap(self):
+
+        def crop_depth(depth):
+            h, w = depth.shape[:2]
+            x1 = w // 3
+            x2 = 2 * w // 3
+            y1 = h // 5
+            y2 = 4 * h // 5
+            return depth[y1:y2, x1:x2], x1, y1
+
+        def segment_3_classes(img, type_of_cap=2):
+            # flatten image to 1D
+            Z = img.reshape((-1, 1)).astype(np.float32)
+            # K-means criteria
+            criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.2)
+            K = type_of_cap
+            _, labels, centers = cv2.kmeans(
+                Z,
+                K,
+                None,
+                criteria,
+                10,
+                cv2.KMEANS_RANDOM_CENTERS
+            )
+            centers = np.uint8(centers)
+            labels = labels.flatten()
+            segmented = centers[labels].reshape(img.shape)
+            return segmented, labels.reshape(img.shape), centers
+        
+
+        _, rgb = self.get_hand_rgb_image()
+        _, depth_origin = self.get_hand_depth_image()
+
+        MAX_VALUE = np.average(depth_origin)*0.75
+        # print(MAX_VALUE)
+        
+        depth, x1, y1 = crop_depth(depth_origin.copy())
+        
+        depth[depth >= MAX_VALUE] = 255
+        depth = 255 - depth
+        depth[depth >= 255] = 0
+
+        # cv2.imshow("clipped_inverted", depth)
+        
+        depth_float = depth.astype(np.float32)
+        min_val = np.min(depth_float[depth_float > 0])
+        max_val = np.max(depth_float)
+
+        depth = (depth_float - min_val) / (max_val - min_val) * 255.0
+        depth = np.clip(depth, 0, 255).astype(np.uint8)
+
+        # depth[depth < 50] = np.average(depth[depth > 5])
+
+        # cv2.imshow("normalized", depth)
+        
+        segmented, labels, centers = segment_3_classes(depth, type_of_cap=2)
+        # print(labels, centers)
+        brightest_cluster = np.argmax(centers)
+
+        mask = (labels == brightest_cluster).astype(np.uint8) * 255
+        
+        # cv2.imshow("mask", mask)    
+        
+        ys, xs = np.where(mask == 255)
+        cx = int(np.median(xs))
+        cy = int(np.median(ys))
+        area = len(xs)
+        radius = int(np.sqrt(area / np.pi))
+        
+        cv2.circle(rgb, (cx+x1, cy+y1), radius, (0, 255, 0), 2)
+        cv2.circle(rgb, (cx+x1, cy+y1), 3, (0, 0, 255), -1)
+        # cv2.imshow("rgb", rgb)
+        # cv2.waitKey(1)
+
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
+        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + "_cap" + ".jpg", rgb) 
+        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + "_cap_mask" + ".jpg", mask) 
+        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + "_cap_depth" + ".jpg", depth_origin) 
+        time.sleep(0.1)
+
+        center_cap_3d_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_origin, "hand", [cy+y1, cx+x1])
+        print(center_cap_3d_coords)
+
+        return center_cap_3d_coords
+        
