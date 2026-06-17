@@ -289,6 +289,7 @@ class ArmUfactory(Node):
 		self.place_milk_in_tray =						[ -226.9,  445.0,   -6.3, math.radians(-111.4), math.radians(   0.0), math.radians( -90.0)]
 		# pre tray_gripper <> self.step_away_from_milk_in_tray =				[ -230.0,  200.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		self.step_away_from_milk_in_tray =				[ -226.9,  180.0,   -6.3, math.radians(-111.4), math.radians(   0.0), math.radians( -90.0)]
+		self.elevated_initial_position =                [ -190.0,    83.4,  -65.0,                -0.5,                 74.9,                270.0]
 
 
 		self.above_cornflakes_place_spot = 				[ -198.0,  350.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
@@ -1161,6 +1162,20 @@ class ArmUfactory(Node):
 			case 7:
 				self.finish_arm_movement_()
 
+	def milk_above_tray_v2(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.above_milk_place_spot, speed=150, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+	
+	def return_to_elevated_initial_position(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.elevated_initial_position, speed=30, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
 	def collect_milk_to_tray(self):
 		match self.estado_tr:
 			case 0:
@@ -1692,6 +1707,10 @@ class ArmUfactory(Node):
 				self.ask_for_objects_to_check_milk_cap()
 			case "check_milk_cap_to_ask_for_objects":
 				self.check_milk_cap_to_ask_for_objects()
+			case "milk_above_tray_v2":
+				self.milk_above_tray_v2()
+			case "return_to_elevated_initial_position":
+				self.return_to_elevated_initial_position()
 
 			# PICK OBJECT FRONT
 			case "initial_pose_to_search_table_front":

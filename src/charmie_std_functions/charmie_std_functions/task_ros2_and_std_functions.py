@@ -8372,8 +8372,7 @@ class RobotStdFunctions():
 
 
         # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
-        # TODO: 2) Check with Pedro Rotation
-        # TODO: 4) Search top for restaurant
+        # TODO 3) Comment/uncomment line for faster adjusts
 
 
 
@@ -8406,6 +8405,7 @@ class RobotStdFunctions():
         valid_detected_object = DetectedObject()
         is_object_in_furniture_check = False
         check = False
+        ask_help = False
         reversed_tetas = False
         show_detection = True
         correct_z_lock = False
@@ -8453,11 +8453,11 @@ class RobotStdFunctions():
         GRASP_OBJECT = 5
         ADJUST_TO_INITIAL_POSITION = 6
         PICK_TO_SAFE_ARM_POSITION = 7
-        RETURN_ARM_TO_END_PLACE_POSITION = 8 #LEMBRAR A DIFERENÇA DE TESTAR O TOP
+        RETURN_ARM_TO_END_PLACE_POSITION = 8 
         ERROR_HANDLING_ASK_FOR_HELP = 9
 
         state = HEAD_SEARCH_OBJECTS
-
+        
         """ 
         # MAKE SURE ALL STATES ARE DECLARED, NO NEED TO CHANGE EXCEPT FOR TESTING PURPOSES
         head_search = True     # STATE SEARCHING FOR OBJECTS WITH HEAD
@@ -8466,8 +8466,6 @@ class RobotStdFunctions():
         pick_object = False    # STATE FOR PICKING OBJECT AFTER FOUND WITH HAND CAMERA
         object_gripped = False # STATE AFTER OBJECT PICK BEFORE RETURNING TO INITIAL POSITION
         """
-        ask_help = False
-
 
         # ****************************************************************************************
         # 
@@ -8855,16 +8853,16 @@ class RobotStdFunctions():
 
                 # Put all grab movement calculations together
                 if pick_mode == "front":
-                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0] # TODO: 2)
+                    object_position_grab = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
 
                 if pick_mode == "top":
-                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
+                    object_position_grab = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
 
                 #APPLY ADJUSTEMENT BEFORE GRABBING
                 if obj.object_name != "cup":
                     check, m = self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
                 else:
-                    object_position_grab = [correct_z_grab, -correct_y_grab, 0.0, 0.0, 0.0, correct_rotation]
+                    object_position_grab = [correct_z_grab, - correct_y_grab, 0.0, 0.0, 0.0, correct_rotation]
                     self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
                     object_position_grab = [0.0, 0.0, correct_x_grab, 0.0, 0.0, 0.0]
                     self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
@@ -8935,7 +8933,7 @@ class RobotStdFunctions():
                     self.adjust_x_ = 0
 
                 self.adjust_y_ = - self.adjust_y_
-                self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False)
+                self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False) #TODO 3) Uncomment this line
 
                 self.set_face("charmie_face", wait_for_end_of=False)
 
@@ -9171,3 +9169,58 @@ class RobotStdFunctions():
             print("Rotation", correct_rotation)
 
             return correct_rotation
+        
+    def place_milk_in_tray(self, place_height = -1):
+        self.open_tray_gripper(wait_for_end_of=True)
+        self.set_arm(command="milk_above_tray_v2", wait_for_end_of=True)
+
+        TRAY_HEIGHT = 0.59
+        TOLERANCE_ERROR = 0.005
+        PUSH_MILK_DISTANCE = 0.04
+
+        milk_push = [0.0 , 0.0 , PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
+        after_push = [0.0 , 0.0 , -PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
+
+        gripper_place_position = self.get_gripper_localization()
+
+        if place_height >= 0:
+            final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+        else:
+            print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object("milk")/1.25) ," TOLERA ", TOLERANCE_ERROR)
+            final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object("milk")/1.5) - TOLERANCE_ERROR)*1000
+
+        safe_place = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+        safe_rise = [self.get_object_height_from_object("milk")*1.2*1000 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_place, wait_for_end_of=True)
+
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = milk_push, wait_for_end_of=True)
+        self.close_tray_gripper(wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = after_push, wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_rise, wait_for_end_of=True)
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+        self.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+
+    def pour_milk(self, milk_height=0.0):
+
+        POUR_ROTATION = -90.0
+        CENTRE_LID_DISTANCE = 0.0
+
+        if milk_height == 0.0:
+            milk_height = self.get_object_height_from_object(object_name="milk")
+            if milk_height is None:
+                print("Milk not found")
+        
+        adjust_pouring_y = milk_height - 0.17
+
+        if adjust_pouring_y != 0.0 :
+            self.pouring_distance = [0.0, adjust_pouring_y*1000, CENTRE_LID_DISTANCE*1000, 0.0, 0.0, 0.0]
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.pouring_distance, wait_for_end_of=True)
+        
+        self.pouring_angle = [0.0, 0.0, 0.0, 0.0, 0.0, POUR_ROTATION]
+        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.pouring_angle, wait_for_end_of=True)
+        self.after_pouring_angle = [0.0, 0.0, 0.0, 0.0, 0.0, -POUR_ROTATION]
+        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.after_pouring_angle, wait_for_end_of=True)
+        
