@@ -134,7 +134,8 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.robot.open_door(push_pull="pull", handle_side="right")
+                #self.robot.open_door(push_pull="pull", handle_side="right")
+                self.robot.pick_object(selected_object="Apple", max_search_attempts=1)
 
                 self.robot.set_initial_position(self.initial_position)
 

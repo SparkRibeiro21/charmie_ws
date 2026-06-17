@@ -8601,11 +8601,10 @@ class RobotStdFunctions():
                                 state = ERROR_HANDLING_ASK_FOR_HELP
                                 
                         # IF the object is within the specified distances, then hand_search is complete and will move on to the next state
-                        if obj.object_name == selected_object and MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y :
+                        if obj.object_name == selected_object and MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and MIN_OBJECT_Z < obj.position_absolute.z < MAX_OBJECT_Z:
                             
                             if  (object_location == furniture and is_object_in_furniture_check) \
-                                or is_object_in_furniture_check == False: 
-
+                                or is_object_in_furniture_check == False:
                                 if not_validated == False and (valid_detected_object.confidence < obj.confidence):
                                     valid_detected_object = obj
                                 elif not_validated == True:
@@ -8633,7 +8632,7 @@ class RobotStdFunctions():
                     show_detection = False
                     ask_help = True
                     state = ERROR_HANDLING_ASK_FOR_HELP
-                else:
+                elif objects_found:
                     # ANNOUNCE THE FOUND OBJECT
 
                     self.set_speech(filename="generic/found_following_items", wait_for_end_of=False)
@@ -8819,7 +8818,7 @@ class RobotStdFunctions():
                         #correct_x_grab = MAX_MOVE_LIMIT
                 if pick_mode == "top":
                     correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
-                    MAX_MOVE_LIMIT = 235
+                    MAX_MOVE_LIMIT = 260
                     if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320:
                         correct_x_grab = MAX_MOVE_LIMIT
                 
@@ -8955,8 +8954,9 @@ class RobotStdFunctions():
                     security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
                 if pick_mode == "top" and not ask_help:
-                    object_position_grab = [correct_z_grab, -correct_y_grab, correct_x_grab, 0.0, 0.0, correct_rotation]
+                    object_position_grab = [-correct_z_grab, correct_y_grab, -correct_x_grab, 0.0, 0.0, -correct_rotation]
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+
 
                 state = RETURN_ARM_TO_END_PLACE_POSITION
 
