@@ -8646,6 +8646,7 @@ class RobotStdFunctions():
             return correct_rotation
         
     def place_milk_in_tray(self, place_height = -1):
+        self.open_tray_gripper(wait_for_end_of=True)
         self.set_arm(command="milk_above_tray_v2", wait_for_end_of=True)
 
         TRAY_HEIGHT = 0.59
@@ -8671,6 +8672,7 @@ class RobotStdFunctions():
         self.set_arm(command="open_gripper", wait_for_end_of=True)
 
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = milk_push, wait_for_end_of=True)
+        self.close_tray_gripper(wait_for_end_of=True)
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = after_push, wait_for_end_of=True)
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_rise, wait_for_end_of=True)
         self.set_arm(command="close_gripper", wait_for_end_of=True)
