@@ -119,6 +119,7 @@ class TaskMain():
         self.all_orders = []
         self.NCP = ["Red_Bull", "Tuna"]
         self.NCT = ["Red Wine","Orange Juice","Pringles","Cheezit"]
+        self.number_of_customers_served = 0
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -259,8 +260,13 @@ class TaskMain():
                 customers_list = []
                 self.detected_customers.clear()
                 self.DETECTED_CUSTOMER_INDEX = 0
-                NUMBER_OF_CUSTOMERS = 2
                 moved_to_find_customers = False
+
+                # update to avoid confirmations on second guest, to save time
+                if self.number_of_customers_served == 0:
+                    NUMBER_OF_CUSTOMERS = 2
+                else:
+                    NUMBER_OF_CUSTOMERS = 1
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
                 self.robot.set_speech(filename="restaurant/customers_wave", wait_for_end_of=True)
@@ -332,11 +338,12 @@ class TaskMain():
 
                         if self.detected_customers:
             
-                            # final customer confirmation
-                            self.robot.set_speech(filename="restaurant/final_check_saved_customers", wait_for_end_of=True)
-                            for p in self.detected_customers:
-                                self.robot.detected_person_to_face_path(person=p, send_to_face=True)
-                                time.sleep(3.0)
+                            if self.number_of_customers_served == 0: # only confirmas for the first order, to save time
+                                # final customer confirmation
+                                self.robot.set_speech(filename="restaurant/final_check_saved_customers", wait_for_end_of=True)
+                                for p in self.detected_customers:
+                                    self.robot.detected_person_to_face_path(person=p, send_to_face=True)
+                                    time.sleep(3.0)
                                                         
                             # jumps to next customer in list (if available)
                             self.state = self.task_states["Approach_customer"]
@@ -407,8 +414,8 @@ class TaskMain():
                 if d > self.MIN_DISTANCE_TO_CUSTOMER:
                     self.robot.adjust_obstacles(distance=self.MIN_DISTANCE_TO_CUSTOMER, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
                 
                 self.state = self.task_states["Receive_order"]
                 # self.state = self.task_states["Go_back_to_barman_with_order"] # for debug
@@ -670,8 +677,8 @@ class TaskMain():
                 self.robot.sdnl_move_to_position(move_coords=self.BARMAN_NAV_COORDS, first_rotate=True, orient_after_move=True, reached_radius=1.0, wait_for_end_of=True)
                 self.robot.adjust_obstacles(distance=self.MIN_DISTANCE_TO_BARMAN, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
                         
                 self.state = self.task_states["Collect_order_from_barman"]
                 # self.state = self.task_states["Approch_customer_with_order"] # debug
@@ -892,8 +899,8 @@ class TaskMain():
                 if d > self.MIN_DISTANCE_TO_CUSTOMER:
                     self.robot.adjust_obstacles(distance=self.MIN_DISTANCE_TO_CUSTOMER, direction=0.0, max_speed=0.1, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="restaurant/customer_table", wait_for_end_of=False)
                         
                 self.state = self.task_states["Deliver_order"]
                 # self.state = self.task_states["Move_to_barman_after_delivery"] # debug
@@ -904,9 +911,6 @@ class TaskMain():
                 self.robot.detected_person_to_face_path(person=self.detected_customers[self.DETECTED_CUSTOMER_INDEX-1], send_to_face=True)
                 
                 self.robot.set_speech(filename="restaurant/i_have_your_order", wait_for_end_of=True)
-                self.robot.set_speech(filename="restaurant/please_take_order_from_tray", wait_for_end_of=True)
-
-                # self.is_object_in_hand = True ### FOR PORTUGAL OPEN WE ASSUME THERE IS ALWAYS ONE OF THE ITEMS IN THE ROBOT HAND
                 
                 if self.is_object_in_hand:
                     # time.sleep(5.0)
@@ -916,9 +920,11 @@ class TaskMain():
                     self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
                     time.sleep(3.0)
                     self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
-                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                     # self.robot.set_speech(filename="restaurant/enjoy_your_order", wait_for_end_of=True)
                 
+                self.robot.set_speech(filename="restaurant/please_take_order_from_tray", wait_for_end_of=True)
+
                 order_taken = False
                 order_taken_ctr = 0
                 max_attempts = 2
@@ -936,6 +942,7 @@ class TaskMain():
                     if not order_taken_ctr and order_taken_ctr == max_attempts:
                         self.robot.set_speech(filename="restaurant/problem_taking_order", wait_for_end_of=True)
 
+                self.number_of_customers_served += 1
 
                 self.state = self.task_states["Move_to_barman_after_delivery"] 
             
@@ -956,8 +963,8 @@ class TaskMain():
                 else:
                     self.robot.adjust_angle(angle=90, wait_for_end_of=True)
                 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="restaurant/barman_table", wait_for_end_of=False)
                         
                 self.state = self.task_states["Detecting_waving_customers"]
 
