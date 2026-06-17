@@ -8425,6 +8425,9 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_X =  2.00
         MIN_OBJECT_DISTANCE_Y = -1.00
         MAX_OBJECT_DISTANCE_Y =  1.00
+        MIN_OBJECT_Z          =  0.20
+        MAX_OBJECT_Z          =  1.90
+        
 
         # HOW FAR AWAY FROM THE FURNITURE THE ROBOT WILL BE BEFORE PICKING OBJECT (ADJUSTS)
         DISTANCE_IN_FRONT_X     =  0.26 
@@ -9288,6 +9291,18 @@ class RobotStdFunctions():
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         self.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
 
+    def place_cornflakes_in_tray(self, place_height = -1):
+
+        corn_flakes_place=[-246.2,-23.6,-36.4,15.6,51.8,198.7]
+
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = corn_flakes_place, wait_for_end_of=True)
+        
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        object_position_grab = [0.16*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+
+    
+
     def pour_milk(self, milk_height=0.0):
 
         POUR_ROTATION = -90.0
@@ -9308,4 +9323,14 @@ class RobotStdFunctions():
         self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.pouring_angle, wait_for_end_of=True)
         self.after_pouring_angle = [0.0, 0.0, 0.0, 0.0, 0.0, -POUR_ROTATION]
         self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.after_pouring_angle, wait_for_end_of=True)
+
+    def pour_cornflakes(self, cornflakes_height=0.0):
+
+        pick_flakes_first=[-216.6,-70.3,-10,5.9,65.5,236.1]
+
+        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
+        object_position_grab = [-0.24*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
         
