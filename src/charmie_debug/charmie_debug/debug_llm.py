@@ -302,7 +302,7 @@ class TaskMain():
             
             if self.state == LLM_gpsr_llp:
 
-                # self.robot.wait_for_start_button()
+                self.robot.wait_for_start_button()
                 
                 print("New LLM GPSR LLP")
 
@@ -313,7 +313,7 @@ class TaskMain():
                 initial_position = [0, 0, 0]
                 # print(f"Initial Robot Position: {initial_position}")
 
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Count the number of drinks on the office table and tell the result to the person waving in the kitchen", mode="", wait_for_end_of=True)
+                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to Anna in the living room", mode="", wait_for_end_of=True)
 
                 start_llp_time = time.time()
 
