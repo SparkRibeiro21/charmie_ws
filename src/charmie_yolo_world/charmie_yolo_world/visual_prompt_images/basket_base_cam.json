@@ -1,0 +1,27 @@
+{
+  "type": "yoloe_visual_prompt",
+  "image": "basket_base_cam.jpg",
+  "image_dir": "charmie_ws/src/charmie_yolo_world/charmie_yolo_world/visual_prompt_images",
+  "width": 640,
+  "height": 480,
+  "classes": [
+    {
+      "cls": 0,
+      "name": "basket"
+    }
+  ],
+  "bboxes": [
+    {
+      "cls": 0,
+      "xyxy": [
+        172.0,
+        11.0,
+        541.0,
+        287.0
+      ]
+    }
+  ],
+  "meta": {
+    "notes": ""
+  }
+}
