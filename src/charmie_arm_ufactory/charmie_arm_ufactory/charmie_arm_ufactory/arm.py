@@ -1460,6 +1460,28 @@ class ArmUfactory(Node):
 			case 4:
 				self.finish_arm_movement_()
 
+
+	def approach_milk_in_tray(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_milk_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=120, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
+	def milk_in_tray_position_to_pre_pour(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.pos_picking_milk_tray, speed=90, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=90, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.reach_position_to_pour_milk_bowl, speed=90, wait=True)
+			case 3:
+				self.finish_arm_movement_()
+
+
 	def place_spoon_table(self):
 		match self.estado_tr:
 			case 0:
@@ -1679,6 +1701,10 @@ class ArmUfactory(Node):
 				self.post_pour_milk_bowl_risky()
 			case "place_milk_table":
 				self.place_milk_table()
+			case "approach_milk_in_tray":
+				self.approach_milk_in_tray()
+			case "milk_in_tray_position_to_pre_pour":
+				self.milk_in_tray_position_to_pre_pour()
 			case "place_spoon_table":
 				self.place_spoon_table()
 			case "place_spoon_table_funilocopo_v2":
