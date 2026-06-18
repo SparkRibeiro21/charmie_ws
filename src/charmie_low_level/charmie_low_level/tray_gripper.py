@@ -44,12 +44,12 @@ class TrayGripperNode(Node):
         # bool success   # indicate successful run of triggered service
         # string message # informational, e.g. for error messages.
 
-        pct = max(0, min(100, int(request.data)))
-        value = pct * 120 // 100
+        pct = max(0, min(100, int(100-request.data)))
+        value = pct * 170 // 100
         payload = str(value).encode("utf-8")
         
         self._udp_socket.sendto(payload, self._pico_endpoint)
-        message = f"[pico_cmd] sent {pct}% = {value} (0-120 scale) to {self._pico_ip}:{self._pico_port}"
+        message = f"[pico_cmd] sent {pct}% = {value} (0-170 scale) to {self._pico_ip}:{self._pico_port}"
         self.get_logger().info(message)
 
         response.success = True
