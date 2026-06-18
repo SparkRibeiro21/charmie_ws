@@ -134,25 +134,28 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.robot.open_door(push_pull="pull", handle_side="right")
+                #self.robot.open_door(push_pull="pull", handle_side="right")
 
-                self.robot.set_initial_position(self.initial_position)
+                #self.robot.set_initial_position(self.initial_position)
 
                 #pick_height, s= self.robot.pick_object(selected_object="cup")
-                self.robot.wait_for_start_button()
-                placed_height=self.robot.place_object_in_furniture(selected_object="mustard",place_mode = "front", furniture= "Tray", place_height=pick_height)
-                pick_height = self.robot.pick_from_tray(selected_object="cola", placed_height=placed_height)
-                placed_height=self.robot.place_object_in_furniture(selected_object="cola",place_mode = "front", place_height=pick_height)
+                # self.robot.wait_for_start_button()
+                #placed_height=self.robot.place_object_in_furniture(selected_object="mustard",place_mode = "front", furniture= "Tray", place_height=pick_height)
+                #pick_height = self.robot.pick_from_tray(selected_object="cola", placed_height=placed_height)
+                #placed_height=self.robot.place_object_in_furniture(selected_object="cola",place_mode = "front", place_height=pick_height)
 
                 self.robot.wait_for_start_button()
                 
                 #self.robot.set_initial_position(self.initial_position)
+                self.robot.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+                picked_height,_ =self.robot.pick_object(selected_object="milk", arm_initial_position="initial_position_to_ask_for_objects")
+                self.robot.place_milk_in_tray(place_height=picked_height)
                 
                 print("SET INITIAL POSITION")
 
                 self.robot.wait_for_start_button()
 
-                self.robot.pick_object(selected_object="Mustard")
+                # self.robot.pick_object(selected_object="Mustard")
 
 
                 self.state = self.task_states["Select_object_to_pick"]

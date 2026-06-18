@@ -73,12 +73,12 @@ class LLMNode(Node):
                 req = GetLLMResponse.Request()
                 req.command="Go to the kitchen and bring me the milk to the bed"
                 req.mode = ""
-                self.llm_ollama_gpsr_hlp_level_callback(request=req, response=GetLLMResponse.Response())
+                self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
 
                 req = GetLLMResponse.Request()
                 req.command="Move to the kitchen"
                 req.mode = ""
-                self.llm_ollama_gpsr_llp_level_callback(request=req, response=GetLLMResponse.Response())
+                self.llm_ollama_gpsr_low_level_callback(request=req, response=GetLLMResponse.Response())
 
 
 
