@@ -4656,15 +4656,19 @@ class RobotStdFunctions():
                     print("FOUND:", len(people_found)) 
 
                     for p in people_found:
+
+                        print("p room: ", p.room_location)
+                        print("current room: ", curr_room)
+
                         if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-                            correct_person=p
+                            correct_person = p
 
 
                     print("correct x coords absolut: ", correct_person.position_absolute.x) 
                     print("correct y coords absolut: ", correct_person.position_absolute.y) 
                     print("Correct person's height", correct_person.height)
 
-                    self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+                    # self.detected_person_to_face_path(person=correct_person, send_to_face=True)
 
                     self.set_neck(self.look_navigation)
                     self.move_to_person(person = correct_person)
