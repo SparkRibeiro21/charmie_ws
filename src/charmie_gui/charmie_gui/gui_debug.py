@@ -123,9 +123,6 @@ class DebugVisualNode(Node):
         self.set_rgb_client = self.create_client(SetRGB, "rgb_mode")
         self.set_tray_gripper_client = self.create_client(SetInt, "tray_gripper_command")
         # self.get_vccs_client = self.create_client(GetVCCs, "get_vccs")
-        # LLM
-        self.llm_demonstration_client = self.create_client(GetLLMDemo, "llm_demonstration")
-        self.llm_gpsr_client = self.create_client(GetLLMGPSR, "llm_gpsr")
         # LLM Offline OLLAMA
         self.llm_ollama_demonstration_client    = self.create_client(GetLLMResponse, "llm_ollama_demonstration")
         self.llm_ollama_information_client      = self.create_client(GetLLMResponse, "llm_ollama_information")
@@ -636,8 +633,8 @@ class CheckNodesMain():
         self.CHECK_LIDAR_NODE = False
         self.CHECK_LIDAR_BOTTOM_NODE = False
         self.CHECK_LIDAR_LIVOX_NODE = False
-        self.CHECK_LLM_NODE = False
-        self.CHECK_LLM_OLLAMA_NODE = False
+        self.CHECK_LLM_OLLAMA_HLP_NODE = False
+        self.CHECK_LLM_OLLAMA_LLP_NODE = False
         self.CHECK_LOCALISATION_NODE = False
         self.CHECK_LOW_LEVEL_NODE = False
         self.CHECK_NAVIGATION_NODE = False
@@ -736,19 +733,19 @@ class CheckNodesMain():
             else:
                 self.CHECK_LIDAR_LIVOX_NODE = True
 
-            # LLM
-            if not self.node.llm_demonstration_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
-                # self.node.get_logger().warn("Waiting for Server Face ...")
-                self.CHECK_LLM_NODE = False
+            # LLM Offline HLP OLLAMA
+            if not self.node.llm_ollama_gpsr_high_level_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
+                # self.node.get_logger().warn("Waiting for LLM HLP Face ...")
+                self.CHECK_LLM_OLLAMA_HLP_NODE = False
             else:
-                self.CHECK_LLM_NODE = True
+                self.CHECK_LLM_OLLAMA_HLP_NODE = True
 
-            # LLM Offline OLLAMA
+            # LLM Offline LLP OLLAMA
             if not self.node.llm_ollama_gpsr_low_level_client.wait_for_service(self.WAIT_TIME_CHECK_NODE):
-                # self.node.get_logger().warn("Waiting for Server Face ...")
-                self.CHECK_LLM_OLLAMA_NODE = False
+                # self.node.get_logger().warn("Waiting for LLM LLP Face ...")
+                self.CHECK_LLM_OLLAMA_LLP_NODE = False
             else:
-                self.CHECK_LLM_OLLAMA_NODE = True
+                self.CHECK_LLM_OLLAMA_LLP_NODE = True
 
             # LOCALISATION
             if current_time - self.node.localisation_time > self.MIN_TIMEOUT_FOR_CHECK_NODE: # or current_time - self.node.amcl_time > self.MIN_TIMEOUT_FOR_CHECK_NODE:
@@ -1062,8 +1059,8 @@ class DebugVisualMain():
         self.CHARMIE_LIDAR_NODE_RECT                = pygame.Rect(self.init_pos_w_rect_check_nodes,                                         self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LIDAR_BOTTOM_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LIDAR_LIVOX_NODE_RECT          = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*2, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*6, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LLM_NODE_RECT                  = pygame.Rect(self.init_pos_w_rect_check_nodes,                                         self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
-        self.CHARMIE_LLM_OLLAMA_NODE_RECT           = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LLM_OLLAMA_HLP_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes,                                         self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
+        self.CHARMIE_LLM_OLLAMA_LLP_NODE_RECT       = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*7, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOCALISATION_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes,                                         self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*8, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_LOW_LEVEL_NODE_RECT            = pygame.Rect(self.init_pos_w_rect_check_nodes,                                         self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
         self.CHARMIE_TRAY_GRIPPER_NODE_RECT         = pygame.Rect(self.init_pos_w_rect_check_nodes+self.deviation_pos_w_rect_check_nodes*1, self.init_pos_h_rect_check_nodes+self.deviation_pos_h_rect_check_nodes*9, self.square_size_rect_check_nodes, self.square_size_rect_check_nodes)
@@ -1295,16 +1292,16 @@ class DebugVisualMain():
         pygame.draw.rect(self.WIN, rc, self.CHARMIE_GAMEPAD_NODE_RECT)
 
         # LLM GPT - Online
-        tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_llm, self.check_nodes.CHECK_LLM_NODE)
-        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LLM_NODE_RECT)
+        tc1, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_llm, self.check_nodes.CHECK_LLM_OLLAMA_HLP_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LLM_OLLAMA_HLP_NODE_RECT)
         # LLM Ollama - Offline
-        tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_llm, self.check_nodes.CHECK_LLM_OLLAMA_NODE)
-        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LLM_OLLAMA_NODE_RECT)
+        tc2, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_llm, self.check_nodes.CHECK_LLM_OLLAMA_LLP_NODE)
+        pygame.draw.rect(self.WIN, rc, self.CHARMIE_LLM_OLLAMA_LLP_NODE_RECT)
         if tc1 == self.BLUE_L or tc2 == self.BLUE_L:
             tc = self.BLUE_L
         else:
             tc = self.WHITE
-        self.draw_text("LLM (GPT/Ollama)", self.text_font, tc, self.CHARMIE_LLM_OLLAMA_NODE_RECT.x+2*self.CHARMIE_LLM_OLLAMA_NODE_RECT.width, self.CHARMIE_LLM_OLLAMA_NODE_RECT.y-2)
+        self.draw_text("LLM (HLP/LLP)", self.text_font, tc, self.CHARMIE_LLM_OLLAMA_LLP_NODE_RECT.x+2*self.CHARMIE_LLM_OLLAMA_LLP_NODE_RECT.width, self.CHARMIE_LLM_OLLAMA_LLP_NODE_RECT.y-2)
 
         # LOCALISATION
         tc, rc = self.get_check_nodes_rectangle_and_text_color(self.node.nodes_used.charmie_localisation, self.check_nodes.CHECK_LOCALISATION_NODE)
