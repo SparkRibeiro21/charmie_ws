@@ -2,6 +2,8 @@
 
 ### LAUNCH FILE ARM: ros2 launch xarm_api xarm6_driver.launch.py
 
+from cv2 import rotate
+
 import rclpy
 import threading
 import time
@@ -103,12 +105,88 @@ class TaskMain():
                     # time.sleep(5.0)
                     # self.robot.set_arm(command="ask_for_objects_to_check_milk_cap", wait_for_end_of=True)
                     # time.sleep(5.0)
+                    # lid = self.robot.detect_milk_cap()
+
+                    # print("lid:", lid)
+                    # time.sleep(5.0)
                     # self.robot.open_tray_gripper()
                     # time.sleep(5.0)
                     # self.robot.close_tray_gripper()
-                    time.sleep(5.0)
-                    self.robot.detect_milk_cap()
+                    # time.sleep(5.0)
+
+                    # while True:
+                    #     pass
+
+                    # #PICK MILK
+                    # pick_height,_ = self.robot.pick_object(selected_object="Milk", arm_initial_position="initial_position_to_ask_for_objects")
+                    # #PLACE MILK IN TRAY
+                    # self.robot.place_milk_in_tray(place_height=pick_height)
+                    #OPEN MILK LID
+                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                    time.sleep(3.0)
+                    self.robot.set_arm(command="ask_for_objects_to_check_milk_cap", wait_for_end_of=True)
+                    time.sleep(3.0)
+                    self.robot.close_tray_gripper(wait_for_end_of=True)
+                    self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                    lid = self.robot.detect_milk_cap()
                     self.robot.wait_for_start_button()
+
+                    tf_x =  0.145
+                    tf_y = -0.006
+                    tf_z = -0.075
+                    LID_HEIGHT = 0.01
+                    DETECTION_ERROR = 0.018
+                    OPENING_ATTEMPT = 0
+                    MAX_OPENING_ATTEMPTS = 2
+
+                    TRAY_HEIGHT = 0.59
+
+                    gripper_place_position = self.robot.get_gripper_localization()
+                    correct_x_grab = (gripper_place_position.z - TRAY_HEIGHT - LID_HEIGHT/0.5 - tf_x - self.robot.get_object_height_from_object("milk"))*1000
+                    correct_y_grab = (lid.y - tf_y)*1000
+                    correct_z_grab = (lid.z - tf_z + DETECTION_ERROR)*1000
+
+                    open_milk_lid_adjust = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
+
+                    print(open_milk_lid_adjust)
+
+                    self.robot.wait_for_start_button()
+
+                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_adjust, wait_for_end_of=True)
+
+                    self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                    for OPENING_ATTEMPT in range(MAX_OPENING_ATTEMPTS):
+                        print("OPENING_ATTEMPT:", OPENING_ATTEMPT)
+                        if OPENING_ATTEMPT == 0:
+                            small_rotation = [0.0,0.0,0.0,0.0,0.0,-30.0]
+                            self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=small_rotation, wait_for_end_of=True)
+                            self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                        rotate_right = [0.0,0.0,0.0,0.0,0.0,70.0]
+                        rotate_left = [0.0,0.0,0.0,0.0,0.0,-70.0]
+                        self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_right, wait_for_end_of=True)
+                        self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                        if OPENING_ATTEMPT != MAX_OPENING_ATTEMPTS-1:
+                            self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_left, wait_for_end_of=True)
+                            self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                        else:
+                            last_rotation = [0.0,0.0,0.0,0.0,0.0,-40.0]
+                            self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=last_rotation, wait_for_end_of=True)
+                            safe_rise = [0.0,0.0,-LID_HEIGHT*4*1000,0.0,0.0,0.0]
+                            self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=safe_rise, wait_for_end_of=True)
+
+                    let_lid_go = [-correct_z_grab, correct_y_grab, -correct_x_grab + LID_HEIGHT*4*1000, 0.0, 0.0, 0.0]
+                    self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=let_lid_go, wait_for_end_of=True)
+                    self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+
+
+
+
+                    
+
+                    self.robot.wait_for_start_button()
+
                     time.sleep(5.0)
                     self.robot.set_arm(command="check_milk_cap_to_ask_for_objects", wait_for_end_of=True)
                     time.sleep(5.0)
