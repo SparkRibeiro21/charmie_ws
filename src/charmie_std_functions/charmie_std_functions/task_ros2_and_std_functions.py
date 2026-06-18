@@ -9170,7 +9170,7 @@ class RobotStdFunctions():
 
             return correct_rotation
 
-    def detect_milk_cap(self):
+    def detect_milk_cap(self, cap="small"):
 
         def crop_depth(depth):
             h, w = depth.shape[:2]
@@ -9180,7 +9180,7 @@ class RobotStdFunctions():
             y2 = 4 * h // 5
             return depth[y1:y2, x1:x2], x1, y1
 
-        def segment_3_classes(img, type_of_cap=2):
+        def segment_3_classes(img, type_of_cap=2): # 2 for small cap, 3 big cap
             # flatten image to 1D
             Z = img.reshape((-1, 1)).astype(np.float32)
             # K-means criteria
@@ -9199,6 +9199,10 @@ class RobotStdFunctions():
             segmented = centers[labels].reshape(img.shape)
             return segmented, labels.reshape(img.shape), centers
         
+        if cap == "small":
+            type_of_cap = 2
+        else:
+            type_of_cap = 3
 
         _, rgb = self.get_hand_rgb_image()
         _, depth_origin = self.get_hand_depth_image()
@@ -9225,7 +9229,7 @@ class RobotStdFunctions():
 
         # cv2.imshow("normalized", depth)
         
-        segmented, labels, centers = segment_3_classes(depth, type_of_cap=2)
+        segmented, labels, centers = segment_3_classes(depth, type_of_cap=type_of_cap)
         # print(labels, centers)
         brightest_cluster = np.argmax(centers)
 
