@@ -4317,21 +4317,51 @@ class RobotStdFunctions():
    
 
         return self.node.llm_demonstration_response
+    
+    def receive_command_and_generate_low_level_planner(self, generate_llp=True):
+
+        request = self.get_llm_confirm_command()
+
+        # Save current request
+        print("Request " + str(self.curr_request) + ": " + request)
+        l_command = request.split(";")
+        print(l_command)
+
+        # Say HLP with time efficiency, divide in sentences and generate next sentence as I am saying the current sentence
+        self.set_speech(filename="gpsr/say_plan1", wait_for_end_of= False)
+        ctr = 0
+        self.save_speech(command=l_command[0], filename=str(ctr), quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True)
+        for c in l_command[1:]:
+            ctr += 1
+            self.save_speech(command=c, filename=str(ctr), quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+            self.set_speech(filename="temp/"+str(ctr-1), wait_for_end_of=True)
+            while not self.save_speech_is_done():
+                time.sleep(0.05)
+        self.set_speech(filename="temp/"+str(ctr), wait_for_end_of=True)
+
+        # different cases if doing gpsr task or finals
+        if generate_llp:
+            llp_plan = self.get_llm_ollama_gpsr_low_level(command=request, mode="", wait_for_end_of=True)
+            return llp_plan
+        else:                
+            return request
+        
 
     ##  GETS AND CONFIRMS A GPSR COMMAND ##
     def get_llm_confirm_command(self, wait_for_end_of=True):
 
         command_confirmed = False
-        max_confirm_attempts = 3
-        confirm_attempts_cntr = 0
+        # max_confirm_attempts = 3
+        # confirm_attempts_cntr = 0
         max_characters = 250
-        valid_command = False
+        # valid_command = False
+        hlp_comm = ""
 
         self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
 
-        while not command_confirmed and confirm_attempts_cntr < max_confirm_attempts:
+        while not command_confirmed: #  and confirm_attempts_cntr < max_confirm_attempts:
 
-            confirm_attempts_cntr += 1
+            # confirm_attempts_cntr += 1
 
             ##### SPEAK: "What is your request?"
             gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green", wait_for_end_of= True)
@@ -4342,9 +4372,11 @@ class RobotStdFunctions():
             self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
             
             if len(gpsr_command) > max_characters:
-                valid_command = False
+                # valid_command = False
                 self.set_speech(filename="gpsr/could_not_process", wait_for_end_of=True)
             else:
+
+                self.get_llm_ollama_gpsr_high_level(command=gpsr_command, mode="", wait_for_end_of=False)
             
                 self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
                 
@@ -4357,28 +4389,31 @@ class RobotStdFunctions():
                 confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                 print("Finished:", confirmation)
 
+                while not self.get_llm_ollama_gpsr_high_level_is_done():
+                    time.sleep(0.05)
+                
                 if confirmation.lower() == "yes":
                     self.set_rgb(command=GREEN+BLINK_LONG)
                     ##### SPEAK: "Great!"
-                    valid_command = True
+                    # valid_command = True
                     command_confirmed = True
 
-                else:
-                    self.set_rgb(command=RED+BLINK_LONG)
+                    hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
 
-                    if confirm_attempts_cntr < max_confirm_attempts:
-                        ##### SPEAK: Sorry for my mistake, lets try again.
-                        self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
-                        command_confirmed = False
-                        valid_command = False
-                
-                    else:
-                        gpsr_command = "ERROR"
+                # else:
+                #     self.set_rgb(command=RED+BLINK_LONG)
+                #     if confirm_attempts_cntr < max_confirm_attempts:
+                #         ##### SPEAK: Sorry for my mistake, lets try again.
+                #         self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
+                #         command_confirmed = False
+                #         valid_command = False
+                #     else:
+                #         gpsr_command = "ERROR"
 
-        if not valid_command:
-            gpsr_command = "ERROR"
+        # if not valid_command:
+        #     gpsr_command = "ERROR"
 
-        return gpsr_command
+        return hlp_comm
 
     ##  HIGH-LEVEL PLANNER (GENERATES A HIGH-LEVEL PLAN FOR A GPSR COMMAND)
     def get_llm_high_level_plan(self, command= "", wait_for_end_of=True):
