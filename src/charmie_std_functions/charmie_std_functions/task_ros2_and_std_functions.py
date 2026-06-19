@@ -4356,7 +4356,7 @@ class RobotStdFunctions():
 
 
     
-    def receive_command_and_generate_low_level_planner(self, generate_llp=True, use_touchscreen_for_yes_no_questions=False):
+    def receive_command_and_generate_low_level_planner(self, use_touchscreen_for_yes_no_questions=False):
 
         command_confirmed = False
         max_characters = 250
@@ -4373,7 +4373,6 @@ class RobotStdFunctions():
             self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
             
             if len(gpsr_command) > max_characters:
-                # valid_command = False
                 self.set_speech(filename="gpsr/could_not_process", wait_for_end_of=True)
             else:
 
@@ -4382,16 +4381,14 @@ class RobotStdFunctions():
                 self.set_face(loadbar=10.0, command=gpsr_command)
                 self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
                 self.set_face("charmie_face")
-                
 
+                ### IF I WANT TO SPEAK WITHOUT THE SENTENCE DIVISION TIME EFFICIENCY, FULL SPEAK COMMAND
                 # if self.get_llm_ollama_gpsr_high_level_is_done():
                 #     self.save_speech(command=self.node.llm_ollama_gpsr_high_level_response[0], filename="123", quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
-
                 
                 ##### SPEAK: "I have understood the following command."
                 self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
                 self.set_speech(filename="temp/gpsr_command", show_in_face=True, wait_for_end_of=True)
-                
                 
                 if not use_touchscreen_for_yes_no_questions:
                     ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
@@ -4401,8 +4398,7 @@ class RobotStdFunctions():
                 else: # if touchscreen is used
                     answer = self.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
                     confirmation = answer[0]
-                    
-
+                
                 while not self.get_llm_ollama_gpsr_high_level_is_done():
                     time.sleep(0.05)
                 
@@ -4411,10 +4407,11 @@ class RobotStdFunctions():
                     ##### SPEAK: "Great!"
                     # valid_command = True
                     command_confirmed = True
-
                     hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
 
-
+        self.get_llm_ollama_gpsr_low_level(command=hlp_comm, mode="", wait_for_end_of=False)
+        
+        ### IF I WANT TO SPEAK WITHOUT THE SENTENCE DIVISION TIME EFFICIENCY, FULL SPEAK COMMAND
         # while not self.save_speech_is_done():
         #     time.sleep(0.05)
         # self.set_speech(filename="123", wait_for_end_of=True)
@@ -4435,12 +4432,13 @@ class RobotStdFunctions():
                 time.sleep(0.05)
         self.set_speech(filename="temp/"+str(ctr), wait_for_end_of=True)
 
-        # different cases if doing gpsr task or finals
-        if generate_llp:
-            llp_plan = self.get_llm_ollama_gpsr_low_level(command=hlp_comm, mode="", wait_for_end_of=True)
-            return llp_plan
-        else:                
-            return hlp_comm
+        while not self.get_llm_ollama_gpsr_low_level_is_done():
+            time.sleep(0.5)
+        
+        llp = self.node.llm_ollama_gpsr_low_level_response
+
+        return llp
+        
         
 
     ##  HIGH-LEVEL PLANNER (GENERATES A HIGH-LEVEL PLAN FOR A GPSR COMMAND)

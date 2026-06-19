@@ -120,32 +120,20 @@ class TaskMain():
 
                 self.curr_request+=1
                 
-                hlp = self.robot.receive_command_and_generate_low_level_planner(generate_llp=False, use_touchscreen_for_yes_no_questions=USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS)
-                print("Request " + str(self.curr_request) + ": " + hlp)
+                llp = self.robot.receive_command_and_generate_low_level_planner(use_touchscreen_for_yes_no_questions=USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS)
+                print("Low-level planner " + str(self.curr_request) + ": " + llp)
+                self.llps.append(llp)
 
-                # if not the first request, make sure we have saved the previous llp
-                if self.curr_request > 1:
-                    while not self.robot.get_llm_ollama_gpsr_low_level_is_done():
-                        time.sleep(0.5)
-                    self.llps.append(self.robot.node.waited_for_end_of_llm_ollama_gpsr_low_level)
-
-                # create current llp in the backgroung
-                self.robot.get_llm_ollama_gpsr_low_level(command=hlp, mode="", wait_for_end_of=False)
-                
+                # checks if there is another command to be received, if not proceeds to deciding and executing the commands in the list
                 if not USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS:
                     confirmation = self.robot.get_audio(yes_or_no=True, question="gpsr/do_you_have_another_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-
                 else: # if touchscreen is used
                     answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have another command?", speak_results=False, start_speak_file="gpsr/do_you_have_another_command", wait_for_end_of=True)
                     confirmation = answer[0]
                     
                 if confirmation.lower() == "no":
-                    while not self.robot.get_llm_ollama_gpsr_low_level_is_done():
-                        time.sleep(0.5)
-                    self.llps.append(self.robot.node.waited_for_end_of_llm_ollama_gpsr_low_level)
                     self.state = Set_command_order   
                 
-
             if self.state == Set_command_order:
                 pass
 
