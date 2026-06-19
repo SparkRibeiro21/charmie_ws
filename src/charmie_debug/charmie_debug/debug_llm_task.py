@@ -121,7 +121,7 @@ class TaskMain():
                 self.curr_request+=1
                 
                 llp = self.robot.receive_command_and_generate_low_level_planner(use_touchscreen_for_yes_no_questions=USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS)
-                print("Low-level planner " + str(self.curr_request) + ": " + llp)
+                print("Low-level planner " + str(self.curr_request) + ": ", llp)
                 self.llps.append(llp)
 
                 # checks if there is another command to be received, if not proceeds to deciding and executing the commands in the list
@@ -135,7 +135,10 @@ class TaskMain():
                     self.state = Set_command_order   
                 
             if self.state == Set_command_order:
-                pass
+
+                print(self.llps)
+                while True:
+                    pass
 
                 # CHECK LLP LIST
 
