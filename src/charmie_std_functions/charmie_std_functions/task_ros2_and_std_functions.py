@@ -4346,6 +4346,8 @@ class RobotStdFunctions():
             if not got_hlp and self.get_llm_ollama_gpsr_high_level_is_done():
                 print("CHECKED RECEIVE HLP - STARTING TO GENERATE SPEECH FILES")
                 hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
+                if hlp_comm.endswith(";"): # edge case where hlp ended with ; . This made a sentence be empty and thus not generated, which maskes the checks if can do speaks block because it is waiting for file to be created
+                    hlp_comm = hlp_comm[:-1]
                 l_command = hlp_comm.split(";")
 
                 # SAVE ALL SPEAKS
