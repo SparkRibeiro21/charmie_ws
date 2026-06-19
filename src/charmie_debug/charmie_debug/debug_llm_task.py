@@ -130,12 +130,10 @@ class TaskMain():
                 else: # if touchscreen is used
                     if self.curr_request == 1: # for time efficiency, only inform user that needs to press the face for the first command
                         self.robot.set_speech(filename="generic/press_correct_option_touchscreen", wait_for_end_of=True) # SAY: Please press the correct option on my face.
-                    answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have another command?", speak_results=False, start_speak_file="gpsr/do_you_have_another_command", wait_for_end_of=True)
+                    answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have another command?", speak_results=False, speak_timeout=False, start_speak_file="gpsr/do_you_have_another_command", wait_for_end_of=True)
                     confirmation = answer[0]
 
-                    
-                    
-                if confirmation.lower() == "no":
+                if not confirmation.lower() == "yes": # "no" or "TIMEOUT"
                     self.state = Set_command_order   
                 
             if self.state == Set_command_order:

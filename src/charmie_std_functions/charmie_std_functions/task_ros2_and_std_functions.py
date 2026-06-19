@@ -4410,7 +4410,7 @@ class RobotStdFunctions():
                 else: # if touchscreen is used
                     if command_no == 1: # for time efficiency, only inform user that needs to press the face for the first command
                         self.set_speech(filename="generic/press_correct_option_touchscreen", wait_for_end_of=True) # SAY: Please press the correct option on my face.
-                    answer = self.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
+                    answer = self.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, speak_timeout=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
                     confirmation = answer[0]
                 
                 # worst case scenario, it waits until is received here, 
@@ -4422,11 +4422,14 @@ class RobotStdFunctions():
                 if confirmation.lower() == "yes":
                     self.set_rgb(command=GREEN+BLINK_LONG)
                     command_confirmed = True
+                else: # "no" or "TIMEOUT"
+                    self.set_speech(filename="generic/sorry_for_my_mistake_lets_try_again", wait_for_end_of=True) # SAY: Sorry for my mistake let's try again
+
 
         self.get_llm_ollama_gpsr_low_level(command=hlp_comm, mode="", wait_for_end_of=False)
         
         # time_efficient_high_level_sentence_saver()
-        self.set_speech(filename="gpsr/say_plan1", wait_for_end_of= True)
+        self.set_speech(filename="gpsr/say_plan", wait_for_end_of= True)
         for index, value in enumerate(l_command):
             while not speech_file_is_ready("hlp_" + current_datetime + "_" + str(index)):
                 time.sleep(0.05)
