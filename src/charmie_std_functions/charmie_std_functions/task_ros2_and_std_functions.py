@@ -4231,13 +4231,13 @@ class RobotStdFunctions():
             while not self.node.waited_for_end_of_llm_ollama_gpsr_high_level:
                 pass
             self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False
+            print(self.node.llm_ollama_gpsr_high_level_response)
 
         ### if wfeo
         ###     The result is returned by this function
         ### else
         ###     The task node must get the response command from: self.node.llm_ollama_gpsr_high_level_response
 
-        print(self.node.llm_ollama_gpsr_high_level_response)
         return self.node.llm_ollama_gpsr_high_level_response
     
     def get_llm_ollama_gpsr_high_level_is_done(self):
@@ -4261,13 +4261,13 @@ class RobotStdFunctions():
             while not self.node.waited_for_end_of_llm_ollama_gpsr_low_level:
                 pass
             self.node.waited_for_end_of_llm_ollama_gpsr_low_level = False
+            print(self.node.llm_ollama_gpsr_low_level_response)
 
         ### if wfeo
         ###     The result is returned by this function
         ### else
         ###     The task node must get the response command from: self.node.llm_ollama_gpsr_low_level_response
 
-        print(self.node.llm_ollama_gpsr_low_level_response)
         return self.node.llm_ollama_gpsr_low_level_response
 
     def get_llm_ollama_gpsr_low_level_is_done(self):
@@ -4333,69 +4333,108 @@ class RobotStdFunctions():
    
 
         return self.node.llm_demonstration_response
+    
+    def receive_command_and_generate_low_level_planner(self, use_touchscreen_for_yes_no_questions=False):
 
-    ##  GETS AND CONFIRMS A GPSR COMMAND ##
-    def get_llm_confirm_command(self, wait_for_end_of=True):
+        current_datetime = ""
+        hlp_comm = ""
+        l_command = [] # can only be used after the .split(";")
+        got_hlp = False
+
+        def check_received_hlp_and_save_speaker_sentences(): # checks if hlp has been received and sends all sentence speak files
+            nonlocal current_datetime, hlp_comm, l_command, got_hlp
+            if not got_hlp and self.get_llm_ollama_gpsr_high_level_is_done():
+                print("CHECKED RECEIVE HLP - STARTING TO GENERATE SPEECH FILES")
+                hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
+                l_command = hlp_comm.split(";")
+
+                # SAVE ALL SPEAKS
+                for index, value in enumerate(l_command):
+                    # print("hlp_" + current_datetime + "_" + str(index))
+                    self.save_speech(command=value, filename="hlp_" + current_datetime + "_" + str(index), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
+
+                got_hlp = True
+
+        def speech_file_is_ready(filename): # helper to check if file exists, wav + txt because txt is created after wav, which means wav is not under construction
+            temp_path = (
+                Path.home()
+                / "charmie_ws"
+                / "src"
+                / "charmie_speakers"
+                / "charmie_speakers"
+                / "list_of_sentences"
+                / "temp"
+            )
+            wav_path = Path(temp_path) / f"{filename}.wav"
+            txt_path = Path(temp_path) / f"{filename}.txt"
+            return wav_path.is_file() and txt_path.is_file()
 
         command_confirmed = False
-        max_confirm_attempts = 3
-        confirm_attempts_cntr = 0
         max_characters = 250
-        valid_command = False
 
         self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
-
-        while not command_confirmed and confirm_attempts_cntr < max_confirm_attempts:
-
-            confirm_attempts_cntr += 1
+        while not command_confirmed: #  and confirm_attempts_cntr < max_confirm_attempts:
+            got_hlp = False
+            current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
 
             ##### SPEAK: "What is your request?"
             gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green", wait_for_end_of= True)
-            # gpsr_command = "Please proceed to the living room, introduce yourself to the person wearing a black jacket, and thereafter follow them."
             print("Finished:", gpsr_command)
 
             ##### SPEAK: "Please give me a moment to process your command"
             self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
             
             if len(gpsr_command) > max_characters:
-                valid_command = False
                 self.set_speech(filename="gpsr/could_not_process", wait_for_end_of=True)
             else:
+
+                self.get_llm_ollama_gpsr_high_level(command=gpsr_command, mode="", wait_for_end_of=False)
             
+                self.set_face(loadbar=10.0, command=gpsr_command)
                 self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
-                
+                self.set_face("charmie_face")
+                check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+
                 ##### SPEAK: "I have understood the following command."
                 self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
-                self.set_speech(filename="temp/gpsr_command",show_in_face=True, wait_for_end_of=True)
-                ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
-                self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
-                # confirmation = "yes"
-                confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                print("Finished:", confirmation)
-
+                check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+                self.set_speech(filename="temp/gpsr_command", show_in_face=True, wait_for_end_of=True)
+                check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+                
+                if not use_touchscreen_for_yes_no_questions:
+                    ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
+                    self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
+                    confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                else: # if touchscreen is used
+                    answer = self.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
+                    confirmation = answer[0]
+                
+                # worst case scenario, it waits until is received here, 
+                while not got_hlp:
+                    check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+                    time.sleep(0.05)
+                
+                # print("confirmation:", confirmation)
                 if confirmation.lower() == "yes":
                     self.set_rgb(command=GREEN+BLINK_LONG)
-                    ##### SPEAK: "Great!"
-                    valid_command = True
                     command_confirmed = True
 
-                else:
-                    self.set_rgb(command=RED+BLINK_LONG)
+        self.get_llm_ollama_gpsr_low_level(command=hlp_comm, mode="", wait_for_end_of=False)
+        
+        # time_efficient_high_level_sentence_saver()
+        self.set_speech(filename="gpsr/say_plan1", wait_for_end_of= True)
+        for index, value in enumerate(l_command):
+            while not speech_file_is_ready("hlp_" + current_datetime + "_" + str(index)):
+                time.sleep(0.05)
+            self.set_speech(filename="temp/hlp_" + current_datetime + "_" + str(index), wait_for_end_of=True)
 
-                    if confirm_attempts_cntr < max_confirm_attempts:
-                        ##### SPEAK: Sorry for my mistake, lets try again.
-                        self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
-                        command_confirmed = False
-                        valid_command = False
-                
-                    else:
-                        gpsr_command = "ERROR"
-
-        if not valid_command:
-            gpsr_command = "ERROR"
-
-        return gpsr_command
-
+        # worst case scenario, it waits until is received here, 
+        while not self.get_llm_ollama_gpsr_low_level_is_done():
+            time.sleep(0.05)
+        
+        llp = self.node.llm_ollama_gpsr_low_level_response
+        return llp
+        
     ##  HIGH-LEVEL PLANNER (GENERATES A HIGH-LEVEL PLAN FOR A GPSR COMMAND)
     def get_llm_high_level_plan(self, command= "", wait_for_end_of=True):
         
@@ -4416,7 +4455,7 @@ class RobotStdFunctions():
 
         return self.node.llm_demonstration_response
 
-##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)
+    ##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)
     def execute_gpsr_plan(self, command ="", instruction_point=[0, 0, 0], curr_room="", curr_furniture="", curr_result="", curr_obj_list=[], curr_picked_height = 0.0, curr_asked_help = False, wait_for_end_of = True):
             
         task_split = command.split("-")
@@ -4480,7 +4519,7 @@ class RobotStdFunctions():
                         self.set_speech(filename="generic/moving", wait_for_end_of=True)
                         self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
 
-                        # self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
                         
                         self.set_neck(position=self.look_forward, wait_for_end_of=False)
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -4521,11 +4560,6 @@ class RobotStdFunctions():
 
                 tetas = [[-60, 0], [0, 0], [60, 0]]
 
-                curr_room_top_left_x = curr_room_top_left[0]
-                curr_room_top_left_y = curr_room_top_left[1]
-                curr_room_bottom_right_x = curr_room_bottom_right[0]
-                curr_room_bottom_right_y = curr_room_bottom_right[1]
-
                 if parameter == "pose":
 
                     if second_parameter == "sitting":
@@ -4533,10 +4567,16 @@ class RobotStdFunctions():
                         people_found=self.search_for_person(tetas=tetas)
 
                         for p in people_found:
-                            if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
-                                curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
+
+                            print("p room: ", p.room_location) 
+                            print("person height:", p.height) 
+                            print("current room: ", curr_room)
+                            print("p x coords relative: ", p.position_absolute.x) 
+                            print("p y coords relative: ", p.position_absolute.y) 
+
+                            if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                 
-                                if (0.8 <= p.height <1.4):
+                                if (0.8 <= p.height <1.6):
                                     correct_person = p
 
                         pass
@@ -4546,21 +4586,38 @@ class RobotStdFunctions():
                         people_found=self.search_for_person(tetas=tetas)
 
                         for p in people_found:
-                            if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
-                                curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
+
+                            print("p room: ", p.room_location) 
+                            print("person height:", p.height) 
+                            print("current room: ", curr_room)
+                            print("p x coords relative: ", p.position_absolute.x) 
+                            print("p y coords relative: ", p.position_absolute.y) 
+
+                            if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                 
-                                if (1.4 <= p.height):
+                                if (1.5 <= p.height):
                                     correct_person = p
                         
                         pass
 
                     if second_parameter == "lying_down":
 
+                        tetas = [[-60, -30], [0, -30], [60, -30]]
+
                         people_found=self.search_for_person(tetas=tetas)
 
+
                         for p in people_found:
-                            if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
-                                curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
+
+                            print("p room: ", p.room_location) 
+                            print("person height:", p.height) 
+                            print("current room: ", curr_room)
+                            print("p x coords relative: ", p.position_absolute.x) 
+                            print("p y coords relative: ", p.position_absolute.y) 
+
+                            if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                                print("p x coords: ", p.position_absolute.x) 
+                                print("p y coords: ", p.position_absolute.y) 
                                 
                                 if (p.height > 0.8):
                                     correct_person = p
@@ -4574,18 +4631,11 @@ class RobotStdFunctions():
 
                         for p in people_found:
 
-                            print("p room: ", p.room_location) 
+                            print("p room: ", p.room_location)
                             print("current room: ", curr_room)
-
-                            print("p x coords absolut: ", p.position_absolute.x) 
-                            print("p y coords absolut: ", p.position_absolute.y) 
-                            print("p x coords relative: ", p.position_absolute.x) 
-                            print("p y coords relative: ", p.position_absolute.y) 
 
                             if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                 correct_person = p
-                                print("p x coords: ", p.position_absolute.x) 
-                                print("p y coords: ", p.position_absolute.y) 
                       
                     if second_parameter == "pointing_right":
                         
@@ -4594,10 +4644,17 @@ class RobotStdFunctions():
                         print("FOUND:", len(people_found)) 
                         
                         for p in people_found:
-                            print(p.pointing_at)
-                            if p.pointing_at == "right":
-                                if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
-                                    curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
+                            
+                            self.detected_person_to_face_path(person=p, send_to_face=True)
+                            print("p room: ", p.room_location) 
+                            print("pointing at:", p.pointing_at) 
+                            print("current room: ", curr_room)
+                            print("p x coords relative: ", p.position_absolute.x) 
+                            print("p y coords relative: ", p.position_absolute.y) 
+
+
+                            if p.pointing_at == "Right":
+                                if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                     correct_person = p
 
                         pass
@@ -4609,17 +4666,25 @@ class RobotStdFunctions():
                         print("FOUND:", len(people_found)) 
                         
                         for p in people_found:
-                            print(p.pointing_at)
-                            if p.pointing_at == "left":
-                                if (curr_room_top_left_x <= p.position_absolute.x <= curr_room_bottom_right_x and
-                                    curr_room_top_left_y <= p.position_absolute.y <= curr_room_bottom_right_y):
+
+                            self.detected_person_to_face_path(person=p, send_to_face=True)
+                            print("p room: ", p.room_location) 
+                            print("pointing at:", p.pointing_at) 
+                            print("current room: ", curr_room)
+                            print("p x coords absolute: ", p.position_absolute.x) 
+                            print("p y coords absolute: ", p.position_absolute.y) 
+
+                            if p.pointing_at == "Left":
+                                if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                     correct_person = p
 
                         pass
-                    print("correct x coords relative: ", correct_person.position_relative.x) 
-                    print("correct y coords relative: ", correct_person.position_relative.y) 
+
                     print("correct x coords absolut: ", correct_person.position_absolute.x) 
                     print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                    print("Correct person's height", correct_person.height)
+
+                    self.detected_person_to_face_path(person=correct_person, send_to_face=True)
 
                     self.set_neck(self.look_navigation)
                     self.move_to_person(person = correct_person)
@@ -4628,31 +4693,44 @@ class RobotStdFunctions():
                     self.set_speech(filename= "gpsr/gpsr_intro")
 
                 if parameter == "name":
-
+                    
+                    ### Speak: "I am lookig for someone named [name]"
                     ### Speak: "[name] could you please raise your hand so I can find you?"
+                    self.save_speech(command=second_parameter.replace("_"," ").lower(), filename="person_name", quick_voice=False, wait_for_end_of=False)
+
+                    self.set_speech(filename="gpsr/looking_for", wait_for_end_of=True)
+                    while not self.save_speech_is_done():
+                        pass
+                    self.set_speech(filename="temp/person_name", wait_for_end_of=True)
+                    time.sleep(0.5)
+                    self.set_speech(filename="gpsr/raise_your_hand", wait_for_end_of=True)
+                    time.sleep(0.5)
 
                     ### Search for person with hand raised in the current room
                     people_found = self.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
                     print("FOUND:", len(people_found)) 
 
                     for p in people_found:
-                        if (curr_room_top_left_x <= p.position_relative.x <= curr_room_bottom_right_x and
-                            curr_room_top_left_y <= p.position_relative.y <= curr_room_bottom_right_y):
-                            people_list.append(p)
 
-                    ### If found, move to the person
-                    robot_pose= self.get_robot_localization()
-                    
-                    dx = people_list[0].position_relative.x - robot_pose.x
-                    dy = people_list[0].position_relative.y - robot_pose.y
-                    distance = math.sqrt(dx**2 + dy**2)
+                        print("p room: ", p.room_location)
+                        print("current room: ", curr_room)
 
-                    target_x = people_list[0].position_relative.x - (dx / distance) * self.min_distance_to_person
-                    target_y = people_list[0].position_relative.y - (dy / distance) * self.min_distance_to_person
+                        if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                            correct_person = p
 
-                    self.move_to_position(move_coords=(target_x, target_y), wait_for_end_of=True)
+
+                    print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                    print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                    print("Correct person's height", correct_person.height)
+
+                    # self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+
+                    self.set_neck(self.look_navigation)
+                    self.move_to_person(person = correct_person)
+                    self.set_neck(self.look_forward)
 
                     ### Speak: "Hello [name], my name is Charmie!"
+                    self.set_speech(filename= "gpsr/gpsr_intro")
 
                     pass
 
@@ -4671,20 +4749,27 @@ class RobotStdFunctions():
                         if person_shirt_color.lower() == second_parameter.lower():
                             people_list.append(p)
 
+                    for p in people_found:
 
-                    ### Move to the person
-                    robot_pose= self.get_robot_localization()
-                    
-                    dx = people_list[0].position_relative.x - robot_pose.x
-                    dy = people_list[0].position_relative.y - robot_pose.y
-                    distance = math.sqrt(dx**2 + dy**2)
+                        if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
 
-                    target_x = people_list[0].position_relative.x - (dx / distance) * self.min_distance_to_person
-                    target_y = people_list[0].position_relative.y - (dy / distance) * self.min_distance_to_person
+                            if person_shirt_color.lower() == second_parameter.lower():
 
-                    self.move_to_position(move_coords=(target_x, target_y), wait_for_end_of=True)
+                                correct_person=p
+
+
+                    print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                    print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                    print("Correct person's height", correct_person.height)
+
+                    self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+
+                    self.set_neck(self.look_navigation)
+                    self.move_to_person(person = correct_person)
+                    self.set_neck(self.look_forward)
 
                     ### Speak: "Hello [name], my name is Charmie!"
+                    self.set_speech(filename= "gpsr/gpsr_intro")
 
                     pass
                 
@@ -4705,7 +4790,7 @@ class RobotStdFunctions():
 
                     ### Speak: "Arrived at the instruction point"
                     self.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                    self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
+                    self.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
 
                     pass
           
@@ -4769,9 +4854,7 @@ class RobotStdFunctions():
                 pass
 
             case "hand_object":
-                # temporary speech to show it is working
-                # self.save_speech(command="Handing the object in my hand", filename="temp/action", quick_voice=True, wait_for_end_of=True)
-                # self.set_speech(filename="action", wait_for_end_of=True)
+                
                 print("Handing:", parameter)
 
                 self.set_speech(filename="restaurant/give_order_from_gripper", wait_for_end_of=True)
@@ -4865,7 +4948,6 @@ class RobotStdFunctions():
 
                 else:    
                     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
-
 
 
                 if parameter == "smallest":
@@ -4963,14 +5045,16 @@ class RobotStdFunctions():
 
                 print("Guiding the person to:", parameter)
 
-                ### Speak: "I will guide you to the [parameter]"
-
-                ### Please follow me.
+                ### Speak: "Please follow me while I guide you to the [parameter]"
+                self.set_speech(filename="gpsr/follow_me", wait_for_end_of=True)
+                self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
                 ### Move to the [parameter]
-                # self.execute_gpsr_plan(command="move_to-"+parameter, instruction_point=instruction_point, curr_room=curr_room, curr_furniture=curr_furniture, curr_result=curr_result, curr_obj_list=curr_obj_list, curr_picked_height=curr_picked_height, curr_asked_help=curr_asked_help, wait_for_end_of=True)
+                self.execute_gpsr_plan(command="move_to-"+parameter, instruction_point=instruction_point, curr_room=curr_room, curr_furniture=curr_furniture, curr_result=curr_result, curr_obj_list=curr_obj_list, curr_picked_height=curr_picked_height, curr_asked_help=curr_asked_help, wait_for_end_of=True)
 
                 ### Speak: "We have arrived to the [parameter]."
+                self.set_speech(filename="gpsr/end_of_guide", wait_for_end_of=True)
+                self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
 
                 print("Finished guiding the person to:", parameter)
 

@@ -51,11 +51,6 @@ class RobotSpeak():
             temp_filename = "temp/temp"
         else:
             temp_filename = "temp/"+filename
-
-        # create txt file with command for face package
-        f = open(self.complete_path+temp_filename+".txt", "w")
-        f.write(command)
-        f.close()
             
         # create wav file for speakers package 
         print("Initialised synthetisation.")
@@ -70,6 +65,9 @@ class RobotSpeak():
             
         print(time.time()-init_time)
 
+        # create txt file with command for face package
+        with open(self.complete_path + temp_filename + ".txt", "w") as f:
+            f.write(command)
 
 class SpeakerNode(Node):
 
