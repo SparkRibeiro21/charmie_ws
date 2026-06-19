@@ -4355,8 +4355,44 @@ class RobotStdFunctions():
 
 
 
+
+
+
+
     
     def receive_command_and_generate_low_level_planner(self, use_touchscreen_for_yes_no_questions=False):
+
+        index_hlp_save_speaker = 0
+        hlp_comm = ""
+        l_command = [] # can only be used after the .split(";")
+        got_hlp = False
+        def time_efficient_high_level_sentence_saver(): # helper function to make save speakers for HLP more time efficient
+            nonlocal index_hlp_save_speaker, hlp_comm, l_command, got_hlp # variables whose changes inside the function must be reflected outside the function
+            print("...")
+
+            if self.get_llm_ollama_gpsr_high_level_is_done():
+                hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
+                l_command = hlp_comm.split(";")
+                got_hlp = True
+                print("---")
+
+            if got_hlp:
+                if index_hlp_save_speaker >= len(l_command): # no more commands to save, exit the function
+                    return
+                else:
+                    if index_hlp_save_speaker == 0: # first command to save, no need to check prior command status
+                        print("STARTED SAVING "+ str(index_hlp_save_speaker))
+                        self.save_speech(command=l_command[index_hlp_save_speaker], filename=str("hlp")+str(index_hlp_save_speaker), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
+                        index_hlp_save_speaker+=1
+                    else: # if previous command is saved, starts saving the new one
+                        if self.save_speech_is_done():
+                            print("FINISHED SAVING "+ str(index_hlp_save_speaker))
+                            if index_hlp_save_speaker < len(l_command):
+                                print("STARTED SAVING "+ str(index_hlp_save_speaker))
+                                self.save_speech(command=l_command[index_hlp_save_speaker], filename=str("hlp")+str(index_hlp_save_speaker), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
+                                index_hlp_save_speaker+=1
+                        else:
+                            print("WAITING SAVING "+ str(index_hlp_save_speaker))
 
         command_confirmed = False
         max_characters = 250
@@ -4381,6 +4417,9 @@ class RobotStdFunctions():
                 self.set_face(loadbar=10.0, command=gpsr_command)
                 self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
                 self.set_face("charmie_face")
+                time.sleep(10.0)
+
+                time_efficient_high_level_sentence_saver()
 
                 ### IF I WANT TO SPEAK WITHOUT THE SENTENCE DIVISION TIME EFFICIENCY, FULL SPEAK COMMAND
                 # if self.get_llm_ollama_gpsr_high_level_is_done():
@@ -4388,7 +4427,9 @@ class RobotStdFunctions():
                 
                 ##### SPEAK: "I have understood the following command."
                 self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
+                time_efficient_high_level_sentence_saver()
                 self.set_speech(filename="temp/gpsr_command", show_in_face=True, wait_for_end_of=True)
+                time_efficient_high_level_sentence_saver()
                 
                 if not use_touchscreen_for_yes_no_questions:
                     ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
@@ -4399,15 +4440,15 @@ class RobotStdFunctions():
                     answer = self.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
                     confirmation = answer[0]
                 
-                while not self.get_llm_ollama_gpsr_high_level_is_done():
-                    time.sleep(0.05)
+                time_efficient_high_level_sentence_saver()
+                
+                if not got_hlp: # only waits if has not checks in the helper function
+                    while not self.get_llm_ollama_gpsr_high_level_is_done():
+                        time.sleep(0.05)
                 
                 if confirmation.lower() == "yes":
                     self.set_rgb(command=GREEN+BLINK_LONG)
-                    ##### SPEAK: "Great!"
-                    # valid_command = True
                     command_confirmed = True
-                    hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
 
         self.get_llm_ollama_gpsr_low_level(command=hlp_comm, mode="", wait_for_end_of=False)
         
@@ -4416,24 +4457,34 @@ class RobotStdFunctions():
         #     time.sleep(0.05)
         # self.set_speech(filename="123", wait_for_end_of=True)
 
+        time_efficient_high_level_sentence_saver()
+        self.set_speech(filename="gpsr/say_plan1", wait_for_end_of= True)
+
+        for index, value in enumerate(l_command):
+            time_efficient_high_level_sentence_saver()
+            print("SPEAKING "+ str(index), ":", index_hlp_save_speaker)
+            if index < index_hlp_save_speaker:
+                self.set_speech(filename="temp/"+str("hlp")+str(index), wait_for_end_of=True)
+            
+            
         # Save current request
-        print("Request " + hlp_comm)
-        l_command = hlp_comm.split(";")
-        print(l_command)
-        # Say HLP with time efficiency, divide in sentences and generate next sentence as I am saying the current sentence
-        self.set_speech(filename="gpsr/say_plan1", wait_for_end_of= False)
-        ctr = 0
-        self.save_speech(command=l_command[0], filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=True)
-        for c in l_command[1:]:
-            ctr += 1
-            self.save_speech(command=c, filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
-            self.set_speech(filename="temp/"+str(ctr-1), wait_for_end_of=True)
-            while not self.save_speech_is_done():
-                time.sleep(0.05)
-        self.set_speech(filename="temp/"+str(ctr), wait_for_end_of=True)
+        # print("Request " + hlp_comm)
+        # l_command = hlp_comm.split(";")
+        # print(l_command)
+        # # Say HLP with time efficiency, divide in sentences and generate next sentence as I am saying the current sentence
+        # self.set_speech(filename="gpsr/say_plan1", wait_for_end_of= False)
+        # ctr = 0
+        # self.save_speech(command=l_command[0], filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=True)
+        # for c in l_command[1:]:
+        #     ctr += 1
+        #     self.save_speech(command=c, filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
+        #     self.set_speech(filename="temp/"+str(ctr-1), wait_for_end_of=True)
+        #     while not self.save_speech_is_done():
+        #         time.sleep(0.05)
+        # self.set_speech(filename="temp/"+str(ctr), wait_for_end_of=True)
 
         while not self.get_llm_ollama_gpsr_low_level_is_done():
-            time.sleep(0.5)
+            time.sleep(0.05)
         
         llp = self.node.llm_ollama_gpsr_low_level_response
 
