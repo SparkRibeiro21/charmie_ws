@@ -74,7 +74,7 @@ class TaskMain():
         self.number_of_requests = 3
         self.curr_request = 0
         self.llps = []
-        USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS = False
+        USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS = True
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")
@@ -133,15 +133,12 @@ class TaskMain():
                 self.robot.get_llm_ollama_gpsr_low_level(command=hlp, mode="", wait_for_end_of=False)
                 
                 if not USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS:
-                    ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
-                    self.robot.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
-                    # confirmation = "yes"
-                    confirmation = self.robot.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    confirmation = self.robot.get_audio(yes_or_no=True, question="gpsr/do_you_have_another_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
 
                 else: # if touchscreen is used
-                    # TODO: Add touchscreen
-                    pass
-
+                    answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have another command?", speak_results=False, start_speak_file="gpsr/do_you_have_another_command", wait_for_end_of=True)
+                    confirmation = answer[0]
+                    
                 if confirmation.lower() == "no":
                     while not self.robot.get_llm_ollama_gpsr_low_level_is_done():
                         time.sleep(0.5)

@@ -4379,28 +4379,32 @@ class RobotStdFunctions():
 
                 self.get_llm_ollama_gpsr_high_level(command=gpsr_command, mode="", wait_for_end_of=False)
             
+                self.set_face(loadbar=10.0, command=gpsr_command)
                 self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
+                self.set_face("charmie_face")
+                
 
-                if self.get_llm_ollama_gpsr_high_level_is_done():
-                    self.save_speech(command=self.node.llm_ollama_gpsr_high_level_response[0], filename="123", quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
+                # if self.get_llm_ollama_gpsr_high_level_is_done():
+                #     self.save_speech(command=self.node.llm_ollama_gpsr_high_level_response[0], filename="123", quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
 
                 
                 ##### SPEAK: "I have understood the following command."
                 self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
-                self.set_speech(filename="temp/gpsr_command",show_in_face=True, wait_for_end_of=True)
-                ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
-                self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
+                self.set_speech(filename="temp/gpsr_command", show_in_face=True, wait_for_end_of=True)
                 
                 
                 if not use_touchscreen_for_yes_no_questions:
+                    ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
+                    self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
                     confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                     print("Finished:", confirmation)
                 else: # if touchscreen is used
-                    # TODO: Add touchscreen
-                    pass
+                    answer = self.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
+                    confirmation = answer[0]
+                    
 
-                # while not self.get_llm_ollama_gpsr_high_level_is_done():
-                #     time.sleep(0.05)
+                while not self.get_llm_ollama_gpsr_high_level_is_done():
+                    time.sleep(0.05)
                 
                 if confirmation.lower() == "yes":
                     self.set_rgb(command=GREEN+BLINK_LONG)
@@ -4411,25 +4415,25 @@ class RobotStdFunctions():
                     hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
 
 
-        while not self.save_speech_is_done():
-            time.sleep(0.05)
-        self.set_speech(filename="123", wait_for_end_of=True)
+        # while not self.save_speech_is_done():
+        #     time.sleep(0.05)
+        # self.set_speech(filename="123", wait_for_end_of=True)
 
         # Save current request
-        # print("Request " + hlp_comm)
-        # l_command = hlp_comm.split(";")
-        # print(l_command)
+        print("Request " + hlp_comm)
+        l_command = hlp_comm.split(";")
+        print(l_command)
         # Say HLP with time efficiency, divide in sentences and generate next sentence as I am saying the current sentence
-        # self.set_speech(filename="gpsr/say_plan1", wait_for_end_of= False)
-        # ctr = 0
-        # self.save_speech(command=l_command[0], filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=True)
-        # for c in l_command[1:]:
-        #     ctr += 1
-        #     self.save_speech(command=c, filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
-        #     self.set_speech(filename="temp/"+str(ctr-1), wait_for_end_of=True)
-        #     while not self.save_speech_is_done():
-        #         time.sleep(0.05)
-        # self.set_speech(filename="temp/"+str(ctr), wait_for_end_of=True)
+        self.set_speech(filename="gpsr/say_plan1", wait_for_end_of= False)
+        ctr = 0
+        self.save_speech(command=l_command[0], filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=True)
+        for c in l_command[1:]:
+            ctr += 1
+            self.save_speech(command=c, filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
+            self.set_speech(filename="temp/"+str(ctr-1), wait_for_end_of=True)
+            while not self.save_speech_is_done():
+                time.sleep(0.05)
+        self.set_speech(filename="temp/"+str(ctr), wait_for_end_of=True)
 
         # different cases if doing gpsr task or finals
         if generate_llp:
