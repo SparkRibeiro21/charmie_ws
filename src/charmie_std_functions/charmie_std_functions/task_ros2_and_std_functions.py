@@ -7487,7 +7487,7 @@ class RobotStdFunctions():
 
         return success, message, nav_coords_ret
 
-    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, forbidden_sides=["top", "right"], speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True):
+    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, forbidden_sides=["top"], speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True):
         
         # TODO: this function still does not consider the object height for comparing which is the best spot to place object (multiple shelves)
 
@@ -9453,13 +9453,67 @@ class RobotStdFunctions():
         self.after_pouring_angle = [0.0, 0.0, 0.0, 0.0, 0.0, -POUR_ROTATION]
         self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.after_pouring_angle, wait_for_end_of=True)
 
-    def pour_cornflakes(self, cornflakes_height=0.0):
+    def pour_cornflakes(self, cornflakes_height=0.0, furniture=""):
+
+        GRIPPER_STANDARD_HEIGHT_PICK = 0.98
+        TRAY_HEIGHT                 = 0.59 #m
+        cornflakes_height           = 0.28
+        TOLERANCE_ERROR             = 0.005
+        safe_retreat_arm_distance_y = 0.10
+        safe_retreat_arm_distance_x = -0.20
+        ADJUST_WHEN_POURING         = 0.03
+
+        gripper_place_height        = 1.105
+
+        grasp_height = cornflakes_height - 0.07
 
         pick_flakes_first=[-216.6,-70.3,-10,5.9,65.5,236.1]
 
         self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
-        object_position_grab = [-0.24*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+        final_pick_z = ( GRIPPER_STANDARD_HEIGHT_PICK - TRAY_HEIGHT - grasp_height - TOLERANCE_ERROR)*1000
+
+        print("Picked adjust in Z:", final_pick_z)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_pick_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
         self.set_arm(command="close_gripper", wait_for_end_of=True)
-        
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [final_pick_z , safe_retreat_arm_distance_y*1000 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = [-161.5, -12.9, -78.6,  84, -19.2, 147.7], wait_for_end_of=True)
+
+        self.set_arm(command="pick_from_tray_to_pour_cornflakes", wait_for_end_of=True)
+
+        if ADJUST_WHEN_POURING != 0.0:
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [ADJUST_WHEN_POURING*1000 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , 0.0 , 0.0 , 0.0 , 25.0 , -90.0], wait_for_end_of=True)
+
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = [-161.5, -12.9, -78.6,  84, -19.2, 147.7], wait_for_end_of=True)
+
+        self.set_arm(command="place_cornflakes_on_table_ROBOCUP_2026", wait_for_end_of=True)
+
+
+        adjust_z_height = (gripper_place_height - (self.get_height_from_furniture(furniture)[0]) - cornflakes_height - 0.08)*1000
+
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [ adjust_z_height, 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , 0.0 , safe_retreat_arm_distance_x*1000, 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+        self.set_arm(command="close_gripper", wait_for_end_of=False)
+
+        self.set_arm(command="initial_position_to_ask_for_objects",wait_for_end_of=True)
+
+        return
+
+
+
+

@@ -34,7 +34,7 @@ ros2_modules = {
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
-    "charmie_yolo_objects":         True,
+    "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
@@ -87,7 +87,7 @@ class TaskMain():
 
         # Which objects should be acquired
         self.GET_MILK            = True
-        self.GET_CORNFLAKES      = False
+        self.GET_CORNFLAKES      = True
         self.GET_BOWL            = True
         self.GET_BREAKFAST_SPOON = False
         self.GET_CUTLERY         = False
@@ -119,14 +119,14 @@ class TaskMain():
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
         ### TESTING POURING self.initial_position = [0.0, 0.0, 0.0]
-        self.initial_position = self.robot.get_navigation_coords_from_furniture(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+        # self.initial_position = self.robot.get_navigation_coords_from_furniture(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
         self.DISHWASHER_LOCATION = [ 4.08, -3.0, -2]
 
         self.SELECTED_PICKED_DISH = DetectedObject()
 
-        print(self.initial_position)
+        # print(self.initial_position)
         
     def main(self):
 
@@ -172,13 +172,19 @@ class TaskMain():
             
             if self.state == self.task_states["Waiting_for_task_start"]:
 
-                self.robot.set_initial_position(self.initial_position)
+                # self.robot.set_initial_position(self.initial_position)
                         
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
                 self.robot.set_speech(filename="pick_and_place_task/pp_ready_start", wait_for_end_of=True)
+
+                self.robot.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+
+                # self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+
+                # self.robot.set_arm(command="place_cornflakes_on_table_ROBOCUP_2026", wait_for_end_of=True)
 
                 self.robot.wait_for_start_button()
                 
@@ -191,9 +197,9 @@ class TaskMain():
 
 
                 if self.MILK_BEFORE_CORNFLAKES:
-                    self.state = self.task_states["Detect_and_pick_milk"] # TESTING POURING MILK
+                    self.state = self.task_states["Placing_bowl"] # TESTING POURING MILK
                 else:
-                    self.state = self.task_states["Detect_and_pick_milk"] # TESTING POURING MILK
+                    self.state = self.task_states["Placing_bowl"] # TESTING POURING MILK
                 
 
             elif self.state == self.task_states["Move_milk_location"]:
@@ -452,17 +458,56 @@ class TaskMain():
                     
                     self.robot.place_object(arm_command="place_bowl_table", speak_before=False, speak_after=True, verb="place", object_name="bowl", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     
-                self.state = self.task_states["Placing_milk"] 
+                self.state = self.task_states["Placing_cornflakes"] 
             
 
             elif self.state == self.task_states["Placing_cornflakes"]:
 
-                if self.GET_CORNFLAKES:
-                    ##### ARM POUR IN BOWL
-                    self.robot.place_object(arm_command="pour_cereals_bowl", speak_before=False, speak_after=True, verb="pour", object_name="cornflakes", preposition="into", furniture_name="bowl")
+                self.robot.pour_cornflakes(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+
+                # GRIPPER_STANDARD_HEIGHT_PICK = 0.98
+                # TRAY_HEIGHT                 = 0.59 #m
+                # cornflakes_height           = 0.28
+                # TOLERANCE_ERROR             = 0.005
+                # safe_retreat_arm_distance_y = 0.10
+
+                # grasp_height = cornflakes_height - 0.07
+
+                # pick_flakes_first=[-216.6,-70.3,-10,5.9,65.5,236.1]
+
+                # self.robot.set_arm(command="return_to_elevated_initial_position", wait_for_end_of=True)
+
+                # self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                # self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
+
+                # self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                # final_pick_z = ( GRIPPER_STANDARD_HEIGHT_PICK - TRAY_HEIGHT - grasp_height - TOLERANCE_ERROR)*1000
+
+                # print("Picked adjust in Z:", final_pick_z)
+
+                # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_pick_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+                # self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [final_pick_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+                # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , safe_retreat_arm_distance_y*1000 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+                # self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = [-161.5, -12.9, -78.6,  84, -19.2, 147.7], wait_for_end_of=True)
+
+                # self.robot.set_arm(command="pick_from_tray_to_pour_cornflakes", wait_for_end_of=True)
+
+                # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , 0.0 , 0.0 , 0.0 , 25.0 , -90.0], wait_for_end_of=True)
+
+                # self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = [-161.5, -12.9, -78.6,  84, -19.2, 147.7], wait_for_end_of=True)
+
+                # if self.GET_CORNFLAKES:
+                #     ##### ARM POUR IN BOWL
+                #     self.robot.place_object(arm_command="pour_cereals_bowl", speak_before=False, speak_after=True, verb="pour", object_name="cornflakes", preposition="into", furniture_name="bowl")
                     
-                    ##### ARM PLACE OBJECT
-                    self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name="cornflakes", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                #     ##### ARM PLACE OBJECT
+                #     self.robot.place_object(arm_command="place_cereal_table", speak_before=False, speak_after=True, verb="place", object_name="cornflakes", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     
                 self.state = self.task_states["Placing_milk"]
 

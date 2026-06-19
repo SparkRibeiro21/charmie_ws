@@ -85,6 +85,7 @@ class TaskMain():
         self.Final_State = 11
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
+        # self.state = self.Picking_up_cereal
         self.state = self.Placing_cereal
 
         self.ATTEMPTS_AT_RECEIVING = 2
@@ -368,7 +369,7 @@ class TaskMain():
                 # next state
                 self.state = self.Approach_kitchen_counter
 
-            elif self.state == self.Placing_cereal:
+            elif self.state == self.Picking_up_cereal:
                 
                 self.robot.wait_for_start_button()
 
@@ -379,15 +380,15 @@ class TaskMain():
                 self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = cornflakes_place, wait_for_end_of=True)
 
 
-                GRIPPER_STANDARD_HEIGHT = 0.83 #m
+                GRIPPER_STANDARD_HEIGHT_PLACE = 0.83 #m
                 TRAY_HEIGHT             = 0.59 #m
                 cornflakes_height       = 0.28
                 TOLERANCE_ERROR         = 0.005
                 safe_retreat_arm_distance_y = 0.20
 
-                final_z = ( GRIPPER_STANDARD_HEIGHT - TRAY_HEIGHT - (cornflakes_height/1.5) - TOLERANCE_ERROR)*1000
+                final_place_z = ( GRIPPER_STANDARD_HEIGHT_PLACE - TRAY_HEIGHT - (cornflakes_height/1.5) - TOLERANCE_ERROR)*1000
 
-                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_place_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
         
                 self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
                 time.sleep(0.5)
@@ -398,11 +399,63 @@ class TaskMain():
 
                 self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , safe_retreat_arm_distance_y*1000 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
 
-                self.robot.set_arm(command="close_gripper", wait_for_end_of=False)
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
                 
                 self.robot.set_arm(command="return_to_elevated_initial_position", wait_for_end_of=True)
 
-                self.state = self.Final_State
+                self.state = self.Placing_cereal
+
+            elif self.state == self.Placing_cereal:
+
+                GRIPPER_STANDARD_HEIGHT_PICK = 0.98
+                TRAY_HEIGHT                 = 0.59 #m
+                cornflakes_height           = 0.28
+                TOLERANCE_ERROR             = 0.005
+                safe_retreat_arm_distance_y = 0.20
+
+                grasp_height = cornflakes_height - 0.07
+
+                self.robot.wait_for_start_button()
+
+                pick_flakes_first=[-216.6,-70.3,-10,5.9,65.5,236.1]
+
+                self.robot.set_arm(command="return_to_elevated_initial_position", wait_for_end_of=True)
+
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
+
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+
+                final_pick_z = ( GRIPPER_STANDARD_HEIGHT_PICK - TRAY_HEIGHT - grasp_height - TOLERANCE_ERROR)*1000
+
+                print("Picked adjust in Z:", final_pick_z)
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_pick_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.07*1000 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , safe_retreat_arm_distance_y*1000 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = [-161.5, -12.9, -78.6,  84, -19.2, 147.7], wait_for_end_of=True)
+
+                self.robot.set_arm(command="pick_from_tray_to_pour_cornflakes", wait_for_end_of=True)
+
+                self.robot.wait_for_start_button()
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , 0.0 , 0.0 , 0.0 , -15.0 , -90.0], wait_for_end_of=True)
+
+
+
+
+
+
+
+
+
+
+
 
             elif self.state == self.Final_State:
                 

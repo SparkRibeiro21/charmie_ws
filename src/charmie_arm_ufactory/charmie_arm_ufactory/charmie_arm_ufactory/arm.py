@@ -317,6 +317,7 @@ class ArmUfactory(Node):
 		# close gripper
 		self.new_cornflakes_post_pick_tray_position = [-219.8, 109.7, 146.3, math.radians(178.7), math.radians(  30.2), math.radians( -90.1)]
 		self.new_cornflakes_pre_pour = [-161.5, -12.8, -78.8,  84.6, -19.2, 182.0]
+		self.cornflakes_pre_pour_ROBOCUP_2026 = [-161.5, -12.9, -78.6,  84, -19.2, 147.7]
 		self.new_cornflakes_pour1 = [-602.3, 130.7+height_adjust, 628.1, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
 		self.new_cornflakes_pour2 = [-602.4, 131.0+height_adjust, 628.0, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
 		self.new_cornflakes_pour3 = [-602.4, 131.0+height_adjust, 628.0, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
@@ -324,6 +325,7 @@ class ArmUfactory(Node):
 		
 		# place positions
 		self.new_cornflakes_pre_place = [-153.6,  10.2, -124.9,  95.3, -46.5, 148.7]
+		self.new_cornflakes_pre_place_ROBOCUP_2026 = [-168,  2.8, -128.6,  156.1, -30.3, 103.5]
 		self.new_cornflakes_place = [-555.4,  92.6+height_adjust, 784.8, math.radians( 77.5), math.radians(  8.4), math.radians(-112.7)]
 		self.new_cornflakes_post_place = [-392.7,  30.7+height_adjust, 745.5, math.radians( 77.5), math.radians(  8.4), math.radians(-112.7)]
 		
@@ -1327,6 +1329,15 @@ class ArmUfactory(Node):
 			case 15:
 				self.finish_arm_movement_()
 
+	def pick_from_tray_to_pour_cornflakes(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.cornflakes_pre_pour_ROBOCUP_2026, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.new_cornflakes_pour1, speed=100, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
 	def place_cereal_table(self):   
 		match self.estado_tr:
 			case 0:
@@ -1355,6 +1366,15 @@ class ArmUfactory(Node):
 			case 5:
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
 			case 6:
+				self.finish_arm_movement_()
+
+	def place_cornflakes_on_table_ROBOCUP_2026(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.new_cornflakes_pre_place_ROBOCUP_2026, speed=50, wait=True)
+			# case 1:
+			# 	self.set_position_values_(pose=self.new_cornflakes_place, speed=120, wait=True)
+			case 1:
 				self.finish_arm_movement_()
 	
 	def milk_tray_location_grab(self):
@@ -1693,6 +1713,10 @@ class ArmUfactory(Node):
 				self.pour_cereals_bowl_alternative_robocup_cornflakes()
 			case "place_cereal_table_alternative_robocup_cornflakes":
 				self.place_cereal_table_alternative_robocup_cornflakes()
+			case "pick_from_tray_to_pour_cornflakes":
+				self.pick_from_tray_to_pour_cornflakes()
+			case "place_cornflakes_on_table_ROBOCUP_2026":
+				self.place_cornflakes_on_table_ROBOCUP_2026()
 			case "pour_milk_bowl":
 				self.pour_milk_bowl()
 			case "pre_pour_milk_bowl_risky":
