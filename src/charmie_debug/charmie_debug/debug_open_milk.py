@@ -21,7 +21,7 @@ ros2_modules = {
     "charmie_audio":                False,
     "charmie_face":                 False,
     "charmie_head_camera":          False,
-    "charmie_hand_camera":          True,
+    "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                False,
@@ -29,7 +29,7 @@ ros2_modules = {
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
     "charmie_localisation":         False,
-    "charmie_low_level":            True,
+    "charmie_low_level":            False,
     "charmie_navigation":           False,
     "charmie_nav2":                 False,
     "charmie_nav_sdnl":             False,
@@ -39,7 +39,7 @@ ros2_modules = {
     "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
-    "charmie_tray_gripper":         True,
+    "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
@@ -85,7 +85,7 @@ class TaskMain():
         self.Final_State = 11
 
         # State the robot starts at, when testing it may help to change to the state it is intended to be tested
-        self.state = self.Waiting_for_task_start
+        self.state = self.Placing_cereal
 
         self.ATTEMPTS_AT_RECEIVING = 2
         self.SHOW_OBJECT_DETECTED_WAIT_TIME = 3.0
@@ -368,11 +368,40 @@ class TaskMain():
                 # next state
                 self.state = self.Approach_kitchen_counter
 
-            elif self.state == self.Approach_kitchen_counter:
-                print("State:", self.state, "- Approach_kitchen_counter")
-                # your code here ...
-                                
-                # next state
+            elif self.state == self.Placing_cereal:
+                
+                self.robot.wait_for_start_button()
+
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                
+                cornflakes_place=[-241.8, -34.6, -28, 14.2, 53.1, 204.4]
+
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = cornflakes_place, wait_for_end_of=True)
+
+
+                GRIPPER_STANDARD_HEIGHT = 0.83 #m
+                TRAY_HEIGHT             = 0.59 #m
+                cornflakes_height       = 0.28
+                TOLERANCE_ERROR         = 0.005
+                safe_retreat_arm_distance_y = 0.20
+
+                final_z = ( GRIPPER_STANDARD_HEIGHT - TRAY_HEIGHT - (cornflakes_height/1.5) - TOLERANCE_ERROR)*1000
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+        
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [(cornflakes_height/1.5)*1000 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+                time.sleep(1.0)
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , safe_retreat_arm_distance_y*1000 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=False)
+                
+                self.robot.set_arm(command="return_to_elevated_initial_position", wait_for_end_of=True)
+
                 self.state = self.Final_State
 
             elif self.state == self.Final_State:

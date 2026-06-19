@@ -9321,18 +9321,29 @@ class RobotStdFunctions():
 
     def place_cornflakes_in_tray(self, place_height = -1):
 
-        TRAY_HEIGHT = 0.59
-        TOLERANCE_ERROR = 0.005
 
-        gripper_place_position = self.get_gripper_localization()
+        GRIPPER_STANDARD_HEIGHT  = 0.83  #m
+        TRAY_HEIGHT              = 0.59  #m
+        TOLERANCE_ERROR          = 0.005 #m
+        cornflakes_height        = self.get_object_height_from_object("cornflakes")
+        safe_retreat_arm_distance_y = 0.20
 
-        if place_height >= 0:
-            final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+        # gripper_place_position = self.get_gripper_localization()
+
+        # if place_height >= 0:
+        #     final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+        # else:
+        #     print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object("cornflakes")/1.25) ," TOLERA ", TOLERANCE_ERROR)
+        #     final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object("cornflakes")/1.5) - TOLERANCE_ERROR)*1000
+
+        if cornflakes_height > place_height > 0:
+            final_z = ( GRIPPER_STANDARD_HEIGHT - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
         else:
-            print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object("cornflakes")/1.25) ," TOLERA ", TOLERANCE_ERROR)
-            final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object("cornflakes")/1.5) - TOLERANCE_ERROR)*1000
+            final_z = ( GRIPPER_STANDARD_HEIGHT - TRAY_HEIGHT - (cornflakes_height/1.5) - TOLERANCE_ERROR)*1000
 
-        cornflakes_place=[-246.2,-23.6,-36.4,15.6,51.8,198.7]
+        # cornflakes_place=[-246.2,-23.6,-36.4,15.6,51.8,198.7] old position
+
+        cornflakes_place = [-241.8, -34.6, -28, 14.2, 53.1, 204.4] # new position
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = cornflakes_place, wait_for_end_of=True)
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
@@ -9340,10 +9351,15 @@ class RobotStdFunctions():
         self.set_arm(command="open_gripper", wait_for_end_of=True)
         time.sleep(0.5)
 
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [(cornflakes_height/1.5)*1000 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
 
-        # object_position_grab = [0.16*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
-        # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+        time.sleep(0.5)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , safe_retreat_arm_distance_y*1000 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+        self.set_arm(command="close_gripper", wait_for_end_of=False)
+        
+        self.set_arm(command="return_to_elevated_initial_position", wait_for_end_of=True)
 
     
     def open_milk_lid(self, lid_height = 0.01, max_opening_attempts = 3):
