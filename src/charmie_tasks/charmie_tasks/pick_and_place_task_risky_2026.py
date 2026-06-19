@@ -90,7 +90,7 @@ class TaskMain():
         self.GET_CORNFLAKES      = True
         self.GET_BOWL            = True
         self.GET_BREAKFAST_SPOON = False
-        self.GET_CUTLERY         = False
+        self.GET_CUTLERY         = True
         self.IS_CORNFLAKES_BIG   = False # choose whether the cornflakes package is a big one (False) or a small one (True)
 
         # whether we know in advance that one of the objects we want the judge to help CHARMIE due to some physical constraint in picking the object
@@ -112,17 +112,19 @@ class TaskMain():
 
         # Objects picked furniture names
         # self.MILK_LOCATION = "Pantry"
-        self.MILK_LOCATION = "Dinner Table" # TESTING POURING MILK
-        self.CORNFLAKES_LOCATION = "Cabinet"
-        self.DISHES_LOCATION = "Dinner Table" # TESTING POURING MILK
+        self.MILK_LOCATION = "Kitchen Cabinet"
+        self.CORNFLAKES_LOCATION = "Kitchen Cabinet"
+        self.DISHES_LOCATION = "Dishwasher"
 
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
-        ### TESTING POURING self.initial_position = [0.0, 0.0, 0.0]
+        self.initial_position = [0.0, 0.0, 0.0]
         # self.initial_position = self.robot.get_navigation_coords_from_furniture(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
-        self.DISHWASHER_LOCATION = [ 4.08, -3.0, -2]
+        # self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
+        self.SEARCH_CUTLERY_COORDS = [4.43, 1.85, 0.0] # LAR Side of Dinner Table
+        # self.DISHWASHER_LOCATION = [ 4.08, -3.0, -2]
+        self.DISHWASHER_LOCATION = self.robot.get_navigation_coords_from_furniture("dishwasher")
 
         self.SELECTED_PICKED_DISH = DetectedObject()
 
@@ -172,7 +174,7 @@ class TaskMain():
             
             if self.state == self.task_states["Waiting_for_task_start"]:
 
-                # self.robot.set_initial_position(self.initial_position)
+                self.robot.set_initial_position(self.initial_position)
                         
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
@@ -180,7 +182,13 @@ class TaskMain():
 
                 self.robot.set_speech(filename="pick_and_place_task/pp_ready_start", wait_for_end_of=True)
 
-                self.robot.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+                # self.robot.open_tray_gripper()
+
+                self.robot.close_tray_gripper()
+
+                # self.robot.open_tray_gripper()
+
+                # self.robot.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
 
                 # self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
@@ -190,16 +198,15 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                # TESTING POURING MILK
-                # self.robot.wait_for_door_opening()
+                self.robot.wait_for_door_opening()
 
-                # self.robot.enter_house_after_door_opening()
+                self.robot.enter_house_after_door_opening()
 
 
                 if self.MILK_BEFORE_CORNFLAKES:
-                    self.state = self.task_states["Placing_bowl"] # TESTING POURING MILK
+                    self.state = self.task_states["Move_milk_location"]
                 else:
-                    self.state = self.task_states["Placing_bowl"] # TESTING POURING MILK
+                    self.state = self.task_states["Move_cornflakes_location"]
                 
 
             elif self.state == self.task_states["Move_milk_location"]:
@@ -224,8 +231,6 @@ class TaskMain():
                     
                     if not self.HELP_PICK_MILK:
 
-                        # TESTING POURING MILK
-
                         #self.robot.set_speech(filename="pick_and_place_task/open_milk_lid", wait_for_end_of=True)
                         #time.sleep(8.0)
                         pick_height, _ = self.robot.pick_object(selected_object="Milk", arm_initial_position="initial_position_to_ask_for_objects",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
@@ -249,9 +254,9 @@ class TaskMain():
                 
                 if self.MILK_BEFORE_CORNFLAKES:
 
-                    self.state = self.task_states["Detect_and_pick_dishes"]
+                    self.state = self.task_states["Move_cornflakes_location"]
                 else:    
-                    self.state = self.task_states["Detect_and_pick_dishes"]
+                    self.state = self.task_states["Move_milk_location"]
 
 
             elif self.state == self.task_states["Move_cornflakes_location"]:
@@ -282,7 +287,9 @@ class TaskMain():
                 if self.GET_CORNFLAKES:
 
                     if not self.HELP_PICK_CORNFLAKES:
-                        self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position="collect_cornflakes_to_tray",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
+                        # self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position="collect_cornflakes_to_tray",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
+                        cornflakes_height, _ = self.robot.pick_object(selected_object="Cornflakes", arm_initial_position="initial_position_to_ask_for_objects",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
+                        self.robot.place_cornflakes_in_tray(place_height=cornflakes_height)
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                         # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
@@ -329,7 +336,7 @@ class TaskMain():
                 if self.GET_BREAKFAST_SPOON:
 
                     if not self.HELP_PICK_SPOON:
-                        self.robot.pick_object_risky(selected_object="Spoon", list_of_objects_detected_as= [["Fork", "Knife"]], return_arm_to_initial_position="collect_spoon_to_tray_funilocopo_v4")
+                        self.robot.pick_object(selected_object="Spoon", list_of_objects_detected_as= [["Fork", "Knife"]], arm_initial_position="collect_spoon_to_tray_funilocopo_v4")
 
                     else:
                         object_in_gripper = False
@@ -346,7 +353,9 @@ class TaskMain():
                 if self.GET_BOWL:
                     
                     if not self.HELP_PICK_BOWL:
-                        self.robot.pick_object_risky(selected_object="Bowl")
+                        # self.robot.pick_object_risky(selected_object="Bowl")
+
+                        self.robot.pick_object(selected_object="Bowl")
                         
                     else:
                         object_in_gripper = False
@@ -401,21 +410,24 @@ class TaskMain():
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
                 # self.robot.set_speech(filename="pick_and_place_task/remove_chairs", wait_for_end_of=False)
 
-                """ TESTING POURING MILK
-                # self.robot.move_to_position(move_coords=self.SEARCH_CUTLERY_COORDS, wait_for_end_of=True)
 
-                # cutlery = self.robot.search_for_objects(tetas=self.search_for_cutlery_tetas, list_of_objects=[], use_arm=True, detect_objects=True)
-                """
+                self.robot.move_to_position(move_coords=self.SEARCH_CUTLERY_COORDS, wait_for_end_of=True)
 
-                move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))
+                cutlery = self.robot.search_for_objects(tetas=self.search_for_cutlery_tetas, list_of_objects=[], use_arm=True, detect_objects=True)
+
+                s, _ , coords, _ =self.robot.move_to_free_place_position(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, list_of_objects=cutlery, heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=False, wait_for_end_of=True)
+
+                # move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))
+
+                move_coords = self.robot.add_rotation_to_pick_position(coords)
                                 
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
 
                 self.robot.adjust_obstacles(distance=0.3, direction=-45.0, wait_for_end_of=False)
 
-                """ TESTING POURING MILK
                 #VARIABLE TO ENSURE ONLY CUTLERY IS PICKED
-                no_other_cutlery = True
+                # POURING TESTS
+                """no_other_cutlery = True
 
                 for c in cutlery:
                     if (c.object_name == "Fork" or c.object_name == "Spoon" or c.object_name == "Knife") and no_other_cutlery:
@@ -442,7 +454,7 @@ class TaskMain():
                             # time.sleep(8.0)  
 
                             self.SELECTED_PICKED_DISH = c  
-                            no_other_cutlery = False     """                        
+                            no_other_cutlery = False  """                     
         
                 # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 # self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
@@ -522,7 +534,7 @@ class TaskMain():
 
                     self.robot.pour_milk()
 
-                    self.robot.set_arm(command="place_milk_table", wait_for_end_of=True)
+                    # self.robot.set_arm(command="place_milk_table", wait_for_end_of=True)
                     
                     # ##### ARM POUR IN BOWL # TESTING POURING MILK
                     # self.robot.place_object(arm_command="pre_pour_milk_bowl_risky", speak_before=False, speak_after=False)
@@ -531,11 +543,11 @@ class TaskMain():
                     # self.robot.pour_milk(milk_height = 0.21)
                     # self.robot.place_object(arm_command="post_pour_milk_bowl_risky", speak_before=False, speak_after=True, verb="pour", object_name="milk", preposition="into", furniture_name="bowl")
                 
-                    # ##### ARM PLACE OBJECT
-                    # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name="milk", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
-                    # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    ##### ARM PLACE OBJECT
+                    self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name="milk", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
-                self.state = self.task_states["Final_State"]  # TESTING POURING MILK
+                self.state = self.task_states["Placing_spoon"]
 
 
             elif self.state == self.task_states["Placing_spoon"]:
@@ -625,7 +637,7 @@ class TaskMain():
                     self.robot.place_object_in_dishwasher_top_rack_and_close_rack(selected_object=c.object_name, place_mode = self.robot.get_standard_pick_from_object(object_name=c.object_name), place_height = pick_height_cutlery, navigation_distance= furniture_distance - 0.60)
                     # self.robot.set_speech(filename="clean_the_table/ask_to_close_dishwasher_rack", wait_for_end_of=True)
                     # time.sleep(1.0)
-                    self.robot.close_dishwasher(task = "pp")
+                    # self.robot.close_dishwasher(task = "pp")
                 
                 self.state = self.task_states["Final_State"]
 

@@ -9462,6 +9462,7 @@ class RobotStdFunctions():
         safe_retreat_arm_distance_y = 0.10
         safe_retreat_arm_distance_x = -0.20
         ADJUST_WHEN_POURING         = 0.03
+        POURING_ANGLE               = -70
 
         gripper_place_height        = 1.105
 
@@ -9491,7 +9492,7 @@ class RobotStdFunctions():
         if ADJUST_WHEN_POURING != 0.0:
             self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [ADJUST_WHEN_POURING*1000 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
 
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , 0.0 , 0.0 , 0.0 , 25.0 , -90.0], wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , 0.0 , 0.0 , 0.0 , 25.0 , POURING_ANGLE], wait_for_end_of=True)
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = [-161.5, -12.9, -78.6,  84, -19.2, 147.7], wait_for_end_of=True)
 
