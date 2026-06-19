@@ -4334,7 +4334,7 @@ class RobotStdFunctions():
 
         return self.node.llm_demonstration_response
     
-    def receive_command_and_generate_low_level_planner(self, use_touchscreen_for_yes_no_questions=False):
+    def receive_command_and_generate_low_level_planner(self, command_no=1, use_touchscreen_for_yes_no_questions=False):
 
         current_datetime = ""
         hlp_comm = ""
@@ -4406,6 +4406,8 @@ class RobotStdFunctions():
                     self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
                     confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
                 else: # if touchscreen is used
+                    if command_no == 1: # for time efficiency, only inform user that needs to press the face for the first command
+                        self.set_speech(filename="generic/press_correct_option_touchscreen", wait_for_end_of=True) # SAY: Please press the correct option on my face.
                     answer = self.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
                     confirmation = answer[0]
                 
