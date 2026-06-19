@@ -4237,6 +4237,7 @@ class RobotStdFunctions():
         ### else
         ###     The task node must get the response command from: self.node.llm_ollama_gpsr_high_level_response
 
+        print(self.node.llm_ollama_gpsr_high_level_response)
         return self.node.llm_ollama_gpsr_high_level_response
     
     def get_llm_ollama_gpsr_high_level_is_done(self):
@@ -4251,6 +4252,9 @@ class RobotStdFunctions():
         request = GetLLMResponse.Request()
         request.command = command
         request.mode = mode
+        
+        self.node.waited_for_end_of_llm_ollama_gpsr_low_level = False # to prevent possible wfeo as false that did not have a _is_done() check that turned down the flag
+        
         self.node.call_llm_ollama_gpsr_low_level_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
@@ -4258,8 +4262,20 @@ class RobotStdFunctions():
                 pass
             self.node.waited_for_end_of_llm_ollama_gpsr_low_level = False
 
+        ### if wfeo
+        ###     The result is returned by this function
+        ### else
+        ###     The task node must get the response command from: self.node.llm_ollama_gpsr_low_level_response
+
         print(self.node.llm_ollama_gpsr_low_level_response)
         return self.node.llm_ollama_gpsr_low_level_response
+
+    def get_llm_ollama_gpsr_low_level_is_done(self):
+        if self.node.waited_for_end_of_llm_ollama_gpsr_low_level:
+            self.node.waited_for_end_of_llm_ollama_gpsr_low_level = False
+            return True
+        else:
+            return False
 
     ### LLM
     def get_llm_demonstration(self, wait_for_end_of=True):
@@ -4317,68 +4333,113 @@ class RobotStdFunctions():
    
 
         return self.node.llm_demonstration_response
+    
 
-    ##  GETS AND CONFIRMS A GPSR COMMAND ##
-    def get_llm_confirm_command(self, wait_for_end_of=True):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    def receive_command_and_generate_low_level_planner(self, use_touchscreen_for_yes_no_questions=False):
 
         command_confirmed = False
-        max_confirm_attempts = 3
-        confirm_attempts_cntr = 0
         max_characters = 250
-        valid_command = False
+        hlp_comm = ""
 
         self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
-
-        while not command_confirmed and confirm_attempts_cntr < max_confirm_attempts:
-
-            confirm_attempts_cntr += 1
+        while not command_confirmed: #  and confirm_attempts_cntr < max_confirm_attempts:
 
             ##### SPEAK: "What is your request?"
             gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green", wait_for_end_of= True)
-            # gpsr_command = "Please proceed to the living room, introduce yourself to the person wearing a black jacket, and thereafter follow them."
             print("Finished:", gpsr_command)
 
             ##### SPEAK: "Please give me a moment to process your command"
             self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
             
             if len(gpsr_command) > max_characters:
-                valid_command = False
                 self.set_speech(filename="gpsr/could_not_process", wait_for_end_of=True)
             else:
+
+                self.get_llm_ollama_gpsr_high_level(command=gpsr_command, mode="", wait_for_end_of=False)
             
+                self.set_face(loadbar=10.0, command=gpsr_command)
                 self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
+                self.set_face("charmie_face")
+
+                ### IF I WANT TO SPEAK WITHOUT THE SENTENCE DIVISION TIME EFFICIENCY, FULL SPEAK COMMAND
+                # if self.get_llm_ollama_gpsr_high_level_is_done():
+                #     self.save_speech(command=self.node.llm_ollama_gpsr_high_level_response[0], filename="123", quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
                 
                 ##### SPEAK: "I have understood the following command."
                 self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
-                self.set_speech(filename="temp/gpsr_command",show_in_face=True, wait_for_end_of=True)
-                ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
-                self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
-                # confirmation = "yes"
-                confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                print("Finished:", confirmation)
-
+                self.set_speech(filename="temp/gpsr_command", show_in_face=True, wait_for_end_of=True)
+                
+                if not use_touchscreen_for_yes_no_questions:
+                    ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
+                    self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
+                    confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    print("Finished:", confirmation)
+                else: # if touchscreen is used
+                    answer = self.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
+                    confirmation = answer[0]
+                
+                while not self.get_llm_ollama_gpsr_high_level_is_done():
+                    time.sleep(0.05)
+                
                 if confirmation.lower() == "yes":
                     self.set_rgb(command=GREEN+BLINK_LONG)
                     ##### SPEAK: "Great!"
-                    valid_command = True
+                    # valid_command = True
                     command_confirmed = True
+                    hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
 
-                else:
-                    self.set_rgb(command=RED+BLINK_LONG)
+        self.get_llm_ollama_gpsr_low_level(command=hlp_comm, mode="", wait_for_end_of=False)
+        
+        ### IF I WANT TO SPEAK WITHOUT THE SENTENCE DIVISION TIME EFFICIENCY, FULL SPEAK COMMAND
+        # while not self.save_speech_is_done():
+        #     time.sleep(0.05)
+        # self.set_speech(filename="123", wait_for_end_of=True)
 
-                    if confirm_attempts_cntr < max_confirm_attempts:
-                        ##### SPEAK: Sorry for my mistake, lets try again.
-                        self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
-                        command_confirmed = False
-                        valid_command = False
-                
-                    else:
-                        gpsr_command = "ERROR"
+        # Save current request
+        print("Request " + hlp_comm)
+        l_command = hlp_comm.split(";")
+        print(l_command)
+        # Say HLP with time efficiency, divide in sentences and generate next sentence as I am saying the current sentence
+        self.set_speech(filename="gpsr/say_plan1", wait_for_end_of= False)
+        ctr = 0
+        self.save_speech(command=l_command[0], filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=True)
+        for c in l_command[1:]:
+            ctr += 1
+            self.save_speech(command=c, filename=str(ctr), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
+            self.set_speech(filename="temp/"+str(ctr-1), wait_for_end_of=True)
+            while not self.save_speech_is_done():
+                time.sleep(0.05)
+        self.set_speech(filename="temp/"+str(ctr), wait_for_end_of=True)
 
-        if not valid_command:
-            gpsr_command = "ERROR"
+        while not self.get_llm_ollama_gpsr_low_level_is_done():
+            time.sleep(0.5)
+        
+        llp = self.node.llm_ollama_gpsr_low_level_response
 
-        return gpsr_command
+        return llp
+        
+        
 
     ##  HIGH-LEVEL PLANNER (GENERATES A HIGH-LEVEL PLAN FOR A GPSR COMMAND)
     def get_llm_high_level_plan(self, command= "", wait_for_end_of=True):
@@ -4656,15 +4717,19 @@ class RobotStdFunctions():
                     print("FOUND:", len(people_found)) 
 
                     for p in people_found:
+
+                        print("p room: ", p.room_location)
+                        print("current room: ", curr_room)
+
                         if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-                            correct_person=p
+                            correct_person = p
 
 
                     print("correct x coords absolut: ", correct_person.position_absolute.x) 
                     print("correct y coords absolut: ", correct_person.position_absolute.y) 
                     print("Correct person's height", correct_person.height)
 
-                    self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+                    # self.detected_person_to_face_path(person=correct_person, send_to_face=True)
 
                     self.set_neck(self.look_navigation)
                     self.move_to_person(person = correct_person)
@@ -8466,6 +8531,9 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_X =  2.00
         MIN_OBJECT_DISTANCE_Y = -1.00
         MAX_OBJECT_DISTANCE_Y =  1.00
+        MIN_OBJECT_Z          =  0.20
+        MAX_OBJECT_Z          =  1.90
+        
 
         # HOW FAR AWAY FROM THE FURNITURE THE ROBOT WILL BE BEFORE PICKING OBJECT (ADJUSTS)
         DISTANCE_IN_FRONT_X     =  0.26 
@@ -8857,7 +8925,10 @@ class RobotStdFunctions():
                         #correct_x_grab = MAX_MOVE_LIMIT
                 if pick_mode == "top":
                     correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
-                    MAX_MOVE_LIMIT = 260
+                    if selected_object != "bowl":
+                        MAX_MOVE_LIMIT = 260
+                    else:
+                        MAX_MOVE_LIMIT = 220
                     if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320:
                         correct_x_grab = MAX_MOVE_LIMIT
                 
@@ -9211,7 +9282,7 @@ class RobotStdFunctions():
 
             return correct_rotation
 
-    def detect_milk_cap(self):
+    def detect_milk_cap(self, cap="small"):
 
         def crop_depth(depth):
             h, w = depth.shape[:2]
@@ -9221,7 +9292,7 @@ class RobotStdFunctions():
             y2 = 4 * h // 5
             return depth[y1:y2, x1:x2], x1, y1
 
-        def segment_3_classes(img, type_of_cap=2):
+        def segment_3_classes(img, type_of_cap=2): # 2 for small cap, 3 big cap
             # flatten image to 1D
             Z = img.reshape((-1, 1)).astype(np.float32)
             # K-means criteria
@@ -9240,6 +9311,10 @@ class RobotStdFunctions():
             segmented = centers[labels].reshape(img.shape)
             return segmented, labels.reshape(img.shape), centers
         
+        if cap == "small":
+            type_of_cap = 2
+        else:
+            type_of_cap = 3
 
         _, rgb = self.get_hand_rgb_image()
         _, depth_origin = self.get_hand_depth_image()
@@ -9266,7 +9341,7 @@ class RobotStdFunctions():
 
         # cv2.imshow("normalized", depth)
         
-        segmented, labels, centers = segment_3_classes(depth, type_of_cap=2)
+        segmented, labels, centers = segment_3_classes(depth, type_of_cap=type_of_cap)
         # print(labels, centers)
         brightest_cluster = np.argmax(centers)
 
@@ -9302,7 +9377,7 @@ class RobotStdFunctions():
 
         TRAY_HEIGHT = 0.59
         TOLERANCE_ERROR = 0.005
-        PUSH_MILK_DISTANCE = 0.04
+        PUSH_MILK_DISTANCE = 0.085 - self.get_object_width_from_object("milk")
 
         milk_push = [0.0 , 0.0 , PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
         after_push = [0.0 , 0.0 , -PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
@@ -9318,21 +9393,111 @@ class RobotStdFunctions():
         safe_place = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
         safe_rise = [self.get_object_height_from_object("milk")*1.2*1000 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = milk_push, wait_for_end_of=True)
+
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_place, wait_for_end_of=True)
 
         self.set_arm(command="open_gripper", wait_for_end_of=True)
 
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = milk_push, wait_for_end_of=True)
-        self.close_tray_gripper(wait_for_end_of=True)
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = after_push, wait_for_end_of=True)
+
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_rise, wait_for_end_of=True)
+
+        self.close_tray_gripper(wait_for_end_of=True)
+        
+
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         self.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+
+    def place_cornflakes_in_tray(self, place_height = -1):
+
+        TRAY_HEIGHT = 0.59
+        TOLERANCE_ERROR = 0.005
+
+        gripper_place_position = self.get_gripper_localization()
+
+        if place_height >= 0:
+            final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+        else:
+            print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object("cornflakes")/1.25) ," TOLERA ", TOLERANCE_ERROR)
+            final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object("cornflakes")/1.5) - TOLERANCE_ERROR)*1000
+
+        cornflakes_place=[-246.2,-23.6,-36.4,15.6,51.8,198.7]
+
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = cornflakes_place, wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+        
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        time.sleep(0.5)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+        # object_position_grab = [0.16*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+        # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+
+    
+    def open_milk_lid(self, lid_height = 0.01, max_opening_attempts = 3):
+        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+        self.set_arm(command="ask_for_objects_to_check_milk_cap", wait_for_end_of=True)
+        self.set_arm(command="close_tray_gripper", wait_for_end_of=True)
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        lid = self.detect_milk_cap()
+
+        tf_x =  0.145
+        tf_y = -0.006
+        tf_z = -0.075
+        DETECTION_ERROR = 0.018
+        OPENING_ATTEMPT = 0
+
+        TRAY_HEIGHT = 0.59
+
+        gripper_place_position = self.get_gripper_localization()
+        correct_x_grab = (gripper_place_position.z - TRAY_HEIGHT - lid_height/0.5 - tf_x - self.get_object_height_from_object("milk"))*1000
+        correct_y_grab = (lid.y - tf_y)*1000
+        correct_z_grab = (lid.z - tf_z + DETECTION_ERROR)*1000
+
+        open_milk_lid_adjust = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
+
+        print(open_milk_lid_adjust)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_adjust, wait_for_end_of=True)
+
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+        for OPENING_ATTEMPT in range(max_opening_attempts):
+            print("OPENING_ATTEMPT:", OPENING_ATTEMPT)
+            if OPENING_ATTEMPT == 0:
+                small_rotation = [0.0,0.0,0.0,0.0,0.0,-30.0]
+                self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=small_rotation, wait_for_end_of=True)
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+            rotate_right = [0.0,0.0,0.0,0.0,0.0,70.0]
+            rotate_left = [0.0,0.0,0.0,0.0,0.0,-70.0]
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_right, wait_for_end_of=True)
+            self.set_arm(command="close_gripper", wait_for_end_of=True)
+            if OPENING_ATTEMPT != max_opening_attempts-1:
+                self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_left, wait_for_end_of=True)
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
+            else:
+                last_rotation = [0.0,0.0,0.0,0.0,0.0,-40.0]
+                self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=last_rotation, wait_for_end_of=True)
+                safe_rise = [0.0,0.0,-lid_height*4*1000,0.0,0.0,0.0]
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=safe_rise, wait_for_end_of=True)
+
+        let_lid_go = [-correct_z_grab, correct_y_grab, -correct_x_grab + lid_height*4*1000, 0.0, 0.0, 0.0]
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=let_lid_go, wait_for_end_of=True)
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        self.set_arm(command="check_milk_cap_to_ask_for_objects", wait_for_end_of=True)
+
 
     def pour_milk(self, milk_height=0.0):
 
         POUR_ROTATION = -90.0
         CENTRE_LID_DISTANCE = 0.0
+        PUSH_MILK_DISTANCE = 0.085 - self.get_object_width_from_object("milk")
+
+        reach_milk = [0.0 , 0.0 , PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
+        take_milk = [0.0 , 0.0 , -PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
 
         if milk_height == 0.0:
             milk_height = self.get_object_height_from_object(object_name="milk")
@@ -9340,6 +9505,18 @@ class RobotStdFunctions():
                 print("Milk not found")
         
         adjust_pouring_y = milk_height - 0.17
+
+        self.open_tray_gripper()
+
+        self.set_arm(command="approach_milk_in_tray", wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = reach_milk, wait_for_end_of=True)
+
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = take_milk, wait_for_end_of=True)
+
+        self.set_arm(command="milk_in_tray_position_to_pre_pour", wait_for_end_of=True)
 
         if adjust_pouring_y != 0.0 :
             self.pouring_distance = [0.0, adjust_pouring_y*1000, CENTRE_LID_DISTANCE*1000, 0.0, 0.0, 0.0]
@@ -9349,4 +9526,14 @@ class RobotStdFunctions():
         self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.pouring_angle, wait_for_end_of=True)
         self.after_pouring_angle = [0.0, 0.0, 0.0, 0.0, 0.0, -POUR_ROTATION]
         self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.after_pouring_angle, wait_for_end_of=True)
+
+    def pour_cornflakes(self, cornflakes_height=0.0):
+
+        pick_flakes_first=[-216.6,-70.3,-10,5.9,65.5,236.1]
+
+        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
+        object_position_grab = [-0.24*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
         
