@@ -34,6 +34,7 @@ ros2_modules = {
     "charmie_speakers":             True,
     "charmie_speakers_save":        True,
     "charmie_tracking":             True,
+    "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
@@ -102,20 +103,20 @@ class TaskMain():
             
             # couch that extends in the Y axis in the 2D map (horizontal in the map)
             {
-                "name": "grey_couch_left",  
+                "name": "couch_left",  
                 "furniture": "Couch",
                 "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
                                   self.robot.get_location_coords_from_furniture("Couch")[1] + (self.robot.get_size_from_furniture("Couch")[1]/4.0),
                                   self.robot.get_location_coords_from_furniture("Couch")[2]],
-                "speak": "hri/grey_couch_left",
+                "speak": "hri/couch_left",
             },
             {
-                "name": "grey_couch_right", 
+                "name": "couch_right", 
                 "furniture": "Couch",
                 "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
                                   self.robot.get_location_coords_from_furniture("Couch")[1] - (self.robot.get_size_from_furniture("Couch")[1]/4.0),
                                   self.robot.get_location_coords_from_furniture("Couch")[2]],
-                "speak": "hri/grey_couch_right"
+                "speak": "hri/couch_right"
             },
 
             # couch that extends in the X axis in the 2D map (vertical in the map)
@@ -157,15 +158,15 @@ class TaskMain():
         # while True:
         #     pass
         
-        self.ENTRANCE_DOOR_FURNITURE = "exit"
+        self.ENTRANCE_DOOR_FURNITURE = "entrance"
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
-        self.default_speak_file = "hri/grey_couch_center"
-        self.default_couch_to_look_center = "grey couch"
+        self.default_speak_file = "hri/couch_center"
+        self.default_couch_to_look_center = "couch"
         # Which objects should be acquired
-        self.OPEN_DOOR_GUEST1 = False
-        self.OPEN_DOOR_GUEST2 = False
+        self.OPEN_DOOR_GUEST1 = True
+        self.OPEN_DOOR_GUEST2 = True
         self.POINT_TO_FREE_SEAT = True # if False it will only say it is looking to the free seat
         self.HANDOVER_GUEST2_BAG = False
 
@@ -220,6 +221,7 @@ class TaskMain():
         self.look_left = [90, 0]
         self.look_right = [-90, 0]
         self.search_tetas = [[-60, -15], [0, -15], [60, -15]]
+        self.search_for_guest_tetas=[[0, 10]]
 
         self.state = self.task_states["Waiting_for_task_start"]
 
@@ -266,7 +268,7 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest1"]:
                                         
                 if self.OPEN_DOOR_GUEST1:
-                    self.robot.open_door(push_pull="pull", left_right="left", wait_for_end_of=True)
+                    self.robot.open_door(push_pull="pull", handle_side="right", wait_for_end_of=True)
                     self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
                 self.state = self.task_states["Receive_guest1"]
@@ -288,7 +290,7 @@ class TaskMain():
                     if not self.OPEN_DOOR_GUEST1:
                         people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     else:
-                        people_found = self.robot.search_for_person(tetas=[[20, 10]], time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
+                        people_found = self.robot.search_for_person(tetas=self.search_for_guest_tetas, time_in_each_frame=10.0, break_if_detect=True, characteristics=True, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     print("Number of people found:", len(people_found))
 
                     if len(people_found) == 0:
@@ -506,7 +508,7 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest2"]:
                                         
                 if self.OPEN_DOOR_GUEST2:
-                    self.robot.open_door(push_pull="pull", left_right="left", wait_for_end_of=True)
+                    self.robot.open_door(push_pull="pull", handle_side="right", wait_for_end_of=True)
                     self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
                 self.state = self.task_states["Receive_guest2"]
@@ -528,7 +530,7 @@ class TaskMain():
                     if not self.OPEN_DOOR_GUEST2:
                         people_found = self.robot.search_for_person(tetas=[self.look_forward], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     else:
-                        people_found = self.robot.search_for_person(tetas=[[20, 10]], time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
+                        people_found = self.robot.search_for_person(tetas=self.search_for_guest_tetas, time_in_each_frame=10.0, break_if_detect=True, characteristics=False, only_detect_person_right_in_front=True, keep_neck_in_final_search_position=True)
                     
                     # still need to check for timeout, and decide what to do in that case
                     print("Number of people found:", len(people_found))
@@ -775,6 +777,7 @@ class TaskMain():
                 if self.POINT_TO_FREE_SEAT: # pointing at the free seat
                     ang = self.robot.get_rotation_angle_to_map_coords(target_coords=seat_position)
                     self.robot.adjust_angle(angle=ang, wait_for_end_of=False)
+                    self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                     self.robot.set_arm(command="initial_position_to_point_front", wait_for_end_of=True)
                     while not self.robot.adjust_angle_is_done():
                         print("Waiting... untill pointing movements are done!")
@@ -783,9 +786,9 @@ class TaskMain():
                     self.robot.set_speech(filename="hri/i_am_pointing_at_the_free_seat_on_the", wait_for_end_of=True)
                     self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
 
-                    self.robot.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
-                    self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
-                    self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
+                    # self.robot.set_speech(filename="receptionist/dear_guest", wait_for_end_of=True)
+                    # self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
+                    # self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
 
                     time.sleep(2.0)
                     self.robot.set_arm(command="point_front_to_initial_position", wait_for_end_of=False)
