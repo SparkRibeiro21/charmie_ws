@@ -83,8 +83,18 @@ class TaskMain():
         self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS = 2
         self.SOLVE_PEOPLE_WITH_REQUESTS = True
         self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 2
-        self.SOLVE_TRASH_OBJECTS = False
+        self.SOLVE_TRASH_OBJECTS = True
         self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS = 2
+
+        # Overall Configurables:
+        self.rooms_to_go = ["Kitchen", "Living room", "Hallway", "Office"]
+        self.rooms_to_go = [s.replace(" ", "_").lower() for s in self.rooms_to_go]
+        # Initial Position
+        #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
+        self.initial_position = [0.0, 0.0, 0.0]
+        # self.initial_position = self.robot.get_navigation_coords_from_furniture(furniture="Dinner Table")
+        # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
+        print(self.initial_position)
 
         # Configurables for Door Opening and Request Getting:
         self.handle_side = "right"
@@ -96,9 +106,12 @@ class TaskMain():
         self.FURNITURE_WE_WANT_TO_ANALYSE = [s.replace(" ", "_").lower() for s in self.FURNITURE_WE_WANT_TO_ANALYSE]
 
         # Configurables for People with Requests:
-        self.rooms_to_go = ["Kitchen", "Living room", "Workshop", "Office", "Bedroom"]
-        self.rooms_to_go = [s.replace(" ", "_").lower() for s in self.rooms_to_go]
-        self.search_for_people_tetas = [[-60, -10], [0, -10], [60, -10]]
+        self.tetas_for_rooms = {
+            "Kitchen":          [[-20, -10], [40, -10]],
+            "Living Room":      [[-30, -10], [30, -10]],
+            "Hallway":          [[-30, -10], [30, -10]],
+            "Office":           [[-40, -10], [20, -10]]
+        }
 
         # Configurables for Trash Objects:
         self.TRASH_SEARCH_CAMERA = "head"
@@ -108,15 +121,6 @@ class TaskMain():
         self.MAX_OBJECT_DISTANCE_X = 6
         self.MIN_OBJECT_DISTANCE_Y = -6
         self.MAX_OBJECT_DISTANCE_Y = 6
-        pass
-
-        # Overall Configurables:
-        # Initial Position
-        #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
-        self.initial_position = [0.0, 0.0, 0.0]
-        # self.initial_position = self.robot.get_navigation_coords_from_furniture(furniture="Dinner Table")
-        # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        print(self.initial_position)
         
 
     def main(self):
@@ -470,7 +474,8 @@ class TaskMain():
             # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
             # self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=True)
 
-            people_found = self.robot.search_for_person(tetas=self.search_for_people_tetas, only_detect_person_arm_raised=True)
+            print("Tetas:", self.tetas_for_rooms[room])
+            people_found = self.robot.search_for_person(tetas=self.tetas_for_rooms[room], only_detect_person_arm_raised=True)
 
             people_with_requests = []
             print("FOUND:", len(people_found)) 
