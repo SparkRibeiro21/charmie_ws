@@ -7587,6 +7587,81 @@ class RobotStdFunctions():
             pass
         
         if push_pull == "push" and handle_side == "right":
+            #self.move_to_position(move_coords=initial_position_pull, wait_for_end_of=True)
+            self.set_speech(filename="hri/opening_door", wait_for_end_of=False)
+            _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+            print("Door Distance", furniture_distance)
+            dx = furniture_distance - 0.60
+            dy = 0.0
+
+            self.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=True, safety=False)
+
+
+            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
+        
+            for h in door_handle:
+
+                move_y = h.position_relative.y
+
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.25, wait_for_end_of=False)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_pull_left, wait_for_end_of=True)
+
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+            
+
+            validated = False
+            self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+            while not validated:
+
+                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, detect_tv_prompt_head=False, visual_prompts=["door_handle_pull_right_hand"], minimum_tv_prompt_confidence=0.25)
+
+                for g in door_handle:
+
+                    gripper_position = self.get_gripper_localization()
+
+                    move_z_gripper = (g.position_cam.z - tf_z - 0.05)*1000
+                    move_y_gripper = (g.position_cam.y + tf_y + 0.01)*1000
+                    move_x_gripper = (g.position_cam.x - tf_x)*1000
+                    move_x_base = abs(tf_x - g.position_cam.x)
+                    print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
+                    print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
+                if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
+                    validated = True
+
+            lower_gripper = [move_z_gripper, move_y_gripper , 0.0, 0.0, 0.0, 0.0] 
+
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = lower_gripper, wait_for_end_of=True)
+
+            print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, " Position cam Z ",g.position_cam.z , " Position cam Y ",g.position_cam.y , " Position cam X ",g.position_cam.x)
+            self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.035 , dy = 0.0, wait_for_end_of=True, safety=False)
+            GRAB_DOOR_Y = 0.08*1000
+            GRAB_DOOR_X = 0.018*1000
+            GRAB_DOOR_ROTATE= -30
+            grab_door = [0.0, GRAB_DOOR_Y, 0.0, GRAB_DOOR_ROTATE, 0.0, 0.0]
+            release_door = [0.0, -GRAB_DOOR_Y, 0.0, -GRAB_DOOR_ROTATE, 0.0, 0.0]
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True) 
+            self.adjust_omnidirectional_position(dx = 0.03 , dy = 0.0, wait_for_end_of=True, safety=False)
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True)
+            self.adjust_omnidirectional_position(dx = -0.50 , dy = 0.14, wait_for_end_of=False, safety=False)
+
+            middle_position = [-183.2,83.2,-115.9,166.1,56.4,96.7] 
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = middle_position, wait_for_end_of=True)
+
+
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+
+            after_release_first = [-0.1*1000, 0.0, 0.15*1000, 0.0, 0.0, 0.0, 0.0]
+            #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
+            after_release_last = [0.12*1000, 0.12*1000, 0.195*1000, 0.0, 0.0, 0.0]
+            self.adjust_omnidirectional_position(dx = 1.30 , dy = 0.0, wait_for_end_of=True, safety=False)
 
             pass
 
