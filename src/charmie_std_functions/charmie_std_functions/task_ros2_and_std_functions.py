@@ -9470,20 +9470,21 @@ class RobotStdFunctions():
 
         pick_flakes_first=[-216.6,-70.3,-10,5.9,65.5,236.1]
 
-        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
-
-        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        #self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+        #self.set_arm(command="open_gripper", wait_for_end_of=False)
+        #time.sleep(1)
+        #self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
+        self.set_arm(command="pick_cornflakes_tray_ROBOCUP_2026", wait_for_end_of=True)
 
         final_pick_z = ( GRIPPER_STANDARD_HEIGHT_PICK - TRAY_HEIGHT - grasp_height - TOLERANCE_ERROR)*1000
 
         print("Picked adjust in Z:", final_pick_z)
 
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_pick_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = [-final_pick_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
 
         self.set_arm(command="close_gripper", wait_for_end_of=True)
 
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [final_pick_z , safe_retreat_arm_distance_y*1000 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = [final_pick_z , safe_retreat_arm_distance_y*1000 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = [-161.5, -12.9, -78.6,  84, -19.2, 147.7], wait_for_end_of=True)
 
@@ -9498,8 +9499,9 @@ class RobotStdFunctions():
 
         self.set_arm(command="place_cornflakes_on_table_ROBOCUP_2026", wait_for_end_of=True)
 
+        adjust_z_height = (gripper_place_height - (self.get_height_from_furniture(furniture)[0]) - cornflakes_height - 0.20)*1000
 
-        adjust_z_height = (gripper_place_height - (self.get_height_from_furniture(furniture)[0]) - cornflakes_height - 0.08)*1000
+        print(gripper_place_height, self.get_height_from_furniture(furniture)[0], cornflakes_height)
 
 
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [ adjust_z_height, 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
@@ -9507,11 +9509,11 @@ class RobotStdFunctions():
         self.set_arm(command="open_gripper", wait_for_end_of=True)
 
 
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [0.0 , 0.0 , safe_retreat_arm_distance_x*1000, 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [ -0.01*1000, 0.0 , safe_retreat_arm_distance_x*1000, 0.0 , 0.0 , 0.0], wait_for_end_of=True)
 
         self.set_arm(command="close_gripper", wait_for_end_of=False)
 
-        self.set_arm(command="initial_position_to_ask_for_objects",wait_for_end_of=True)
+        self.set_arm(command="initial_position_to_ask_for_objects_slow",wait_for_end_of=True)
 
         return
 

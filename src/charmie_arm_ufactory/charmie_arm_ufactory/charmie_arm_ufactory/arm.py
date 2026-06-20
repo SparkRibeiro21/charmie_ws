@@ -318,6 +318,7 @@ class ArmUfactory(Node):
 		self.new_cornflakes_post_pick_tray_position = [-219.8, 109.7, 146.3, math.radians(178.7), math.radians(  30.2), math.radians( -90.1)]
 		self.new_cornflakes_pre_pour = [-161.5, -12.8, -78.8,  84.6, -19.2, 182.0]
 		self.cornflakes_pre_pour_ROBOCUP_2026 = [-161.5, -12.9, -78.6,  84, -19.2, 147.7]
+		self.pick_cornflakes_ROBOCUP          = [-216.6,-70.3,-10,5.9,65.5,236.1]
 		self.new_cornflakes_pour1 = [-602.3, 130.7+height_adjust, 628.1, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
 		self.new_cornflakes_pour2 = [-602.4, 131.0+height_adjust, 628.0, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
 		self.new_cornflakes_pour3 = [-602.4, 131.0+height_adjust, 628.0, math.radians(-37.2), math.radians(  85.9), math.radians( 142.4)]
@@ -781,6 +782,13 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def pour_cornflakes_to_ask_for_objects_ROBOCUP(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=25, wait=True)
 			case 1:
 				self.finish_arm_movement_()
 
@@ -1368,6 +1376,17 @@ class ArmUfactory(Node):
 			case 6:
 				self.finish_arm_movement_()
 
+	def pick_cornflakes_tray_ROBOCUP_2026(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=50, wait=True)
+			case 1:
+				self.set_gripper_position_(pos=900, wait=False)
+			case 2:
+				self.set_joint_values_(angles=self.pick_cornflakes_ROBOCUP, speed=50, wait=True)
+			case 3:
+				self.finish_arm_movement_()
+
 	def place_cornflakes_on_table_ROBOCUP_2026(self):
 		match self.estado_tr:
 			case 0:
@@ -1717,6 +1736,10 @@ class ArmUfactory(Node):
 				self.pick_from_tray_to_pour_cornflakes()
 			case "place_cornflakes_on_table_ROBOCUP_2026":
 				self.place_cornflakes_on_table_ROBOCUP_2026()
+			case "pick_cornflakes_tray_ROBOCUP_2026":
+				self.pick_cornflakes_tray_ROBOCUP_2026()
+			case "pour_cornflakes_to_ask_for_objects_ROBOCUP":
+				self.pour_cornflakes_to_ask_for_objects_ROBOCUP()
 			case "pour_milk_bowl":
 				self.pour_milk_bowl()
 			case "pre_pour_milk_bowl_risky":
