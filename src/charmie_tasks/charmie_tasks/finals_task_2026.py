@@ -486,6 +486,7 @@ class TaskMain():
                     self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
                     self.robot.set_speech(filename="finals/problem_person_with_request", wait_for_end_of=True)
                     self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
+                    time.sleep(2.0) # wait a bit to let the speaks be said before going to next room
 
                 else: # if self.SOLVE_PEOPLE_WITH_REQUESTS:
                     self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
@@ -537,6 +538,8 @@ class TaskMain():
 
             if number_of_solved_requests == requests_left: # breaks if we have solved the number of requests we wanted to solve
                 no_people_left_with_requests_in_this_room = True
+
+        return number_of_solved_requests
 
 
     def solve_trash_objects(self, room, requests_left):
