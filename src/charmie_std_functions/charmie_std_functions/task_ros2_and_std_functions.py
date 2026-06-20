@@ -4334,7 +4334,7 @@ class RobotStdFunctions():
 
         return self.node.llm_demonstration_response
     
-    def receive_command_and_generate_low_level_planner(self, command_no=1, use_touchscreen_for_yes_no_questions=False):
+    def receive_command_and_generate_low_level_planner(self, command_no=1, use_touchscreen_for_yes_no_questions=True):
 
         current_datetime = ""
         hlp_comm = ""

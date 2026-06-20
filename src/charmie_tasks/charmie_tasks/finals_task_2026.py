@@ -2,6 +2,7 @@
 import rclpy
 import threading
 import time
+import math
 from charmie_interfaces.msg import DetectedObject
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
@@ -65,19 +66,28 @@ class TaskMain():
         # Task States
         self.task_states ={
             "Waiting_for_task_start":       0,
-            "Search_for_misplaced_objects": 1,
-            "Final_State":                  2,
+            "Solve_misplaced_objects":      1,
+            "Solve_people_with_requests":   2,
+            "Final_State":                  3,
         }
+
 
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
+        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
+        # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
+
+        self.search_for_people_tetas = [[-60, -10], [0, -10], [60, -10]]
+        self.number_of_requests_to_solve = 2
+        
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
-        # self.initial_position = [0.0, 0.0, 0.0]
-        self.initial_position = self.robot.get_navigation_coords_from_furniture(furniture="Dinner Table")
+        self.initial_position = [0.0, 0.0, 0.0]
+        # self.initial_position = self.robot.get_navigation_coords_from_furniture(furniture="Dinner Table")
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         print(self.initial_position)
         
+
     def main(self):
 
         self.configurables() # set all the configuration variables
@@ -86,9 +96,6 @@ class TaskMain():
         self.DEMO_MODE = self.robot.get_demo_mode()
         self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
 
-        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
-        # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
-        
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
@@ -117,11 +124,11 @@ class TaskMain():
                 self.robot.set_speech(filename="finals/start_finals", wait_for_end_of=True)
 
                 self.robot.wait_for_start_button()
-                
 
-                self.state = self.task_states["Search_for_misplaced_objects"]
+                self.state = self.task_states["Solve_misplaced_objects"]
 
-            elif self.state == self.task_states["Search_for_misplaced_objects"]:
+
+            elif self.state == self.task_states["Solve_misplaced_objects"]:
 
                 for current_furniture in self.FURNITURE_WE_WANT_TO_ANALYSE:
 
@@ -298,6 +305,103 @@ class TaskMain():
                             # self.robot.set_speech(filename="furniture/"+ current_furniture.replace(" ","_").lower(), wait_for_end_of=False)                                                    
                     
                 
+                self.state = self.task_states["Final_State"]
+
+
+            elif self.state == self.task_states["Solve_people_with_requests"]:
+
+                number_of_solved_requests = 0
+                for room in self.robot.node.rooms:
+
+                    no_people_left_with_requests_in_this_room = False
+                    while not no_people_left_with_requests_in_this_room:
+
+                        # NAVIGATION TO ROOM
+                        self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
+                        self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                        self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=False)
+
+                        self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room), wait_for_end_of=True)
+
+                        self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
+                        # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                        # self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=True)
+
+                        people_found = self.robot.search_for_person(self, tetas=self.search_for_people_tetas, only_detect_person_arm_raised=False)
+
+                        people_with_requests = []
+                        print("FOUND:", len(people_found)) 
+                        for p in people_found:
+                            if p.arm_raised and p.room_location == room:
+                                people_with_requests.append(p)
+                                print("ID:", p.index, p.arm_raised, p.room_location, " - HAS REQUEST!")
+                            else:
+                                print("ID:", p.index, p.arm_raised, p.room_location, " - NO REQUEST!")
+
+                        # There is a discussion to be had, whether this should be a for loop.
+                        # The reasoning behind this decision, is that after a long time and executing a GPSR task,
+                        # the people may have changed position, and therefore the robot would go to an old position.
+                        # If there are multiple people with requests, the robot does not continue to be next room
+                        if len(people_with_requests) == 0:
+                            no_people_left_with_requests_in_this_room = True
+                        else: # there are people with requests
+
+                            # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
+                            people_with_requests.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
+
+                            person_with_request = people_with_requests[0]
+
+                            self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
+                            self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, person_with_request.position_absolute.z], wait_for_end_of=False)
+                            # self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, 1.6], wait_for_end_of=True) # pre defined height for better looking at the face
+                            # TODO: PLACEHOLDER: Say i have found a problem and will attmpt to solve it, please look at my face to see the detected person
+                            self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True)
+                            time.sleep(3.0)
+
+                            # NAVIGATION TO PERSON
+                            self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                            self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=False) # TODO: person
+                            self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room), wait_for_end_of=True)
+
+                            self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
+                            # CONFIRM PERSON HAS A REQUEST
+                            # TODO: PLACEHOLDER:
+                            self.robot.set_speech(filename="generic/press_correct_option_touchscreen", wait_for_end_of=True) # SAY: Please press the correct option on my face.
+                            answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have another command?", speak_results=False, speak_timeout=False, start_speak_file="gpsr/do_you_have_another_command", wait_for_end_of=True)
+                            
+                            if answer != ["yes"]:
+                                # TODO: PLACEHOLDER: My bad, ...
+                                no_people_left_with_requests_in_this_room = True # MOVE TO NEXT ROOM, THIS IS NOT IDEAL BUT AVOIDS TO ROBOT GETTING STUCK IN ENDLESS LOOP OF GOING BACK TO SEARCH AND CONTINUING TO FIND THE SAME PERSON WITH THE REQUEST
+                            else:
+                                # EXECUTE GPSR
+                                # TODO: PLACEHOLDER: Please wait.
+                                self.robot.calibrate_audio()
+
+                                llp = self.robot.receive_command_and_generate_low_level_planner()
+                                print("Low-level planner:", llp)
+
+                                # TODO: PLACEHOLDER: CHECK IF ORDER CAN BE EXECUTED...
+                                order_can_be_executed = True
+
+                                if order_can_be_executed:
+                                    # TODO: PLACEHOLDER: ADD LOW LEVEL PLANNER EXECUTION HERE ...
+                                    number_of_solved_requests+=1
+                                    # TODO: PLACEHOLDER: Please, do not raise your arm anymore, if you do not have any different requests in the future.
+                                else:
+                                    pass
+                                    # TODO: PLACEHOLDER: Unfortunately I cannot perform this task becuase there are steps I do not know how to perform. My apologies.
+                                    # TODO: PLACEHOLDER: Please, do not raise your arm anymore, if you do not have any different requests in the future.
+                                    # WILL SEARCH FOR MORE PEOPLE IN THE SAME ROOM
+
+
+                        if self.number_of_requests_to_solve == number_of_solved_requests: # breaks if we have solved the number of requests we wanted to solve
+                            no_people_left_with_requests_in_this_room = True
+
+                    if self.number_of_requests_to_solve == number_of_solved_requests: # breaks if we have solved the number of requests we wanted to solve
+                        break
+
                 self.state = self.task_states["Final_State"]
 
 
