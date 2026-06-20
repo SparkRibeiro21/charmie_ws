@@ -9024,7 +9024,7 @@ class RobotStdFunctions():
                         MAX_MOVE_LIMIT = 260
                     else:
                         MAX_MOVE_LIMIT = 220
-                    if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320 and obj.object_name != cup:
+                    if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320 and selected_object != "cup":
                         correct_x_grab = MAX_MOVE_LIMIT
                 
                 print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab}, {correct_rotation})")
