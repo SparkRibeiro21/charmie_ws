@@ -341,6 +341,10 @@ class TaskMain():
 
                         for wrong_obj in objects_in_wrong_furniture:
 
+                            if current_furniture == "Dinner Table":
+                                self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=current_furniture, object_name=wrong_obj, search_tetas=search_misplaced_obj_tetas)
+
+
                             picked_height, asked_help = self.robot.pick_object(selected_object=wrong_obj,
                                                         pick_mode=self.robot.get_standard_pick_from_object(wrong_obj),
                                                         first_search_tetas=search_misplaced_obj_tetas)
@@ -375,6 +379,10 @@ class TaskMain():
                             
                             wrong_obj_1 = objects_in_wrong_furniture[0]
 
+                            if current_furniture == "Dinner Table":
+                                self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=current_furniture, object_name=wrong_obj_1, search_tetas=search_misplaced_obj_tetas)
+
+
                             picked_height_1, asked_help_1 = self.robot.pick_object(selected_object=wrong_obj_1,
                                                                                     pick_mode=self.robot.get_standard_pick_from_object(object_name=wrong_obj_1),
                                                                                     first_search_tetas=search_misplaced_obj_tetas)
@@ -405,6 +413,10 @@ class TaskMain():
                             self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(current_furniture.replace(" ","_").lower()), wait_for_end_of=True)
                             
                             wrong_obj_2 = objects_in_wrong_furniture[1]
+
+                            if current_furniture == "Dinner Table":
+                                self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=current_furniture, object_name=wrong_obj_2, search_tetas=search_misplaced_obj_tetas)
+
 
                             picked_height_2, asked_help_2 = self.robot.pick_object(selected_object=wrong_obj_2,
                                                                                     pick_mode=self.robot.get_standard_pick_from_object(object_name=wrong_obj_2),
