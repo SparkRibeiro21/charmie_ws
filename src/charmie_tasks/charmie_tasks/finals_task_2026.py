@@ -12,32 +12,32 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  False,
+    "charmie_arm":                  True,
     "charmie_audio":                False,
-    "charmie_face":                 False,
-    "charmie_head_camera":          False,
-    "charmie_hand_camera":          False,
+    "charmie_face":                 True,
+    "charmie_head_camera":          True,
+    "charmie_hand_camera":          True,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                False,
+    "charmie_lidar":                True,
     "charmie_lidar_bottom":         False,
-    "charmie_lidar_livox":          False,
+    "charmie_lidar_livox":          True,
     "charmie_llm":                  False,
-    "charmie_localisation":         False,
-    "charmie_low_level":            False,
-    "charmie_navigation":           False,
-    "charmie_nav2":                 False,
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
+    "charmie_navigation":           True,
+    "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 False,
-    "charmie_radar":                False,
+    "charmie_neck":                 True,
+    "charmie_radar":                True,
     "charmie_sound_classification": False,
-    "charmie_speakers":             False,
+    "charmie_speakers":             True,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
-    "charmie_yolo_objects":         False,
-    "charmie_yolo_pose":            False,
-    "charmie_yolo_world":           False,
+    "charmie_yolo_objects":         True,
+    "charmie_yolo_pose":            True,
+    "charmie_yolo_world":           True,
 }
 
 # main function that already creates the thread for the task state machine
@@ -155,6 +155,8 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="finals/start_finals", wait_for_end_of=True)
                 self.robot.wait_for_start_button()
+                self.robot.wait_for_door_opening()
+                self.robot.enter_house_after_door_opening()
                 self.state = self.task_states["State_selector"]
 
 
@@ -164,21 +166,21 @@ class TaskMain():
                 peoples_with_requests_problems_solved_ctr = 0
                 trash_objects_problems_solved_ctr = 0
 
-                # Starts with door opening and getting the request from the person behind the door
-                self.solve_open_door_and_get_request()
+                # Starts with door opening and getting the request fsolve_open_door_and_get_requestrom the person behind the door
+                # self.solve_open_door_and_get_request()
 
                 for room in self.rooms_to_go:
-                    if misplaced_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
-                        misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
-                        misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
+                    # if misplaced_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
+                    #     misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
+                    #     misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
 
                     if trash_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
                         trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
                         trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
 
-                    if peoples_with_requests_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
-                        peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
-                        peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
+                    # if peoples_with_requests_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
+                    #     peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
+                    #     peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
 
                 # Not used in 2026 finals strategy, but left here for future use
                 # self.solve_basket_misplacement()
@@ -254,8 +256,6 @@ class TaskMain():
             # TODO: PLACEHOLDER: ADD LOW LEVEL PLANNER EXECUTION HERE ...
             time.sleep(0.5)
             self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=True)
-            
-            number_of_solved_requests+=1
             self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
             
         else: # WILL SEARCH FOR MORE PEOPLE IN THE SAME ROOM
@@ -329,9 +329,7 @@ class TaskMain():
                     self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
                     self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                     self.robot.set_speech(filename="finals/object_in_the_wrong_furniture", wait_for_end_of=True)
-                    
               
-
                 if self.SOLVE_MISPLACED_OBJECTS:
 
                     if len(objects_in_wrong_furniture) == 0:
@@ -568,6 +566,9 @@ class TaskMain():
         requests_solved = 0
 
         if requests_left > 0:
+            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+            self.robot.set_speech(filename="rooms/"+ room.replace(" ","_").lower(), wait_for_end_of=False)
+            self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room=room), wait_for_end_of=True)
             valid_detected_object = DetectedObject()
             validated = False
 
@@ -582,7 +583,7 @@ class TaskMain():
             else:
                 objects_found = self.robot.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=False, detect_objects_hand=False, detect_objects_base=True)
 
-
+            objects_found_validated = []
             if objects_found:
                 for obj in objects_found:
                     conf   = f"{obj.confidence * 100:.0f}%"
@@ -592,21 +593,29 @@ class TaskMain():
 
                     print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.position_absolute.z}{obj.furniture_location})")
 
-                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.get_object_width_from_object(obj.object_name) * 2) and not validated:
+                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and not validated:
                         valid_detected_object = obj
+                        objects_found_validated.append(obj)
                         validated = True
                     if validated:
-                        if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.get_object_width_from_object(obj.object_name) * 2) and valid_detected_object.position_relative.x > obj.position_relative.x:
+                        if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and valid_detected_object.position_relative.x > obj.position_relative.x:
                             valid_detected_object = obj
                 
             if validated == True:
 
-                requests_solved = 1
-                self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
-                self.robot.set_speech(filename="objects_names/"+valid_detected_object.object_name.replace(" ","_").lower(), wait_for_end_of=True)
-                self.robot.set_speech(filename="finals/should_be_in_trashcan", wait_for_end_of=True)
+                # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
+                objects_found_validated.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
 
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                for o in objects_found_validated:
+                    self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
+                    self.robot.detected_object_to_face_path(object=o, send_to_face=True)
+                    self.robot.set_speech(filename="generic/found_the", wait_for_end_of=True)
+                    self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
+                    self.robot.set_speech(filename="finals/should_be_in_trashcan", wait_for_end_of=True)
+
+                requests_solved = 1
                 if pick_to_trashcan:
 
                     counter = 0
@@ -616,18 +625,20 @@ class TaskMain():
                         counter = counter + 1
                     
                     if goal != "":
-                        self.robot.ask_help_pick_object_gripper(object_d = valid_detected_object, look_judge= [0,0], show_detection = True)
+                        self.robot.ask_help_pick_object_gripper(object_d = valid_detected_object, look_judge= [0,0], show_detection = False)
+                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                         self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                        self.robot.set_speech(filename="furniture/"+goal, wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
 
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
                         self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
 
                         self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                        self.robot.set_speech(filename="rooms/"+goal, wait_for_end_of=False)
+                        self.robot.set_speech(filename="rooms/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room=room), wait_for_end_of=True)
 
             return requests_solved
+
 
     def solve_basket_misplacement(self):
         print("\n>>> Current Task State: Solve_Basket_Misplacement <<<\n")
