@@ -254,183 +254,191 @@ class TaskMain():
     def solve_misplaced_objects(self, room, requests_left):
         print("\n>>> Current Task State: Solve_Misplaced_Objects <<<\n")
 
+        number_of_replaced_objects = 0
+
         for current_furniture in self.FURNITURE_WE_WANT_TO_ANALYSE:
 
-            self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-            self.robot.set_speech(filename="furniture/"+ current_furniture.replace(" ","_").lower(), wait_for_end_of=False)
+            if self.robot.get_room_from_furniture(current_furniture) == room and number_of_replaced_objects < requests_left:
 
-            self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=current_furniture), wait_for_end_of=True)
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+ current_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
-            self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-            self.robot.set_speech(filename="furniture/"+ current_furniture.replace(" ","_").lower(), wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=current_furniture), wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="furniture/"+ current_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
-            objects_in_correct_furniture = []
-            objects_in_wrong_furniture = []
-            ignored_objects = []
+                objects_in_correct_furniture = []
+                objects_in_wrong_furniture = []
+                ignored_objects = []
 
-            if self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "horizontal":
-                search_misplaced_obj_tetas = self.search_tetas_horizontal
-            elif self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "vertical":
-                search_misplaced_obj_tetas = self.search_tetas_vertical
+                if self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "horizontal":
+                    search_misplaced_obj_tetas = self.search_tetas_horizontal
+                elif self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "vertical":
+                    search_misplaced_obj_tetas = self.search_tetas_vertical
 
-            object_detected = self.robot.search_for_objects(tetas=search_misplaced_obj_tetas, detect_objects=True)
+                object_detected = self.robot.search_for_objects(tetas=search_misplaced_obj_tetas, detect_objects=True)
 
-            for obj in object_detected:
+                for obj in object_detected:
 
-                conf   = f"{obj.confidence * 100:.0f}%"
-                cam_x_ = f"{obj.position_relative.x:5.2f}"
-                cam_y_ = f"{obj.position_relative.y:5.2f}"
-                cam_z_ = f"{obj.position_relative.z:5.2f}"
+                    conf   = f"{obj.confidence * 100:.0f}%"
+                    cam_x_ = f"{obj.position_relative.x:5.2f}"
+                    cam_y_ = f"{obj.position_relative.y:5.2f}"
+                    cam_z_ = f"{obj.position_relative.z:5.2f}"
 
-                print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
-                print("INFO FROM JSON:", self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(obj.object_name)))
+                    print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
+                    print("INFO FROM JSON:", self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(obj.object_name)))
 
-                if obj.furniture_location.replace(" ","_").lower() == current_furniture.replace(" ","_").lower():
+                    if obj.furniture_location.replace(" ","_").lower() == current_furniture.replace(" ","_").lower():
 
-                    if obj.furniture_location.replace(" ","_").lower() != self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(object_name=obj.object_name)):
-                        print("OBJECT IS NOT IN CORRECT FURNITURE")
+                        if obj.furniture_location.replace(" ","_").lower() != self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(object_name=obj.object_name)):
+                            print("OBJECT IS NOT IN CORRECT FURNITURE")
 
-                        self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
-                        self.robot.set_speech(filename="finals/object_in_the_wrong_furniture", wait_for_end_of=True)
-                        objects_in_wrong_furniture.append(obj.object_name)
+                            # self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+                            # self.robot.set_speech(filename="finals/object_in_the_wrong_furniture", wait_for_end_of=True)
+                            objects_in_wrong_furniture.append(obj.object_name)
+                        else:
+                            print("OBJECT IN CORRECT FURNITURE")
+                            # self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+                            # self.robot.set_speech(filename="finals/object_in_the_correct_furniture", wait_for_end_of=True)
+                            objects_in_correct_furniture.append(obj.object_name)
+
                     else:
-                        print("OBJECT IN CORRECT FURNITURE")
-                        # self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
-                        # self.robot.set_speech(filename="finals/object_in_the_correct_furniture", wait_for_end_of=True)
-                        objects_in_correct_furniture.append(obj.object_name)
-
-                else:
-                    print("I don't care about this object")
-                    ignored_objects.append(obj.object_name)
+                        print("I don't care about this object")
+                        ignored_objects.append(obj.object_name)
 
 
-            print("Objects in correct furniture:", objects_in_correct_furniture)
-            print("Objects in wrong furniture:", objects_in_wrong_furniture)
-            print("Ignored objects:", ignored_objects)
-            # correct_objects_counter = 0
+                print("Objects in correct furniture:", objects_in_correct_furniture)
+                print("Objects in wrong furniture:", objects_in_wrong_furniture)
+                print("Ignored objects:", ignored_objects)
+                # correct_objects_counter = 0
 
-            if len(objects_in_wrong_furniture) == 0:
-                print("All objects are in the correct furniture")
-                self.robot.set_speech(filename="finals/check_the_next_furniture", wait_for_end_of=False)
-
-            elif len(objects_in_wrong_furniture) == 1:
-
-                for wrong_obj in objects_in_wrong_furniture:
-
-                    picked_height, asked_help = self.robot.pick_object_risky(selected_object=wrong_obj,
-                                                pick_mode=self.robot.get_standard_pick_from_object(wrong_obj),
-                                                first_search_tetas=search_misplaced_obj_tetas, return_arm_to_initial_position=False)
+                if obj in objects_in_wrong_furniture:
+                    self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
+                    self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    self.robot.set_speech(filename="finals/object_in_the_wrong_furniture", wait_for_end_of=True)
                     
-                    place_furniture = self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(wrong_obj))
+              
+
+                if self.SOLVE_MISPLACED_OBJECTS:
+
+                    if len(objects_in_wrong_furniture) == 0:
+                        print("All objects are in the correct furniture")
+                        self.robot.set_speech(filename="finals/check_the_next_furniture", wait_for_end_of=False)
+
+                    elif len(objects_in_wrong_furniture) == 1:
+
+                        for wrong_obj in objects_in_wrong_furniture:
+
+                            picked_height, asked_help = self.robot.pick_object(selected_object=wrong_obj,
+                                                        pick_mode=self.robot.get_standard_pick_from_object(wrong_obj),
+                                                        first_search_tetas=search_misplaced_obj_tetas)
+                            
+                            place_furniture = self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(wrong_obj))
+                        
+                            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                            self.robot.set_speech(filename="furniture/" + place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
+
+                            self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
+
+
+                            self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                            self.robot.set_speech(filename="furniture/" + place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
+
+                            if len(place_furniture) > 1:
+                                shelf_number_place = 2
+                            else:
+                                shelf_number_place = 0
+
+                            self.robot.place_object_in_furniture(selected_object=wrong_obj,
+                                                                place_mode=self.robot.get_standard_pick_from_object(wrong_obj),
+                                                                furniture=place_furniture,
+                                                                shelf_number=shelf_number_place, place_height=picked_height,
+                                                                return_to_initial_position=True)
+                            
+                            self.robot.set_speech(filename="finals/check_the_next_furniture", wait_for_end_of=True)
+
+                            number_of_replaced_objects += 1
+                            
+                    elif len(objects_in_wrong_furniture) > 1:
+                            
+                            wrong_obj_1 = objects_in_wrong_furniture[0]
+
+                            picked_height_1, asked_help_1 = self.robot.pick_object(selected_object=wrong_obj_1,
+                                                                                    pick_mode=self.robot.get_standard_pick_from_object(object_name=wrong_obj_1),
+                                                                                    first_search_tetas=search_misplaced_obj_tetas)
+                            
+                            place_object_in_tray_height = self.robot.place_object_in_furniture(selected_object=wrong_obj_1,
+                                                                                                place_mode=self.robot.get_standard_pick_from_object(object_name=wrong_obj_1),
+                                                                                                furniture="Tray", place_height=picked_height_1)
+                            
+                            wrong_obj_2 = objects_in_wrong_furniture[1]
+
+                            picked_height_2, asked_help_2 = self.robot.pick_object(selected_object=wrong_obj_2,
+                                                                                    pick_mode=self.robot.get_standard_pick_from_object(object_name=wrong_obj_2),
+                                                                                    first_search_tetas=search_misplaced_obj_tetas)
                 
-                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/" + place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
+                            place_furniture_2 = self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(object_name=wrong_obj_2))
+                        
+                            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                            self.robot.set_speech(filename="furniture/" + place_furniture_2.replace(" ","_").lower(), wait_for_end_of=False)
 
-                    self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(place_furniture.replace(" ","_").lower()), wait_for_end_of=True)
-
-
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/" + place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
-
-                    if len(place_furniture) > 1:
-                        shelf_number_place = 2
-                    else:
-                        shelf_number_place = 0
-
-                    self.robot.place_object_in_furniture(selected_object=wrong_obj,
-                                                        place_mode=self.robot.get_standard_pick_from_object(wrong_obj),
-                                                        furniture=place_furniture,
-                                                        shelf_number=shelf_number_place, place_height=picked_height,
-                                                        return_to_initial_position=True)
-                    
-                    self.robot.set_speech(filename="finals/check_the_next_furniture", wait_for_end_of=True)
-                    
-            elif len(objects_in_wrong_furniture) > 1:
-                    
-                    wrong_obj_1 = objects_in_wrong_furniture[0]
-
-                    picked_height_1, asked_help_1 = self.robot.pick_object_risky(selected_object=wrong_obj_1,
-                                                                                pick_mode=self.robot.get_standard_pick_from_object(wrong_obj_1),
-                                                                                first_search_tetas=search_misplaced_obj_tetas)
-                    
-                    place_object_in_tray_height = self.robot.place_object_in_furniture(selected_object=wrong_obj_1,
-                                                                                        place_mode=self.robot.get_standard_pick_from_object(object_name=wrong_obj_1),
-                                                                                        furniture="Tray", place_height=picked_height_1)
-                    
-                    wrong_obj_2 = objects_in_wrong_furniture[1]
-
-                    picked_height_2, asked_help_2 = self.robot.pick_object_risky(selected_object=wrong_obj_2,
-                                                                                pick_mode=self.robot.get_standard_pick_from_object(wrong_obj_2),
-                                                                                first_search_tetas=search_misplaced_obj_tetas)
-        
-                    place_furniture_2 = self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(wrong_obj_2))
-                
-                    self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/" + place_furniture_2.replace(" ","_").lower(), wait_for_end_of=False)
-
-                    self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(place_furniture_2.replace(" ","_").lower()), wait_for_end_of=True)
+                            self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(place_furniture_2.replace(" ","_").lower()), wait_for_end_of=True)
 
 
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    self.robot.set_speech(filename="furniture/" + place_furniture_2.replace(" ","_").lower(), wait_for_end_of=False)
+                            self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                            self.robot.set_speech(filename="furniture/" + place_furniture_2.replace(" ","_").lower(), wait_for_end_of=False)
 
-                    if len(place_furniture_2) > 1:
-                        shelf_number_place_2 = 2
-                    else:
-                        shelf_number_place_2 = 0
+                            if len(place_furniture_2) > 1:
+                                shelf_number_place_2 = 2
+                            else:
+                                shelf_number_place_2 = 0
 
-                    
-                    self.robot.place_object_in_furniture(selected_object=wrong_obj_2,
-                                                        place_mode=self.robot.get_standard_pick_from_object(wrong_obj_2),
-                                                        furniture=place_furniture_2,
-                                                        shelf_number=shelf_number_place_2, place_height=picked_height_2,
-                                                        return_to_initial_position=True)
-                    
-                    picked_height_3 = self.robot.pick_object_risky(selected_object=wrong_obj_1,
-                                                                    pick_mode=self.robot.get_standard_pick_from_object(wrong_obj_1),
+                            
+                            self.robot.place_object_in_furniture(selected_object=wrong_obj_2,
+                                                                place_mode=self.robot.get_standard_pick_from_object(object_name=wrong_obj_2),
+                                                                furniture=place_furniture_2,
+                                                                shelf_number=shelf_number_place_2, place_height=picked_height_2,
+                                                                return_to_initial_position=True)
+                            
+                            picked_height_3 = self.robot.pick_object(selected_object=wrong_obj_1,
+                                                                    pick_mode=self.robot.get_standard_pick_from_object(object_name=wrong_obj_1),
                                                                     furniture="Tray", placed_in_tray_height = place_object_in_tray_height)
-        
-                    
-                    place_furniture_1 = self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(wrong_obj_1))
+                
+                            
+                            place_furniture_1 = self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(object_name=wrong_obj_1))
+                            if place_furniture_1 != place_furniture_2:
 
-                    if place_furniture_1 != place_furniture_2:
+                                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                                self.robot.set_speech(filename="furniture/" + place_furniture_1.replace(" ","_").lower(), wait_for_end_of=False)
 
-                        self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                        self.robot.set_speech(filename="furniture/" + place_furniture_1.replace(" ","_").lower(), wait_for_end_of=False)
+                                self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(place_furniture_1.replace(" ","_").lower()), wait_for_end_of=True)
 
-                        self.robot.move_to_position(self.robot.get_navigation_coords_from_furniture(place_furniture_1.replace(" ","_").lower()), wait_for_end_of=True)
+                                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                                self.robot.set_speech(filename="furniture/" + place_furniture_2.replace(" ","_").lower(), wait_for_end_of=False)
 
-                        self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                        self.robot.set_speech(filename="furniture/" + place_furniture_2.replace(" ","_").lower(), wait_for_end_of=False)
+                            else:
+                                print("SAME PLACE FURNITURE")
+                                pass
 
-                    else:
-                        print("SAME PLACE FURNITURE")
-                        pass
+                            if len(place_furniture_1) > 1:
+                                shelf_number_place_1 = 2
+                            else:
+                                shelf_number_place_1 = 0
 
-                    if len(place_furniture_1) > 1:
-                        shelf_number_place_1 = 2
-                    else:
-                        shelf_number_place_1 = 0
+                            self.robot.place_object_in_furniture(selected_object=wrong_obj_1,
+                                                                    place_mode=self.robot.get_standard_pick_from_object(object_name=wrong_obj_1),
+                                                                    furniture=place_furniture_1,
+                                                                    shelf_number=shelf_number_place_1, place_height=picked_height_3,
+                                                                    return_to_initial_position=True)
 
-                    self.robot.place_object_in_furniture(selected_object=wrong_obj_1,
-                                                            place_mode=self.robot.get_standard_pick_from_object(wrong_obj_1),
-                                                            furniture=place_furniture_1,
-                                                            shelf_number=shelf_number_place_1, place_height=picked_height_3,
-                                                            return_to_initial_position=True)
+                            print("I have already moved 2 objects, I will stop looking for more objects in this furniture to save time")
+                            # self.robot.set_speech(filename="finals/check_the_next_furniture", wait_for_end_of=True)
 
-                    print("I have already moved 2 objects, I will stop looking for more objects in this furniture to save time")
-                    self.robot.set_speech(filename="finals/check_the_next_furniture", wait_for_end_of=True)
-
-                    # self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    # self.robot.set_speech(filename="furniture/"+ current_furniture.replace(" ","_").lower(), wait_for_end_of=False)
-                    # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=current_furniture), wait_for_end_of=True)
-                    # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                    # self.robot.set_speech(filename="furniture/"+ current_furniture.replace(" ","_").lower(), wait_for_end_of=False)                                                    
+                            number_of_replaced_objects += 2                                                    
             
-        
-        self.state = self.task_states["State_selector"]
-
+        return number_of_replaced_objects
+    
 
     def solve_people_with_requests(self, room, requests_left):
         print("\n>>> Current Task State: Solve_People_With_Requests <<<\n")
