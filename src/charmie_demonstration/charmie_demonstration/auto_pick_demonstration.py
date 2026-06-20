@@ -134,29 +134,57 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.robot.open_door(push_pull="push", handle_side="right")
+                # self.robot.pick_object(selected_object="Apple", max_search_attempts=1)
 
-                # self.robot.set_initial_position(self.initial_position)
-
-                # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("coffee table"), wait_for_end_of=True)
-
-                # self.robot.pick_object(selected_object="strawberry", pick_mode= "top")
+                self.robot.set_initial_position(self.initial_position)
 
                 #pick_height, s= self.robot.pick_object(selected_object="cup")
                 self.robot.wait_for_start_button()
-                placed_height=self.robot.place_object_in_furniture(selected_object="mustard",place_mode = "front", furniture= "Tray", place_height=pick_height)
-                pick_height = self.robot.pick_from_tray(selected_object="cola", placed_height=placed_height)
-                placed_height=self.robot.place_object_in_furniture(selected_object="cola",place_mode = "front", place_height=pick_height)
+                # placed_height=self.robot.place_object_in_furniture(selected_object="mustard",place_mode = "front", furniture= "Tray", place_height=pick_height)
+                # pick_height = self.robot.pick_from_tray(selected_object="cola", placed_height=placed_height)
+                # placed_height=self.robot.place_object_in_furniture(selected_object="cola",place_mode = "front", place_height=pick_height)
+
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+
+                corn_flakes_place=[-246.2,-23.6,-36.4,15.6,51.8,198.7]
+
+                pick_flakes_first=[-216.6,-70.3,-10,5.9,65.5,236.1]
+
+
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = corn_flakes_place, wait_for_end_of=True)
+                
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                object_position_grab = [0.16*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
+                object_position_grab = [-0.24*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                #self.robot.set_arm(command="pour_cereals_bowl_alternative_robocup_cornflakes", wait_for_end_of=True)
+
+                #self.robot.open_door(push_pull="pull", handle_side="right")
+
+                #self.robot.set_initial_position(self.initial_position)
+
+                #pick_height, s= self.robot.pick_object(selected_object="cup")
+                # self.robot.wait_for_start_button()
+                #placed_height=self.robot.place_object_in_furniture(selected_object="mustard",place_mode = "front", furniture= "Tray", place_height=pick_height)
+                #pick_height = self.robot.pick_from_tray(selected_object="cola", placed_height=placed_height)
+                #placed_height=self.robot.place_object_in_furniture(selected_object="cola",place_mode = "front", place_height=pick_height)
 
                 self.robot.wait_for_start_button()
                 
                 #self.robot.set_initial_position(self.initial_position)
+                self.robot.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+                picked_height,_ =self.robot.pick_object(selected_object="milk", arm_initial_position="initial_position_to_ask_for_objects")
+                self.robot.place_milk_in_tray(place_height=picked_height)
                 
                 print("SET INITIAL POSITION")
 
                 self.robot.wait_for_start_button()
 
-                self.robot.pick_object(selected_object="Mustard")
+                # self.robot.pick_object(selected_object="Mustard")
 
 
                 self.state = self.task_states["Select_object_to_pick"]
