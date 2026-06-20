@@ -9239,15 +9239,19 @@ class RobotStdFunctions():
                 print(" NOW ENTERING STATE ", state)
 
                 print(" Asked for Help ")
-                self.ask_help_pick_object_gripper(object_d = obj, look_judge= [0,0], show_detection = show_detection)
-                picked_height = 0
-                if arm_initial_position == "":
+                s = self.ask_help_pick_object_gripper(object_d = obj, look_judge= [0,0], show_detection = show_detection)
+                if s:
+                    picked_height = 0
+                    if arm_initial_position == "":
+                        self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
+                    #Uncomment if ask for help position is changed
+                    # else:
+                    #    if obj.object_name != "plate":    
+                    #        self.set_arm(command=arm_initial_position, wait_for_end_of=True)
+                    return picked_height, ask_help
+                else:
                     self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
-                #Uncomment if ask for help position is changed
-                # else:
-                #    if obj.object_name != "plate":    
-                #        self.set_arm(command=arm_initial_position, wait_for_end_of=True)
-                return picked_height, ask_help
+                    return -1, ask_help
 
 
     def pick_from_tray(self, selected_object="", pick_mode="", placed_height = -1):
