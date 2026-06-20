@@ -7648,12 +7648,11 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True) 
             self.adjust_omnidirectional_position(dx = 0.03 , dy = 0.0, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True)
-            self.adjust_omnidirectional_position(dx = -0.50 , dy = 0.14, wait_for_end_of=False, safety=False)
+            self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.14, wait_for_end_of=False, safety=False)
 
             middle_position = [-183.2,83.2,-115.9,166.1,56.4,96.7] 
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = middle_position, wait_for_end_of=True)
-
 
             while not self.adjust_omnidirectional_position_is_done():
                 pass
@@ -7662,6 +7661,9 @@ class RobotStdFunctions():
             #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
             after_release_last = [0.12*1000, 0.12*1000, 0.195*1000, 0.0, 0.0, 0.0]
             self.adjust_omnidirectional_position(dx = 1.30 , dy = 0.0, wait_for_end_of=True, safety=False)
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
 
             pass
 
