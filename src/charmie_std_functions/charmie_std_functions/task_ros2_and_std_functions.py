@@ -9641,3 +9641,4 @@ class RobotStdFunctions():
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         
+        
