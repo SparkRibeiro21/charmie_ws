@@ -84,7 +84,7 @@ class TaskMain():
         self.SOLVE_PEOPLE_WITH_REQUESTS = True
         self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 2
         self.SOLVE_TRASH_OBJECTS = True
-        self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS = 2
+        self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS = 1
 
         # Overall Configurables:
         self.rooms_to_go = ["Kitchen", "Living room", "Hallway", "Office"]
@@ -175,14 +175,17 @@ class TaskMain():
                 for room in self.rooms_to_go:
                     # if misplaced_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
                     #     misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
+                    #     print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
                     #     misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
 
                     if trash_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
                         trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
+                        print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
                         trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
 
                     # if peoples_with_requests_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
                     #     peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
+                    #     print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
                     #     peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
 
                 # Not used in 2026 finals strategy, but left here for future use
@@ -594,18 +597,26 @@ class TaskMain():
 
                     print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.position_absolute.z}{obj.furniture_location})")
 
-                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and not validated:
-                        valid_detected_object = obj
+                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and \
+                        MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and \
+                        (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or \
+                         obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or \
+                         obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2):
                         objects_found_validated.append(obj)
-                        validated = True
-                    if validated:
-                        if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and valid_detected_object.position_relative.x > obj.position_relative.x:
-                            valid_detected_object = obj
-                
-            if validated == True:
+
+                    # if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and not validated:
+                    #     valid_detected_object = obj
+                    #     validated = True
+                    # if validated:
+                    #     if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and valid_detected_object.position_relative.x > obj.position_relative.x:
+                    #         valid_detected_object = obj
+                    
+            # if validated == True:
+            if len(objects_found_validated) > 0:
 
                 # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
                 objects_found_validated.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
+                valid_detected_object = objects_found_validated[0]
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 for o in objects_found_validated:
@@ -615,9 +626,11 @@ class TaskMain():
                     self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                     self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
                     self.robot.set_speech(filename="finals/should_be_in_trashcan", wait_for_end_of=True)
-
-                requests_solved = 1
+                self.robot.set_face("charmie_face")
+                    
                 if pick_to_trashcan:
+
+                    requests_solved = 1
 
                     counter = 0
                     for d in self.divisions:
@@ -629,14 +642,10 @@ class TaskMain():
                         self.robot.ask_help_pick_object_gripper(object_d = valid_detected_object, look_judge= [0,0], show_detection = False)
                         self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                         self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                        self.robot.set_speech(filename="furniture/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/"+room.replace(" ","_").lower(), wait_for_end_of=False)
 
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
                         self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
-
-                        self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                        self.robot.set_speech(filename="rooms/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
-                        self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room=room), wait_for_end_of=True)
 
             return requests_solved
 
