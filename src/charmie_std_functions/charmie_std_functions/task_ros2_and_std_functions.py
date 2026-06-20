@@ -176,6 +176,7 @@ class ROS2TaskNode(Node):
         self.set_torso_position_client = self.create_client(SetTorso, "set_torso_position")
         self.internal_set_initial_position_define_north_client = self.create_client(SetPoseWithCovarianceStamped, "internal_initial_pose_for_north")
         self.activate_motors_client = self.create_client(ActivateBool, "activate_motors")
+        self.set_tray_gripper_client = self.create_client(SetInt, "tray_gripper_command")
         # GUI
         self.nodes_used_client = self.create_client(NodesUsed, "nodes_used_gui")
         # LLM
@@ -236,6 +237,7 @@ class ROS2TaskNode(Node):
             "charmie_speakers":             True,
             "charmie_speakers_save":        False,
             "charmie_tracking":             False,
+            "charmie_tray_gripper":         False,
             "charmie_yolo_objects":         True,
             "charmie_yolo_pose":            False,
             "charmie_yolo_world":           False,
@@ -325,6 +327,10 @@ class ROS2TaskNode(Node):
             while not self.activate_tracking_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Activate Tracking Command...")
 
+        if self.ros2_modules["charmie_tray_gripper"]:
+            while not self.set_tray_gripper_client.wait_for_service(1.0):
+                self.get_logger().warn("Waiting for Server Set Tray Gripper Command...")
+
         if self.ros2_modules["charmie_yolo_objects"]:
             while not self.activate_yolo_objects_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for Server Yolo Objects Activate Command...")
@@ -368,6 +374,7 @@ class ROS2TaskNode(Node):
         self.waited_for_end_of_face = False
         self.waited_for_end_of_face_touchscreen_menu = False
         self.waited_for_end_of_set_torso_position = False
+        self.waited_for_end_of_set_tray_gripper = False
         self.waited_for_end_of_llm_demonstration = False
         self.waited_for_end_of_llm_confirm_command = False
         self.waited_for_end_of_llm_gpsr = False
@@ -421,6 +428,8 @@ class ROS2TaskNode(Node):
         self.rgb_message = ""
         self.torso_success = True
         self.torso_message = ""
+        self.tray_gripper_success = True
+        self.tray_gripper_message = ""
         self.audio_success = True
         self.audio_message = ""
         self.continuous_audio_success = True
@@ -567,6 +576,7 @@ class ROS2TaskNode(Node):
         nodes_used.charmie_speakers             = self.ros2_modules["charmie_speakers"]
         nodes_used.charmie_speakers_save        = self.ros2_modules["charmie_speakers_save"]
         nodes_used.charmie_tracking             = self.ros2_modules["charmie_tracking"]
+        nodes_used.charmie_tray_gripper         = self.ros2_modules["charmie_tray_gripper"]
         nodes_used.charmie_yolo_objects         = self.ros2_modules["charmie_yolo_objects"]
         nodes_used.charmie_yolo_pose            = self.ros2_modules["charmie_yolo_pose"]
         nodes_used.charmie_yolo_world           = self.ros2_modules["charmie_yolo_world"]
@@ -1100,6 +1110,24 @@ class ROS2TaskNode(Node):
         self.rgb_success = True
         self.rgb_message = "Value Sucessfully Sent"
 
+    def call_set_tray_gripper_server(self, request=SetInt.Request(), wait_for_end_of=True):
+    
+        future = self.set_tray_gripper_client.call_async(request)
+        future.add_done_callback(self.callback_call_set_tray_gripper)
+        
+    def callback_call_set_tray_gripper(self, future): 
+
+        try:
+            # in this function the order of the line of codes matter
+            # it seems that when using future variables, it creates some type of threading system
+            # if the falg raised is here is before the prints, it gets mixed with the main thread code prints
+            response = future.result()
+            self.get_logger().info(str(response.success) + " - " + str(response.message))
+            self.tray_gripper_success = response.success
+            self.tray_gripper_message = response.message
+            self.waited_for_end_of_set_tray_gripper = True
+        except Exception as e:
+            self.get_logger().error("Service call failed %r" % (e,))  
 
     def call_set_torso_position_server(self, request=SetTorso.Request()):
     
@@ -1876,6 +1904,30 @@ class RobotStdFunctions():
 
         return self.node.rgb_success, self.node.rgb_message
 
+    def close_tray_gripper(self, wait_for_end_of=True):
+
+        self.set_tray_gripper_position(command=0, wait_for_end_of=wait_for_end_of) # 0 is open position
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
+    def open_tray_gripper(self, wait_for_end_of=True):
+
+        self.set_tray_gripper_position(command=100, wait_for_end_of=wait_for_end_of) # 0 is open position
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
+    def set_tray_gripper_position(self, command=0, wait_for_end_of=True):
+
+        request = SetInt.Request()
+        request.data = int(command)
+
+        self.node.call_set_tray_gripper_server(request=request, wait_for_end_of=wait_for_end_of)
+
+        if wait_for_end_of:
+            while not self.node.waited_for_end_of_set_tray_gripper:
+                pass
+        self.node.waited_for_end_of_set_tray_gripper = False
+
+        return self.node.tray_gripper_success, self.node.tray_gripper_message
+
     def get_vccs(self, wait_for_end_of=True):
 
         return self.node.vccs.battery_voltage, self.node.vccs.emergency_stop
@@ -2256,12 +2308,13 @@ class RobotStdFunctions():
 
         return success, message, label, score
 
-    def set_face(self, command="", custom="", camera="", show_detections=False, wait_for_end_of=False):
+    def set_face(self, command="", custom="", camera="", show_detections=False, loadbar=0.0, wait_for_end_of=False):
         
         request = SetFace.Request()
         request.command = command
         request.custom = custom
         request.camera = camera
+        request.loadbar = loadbar
         request.show_detections = show_detections
         
         self.node.call_face_command_server(request=request, wait_for_end_of=wait_for_end_of)
@@ -2648,6 +2701,42 @@ class RobotStdFunctions():
         else:
             return False
         
+    def move_to_person(self, person=DetectedPerson(), dist_to_person=2.0, print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
+
+        move_coords = [person.position_absolute.x, person.position_absolute.y, 0.0]
+
+        if person.furniture_location == "None" or person.furniture_location == None: # if the person is not in a specific furniture, assume we can navigate there and have generic logic
+
+            print("Person detected is NOT in a furniture.")
+
+            self.move_to_position(move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, wait_for_end_of=False)
+            is_person_radius_reached = False
+            while not is_person_radius_reached:
+                robot_pos = self.get_robot_localization()
+                dist = math.sqrt((move_coords[0] - robot_pos.x)**2 + (move_coords[1] - robot_pos.y)**2)
+                print("Distance to person: " + str(round(dist, 2)) + " m")
+                if dist <= dist_to_person:
+                    is_person_radius_reached = True
+                else:
+                    time.sleep(0.05)
+            
+            self.move_to_position_cancel()
+            time.sleep(1.5)
+            self.adjust_angle(angle=self.get_rotation_angle_to_map_coords(target_coords=move_coords), wait_for_end_of=True)
+
+            robot_pos = self.get_robot_localization()
+            dist = math.sqrt((move_coords[0] - robot_pos.x)**2 + (move_coords[1] - robot_pos.y)**2)
+            print("Distance to person: " + str(round(dist, 2)) + " m")
+
+        else: # if person is in a furniture, it may not be phisically acessible to navigate to the coordinates, because this may be blocked in the map, if so, we navigate the navigation coords of that furniture
+            
+            print("Person detected is in furniture:" + person.furniture_location)
+            # move to nav_coords of the furniture where the person is, which are accessible in the map
+            move_coords = self.get_navigation_coords_from_furniture(person.furniture_location) 
+            self.move_to_position(move_coords, print_feedback=print_feedback, feedback_freq=feedback_freq, wait_for_end_of=True)
+            # rotate to person position (most furnitures not necessary but for sofa must be done)
+            self.adjust_angle(angle=self.get_rotation_angle_to_map_coords(target_coords=move_coords), wait_for_end_of=True)
+
     def move_to_position_follow_waypoints(self, move_coords = [], print_feedback=True, feedback_freq=1.0, wait_for_end_of=True):
 
         if move_coords:
@@ -4142,6 +4231,7 @@ class RobotStdFunctions():
             while not self.node.waited_for_end_of_llm_ollama_gpsr_high_level:
                 pass
             self.node.waited_for_end_of_llm_ollama_gpsr_high_level = False
+            print(self.node.llm_ollama_gpsr_high_level_response)
 
         ### if wfeo
         ###     The result is returned by this function
@@ -4162,15 +4252,30 @@ class RobotStdFunctions():
         request = GetLLMResponse.Request()
         request.command = command
         request.mode = mode
+        
+        self.node.waited_for_end_of_llm_ollama_gpsr_low_level = False # to prevent possible wfeo as false that did not have a _is_done() check that turned down the flag
+        
         self.node.call_llm_ollama_gpsr_low_level_server(request=request, wait_for_end_of=wait_for_end_of)
         
         if wait_for_end_of:
             while not self.node.waited_for_end_of_llm_ollama_gpsr_low_level:
                 pass
             self.node.waited_for_end_of_llm_ollama_gpsr_low_level = False
+            print(self.node.llm_ollama_gpsr_low_level_response)
 
-        print(self.node.llm_ollama_gpsr_low_level_response)
+        ### if wfeo
+        ###     The result is returned by this function
+        ### else
+        ###     The task node must get the response command from: self.node.llm_ollama_gpsr_low_level_response
+
         return self.node.llm_ollama_gpsr_low_level_response
+
+    def get_llm_ollama_gpsr_low_level_is_done(self):
+        if self.node.waited_for_end_of_llm_ollama_gpsr_low_level:
+            self.node.waited_for_end_of_llm_ollama_gpsr_low_level = False
+            return True
+        else:
+            return False
 
     ### LLM
     def get_llm_demonstration(self, wait_for_end_of=True):
@@ -4228,69 +4333,115 @@ class RobotStdFunctions():
    
 
         return self.node.llm_demonstration_response
+    
+    def receive_command_and_generate_low_level_planner(self, command_no=1, use_touchscreen_for_yes_no_questions=False):
 
-    ##  GETS AND CONFIRMS A GPSR COMMAND ##
-    def get_llm_confirm_command(self, wait_for_end_of=True):
+        current_datetime = ""
+        hlp_comm = ""
+        l_command = [] # can only be used after the .split(";")
+        got_hlp = False
+
+        def check_received_hlp_and_save_speaker_sentences(): # checks if hlp has been received and sends all sentence speak files
+            nonlocal current_datetime, hlp_comm, l_command, got_hlp
+            if not got_hlp and self.get_llm_ollama_gpsr_high_level_is_done():
+                print("CHECKED RECEIVE HLP - STARTING TO GENERATE SPEECH FILES")
+                hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
+                if hlp_comm.endswith(";"): # edge case where hlp ended with ; . This made a sentence be empty and thus not generated, which maskes the checks if can do speaks block because it is waiting for file to be created
+                    hlp_comm = hlp_comm[:-1]
+                l_command = hlp_comm.split(";")
+
+                # SAVE ALL SPEAKS
+                for index, value in enumerate(l_command):
+                    # print("hlp_" + current_datetime + "_" + str(index))
+                    self.save_speech(command=value, filename="hlp_" + current_datetime + "_" + str(index), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
+
+                got_hlp = True
+
+        def speech_file_is_ready(filename): # helper to check if file exists, wav + txt because txt is created after wav, which means wav is not under construction
+            temp_path = (
+                Path.home()
+                / "charmie_ws"
+                / "src"
+                / "charmie_speakers"
+                / "charmie_speakers"
+                / "list_of_sentences"
+                / "temp"
+            )
+            wav_path = Path(temp_path) / f"{filename}.wav"
+            txt_path = Path(temp_path) / f"{filename}.txt"
+            return wav_path.is_file() and txt_path.is_file()
 
         command_confirmed = False
-        max_confirm_attempts = 3
-        confirm_attempts_cntr = 0
         max_characters = 250
-        valid_command = False
 
         self.set_speech(filename="generic/hear_green_face", wait_for_end_of=True)
-
-        while not command_confirmed and confirm_attempts_cntr < max_confirm_attempts:
-
-            confirm_attempts_cntr += 1
+        while not command_confirmed: #  and confirm_attempts_cntr < max_confirm_attempts:
+            got_hlp = False
+            current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
 
             ##### SPEAK: "What is your request?"
             gpsr_command = self.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green", wait_for_end_of= True)
-            # gpsr_command = "Please proceed to the living room, introduce yourself to the person wearing a black jacket, and thereafter follow them."
             print("Finished:", gpsr_command)
 
             ##### SPEAK: "Please give me a moment to process your command"
             self.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
             
             if len(gpsr_command) > max_characters:
-                valid_command = False
                 self.set_speech(filename="gpsr/could_not_process", wait_for_end_of=True)
             else:
+
+                self.get_llm_ollama_gpsr_high_level(command=gpsr_command, mode="", wait_for_end_of=False)
             
+                self.set_face(loadbar=10.0, command=gpsr_command)
                 self.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
-                
+                self.set_face("charmie_face")
+                check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+
                 ##### SPEAK: "I have understood the following command."
                 self.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
-                self.set_speech(filename="temp/gpsr_command",show_in_face=True, wait_for_end_of=True)
-                ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
-                self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
-                # confirmation = "yes"
-                confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                print("Finished:", confirmation)
-
+                check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+                self.set_speech(filename="temp/gpsr_command", show_in_face=True, wait_for_end_of=True)
+                check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+                
+                if not use_touchscreen_for_yes_no_questions:
+                    ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
+                    self.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
+                    confirmation = self.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                else: # if touchscreen is used
+                    if command_no == 1: # for time efficiency, only inform user that needs to press the face for the first command
+                        self.set_speech(filename="generic/press_correct_option_touchscreen", wait_for_end_of=True) # SAY: Please press the correct option on my face.
+                    answer = self.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, speak_timeout=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
+                    confirmation = answer[0]
+                
+                # worst case scenario, it waits until is received here, 
+                while not got_hlp:
+                    check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+                    time.sleep(0.05)
+                
+                # print("confirmation:", confirmation)
                 if confirmation.lower() == "yes":
                     self.set_rgb(command=GREEN+BLINK_LONG)
-                    ##### SPEAK: "Great!"
-                    valid_command = True
                     command_confirmed = True
+                else: # "no" or "TIMEOUT"
+                    self.set_speech(filename="generic/sorry_for_my_mistake_lets_try_again", wait_for_end_of=True) # SAY: Sorry for my mistake let's try again
 
-                else:
-                    self.set_rgb(command=RED+BLINK_LONG)
 
-                    if confirm_attempts_cntr < max_confirm_attempts:
-                        ##### SPEAK: Sorry for my mistake, lets try again.
-                        self.set_speech(filename="gpsr/no_order", wait_for_end_of=True)
-                        command_confirmed = False
-                        valid_command = False
-                
-                    else:
-                        gpsr_command = "ERROR"
+        self.get_llm_ollama_gpsr_low_level(command=hlp_comm, mode="", wait_for_end_of=False)
+        
+        # time_efficient_high_level_sentence_saver()
+        self.set_speech(filename="gpsr/say_plan", wait_for_end_of= True)
+        for index, value in enumerate(l_command):
+            while not speech_file_is_ready("hlp_" + current_datetime + "_" + str(index)):
+                time.sleep(0.05)
+            self.set_speech(filename="temp/hlp_" + current_datetime + "_" + str(index), wait_for_end_of=True)
 
-        if not valid_command:
-            gpsr_command = "ERROR"
-
-        return gpsr_command
-
+        # worst case scenario, it waits until is received here, 
+        while not self.get_llm_ollama_gpsr_low_level_is_done():
+            time.sleep(0.05)
+        
+        llp = self.node.llm_ollama_gpsr_low_level_response
+        return llp
+        
     ##  HIGH-LEVEL PLANNER (GENERATES A HIGH-LEVEL PLAN FOR A GPSR COMMAND)
     def get_llm_high_level_plan(self, command= "", wait_for_end_of=True):
         
@@ -4310,85 +4461,657 @@ class RobotStdFunctions():
         print(self.node.llm_demonstration_response)
 
         return self.node.llm_demonstration_response
-        # self.execute_gpsr_plan(plan=self.node.llm_demonstration_response)
 
-##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)
-    def execute_gpsr_plan(self, command ="", wait_for_end_of = True):
+    ##  LOW-LEVEL PLANNER (GENERATES AND EXECUTES THE LOW LEVEL PLAN FOR GPSR REQUESTS)
+    def execute_gpsr_plan(self, command ="", instruction_point=[0, 0, 0], curr_room="", curr_furniture="", curr_result="", curr_obj_list=[], curr_picked_height = 0.0, curr_asked_help = False, wait_for_end_of = True):
+            
+        task_split = command.split("-")
 
-        request = GetLLMGPSR.Request()
-        request.command = command
+        ### CONFIGURATIONS FOR GPSR EXECUTION ###
 
-        self.node.call_llm_gpsr_server(request=request, wait_for_end_of=wait_for_end_of)
+        # Neck positions
+        self.look_navigation = [0, -30]
+        self.look_forward = [0, 0]
 
-        if wait_for_end_of:
-            while not self.node.waited_for_end_of_llm_gpsr:
-                pass
-            self.node.waited_for_end_of_llm_gpsr = False
+        # Timers for handing objects
+        self.release_timer = 0.3
+        self.gripper_release_timer = 2
 
-        plan = self.node.llm_gpsr_response
+        self.min_distance_to_person = 0.8
+
+
+        ### Parsing the command ###
+        task_type = task_split[0] if len(task_split) > 0 else ""
+        task_info = task_split[1] if len(task_split) > 1 else ""
+        task_info_2 = task_split[2] if len(task_split) > 2 else ""
+        task_extra = task_split[3] if len(task_split) > 3 else ""
+
+        parameter=task_info.replace(" ","_").lower()
+        second_parameter=task_info_2.replace(" ","_").lower()
         
-        for task in plan.strings:
-            task_split = task.split("-")
+        print("Task type:", task_type, " Task info:", parameter, " Task info 2:", task_info_2, " Task extra:", task_extra)
+
+        match task_type:
+
+            case "move_to":
+
+                # check if it is a room
+                for obj in self.node.rooms:
+                    if str(obj["name"]).replace(" ","_").lower() == parameter:
+                        ### TASK TYPE====> move_to_room
+                        self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
+                        self.set_speech(filename="generic/moving", wait_for_end_of=True)
+                        self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
+
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_room(parameter), wait_for_end_of=True)
+
+                        self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                        self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                        self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
+
+                        print("Moving to room:", parameter)
+
+                        curr_room = parameter
+                        curr_furniture = "NONE"
+
+                        pass
+
+                # check if it is a furniture 
+                for obj in self.node.furniture:
+                    if str(obj["name"]).replace(" ","_").lower() == parameter:
+                        ### TASK TYPE====> move_to_furniture
+                        self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
+                        self.set_speech(filename="generic/moving", wait_for_end_of=True)
+                        self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
+
+                        self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(parameter), wait_for_end_of=True)
+                        
+                        self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                        self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                        self.set_speech(filename="furniture/"+parameter, wait_for_end_of=True)
+                        
+                        print("Moving to furniture:", parameter)
+
+                        curr_furniture = parameter
+                        curr_room = self.get_room_from_furniture(parameter)
+
+                        pass
+
+                pass
+                
+            case "go_to_person":
+                
+                print("Moving to person")
+                print(parameter)
+                print(second_parameter)
+
+                people_list = []
+                correct_person = DetectedPerson()
+
+                curr_room_top_left = []
+                curr_room_bottom_right = []
+
+                for room in self.node.rooms:
+                    print("checking:", str(repr(room["name"])))
+
+                    if str(room["name"]).replace(" ","_").lower() == str(curr_room).replace(" ","_").lower():
+                        print("Currently in the room: ", room["name"])
+                        curr_room_top_left = room["top_left_coords"]
+                        curr_room_bottom_right = (room["bot_right_coords"])
+                        print ("Top left x:", curr_room_top_left[0])
+                        print ("Top left y:", curr_room_top_left[1])
+                        print ("Bottom right x:", curr_room_bottom_right[0])
+                        print ("Bottom tright y:", curr_room_bottom_right[1])
+
+                tetas = [[-60, 0], [0, 0], [60, 0]]
+
+                if parameter == "pose":
+
+                    if second_parameter == "sitting":
+
+                        people_found=self.search_for_person(tetas=tetas)
+
+                        for p in people_found:
+
+                            print("p room: ", p.room_location) 
+                            print("person height:", p.height) 
+                            print("current room: ", curr_room)
+                            print("p x coords relative: ", p.position_absolute.x) 
+                            print("p y coords relative: ", p.position_absolute.y) 
+
+                            if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                                
+                                if (0.8 <= p.height <1.6):
+                                    correct_person = p
+
+                        pass
+
+                    if second_parameter == "standing":
+
+                        people_found=self.search_for_person(tetas=tetas)
+
+                        for p in people_found:
+
+                            print("p room: ", p.room_location) 
+                            print("person height:", p.height) 
+                            print("current room: ", curr_room)
+                            print("p x coords relative: ", p.position_absolute.x) 
+                            print("p y coords relative: ", p.position_absolute.y) 
+
+                            if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                                
+                                if (1.5 <= p.height):
+                                    correct_person = p
+                        
+                        pass
+
+                    if second_parameter == "lying_down":
+
+                        tetas = [[-60, -30], [0, -30], [60, -30]]
+
+                        people_found=self.search_for_person(tetas=tetas)
+
+
+                        for p in people_found:
+
+                            print("p room: ", p.room_location) 
+                            print("person height:", p.height) 
+                            print("current room: ", curr_room)
+                            print("p x coords relative: ", p.position_absolute.x) 
+                            print("p y coords relative: ", p.position_absolute.y) 
+
+                            if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                                print("p x coords: ", p.position_absolute.x) 
+                                print("p y coords: ", p.position_absolute.y) 
+                                
+                                if (p.height > 0.8):
+                                    correct_person = p
+                        pass
+
+                    if second_parameter == "raising_hand":
+
+                        ### Search for person with hand raised in the current room
+                        people_found = self.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
+                        print("FOUND:", len(people_found)) 
+
+                        for p in people_found:
+
+                            print("p room: ", p.room_location)
+                            print("current room: ", curr_room)
+
+                            if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                                correct_person = p
+                      
+                    if second_parameter == "pointing_right":
+                        
+                        ### Search for person in the current room
+                        people_found=self.search_for_person(tetas=tetas)
+                        print("FOUND:", len(people_found)) 
+                        
+                        for p in people_found:
+                            
+                            self.detected_person_to_face_path(person=p, send_to_face=True)
+                            print("p room: ", p.room_location) 
+                            print("pointing at:", p.pointing_at) 
+                            print("current room: ", curr_room)
+                            print("p x coords relative: ", p.position_absolute.x) 
+                            print("p y coords relative: ", p.position_absolute.y) 
+
+
+                            if p.pointing_at == "Right":
+                                if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                                    correct_person = p
+
+                        pass
+
+                    if second_parameter == "pointing_left":
+
+                        ### Search for person in the current room
+                        people_found=self.search_for_person(tetas=tetas)
+                        print("FOUND:", len(people_found)) 
+                        
+                        for p in people_found:
+
+                            self.detected_person_to_face_path(person=p, send_to_face=True)
+                            print("p room: ", p.room_location) 
+                            print("pointing at:", p.pointing_at) 
+                            print("current room: ", curr_room)
+                            print("p x coords absolute: ", p.position_absolute.x) 
+                            print("p y coords absolute: ", p.position_absolute.y) 
+
+                            if p.pointing_at == "Left":
+                                if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                                    correct_person = p
+
+                        pass
+
+                    print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                    print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                    print("Correct person's height", correct_person.height)
+
+                    self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+
+                    self.set_neck(self.look_navigation)
+                    self.move_to_person(person = correct_person)
+                    self.set_neck(self.look_forward)
+
+                    self.set_speech(filename= "gpsr/gpsr_intro")
+
+                if parameter == "name":
+                    
+                    ### Speak: "I am lookig for someone named [name]"
+                    ### Speak: "[name] could you please raise your hand so I can find you?"
+                    self.save_speech(command=second_parameter.replace("_"," ").lower(), filename="person_name", quick_voice=False, wait_for_end_of=False)
+
+                    self.set_speech(filename="gpsr/looking_for", wait_for_end_of=True)
+                    while not self.save_speech_is_done():
+                        pass
+                    self.set_speech(filename="temp/person_name", wait_for_end_of=True)
+                    time.sleep(0.5)
+                    self.set_speech(filename="gpsr/raise_your_hand", wait_for_end_of=True)
+                    time.sleep(0.5)
+
+                    ### Search for person with hand raised in the current room
+                    people_found = self.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
+                    print("FOUND:", len(people_found)) 
+
+                    for p in people_found:
+
+                        print("p room: ", p.room_location)
+                        print("current room: ", curr_room)
+
+                        if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+                            correct_person = p
+
+
+                    print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                    print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                    print("Correct person's height", correct_person.height)
+
+                    # self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+
+                    self.set_neck(self.look_navigation)
+                    self.move_to_person(person = correct_person)
+                    self.set_neck(self.look_forward)
+
+                    ### Speak: "Hello [name], my name is Charmie!"
+                    self.set_speech(filename= "gpsr/gpsr_intro")
+
+                    pass
+
+                if parameter == "clothing":
+
+                    ### Search for person with characteristics
+                    people_found=self.search_for_person(tetas=tetas)
+                    print("FOUND:", len(people_found)) 
+
+                    ### If found, search for the desired characteristic
+                    for p in people_found:
+
+                        print(p.shirt_color)
+                        person_shirt_color = p.shirt_color
+
+                        if person_shirt_color.lower() == second_parameter.lower():
+                            people_list.append(p)
+
+                    for p in people_found:
+
+                        if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
+
+                            if person_shirt_color.lower() == second_parameter.lower():
+
+                                correct_person=p
+
+
+                    print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                    print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                    print("Correct person's height", correct_person.height)
+
+                    self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+
+                    self.set_neck(self.look_navigation)
+                    self.move_to_person(person = correct_person)
+                    self.set_neck(self.look_forward)
+
+                    ### Speak: "Hello [name], my name is Charmie!"
+                    self.set_speech(filename= "gpsr/gpsr_intro")
+
+                    pass
+                
+                if parameter == "you":
+
+                    ### Set neck: navigation
+                    self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+
+                    ### Speak: "Moving to the instruction point"
+                    self.set_speech(filename="generic/moving", wait_for_end_of=False)
+                    self.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
+
+                    ### Move to: instruction_point
+                    self.move_to_position(move_coords=instruction_point, wait_for_end_of=True)
+
+                    ### Set neck: look forward
+                    self.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                    ### Speak: "Arrived at the instruction point"
+                    self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                    self.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
+
+                    pass
+          
+            case "look_for_object":
+
+                # search_tetas = [[0, -45], [-40, -45], [40, -45]]
+
+                # orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                # print("Orientation to search:", orientation_to_search)
+
+                # if orientation_to_search == "horizontal":
+                #     search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                #     print("Looking for:", parameter, "with horizontal search")
+                # elif orientation_to_search == "vertical":
+                #     search_tetas = [[0, -15], [0, -35], [0, 15]]
+                #     print("Looking for:", parameter, "with vertical search")
+
+                # objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
+                # filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
+                # print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
+
+                # if filtered_objects_found:
+                #     self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+
+                #     for obj_found in filtered_objects_found:
+
+                #         curr_obj_list.append(obj_found)
+                #         print("Found:", obj_found.object_name)
+                #         self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+
+                # else:    
+                #     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+
+                pass
             
-            task_type = task_split[0]
-            task_info = task_split[1] if len(task_split) > 1 else ""
+            case "pick_up_object":
+
+                print("Picking up:", parameter)
+
+                search_tetas = [[0, -45], [-40, -45], [40, -45]]
+
+                orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                print("Orientation to search:", orientation_to_search)
+
+                if orientation_to_search == "horizontal":
+                    search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                    print("Looking for:", parameter, "with horizontal search")
+                elif orientation_to_search == "vertical":
+                    search_tetas = [[0, -15], [0, -35], [0, 15]]
+                    print("Looking for:", parameter, "with vertical search")
+
+                picked_height, asked_help = self.pick_object(selected_object= parameter, first_search_tetas=search_tetas)
+
+                object_in_gripper = False
+                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                if object_in_gripper:
+                    curr_obj_list.append(parameter)
+                    curr_picked_height = picked_height
+                    curr_asked_help = asked_help
+
+                pass
+
+            case "hand_object":
+                
+                print("Handing:", parameter)
+
+                self.set_speech(filename="restaurant/give_order_from_gripper", wait_for_end_of=True)
+                self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.set_speech(filename="restaurant/open_gripper_3_2_1", wait_for_end_of=True)
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
+                time.sleep(3.0)
+                self.set_arm(command="close_gripper", wait_for_end_of=True)
+                self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
+                pass
+
+            case "place_object":
+              
+                print("Placing:", parameter)
+
+                self.place_object_in_furniture(selected_object=curr_obj_list[0], furniture=curr_furniture, shelf_number=0, place_height=curr_picked_height, asked_help=curr_asked_help)
+
+                object_in_gripper = False
+                object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                if not object_in_gripper:
+                    curr_obj_list.clear()
+                    curr_picked_height = 0.0
+                    curr_asked_help = False
+
+                pass
             
-            print("Task type:", task_type, " Task info:", task_info)
+            case "count_objects":
 
-            match task_type:
+                obj_counter = 0
+                
+                search_tetas = [[0, -45], [-40, -45], [40, -45]]
 
-                case "MoveToRoom":
-                    # temporary speech to show it is working
-                    self.set_speech(command="Moving to " + task_info, quick_voice=True, wait_for_end_of=True)
-                    pass 
+                orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                print("Orientation to search:", orientation_to_search)
 
-                case "MoveToFurniture":
-                    # temporary speech to show it is working
-                    self.set_speech(command="Moving to " + task_info, quick_voice=True, wait_for_end_of=True)
+                if orientation_to_search == "horizontal":
+                    search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                    print("Looking for:", parameter, "with horizontal search")
+                elif orientation_to_search == "vertical":
+                    search_tetas = [[0, -15], [0, -35], [0, 15]]
+                    print("Looking for:", parameter, "with vertical search")
+
+                objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
+                print("Objects to count:", [obj.object_name for obj in filtered_objects_found])
+
+                if filtered_objects_found:
+                    self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+
+                    for obj_found in filtered_objects_found:
+            
+                        obj_counter += 1
+                        print("Found:", obj_found.object_name)
+                        self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                    
+                curr_result = "I have found " + str(obj_counter) + " " + parameter.replace("_"," ") + "."
+                print(curr_result)
+                self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
+                print ("Total count of ", parameter, ":", obj_counter)
+
+                pass
+
+            case "compare_objects":
+
+                search_tetas = [[0, -45], [-40, -45], [40, -45]]
+
+                curr_obj_list.clear()
+
+                orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                print("Orientation to search:", orientation_to_search)
+
+                if orientation_to_search == "horizontal":
+                    search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                    print("Looking for:", second_parameter, "with horizontal search")
+                elif orientation_to_search == "vertical":
+                    search_tetas = [[0, -15], [0, -35], [0, 15]]
+                    print("Looking for:", second_parameter, "with vertical search")
+
+                objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
+                filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=second_parameter)
+                print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
+
+                if filtered_objects_found:
+
+                    self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
+                    for obj_found in filtered_objects_found:
+
+                        curr_obj_list.append(obj_found.object_name)
+                        print("Found:", obj_found.object_name)
+
+                else:    
+                    self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
+
+
+                if parameter == "smallest":
+                    print("Finding the smallest ", second_parameter)
+                    smallest_volume = float('inf')
+                    smallest_object = None
+
+                    for obj in curr_obj_list:
+                        print("getting size of: ", obj)
+                        obj_volume = self.get_object_volume_from_object(obj)
+                        print("size of ", obj,": ",obj_volume)
+                        if obj_volume < smallest_volume:
+                            smallest_volume = obj_volume
+                            smallest_object = obj
+                    
+                    print("smallest object is: ", smallest_object)
+
+                    curr_result = "Of all the " + second_parameter.replace("_"," ") + " I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
+                    print(curr_result)
+                    self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
+                
+                elif parameter == "biggest":
+                    print("Finding the biggest ", second_parameter)
+                    biggest_volume = float('-inf')
+                    biggest_object = None
+
+                    for obj in curr_obj_list:
+                        print("getting size of: ", obj)
+                        obj_volume = self.get_object_volume_from_object(obj)
+                        print("size of ", obj,": ",obj_volume)
+                        if obj_volume > biggest_volume:
+                            biggest_volume = obj_volume
+                            biggest_object = obj
+
+                    print("biggest object is: ", biggest_object)
+
+                    curr_result = "Of all the " + second_parameter.replace("_"," ") + " I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
+                    print(curr_result)
+                    self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
+
+                elif parameter == "heaviest":
+                    print("Finding the heaviest ", second_parameter)
+                    heaviest_weight_so_far = float('-inf')
+                    heaviest_object = None
+
+                    for obj in curr_obj_list:
+                        print("getting weight of: ", obj)
+                        obj_weight = self.get_object_weight_from_object(obj)
+                        print("size of ", obj,": ",obj_weight)
+                        if obj_weight > heaviest_weight_so_far:
+                            heaviest_weight_so_far = obj_weight
+                            heaviest_object = obj
+
+                    print("heaviest object is: ", heaviest_object)
+
+                    curr_result = "Of all the " + second_parameter.replace("_"," ") + " I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "."
+                    print(curr_result)
+                    self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
+
+                elif parameter == "lightest":
+                    print("Finding the lightest ", second_parameter)
+                    
+                    lightest_weight_so_far = float('inf')
+                    lightest_object = None
+
+                    for obj in curr_obj_list:
+                        print("getting weight of: ", obj)
+                        obj_weight = self.get_object_weight_from_object(obj)
+                        print("size of ", obj,": ",obj_weight)
+                        if obj_weight < lightest_weight_so_far:
+                            lightest_weight_so_far = obj_weight
+                            lightest_object = obj
+
+                    print("lightest object is: ", lightest_object)
+
+                    curr_result = "Of all the " + second_parameter.replace("_"," ") + " I found, the lightest one is the " + lightest_object.replace("_"," ") + "."
+                    print(curr_result)
+
+                    self.save_speech(command=curr_result, filename="result", quick_voice=False, wait_for_end_of=True)
+                
+                curr_obj_list.clear()
+                    
+                pass
+
+            case "say_result":
+
+                while not self.save_speech_is_done():
                     pass
                 
-                case "move_to_person_through_name":
-                    # temporary speech to show it is working
-                    self.set_speech(command="Moving to person called" + task_info, quick_voice=True, wait_for_end_of=True)
-                    
-                    pass
-                
-                case "MoveToPersonPose":
-                    # temporary speech to show it is working
-                    self.set_speech(command="Moving to person with pose" + task_info, quick_voice=True, wait_for_end_of=True)
-                    
-                    pass
-                
-                case "MoveToPersonClothing":
-                    # temporary speech to show it is working
-                    self.set_speech(command="Moving to person with a" + task_info, quick_voice=True, wait_for_end_of=True)
-                  
-                    pass
-                
-                case "MoveToInitialPersonPosition":
-                    # temporary speech to show it is working
-                    self.set_speech(command="Moving to the person who made the request", quick_voice=True, wait_for_end_of=True)
-                    pass
+                self.set_speech(filename="temp/result", wait_for_end_of=True)
 
-                case "Pick":
-                    # temporary speech to show it is working
-                    self.set_speech(command="Picking the " + task_info, quick_voice=True, wait_for_end_of=True)
-                    
-                    pass
+                pass
 
-                case "Place":
-                    # temporary speech to show it is working
-                    task_split_2 = task_info.split(",")
-                    if len(task_split_2) >= 2:
-                        self.set_speech(command="Placing the " + task_split_2[0]+ " on the " + task_split_2[1], quick_voice=True, wait_for_end_of=True)
-                    
-                    pass
+            case "guide_person":
 
-                case "HandObject":
-                    # temporary speech to show it is working
-                    self.set_speech(command="Handing the object in my hand", quick_voice=True, wait_for_end_of=True)
-                    
-                    pass
+                print("Guiding the person to:", parameter)
+
+                ### Speak: "Please follow me while I guide you to the [parameter]"
+                self.set_speech(filename="gpsr/follow_me", wait_for_end_of=True)
+                self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
+
+                ### Move to the [parameter]
+                self.execute_gpsr_plan(command="move_to-"+parameter, instruction_point=instruction_point, curr_room=curr_room, curr_furniture=curr_furniture, curr_result=curr_result, curr_obj_list=curr_obj_list, curr_picked_height=curr_picked_height, curr_asked_help=curr_asked_help, wait_for_end_of=True)
+
+                ### Speak: "We have arrived to the [parameter]."
+                self.set_speech(filename="gpsr/end_of_guide", wait_for_end_of=True)
+                self.set_speech(filename="rooms/"+parameter, wait_for_end_of=True)
+
+                print("Finished guiding the person to:", parameter)
+
+            #in case it is none of the above
+            case _:
+                # self.save_speech(command="Sorry, I cannot execute the task" , filename="temp/action", quick_voice=True, wait_for_end_of=True)
+                # self.set_speech(filename="temp/action", wait_for_end_of=True)
+                print("Sorry, I cannot execute the task:", task_type)
+
+        return curr_room, curr_furniture, curr_result, curr_obj_list, curr_picked_height, curr_asked_help
+
+    def get_filtered_list_of_objects_found(self, list_of_objects_found= [], parameter=""):
+
+        filtered_objects_found = []
+
+        for obj_found in list_of_objects_found:
+            if obj_found.object_name.replace(" ","_").lower() == parameter:
+                filtered_objects_found.append(obj_found)
+
+            else:
+                obj_found_class = self.get_object_class_from_object(obj_found.object_name)
+                if obj_found_class.replace(" ","_").lower() == parameter:
+                    filtered_objects_found.append(obj_found)
+        
+        print("Filtered objects found:", [obj.object_name for obj in filtered_objects_found])
+
+        return filtered_objects_found
+        
+    def get_object_volume_from_object(self, object_name):
+
+        obj_volume = 0.0
+
+
+        for obj in self.node.objects_file:
+            if obj["name"].replace(" ", "_").lower() == object_name:
+
+                if obj["shape"]== "cylinder":
+                    radius = float(obj["width"]) / 2
+                    height = float(obj["height"])
+                    obj_volume = math.pi * radius**2 * height
+
+                elif obj["shape"]== "sphere":
+                    radius = float(obj["width"]) / 2
+                    obj_volume = (4/3) * math.pi * radius**3
+
+                # Every other object we assume it is a cuboid
+                else:
+                    obj_volume = float(obj["width"]) * float(obj["height"]) * float(obj["length"])
+
+        return obj_volume
 
     def get_detected_person_characteristics(self, detected_person=DetectedPerson(), first_sentence="", ethnicity=False, age=False, gender=False, height=False, shirt_color=False, pants_color=False):
 
@@ -5167,7 +5890,7 @@ class RobotStdFunctions():
                 is_object_in_furniture_check = True
         
         if first_search_tetas == []:
-
+            
             if self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "horizontal":
                 first_search_tetas = [[0, -45], [-40, -45], [40, -45]]
 
@@ -6349,14 +7072,14 @@ class RobotStdFunctions():
                     self.safe_rise_gripper = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
 
 
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
 
 
                     time.sleep(0.5)
                     self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
                     time.sleep(0.5)
 
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
                     self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
                     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
 
@@ -6367,11 +7090,11 @@ class RobotStdFunctions():
 
                     # self.set_arm(command="initial_pose_to_place_front", wait_for_end_of=True)
                     self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_rotation_place_top, wait_for_end_of=True)
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion_quick", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
                     if NCT == False:
-                        self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+                        self.set_arm(command="adjust_joint_motion_quick", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
                     else:
-                        self.set_arm(command="adjust_joint_motion", joint_motion_values = NCT_place_joints, wait_for_end_of=True)
+                        self.set_arm(command="adjust_joint_motion_quick", joint_motion_values = NCT_place_joints, wait_for_end_of=True)
 
     
                     gripper_place_position = self.get_gripper_localization()
@@ -6390,7 +7113,7 @@ class RobotStdFunctions():
                         self.safe_rise_gripper = [0.0 , 0.0 , -final_x , 0.0 , 0.0 , 0.0]
 
 
-                        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
+                        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)
                     else:
                         self.safe_rise_gripper = [0.0 , 0.0 , -100 , 0.0 , 0.0 , 0.0]
 
@@ -6399,12 +7122,12 @@ class RobotStdFunctions():
                     self.set_arm(command="slow_open_gripper", wait_for_end_of=True)
                     time.sleep(0.5)
 
-                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
+                    self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
                     if NCT == False:
-                        self.set_arm(command="adjust_joint_motion", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
-                    self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_rotation_place_top, wait_for_end_of=True)
+                        self.set_arm(command="adjust_joint_motion_quick", joint_motion_values = second_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion_quick", joint_motion_values = first_right_tray_top, wait_for_end_of=True)
+                    self.set_arm(command="adjust_joint_motion_quick", joint_motion_values = pre_rotation_place_top, wait_for_end_of=True)
                     self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
 
                     
@@ -6418,10 +7141,8 @@ class RobotStdFunctions():
                 print("THAT FURNITURE DOES NOT EXIST, UNABLE TO PLACE OBJECT !!!")
                 return
             
-        print("Place 1:", place_mode)
         if place_mode == "":
             place_mode = self.get_standard_pick_from_object(selected_object)
-            print("Place 2:", place_mode)
         if furniture != "rack":
             furniture_height = self.get_height_from_furniture(furniture)
 
@@ -6857,7 +7578,7 @@ class RobotStdFunctions():
 
         return success, message, nav_coords_ret
 
-    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True):
+    def move_to_free_place_position(self, furniture="", list_of_objects=[], heads_of_the_table=True, forbidden_sides=["top", "right"], speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True):
         
         # TODO: this function still does not consider the object height for comparing which is the best spot to place object (multiple shelves)
 
@@ -6914,6 +7635,18 @@ class RobotStdFunctions():
         place_lx = None
         place_ly = None
 
+        # if forbidden_sides is None:
+        #     forbidden_sides = []
+
+        valid_sides = ["bottom", "top", "right", "left"]
+
+        for side in forbidden_sides:
+            if side not in valid_sides:
+                print("[PLACE][WARN] Ignoring invalid forbidden side:", side)
+
+        forbidden_sides = [side for side in forbidden_sides if side in valid_sides]
+
+        print("[PLACE] Forbidden sides:", forbidden_sides)
         # ------------------------------------------------------------------
         # Convert detected object positions into furniture-local coordinates.
         # Only objects inside this furniture footprint are considered.
@@ -7076,6 +7809,17 @@ class RobotStdFunctions():
 
                     valid_empty_sides = ["bottom", "top", "right", "left"]
 
+                    available_empty_sides = [
+                        side for side in valid_empty_sides
+                        if side not in forbidden_sides
+                    ]
+
+                    if len(available_empty_sides) == 0:
+                        success = False
+                        message = "All sides are forbidden for empty square furniture"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
                     if empty_table_side not in valid_empty_sides:
                         print("[PLACE][WARN] Invalid empty_table_side:", empty_table_side)
                         print("[PLACE][WARN] Defaulting to right")
@@ -7109,29 +7853,39 @@ class RobotStdFunctions():
                     x = -half_x + placement_margin
                     y = -half_y + placement_margin
                     while y <= half_y - placement_margin:
-                        candidate_points.append((x, y, "bottom"))
+                        if "bottom" not in forbidden_sides:
+                            candidate_points.append((x, y, "bottom"))
                         y += grid_step
 
                     # top side candidates
                     x = half_x - placement_margin
                     y = -half_y + placement_margin
                     while y <= half_y - placement_margin:
-                        candidate_points.append((x, y, "top"))
+                        if "top" not in forbidden_sides:
+                            candidate_points.append((x, y, "top"))
                         y += grid_step
 
                     # right side candidates
                     y = -half_y + placement_margin
                     x = -half_x + placement_margin
                     while x <= half_x - placement_margin:
-                        candidate_points.append((x, y, "right"))
+                        if "right" not in forbidden_sides:
+                            candidate_points.append((x, y, "right"))
                         x += grid_step
 
                     # left side candidates
                     y = half_y - placement_margin
                     x = -half_x + placement_margin
                     while x <= half_x - placement_margin:
-                        candidate_points.append((x, y, "left"))
+                        if "left" not in forbidden_sides:
+                            candidate_points.append((x, y, "left"))
                         x += grid_step
+
+                    if len(candidate_points) == 0:
+                        success = False
+                        message = "No Strategy 2 square candidates available because all sides are forbidden"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
 
                     if DEBUG_PRINTS:
                         side_counts = {"bottom": 0, "top": 0, "right": 0, "left": 0}
@@ -7214,6 +7968,21 @@ class RobotStdFunctions():
                         "left": 90.0
                     }
 
+                    available_empty_sides = [
+                        side for side in side_to_angle.keys()
+                        if side not in forbidden_sides
+                    ]
+
+                    if len(available_empty_sides) == 0:
+                        success = False
+                        message = "All sides are forbidden for empty circular furniture"
+                        print("[PLACE][ERROR]", message)
+                        return success, message, nav_coords_ret, place_coords_ret
+
+                    if empty_table_side not in available_empty_sides:
+                        print("[PLACE][WARN] Invalid or forbidden empty_table_side:", empty_table_side)
+                        print("[PLACE][WARN] Defaulting to:", available_empty_sides[0])
+                        
                     if empty_table_side not in side_to_angle:
                         print("[PLACE][WARN] Invalid empty_table_side:", empty_table_side)
                         print("[PLACE][WARN] Defaulting to left")
@@ -7242,6 +8011,19 @@ class RobotStdFunctions():
 
                     while candidate_angle_deg < 360.0:
                         candidate_angle_rad = math.radians(candidate_angle_deg)
+
+                        if 315.0 <= candidate_angle_deg or candidate_angle_deg < 45.0:
+                            cand_side = "top"
+                        elif 45.0 <= candidate_angle_deg < 135.0:
+                            cand_side = "left"
+                        elif 135.0 <= candidate_angle_deg < 225.0:
+                            cand_side = "bottom"
+                        else:
+                            cand_side = "right"
+
+                        if cand_side in forbidden_sides:
+                            candidate_angle_deg += angle_step_deg
+                            continue
 
                         cand_lx = placement_radius * math.cos(candidate_angle_rad)
                         cand_ly = placement_radius * math.sin(candidate_angle_rad)
@@ -7693,7 +8475,7 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms        
 
-    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False): 
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False): 
 
 
         # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
@@ -7750,6 +8532,9 @@ class RobotStdFunctions():
         MAX_OBJECT_DISTANCE_X =  2.00
         MIN_OBJECT_DISTANCE_Y = -1.00
         MAX_OBJECT_DISTANCE_Y =  1.00
+        MIN_OBJECT_Z          =  0.20
+        MAX_OBJECT_Z          =  1.90
+        
 
         # HOW FAR AWAY FROM THE FURNITURE THE ROBOT WILL BE BEFORE PICKING OBJECT (ADJUSTS)
         DISTANCE_IN_FRONT_X     =  0.26 
@@ -7760,8 +8545,9 @@ class RobotStdFunctions():
         # MAX AND MIN HEIGHTS ALLOWED FOR OBJECTS TO BE CONSIDERED PICKABLE (WORKSPACE LIMITATION)
         MINIMUM_FRONT_HEIGHT    = 0.55
         MAXIMUM_FRONT_HEIGHT    = 1.70
-        HALFWAY_TOP_HEIGHT      = 0.60
-        MAXIMUM_TOP_HEIGHT      = 1.10
+        
+        HALFWAY_TOP_HEIGHT      = 0.40
+        MAXIMUM_TOP_HEIGHT      = 1.00
 
         # DISTANCE FROM GRIPPER CAM TO GRIPPER'S TIP (DO NOT CHANGE UNLESS RE-MEASURED !!!!)
         tf_x =  0.145
@@ -7781,7 +8567,15 @@ class RobotStdFunctions():
         ERROR_HANDLING_ASK_FOR_HELP = 9
 
         state = HEAD_SEARCH_OBJECTS
-
+        
+        """ 
+        # MAKE SURE ALL STATES ARE DECLARED, NO NEED TO CHANGE EXCEPT FOR TESTING PURPOSES
+        head_search = True     # STATE SEARCHING FOR OBJECTS WITH HEAD
+        hand_pre_pick = False  # STATE PREPARING THE PRE SEARCH WITH HAND POSITION 
+        hand_search = False    # STATE SEARCHING FOR OBJECTS WITH HAND CAMERA
+        pick_object = False    # STATE FOR PICKING OBJECT AFTER FOUND WITH HAND CAMERA
+        object_gripped = False # STATE AFTER OBJECT PICK BEFORE RETURNING TO INITIAL POSITION
+        """
 
         # ****************************************************************************************
         # 
@@ -7915,11 +8709,10 @@ class RobotStdFunctions():
                                 state = ERROR_HANDLING_ASK_FOR_HELP
                                 
                         # IF the object is within the specified distances, then hand_search is complete and will move on to the next state
-                        if obj.object_name == selected_object and MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y :
+                        if obj.object_name == selected_object and MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and MIN_OBJECT_Z < obj.position_absolute.z < MAX_OBJECT_Z:
                             
                             if  (object_location == furniture and is_object_in_furniture_check) \
-                                or is_object_in_furniture_check == False: 
-
+                                or is_object_in_furniture_check == False:
                                 if not_validated == False and (valid_detected_object.confidence < obj.confidence):
                                     valid_detected_object = obj
                                 elif not_validated == True:
@@ -7947,7 +8740,7 @@ class RobotStdFunctions():
                     show_detection = False
                     ask_help = True
                     state = ERROR_HANDLING_ASK_FOR_HELP
-                else:
+                elif objects_found:
                     # ANNOUNCE THE FOUND OBJECT
 
                     self.set_speech(filename="generic/found_following_items", wait_for_end_of=False)
@@ -7999,7 +8792,9 @@ class RobotStdFunctions():
                     self.adjust_y_      = valid_detected_object.position_relative.y - DISTANCE_IN_TOP_Y 
                 print("FINAL ADJUST:", self.adjust_x_, self.adjust_y_)
 
-                s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False, safety=False)
+
+                if restaurant_scenario == False or pick_mode == "front":
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False, safety=False)
                 state = MOVE_ARM_PRE_HAND_SEARCH_OBJECT
     
 
@@ -8048,7 +8843,9 @@ class RobotStdFunctions():
                     print("ADJUST Z", correct_x)
 
                     check, m = self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position, wait_for_end_of=True)
-                    
+
+                    if restaurant_scenario == True:
+                        s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False, safety=False)
                     while not self.adjust_omnidirectional_position_is_done():
                         pass
 
@@ -8129,9 +8926,12 @@ class RobotStdFunctions():
                         #correct_x_grab = MAX_MOVE_LIMIT
                 if pick_mode == "top":
                     correct_x_grab = (obj.position_cam.x + oh/1.4 - tf_x)*1000
-                    #MAX_MOVE_LIMIT = 235
-                    #if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320:
-                        #correct_x_grab = MAX_MOVE_LIMIT
+                    if selected_object != "bowl":
+                        MAX_MOVE_LIMIT = 260
+                    else:
+                        MAX_MOVE_LIMIT = 220
+                    if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320:
+                        correct_x_grab = MAX_MOVE_LIMIT
                 
                 print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab}, {correct_rotation})")
 
@@ -8245,7 +9045,7 @@ class RobotStdFunctions():
                     self.adjust_x_ = 0
 
                 self.adjust_y_ = - self.adjust_y_
-                #self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False) #TODO 3) Uncomment this line
+                self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=False, safety=False) #TODO 3) Uncomment this line
 
                 self.set_face("charmie_face", wait_for_end_of=False)
 
@@ -8265,12 +9065,9 @@ class RobotStdFunctions():
                     security_position_front   = [100.0*math.cos(math.radians(correct_rotation)), -100.0*math.sin(math.radians(correct_rotation)), -200.0, 0.0, 0.0, 0.0] #Rise the gripper in table orientation
                     self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = security_position_front, wait_for_end_of=True)
                 if pick_mode == "top" and not ask_help:
-                    object_position_grab = [0.0, 0.0, -correct_x_grab, 0.0, 0.0, -correct_rotation]
-                    check, m = self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
-                    if not check:
-                        object_position_grab = [-correct_z_grab, correct_y_grab, -correct_x_grab, 0.0, 0.0, -correct_rotation]
-                        check, m = self.set_arm(command="adjust_move_tool_line_with_safety", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
-                self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = 0.0, wait_for_end_of=True, safety=False) #TODO 3) Comment this line
+                    object_position_grab = [-correct_z_grab, correct_y_grab, -correct_x_grab, 0.0, 0.0, -correct_rotation]
+                    self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+
 
                 state = RETURN_ARM_TO_END_PLACE_POSITION
 
@@ -8340,6 +9137,12 @@ class RobotStdFunctions():
                 print(" Asked for Help ")
                 self.ask_help_pick_object_gripper(object_d = obj, look_judge= [0,0], show_detection = show_detection)
                 picked_height = 0
+                if arm_initial_position == "":
+                    self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
+                #Uncomment if ask for help position is changed
+                # else:
+                #    if obj.object_name != "plate":    
+                #        self.set_arm(command=arm_initial_position, wait_for_end_of=True)
                 return picked_height, ask_help
 
 
@@ -8479,6 +9282,262 @@ class RobotStdFunctions():
             print("Rotation", correct_rotation)
 
             return correct_rotation
+
+    def detect_milk_cap(self, cap="small"):
+
+        def crop_depth(depth):
+            h, w = depth.shape[:2]
+            x1 = w // 3
+            x2 = 2 * w // 3
+            y1 = h // 5
+            y2 = 4 * h // 5
+            return depth[y1:y2, x1:x2], x1, y1
+
+        def segment_3_classes(img, type_of_cap=2): # 2 for small cap, 3 big cap
+            # flatten image to 1D
+            Z = img.reshape((-1, 1)).astype(np.float32)
+            # K-means criteria
+            criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.2)
+            K = type_of_cap
+            _, labels, centers = cv2.kmeans(
+                Z,
+                K,
+                None,
+                criteria,
+                10,
+                cv2.KMEANS_RANDOM_CENTERS
+            )
+            centers = np.uint8(centers)
+            labels = labels.flatten()
+            segmented = centers[labels].reshape(img.shape)
+            return segmented, labels.reshape(img.shape), centers
+        
+        if cap == "small":
+            type_of_cap = 2
+        else:
+            type_of_cap = 3
+
+        _, rgb = self.get_hand_rgb_image()
+        _, depth_origin = self.get_hand_depth_image()
+
+        MAX_VALUE = np.average(depth_origin)*0.75
+        # print(MAX_VALUE)
+        
+        depth, x1, y1 = crop_depth(depth_origin.copy())
+        
+        depth[depth >= MAX_VALUE] = 255
+        depth = 255 - depth
+        depth[depth >= 255] = 0
+
+        # cv2.imshow("clipped_inverted", depth)
+        
+        depth_float = depth.astype(np.float32)
+        min_val = np.min(depth_float[depth_float > 0])
+        max_val = np.max(depth_float)
+
+        depth = (depth_float - min_val) / (max_val - min_val) * 255.0
+        depth = np.clip(depth, 0, 255).astype(np.uint8)
+
+        # depth[depth < 50] = np.average(depth[depth > 5])
+
+        # cv2.imshow("normalized", depth)
+        
+        segmented, labels, centers = segment_3_classes(depth, type_of_cap=type_of_cap)
+        # print(labels, centers)
+        brightest_cluster = np.argmax(centers)
+
+        mask = (labels == brightest_cluster).astype(np.uint8) * 255
+        
+        # cv2.imshow("mask", mask)    
+        
+        ys, xs = np.where(mask == 255)
+        cx = int(np.median(xs))
+        cy = int(np.median(ys))
+        area = len(xs)
+        radius = int(np.sqrt(area / np.pi))
+        
+        cv2.circle(rgb, (cx+x1, cy+y1), radius, (0, 255, 0), 2)
+        cv2.circle(rgb, (cx+x1, cy+y1), 3, (0, 0, 255), -1)
+        # cv2.imshow("rgb", rgb)
+        # cv2.waitKey(1)
+
+        current_datetime = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S "))
+        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + "_cap" + ".jpg", rgb) 
+        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + "_cap_mask" + ".jpg", mask) 
+        cv2.imwrite(self.node.complete_path_custom_face + current_datetime + "_cap_depth" + ".jpg", depth_origin) 
+        time.sleep(0.1)
+
+        center_cap_3d_coords = self.node.point_cloud.convert_pixel_to_3dpoint(depth_origin, "hand", [cy+y1, cx+x1])
+        print(center_cap_3d_coords)
+
+        return center_cap_3d_coords
+        
+    def place_milk_in_tray(self, place_height = -1):
+        self.open_tray_gripper(wait_for_end_of=True)
+        self.set_arm(command="milk_above_tray_v2", wait_for_end_of=True)
+
+        TRAY_HEIGHT = 0.59
+        TOLERANCE_ERROR = 0.005
+        PUSH_MILK_DISTANCE = 0.085 - self.get_object_width_from_object("milk")
+
+        milk_push = [0.0 , 0.0 , PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
+        after_push = [0.0 , 0.0 , -PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
+
+        gripper_place_position = self.get_gripper_localization()
+
+        if place_height >= 0:
+            final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+        else:
+            print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object("milk")/1.25) ," TOLERA ", TOLERANCE_ERROR)
+            final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object("milk")/1.5) - TOLERANCE_ERROR)*1000
+
+        safe_place = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+        safe_rise = [self.get_object_height_from_object("milk")*1.2*1000 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0]
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = milk_push, wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_place, wait_for_end_of=True)
+
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = after_push, wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_rise, wait_for_end_of=True)
+
+        self.close_tray_gripper(wait_for_end_of=True)
+        
+
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+        self.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+
+    def place_cornflakes_in_tray(self, place_height = -1):
+
+        TRAY_HEIGHT = 0.59
+        TOLERANCE_ERROR = 0.005
+
+        gripper_place_position = self.get_gripper_localization()
+
+        if place_height >= 0:
+            final_z = (gripper_place_position.z - TRAY_HEIGHT - place_height - TOLERANCE_ERROR)*1000
+        else:
+            print ( " GG ", gripper_place_position.z ," TRA ",TRAY_HEIGHT ," OB HEI ", (self.get_object_height_from_object("cornflakes")/1.25) ," TOLERA ", TOLERANCE_ERROR)
+            final_z = (0.85 - TRAY_HEIGHT - (self.get_object_height_from_object("cornflakes")/1.5) - TOLERANCE_ERROR)*1000
+
+        cornflakes_place=[-246.2,-23.6,-36.4,15.6,51.8,198.7]
+
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = cornflakes_place, wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [-final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+        
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        time.sleep(0.5)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = [final_z , 0.0 , 0.0 , 0.0 , 0.0 , 0.0], wait_for_end_of=True)
+
+        # object_position_grab = [0.16*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+        # self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+
+    
+    def open_milk_lid(self, lid_height = 0.01, max_opening_attempts = 3):
+        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+        self.set_arm(command="ask_for_objects_to_check_milk_cap", wait_for_end_of=True)
+        self.set_arm(command="close_tray_gripper", wait_for_end_of=True)
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        lid = self.detect_milk_cap()
+
+        tf_x =  0.145
+        tf_y = -0.006
+        tf_z = -0.075
+        DETECTION_ERROR = 0.018
+        OPENING_ATTEMPT = 0
+
+        TRAY_HEIGHT = 0.59
+
+        gripper_place_position = self.get_gripper_localization()
+        correct_x_grab = (gripper_place_position.z - TRAY_HEIGHT - lid_height/0.5 - tf_x - self.get_object_height_from_object("milk"))*1000
+        correct_y_grab = (lid.y - tf_y)*1000
+        correct_z_grab = (lid.z - tf_z + DETECTION_ERROR)*1000
+
+        open_milk_lid_adjust = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
+
+        print(open_milk_lid_adjust)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_adjust, wait_for_end_of=True)
+
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+        for OPENING_ATTEMPT in range(max_opening_attempts):
+            print("OPENING_ATTEMPT:", OPENING_ATTEMPT)
+            if OPENING_ATTEMPT == 0:
+                small_rotation = [0.0,0.0,0.0,0.0,0.0,-30.0]
+                self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=small_rotation, wait_for_end_of=True)
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+            rotate_right = [0.0,0.0,0.0,0.0,0.0,70.0]
+            rotate_left = [0.0,0.0,0.0,0.0,0.0,-70.0]
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_right, wait_for_end_of=True)
+            self.set_arm(command="close_gripper", wait_for_end_of=True)
+            if OPENING_ATTEMPT != max_opening_attempts-1:
+                self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_left, wait_for_end_of=True)
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
+            else:
+                last_rotation = [0.0,0.0,0.0,0.0,0.0,-40.0]
+                self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=last_rotation, wait_for_end_of=True)
+                safe_rise = [0.0,0.0,-lid_height*4*1000,0.0,0.0,0.0]
+                self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=safe_rise, wait_for_end_of=True)
+
+        let_lid_go = [-correct_z_grab, correct_y_grab, -correct_x_grab + lid_height*4*1000, 0.0, 0.0, 0.0]
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=let_lid_go, wait_for_end_of=True)
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        self.set_arm(command="check_milk_cap_to_ask_for_objects", wait_for_end_of=True)
+
+
+    def pour_milk(self, milk_height=0.0):
+
+        POUR_ROTATION = -90.0
+        CENTRE_LID_DISTANCE = 0.0
+        PUSH_MILK_DISTANCE = 0.085 - self.get_object_width_from_object("milk")
+
+        reach_milk = [0.0 , 0.0 , PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
+        take_milk = [0.0 , 0.0 , -PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
+
+        if milk_height == 0.0:
+            milk_height = self.get_object_height_from_object(object_name="milk")
+            if milk_height is None:
+                print("Milk not found")
+        
+        adjust_pouring_y = milk_height - 0.17
+
+        self.open_tray_gripper()
+
+        self.set_arm(command="approach_milk_in_tray", wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = reach_milk, wait_for_end_of=True)
+
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = take_milk, wait_for_end_of=True)
+
+        self.set_arm(command="milk_in_tray_position_to_pre_pour", wait_for_end_of=True)
+
+        if adjust_pouring_y != 0.0 :
+            self.pouring_distance = [0.0, adjust_pouring_y*1000, CENTRE_LID_DISTANCE*1000, 0.0, 0.0, 0.0]
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = self.pouring_distance, wait_for_end_of=True)
+        
+        self.pouring_angle = [0.0, 0.0, 0.0, 0.0, 0.0, POUR_ROTATION]
+        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.pouring_angle, wait_for_end_of=True)
+        self.after_pouring_angle = [0.0, 0.0, 0.0, 0.0, 0.0, -POUR_ROTATION]
+        self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.after_pouring_angle, wait_for_end_of=True)
+
+    def pour_cornflakes(self, cornflakes_height=0.0):
+
+        pick_flakes_first=[-216.6,-70.3,-10,5.9,65.5,236.1]
+
+        self.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
+        object_position_grab = [-0.24*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+        
         
     def open_washing_machine(self):
 

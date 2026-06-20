@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 True,
+    "charmie_face":                 False,
     "charmie_head_camera":          False,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
@@ -31,8 +31,9 @@ ros2_modules = {
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
-    "charmie_speakers_save":        False,
+    "charmie_speakers_save":        True,
     "charmie_tracking":             False,
+    "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
@@ -80,6 +81,70 @@ class TaskMain():
             # State 6 = Final Speech
 
             if self.state == Waiting_for_start_button:
+
+                command = "I will move to the kitchen; I will move to the cabinet; I will search for the milk;I will pick up the milk; I will move to the bedroom; I will place the milk on the bed."
+                
+                l_command = command.split(";")
+
+                print("Command:", command)
+                print("Command list:", l_command)
+
+                if True:
+                    
+                    llp1 = self.robot.get_llm_ollama_gpsr_low_level(command=command, mode="", wait_for_end_of=True)
+                    print("LLM low level response:", llp1)
+
+                    self.robot.get_llm_ollama_gpsr_low_level(command=command, mode="", wait_for_end_of=False)
+                    while not self.robot.get_llm_ollama_gpsr_low_level_is_done():
+                        time.sleep(0.05)
+                    llp2 = self.robot.node.llm_ollama_gpsr_low_level_response
+                    print("LLM low level response:", llp2)
+
+
+                else:
+                    aaa = time.time()
+                    ctr = 0
+                    self.robot.save_speech(command=l_command[0], filename=str(ctr), quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True)
+                    for c in l_command[1:]:
+                        ctr += 1
+                        self.robot.save_speech(command=c, filename=str(ctr), quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=False)
+                        self.robot.set_speech(filename="temp/"+str(ctr-1), wait_for_end_of=True)
+                        while not self.robot.save_speech_is_done():
+                            time.sleep(0.05)
+                    self.robot.set_speech(filename="temp/"+str(ctr), wait_for_end_of=True)
+                    t1 = time.time()-aaa
+                    
+                    aaa = time.time()
+                    ctr = 0
+                    for c in l_command:
+                        self.robot.save_speech(command=c, filename=str(ctr+10), quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True)
+                        self.robot.set_speech(filename="temp/"+str(ctr+10), wait_for_end_of=True)
+                        ctr += 1
+                    t2 = time.time()-aaa
+
+                    aaa = time.time()
+                    self.robot.save_speech(command=command, filename=str(20), quick_voice=False, play_command=False, show_in_face=False, wait_for_end_of=True)
+                    self.robot.set_speech(filename="temp/"+str(20), wait_for_end_of=True)
+                    t3 = time.time()-aaa
+
+
+                    print("Time to save speeches:", t1)
+                    print("Time to save speeches:", t2)
+                    print("Time to save speeches:", t3)
+
+                    while True:
+                        pass
+
+                # while True:
+                    # self.robot.set_face("charmie_face_green")
+                    # time.sleep(5.0)
+                    # self.robot.set_face(loadbar=5.0, command="Go to the dinner table and bring me the red wine.")
+                    # time.sleep(8.0)
+                    # self.robot.set_face(loadbar=5.0, command="Go to the dinner table and bring me the red wine. Then bring the drink to me at the entrance.")
+                    # time.sleep(3.0)
+                    # self.robot.set_face("charmie_face")
+                    # time.sleep(5.0)
+
 
                 ### self.robot.set_speech(filename="serve_breakfast/sB_finished", wait_for_end_of=True)
 

@@ -37,6 +37,7 @@ ros2_modules = {
     "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
+    "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
@@ -94,6 +95,21 @@ class TaskMain():
 
             if self.state == self.Waiting_for_task_start:
                 print("State:", self.state, "- Waiting_for_task_start")
+
+                while True:
+
+                    print("GO")
+                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_arm(command="ask_for_objects_to_check_milk_cap", wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_arm(command="check_milk_cap_to_ask_for_objects", wait_for_end_of=True)
+                    time.sleep(5.0)
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                    time.sleep(5.0)
+
+                    
+
 
                 while True:
 

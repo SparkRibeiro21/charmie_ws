@@ -267,7 +267,8 @@ class ArmUfactory(Node):
 		# self.pre_place_bowl_joint = 					[ -171.3,	33.6,  -98.3,   245.1,  92.4, - 15.9]
 		self.pre_place_bowl_joint = 					[ -169.8,	28.0,  -81.8,   246.9,  97.9, - 6.3]
 		self.pre_pick_cereals_tray_joints = 			[-193.2, 37.6, -74.9, -16.7, 126.5, 262.8]
-		self.pre_pick_milk_tray_joints = 				[-203.4, 35.4, -61.2, -19.4, 74.5, 261.5]
+		# self.pre_pick_milk_tray_joints = 				[-203.4, 35.4, -61.2, -19.4, 74.5, 261.5]
+		self.pre_pick_milk_tray_joints = 				[-200.5, 49.2, -78.1, -19.9, 96.1, 262.2]
 		self.pre_pick_spoon_tray_joints = 				[-207.7, 48.4, -86.1, -21.8, 84.9, 255.2]
 	
 		# SET POSITIONS VARIABLES
@@ -280,11 +281,17 @@ class ArmUfactory(Node):
 		self.place_in_cuttlery_cup =					[ -135.0,  345.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		self.step_away_from_cuttlery_cup =				[ -135.0,  260.0, -160.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		
-		self.above_milk_place_spot = 					[ -230.0,  380.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		# pre tray_gripper <> self.above_milk_place_spot = 					[ -230.0,  380.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.above_milk_place_spot = 					[ -226.9,  380.0,   -6.3, math.radians(-111.4), math.radians(   0.0), math.radians( -90.0)]
 		# self.place_milk_in_tray =						[ -230.0,  430.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		self.place_milk_in_tray =						[ -230.0,  445.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
-		self.step_away_from_milk_in_tray =				[ -230.0,  200.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
 		
+		# pre tray_gripper <> self.place_milk_in_tray =						[ -230.0,  445.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.place_milk_in_tray =						[ -226.9,  445.0,   -6.3, math.radians(-111.4), math.radians(   0.0), math.radians( -90.0)]
+		# pre tray_gripper <> self.step_away_from_milk_in_tray =				[ -230.0,  200.0,  -27.0, math.radians(-130.0), math.radians(   0.0), math.radians( -90.0)]
+		self.step_away_from_milk_in_tray =				[ -226.9,  180.0,   -6.3, math.radians(-111.4), math.radians(   0.0), math.radians( -90.0)]
+		self.elevated_initial_position =                [ -190.0,    83.4,  -65.0,                -0.5,                 74.9,                270.0]
+
+
 		self.above_cornflakes_place_spot = 				[ -198.0,  350.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 		self.place_cornflakes_in_tray =					[ -198.0,  420.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
 		self.step_away_from_cornflakes_in_tray =		[ -286.0,  128.0,  170.0, math.radians( -90.0), math.radians(   0.0), math.radians( -90.0)]
@@ -390,6 +397,9 @@ class ArmUfactory(Node):
 
 		# point to coords, front of robot
 		self.point_front_of_robot_joints = [-201.2, 52.9, -91.6, 154.1, 57.9, 105.2]
+
+		# OPEN MILK CAP (PICK AND PLACE TASK / SERVE THE BREAKFAST)
+		self.check_milk_cap_position_joints = [-182.1, 46.1, -44.9, -91.4, 90.8, 296.3]
 
 		
 	def setup_arm_movement_services(self):
@@ -960,6 +970,13 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
+	def adjust_joint_motion_quick(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.joint_motion_values, speed=60, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
 	### PICK OBJECT FRONT###
 	def initial_pose_to_search_table_front(self):
 		match self.estado_tr:
@@ -1025,7 +1042,7 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				#self.set_position_values_(pose=self.placing_to_safe_linear, speed=100, wait=True)
-				self.set_gripper_position_(pos=0,wait=True)
+				self.set_gripper_position_(pos=0,wait=False)
 			case 1:
 				self.set_joint_values_(angles=self.initial_position_joints_pick, speed=25, wait=True)
 			case 2:
@@ -1143,6 +1160,20 @@ class ArmUfactory(Node):
 			case 6:
 				self.set_joint_values_(angles=self.initial_position_joints, speed=60, wait=True)
 			case 7:
+				self.finish_arm_movement_()
+
+	def milk_above_tray_v2(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.above_milk_place_spot, speed=150, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+	
+	def return_to_elevated_initial_position(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.elevated_initial_position, speed=30, wait=True)
+			case 1:
 				self.finish_arm_movement_()
 
 	def collect_milk_to_tray(self):
@@ -1363,7 +1394,7 @@ class ArmUfactory(Node):
 				self.set_position_values_(pose=self.pos_pick_cereals_tray, speed=120, wait=True)
 			case 7:
 				self.finish_arm_movement_()
-
+				
 
 	def pour_milk_bowl(self):
 		match self.estado_tr:
@@ -1428,6 +1459,28 @@ class ArmUfactory(Node):
 				self.set_position_values_(pose=self.pos_placing_milk_at_table, speed=120, wait=True)
 			case 4:
 				self.finish_arm_movement_()
+
+
+	def approach_milk_in_tray(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.pre_pick_milk_tray_joints, speed=50, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.place_milk_in_tray, speed=120, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
+	def milk_in_tray_position_to_pre_pour(self):
+		match self.estado_tr:
+			case 0:
+				self.set_position_values_(pose=self.pos_picking_milk_tray, speed=90, wait=True)
+			case 1:
+				self.set_position_values_(pose=self.strategic_avoid_possible_chair_cereals, speed=90, wait=True)
+			case 2:
+				self.set_position_values_(pose=self.reach_position_to_pour_milk_bowl, speed=90, wait=True)
+			case 3:
+				self.finish_arm_movement_()
+
 
 	def place_spoon_table(self):
 		match self.estado_tr:
@@ -1558,6 +1611,20 @@ class ArmUfactory(Node):
 			case 1:
 				self.finish_arm_movement_()
 
+	def ask_for_objects_to_check_milk_cap(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.check_milk_cap_position_joints, speed=40, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
+	def check_milk_cap_to_ask_for_objects(self):
+		match self.estado_tr:
+			case 0:
+				self.set_joint_values_(angles=self.get_lower_order_position_joints, speed=40, wait=True)
+			case 1:
+				self.finish_arm_movement_()
+
 	def movement_selection(self):
 		
 		# self.get_logger().info("INSIDE MOVEMENT_SELECTION")	
@@ -1612,6 +1679,8 @@ class ArmUfactory(Node):
 				self.adjust_move_tool_line_quick_with_open_gripper_first()
 			case "adjust_joint_motion":
 				self.adjust_joint_motion()
+			case "adjust_joint_motion_quick":
+				self.adjust_joint_motion_quick()
 
 			# SERVE BREAKFAST	
 			case "place_bowl_table":
@@ -1632,6 +1701,10 @@ class ArmUfactory(Node):
 				self.post_pour_milk_bowl_risky()
 			case "place_milk_table":
 				self.place_milk_table()
+			case "approach_milk_in_tray":
+				self.approach_milk_in_tray()
+			case "milk_in_tray_position_to_pre_pour":
+				self.milk_in_tray_position_to_pre_pour()
 			case "place_spoon_table":
 				self.place_spoon_table()
 			case "place_spoon_table_funilocopo_v2":
@@ -1656,6 +1729,14 @@ class ArmUfactory(Node):
 				self.close_gripper_with_check_object(200)
 			case "ask_for_objects_to_initial_position_alternative_robocup_cornflakes":
 				self.ask_for_objects_to_initial_position_alternative_robocup_cornflakes()
+			case "ask_for_objects_to_check_milk_cap":
+				self.ask_for_objects_to_check_milk_cap()
+			case "check_milk_cap_to_ask_for_objects":
+				self.check_milk_cap_to_ask_for_objects()
+			case "milk_above_tray_v2":
+				self.milk_above_tray_v2()
+			case "return_to_elevated_initial_position":
+				self.return_to_elevated_initial_position()
 
 			# PICK OBJECT FRONT
 			case "initial_pose_to_search_table_front":
