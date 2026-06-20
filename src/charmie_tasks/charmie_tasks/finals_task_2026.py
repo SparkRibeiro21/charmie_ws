@@ -349,34 +349,35 @@ class TaskMain():
 
                             # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
                             people_with_requests.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
-
                             person_with_request = people_with_requests[0]
 
+                            # INFORM THERE WAS AN ENCOUNTERED PROBLEM
                             self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
                             self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, person_with_request.position_absolute.z], wait_for_end_of=False)
                             # self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, 1.6], wait_for_end_of=True) # pre defined height for better looking at the face
-                            # TODO: PLACEHOLDER: Say i have found a problem and will attmpt to solve it, please look at my face to see the detected person
-                            self.robot.set_speech(filename="generic/waiting_start_button", wait_for_end_of=True)
-                            time.sleep(3.0)
+                            self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
+                            self.robot.set_speech(filename="finals/problem_person_with_request", wait_for_end_of=True)
+                            self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
 
                             # NAVIGATION TO PERSON
                             self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                             self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                            self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=False) # TODO: person
+                            self.robot.set_speech(filename="generic/person", wait_for_end_of=False)
                             self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room), wait_for_end_of=True)
 
-                            self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
                             # CONFIRM PERSON HAS A REQUEST
-                            # TODO: PLACEHOLDER:
+                            self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
+                            self.robot.set_speech(filename="finals/charmie_here_to_help", wait_for_end_of=True)
                             self.robot.set_speech(filename="generic/press_correct_option_touchscreen", wait_for_end_of=True) # SAY: Please press the correct option on my face.
-                            answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have another command?", speak_results=False, speak_timeout=False, start_speak_file="gpsr/do_you_have_another_command", wait_for_end_of=True)
+                            answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have a new request for me?", speak_results=False, speak_timeout=False, start_speak_file="finals/do_you_have_a_new_request_for_me", wait_for_end_of=True)
                             
                             if answer != ["yes"]:
-                                # TODO: PLACEHOLDER: My bad, ...
+                                self.robot.set_speech(filename="finals/problem_with_accepting_request", wait_for_end_of=True)
                                 no_people_left_with_requests_in_this_room = True # MOVE TO NEXT ROOM, THIS IS NOT IDEAL BUT AVOIDS TO ROBOT GETTING STUCK IN ENDLESS LOOP OF GOING BACK TO SEARCH AND CONTINUING TO FIND THE SAME PERSON WITH THE REQUEST
                             else:
                                 # EXECUTE GPSR
-                                # TODO: PLACEHOLDER: Please wait.
+                                self.set_speech(filename="generic/please_wait", wait_for_end_of=True)
+                                time.sleep(0.5) # a little of robot not doing anythingbefore starting background noise calibration 
                                 self.robot.calibrate_audio()
 
                                 llp = self.robot.receive_command_and_generate_low_level_planner()
@@ -386,15 +387,17 @@ class TaskMain():
                                 order_can_be_executed = True
 
                                 if order_can_be_executed:
+                                    
                                     # TODO: PLACEHOLDER: ADD LOW LEVEL PLANNER EXECUTION HERE ...
+                                    time.sleep(0.5)
+                                    self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=True)
+                                    
                                     number_of_solved_requests+=1
-                                    # TODO: PLACEHOLDER: Please, do not raise your arm anymore, if you do not have any different requests in the future.
-                                else:
-                                    pass
-                                    # TODO: PLACEHOLDER: Unfortunately I cannot perform this task becuase there are steps I do not know how to perform. My apologies.
-                                    # TODO: PLACEHOLDER: Please, do not raise your arm anymore, if you do not have any different requests in the future.
-                                    # WILL SEARCH FOR MORE PEOPLE IN THE SAME ROOM
-
+                                    self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
+                                    
+                                else: # WILL SEARCH FOR MORE PEOPLE IN THE SAME ROOM
+                                    self.robot.set_speech(filename="finals/cannot_perform_task", wait_for_end_of=True)
+                                    self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
 
                         if self.number_of_requests_to_solve == number_of_solved_requests: # breaks if we have solved the number of requests we wanted to solve
                             no_people_left_with_requests_in_this_room = True
@@ -409,7 +412,8 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="finals/finished_finals", wait_for_end_of=False)
-
+                self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=False)
+                
                 while True:
                     pass
 
