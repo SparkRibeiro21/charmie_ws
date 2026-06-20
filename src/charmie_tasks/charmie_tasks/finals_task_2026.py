@@ -112,6 +112,7 @@ class TaskMain():
             "Hallway":          [[-30, -10], [30, -10]],
             "Office":           [[-40, -10], [20, -10]]
         }
+        self.tetas_for_rooms = {key.replace(" ", "_").lower(): value for key, value in self.tetas_for_rooms.items()}
 
         # Configurables for Trash Objects:
         self.TRASH_SEARCH_CAMERA = "head"
@@ -173,20 +174,20 @@ class TaskMain():
                 # self.solve_open_door_and_get_request()
 
                 for room in self.rooms_to_go:
-                    if misplaced_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
-                        misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
-                        print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
-                        misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
+                    # if misplaced_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
+                    #     misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
+                    #     print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
+                    #     misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
 
                     # if trash_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
                     #     trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
                     #     print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
                     #     trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
 
-                    # if peoples_with_requests_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
-                    #     peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
-                    #     print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
-                    #     peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
+                    if peoples_with_requests_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
+                        peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
+                        print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
+                        peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
 
                 # Not used in 2026 finals strategy, but left here for future use
                 # self.solve_basket_misplacement()
@@ -478,8 +479,9 @@ class TaskMain():
             # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
             # self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=True)
 
-            print("Tetas:", self.tetas_for_rooms[room])
-            people_found = self.robot.search_for_person(tetas=self.tetas_for_rooms[room], only_detect_person_arm_raised=True)
+            tetas = self.tetas_for_rooms[room]
+            print("Tetas:", tetas)
+            people_found = self.robot.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
 
             people_with_requests = []
             print("FOUND:", len(people_found)) 
@@ -500,20 +502,32 @@ class TaskMain():
 
                 # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
                 people_with_requests.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
-                person_with_request = people_with_requests[0]
-
-                # INFORM THERE WAS AN ENCOUNTERED PROBLEM
-                self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
-                self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, person_with_request.position_absolute.z], wait_for_end_of=False)
-                # self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, 1.6], wait_for_end_of=True) # pre defined height for better looking at the face
 
                 if not self.SOLVE_PEOPLE_WITH_REQUESTS: # added this just because of the WFEO of the speaks, otherwise I would leave this task and maybe move to other place
-                    self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
-                    self.robot.set_speech(filename="finals/problem_person_with_request", wait_for_end_of=True)
-                    self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
-                    time.sleep(2.0) # wait a bit to let the speaks be said before going to next room
 
+                    for p in people_with_requests:
+
+                        # INFORM THERE WAS AN ENCOUNTERED PROBLEM
+                        self.robot.detected_person_to_face_path(person=p, send_to_face=True)
+                        self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, p.position_absolute.z], wait_for_end_of=False)
+                        # self.robot.set_neck_coords(position=[p.position_absolute.x, p.position_absolute.y, 1.6], wait_for_end_of=True) # pre defined height for better looking at the face
+
+                        self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
+                        self.robot.set_speech(filename="finals/problem_person_with_request", wait_for_end_of=True)
+                        self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
+                        time.sleep(2.0) # wait a bit to let the speaks be said before going to next room
+
+                    self.robot.set_face("charmie_face")
+                    no_people_left_with_requests_in_this_room = True
+                
                 else: # if self.SOLVE_PEOPLE_WITH_REQUESTS:
+                    person_with_request = people_with_requests[0]
+
+                    # INFORM THERE WAS AN ENCOUNTERED PROBLEM
+                    self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
+                    self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, person_with_request.position_absolute.z], wait_for_end_of=False)
+                    # self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, 1.6], wait_for_end_of=True) # pre defined height for better looking at the face
+
                     self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
                     self.robot.set_speech(filename="finals/problem_person_with_request", wait_for_end_of=False)
                     self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=False) # may be problematic becuase referee may place himself in front of the robot...
