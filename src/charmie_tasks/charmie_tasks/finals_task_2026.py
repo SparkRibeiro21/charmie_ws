@@ -98,7 +98,6 @@ class TaskMain():
         self.rooms_to_go = ["Kitchen", "Living room", "Workshop", "Office", "Bedroom"]
         self.rooms_to_go = [s.replace(" ", "_").lower() for s in self.rooms_to_go]
         self.search_for_people_tetas = [[-60, -10], [0, -10], [60, -10]]
-        self.number_of_requests_to_solve = 2
 
         # Configurables for Trash Objects:
         pass
@@ -398,54 +397,59 @@ class TaskMain():
     def solve_people_with_requests(self, room, requests_left):
         print("\n>>> Current Task State: Solve_People_With_Requests <<<\n")
 
+        print(room)
         number_of_solved_requests = 0
-        print(self.rooms_to_go)
-        for room in self.rooms_to_go:
-            print(room)
+        
+        no_people_left_with_requests_in_this_room = False
+        while not no_people_left_with_requests_in_this_room:
 
-            no_people_left_with_requests_in_this_room = False
-            while not no_people_left_with_requests_in_this_room:
+            # NAVIGATION TO ROOM
+            self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                # NAVIGATION TO ROOM
-                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+            self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=False)
 
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=False)
+            self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room), wait_for_end_of=True)
 
-                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room), wait_for_end_of=True)
+            self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+            self.robot.set_speech(filename="finals/raise_your_hand", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
+            # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+            # self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=True)
 
-                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                self.robot.set_speech(filename="finals/raise_your_hand", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
-                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                # self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=True)
+            people_found = self.robot.search_for_person(tetas=self.search_for_people_tetas, only_detect_person_arm_raised=True)
 
-                people_found = self.robot.search_for_person(tetas=self.search_for_people_tetas, only_detect_person_arm_raised=True)
+            people_with_requests = []
+            print("FOUND:", len(people_found)) 
+            for p in people_found:
+                if p.arm_raised and p.room_location.replace(" ", "_").lower() == room:
+                    people_with_requests.append(p)
+                    print("ID:", p.index, p.arm_raised, p.room_location, p.position_absolute.x, p.position_absolute.y, " - HAS REQUEST!")
+                else:
+                    print("ID:", p.index, p.arm_raised, p.room_location, p.position_absolute.x, p.position_absolute.y, " - NO REQUEST!")
 
-                people_with_requests = []
-                print("FOUND:", len(people_found)) 
-                for p in people_found:
-                    if p.arm_raised and p.room_location.replace(" ", "_").lower() == room:
-                        people_with_requests.append(p)
-                        print("ID:", p.index, p.arm_raised, p.room_location, p.position_absolute.x, p.position_absolute.y, " - HAS REQUEST!")
-                    else:
-                        print("ID:", p.index, p.arm_raised, p.room_location, p.position_absolute.x, p.position_absolute.y, " - NO REQUEST!")
+            # There is a discussion to be had, whether this should be a for loop.
+            # The reasoning behind this decision, is that after a long time and executing a GPSR task,
+            # the people may have changed position, and therefore the robot would go to an old position.
+            # If there are multiple people with requests, the robot does not continue to be next room
+            if len(people_with_requests) == 0:
+                no_people_left_with_requests_in_this_room = True
+            else: # there are people with requests
 
-                # There is a discussion to be had, whether this should be a for loop.
-                # The reasoning behind this decision, is that after a long time and executing a GPSR task,
-                # the people may have changed position, and therefore the robot would go to an old position.
-                # If there are multiple people with requests, the robot does not continue to be next room
-                if len(people_with_requests) == 0:
-                    no_people_left_with_requests_in_this_room = True
-                else: # there are people with requests
+                # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
+                people_with_requests.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
+                person_with_request = people_with_requests[0]
 
-                    # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
-                    people_with_requests.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
-                    person_with_request = people_with_requests[0]
+                # INFORM THERE WAS AN ENCOUNTERED PROBLEM
+                self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
+                self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, person_with_request.position_absolute.z], wait_for_end_of=False)
+                # self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, 1.6], wait_for_end_of=True) # pre defined height for better looking at the face
 
-                    # INFORM THERE WAS AN ENCOUNTERED PROBLEM
-                    self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
-                    self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, person_with_request.position_absolute.z], wait_for_end_of=False)
-                    # self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, 1.6], wait_for_end_of=True) # pre defined height for better looking at the face
+                if not self.SOLVE_PEOPLE_WITH_REQUESTS: # added this just because of the WFEO of the speaks, otherwise I would leave this task and maybe move to other place
+                    self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
+                    self.robot.set_speech(filename="finals/problem_person_with_request", wait_for_end_of=True)
+                    self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
+
+                else: # if self.SOLVE_PEOPLE_WITH_REQUESTS:
                     self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
                     self.robot.set_speech(filename="finals/problem_person_with_request", wait_for_end_of=False)
                     self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=False) # may be problematic becuase referee may place himself in front of the robot...
@@ -477,7 +481,6 @@ class TaskMain():
                         ### print("Low-level planner:", llp)
                         self.robot.wait_for_start_button()
 
-
                         # TODO: PLACEHOLDER: CHECK IF ORDER CAN BE EXECUTED...
                         order_can_be_executed = True
 
@@ -494,13 +497,8 @@ class TaskMain():
                             self.robot.set_speech(filename="finals/cannot_perform_task", wait_for_end_of=True)
                             self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
 
-                if self.number_of_requests_to_solve == number_of_solved_requests: # breaks if we have solved the number of requests we wanted to solve
-                    no_people_left_with_requests_in_this_room = True
-
-            if self.number_of_requests_to_solve == number_of_solved_requests: # breaks if we have solved the number of requests we wanted to solve
-                break
-
-        self.state = self.task_states["State_selector"]
+            if number_of_solved_requests == requests_left: # breaks if we have solved the number of requests we wanted to solve
+                no_people_left_with_requests_in_this_room = True
 
 
     def solve_trash_objects(self, room, requests_left):
