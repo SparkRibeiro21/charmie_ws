@@ -140,27 +140,34 @@ class TaskMain():
             if self.state == self.task_states["Waiting_for_task_start"]:
 
                 self.robot.set_initial_position(self.initial_position)
-                        
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
-
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-
                 self.robot.set_speech(filename="finals/start_finals", wait_for_end_of=True)
-
                 self.robot.wait_for_start_button()
-
                 self.state = self.task_states["State_selector"]
 
 
             elif self.state == self.task_states["State_selector"]:
 
+                misplaced_objects_problems_solved_ctr = 0
+                peoples_with_requests_problems_solved_ctr = 0
+                trash_objects_problems_solved_ctr = 0
+
                 # Starts with door opening and getting the request from the person behind the door
                 self.solve_open_door_and_get_request()
 
                 for room in self.rooms_to_go:
-                    misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=2)
-                    self.solve_people_with_requests(room=room, requests_left=2)
-                    self.solve_trash_objects(room=room, requests_left=2)
+                    if misplaced_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
+                        misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
+                        misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
+
+                    if trash_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
+                        trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr)
+                        trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
+
+                    if peoples_with_requests_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
+                        peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
+                        peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
 
                 # Not used in 2026 finals strategy, but left here for future use
                 # self.solve_basket_misplacement()
