@@ -16,27 +16,27 @@ ros2_modules = {
     "charmie_audio":                False,
     "charmie_face":                 True,
     "charmie_head_camera":          True,
-    "charmie_hand_camera":          True,
+    "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
-    "charmie_lidar_livox":          False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          True,
     "charmie_llm":                  False,
     "charmie_localisation":         True,
     "charmie_low_level":            True,
-    "charmie_navigation":           False,
+    "charmie_navigation":           True,
     "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
     "charmie_neck":                 True,
-    "charmie_radar":                False,
+    "charmie_radar":                True,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
-    "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            False,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
 }
 
@@ -76,6 +76,11 @@ class TaskMain():
 
         self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
         # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
+
+        self.rooms_to_go = ["Kitchen", "Living room", "Workshop", "Office", "Bedroom"]
+        self.rooms_to_go = [s.replace(" ", "_").lower() for s in self.rooms_to_go]
+
+        print(self.rooms_to_go)
 
         self.search_for_people_tetas = [[-60, -10], [0, -10], [60, -10]]
         self.number_of_requests_to_solve = 2
@@ -125,7 +130,7 @@ class TaskMain():
 
                 self.robot.wait_for_start_button()
 
-                self.state = self.task_states["Solve_misplaced_objects"]
+                self.state = self.task_states["Solve_people_with_requests"]
 
 
             elif self.state == self.task_states["Solve_misplaced_objects"]:
@@ -311,7 +316,9 @@ class TaskMain():
             elif self.state == self.task_states["Solve_people_with_requests"]:
 
                 number_of_solved_requests = 0
-                for room in self.robot.node.rooms:
+                print(self.rooms_to_go)
+                for room in self.rooms_to_go:
+                    print(room)
 
                     no_people_left_with_requests_in_this_room = False
                     while not no_people_left_with_requests_in_this_room:
@@ -324,20 +331,21 @@ class TaskMain():
 
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room), wait_for_end_of=True)
 
-                        self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
+                        self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                        self.robot.set_speech(filename="finals/raise_your_hand", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
                         # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
                         # self.robot.set_speech(filename="rooms/"+room, wait_for_end_of=True)
 
-                        people_found = self.robot.search_for_person(self, tetas=self.search_for_people_tetas, only_detect_person_arm_raised=False)
+                        people_found = self.robot.search_for_person(tetas=self.search_for_people_tetas, only_detect_person_arm_raised=True)
 
                         people_with_requests = []
                         print("FOUND:", len(people_found)) 
                         for p in people_found:
-                            if p.arm_raised and p.room_location == room:
+                            if p.arm_raised and p.room_location.replace(" ", "_").lower() == room:
                                 people_with_requests.append(p)
-                                print("ID:", p.index, p.arm_raised, p.room_location, " - HAS REQUEST!")
+                                print("ID:", p.index, p.arm_raised, p.room_location, p.position_absolute.x, p.position_absolute.y, " - HAS REQUEST!")
                             else:
-                                print("ID:", p.index, p.arm_raised, p.room_location, " - NO REQUEST!")
+                                print("ID:", p.index, p.arm_raised, p.room_location, p.position_absolute.x, p.position_absolute.y, " - NO REQUEST!")
 
                         # There is a discussion to be had, whether this should be a for loop.
                         # The reasoning behind this decision, is that after a long time and executing a GPSR task,
@@ -356,32 +364,36 @@ class TaskMain():
                             self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, person_with_request.position_absolute.z], wait_for_end_of=False)
                             # self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, 1.6], wait_for_end_of=True) # pre defined height for better looking at the face
                             self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
-                            self.robot.set_speech(filename="finals/problem_person_with_request", wait_for_end_of=True)
-                            self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
+                            self.robot.set_speech(filename="finals/problem_person_with_request", wait_for_end_of=False)
+                            self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=False) # may be problematic becuase referee may place himself in front of the robot...
 
                             # NAVIGATION TO PERSON
                             self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                            self.robot.set_speech(filename="generic/person", wait_for_end_of=False)
-                            self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room), wait_for_end_of=True)
+                            # self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                            # self.robot.set_speech(filename="generic/person", wait_for_end_of=False)
+                            self.robot.move_to_person(person=person_with_request)
 
                             # CONFIRM PERSON HAS A REQUEST
                             self.robot.detected_person_to_face_path(person=person_with_request, send_to_face=True)
+                            self.robot.set_neck_coords(position=[person_with_request.position_absolute.x, person_with_request.position_absolute.y, person_with_request.position_absolute.z], wait_for_end_of=False)
                             self.robot.set_speech(filename="finals/charmie_here_to_help", wait_for_end_of=True)
                             self.robot.set_speech(filename="generic/press_correct_option_touchscreen", wait_for_end_of=True) # SAY: Please press the correct option on my face.
                             answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have a new request for me?", speak_results=False, speak_timeout=False, start_speak_file="finals/do_you_have_a_new_request_for_me", wait_for_end_of=True)
+                            self.robot.set_face("charmie_face")
                             
                             if answer != ["yes"]:
                                 self.robot.set_speech(filename="finals/problem_with_accepting_request", wait_for_end_of=True)
                                 no_people_left_with_requests_in_this_room = True # MOVE TO NEXT ROOM, THIS IS NOT IDEAL BUT AVOIDS TO ROBOT GETTING STUCK IN ENDLESS LOOP OF GOING BACK TO SEARCH AND CONTINUING TO FIND THE SAME PERSON WITH THE REQUEST
                             else:
                                 # EXECUTE GPSR
-                                self.set_speech(filename="generic/please_wait", wait_for_end_of=True)
+                                self.robot.set_speech(filename="generic/please_wait", wait_for_end_of=True)
                                 time.sleep(0.5) # a little of robot not doing anythingbefore starting background noise calibration 
-                                self.robot.calibrate_audio()
+                                # self.robot.calibrate_audio()
 
-                                llp = self.robot.receive_command_and_generate_low_level_planner()
-                                print("Low-level planner:", llp)
+                                ### llp = self.robot.receive_command_and_generate_low_level_planner()
+                                ### print("Low-level planner:", llp)
+                                self.robot.wait_for_start_button()
+
 
                                 # TODO: PLACEHOLDER: CHECK IF ORDER CAN BE EXECUTED...
                                 order_can_be_executed = True
