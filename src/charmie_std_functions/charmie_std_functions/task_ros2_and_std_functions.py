@@ -9452,8 +9452,8 @@ class RobotStdFunctions():
 
         MIN_OBJECT_DISTANCE_X = 0.05
         MAX_OBJECT_DISTANCE_X = 2
-        MIN_OBJECT_DISTANCE_Y = -1
-        MAX_OBJECT_DISTANCE_Y = 0.5
+        MIN_OBJECT_DISTANCE_Y = -1.5
+        MAX_OBJECT_DISTANCE_Y = 1.5
 
         ### While cycle to get a valid detected object ###
 
@@ -9489,17 +9489,17 @@ class RobotStdFunctions():
                 match cycle:
 
                     case 1: 
-                        self.adjust_angle(angle = 45.0, tolerance = 10)
+                        self.adjust_angle(angle = 45.0, tolerance = 3.0)
                         cycle=2
                     case 2: 
-                        self.adjust_angle(angle = -90.0, tolerance = 10)
+                        self.adjust_angle(angle = -90.0, tolerance = 3.0)
                         cycle=3
                     case 3: 
-                        self.adjust_angle(angle = 180.0, tolerance = 10)
+                        self.adjust_angle(angle = 180.0, tolerance =3.0)
                         #self.adjust_angle(90)
                         cycle=4
                     case 4: 
-                        self.adjust_angle(angle = -180, tolerance = 10)
+                        self.adjust_angle(angle = -180, tolerance = 3.0)
                         #self.adjust_angle(-90)
                         cycle=5
                     case 5:

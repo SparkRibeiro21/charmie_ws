@@ -137,6 +137,7 @@ class TaskMain():
                 # self.robot.pick_object(selected_object="Apple", max_search_attempts=1)
 
                 self.robot.set_initial_position(self.initial_position)
+                self.robot.floor_pick()
 
                 #pick_height, s= self.robot.pick_object(selected_object="cup")
                 self.robot.wait_for_start_button()
