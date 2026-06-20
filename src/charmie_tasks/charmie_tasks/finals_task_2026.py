@@ -212,6 +212,44 @@ class TaskMain():
     def solve_open_door_and_get_request(self):
         print("\n>>> Current Task State: Solve_Open_Door_And_Get_Request <<<\n")
 
+        # Move to door coordinates
+        self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+        self.robot.set_speech(filename="furniture/exit", wait_for_end_of=False)
+        self.robot.move_to_position(move_coords=[-0.1, -1.35, 0.0], wait_for_end_of=True)
+        # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture="Exit"), wait_for_end_of=True)
+        self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+        self.robot.set_speech(filename="furniture/exit", wait_for_end_of=False)
+
+        # Open the door
+        self.robot.open_door(push_pull="push", handle_side="right", wait_for_end_of=True)
+
+        # Request GPSR command
+        self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+        self.robot.set_speech(filename="generic/please_wait", wait_for_end_of=True)
+        time.sleep(0.5) # a little of robot not doing anythingbefore starting background noise calibration 
+        # self.robot.calibrate_audio()
+
+        ### llp = self.robot.receive_command_and_generate_low_level_planner()
+        ### print("Low-level planner:", llp)
+        self.robot.wait_for_start_button()
+
+        # TODO: PLACEHOLDER: CHECK IF ORDER CAN BE EXECUTED...
+        order_can_be_executed = True
+
+        if order_can_be_executed:
+            
+            # TODO: PLACEHOLDER: ADD LOW LEVEL PLANNER EXECUTION HERE ...
+            time.sleep(0.5)
+            self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=True)
+            
+            number_of_solved_requests+=1
+            self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
+            
+        else: # WILL SEARCH FOR MORE PEOPLE IN THE SAME ROOM
+            self.robot.set_speech(filename="finals/cannot_perform_task", wait_for_end_of=True)
+            self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
+
 
     def solve_misplaced_objects(self, room, requests_left):
         print("\n>>> Current Task State: Solve_Misplaced_Objects <<<\n")
