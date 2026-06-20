@@ -101,7 +101,7 @@ class TaskMain():
         pass
 
         # Configurables for Misplaced Objects:
-        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
+        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry"]
         # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
         self.FURNITURE_WE_WANT_TO_ANALYSE = [s.replace(" ", "_").lower() for s in self.FURNITURE_WE_WANT_TO_ANALYSE]
 
@@ -139,7 +139,7 @@ class TaskMain():
         # self.search_tetas_horizontal = [[0, -45], [-40, -45], [40, -45]]
         # self.search_tetas_vertical = [[0, -15], [0, -35], [0, 15]]
 
-        self.search_tetas_horizontal = [[-20, -45], [20, -45]]
+        self.search_tetas_horizontal = [[-20, -20], [20, -20]]
         self.search_tetas_vertical = [[0, -15], [0, 15]]
 
         self.state = self.task_states["State_selector"]
@@ -173,15 +173,15 @@ class TaskMain():
                 # self.solve_open_door_and_get_request()
 
                 for room in self.rooms_to_go:
-                    # if misplaced_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
-                    #     misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
-                    #     print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
-                    #     misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
+                    if misplaced_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
+                        misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
+                        print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
+                        misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
 
-                    if trash_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
-                        trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
-                        print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
-                        trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
+                    # if trash_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
+                    #     trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
+                    #     print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
+                    #     trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
 
                     # if peoples_with_requests_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
                     #     peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
@@ -331,10 +331,12 @@ class TaskMain():
                 print("Ignored objects:", ignored_objects)
                 # correct_objects_counter = 0
 
-                if obj.object_name in objects_in_wrong_furniture:
-                    self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
-                    self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
-                    self.robot.set_speech(filename="finals/object_in_the_wrong_furniture", wait_for_end_of=True)
+                if len(objects_in_wrong_furniture) > 0:
+
+                    if obj.object_name in objects_in_wrong_furniture:
+                        self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
+                        self.robot.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                        self.robot.set_speech(filename="finals/object_in_the_wrong_furniture", wait_for_end_of=True)
               
                 if self.SOLVE_MISPLACED_OBJECTS:
 
