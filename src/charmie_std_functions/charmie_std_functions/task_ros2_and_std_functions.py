@@ -3599,6 +3599,7 @@ class RobotStdFunctions():
                            list_of_objects = [], 
                            list_of_objects_detected_as = [],
                            max_search_attempts = 0,
+                           speak_problem_in_max_search_attempts = True,
                            use_arm=False, 
                            detect_objects        = False, 
                            detect_furniture      = False, 
@@ -3943,15 +3944,16 @@ class RobotStdFunctions():
                                 
                     self.set_face("charmie_face")
                     self.set_neck(position=[0, 0], wait_for_end_of=False)
-                    # Speech: "Unfortunately, I could not detect the following objects."
-                    self.set_speech(filename="generic/max_searches_could_not_detect_objects", wait_for_end_of=True) 
-                    for obj in range(len(list_of_objects)):
-                        if not mandatory_object_detected_flags[obj]:
-                            # Speech: (Name of object)
-                            if say_cutlery and list_of_objects[obj].replace(" ","_").lower() in ["fork", "knife", "spoon"]:
-                                self.set_speech(filename="objects_names/cutlery", wait_for_end_of=True)
-                            else:
-                                self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
+                    if speak_problem_in_max_search_attempts:
+                        # Speech: "Unfortunately, I could not detect the following objects."
+                        self.set_speech(filename="generic/max_searches_could_not_detect_objects", wait_for_end_of=True) 
+                        for obj in range(len(list_of_objects)):
+                            if not mandatory_object_detected_flags[obj]:
+                                # Speech: (Name of object)
+                                if say_cutlery and list_of_objects[obj].replace(" ","_").lower() in ["fork", "knife", "spoon"]:
+                                    self.set_speech(filename="objects_names/cutlery", wait_for_end_of=True)
+                                else:
+                                    self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
                     
                 else: # elif not all(mandatory_object_detected_flags):
                     # Speech: "There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?"
@@ -8563,7 +8565,7 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms        
 
-    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_handle_not_ask_for_help_if_no_object_is_seen_in_head_sfo=False): 
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False): 
 
 
         # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
@@ -8747,7 +8749,11 @@ class RobotStdFunctions():
                 # The first object detection will be made with the head camera. Will look for selected_object or list_of_objects_detected_as if selected_object is not found. Will look at first_search_tetas until object found within a number of tries equal to max_search_attempts.
                 
                 self.set_face(camera="head", show_detections=True)
-                objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], list_of_objects_detected_as=list_of_objects_detected_as, use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts = max_search_attempts)
+                if finals_flag:
+                    speak_problem_in_max_search_attempts = False
+                else:
+                    speak_problem_in_max_search_attempts = True
+                objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], list_of_objects_detected_as=list_of_objects_detected_as, use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts=max_search_attempts, speak_problem_in_max_search_attempts=speak_problem_in_max_search_attempts)
 
                 # If no selected object is found go to ask for help, giving a placeholder DetectedObject() type as none was found
                 if not objects_found:
@@ -8756,7 +8762,7 @@ class RobotStdFunctions():
                     obj.object_name = selected_object
                     show_detection = False
                     state = ERROR_HANDLING_ASK_FOR_HELP
-                    if finals_handle_not_ask_for_help_if_no_object_is_seen_in_head_sfo: #special case for finals
+                    if finals_flag: # In finals I dont want to lose time in asking object, I want to be time efficient and move on
                         return -1, ask_help
                 else:
 
@@ -8962,8 +8968,12 @@ class RobotStdFunctions():
                 if obj.object_name != "plate":
                     self.set_arm(command="open_gripper", wait_for_end_of=True)
 
+                if finals_flag:
+                    speak_problem_in_max_search_attempts = False
+                else:
+                    speak_problem_in_max_search_attempts = True
                 #CALIBRATE GRIPPER BEFORE GRABBING
-                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False, list_of_objects_detected_as=list_of_objects_detected_as, max_search_attempts = max_search_attempts)
+                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False, list_of_objects_detected_as=list_of_objects_detected_as, max_search_attempts=max_search_attempts, speak_problem_in_max_search_attempts=speak_problem_in_max_search_attempts)
 
                 self.set_face(camera="hand", show_detections=True)
                 

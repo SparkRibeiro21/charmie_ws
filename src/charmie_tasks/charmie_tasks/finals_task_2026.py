@@ -385,7 +385,7 @@ class TaskMain():
 
                                 picked_height, asked_help = self.robot.pick_object(selected_object=wrong_obj.object_name.replace(" ","_").lower(),
                                                             pick_mode=self.robot.get_standard_pick_from_object(wrong_obj.object_name.replace(" ","_").lower()),
-                                                            first_search_tetas=search_misplaced_obj_tetas, max_search_attempts=2, finals_handle_not_ask_for_help_if_no_object_is_seen_in_head_sfo=True)
+                                                            first_search_tetas=search_misplaced_obj_tetas, max_search_attempts=2, finals_flag=True)
                                 
                                 if picked_height != -1: # ASK FOR HELP WAS CORRECT
                                 
