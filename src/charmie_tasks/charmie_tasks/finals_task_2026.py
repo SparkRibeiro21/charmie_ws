@@ -80,9 +80,9 @@ class TaskMain():
         self.SOLVE_DOOR_OPENING = True
         self.SOLVE_REQUEST_FROM_PERSON_BEHIND_DOOR = True
         self.SOLVE_MISPLACED_OBJECTS = True
-        self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS = 2
+        self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS = 1
         self.SOLVE_PEOPLE_WITH_REQUESTS = True
-        self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 2
+        self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 1
         self.SOLVE_TRASH_OBJECTS = True
         self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS = 1
 
@@ -101,7 +101,7 @@ class TaskMain():
         pass
 
         # Configurables for Misplaced Objects:
-        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry"]
+        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry", "Office Table"]
         # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
         self.FURNITURE_WE_WANT_TO_ANALYSE = [s.replace(" ", "_").lower() for s in self.FURNITURE_WE_WANT_TO_ANALYSE]
         self.FURNITURE_WITH_ONLY_ONE_TETA = ["Dishwasher", "Coffee Table"]
@@ -182,29 +182,32 @@ class TaskMain():
                 while True:
                     for room in self.rooms_to_go:
 
-                        # # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
-                        # if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
-                        #     self.SOLVE_MISPLACED_OBJECTS = True
-                        #     self.SOLVE_TRASH_OBJECTS = True
-                        #     self.SOLVE_PEOPLE_WITH_REQUESTS = True
+                        # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
+                        if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
+                            self.SOLVE_MISPLACED_OBJECTS = True
+                            self.SOLVE_TRASH_OBJECTS = True
+                            self.SOLVE_PEOPLE_WITH_REQUESTS = True
 
                         misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
                         print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
                         misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
                         if misplaced_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
                             self.SOLVE_MISPLACED_OBJECTS = False
+                            misplaced_objects_problems_solved_ctr = 0
 
-                        # trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
-                        # print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
-                        # trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
-                        # if trash_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
-                        #     self.SOLVE_TRASH_OBJECTS = False
+                        trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
+                        print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
+                        trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
+                        if trash_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
+                            self.SOLVE_TRASH_OBJECTS = False
+                            trash_objects_problems_solved_ctr = 0
 
-                        # peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
-                        # print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
-                        # peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
-                        # if peoples_with_requests_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
-                        #     self.SOLVE_PEOPLE_WITH_REQUESTS = False
+                        peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
+                        print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
+                        peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
+                        if peoples_with_requests_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
+                            self.SOLVE_PEOPLE_WITH_REQUESTS = False
+                            peoples_with_requests_problems_solved_ctr = 0
 
                 # Not used in 2026 finals strategy, but left here for future use
                 # self.solve_basket_misplacement()

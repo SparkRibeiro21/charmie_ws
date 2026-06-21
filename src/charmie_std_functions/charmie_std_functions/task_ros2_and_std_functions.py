@@ -9253,7 +9253,7 @@ class RobotStdFunctions():
                 print(" Asked for Help ")
                 s = self.ask_help_pick_object_gripper(object_d = obj, look_judge= [0,0], show_detection = show_detection)
                 if s:
-                    picked_height = 0
+                    picked_height = self.get_object_height_from_object(selected_object)/1.25
                     if arm_initial_position == "":
                         self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
                     #Uncomment if ask for help position is changed
