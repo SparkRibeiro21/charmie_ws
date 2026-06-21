@@ -414,12 +414,12 @@ class TaskMain():
                                                                         shelf_number=shelf_number_place, place_height=picked_height,
                                                                         return_to_initial_position=True)
                                     
-                                    self.robot.set_speech(filename="finals/check_the_next_furniture", wait_for_end_of=True)
-
                                     number_of_replaced_objects += 1
-
                                     if number_of_replaced_objects == requests_left: # breaks if we have solved the number of requests we wanted to solve
                                         break
+                        
+                        if number_of_replaced_objects < requests_left: # breaks if we have solved the number of requests we wanted to solve
+                            self.robot.set_speech(filename="finals/check_the_next_furniture", wait_for_end_of=True)
 
         return number_of_replaced_objects
     
