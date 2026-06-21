@@ -8563,7 +8563,7 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms        
 
-    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False): 
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_handle_not_ask_for_help_if_no_object_is_seen_in_head_sfo=False): 
 
 
         # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
@@ -8756,6 +8756,8 @@ class RobotStdFunctions():
                     obj.object_name = selected_object
                     show_detection = False
                     state = ERROR_HANDLING_ASK_FOR_HELP
+                    if finals_handle_not_ask_for_help_if_no_object_is_seen_in_head_sfo: #special case for finals
+                        return -1, ask_help
                 else:
 
                     print("LIST OF DETECTED OBJECTS:")
