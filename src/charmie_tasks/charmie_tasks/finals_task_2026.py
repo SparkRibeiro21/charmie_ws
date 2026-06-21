@@ -80,9 +80,9 @@ class TaskMain():
         self.SOLVE_DOOR_OPENING = True
         self.SOLVE_REQUEST_FROM_PERSON_BEHIND_DOOR = True
         self.SOLVE_MISPLACED_OBJECTS = True
-        self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS = 2
+        self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS = 1
         self.SOLVE_PEOPLE_WITH_REQUESTS = True
-        self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 2
+        self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 1
         self.SOLVE_TRASH_OBJECTS = True
         self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS = 1
 
@@ -101,7 +101,7 @@ class TaskMain():
         pass
 
         # Configurables for Misplaced Objects:
-        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry"]
+        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry", "Office Table"]
         # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
         self.FURNITURE_WE_WANT_TO_ANALYSE = [s.replace(" ", "_").lower() for s in self.FURNITURE_WE_WANT_TO_ANALYSE]
         self.FURNITURE_WITH_ONLY_ONE_TETA = ["Dishwasher", "Coffee Table"]
@@ -123,8 +123,10 @@ class TaskMain():
 
         # Configurables for Trash Objects:
         self.TRASH_SEARCH_CAMERA = "head"
-        self.divisions           =["kitchen"         ,"living room"         ,"hallway","office","bedroom","workshop"]
-        self.trashcans           =["kitchen trashcan","living room trashcan",""       ,""      ,""       ,""        ]
+        self.divisions          = ["kitchen"         ,"living room"         ,"hallway","office","bedroom","workshop"]
+        self.divisions          = [s.replace(" ", "_").lower() for s in self.divisions]
+        self.trashcans          = ["kitchen trashcan","living room trashcan",""       ,""      ,""       ,""        ]
+        self.trashcans          = [s.replace(" ", "_").lower() for s in self.trashcans]
         self.MIN_OBJECT_DISTANCE_X = 0.05
         self.MAX_OBJECT_DISTANCE_X = 6
         self.MIN_OBJECT_DISTANCE_Y = -6
@@ -150,7 +152,7 @@ class TaskMain():
         self.search_tetas_horizontal = [[-20, -20], [20, -20]]
         self.search_tetas_vertical = [[0, -15], [0, 15]]
 
-        self.state = self.task_states["State_selector"]
+        self.state = self.task_states["Waiting_for_task_start"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -178,33 +180,38 @@ class TaskMain():
                 trash_objects_problems_solved_ctr = 0
 
                 # Starts with door opening and getting the request fsolve_open_door_and_get_requestrom the person behind the door
-                # self.solve_open_door_and_get_request()
+                self.solve_open_door_and_get_request()
+                
                 while True:
                     for room in self.rooms_to_go:
 
-                        # # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
-                        # if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
-                        #     self.SOLVE_MISPLACED_OBJECTS = True
-                        #     self.SOLVE_TRASH_OBJECTS = True
-                        #     self.SOLVE_PEOPLE_WITH_REQUESTS = True
+                        # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
+                        if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
+                            print("CLEARED ALL FLAGS")
+                            self.SOLVE_MISPLACED_OBJECTS = True
+                            self.SOLVE_TRASH_OBJECTS = True
+                            self.SOLVE_PEOPLE_WITH_REQUESTS = True
 
                         misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
                         print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
                         misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
                         if misplaced_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
                             self.SOLVE_MISPLACED_OBJECTS = False
+                            misplaced_objects_problems_solved_ctr = 0
 
-                        # trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
-                        # print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
-                        # trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
-                        # if trash_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
-                        #     self.SOLVE_TRASH_OBJECTS = False
+                        trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
+                        print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
+                        trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
+                        if trash_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
+                            self.SOLVE_TRASH_OBJECTS = False
+                            trash_objects_problems_solved_ctr = 0
 
-                        # peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
-                        # print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
-                        # peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
-                        # if peoples_with_requests_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
-                        #     self.SOLVE_PEOPLE_WITH_REQUESTS = False
+                        peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
+                        print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
+                        peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
+                        if peoples_with_requests_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
+                            self.SOLVE_PEOPLE_WITH_REQUESTS = False
+                            peoples_with_requests_problems_solved_ctr = 0
 
                 # Not used in 2026 finals strategy, but left here for future use
                 # self.solve_basket_misplacement()
@@ -280,7 +287,7 @@ class TaskMain():
             # TODO: PLACEHOLDER: ADD LOW LEVEL PLANNER EXECUTION HERE ...
             time.sleep(0.5)
             self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=True)
-            self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
+            # self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
             
         else: # WILL SEARCH FOR MORE PEOPLE IN THE SAME ROOM
             self.robot.set_speech(filename="finals/cannot_perform_task", wait_for_end_of=True)
@@ -548,7 +555,7 @@ class TaskMain():
         return number_of_solved_requests
 
 
-    def solve_trash_objects(self, room="", requests_left=0 ,pick_to_trashcan=False ,camera="head"):
+    def solve_trash_objects(self, room="", requests_left=0, pick_to_trashcan=False, camera="head"):
         print("\n>>> Current Task State: Solve_Trash_Objects <<<\n")
         requests_solved = 0
 
@@ -613,8 +620,6 @@ class TaskMain():
                     
                 if pick_to_trashcan:
 
-                    requests_solved = 1
-
                     counter = 0
                     for d in self.divisions:
                         if d == room:
@@ -625,10 +630,11 @@ class TaskMain():
                         self.robot.ask_help_pick_object_gripper(object_d = valid_detected_object, look_judge= [0,0], show_detection = False)
                         self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                         self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                        self.robot.set_speech(filename="furniture/"+room.replace(" ","_").lower(), wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
 
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
                         self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
+                        requests_solved = 1
 
             return requests_solved
 

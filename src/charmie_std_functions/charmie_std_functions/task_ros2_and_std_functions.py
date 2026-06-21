@@ -8302,9 +8302,9 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx = 0.40 , dy = 0.0, wait_for_end_of=True, safety=False)
             while not self.adjust_omnidirectional_position_is_done():
                 pass
+            self.set_arm(command="close_gripper", wait_for_end_of=True)
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
 
-            pass
 
         if push_pull == "pull" and handle_side == "left":
 
@@ -9256,7 +9256,7 @@ class RobotStdFunctions():
                 print(" Asked for Help ")
                 s = self.ask_help_pick_object_gripper(object_d = obj, look_judge= [0,0], show_detection = show_detection)
                 if s:
-                    picked_height = 0
+                    picked_height = self.get_object_height_from_object(selected_object)/1.25
                     if arm_initial_position == "":
                         self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
                     #Uncomment if ask for help position is changed
