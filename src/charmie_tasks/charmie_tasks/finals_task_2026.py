@@ -79,7 +79,7 @@ class TaskMain():
         # Configurables for Task Selection:
         self.SOLVE_DOOR_OPENING = True
         self.SOLVE_REQUEST_FROM_PERSON_BEHIND_DOOR = True
-        self.SOLVE_MISPLACED_OBJECTS = False
+        self.SOLVE_MISPLACED_OBJECTS = True
         self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS = 2
         self.SOLVE_PEOPLE_WITH_REQUESTS = True
         self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 2
@@ -178,17 +178,17 @@ class TaskMain():
                 while True:
                     for room in self.rooms_to_go:
 
-                        # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
-                        if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
-                            self.SOLVE_MISPLACED_OBJECTS = True
-                            self.SOLVE_TRASH_OBJECTS = True
-                            self.SOLVE_PEOPLE_WITH_REQUESTS = True
+                        # # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
+                        # if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
+                        #     self.SOLVE_MISPLACED_OBJECTS = True
+                        #     self.SOLVE_TRASH_OBJECTS = True
+                        #     self.SOLVE_PEOPLE_WITH_REQUESTS = True
 
-                        # misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
-                        # print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
-                        # misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
-                        # if misplaced_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
-                        #     self.SOLVE_MISPLACED_OBJECTS = False
+                        misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
+                        print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
+                        misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
+                        if misplaced_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
+                            self.SOLVE_MISPLACED_OBJECTS = False
 
                         # trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
                         # print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
@@ -196,11 +196,11 @@ class TaskMain():
                         # if trash_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
                         #     self.SOLVE_TRASH_OBJECTS = False
 
-                        peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
-                        print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
-                        peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
-                        if peoples_with_requests_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
-                            self.SOLVE_PEOPLE_WITH_REQUESTS = False
+                        # peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
+                        # print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
+                        # peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
+                        # if peoples_with_requests_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
+                        #     self.SOLVE_PEOPLE_WITH_REQUESTS = False
 
                 # Not used in 2026 finals strategy, but left here for future use
                 # self.solve_basket_misplacement()
@@ -379,7 +379,7 @@ class TaskMain():
 
                                 picked_height, asked_help = self.robot.pick_object(selected_object=wrong_obj.object_name.replace(" ","_").lower(),
                                                             pick_mode=self.robot.get_standard_pick_from_object(wrong_obj.object_name.replace(" ","_").lower()),
-                                                            first_search_tetas=search_misplaced_obj_tetas)
+                                                            first_search_tetas=search_misplaced_obj_tetas, max_search_attempts=2, finals_handle_not_ask_for_help_if_no_object_is_seen_in_head_sfo=True)
                                 
                                 if picked_height != -1: # ASK FOR HELP WAS CORRECT
                                 
@@ -395,7 +395,7 @@ class TaskMain():
                                     self.robot.set_speech(filename="furniture/" + place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
                                     if len(self.robot.get_height_from_furniture(place_furniture)) > 1:
-                                        if place_furniture == "pantry": # HARDCODED
+                                        if place_furniture == "pantry" or place_furniture == "shelf": # HARDCODED
                                             shelf_number_place = 1
                                         else:
                                             shelf_number_place = 2
