@@ -184,6 +184,7 @@ class TaskMain():
 
                         # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
                         if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
+                            print("CLEARED ALL FLAGS")
                             self.SOLVE_MISPLACED_OBJECTS = True
                             self.SOLVE_TRASH_OBJECTS = True
                             self.SOLVE_PEOPLE_WITH_REQUESTS = True
@@ -551,7 +552,7 @@ class TaskMain():
         return number_of_solved_requests
 
 
-    def solve_trash_objects(self, room="", requests_left=0 ,pick_to_trashcan=False ,camera="head"):
+    def solve_trash_objects(self, room="", requests_left=0, pick_to_trashcan=False, camera="head"):
         print("\n>>> Current Task State: Solve_Trash_Objects <<<\n")
         requests_solved = 0
 
@@ -616,8 +617,6 @@ class TaskMain():
                     
                 if pick_to_trashcan:
 
-                    requests_solved = 1
-
                     counter = 0
                     for d in self.divisions:
                         if d == room:
@@ -632,6 +631,7 @@ class TaskMain():
 
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
                         self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
+                        requests_solved = 1
 
             return requests_solved
 
