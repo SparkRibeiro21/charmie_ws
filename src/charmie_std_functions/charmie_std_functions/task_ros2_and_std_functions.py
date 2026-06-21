@@ -8299,9 +8299,9 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx = 0.40 , dy = 0.0, wait_for_end_of=True, safety=False)
             while not self.adjust_omnidirectional_position_is_done():
                 pass
+            self.set_arm(command="close_gripper", wait_for_end_of=True)
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
 
-            pass
 
         if push_pull == "pull" and handle_side == "left":
 

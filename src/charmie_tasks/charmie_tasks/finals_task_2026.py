@@ -123,8 +123,10 @@ class TaskMain():
 
         # Configurables for Trash Objects:
         self.TRASH_SEARCH_CAMERA = "head"
-        self.divisions           =["kitchen"         ,"living room"         ,"hallway","office","bedroom","workshop"]
-        self.trashcans           =["kitchen trashcan","living room trashcan",""       ,""      ,""       ,""        ]
+        self.divisions          = ["kitchen"         ,"living room"         ,"hallway","office","bedroom","workshop"]
+        self.divisions          = [s.replace(" ", "_").lower() for s in self.divisions]
+        self.trashcans          = ["kitchen trashcan","living room trashcan",""       ,""      ,""       ,""        ]
+        self.trashcans          = [s.replace(" ", "_").lower() for s in self.trashcans]
         self.MIN_OBJECT_DISTANCE_X = 0.05
         self.MAX_OBJECT_DISTANCE_X = 6
         self.MIN_OBJECT_DISTANCE_Y = -6
@@ -150,7 +152,7 @@ class TaskMain():
         self.search_tetas_horizontal = [[-20, -20], [20, -20]]
         self.search_tetas_vertical = [[0, -15], [0, 15]]
 
-        self.state = self.task_states["State_selector"]
+        self.state = self.task_states["Waiting_for_task_start"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -178,7 +180,8 @@ class TaskMain():
                 trash_objects_problems_solved_ctr = 0
 
                 # Starts with door opening and getting the request fsolve_open_door_and_get_requestrom the person behind the door
-                # self.solve_open_door_and_get_request()
+                self.solve_open_door_and_get_request()
+                
                 while True:
                     for room in self.rooms_to_go:
 
@@ -284,7 +287,7 @@ class TaskMain():
             # TODO: PLACEHOLDER: ADD LOW LEVEL PLANNER EXECUTION HERE ...
             time.sleep(0.5)
             self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=True)
-            self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
+            # self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
             
         else: # WILL SEARCH FOR MORE PEOPLE IN THE SAME ROOM
             self.robot.set_speech(filename="finals/cannot_perform_task", wait_for_end_of=True)
@@ -627,7 +630,7 @@ class TaskMain():
                         self.robot.ask_help_pick_object_gripper(object_d = valid_detected_object, look_judge= [0,0], show_detection = False)
                         self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                         self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                        self.robot.set_speech(filename="furniture/"+room.replace(" ","_").lower(), wait_for_end_of=False)
+                        self.robot.set_speech(filename="furniture/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
 
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
                         self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
