@@ -174,22 +174,32 @@ class TaskMain():
 
                 # Starts with door opening and getting the request fsolve_open_door_and_get_requestrom the person behind the door
                 # self.solve_open_door_and_get_request()
+                while True:
+                    for room in self.rooms_to_go:
 
-                for room in self.rooms_to_go:
-                    # if misplaced_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
-                    #     misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
-                    #     print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
-                    #     misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
+                        # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
+                        if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
+                            self.SOLVE_MISPLACED_OBJECTS = True
+                            self.SOLVE_TRASH_OBJECTS = True
+                            self.SOLVE_PEOPLE_WITH_REQUESTS = True
 
-                    # if trash_objects_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
-                    #     trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
-                    #     print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
-                    #     trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
+                        # misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
+                        # print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
+                        # misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
+                        # if misplaced_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
+                        #     self.SOLVE_MISPLACED_OBJECTS = False
 
-                    if peoples_with_requests_problems_solved_ctr < self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
+                        # trash_objects_number_of_problems_solved = self.solve_trash_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS - trash_objects_problems_solved_ctr, pick_to_trashcan=self.SOLVE_TRASH_OBJECTS, camera=self.TRASH_SEARCH_CAMERA)
+                        # print("trash_objects_number_of_problems_solved:", trash_objects_number_of_problems_solved)
+                        # trash_objects_problems_solved_ctr += trash_objects_number_of_problems_solved
+                        # if trash_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS:
+                        #     self.SOLVE_TRASH_OBJECTS = False
+
                         peoples_with_requests_number_of_problems_solved = self.solve_people_with_requests(room=room, requests_left=self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS - peoples_with_requests_problems_solved_ctr)
                         print("peoples_with_requests_number_of_problems_solved:", peoples_with_requests_number_of_problems_solved)
                         peoples_with_requests_problems_solved_ctr += peoples_with_requests_number_of_problems_solved
+                        if peoples_with_requests_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS:
+                            self.SOLVE_PEOPLE_WITH_REQUESTS = False
 
                 # Not used in 2026 finals strategy, but left here for future use
                 # self.solve_basket_misplacement()
