@@ -134,7 +134,8 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                # self.robot.pick_object(selected_object="Apple", max_search_attempts=1)
+                pick,afh =self.robot.pick_object(selected_object="cup")
+                self.robot.place_object_in_furniture(selected_object="cup",place_height=pick, furniture="coffee table")
 
                 self.robot.set_initial_position(self.initial_position)
 

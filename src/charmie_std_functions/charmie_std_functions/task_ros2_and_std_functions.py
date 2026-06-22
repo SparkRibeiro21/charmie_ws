@@ -3599,6 +3599,7 @@ class RobotStdFunctions():
                            list_of_objects = [], 
                            list_of_objects_detected_as = [],
                            max_search_attempts = 0,
+                           speak_problem_in_max_search_attempts = True,
                            use_arm=False, 
                            detect_objects        = False, 
                            detect_furniture      = False, 
@@ -3943,15 +3944,16 @@ class RobotStdFunctions():
                                 
                     self.set_face("charmie_face")
                     self.set_neck(position=[0, 0], wait_for_end_of=False)
-                    # Speech: "Unfortunately, I could not detect the following objects."
-                    self.set_speech(filename="generic/max_searches_could_not_detect_objects", wait_for_end_of=True) 
-                    for obj in range(len(list_of_objects)):
-                        if not mandatory_object_detected_flags[obj]:
-                            # Speech: (Name of object)
-                            if say_cutlery and list_of_objects[obj].replace(" ","_").lower() in ["fork", "knife", "spoon"]:
-                                self.set_speech(filename="objects_names/cutlery", wait_for_end_of=True)
-                            else:
-                                self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
+                    if speak_problem_in_max_search_attempts:
+                        # Speech: "Unfortunately, I could not detect the following objects."
+                        self.set_speech(filename="generic/max_searches_could_not_detect_objects", wait_for_end_of=True) 
+                        for obj in range(len(list_of_objects)):
+                            if not mandatory_object_detected_flags[obj]:
+                                # Speech: (Name of object)
+                                if say_cutlery and list_of_objects[obj].replace(" ","_").lower() in ["fork", "knife", "spoon"]:
+                                    self.set_speech(filename="objects_names/cutlery", wait_for_end_of=True)
+                                else:
+                                    self.set_speech(filename="objects_names/"+list_of_objects[obj].replace(" ","_").lower(), wait_for_end_of=True)
                     
                 else: # elif not all(mandatory_object_detected_flags):
                     # Speech: "There seems to be a problem with detecting the objects. Can you please slightly move and rotate the following objects?"
@@ -4334,7 +4336,7 @@ class RobotStdFunctions():
 
         return self.node.llm_demonstration_response
     
-    def receive_command_and_generate_low_level_planner(self, command_no=1, use_touchscreen_for_yes_no_questions=False):
+    def receive_command_and_generate_low_level_planner(self, command_no=1, use_touchscreen_for_yes_no_questions=True):
 
         current_datetime = ""
         hlp_comm = ""
@@ -7180,7 +7182,7 @@ class RobotStdFunctions():
 
         #### FUNCTION ####
 
-        _ , _ , furniture_gap = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+        _ , _ , furniture_gap = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=35)
 
         if place_mode == "front":
 
@@ -7244,7 +7246,10 @@ class RobotStdFunctions():
             gripper_place_position = self.get_gripper_localization()
 
             while not self.adjust_omnidirectional_position_is_done():
-                pass                                                     
+                pass    
+            
+            if selected_object=="bowl":
+                place_height = place_height + 0.04                                                 
 
             final_x = (gripper_place_position.z - furniture_height - place_height - 0.02)*1000
             print( "Final X: ", final_x, "gripper position: ", gripper_place_position.z, "furniture height: ", furniture_height, " place_height :", place_height)                                     
@@ -8193,6 +8198,7 @@ class RobotStdFunctions():
 
 
         arm_position_pull_left = [-189.7, 36.6, -78.1, 170.7, 45.5, 183.4]
+        self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
         arm_position_pull_right = [-192.4, 71.8, -118.4, 160.6, 46.7, 191.8]
         arm_position_handle = [-184.3, 27.1, -81.7, 178, 32.1, 178.3]
 
@@ -8273,7 +8279,7 @@ class RobotStdFunctions():
 
             print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, " Position cam Z ",g.position_cam.z , " Position cam Y ",g.position_cam.y , " Position cam X ",g.position_cam.x)
             self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.035 , dy = 0.0, wait_for_end_of=True, safety=False)
-            GRAB_DOOR_Y = 0.08*1000
+            GRAB_DOOR_Y = 0.09*1000
             GRAB_DOOR_X = 0.018*1000
             GRAB_DOOR_ROTATE= -30
             grab_door = [0.0, GRAB_DOOR_Y, 0.0, GRAB_DOOR_ROTATE, 0.0, 0.0]
@@ -8281,7 +8287,7 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True) 
             self.adjust_omnidirectional_position(dx = 0.03 , dy = 0.0, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True)
-            self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.14, wait_for_end_of=False, safety=False)
+            self.adjust_omnidirectional_position(dx = -0.10 , dy = 0.14, wait_for_end_of=False, safety=False)
 
             middle_position = [-183.2,83.2,-115.9,166.1,56.4,96.7] 
 
@@ -8293,12 +8299,12 @@ class RobotStdFunctions():
             after_release_first = [-0.1*1000, 0.0, 0.15*1000, 0.0, 0.0, 0.0, 0.0]
             #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
             after_release_last = [0.12*1000, 0.12*1000, 0.195*1000, 0.0, 0.0, 0.0]
-            self.adjust_omnidirectional_position(dx = 1.30 , dy = 0.0, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = 0.40 , dy = 0.0, wait_for_end_of=True, safety=False)
             while not self.adjust_omnidirectional_position_is_done():
                 pass
+            self.set_arm(command="close_gripper", wait_for_end_of=True)
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
 
-            pass
 
         if push_pull == "pull" and handle_side == "left":
 
@@ -8562,7 +8568,7 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms        
 
-    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False): 
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False): 
 
 
         # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
@@ -8710,9 +8716,9 @@ class RobotStdFunctions():
                 correct_rotation_adjust = 0.0 #degree
 
             if selected_object == "cup":
-                correct_y_adjust = 45 #mm
+                correct_y_adjust = 49 #mm
                 correct_x_lock = True
-                correct_x_adjust = 285 #mm
+                correct_x_adjust = 220 #mm
                 rotation_lock = True
                 correct_rotation_adjust = 0.0 #degree
 
@@ -8746,7 +8752,11 @@ class RobotStdFunctions():
                 # The first object detection will be made with the head camera. Will look for selected_object or list_of_objects_detected_as if selected_object is not found. Will look at first_search_tetas until object found within a number of tries equal to max_search_attempts.
                 
                 self.set_face(camera="head", show_detections=True)
-                objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], list_of_objects_detected_as=list_of_objects_detected_as, use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts = max_search_attempts)
+                if finals_flag:
+                    speak_problem_in_max_search_attempts = False
+                else:
+                    speak_problem_in_max_search_attempts = True
+                objects_found = self.search_for_objects(tetas = first_search_tetas, time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=[selected_object], list_of_objects_detected_as=list_of_objects_detected_as, use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts=max_search_attempts, speak_problem_in_max_search_attempts=speak_problem_in_max_search_attempts)
 
                 # If no selected object is found go to ask for help, giving a placeholder DetectedObject() type as none was found
                 if not objects_found:
@@ -8755,6 +8765,8 @@ class RobotStdFunctions():
                     obj.object_name = selected_object
                     show_detection = False
                     state = ERROR_HANDLING_ASK_FOR_HELP
+                    if finals_flag: # In finals I dont want to lose time in asking object, I want to be time efficient and move on
+                        return -1, ask_help
                 else:
 
                     print("LIST OF DETECTED OBJECTS:")
@@ -8959,8 +8971,12 @@ class RobotStdFunctions():
                 if obj.object_name != "plate":
                     self.set_arm(command="open_gripper", wait_for_end_of=True)
 
+                if finals_flag:
+                    speak_problem_in_max_search_attempts = False
+                else:
+                    speak_problem_in_max_search_attempts = True
                 #CALIBRATE GRIPPER BEFORE GRABBING
-                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False, list_of_objects_detected_as=list_of_objects_detected_as, max_search_attempts = max_search_attempts)
+                final_objects = self.search_for_objects(tetas=[[0, 0]], time_in_each_frame=4.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=[selected_object], use_arm=False, detect_objects=False, detect_objects_hand=True, detect_objects_base=False, list_of_objects_detected_as=list_of_objects_detected_as, max_search_attempts=max_search_attempts, speak_problem_in_max_search_attempts=speak_problem_in_max_search_attempts)
 
                 self.set_face(camera="hand", show_detections=True)
                 
@@ -9023,7 +9039,7 @@ class RobotStdFunctions():
                         MAX_MOVE_LIMIT = 260
                     else:
                         MAX_MOVE_LIMIT = 220
-                    if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320 and obj.object_name != cup:
+                    if correct_x_grab > MAX_MOVE_LIMIT and correct_x_grab < 320 and selected_object != "cup":
                         correct_x_grab = MAX_MOVE_LIMIT
                 
                 print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab}, {correct_rotation})")
@@ -9238,15 +9254,19 @@ class RobotStdFunctions():
                 print(" NOW ENTERING STATE ", state)
 
                 print(" Asked for Help ")
-                self.ask_help_pick_object_gripper(object_d = obj, look_judge= [0,0], show_detection = show_detection)
-                picked_height = 0
-                if arm_initial_position == "":
+                s = self.ask_help_pick_object_gripper(object_d = obj, look_judge= [0,0], show_detection = show_detection)
+                if s:
+                    picked_height = self.get_object_height_from_object(selected_object)/1.25
+                    if arm_initial_position == "":
+                        self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
+                    #Uncomment if ask for help position is changed
+                    # else:
+                    #    if obj.object_name != "plate":    
+                    #        self.set_arm(command=arm_initial_position, wait_for_end_of=True)
+                    return picked_height, ask_help
+                else:
                     self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
-                #Uncomment if ask for help position is changed
-                # else:
-                #    if obj.object_name != "plate":    
-                #        self.set_arm(command=arm_initial_position, wait_for_end_of=True)
-                return picked_height, ask_help
+                    return -1, ask_help
 
 
     def pick_from_tray(self, selected_object="", pick_mode="", placed_height = -1):
@@ -9640,4 +9660,5 @@ class RobotStdFunctions():
         object_position_grab = [-0.24*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
         self.set_arm(command="close_gripper", wait_for_end_of=True)
+        
         
