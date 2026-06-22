@@ -7246,7 +7246,10 @@ class RobotStdFunctions():
             gripper_place_position = self.get_gripper_localization()
 
             while not self.adjust_omnidirectional_position_is_done():
-                pass                                                     
+                pass    
+            
+            if selected_object=="bowl":
+                place_height = place_height + 0.04                                                 
 
             final_x = (gripper_place_position.z - furniture_height - place_height - 0.02)*1000
             print( "Final X: ", final_x, "gripper position: ", gripper_place_position.z, "furniture height: ", furniture_height, " place_height :", place_height)                                     
@@ -8713,9 +8716,9 @@ class RobotStdFunctions():
                 correct_rotation_adjust = 0.0 #degree
 
             if selected_object == "cup":
-                correct_y_adjust = 45 #mm
+                correct_y_adjust = 49 #mm
                 correct_x_lock = True
-                correct_x_adjust = 285 #mm
+                correct_x_adjust = 220 #mm
                 rotation_lock = True
                 correct_rotation_adjust = 0.0 #degree
 
