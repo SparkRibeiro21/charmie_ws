@@ -8382,7 +8382,63 @@ class RobotStdFunctions():
 
         pass
         # arm movements and search for objects for furniture door_handle 
-        # add safety and timeout mechanisms        
+        # add safety and timeout mechanisms
+        # 
+    def declare_correct_object_placement(self, objects_detected=DetectedObject()):
+
+        # NECESSARY CONFIGURABLES 
+        categories      =["snacks"     ,"drinks"     ]
+        correct_position=[["left","1"] ,["right","2"]]
+        furniture="cabinet"
+
+        coords = self.get_navigation_coords_from_furniture(furniture=furniture) 
+        center_point_x, center_point_y, height = self.get_location_coords_from_furniture
+
+        if coords[3] < 0:
+            coords[3] = coords[3] + 360
+        if 45 <= coords[3] < 135:
+            axis = ["y", "negative"]    
+        elif 135 <= coords[3] < 225:
+            axis = ["x", "negative"]
+        elif 225 <= coords[3] < 315:
+            axis = ["y", "positive"]
+        else: 
+            axis = ["x", "positive"]
+
+        for obj in objects_detected:
+            index = -1
+            conf   = f"{obj.confidence * 100:.0f}%"
+            cam_x_ = f"{obj.position_absolute.x:5.2f}"
+            cam_y_ = f"{obj.position_absolute.y:5.2f}"
+            cam_z_ = f"{obj.position_absolute.z:5.2f}"
+
+            print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.furniture_location})")
+            object_class = self.get_object_class_from_object(obj)
+
+            for cat in categories:
+                if object_class == cat:
+                    index = categories.index(cat)
+
+            if index != -1:
+                position, shelf_number =correct_position[index]
+                if (obj.position_absolute.y >= center_point_y and axis[0] == "y") \
+                or obj.position_absolute.x >= center_point_x and axis[0] == "x":
+                    if axis[1] == "positive":
+                        object_positon = "right"
+                    elif axis[1] == "negative":
+                        object_positon = "left"
+                    
+                for h in height:
+                    print("HEIGHT COMPARATION:", h)
+                    if h < obj.position_absolute.z:
+                        shelf_number = categories.index(cat)
+
+                if object_positon != correct_position[index[0]] or shelf_number != correct_position[index[1]]:
+                    # self.set_speech()
+                    pass
+                    
+
+
 
     def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False): 
 
