@@ -112,8 +112,8 @@ class TaskMain():
 
         # Objects picked furniture names
         # self.MILK_LOCATION = "Pantry"
-        self.MILK_LOCATION = "Cabinet"
-        self.CORNFLAKES_LOCATION = "Cabinet"
+        self.MILK_LOCATION = "Kitchen Cabinet"
+        self.CORNFLAKES_LOCATION = "Kitchen Cabinet"
         self.DISHES_LOCATION = "Kitchen Counter"
 
         # Initial Position
@@ -466,7 +466,7 @@ class TaskMain():
                 if self.GET_MILK:
 
                     self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
-                     # TESTING POURING MILK
+
                     self.robot.open_milk_lid()
 
                     self.robot.pour_milk()
