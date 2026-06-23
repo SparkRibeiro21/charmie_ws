@@ -8573,10 +8573,11 @@ class RobotStdFunctions():
         # NECESSARY CONFIGURABLES 
         categories      =["snacks"     ,"drinks"     ]
         correct_position=[["left","1"] ,["right","2"]]
-        furniture="cabinet"
+        furniture="Kitchen Cabinet"
+        furniture = furniture.replace(" ","_").lower()
 
         coords = self.get_navigation_coords_from_furniture(furniture=furniture) 
-        center_point_x, center_point_y, height = self.get_location_coords_from_furniture
+        center_point_x, center_point_y, height = self.get_location_coords_from_furniture(furniture=furniture)
 
         if coords[3] < 0:
             coords[3] = coords[3] + 360
@@ -8618,8 +8619,13 @@ class RobotStdFunctions():
                         shelf_number = categories.index(cat)
 
                 if object_positon != correct_position[index[0]] or shelf_number != correct_position[index[1]]:
-                    # self.set_speech()
-                    pass
+                    self.detected_object_to_face_path(object=obj, send_to_face=True)
+                    self.set_speech(filename="generic/found_the", wait_for_end_of=False)
+                    self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+                    self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
+                    self.set_speech(filename="finals/object_should_be_placed_on", wait_for_end_of=False)
+                    self.set_speech(filename="furniture/"+self.get_furniture_from_object_class(self.get_object_class_from_object(obj.object_name.replace(" ","_").lower())), wait_for_end_of=False)
+                
                             
 
     def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False): 
