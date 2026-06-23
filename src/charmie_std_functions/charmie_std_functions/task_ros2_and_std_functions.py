@@ -8572,7 +8572,7 @@ class RobotStdFunctions():
 
         # NECESSARY CONFIGURABLES 
         categories      =["snacks"     ,"drinks"     ]
-        correct_position=[["left","1"] ,["right","2"]]
+        correct_position=[["left",1] ,["right",2]]
         furniture="Kitchen Cabinet"
         furniture = furniture.replace(" ","_").lower()
 
@@ -8605,7 +8605,7 @@ class RobotStdFunctions():
                     index = categories.index(cat)
 
             if index != -1:
-                position, shelf_number =correct_position[index]
+                position, shelf =correct_position[index]
                 if (obj.position_absolute.y >= center_point_y and axis[0] == "y") \
                 or obj.position_absolute.x >= center_point_x and axis[0] == "x":
                     if axis[1] == "positive":
@@ -8618,13 +8618,14 @@ class RobotStdFunctions():
                     if h < obj.position_absolute.z:
                         shelf_number = categories.index(cat)
 
-                if object_positon != correct_position[index[0]] or shelf_number != correct_position[index[1]]:
+                if object_positon != position or shelf_number != shelf:
                     self.detected_object_to_face_path(object=obj, send_to_face=True)
                     self.set_speech(filename="generic/found_the", wait_for_end_of=False)
                     self.set_speech(filename="objects_names/"+obj.object_name.replace(" ","_").lower(), wait_for_end_of=False)
                     self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
                     self.set_speech(filename="finals/object_should_be_placed_on", wait_for_end_of=False)
                     self.set_speech(filename="furniture/"+self.get_furniture_from_object_class(self.get_object_class_from_object(obj.object_name.replace(" ","_").lower())), wait_for_end_of=False)
+                    ## set_speechs for correct position and shelf number for each misplaced object
                 
                             
 
