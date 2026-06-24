@@ -18,7 +18,7 @@ ros2_modules = {
     "charmie_gamepad":              False,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          True,
-    "charmie_base_camera":          False,
+    "charmie_base_camera":          True,
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          True,
@@ -79,7 +79,7 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
 
-        self.home_furniture = "Shelf"
+        self.home_furniture = "Entrance"
         # self.home_furniture = "Dinner Table"        
         self.initial_position = [8.80, 0.13, -180.0]
 
@@ -134,8 +134,7 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                pick,afh =self.robot.pick_object(selected_object="cup")
-                self.robot.place_object_in_furniture(selected_object="cup",place_height=pick, furniture="coffee table")
+                # self.robot.pick_object(selected_object="Apple", max_search_attempts=1)
 
                 self.robot.set_initial_position(self.initial_position)
 
