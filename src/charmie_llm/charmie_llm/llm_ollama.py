@@ -69,7 +69,8 @@ class LLMNode(Node):
                 # self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
 
 
-                self.ollama_unified_planner = Ollama_unified_planner_description()
+                # self.ollama_unified_planner = Ollama_unified_planner_description()
+                self.ollama_planner = Ollama_planner_description()
                 req = GetLLMResponse.Request()
                 req.command="Go to the kitchen and bring me the milk to the bed"
                 req.mode = ""
@@ -181,11 +182,12 @@ class LLMNode(Node):
         #llm_response = self.llm_planner_description.handle_request(request.command)
 
         start_time = time.time()
-        # generated_plan = self.ollama_planner.high_level_planner(request.command)
-        generated_unified_plan = self.ollama_unified_planner.high_level_planner(request.command)
+        generated_plan = self.ollama_planner.high_level_planner(request.command)
+        # generated_unified_plan = self.ollama_unified_planner.high_level_planner(request.command)
         end_time = time.time()
 
-        print("Plan Generated:", generated_unified_plan)
+        # print("Plan Generated:", generated_unified_plan)
+        print("Plan Generated:", generated_plan)
         print("Time taken to generate the plan: ", end_time - start_time, "seconds")
 
 
@@ -244,7 +246,8 @@ class LLMNode(Node):
         
         # response.answer = los
         los = ListOfStrings()
-        los.strings.append(generated_unified_plan)
+        # los.strings.append(generated_unified_plan)
+        los.strings.append(generated_plan)
 
         response.answer = los
 
@@ -329,8 +332,10 @@ class LLMNode(Node):
                     if step_to_llm == "" or step_to_llm == " ":
                         print("Skipping empty step")
                     else:
-                        generated_unified_plan = self.ollama_unified_planner.low_level_planner(step.strip())
-                        los.strings.append(generated_unified_plan)
+                        # generated_unified_plan = self.ollama_unified_planner.low_level_planner(step.strip())
+                        generated_plan = self.ollama_planner.low_level_planner(step.strip())
+                        # los.strings.append(generated_unified_plan)
+                        los.strings.append(generated_plan)
 
         end_time = time.time()
 

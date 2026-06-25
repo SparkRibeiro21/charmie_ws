@@ -11,31 +11,31 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
-    "charmie_audio":                True,
-    "charmie_face":                 True,
-    "charmie_head_camera":          True,
-    "charmie_hand_camera":          True,
+    "charmie_arm":                  False,
+    "charmie_audio":                False,
+    "charmie_face":                 False,
+    "charmie_head_camera":          False,
+    "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                True,
+    "charmie_lidar":                False,
     "charmie_lidar_bottom":         False,
-    "charmie_lidar_livox":          True,
+    "charmie_lidar_livox":          False,
     "charmie_llm":                  True,
-    "charmie_localisation":         True,
-    "charmie_low_level":            True,
-    "charmie_navigation":           True,
-    "charmie_nav2":                 True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 True,
-    "charmie_radar":                True,
+    "charmie_neck":                 False,
+    "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
-    "charmie_speakers_save":        True,
+    "charmie_speakers":             False,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
-    "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            True,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
 
@@ -73,7 +73,7 @@ class TaskMain():
         Final_State = 9
 
         # VARS ...
-        self.state = LLM_gpsr
+        self.state = LLM_demo
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -95,25 +95,123 @@ class TaskMain():
 
                 print("New LLM Demo")
 
+
+            commands = [
+            "Please identify which object on the refrigerator is the lightest.",
+            "Tell me which object on the refrigerator is the lightest.",
+            "What's the lightest object on the refrigerator?",
+
+            "Please verbally communicate the day of the month to the waving person in the bedroom.",
+            "Tell the day of the month to the waving person in the bedroom.",
+            "Tell the waving person in the bedroom the day of the month.",
+
+            "Please proceed to the living room, introduce yourself to the person wearing a black jacket, and thereafter follow them.",
+            "Go to the living room, introduce yourself to the person wearing a black jacket, then follow them.",
+            "In the living room, introduce yourself to the person wearing a black jacket and follow them.",
+
+            "Kindly address the person who is raising their left arm in the bedroom with a statement about yourself.",
+            "Tell the person raising their left arm in the bedroom something about yourself.",
+            "Talk about yourself to the person raising their left arm in the bedroom.",
+
+            "Please direct the person pointing to the left, ensuring they move from the sofa to the waste basket.",
+            "Guide the person who is pointing to the left from the sofa over to the waste basket.",
+            "Help the person pointing to the left go from the sofa to the waste basket.",
+
+            "Please proceed to the kitchen, at which point you should locate a toothpaste, take it, and deliver it to me.",
+            "Go to the kitchen, find a toothpaste, take it, and deliver it to me.",
+            "Head to the kitchen, grab a toothpaste, and deliver it to me.",
+
+            "First, proceed to the storage rack; upon arrival, identify the sitting person and subsequently follow them.",
+            "Go to the storage rack, find the sitting person, and then follow them.",
+            "Head to the storage rack, spot the sitting person, and follow them.",
+
+            "Proceed to the chairs first, after which you should meet Scarlett and subsequently follow them.",
+            "Go to the chairs, then meet Scarlett, and then follow them.",
+            "Head to the chairs, meet Scarlett, and follow them.",
+
+            "Proceed to the bed to retrieve a lemon, and subsequently deliver it to the standing person in the kitchen.",
+            "Grab a lemon from the bed and take it to the standing person in the kitchen.",
+            "Take a lemon from the bed to the standing person in the kitchen.",
+
+            "Proceed to the armchair, locate the lying person, and subsequently lead them to the bedroom.",
+            "Go to the armchair, find the lying person, and then lead them to the bedroom.",
+            "Head to the armchair, spot the lying person, and take them to the bedroom.",
+
+            "Please retrieve a chocolate jello from the bed and subsequently dispose of it by throwing it in the trash.",
+            "Pick up a chocolate jello from the bed, then toss it in the trash.",
+            "Grab a chocolate jello from the bed and throw it in the trash.",
+
+            "Proceed to navigate to the bedroom; upon arrival, locate a food, retrieve it, and subsequently deliver it to the waving person in the kitchen.",
+            "Go to the bedroom, find a food, pick it up, and bring it to the waving person in the kitchen.",
+            "Head to the bedroom, find a food, get it, and take it to the waving person in the kitchen.",
+
+            "Identify, within the bedroom, a person who is pointing to the left, and proceed to follow them to the office.",
+            "In the bedroom, find a person pointing to the left and follow them to the office.",
+            "Find a person pointing to the left in the bedroom, then follow them to the office.",
+
+            "Kindly inform the waving person in the bedroom as to what day today is.",
+            "Tell the waving person in the bedroom what day it is today.",
+            "Tell the waving person in the bedroom what day today is.",
+
+            "Would you be so kind as to bring me a cleanser from the side tables?",
+            "Please bring me a cleanser from the side tables.",
+            "Grab me a cleanser from the side tables.",
+
+            "Locate a fruit within the living room, retrieve it, and present it to the person pointing to the right in the living room.",
+            "Find a fruit in the living room, pick it up, and give it to the person pointing to the right in the living room.",
+            "Search the living room for a fruit, take it, and hand it to the person pointing to the right in the living room.",
+
+            "Please retrieve an iced tea from the side tables and proceed to deliver it to Matthew in the bedroom.",
+            "Grab an iced tea from the side tables and deliver it to Matthew in the bedroom.",
+            "Get an iced tea from the side tables and bring it to Matthew in the bedroom",
+
+            "First, navigate to the cabinet; thereafter, meet Connor and subsequently follow them.",
+            "Navigate to the cabinet, then meet Connor, and follow them.",
+            "Go to the cabinet, meet Connor, and follow them.",
+
+            "Please proceed to meet Michael in the living room, after which you are to guide them to the side tables.",
+            "Meet Michael in the living room, then guide them to the side tables.",
+            "Meet Michael in the living room and lead them to the side tables.",
+
+            "Could you determine and inform me of the number of dishes that are on the sofa?",
+            "Can you tell me how many dishes are on the sofa?",
+            "How many dishes are on the sofa?"
+        ]
+
+            for i, command in enumerate(commands):
+
+                print(f"============== {i}/{len(commands)}")
+
                 start_time = time.time()
 
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Bring me the milk from the coffee table", mode="", wait_for_end_of=True)
+                hlp = self.robot.get_llm_ollama_gpsr_high_level(
+                    command=command,
+                    mode="",
+                    wait_for_end_of=True
+                )
 
                 start_llp_time = time.time()
 
-                llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=hlp[0], mode="", wait_for_end_of=True)
+                llp_output = self.robot.get_llm_ollama_gpsr_low_level(
+                    command=hlp[0],
+                    mode="",
+                    wait_for_end_of=True
+                )
 
                 end_time = time.time()
 
+                print(f"Command: {command}")
+                print(f"HLP: {hlp[0]}")
+                print(f"LLP: {llp_output}")
+                
+                # print(f"Total Time taken for GPSR task {i}: {end_time - start_time:.3f} s")
+                # print(f"Total Time taken for HLP task {i}: {start_llp_time - start_time:.3f} s")
+                # print(f"Total Time taken for LLP task {i}: {end_time - start_llp_time:.3f} s")
 
-                print(f"Total Time taken for 1st GPSR task: {end_time - start_time}")
-                print(f"Total Time taken for 1st HLP task: {start_llp_time - start_time}")
-                print(f"Total Time taken for 1st LLP task: {end_time - start_llp_time}")
 
-
-                print("Finished LLM GPSR LLP")
-                while True:
-                    pass
+            print("Finished LLM GPSR LLP")
+            while True:
+                pass
                 
             if self.state == LLM_gpsr:
 
@@ -336,41 +434,146 @@ class TaskMain():
             
             if self.state == LLM_gpsr_llp:
 
-                self.robot.wait_for_start_button()
+                # self.robot.wait_for_start_button()
                 
-                print("New LLM GPSR LLP")
+                # print("New LLM GPSR LLP")
 
-                start_time = time.time()
+                # start_time = time.time()
 
-                # robot_pose= self.robot.get_robot_localization()
-                # initial_position = [robot_pose.x, robot_pose.y, robot_pose.theta]
-                initial_position = [0, 0, 0]
-                # print(f"Initial Robot Position: {initial_position}")
+                # # robot_pose= self.robot.get_robot_localization()
+                # # initial_position = [robot_pose.x, robot_pose.y, robot_pose.theta]
+                # initial_position = [0, 0, 0]
+                # # print(f"Initial Robot Position: {initial_position}")
 
-                hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to Anna in the living room", mode="", wait_for_end_of=True)
+                # hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to Anna in the living room", mode="", wait_for_end_of=True)
 
-                start_llp_time = time.time()
+                # start_llp_time = time.time()
 
-                llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=hlp[0], mode="", wait_for_end_of=True)
+                # llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=hlp[0], mode="", wait_for_end_of=True)
 
-                self.curr_room = "living_room"
-                self.curr_furniture = "shelf"
-                self.curr_result = "NONE"
-                self.curr_obj_list =[]
-                self.curr_picked_height= 0.0
-                self.curr_asked_help = False
+                # self.curr_room = "living_room"
+                # self.curr_furniture = "shelf"
+                # self.curr_result = "NONE"
+                # self.curr_obj_list =[]
+                # self.curr_picked_height= 0.0
+                # self.curr_asked_help = False
 
-                for i, step in enumerate(llp_output):
-                    print(f"Step {i+1}: {step.strip()}")
-                    self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=step.strip(), instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
-                    print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
+                # for i, step in enumerate(llp_output):
+                #     print(f"Step {i+1}: {step.strip()}")
+                #     self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=step.strip(), instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
+                #     print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
 
-                end_time = time.time()
-                print(f"Total Time taken for GPSR task: {end_time - start_time}")
-                print(f"Total Time taken for HLP task: {start_llp_time - start_time}")
-                print(f"Total Time taken for LLP task: {end_time - start_llp_time}")
+                # end_time = time.time()
+                # print(f"Total Time taken for GPSR task: {end_time - start_time}")
+                # print(f"Total Time taken for HLP task: {start_llp_time - start_time}")
+                # print(f"Total Time taken for LLP task: {end_time - start_llp_time}")
 
-                self.robot.set_rgb(command=GREEN+SET_COLOUR, wait_for_end_of=True)
+                # self.robot.set_rgb(command=GREEN+SET_COLOUR, wait_for_end_of=True)
+
+                # #================= Init =================
+                # self.llps = []
+                # USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS = True
+
+                # self.robot.calibrate_audio()
+
+                # ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."
+                # self.robot.set_speech(filename="gpsr/gpsr_intro", wait_for_end_of=True)
+
+                # #================= Get_commands & generate plans =================
+                # self.curr_request=1
+
+                # while self.curr_request < 3:
+                #     self.curr_request+=1
+                
+                #     llp = self.robot.receive_command_and_generate_low_level_planner(use_touchscreen_for_yes_no_questions=USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS)
+                #     print("Low-level planner " + str(self.curr_request) + ": " + llp)
+                #     self.llps.append(llp)
+
+                #     # checks if there is another command to be received, if not proceeds to deciding and executing the commands in the list
+                #     if not USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS:
+                #         confirmation = self.robot.get_audio(yes_or_no=True, question="gpsr/do_you_have_another_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                #     else: # if touchscreen is used
+                #         answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have another command?", speak_results=False, start_speak_file="gpsr/do_you_have_another_command", wait_for_end_of=True)
+                #         confirmation = answer[0]
+
+                #================= Set_command_order =================
+                order_to_execute = []
+                plan_feasibility = []
+
+                self.llps = [
+                    ["move_to-shelf",
+                    "pick_object-cup",
+                    "move_to-table",
+                    "place_object"],
+
+                    ["move_to-location1",
+                    "compare_objects-heaviest-drinks",
+                    "move_to-location1",
+                    "say_result"],
+
+                    ["go_to_person-name-john",
+                    "ERROR",
+                    "move_to-kitchen",
+                    "ERROR",],
+
+                    ["move_to-location1",
+                    "compare_objects-heaviest-drinks",
+                    "move_to-location1",
+                    "follow_person-living_room"],
+                ]
+
+                for plan in self.llps:
+                    cannot_perform_task = False
+                    points = 0
+
+                    for step in plan:
+                        action = step.split("-")
+
+                        match action[0]:                          
+                            case "say_info" | "follow_person":
+                                cannot_perform_task = True
+
+                            case "compare_objects" | "count_objects":
+                                points += 6
+
+                            case "pick_object" | "place_object":
+                                points += 3
+
+                            case "move_to" | "say_result":
+                                points += 2
+
+                            case "go_to_person" | "look_for_person" | "guide_person":
+                                points += 1
+
+                            case "ERROR":
+                                points -= 4
+
+                    if cannot_perform_task:
+                        points = float('-inf')
+
+                    i = 0
+                    while i < len(plan_feasibility) and plan_feasibility[i] >= points:
+                        i += 1                                    
+
+                    plan_feasibility.insert(i, points)            
+                    order_to_execute.insert(i, plan)
+
+
+                for plan in order_to_execute:
+
+                    for i, plan_check in enumerate(self.llps):
+
+                        print(plan)
+                        print(plan_check)
+
+                        if plan == self.llps[i]:
+                            
+                            print("I will start executing request number"+str(i+1))
+                            # self.robot.set_speech(filename="gpsr/execute_request"+(i+1), wait_for_end_of=True)
+
+                    initial_position=[0, 0, 0]
+                    # self.robot.execute_gpsr_plan(command=plan, instruction_point=initial_position)
+
 
                 print("Finished LLM GPSR LLP")
                 while True:
