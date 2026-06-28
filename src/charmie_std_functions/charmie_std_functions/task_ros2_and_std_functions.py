@@ -8707,7 +8707,7 @@ class RobotStdFunctions():
                         self.set_speech(filename="finals/side_"+side, wait_for_end_of=False)
                         speak_counter= speak_counter + 1
                         if speak_counter == speak_limit:
-                            break
+                            return
                 
     
         return
