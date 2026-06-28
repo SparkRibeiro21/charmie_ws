@@ -8574,7 +8574,7 @@ class RobotStdFunctions():
     def declare_correct_object_placement(self, object_list=[DetectedObject()]):
 
         # NECESSARY CONFIGURABLES 
-        furniture                    =" Kitchen Cabinet"
+        furniture                    ="Kitchen Cabinet"
         furniture                    = furniture.replace(" ","_").lower()
         detect_in_specific_furniture = False
         speak_limit                  = 3
