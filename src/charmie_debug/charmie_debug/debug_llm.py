@@ -182,7 +182,7 @@ class TaskMain():
 
                     print(f"============== {i}/{len(commands)}")
 
-                    start_time = time.time()
+                    # start_time = time.time()
 
                     hlp = self.robot.get_llm_ollama_gpsr_high_level(
                         command=command,
@@ -192,17 +192,17 @@ class TaskMain():
 
                     start_llp_time = time.time()
 
-                    llp_output = self.robot.get_llm_ollama_gpsr_low_level(
-                        command=hlp[0],
-                        mode="",
-                        wait_for_end_of=True
-                    )
+                    # llp_output = self.robot.get_llm_ollama_gpsr_low_level(
+                    #     command=hlp[0],
+                    #     mode="",
+                    #     wait_for_end_of=True
+                    # )
 
                     end_time = time.time()
 
                     print(f"Command: {command}")
                     print(f"HLP: {hlp[0]}")
-                    print(f"LLP: {llp_output}")
+                    # print(f"LLP: {llp_output}")
                     
                     # print(f"Total Time taken for GPSR task {i}: {end_time - start_time:.3f} s")
                     # print(f"Total Time taken for HLP task {i}: {start_llp_time - start_time:.3f} s")
@@ -431,7 +431,6 @@ class TaskMain():
                 while True:
                     pass
 
-            
             if self.state == LLM_gpsr_llp:
 
                 # self.robot.wait_for_start_button()

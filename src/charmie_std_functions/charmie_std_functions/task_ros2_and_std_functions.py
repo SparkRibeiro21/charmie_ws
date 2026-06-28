@@ -4482,7 +4482,7 @@ class RobotStdFunctions():
         for i, step in enumerate(command):
             print(f"Executing step {i+1}: {step.strip()}")
 
-            task_split = step.replace(":","-").split("-")
+            task_split = step.replace(":", "-").replace("\n", "-").split("-")
 
             # Parsing the command
             task_action = task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
@@ -4493,7 +4493,7 @@ class RobotStdFunctions():
 
             match task_action:
 
-                case "move_to":
+                case "move_to_place":
 
                     # check if it is a room
                     for obj in self.node.rooms:
@@ -4541,7 +4541,7 @@ class RobotStdFunctions():
 
                     pass
                     
-                case "go_to_person":
+                case "move_to_person":
                     
                     print("Moving to person")
                     print(task_attribute)
@@ -5033,7 +5033,7 @@ class RobotStdFunctions():
                     self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=True)
 
                     ### Move to the [task_attribute]
-                    self.execute_gpsr_plan(command="move_to-"+task_attribute, instruction_point=instruction_point)
+                    self.execute_gpsr_plan(command="move_to_place-"+task_attribute, instruction_point=instruction_point)
 
                     ### Speak: "We have arrived to the [task_attribute]."
                     self.set_speech(filename="gpsr/end_of_guide", wait_for_end_of=True)
