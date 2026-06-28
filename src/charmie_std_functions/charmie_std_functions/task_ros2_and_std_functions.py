@@ -35,6 +35,9 @@ import random
 import json
 import face_recognition
 from skimage.metrics import structural_similarity as ssim
+from collections import defaultdict, Counter
+from pprint import pprint
+
 
 # Constant Variables to ease RGB_MODE coding
 RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE, PINK, BROWN  = 0, 10, 20, 30, 40, 50, 60, 70, 80, 90
@@ -8568,84 +8571,148 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms
         
-    def declare_correct_object_placement(self, object_detected=DetectedObject()):
+    def declare_correct_object_placement(self, object_list=[DetectedObject()]):
 
         # NECESSARY CONFIGURABLES 
-        categories      =["snacks"     ,"drinks"     ]
-        correct_position=[["left",2]   ,["right",2]  ]
-        furniture       ="Kitchen Cabinet"
-        furniture       = furniture.replace(" ","_").lower()
+        furniture                    =" Kitchen Cabinet"
+        furniture                    = furniture.replace(" ","_").lower()
+        detect_in_specific_furniture = False
+        speak_limit                  = 3
 
+        self.shelf_side_objects = defaultdict(list)
+        self.shelf_side_class_counts = defaultdict(Counter)
+        self.shelf_side_common_class = {}
+        declare_objects              = []
+        filled_classes               = []
+        filled_names                 = []
         coords = self.get_navigation_coords_from_furniture(furniture=furniture) 
         center_point_x, center_point_y, _ = self.get_location_coords_from_furniture(furniture=furniture)
         height = self.get_height_from_furniture(furniture=furniture)
+        speak_counter = 0 
 
-        print(coords)
+        for objects_detected in object_list:
 
-        if coords[2] < 0:
-            coords[2] = coords[2] + 360
-        if 45 <= coords[2] < 135:  
-            axis = ["x", "negative"]  
-        elif 135 <= coords[2] < 225:
-            axis = ["y", "positive"]
-        elif 225 <= coords[2] < 315:
-            axis = ["x", "positive"]
-        else: 
-            axis = ["y", "negative"] 
+            print(coords)
+            objects_detected.object_name = objects_detected.object_name.replace(" ","_").lower()
 
-        print("axis", axis)
+            if (detect_in_specific_furniture == True and objects_detected.furniture_location.replace(" ","_").lower() == furniture.replace(" ","_").lower()) or detect_in_specific_furniture == False:
+                if coords[2] < 0:
+                    coords[2] = coords[2] + 360
+                if 45 <= coords[2] < 135:  
+                    axis = ["x", "negative"]  
+                elif 135 <= coords[2] < 225:
+                    axis = ["y", "positive"]
+                elif 225 <= coords[2] < 315:
+                    axis = ["x", "positive"]
+                else: 
+                    axis = ["y", "negative"] 
+    
+                #print("axis", axis)
+    
+                conf   = f"{objects_detected.confidence * 100:.0f}%"
+                cam_x_ = f"{objects_detected.position_absolute.x:5.2f}"
+                cam_y_ = f"{objects_detected.position_absolute.y:5.2f}"
+                cam_z_ = f"{objects_detected.position_absolute.z:5.2f}"
+    
+                print(f"{'ID:'+str(objects_detected.index):<7} {objects_detected.object_name:<17} {conf:<3} {objects_detected.camera} ({cam_x_},{cam_y_},{cam_z_} {objects_detected.furniture_location})")
+                object_class = self.get_object_class_from_object(object_name=objects_detected.object_name)
+                print(" object class", object_class)
+    
+                print("obj y",objects_detected.position_absolute.y," center point y", center_point_y,"axis", axis[0])
+                if (objects_detected.position_absolute.y >= center_point_y and axis[0] == "y") \
+                or (objects_detected.position_absolute.x >= center_point_x and axis[0] == "x"):
+                    if axis[1] == "positive":
+                        object_positon_detected = "right"
+                    elif axis[1] == "negative":
+                        object_positon_detected = "left"
+                else:
+                    if axis[1] == "negative":
+                        object_positon_detected = "right"
+                    elif axis[1] == "positive":
+                        object_positon_detected = "left"
 
-        index = -1
-        conf   = f"{object_detected.confidence * 100:.0f}%"
-        cam_x_ = f"{object_detected.position_absolute.x:5.2f}"
-        cam_y_ = f"{object_detected.position_absolute.y:5.2f}"
-        cam_z_ = f"{object_detected.position_absolute.z:5.2f}"
+                print("obj z", objects_detected.position_absolute.z)
+                    
+                for h in height:
+                    #print("HEIGHT COMPARATION:", h)
+                    if h < objects_detected.position_absolute.z:
+                        shelf_number_detected = height.index(h)
+                        break
 
-        print(f"{'ID:'+str(object_detected.index):<7} {object_detected.object_name:<17} {conf:<3} {object_detected.camera} ({cam_x_},{cam_y_},{cam_z_} {object_detected.furniture_location})")
-        object_class = self.get_object_class_from_object(object_name=object_detected.object_name)
-        print(" object class", object_class)
-
-        for cat in categories:
-            if object_class == cat:
-                index = categories.index(cat)
-
-        print("cat ", cat, "index", index)
-        if index != -1:
-            print("obj y",object_detected.position_absolute.y," center point y", center_point_y,"axis", axis[0])
-            position, shelf =correct_position[index]
-            if (object_detected.position_absolute.y >= center_point_y and axis[0] == "y") \
-            or (object_detected.position_absolute.x >= center_point_x and axis[0] == "x"):
-                if axis[1] == "positive":
-                    object_positon_detected = "right"
-                elif axis[1] == "negative":
-                    object_positon_detected = "left"
-            else:
-                if axis[1] == "negative":
-                    object_positon_detected = "right"
-                elif axis[1] == "positive":
-                    object_positon_detected = "left"
-
-            print("obj z", object_detected.position_absolute.z)
                 
-            for h in height:
-                print("HEIGHT COMPARATION:", h)
-                if h < object_detected.position_absolute.z:
-                    shelf_number_detected = height.index(h)
-                    break
+                print("Object", objects_detected.object_name, " is in the ", object_positon_detected, " side of the ", shelf_number_detected, " shelf")
+                declare_objects.append(objects_detected)
+                filled_classes.append(self.get_object_class_from_object(objects_detected.object_name))
+                filled_names.append(objects_detected.object_name)
 
-            
-            print("Object", object_detected.object_name, " is in the ", object_positon_detected, " side of the ", shelf_number_detected, " shelf")
-            if object_positon_detected != position or shelf_number_detected != shelf:
+                shelf_side_key = (shelf_number_detected, object_positon_detected)
+                self.shelf_side_objects[shelf_side_key].append(objects_detected)
+                self.shelf_side_class_counts[shelf_side_key][object_class] += 1
 
-                print("Object", object_detected.object_name, " should be in the ", position, " side of the ", shelf, " shelf")
-                #self.detected_object_to_face_path(object=object_detected, send_to_face=True)
-                #self.set_speech(filename="generic/found_the", wait_for_end_of=False)
-                #self.set_speech(filename="objects_names/"+object_detected.object_name.replace(" ","_").lower(), wait_for_end_of=False)
-                #self.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
-                #self.set_speech(filename="finals/object_should_be_placed_on", wait_for_end_of=False)
-                #self.set_speech(filename="furniture/"+self.get_furniture_from_object_class(self.get_object_class_from_object(object_detected.object_name.replace(" ","_").lower())), wait_for_end_of=False)
-                ## set_speechs for correct position and shelf number for each misplaced object
-            
+        # Step 2: Determine Most Common Class
+        potential_assignments = defaultdict(list)
+        for shelf_side, class_counter in self.shelf_side_class_counts.items():
+            most_common_classes = class_counter.most_common()
+            if len(most_common_classes) == 1:
+                potential_assignments[most_common_classes[0][0]].append((most_common_classes[0][1], shelf_side))
+            else:
+                max_count = most_common_classes[0][1]
+                tied_classes = [cls for cls, count in most_common_classes if count == max_count]
+                if len(tied_classes) == 1:
+                    potential_assignments[tied_classes[0]].append((max_count, shelf_side))
+                # Tie within the shelf-side, discard this shelf-side for final assignment
+        
+        # Step 3: Assign Classes Uniquely
+        final_class_assignment = {}
+        for obj_class, occurrences in potential_assignments.items():
+            if len(occurrences) == 1:
+                final_class_assignment[occurrences[0][1]] = obj_class
+            else:
+                occurrences.sort(reverse=True)  # Sort by count (descending)
+                selected_shelf_side = occurrences[0][1]
+                final_class_assignment[selected_shelf_side] = obj_class
+                # Discard other occurrences
+                
+        # Step 4: Print and Store Results
+        print("---------------------------------------------------------------------")
+        print("Final class assignments per shelf-side combination:")
+        for shelf_side, obj_class in final_class_assignment.items():
+            shelf, side = shelf_side
+            print(f"Shelf {shelf}, Side {side} - Most Common Class: {obj_class}")
+            print("---------------------------------------------------------------")
+
+        pprint(self.shelf_side_objects)
+
+        for key, objects in self.shelf_side_objects.items():
+            for objects_detected in objects:
+                shelf, side = key
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+                print(f"Shelf {shelf}, Side {side}")
+                print(f"Objects cabinet: {objects_detected.object_name}")
+                detected_class = self.get_object_class_from_object(objects_detected.object_name)
+                for shelf_side, obj_class in final_class_assignment.items():
+                    final_shelf, final_side = shelf_side
+                    print (" OBJ NAME", objects_detected.object_name, " side", side ,"shelf",shelf," final shelf ", final_shelf, "final side", final_side)
+                    if obj_class == detected_class and (side != final_side or shelf !=final_shelf):
+                        print("Object", objects_detected.object_name, " should be in the ", " side of the ", shelf, " shelf")
+                        print(objects_detected.object_name.replace(" ","_").lower())
+                        #self.detected_object_to_face_path(object=objects_detected, send_to_face=True)
+                        self.set_speech(filename="generic/found_the", wait_for_end_of=False)
+                        self.set_speech(filename="objects_names/"+objects_detected.object_name.replace(" ","_").lower(), wait_for_end_of=False)
+                        #self.set_speech(filename="generic/check_face_objects_detected", wait_for_end_of=False)
+                        self.set_speech(filename="finals/object_should_be_placed_on", wait_for_end_of=False)
+                        if self.get_furniture_from_object_class(self.get_object_class_from_object(objects_detected.object_name.replace(" ","_").lower())) != "shelf":
+                            self.set_speech(filename="furniture/"+self.get_furniture_from_object_class(self.get_object_class_from_object(objects_detected.object_name.replace(" ","_").lower())), wait_for_end_of=False)
+                        self.set_speech(filename="finals/shelf_"+str(shelf), wait_for_end_of=False)
+                        self.set_speech(filename="finals/side_"+side, wait_for_end_of=False)
+                        speak_counter= speak_counter + 1
+                        if speak_counter == speak_limit:
+                            break
+                
+    
+        return
+                        
+                
                             
 
     def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False): 
@@ -9060,7 +9127,7 @@ class RobotStdFunctions():
 
                 self.set_face(camera="hand", show_detections=True)
                 
-                best_conf = 0.0
+                smallest_dist = -1
 
                 for o in final_objects:
 
@@ -9071,8 +9138,8 @@ class RobotStdFunctions():
                     correct_y_grab = (o.position_cam.y - tf_y)*1000
                     correct_z_grab = (o.position_cam.z - tf_z)*1000
 
-                    if o.confidence > best_conf:
-                        best_conf = o.confidence
+                    if smallest_dist > math.sqrt((o.position_relative.x)^2 + (o.position_relative.y)^2) or smallest_dist == -1:
+                        smallest_dist = math.sqrt((o.position_relative.x)^2 + (o.position_relative.y)^2)
                         obj = o
 
                 # IF NO OBJECTS FOUND WITHIN X SEARCHES GO FOR ASK FOR HELP

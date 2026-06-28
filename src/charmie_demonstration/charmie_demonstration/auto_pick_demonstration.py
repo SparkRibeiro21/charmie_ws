@@ -101,6 +101,57 @@ class TaskMain():
     # main state-machine function
     def main(self):
 
+        #CHANGE AFTER THE TESTS #############
+        ### RIGHT - 7.02 / LEFT - 7.08
+
+        test1 = DetectedObject()
+        test1.position_absolute.x = 7.08
+        test1.position_absolute.y = 3.31
+        test1.position_absolute.z = 0.32
+        test1.furniture_location = "pantry"
+        test1.object_name = "Water"
+
+        test2 = DetectedObject()
+        test2.position_absolute.x = 7.11
+        test2.position_absolute.y = 3.32
+        test2.position_absolute.z = 0.72
+        test2.furniture_location = "shelf"
+        test2.object_name = "Pringles"
+
+        test3 = DetectedObject()
+        test3.position_absolute.x = 7.08
+        test3.position_absolute.y = 3.31
+        test3.position_absolute.z = 0.72
+        test3.furniture_location = "Kitchen Cabinet"
+        test3.object_name = "Milk"
+
+        test4 = DetectedObject()
+        test4.position_absolute.x = 7.08
+        test4.position_absolute.y = 3.31
+        test4.position_absolute.z = 0.32
+        test4.furniture_location = "Kitchen Cabinet"
+        test4.object_name = "Orange Juice"
+
+        test5 = DetectedObject()
+        test5.position_absolute.x = 7.08
+        test5.position_absolute.y = 3.31
+        test5.position_absolute.z = 1.17
+        test5.furniture_location = "Kitchen Cabinet"
+        test5.object_name = "Cola"
+
+        test6 = DetectedObject()
+        test6.position_absolute.x = 7.11
+        test6.position_absolute.y = 3.32
+        test6.position_absolute.z = 0.72
+        test6.furniture_location = "shelf"
+        test6.object_name = "Cornflakes"
+
+        objects_test = [test2,test1,test3,test4,test5,test6]
+
+        self.robot.declare_correct_object_placement(object_list=objects_test)
+
+        #####################################
+
         self.configurables() # set all the configuration variables
 
         self.look_forward = [0, 0]
