@@ -97,86 +97,167 @@ class TaskMain():
 
 
                 commands = [
-                "Please identify which object on the refrigerator is the lightest.",
-                "Tell me which object on the refrigerator is the lightest.",
-                "What's the lightest object on the refrigerator?",
+                # "Please identify which object on the refrigerator is the lightest.",
+                # "Tell me which object on the refrigerator is the lightest.",
+                # "What's the lightest object on the refrigerator?",
+                
+                # "Please verbally communicate the day of the month to the waving person in the bedroom.",
+                # "Tell the day of the month to the waving person in the bedroom.",
+                # "Tell the waving person in the bedroom the day of the month.",
 
-                "Please verbally communicate the day of the month to the waving person in the bedroom.",
-                "Tell the day of the month to the waving person in the bedroom.",
-                "Tell the waving person in the bedroom the day of the month.",
+                # "Please proceed to the living room, introduce yourself to the person wearing a black jacket, and thereafter follow them.",
+                # "Go to the living room, introduce yourself to the person wearing a black jacket, then follow them.",
+                # "In the living room, introduce yourself to the person wearing a black jacket and follow them.",
 
-                "Please proceed to the living room, introduce yourself to the person wearing a black jacket, and thereafter follow them.",
-                "Go to the living room, introduce yourself to the person wearing a black jacket, then follow them.",
-                "In the living room, introduce yourself to the person wearing a black jacket and follow them.",
+                # "Kindly address the person who is raising their left arm in the bedroom with a statement about yourself.",
+                # "Tell the person raising their left arm in the bedroom something about yourself.",
+                # "Talk about yourself to the person raising their left arm in the bedroom.",
 
-                "Kindly address the person who is raising their left arm in the bedroom with a statement about yourself.",
-                "Tell the person raising their left arm in the bedroom something about yourself.",
-                "Talk about yourself to the person raising their left arm in the bedroom.",
+                # "Please direct the person pointing to the left, ensuring they move from the sofa to the waste basket.",
+                # "Guide the person who is pointing to the left from the sofa over to the waste basket.",
+                # "Help the person pointing to the left go from the sofa to the waste basket.",
 
-                "Please direct the person pointing to the left, ensuring they move from the sofa to the waste basket.",
-                "Guide the person who is pointing to the left from the sofa over to the waste basket.",
-                "Help the person pointing to the left go from the sofa to the waste basket.",
+                # "Please proceed to the kitchen, at which point you should locate a toothpaste, take it, and deliver it to me.",
+                # "Go to the kitchen, find a toothpaste, take it, and deliver it to me.",
+                # "Head to the kitchen, grab a toothpaste, and deliver it to me.",
 
-                "Please proceed to the kitchen, at which point you should locate a toothpaste, take it, and deliver it to me.",
-                "Go to the kitchen, find a toothpaste, take it, and deliver it to me.",
-                "Head to the kitchen, grab a toothpaste, and deliver it to me.",
+                "While in the bedroom, salute Nathan and then announce the time.",
+                "Salute Nathan in the bedroom, then say the time.",
+                "In the bedroom, salute Nathan and say the time.",
 
-                "First, proceed to the storage rack; upon arrival, identify the sitting person and subsequently follow them.",
-                "Go to the storage rack, find the sitting person, and then follow them.",
-                "Head to the storage rack, spot the sitting person, and follow them.",
+                # "Please proceed to the bed, at which point you should locate a cleaning supply, retrieve it, and subsequently bring it to me.",
+                # "Go to the bed, find a cleaning supply, pick it up, and bring it to me.",
+                # "Head to the bed, find a cleaning supply, grab it, and bring it to me.",
+
+                "At your earliest opportunity, proceed to the kitchen to introduce yourself to Andrew, after which you should lead them to the bedroom.",
+                "Head to the kitchen, introduce yourself to Andrew, then lead them to the bedroom.",
+                "Introduce yourself to Andrew in the kitchen, then take them to the bedroom.",
+
+                "Proceed to the living room first; upon meeting Violet, thereafter follow them to the kitchen.",
+                "Make your way to the living room, meet Violet, and then follow them to the kitchen.",
+                "Go to the living room, meet Violet, then follow them to the kitchen.",
+
+                "Please proceed to rendezvous with Wyatt in the living room and subsequently escort them to the bedroom.",
+                "Meet Wyatt in the living room, then guide them to the bedroom.",
+                "Go meet Wyatt in the living room and take them to the bedroom.",
+
+                # "Proceed to the chairs, then locate a pear, pick it up, and deliver it to me.",
+                # "Go to the chairs, find a pear, take it, and give it to me.",
+                # "Head to the chairs, grab a pear, and hand it to me.",
+
+                # "Kindly ascertain the number of snacks on the cabinet and let me know.",
+                # "Please tell me how many snacks are on the cabinet.",
+                # "How many snacks are on the cabinet?",
+
+                # "First, proceed to the storage rack; upon arrival, identify the sitting person and subsequently follow them.",
+                # "Go to the storage rack, find the sitting person, and then follow them.",
+                # "Head to the storage rack, spot the sitting person, and follow them.",
+
+                # "Could you determine and inform me which is the smallest cleaning supply on the shelf?",
+                # "Can you tell me what the smallest cleaning supply on the shelf is?",
+                # "What's the smallest cleaning supply on the shelf?",
+
+                # "Please provide guidance to the person wearing an orange blouse so that they proceed from the side tables to the coatrack.",
+                # "Help the person wearing an orange blouse go from the side tables to the coatrack.",
+                # "Show the person wearing an orange blouse the way from the side tables to the coatrack.",
+
+                # "Would you kindly retrieve a toy from the sofa and deliver it to me.",
+                # "Please grab a toy from the sofa and give it to me.",
+                # "Bring me a toy from the sofa.",
+
+                # "Would you be so kind as to retrieve a dice from the cabinet and bring it to me?",
+                # "Please grab a dice from the cabinet and bring it to me.",
+                # "Grab a dice from the cabinet for me.",
+
+                # "Kindly retrieve a cleaning supply from the cabinet and then place it on the bed.",
+                # "Grab a cleaning supply from the cabinet and put it on the bed.",
+                # "Take a cleaning supply from the cabinet and set it on the bed.",
+
+                "Kindly proceed to follow Joshua as he moves from the chairs to the kitchen.",
+                "Trail Joshua from the chairs to the kitchen.",
+                "Stick with Joshua from the chairs to the kitchen.",
+
+                "Please proceed to the storage rack initially, after which you should rendezvous with Isaac and escort them to the side tables.",
+                "Go to the storage rack, then meet Isaac and walk them over to the side tables.",
+                "Head to the storage rack, meet Isaac, and take them to the side tables.",
+
+                # "Would you be so kind as to retrieve a lemon from the cabinet and bring it to me?",
+                # "Please grab a lemon from the cabinet and bring it to me.",
+                # "Get me a lemon from the cabinet.",
+
+                # "Please communicate to the waving person in the kitchen which day tomorrow will be.",
+                # "Tell the waving person in the kitchen what day is tomorrow.",
+                # "In the kitchen, tell the waving person what day is tomorrow.",
+
+                "Please proceed to the office; afterwards, meet Sophia and then tell the time.",
+                "First go to the office, then meet Sophia, and tell the time.",
+                "Go to the office, meet Sophia, then tell the time.",
+
+                # "Retrieve a dish from the refrigerator and subsequently position it on the storage rack.",
+                # "Take a dish out of the refrigerator and put it on the storage rack.",
+                # "Grab a dish from the refrigerator and set it on the storage rack.",
+
+                # "Proceed to the office, introduce yourself to the person wearing a gray shirt, and thereafter escort them to the bedroom.",
+                # "Go to the office, introduce yourself to the person wearing a gray shirt, then take them to the bedroom.",
+                # "In the office, say who you are to the person wearing a gray shirt and take them to the bedroom.",
+                
+                # "Proceed to the chairs, after which you should identify the waving person and announce the time.",
+                # "Go to the chairs, find the waving person, and tell the time.",
+                # "Head to the chairs, spot the waving person, then tell the time.",
+
+                # "Please ascertain the number of people in the kitchen who are wearing yellow jackets.",
+                # "How many people in the kitchen have yellow jackets on?",
+                # "Count the people in the kitchen wearing yellow jackets.",
+
+                # "First, locate a cola in the kitchen; once located, take it and deliver it to the standing person in the kitchen.",
+                # "Find a cola in the kitchen, pick it up, and deliver it to the standing person in the kitchen.",
+                # "Find a cola in the kitchen and give it to the standing person in the kitchen.",
+
+                # "Proceed to the chairs; subsequently, locate the sitting person and then tell something about yourself.",
+                # "Go to the chairs, find the sitting person, and tell something about yourself.",
+                # "Head to the chairs, spot the sitting person, and say something about yourself.",
+
+                # "Please proceed to follow the lying person who is at the chairs.",
+                # "Follow the lying person by the chairs.",
+                # "Go follow the lying person at the chairs.",
 
                 "Proceed to the chairs first, after which you should meet Scarlett and subsequently follow them.",
                 "Go to the chairs, then meet Scarlett, and then follow them.",
                 "Head to the chairs, meet Scarlett, and follow them.",
 
-                "Proceed to the bed to retrieve a lemon, and subsequently deliver it to the standing person in the kitchen.",
-                "Grab a lemon from the bed and take it to the standing person in the kitchen.",
-                "Take a lemon from the bed to the standing person in the kitchen.",
+                # "Proceed to the bed to retrieve a lemon, and subsequently deliver it to the standing person in the kitchen.",
+                # "Grab a lemon from the bed and take it to the standing person in the kitchen.",
+                # "Take a lemon from the bed to the standing person in the kitchen.",
 
-                "Proceed to the armchair, locate the lying person, and subsequently lead them to the bedroom.",
-                "Go to the armchair, find the lying person, and then lead them to the bedroom.",
-                "Head to the armchair, spot the lying person, and take them to the bedroom.",
+                # "Proceed to the armchair, locate the lying person, and subsequently lead them to the bedroom.",
+                # "Go to the armchair, find the lying person, and then lead them to the bedroom.",
+                # "Head to the armchair, spot the lying person, and take them to the bedroom.",
 
-                "Please retrieve a chocolate jello from the bed and subsequently dispose of it by throwing it in the trash.",
-                "Pick up a chocolate jello from the bed, then toss it in the trash.",
-                "Grab a chocolate jello from the bed and throw it in the trash.",
+                # "Please retrieve a chocolate jello from the bed and subsequently dispose of it by throwing it in the trash.",
+                # "Pick up a chocolate jello from the bed, then toss it in the trash.",
+                # "Grab a chocolate jello from the bed and throw it in the trash.",
 
-                "Proceed to navigate to the bedroom; upon arrival, locate a food, retrieve it, and subsequently deliver it to the waving person in the kitchen.",
-                "Go to the bedroom, find a food, pick it up, and bring it to the waving person in the kitchen.",
-                "Head to the bedroom, find a food, get it, and take it to the waving person in the kitchen.",
+                # "Proceed to navigate to the bedroom; upon arrival, locate a food, retrieve it, and subsequently deliver it to the waving person in the kitchen.",
+                # "Go to the bedroom, find a food, pick it up, and bring it to the waving person in the kitchen.",
+                # "Head to the bedroom, find a food, get it, and take it to the waving person in the kitchen.",
 
-                "Identify, within the bedroom, a person who is pointing to the left, and proceed to follow them to the office.",
-                "In the bedroom, find a person pointing to the left and follow them to the office.",
-                "Find a person pointing to the left in the bedroom, then follow them to the office.",
+                # "Identify, within the bedroom, a person who is pointing to the left, and proceed to follow them to the office.",
+                # "In the bedroom, find a person pointing to the left and follow them to the office.",
+                # "Find a person pointing to the left in the bedroom, then follow them to the office.",
 
-                "Kindly inform the waving person in the bedroom as to what day today is.",
-                "Tell the waving person in the bedroom what day it is today.",
-                "Tell the waving person in the bedroom what day today is.",
+                # "Kindly inform the waving person in the bedroom as to what day today is.",
+                # "Tell the waving person in the bedroom what day it is today.",
+                # "Tell the waving person in the bedroom what day today is.",
 
-                "Would you be so kind as to bring me a cleanser from the side tables?",
-                "Please bring me a cleanser from the side tables.",
-                "Grab me a cleanser from the side tables.",
+                # "Would you be so kind as to bring me a cleanser from the side tables?",
+                # "Please bring me a cleanser from the side tables.",
+                # "Grab me a cleanser from the side tables.",
 
-                "Locate a fruit within the living room, retrieve it, and present it to the person pointing to the right in the living room.",
-                "Find a fruit in the living room, pick it up, and give it to the person pointing to the right in the living room.",
-                "Search the living room for a fruit, take it, and hand it to the person pointing to the right in the living room.",
+                # "Locate a fruit within the living room, retrieve it, and present it to the person pointing to the right in the living room.",
+                # "Find a fruit in the living room, pick it up, and give it to the person pointing to the right in the living room.",
+                # "Search the living room for a fruit, take it, and hand it to the person pointing to the right in the living room.",
 
-                "Please retrieve an iced tea from the side tables and proceed to deliver it to Matthew in the bedroom.",
-                "Grab an iced tea from the side tables and deliver it to Matthew in the bedroom.",
-                "Get an iced tea from the side tables and bring it to Matthew in the bedroom",
-
-                "First, navigate to the cabinet; thereafter, meet Connor and subsequently follow them.",
-                "Navigate to the cabinet, then meet Connor, and follow them.",
-                "Go to the cabinet, meet Connor, and follow them.",
-
-                "Please proceed to meet Michael in the living room, after which you are to guide them to the side tables.",
-                "Meet Michael in the living room, then guide them to the side tables.",
-                "Meet Michael in the living room and lead them to the side tables.",
-
-                "Could you determine and inform me of the number of dishes that are on the sofa?",
-                "Can you tell me how many dishes are on the sofa?",
-                "How many dishes are on the sofa?"
-            ]
+                ]
 
                 for i, command in enumerate(commands):
 
@@ -192,17 +273,17 @@ class TaskMain():
 
                     start_llp_time = time.time()
 
-                    # llp_output = self.robot.get_llm_ollama_gpsr_low_level(
-                    #     command=hlp[0],
-                    #     mode="",
-                    #     wait_for_end_of=True
-                    # )
+                    llp_output = self.robot.get_llm_ollama_gpsr_low_level(
+                        command=hlp[0],
+                        mode="",
+                        wait_for_end_of=True
+                    )
 
                     end_time = time.time()
 
                     print(f"Command: {command}")
                     print(f"HLP: {hlp[0]}")
-                    # print(f"LLP: {llp_output}")
+                    print(f"LLP: {llp_output}")
                     
                     # print(f"Total Time taken for GPSR task {i}: {end_time - start_time:.3f} s")
                     # print(f"Total Time taken for HLP task {i}: {start_llp_time - start_time:.3f} s")
