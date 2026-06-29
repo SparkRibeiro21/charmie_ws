@@ -104,9 +104,6 @@ class TaskMain():
         self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry", "Office Table"]
         # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
         self.FURNITURE_WE_WANT_TO_ANALYSE = [s.replace(" ", "_").lower() for s in self.FURNITURE_WE_WANT_TO_ANALYSE]
-        self.FURNITURE_WITH_ONLY_ONE_TETA = ["Dishwasher", "Coffee Table"]
-        self.FURNITURE_WITH_ONLY_ONE_TETA = [s.replace(" ", "_").lower() for s in self.FURNITURE_WITH_ONLY_ONE_TETA]
-        self.ONE_TETA_SEARCH_POSITION = [[0, -15]] 
         
         self.IGNORED_OBJECT               = ["Water", "Peach", "Apple"]
         self.IGNORED_OBJECT               = [s.replace(" ", "_").lower() for s in self.IGNORED_OBJECT]
@@ -151,6 +148,7 @@ class TaskMain():
 
         self.search_tetas_horizontal = [[-20, -20], [20, -20]]
         self.search_tetas_vertical = [[0, -15], [0, 15]]
+        self.search_tetas_single = [[0, -15]]
 
         self.state = self.task_states["Waiting_for_task_start"]
 
@@ -315,12 +313,12 @@ class TaskMain():
                 objects_in_wrong_furniture = []
                 ignored_objects = []
 
-                if current_furniture in self.FURNITURE_WITH_ONLY_ONE_TETA:
-                    search_misplaced_obj_tetas =self.ONE_TETA_SEARCH_POSITION
-                elif self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "horizontal":
+                if self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "horizontal":
                     search_misplaced_obj_tetas = self.search_tetas_horizontal
                 elif self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "vertical":
                     search_misplaced_obj_tetas = self.search_tetas_vertical
+                elif self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "single":
+                    search_misplaced_obj_tetas = self.search_tetas_single
 
                 object_detected = self.robot.search_for_objects(tetas=search_misplaced_obj_tetas, detect_objects=True)
 
@@ -671,6 +669,8 @@ class TaskMain():
                 search_misplaced_obj_tetas = self.search_tetas_horizontal
             elif self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "vertical":
                 search_misplaced_obj_tetas = self.search_tetas_vertical
+            elif self.robot.get_look_orientation_from_furniture(furniture=current_furniture) == "single":
+                search_misplaced_obj_tetas = self.search_tetas_single
 
             object_detected = self.robot.search_for_objects(tetas=search_misplaced_obj_tetas, detect_objects=True)
 
