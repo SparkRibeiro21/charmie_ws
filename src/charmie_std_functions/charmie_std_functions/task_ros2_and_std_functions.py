@@ -5467,6 +5467,7 @@ class RobotStdFunctions():
         # Iterate through the list of dictionaries
         for obj in self.node.furniture:
             # To make sure there are no errors due to spaces/underscores and upper/lower cases
+            print("obj name ", obj["name"], " height", obj['height'])
             if str(obj["name"]).replace(" ","_").lower() == str(furniture).replace(" ","_").lower():  # Check if the name matches
                 return obj['height'].copy() # Return the height
         return None  # Return None if the object is not found
@@ -8676,6 +8677,7 @@ class RobotStdFunctions():
         # 
         # **************************************************************************************** 
 
+
         # IF NOT SEARCH TETAS ARE DECLARED, USE CONFIGURATION FILES "LOOK" PARAMETER
         if first_search_tetas == []:
 
@@ -8694,7 +8696,9 @@ class RobotStdFunctions():
             pick_mode = self.get_standard_pick_from_object(selected_object)
 
         # IF FURNITURE HEIGHT IS NOT DECLARED, CHECK THE CONFIGURATION FILES FURNITURE HEIGHT
+        print("a")
         if furniture_height == -1 and furniture != "":
+            print("b")
             furniture_height = self.get_height_from_furniture(furniture)
             if furniture_height is None:
                 print("PICK FURNITURE DOES NOT EXIST OR HAS NO HEIGHT")
@@ -8914,6 +8918,7 @@ class RobotStdFunctions():
 
                     gripper_search_height = self.get_gripper_localization().z
                     object_height = self.get_object_height_from_object(valid_detected_object.object_name)
+                    print(" furn height ", furniture_height)
                     if furniture_height < 0:
                         adjust_z = (valid_detected_object.position_relative.z - (object_height/2) - gripper_search_height)*1000
                     else:
