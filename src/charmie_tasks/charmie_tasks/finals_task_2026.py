@@ -36,8 +36,8 @@ ros2_modules = {
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            True,
-    "charmie_yolo_world":           True,
+    "charmie_yolo_pose":            False,
+    "charmie_yolo_world":           False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -131,16 +131,18 @@ class TaskMain():
         self.MAX_OBJECT_DISTANCE_X = 6
         self.MIN_OBJECT_DISTANCE_Y = -6
         self.MAX_OBJECT_DISTANCE_Y = 6
-        # Place in trash configs
-        self.DIST_X_TRASHCAN = 0.30
+        # Place in trash configs // COMMENTED LINES ARE THERE IN CASE THEY MAY BE NECESSARY IN THE FUTURE
+        self.DIST_X_TRASHCAN_BASE = 0.55
+        self.DIST_X_TRASHCAN_HEAD = 0.65
         self.DIST_Y_TRASHCAN = 0.0
 
-        self.use_radar_distance_trashcan = False
-        self.use_default_distance_trashcan = False
-        self.max_trashcan_detect_tries = 2
+        #self.use_radar_distance_trashcan = False
+        #self.use_default_distance_trashcan = False
+        self.max_trashcan_detect_tries_head = 1
+        self.max_trashcan_detect_tries_base = 1
 
-        self.DEFAULT_DX_TRASHCAN = 0.0
-        self.DEFAULT_DY_TRASHCAN = 0.0
+        #self.DEFAULT_DX_TRASHCAN = 0.0
+        #self.DEFAULT_DY_TRASHCAN = 0.0
         
 
     def main(self):
@@ -651,30 +653,58 @@ class TaskMain():
         
     def place_in_trashcan(self,furniture=""):
         
-        objects_found = self.robot.search_for_objects(tetas = [[0.0,-40.0],[20.0,-40.0],[-20.0,-40.0]], time_in_each_frame=1.0, list_of_objects=[furniture],max_search_attempts=self.max_trashcan_detect_tries, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+        best_dist = -1
+
+        objects_found = self.robot.search_for_objects(tetas = [[0.0,-40.0],[20.0,-40.0],[-20.0,-40.0]], time_in_each_frame=1.0, list_of_objects=[furniture],max_search_attempts=self.max_trashcan_detect_tries_head, detect_objects=False, detect_furniture=True, detect_objects_hand=False, detect_objects_base=False)
         self.robot.set_speech(filename="finals/placing_trash", wait_for_end_of=False)
 
         if objects_found:
             for obj in objects_found:
 
-                dx = obj.position_relative.x - self.DIST_X_TRASHCAN
-                dy = obj.position_relative.y - self.DIST_Y_TRASHCAN
-            self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
-        elif self.use_radar_distance_trashcan == True:
+                if math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2) < best_dist or best_dist == -1:
+                        best_dist = math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2)
+                        valid_obj_h = obj
 
-            _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
-            dx = furniture_distance - self.DIST_X_TRASHCAN
-            dy = 0.0
-            self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
+                object_angle = math.atan2(valid_obj_h.position_relative.y,valid_obj_h.position_relative.x) * 180 / math.pi
+                self.robot.adjust_angle(angle = object_angle, tolerance= 3.0)
+            
+            head_found = True
+            best_dist = -1
 
-        elif self.use_default_distance_trashcan == True:
-            dx = self.DEFAULT_DX_TRASHCAN
-            dy = self.DEFAULT_DY_TRASHCAN
-            self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
+        objects_found = self.robot.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=1.5, list_of_objects=[furniture],max_search_attempts=self.max_trashcan_detect_tries_base, detect_objects=False, detect_furniture_base=True, detect_objects_hand=False, detect_objects_base=False)
+            
+        if objects_found:
+            for obj in objects_found:
 
+                if math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2) < best_dist or best_dist == -1:
+                    best_dist = math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2)
+                    valid_obj_b = obj
+
+            dx = valid_obj_b.position_relative.x - self.DIST_X_TRASHCAN_BASE
+            dy = valid_obj_b.position_relative.y - self.DIST_Y_TRASHCAN
+            self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
+        elif head_found:
+            dx     = (valid_obj_h.position_relative.x**2 + valid_obj_h.position_relative.y**2)**0.5 - self.DIST_X_TRASHCAN_HEAD
+            dy     = self.DIST_Y_TRASHCAN 
+            self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
         else:
-            # SAY SORRY LATER, THINK OF WHAT TO DO WITH OBJECT IN HAND:(
+            # RETURN SAY SOMETHING EMERGENCY CASE
             return
+
+
+
+        # elif self.use_radar_distance_trashcan == True:
+
+        #     _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+        #     dx = furniture_distance - self.DIST_X_TRASHCAN
+        #     dy = 0.0
+        #     self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
+
+        # elif self.use_default_distance_trashcan == True:
+        #     dx = self.DEFAULT_DX_TRASHCAN
+        #     dy = self.DEFAULT_DY_TRASHCAN
+        #     self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
+
 
         trashcan_place=[-220.2,48.5,-79.6,135.9,72.5,111.1]
         self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = trashcan_place, wait_for_end_of=True)
@@ -683,6 +713,7 @@ class TaskMain():
             pass 
 
         self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+        time.sleep(0.5)
 
         self.robot.adjust_omnidirectional_position(dx = -dx, dy = -dy, wait_for_end_of=False, safety=False)
         self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
