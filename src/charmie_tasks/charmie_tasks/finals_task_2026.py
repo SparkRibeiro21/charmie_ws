@@ -148,7 +148,7 @@ class TaskMain():
 
         self.search_tetas_horizontal = [[-20, -20], [20, -20]]
         self.search_tetas_vertical = [[0, -15], [0, 15]]
-        self.search_tetas_single = [[0, -15]]
+        self.search_tetas_single = [[0, -25]]
 
         self.state = self.task_states["Waiting_for_task_start"]
 

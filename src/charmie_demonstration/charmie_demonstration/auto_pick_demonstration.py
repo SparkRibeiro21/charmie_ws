@@ -127,7 +127,7 @@ class TaskMain():
 
             if self.state == self.task_states["Waiting_for_task_start"]:
         
-                self.robot.set_face("charmie_face", wait_for_end_of=False)
+                # self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 #self.robot.set_torso_position(legs=0.10, torso=10, wait_for_end_of=True) 
                 #self.robot.wait_until_camera_stable(timeout=120, check_interval=0.3, stable_duration=0.3, get_gripper=False)
@@ -136,9 +136,15 @@ class TaskMain():
 
                 # self.robot.pick_object(selected_object="Apple", max_search_attempts=1)
 
-                self.robot.set_initial_position(self.initial_position)
+                # self.robot.set_initial_position(self.initial_position)
+                
+                #self.robot.search_for_objects(tetas=[[0, -45], [-40, -45], [40, -45]],  time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["water"], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts=1)
 
-                #pick_height, s= self.robot.pick_object(selected_object="cup")
+                self.robot.wait_for_start_button()
+
+                pick_height, s= self.robot.pick_object(selected_object="water")
+                placed_height=self.robot.place_object_in_furniture(selected_object="water", furniture= "Table 2", place_height=pick_height)
+
                 self.robot.wait_for_start_button()
                 # placed_height=self.robot.place_object_in_furniture(selected_object="mustard",place_mode = "front", furniture= "Tray", place_height=pick_height)
                 # pick_height = self.robot.pick_from_tray(selected_object="cola", placed_height=placed_height)
@@ -365,7 +371,7 @@ class TaskMain():
                     self.tetas = [[0, 0], [0, 15], [0, -35]]
 
                 elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "single":
-                    self.tetas = [[0, -15]]
+                    self.tetas = [[0, -25]]
                      
                 self.HORIZONTAL_TETAS = [[0, -45], [-40, -45], [40, -45]]
                 self.VERTICAL_TETAS = [[0, 0], [0, 15], [0, -35]]
