@@ -8255,6 +8255,8 @@ class RobotStdFunctions():
 
 
             door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
+            # YOLO FURNITURE CHANGE
+            # door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_furniture=True)
         
             for h in door_handle:
 
@@ -8277,6 +8279,8 @@ class RobotStdFunctions():
             while not validated:
 
                 door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, detect_tv_prompt_head=False, visual_prompts=["door_handle_pull_right_hand"], minimum_tv_prompt_confidence=0.25)
+                # YOLO FURNITURE CHANGE
+                # door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_grip"], detect_furniture_hand=True)
 
                 for g in door_handle:
 
@@ -8338,6 +8342,8 @@ class RobotStdFunctions():
 
 
             door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_head_FNR"], minimum_tv_prompt_confidence=0.25)
+            # YOLO FURNITURE CHANGE
+            # door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_furniture_hand=True)
         
             for h in door_handle:
 
@@ -8423,6 +8429,8 @@ class RobotStdFunctions():
 
 
             door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
+            # YOLO FURNITURE CHANGE
+            # door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_furniture=True)
         
             for h in door_handle:
 
@@ -8445,6 +8453,9 @@ class RobotStdFunctions():
             while not validated:
 
                 door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, detect_tv_prompt_head=False, visual_prompts=["door_handle_pull_right_hand"], minimum_tv_prompt_confidence=0.25)
+                # YOLO FURNITURE CHANGE
+                # door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_grip"], detect_furniture_hand=True)
+                
 
                 for g in door_handle:
 
