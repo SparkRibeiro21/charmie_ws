@@ -12,11 +12,11 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  False, # True
+    "charmie_arm":                  True, # True
     "charmie_audio":                True,
     "charmie_face":                 True,
-    "charmie_head_camera":          False, 
-    "charmie_hand_camera":          False, # True
+    "charmie_head_camera":          True, 
+    "charmie_hand_camera":          True, # True
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
@@ -35,8 +35,8 @@ ros2_modules = {
     "charmie_speakers_save":        True,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
-    "charmie_yolo_objects":         False,
-    "charmie_yolo_pose":            False,
+    "charmie_yolo_objects":         True,
+    "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
 }
 
@@ -83,7 +83,7 @@ class TaskMain():
         # Initial Position
         self.initial_position = [0.0, 0.0, 0.0]
 
-        self.instruction_point =  [ 7.80, 3.84, 180]
+        self.instruction_point =  [ 6.09, -1.33, 0]
 
         print(self.initial_position)
         print(self.instruction_point)
@@ -138,9 +138,9 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                self.robot.wait_for_door_opening()
+                # self.robot.wait_for_door_opening()
 
-                self.robot.enter_house_after_door_opening()
+                # self.robot.enter_house_after_door_opening()
                 
                 self.state = self.task_states["Move_to_instruction_point"]
                 
@@ -245,13 +245,16 @@ class TaskMain():
 
                     for i, plan_check in enumerate(self.llps):
 
+                        curr_plan = i +1
+
                         print(plan)
                         print(plan_check)
 
                         if plan == self.llps[i]:
+
                             
-                            print("I will start executing request number"+str(i+1))
-                            self.robot.set_speech(filename="gpsr/execute_request"+(i+1), wait_for_end_of=True)
+                            print("I will start executing request number"+str(curr_plan))
+                            self.robot.set_speech(filename="gpsr/execute_request"+str(i+1), wait_for_end_of=True)
 
                     self.robot.execute_gpsr_plan(command=plan, instruction_point=self.instruction_point)
 

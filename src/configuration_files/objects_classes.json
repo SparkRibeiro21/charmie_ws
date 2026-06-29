@@ -1,9 +1,9 @@
 [
-{"name": "Cleaning Supplies",   "location": "Table 2"},
-{"name": "Drinks", 		"location": "Table 2"},
-{"name": "Foods",   		"location": "Table 2"},
-{"name": "Fruits", 		"location": "Table 2"},
-{"name": "Toys",   		"location": "Table 2"},
-{"name": "Snacks", 		"location": "Table 2"},
-{"name": "Dishes",   		"location": "Table 2"}
+{"name": "Cleaning Supplies",   "location": "Desk"},
+{"name": "Drinks", 		"location": "Desk"},
+{"name": "Foods",   		"location": "Desk"},
+{"name": "Fruits", 		"location": "Desk"},
+{"name": "Toys",   		"location": "Desk"},
+{"name": "Snacks", 		"location": "Desk"},
+{"name": "Dishes",   		"location": "Desk"}
 ]

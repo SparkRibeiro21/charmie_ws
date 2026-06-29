@@ -4521,14 +4521,14 @@ class RobotStdFunctions():
                     for obj in self.node.furniture:
                         if str(obj["name"]).replace(" ","_").lower() == task_attribute:
                             ### TASK TYPE====> move_to_furniture
-                            self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                            self.set_neck(position=look_navigation, wait_for_end_of=False)
 
                             self.set_speech(filename="generic/moving", wait_for_end_of=True)
                             self.set_speech(filename="furniture/"+task_attribute, wait_for_end_of=True)
 
                             self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(task_attribute), wait_for_end_of=True)
                             
-                            self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                            self.set_neck(position=look_forward, wait_for_end_of=False)
                             self.set_speech(filename="generic/arrived", wait_for_end_of=True)
                             self.set_speech(filename="furniture/"+task_attribute, wait_for_end_of=True)
                             
@@ -4677,9 +4677,9 @@ class RobotStdFunctions():
 
                     #     self.detected_person_to_face_path(person=correct_person, send_to_face=True)
 
-                    #     self.set_neck(self.look_navigation)
+                    #     self.set_neck(look_navigation)
                     #     self.move_to_person(person = correct_person)
-                    #     self.set_neck(self.look_forward)
+                    #     self.set_neck(look_forward)
 
                     #     self.set_speech(filename= "gpsr/gpsr_intro")
 
@@ -4715,9 +4715,9 @@ class RobotStdFunctions():
 
                     # #     # self.detected_person_to_face_path(person=correct_person, send_to_face=True)
 
-                    # #     self.set_neck(self.look_navigation)
+                    # #     self.set_neck(look_navigation)
                     # #     self.move_to_person(person = correct_person)
-                    # #     self.set_neck(self.look_forward)
+                    # #     self.set_neck(look_forward)
 
                     # #     ### Speak: "Hello [name], my name is Charmie!"
                     # #     self.set_speech(filename= "gpsr/gpsr_intro")
@@ -4746,35 +4746,35 @@ class RobotStdFunctions():
 
                     #     self.detected_person_to_face_path(person=correct_person, send_to_face=True)
 
-                    #     self.set_neck(self.look_navigation)
+                    #     self.set_neck(look_navigation)
                     #     self.move_to_person(person = correct_person)
-                    #     self.set_neck(self.look_forward)
+                    #     self.set_neck(look_forward)
 
                     #     ### Speak: "Hello [name], my name is Charmie!"
                     #     self.set_speech(filename= "gpsr/gpsr_intro")
 
                     #     pass
                     
-                    # if task_attribute == "you":
+                    if task_attribute == "you":
 
-                    #     ### Set neck: navigation
-                    #     self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                        ### Set neck: navigation
+                        self.set_neck(position=look_navigation, wait_for_end_of=False)
 
-                    #     ### Speak: "Moving to the instruction point"
-                    #     self.set_speech(filename="generic/moving", wait_for_end_of=False)
-                    #     self.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
+                        ### Speak: "Moving to the instruction point"
+                        self.set_speech(filename="generic/moving", wait_for_end_of=False)
+                        self.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
 
-                    #     ### Move to: instruction_point
-                    #     self.move_to_position(move_coords=instruction_point, wait_for_end_of=True)
+                        ### Move to: instruction_point
+                        self.move_to_position(move_coords=instruction_point, wait_for_end_of=True)
 
-                    #     ### Set neck: look forward
-                    #     self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                        ### Set neck: look forward
+                        self.set_neck(position=look_forward, wait_for_end_of=False)
 
-                    #     ### Speak: "Arrived at the instruction point"
-                    #     self.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                    #     self.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
+                        ### Speak: "Arrived at the instruction point"
+                        self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                        self.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
 
-                    #     pass
+                        pass
                     pass
 
                 case "look_for_object":
@@ -4818,6 +4818,8 @@ class RobotStdFunctions():
                     correct_person = DetectedPerson()
 
                     tetas = [[-60, 0], [0, 0], [60, 0]]
+
+                    people_found=[]
 
                     if task_attribute == "pose":
 
@@ -4939,17 +4941,20 @@ class RobotStdFunctions():
 
                             pass
 
-                        print("correct x coords absolut: ", correct_person.position_absolute.x) 
-                        print("correct y coords absolut: ", correct_person.position_absolute.y) 
-                        print("Correct person's height", correct_person.height)
+                        if people_found:
+                            print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                            print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                            print("Correct person's height", correct_person.height)
 
-                        self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+                            self.detected_person_to_face_path(person=correct_person, send_to_face=True)
 
-                        self.set_neck(self.look_navigation)
-                        self.move_to_person(person = correct_person)
-                        self.set_neck(self.look_forward)
+                            self.set_neck(look_navigation)
+                            self.move_to_person(person = correct_person)
+                            self.set_neck(look_forward)
 
-                        self.set_speech(filename= "gpsr/gpsr_intro")
+                            self.set_face("charmie_face", wait_for_end_of=False)
+
+                            self.set_speech(filename= "gpsr/gpsr_intro")
 
                     if task_attribute == "name":
                         
@@ -4976,19 +4981,19 @@ class RobotStdFunctions():
                             if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                 correct_person = p
 
+                        if people_found:
+                            print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                            print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                            print("Correct person's height", correct_person.height)
 
-                        print("correct x coords absolut: ", correct_person.position_absolute.x) 
-                        print("correct y coords absolut: ", correct_person.position_absolute.y) 
-                        print("Correct person's height", correct_person.height)
+                            self.detected_person_to_face_path(person=correct_person, send_to_face=True)
 
-                        self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+                            self.set_neck(look_navigation)
+                            self.move_to_person(person = correct_person)
+                            self.set_neck(look_forward)
 
-                        self.set_neck(self.look_navigation)
-                        self.move_to_person(person = correct_person)
-                        self.set_neck(self.look_forward)
-
-                        ### Speak: "Hello [name], my name is Charmie!"
-                        self.set_speech(filename= "gpsr/gpsr_intro")
+                            ### Speak: "Hello [name], my name is Charmie!"
+                            self.set_speech(filename= "gpsr/gpsr_intro")
 
                         if task_attribute == "clothing":
 
@@ -5005,26 +5010,28 @@ class RobotStdFunctions():
 
                                         correct_person=p
 
+                            if people_found:
+                                print("correct x coords absolut: ", correct_person.position_absolute.x) 
+                                print("correct y coords absolut: ", correct_person.position_absolute.y) 
+                                print("Correct person's height", correct_person.height)
 
-                            print("correct x coords absolut: ", correct_person.position_absolute.x) 
-                            print("correct y coords absolut: ", correct_person.position_absolute.y) 
-                            print("Correct person's height", correct_person.height)
+                                self.detected_person_to_face_path(person=correct_person, send_to_face=True)
 
-                            self.detected_person_to_face_path(person=correct_person, send_to_face=True)
+                                self.set_neck(look_navigation)
+                                self.move_to_person(person = correct_person)
+                                self.set_neck(look_forward)
 
-                            self.set_neck(self.look_navigation)
-                            self.move_to_person(person = correct_person)
-                            self.set_neck(self.look_forward)
+                                self.set_face("charmie_face", wait_for_end_of=False)
 
-                            ### Speak: "Hello [name], my name is Charmie!"
-                            self.set_speech(filename= "gpsr/gpsr_intro")
+                                ### Speak: "Hello [name], my name is Charmie!"
+                                self.set_speech(filename= "gpsr/gpsr_intro")
 
                             pass
                     
                     if task_attribute == "you":
 
                         ### Set neck: navigation
-                        self.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                        self.set_neck(position=look_navigation, wait_for_end_of=False)
 
                         ### Speak: "Moving to the instruction point"
                         self.set_speech(filename="generic/moving", wait_for_end_of=False)
@@ -5034,7 +5041,9 @@ class RobotStdFunctions():
                         self.move_to_position(move_coords=instruction_point, wait_for_end_of=True)
 
                         ### Set neck: look forward
-                        self.set_neck(position=self.look_forward, wait_for_end_of=False)
+                        self.set_neck(position=look_forward, wait_for_end_of=False)
+
+                        self.set_face("charmie_face", wait_for_end_of=False)
 
                         ### Speak: "Arrived at the instruction point"
                         self.set_speech(filename="generic/arrived", wait_for_end_of=True)
@@ -5121,7 +5130,7 @@ class RobotStdFunctions():
                         print("Looking for:", task_attribute, "with single search")
 
                     objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                    filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, task_attribute=task_attribute)
+                    filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=task_attribute)
                     print("Objects to count:", [obj.object_name for obj in filtered_objects_found])
 
                     if filtered_objects_found:
@@ -5135,7 +5144,7 @@ class RobotStdFunctions():
                         
                     result = "I have found " + str(obj_counter) + " " + task_attribute.replace("_"," ") + "."
                     print(result)
-                    self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                    self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
                     print ("Total count of ", task_attribute, ":", obj_counter)
 
                     pass
@@ -5161,7 +5170,7 @@ class RobotStdFunctions():
                         print("Looking for:", task_attribute, "with single search")
 
                     objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                    filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, task_attribute=task_parameter)
+                    filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=task_parameter)
                     print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
 
                     if filtered_objects_found:
@@ -5193,7 +5202,7 @@ class RobotStdFunctions():
 
                         result = "Of all the " + task_parameter.replace("_"," ") + " I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
                         print(result)
-                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
                     
                     elif task_attribute == "biggest":
                         print("Finding the biggest ", task_parameter)
@@ -5212,7 +5221,7 @@ class RobotStdFunctions():
 
                         result = "Of all the " + task_parameter.replace("_"," ") + " I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
                         print(result)
-                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
 
                     elif task_attribute == "heaviest":
                         print("Finding the heaviest ", task_parameter)
@@ -5231,7 +5240,7 @@ class RobotStdFunctions():
 
                         result = "Of all the " + task_parameter.replace("_"," ") + " I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "."
                         print(result)
-                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
 
                     elif task_attribute == "lightest":
                         print("Finding the lightest ", task_parameter)
@@ -5252,7 +5261,7 @@ class RobotStdFunctions():
                         result = "Of all the " + task_parameter.replace("_"," ") + " I found, the lightest one is the " + lightest_object.replace("_"," ") + "."
                         print(result)
 
-                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
                     
                     curr_obj_list.clear()
                         
@@ -5276,12 +5285,55 @@ class RobotStdFunctions():
                     self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=True)
 
                     ### Move to the [task_attribute]
-                    self.execute_gpsr_plan(command="move_to_place-"+task_attribute, instruction_point=instruction_point)
+                    # check if it is a room
+                    for obj in self.node.rooms:
+                        if str(obj["name"]).replace(" ","_").lower() == task_attribute:
+                            ### TASK TYPE====> move_to_room
+                            self.set_neck(position=look_navigation, wait_for_end_of=False)
+
+                            self.set_speech(filename="generic/moving", wait_for_end_of=True)
+                            self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=True)
+
+                            self.move_to_position(move_coords=self.get_navigation_coords_from_room(task_attribute), wait_for_end_of=True)
+
+                            self.set_neck(position=look_forward, wait_for_end_of=False)
+                            self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                            self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=True)
+
+                            print("Moving to room:", task_attribute)
+
+                            curr_room = task_attribute
+                            curr_furniture = "NONE"
+
+                            pass
+
+                    # check if it is a furniture 
+                    for obj in self.node.furniture:
+                        if str(obj["name"]).replace(" ","_").lower() == task_attribute:
+                            ### TASK TYPE====> move_to_furniture
+                            self.set_neck(position=look_navigation, wait_for_end_of=False)
+
+                            self.set_speech(filename="generic/moving", wait_for_end_of=True)
+                            self.set_speech(filename="furniture/"+task_attribute, wait_for_end_of=True)
+
+                            self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(task_attribute), wait_for_end_of=True)
+                            
+                            self.set_neck(position=look_forward, wait_for_end_of=False)
+                            self.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                            self.set_speech(filename="furniture/"+task_attribute, wait_for_end_of=True)
+                            
+                            print("Moving to furniture:", task_attribute)
+
+                            curr_furniture = task_attribute
+                            curr_room = self.get_room_from_furniture(task_attribute)
+
+                            pass
 
                     # ### Speak: "We have arrived to the [task_attribute]."
                     # self.set_speech(filename="gpsr/end_of_guide", wait_for_end_of=True)
                     # self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=True)
-
+                    self.set_speech(filename="gpsr/finished_guiding", wait_for_end_of=True)
+                
                     print("Finished guiding the person to:", task_attribute)
 
                 #in case it is none of the above
