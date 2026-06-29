@@ -1,0 +1,9 @@
+[
+{"name": "Table 1",                     "height": [ 0.76 ], 			                "room": "Printing Room",        "nav_coords": [ 8.46,  -1.68,   80.0],  "center_coords": [ 8.61,  -0.583], "size": [0.98, 0.98], "angle":   -10.0, "diameter":0.0, "look": "single", "shape":"square"},
+{"name": "Table 2",      		        "height": [ 0.76 ], 			                "room": "Printing Room", 	    "nav_coords": [ 8.60, -1.89, -95.0], "center_coords": [ 8.47, -2.98],   "size": [0.98, 0.98], "angle":   0.0, "diameter":0.0, "look": "single", "shape":"square"},
+{"name": "Trashcan",      		        "height": [ 0.29 ], 			                "room": "Printing Room", 	    "nav_coords": [ 6.97, -0.397, 90.0], "center_coords": [ 6.97, 0.246],   "size": [0.27, 0.215], "angle":   -10.0, "diameter":0.0, "look": "horizontal", "shape":"square"},
+
+{"name": "Kitchen Door",      		    "height": [ 2.00 ], 			                "room": "Kitchen", 	    "nav_coords": [ 1.18, 1.41, -180.0], "center_coords": [ 0.691, 1.56],   "size": [0.1, 0.70], "angle":   -3.0, "diameter":0.0, "look": "horizontal", "shape":"square"},
+
+{"name": "Meeting Table",      		    "height": [ 0.75 ], 			                "room": "Conference Room", 	    "nav_coords": [ 7.15, -6.25, 0.0],   "center_coords": [ 9.18, -6.00],   "size": [2.40, 0.85], "angle":   0.0, "diameter":0.0, "look": "horizontal", "shape":"square"}
+]
