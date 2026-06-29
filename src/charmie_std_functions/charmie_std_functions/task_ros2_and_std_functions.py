@@ -4816,6 +4816,9 @@ class RobotStdFunctions():
                 # elif orientation_to_search == "vertical":
                 #     search_tetas = [[0, -15], [0, -35], [0, 15]]
                 #     print("Looking for:", parameter, "with vertical search")
+                # elif orientation_to_search == "single":
+                #     search_tetas = [[0, -15]]
+                #     print("Looking for:", parameter, "with single search")
 
                 # objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
                 # filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
@@ -4850,6 +4853,9 @@ class RobotStdFunctions():
                 elif orientation_to_search == "vertical":
                     search_tetas = [[0, -15], [0, -35], [0, 15]]
                     print("Looking for:", parameter, "with vertical search")
+                elif orientation_to_search == "single":
+                    search_tetas = [[0, -15]]
+                    print("Looking for:", parameter, "with single search")
 
                 picked_height, asked_help = self.pick_object(selected_object= parameter, first_search_tetas=search_tetas)
 
@@ -4906,6 +4912,9 @@ class RobotStdFunctions():
                 elif orientation_to_search == "vertical":
                     search_tetas = [[0, -15], [0, -35], [0, 15]]
                     print("Looking for:", parameter, "with vertical search")
+                elif orientation_to_search == "single":
+                    search_tetas = [[0, -15]]
+                    print("Looking for:", parameter, "with single search")
 
                 objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
                 filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=parameter)
@@ -4942,6 +4951,9 @@ class RobotStdFunctions():
                 elif orientation_to_search == "vertical":
                     search_tetas = [[0, -15], [0, -35], [0, 15]]
                     print("Looking for:", second_parameter, "with vertical search")
+                elif orientation_to_search == "single":
+                    search_tetas = [[0, -15]]
+                    print("Looking for:", parameter, "with single search")
 
                 objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
                 filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=second_parameter)
@@ -5900,6 +5912,9 @@ class RobotStdFunctions():
             elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
                 first_search_tetas = [[0, -15], [0, -35], [0, 15]]
 
+            elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "single":
+                first_search_tetas = [[0, -15]]
+
         if pick_mode == "":
             pick_mode = self.get_standard_pick_from_object(selected_object)
 
@@ -6360,6 +6375,9 @@ class RobotStdFunctions():
 
             elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
                 first_search_tetas = [[0, 0], [0, -35], [0, 15]]
+
+            elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "single":
+                first_search_tetas = [[0, -15]]
 
         if pick_mode == "" and search_with_head_camera:
             pick_mode = self.get_standard_pick_from_object(selected_object)
@@ -8686,6 +8704,9 @@ class RobotStdFunctions():
 
             elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "vertical":
                 first_search_tetas = [[0, 0], [0, -35], [0, 15]]
+
+            elif self.get_look_orientation_from_furniture(self.get_furniture_from_object_class(self.get_object_class_from_object(selected_object))) == "single":
+                first_search_tetas = [[0, -15]]
 
         # IF FURNITURE IS DECLARED, CHECK IF OBJECT IS IN THAT FURNITURE
         if furniture != "":

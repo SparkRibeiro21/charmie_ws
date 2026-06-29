@@ -370,6 +370,9 @@ class TaskMain():
                 elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
                     self.tetas = [[0, 0], [0, 15], [0, -35]]
 
+                elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "single":
+                    self.tetas = [[0, -15]]
+                     
                 self.HORIZONTAL_TETAS = [[0, -45], [-40, -45], [40, -45]]
                 self.VERTICAL_TETAS = [[0, 0], [0, 15], [0, -35]]
 
