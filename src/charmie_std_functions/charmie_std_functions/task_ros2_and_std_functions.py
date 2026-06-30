@@ -8215,7 +8215,7 @@ class RobotStdFunctions():
     def open_door(self, push_pull="push", handle_side="", wait_for_end_of=True):
 
 
-        arm_position_pull_left = [-189.7, 36.6, -78.1, 170.7, 45.5, 183.4]
+        arm_position_pull_left = [-180.2, 37.1, -77.8, 184.0, 46.2, 174.6]
         self.arm_initial_position = [-225, 83, -65, -1, 75, 270]
         arm_position_pull_right = [-192.4, 71.8, -118.4, 160.6, 46.7, 191.8]
         arm_position_handle = [-184.3, 27.1, -81.7, 178, 32.1, 178.3]
@@ -8418,7 +8418,7 @@ class RobotStdFunctions():
 
         if push_pull == "pull" and handle_side == "right":
 
-            self.move_to_position(move_coords=initial_position_pull, wait_for_end_of=True)
+            #CHANGE AFTER self.move_to_position(move_coords=initial_position_pull, wait_for_end_of=True)
             self.set_speech(filename="hri/opening_door", wait_for_end_of=False)
             _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
             print("Door Distance", furniture_distance)
@@ -8428,9 +8428,9 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=True, safety=False)
 
 
-            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
+            # door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
             # YOLO FURNITURE CHANGE
-            # door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_furniture=True)
+            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture=True)
         
             for h in door_handle:
 
@@ -8452,9 +8452,9 @@ class RobotStdFunctions():
 
             while not validated:
 
-                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, detect_tv_prompt_head=False, visual_prompts=["door_handle_pull_right_hand"], minimum_tv_prompt_confidence=0.25)
+                #door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, detect_tv_prompt_head=False, visual_prompts=["door_handle_pull_right_hand"], minimum_tv_prompt_confidence=0.25)
                 # YOLO FURNITURE CHANGE
-                # door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_grip"], detect_furniture_hand=True)
+                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture_hand=True)
                 
 
                 for g in door_handle:
