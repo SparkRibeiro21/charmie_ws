@@ -8439,7 +8439,7 @@ class RobotStdFunctions():
             while not self.adjust_omnidirectional_position_is_done():
                 pass
 
-            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.24, wait_for_end_of=False)
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.23, wait_for_end_of=False)
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_pull_left, wait_for_end_of=True)
 
@@ -8461,7 +8461,7 @@ class RobotStdFunctions():
 
                     gripper_position = self.get_gripper_localization()
 
-                    move_z_gripper = (g.position_cam.z - tf_z - 0.06)*1000
+                    move_z_gripper = (g.position_cam.z - tf_z - 0.08)*1000
                     move_y_gripper = (g.position_cam.y + tf_y - 0.01)*1000
                     move_x_gripper = (g.position_cam.x - tf_x)*1000
                     move_x_base = abs(tf_x - g.position_cam.x)
@@ -8475,24 +8475,30 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = lower_gripper, wait_for_end_of=True)
 
             print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, " Position cam Z ",g.position_cam.z , " Position cam Y ",g.position_cam.y , " Position cam X ",g.position_cam.x)
-            self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.026 , dy = 0.0, wait_for_end_of=True, safety=False)
-            GRAB_DOOR_Y = 0.10*1000
+            self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.024 , dy = 0.0, wait_for_end_of=True, safety=False)
+            GRAB_DOOR_Y = 0.55*1000
             GRAB_DOOR_X = 0.018*1000
             GRAB_DOOR_ROTATE= -20
-            grab_door = [0.0, GRAB_DOOR_Y, 0.0, GRAB_DOOR_ROTATE, 0.0, 0.0]
-            release_door = [0.0, -GRAB_DOOR_Y, 0.0, -GRAB_DOOR_ROTATE, 0.0, 0.0]
-            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True) 
-            self.adjust_omnidirectional_position(dx = -0.20 , dy = 0.0, wait_for_end_of=True, safety=False) 
-            self.adjust_omnidirectional_position(dx = -0.17 , dy = 0.12, wait_for_end_of=True, safety=False)
+            GRAB_DOOR_Y= 10
+            grab_door = [0.0, GRAB_DOOR_Y, 0.0, GRAB_DOOR_ROTATE, GRAB_DOOR_Y, 0.0]
+            grab_door_2=[0.0, 0.075*1000, 0.0, 0.0, 0.0, 0.0]
+            grab_door_return=[0.0, -0.075*1000, 0.0, 0.0, 0.0, 0.0]
+            release_door = [0.0, -GRAB_DOOR_Y, 0.0, -GRAB_DOOR_ROTATE, -GRAB_DOOR_Y, 0.0]
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True)
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door_2, wait_for_end_of=True)  
+            self.adjust_omnidirectional_position(dx = -0.23 , dy = 0.0, wait_for_end_of=True, safety=False) 
+            self.adjust_omnidirectional_position(dx = -0.24 , dy = 0.11, wait_for_end_of=True, safety=False)
             self.adjust_omnidirectional_position(dx = -0.12 , dy = 0.08, wait_for_end_of=True, safety=False)
 
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door_return, wait_for_end_of=True) 
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True) 
             after_release_first = [-0.1*1000, 0.0, -0.15*1000, 0.0, 0.0, 0.0, 0.0]
             #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
-            after_release_last = [0.12*1000, - 0.12*1000, 0.195*1000, 0.0, 0.0, 0.0]
+            after_release_last = [0.25*1000, - 0.12*1000, 0.195*1000, 0.0, -20.0, 0.0]
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_first, wait_for_end_of=True)  
-            self.adjust_omnidirectional_position(dx = 0.05 , dy = - 0.28, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = 0.02 , dy = - 0.28, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_last, wait_for_end_of=True)
+            self.adjust_omnidirectional_position(dx = 0.02 , dy = 0.0, wait_for_end_of=True, safety=False)
             self.set_arm(command="close_gripper", wait_for_end_of=False)
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
