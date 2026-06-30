@@ -123,7 +123,7 @@ class TaskMain():
             {
                 "name": "couch_left",  
                 "furniture": "Couch",
-                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] + (self.robot.get_size_from_furniture("Couch")[0]/4.0), 
+                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] + (self.robot.get_size_from_furniture("Couch")[0]/3.0), 
                                   self.robot.get_location_coords_from_furniture("Couch")[1],
                                   self.robot.get_location_coords_from_furniture("Couch")[2]],
                 "speak": "hri/couch_left"
@@ -141,7 +141,7 @@ class TaskMain():
             {
                 "name": "couch_center", 
                 "furniture": "Couch",
-                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
+                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] + (self.robot.get_size_from_furniture("Couch")[0]/8.0), 
                                   self.robot.get_location_coords_from_furniture("Couch")[1],
                                   self.robot.get_location_coords_from_furniture("Couch")[2]],
                 "speak": "hri/couch_center"
@@ -276,8 +276,8 @@ class TaskMain():
                 self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
                 # if not self.OPEN_DOOR_GUEST1:
                 self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                # self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
                 
                 self.state = self.task_states["Open_door_guest1"]
 
@@ -379,8 +379,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
                 self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
                 
                 self.state = self.task_states["Offer_guest1_free_seat"]
 
@@ -516,8 +516,8 @@ class TaskMain():
                 self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
                 # if not self.OPEN_DOOR_GUEST2:
                 self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
                 
                 self.state = self.task_states["Open_door_guest2"]
 
@@ -679,8 +679,8 @@ class TaskMain():
                     print("Waiting... untill saying characteristics and navigation are done!")
                     time.sleep(0.1)
                 
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                # self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
                 
                 self.state = self.task_states["Introduce_guests_and_offer_guest2_free_seat"]
 
