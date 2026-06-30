@@ -121,30 +121,30 @@ class TaskMain():
 
             # couch that extends in the X axis in the 2D map (vertical in the map)
             {
-                "name": "couch_left",  
-                "furniture": "Couch",
-                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] + (self.robot.get_size_from_furniture("Couch")[0]/3.0), 
-                                  self.robot.get_location_coords_from_furniture("Couch")[1],
-                                  self.robot.get_location_coords_from_furniture("Couch")[2]],
-                "speak": "hri/couch_left"
+                "name": "sofa_left",  
+                "furniture": "Sofa",
+                "center_coords": [self.robot.get_location_coords_from_furniture("Sofa")[0] + (self.robot.get_size_from_furniture("Sofa")[0]/3.0), 
+                                  self.robot.get_location_coords_from_furniture("Sofa")[1],
+                                  self.robot.get_location_coords_from_furniture("Sofa")[2]],
+                "speak": "hri/sofa_left"
             },
 
             {
-                "name": "couch_right", 
-                "furniture": "Couch",
-                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] - (self.robot.get_size_from_furniture("Couch")[0]/4.0), 
-                                  self.robot.get_location_coords_from_furniture("Couch")[1],
-                                  self.robot.get_location_coords_from_furniture("Couch")[2]],
-                "speak": "hri/couch_right"
+                "name": "sofa_right", 
+                "furniture": "Sofa",
+                "center_coords": [self.robot.get_location_coords_from_furniture("Sofa")[0] - (self.robot.get_size_from_furniture("Sofa")[0]/4.0), 
+                                  self.robot.get_location_coords_from_furniture("Sofa")[1],
+                                  self.robot.get_location_coords_from_furniture("Sofa")[2]],
+                "speak": "hri/sofa_right"
             },
 
             {
-                "name": "couch_center", 
-                "furniture": "Couch",
-                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] + (self.robot.get_size_from_furniture("Couch")[0]/8.0), 
-                                  self.robot.get_location_coords_from_furniture("Couch")[1],
-                                  self.robot.get_location_coords_from_furniture("Couch")[2]],
-                "speak": "hri/couch_center"
+                "name": "sofa_center", 
+                "furniture": "Sofa",
+                "center_coords": [self.robot.get_location_coords_from_furniture("Sofa")[0] + (self.robot.get_size_from_furniture("Sofa")[0]/8.0), 
+                                  self.robot.get_location_coords_from_furniture("Sofa")[1],
+                                  self.robot.get_location_coords_from_furniture("Sofa")[2]],
+                "speak": "hri/sofa_center"
             },
             
             # {
@@ -172,8 +172,8 @@ class TaskMain():
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
-        self.default_speak_file = "hri/couch_center"
-        self.default_couch_to_look_center = "couch"
+        self.default_speak_file = "hri/sofa_center"
+        self.default_couch_to_look_center = "sofa"
         # Which objects should be acquired
         self.OPEN_DOOR_GUEST1 = True
         self.OPEN_DOOR_GUEST2 = True
