@@ -8439,7 +8439,7 @@ class RobotStdFunctions():
             while not self.adjust_omnidirectional_position_is_done():
                 pass
 
-            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.25, wait_for_end_of=False)
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.24, wait_for_end_of=False)
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_pull_left, wait_for_end_of=True)
 
@@ -8461,8 +8461,8 @@ class RobotStdFunctions():
 
                     gripper_position = self.get_gripper_localization()
 
-                    move_z_gripper = (g.position_cam.z - tf_z - 0.05)*1000
-                    move_y_gripper = (g.position_cam.y + tf_y + 0.01)*1000
+                    move_z_gripper = (g.position_cam.z - tf_z - 0.06)*1000
+                    move_y_gripper = (g.position_cam.y + tf_y - 0.01)*1000
                     move_x_gripper = (g.position_cam.x - tf_x)*1000
                     move_x_base = abs(tf_x - g.position_cam.x)
                     print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
@@ -8475,10 +8475,10 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = lower_gripper, wait_for_end_of=True)
 
             print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, " Position cam Z ",g.position_cam.z , " Position cam Y ",g.position_cam.y , " Position cam X ",g.position_cam.x)
-            self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.035 , dy = 0.0, wait_for_end_of=True, safety=False)
-            GRAB_DOOR_Y = 0.08*1000
+            self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.026 , dy = 0.0, wait_for_end_of=True, safety=False)
+            GRAB_DOOR_Y = 0.10*1000
             GRAB_DOOR_X = 0.018*1000
-            GRAB_DOOR_ROTATE= -30
+            GRAB_DOOR_ROTATE= -20
             grab_door = [0.0, GRAB_DOOR_Y, 0.0, GRAB_DOOR_ROTATE, 0.0, 0.0]
             release_door = [0.0, -GRAB_DOOR_Y, 0.0, -GRAB_DOOR_ROTATE, 0.0, 0.0]
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True) 
