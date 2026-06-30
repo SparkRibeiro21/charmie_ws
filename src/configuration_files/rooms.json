@@ -1,6 +1,6 @@
 [
-{"name": "Living Room",     "nav_coords": [  7.35,  -4.76,  -45.0], "top_left_coords": [12.20,-3.74], "bot_right_coords": [ 6.37,-8.32]},
-{"name": "Bedroom",         "nav_coords": [  7.00,  -3.00,  60.0],  "top_left_coords": [12.20, 1.10], "bot_right_coords": [ 6.37, -3.74]},
-{"name": "Laundry Room",    "nav_coords": [  2.28, 0.507, -10.0],   "top_left_coords": [ 6.37, 1.97], "bot_right_coords": [ 2.02,-2.45]},
-{"name": "Kitchen",         "nav_coords": [  0.56, 0.0, 0.0],       "top_left_coords": [ 2.02, 2.7],  "bot_right_coords": [ 0.4,-2.45]}
+{"name": "Living Room",     "nav_coords": [  7.35,  -4.76,  -45.0], "top_left_coords": [5.07, 2.03], "bot_right_coords": [ 0.64, -3.15]},
+{"name": "Bedroom",         "nav_coords": [  7.00,  -3.00,  60.0],  "top_left_coords": [9.77, 5.77], "bot_right_coords": [ 5.07, 2.03]},
+{"name": "Laundry Room",    "nav_coords": [  2.28, 0.507, -10.0],   "top_left_coords": [ 5.07, 6.02], "bot_right_coords": [ 0.66, 2.03]},
+{"name": "Kitchen",         "nav_coords": [  0.56, 0.0, 0.0],       "top_left_coords": [ 9.66, 2.03],  "bot_right_coords": [ 5.07, -3.23]}
 ]

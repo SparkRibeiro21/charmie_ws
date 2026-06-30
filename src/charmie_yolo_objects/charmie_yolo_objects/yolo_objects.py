@@ -103,7 +103,7 @@ class Yolo_obj(Node):
             print("I will continue with the default filenames for the yolo models.")
         
             self.objects_model_filename   = "24_25_october_v1_LAR_seg.pt"
-            self.furniture_model_filename = "handle.pt"
+            self.furniture_model_filename = "ROBOCUP_test_1.pt"
             self.shoes_model_filename     = "shoes_socks_v1.pt"
                     
         # gets list of detected objects from objects.json and alphabetically orders it to match YOLO detections 

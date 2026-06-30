@@ -35,7 +35,7 @@ ros2_modules = {
     "charmie_speakers_save":        True,
     "charmie_tracking":             True,
     "charmie_tray_gripper":         False,
-    "charmie_yolo_objects":         False,
+    "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            True,
     "charmie_yolo_world":           False,
 }
@@ -182,11 +182,18 @@ class TaskMain():
 
         # LAR
         # Initial position to start task
-        self.initial_position = [2.2, 2.5, 0.0] 
+        # self.initial_position = [2.2, 2.5, 0.0] 
+
+        #### ROBOCUP 2026
+        self.initial_position = [4.0, 1.0, -135]
+
+
         # Position to start following host after introducing guests
         self.start_follow_position = [2.2, 3.5, -90.0] 
         # Position to communicate with guests at sitting area
-        self.guest_communication_position = [2.2, 2.5, 0.0] 
+        # self.guest_communication_position = [2.2, 2.5, 0.0] 
+        #### ROBOCUP 2026
+        self.guest_communication_position = [ 2.82, -0.58, -90.0] 
         
         # RoboCup Portugal Open 2026
         # Initial position to start task
@@ -267,10 +274,10 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
-                if not self.OPEN_DOOR_GUEST1:
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                    self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
+                # if not self.OPEN_DOOR_GUEST1:
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
                 
                 self.state = self.task_states["Open_door_guest1"]
 
@@ -507,10 +514,10 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
-                if not self.OPEN_DOOR_GUEST2:
-                    self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
-                    self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                    self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=True)
+                # if not self.OPEN_DOOR_GUEST2:
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.ENTRANCE_DOOR_FURNITURE), wait_for_end_of=True)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.ENTRANCE_DOOR_FURNITURE, wait_for_end_of=False)
                 
                 self.state = self.task_states["Open_door_guest2"]
 
