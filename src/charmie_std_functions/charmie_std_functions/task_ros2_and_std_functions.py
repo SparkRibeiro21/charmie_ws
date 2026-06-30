@@ -4482,11 +4482,11 @@ class RobotStdFunctions():
         for i, step in enumerate(command):
             print(f"Executing step {i+1}: {step.strip()}")
 
-            task_split = step.replace(":", "-").replace("\n", "-").split("-")
+            task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
 
             # Parsing the command
             task_action = task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
-            task_attribute = task_split[1].replace(" ","_").lower() if len(task_split) > 1 else ""
+            task_attribute = task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
             task_parameter = task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
             print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
@@ -4837,7 +4837,7 @@ class RobotStdFunctions():
 
                                 if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                     
-                                    if (0.8 <= p.height <1.6):
+                                    if (1.3 <= p.height <1.7):
                                         correct_person = p
 
                             pass
@@ -4856,7 +4856,7 @@ class RobotStdFunctions():
 
                                 if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                     
-                                    if (1.5 <= p.height):
+                                    if (1.7 <= p.height):
                                         correct_person = p
                             
                             pass
@@ -5074,6 +5074,7 @@ class RobotStdFunctions():
 
                     object_in_gripper = False
                     object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+
                     if object_in_gripper:
                         curr_obj_list.append(task_attribute)
                         curr_picked_height = picked_height
@@ -5144,7 +5145,7 @@ class RobotStdFunctions():
                         
                     result = "I have found " + str(obj_counter) + " " + task_attribute.replace("_"," ") + "."
                     print(result)
-                    self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
+                    self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
                     print ("Total count of ", task_attribute, ":", obj_counter)
 
                     pass
@@ -5202,7 +5203,7 @@ class RobotStdFunctions():
 
                         result = "Of all the " + task_parameter.replace("_"," ") + " I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
                         print(result)
-                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
                     
                     elif task_attribute == "biggest":
                         print("Finding the biggest ", task_parameter)
@@ -5221,7 +5222,7 @@ class RobotStdFunctions():
 
                         result = "Of all the " + task_parameter.replace("_"," ") + " I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
                         print(result)
-                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
 
                     elif task_attribute == "heaviest":
                         print("Finding the heaviest ", task_parameter)
@@ -5240,7 +5241,7 @@ class RobotStdFunctions():
 
                         result = "Of all the " + task_parameter.replace("_"," ") + " I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "."
                         print(result)
-                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
 
                     elif task_attribute == "lightest":
                         print("Finding the lightest ", task_parameter)
@@ -5261,7 +5262,7 @@ class RobotStdFunctions():
                         result = "Of all the " + task_parameter.replace("_"," ") + " I found, the lightest one is the " + lightest_object.replace("_"," ") + "."
                         print(result)
 
-                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=False)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
                     
                     curr_obj_list.clear()
                         
@@ -5269,25 +5270,31 @@ class RobotStdFunctions():
 
                 case "say_result":
 
-                    while not self.save_speech_is_done():
-                        pass
+                    # while not self.save_speech_is_done():
+                    #     pass
                     
                     self.set_speech(filename="temp/result", wait_for_end_of=True)
 
                     pass
 
+                case "say_info":
+
+                    ###SPEAK:   Unfortunately, I don't have the information I needed to share with you. I am sorry for this.
+                    self.set_speech(filename="gpsr/cannot_perform_say_info",wait_for_end_of=True)
+                    
                 case "guide_person":
 
                     print("Guiding the person to:", task_attribute)
-
-                    ### Speak: "Please follow me while I guide you to the [task_attribute]"
-                    self.set_speech(filename="gpsr/follow_me", wait_for_end_of=True)
-                    self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=True)
 
                     ### Move to the [task_attribute]
                     # check if it is a room
                     for obj in self.node.rooms:
                         if str(obj["name"]).replace(" ","_").lower() == task_attribute:
+
+                            ### Speak: "Please follow me while I guide you to the [task_attribute]"
+                            self.set_speech(filename="gpsr/follow_me", wait_for_end_of=True)
+                            self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=True)
+
                             ### TASK TYPE====> move_to_room
                             self.set_neck(position=look_navigation, wait_for_end_of=False)
 
@@ -5310,6 +5317,11 @@ class RobotStdFunctions():
                     # check if it is a furniture 
                     for obj in self.node.furniture:
                         if str(obj["name"]).replace(" ","_").lower() == task_attribute:
+                            
+                            ### Speak: "Please follow me while I guide you to the [task_attribute]"
+                            self.set_speech(filename="gpsr/follow_me", wait_for_end_of=True)
+                            self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=True)
+
                             ### TASK TYPE====> move_to_furniture
                             self.set_neck(position=look_navigation, wait_for_end_of=False)
 
@@ -5336,6 +5348,12 @@ class RobotStdFunctions():
                 
                     print("Finished guiding the person to:", task_attribute)
 
+                case "follow_person":
+
+                    ###SPEAK:   Unfortunately, I am still learning how to perform the follow task. So, I am unable to perform it. I am sorry for this.
+                    self.set_speech(filename="gpsr/cannot_perform_follow",wait_for_end_of=True)
+
+                    pass
                 #in case it is none of the above
                 case _:
                     # self.save_speech(command="Sorry, I cannot execute the task" , filename="temp/action", quick_voice=True, wait_for_end_of=True)

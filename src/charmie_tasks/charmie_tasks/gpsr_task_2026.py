@@ -287,11 +287,11 @@ class TaskMain():
             elif self.state == self.task_states["Final_State"]:
                 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-         
-                self.robot.set_speech(filename="gpsr/end_of_gpsr", wait_for_end_of=False)
 
-                while True:
-                    pass
+                self.llps=[]
+                self.order_to_execute=[]
+         
+                self.state = self.task_states["Receive_requests"]
 
             else:
                 pass
