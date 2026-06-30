@@ -9996,6 +9996,8 @@ class RobotStdFunctions():
         open_washing_ROBOCUP = [0.0, 0.0, 0.115*1000, 0.0, 0.0, 0.0]
         open_washing_ROBOCUP_return = [0.0, 0.0, -0.115*1000, 0.0, 0.0, 0.0]
 
+        #_ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+
         objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Red Wine"], detect_furniture=True)
 
         best_conf = 0.0
@@ -10020,13 +10022,16 @@ class RobotStdFunctions():
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = open_washing_ROBOCUP_return, wait_for_end_of=True)
         self.wait_for_start_button()
 
-        above_door = [-184.4, 58.2, -132.5, 75.8, -59.7, 322.2]
+        above_door = [-176.1,30.5,-84.3,-95.7,81,317.2]
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = above_door, wait_for_end_of=True)
-        pre_pull_door = [-188.9, 57, -134.4, 75.8, -52.6, 322.2]
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_pull_door, wait_for_end_of=True)
+        self.wait_for_start_button()
+        pre_pull_door = [-205.2, 30.9, -94.2, -56.1, 32.6, 293.6]
+        #self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_pull_door, wait_for_end_of=True)
+        self.wait_for_start_button()
         pull_door = [-187.0, 64.8, -134.4, 141.9, -52.6, 322.2]
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pull_door, wait_for_end_of=True)
+        self.wait_for_start_button()
 
         pre_inside_pick = [-239.8, 86.4, -181.6, -69.1, -54.6, 328.7]
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
