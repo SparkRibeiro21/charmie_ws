@@ -102,53 +102,63 @@ class TaskMain():
             # },
             
             # couch that extends in the Y axis in the 2D map (horizontal in the map)
+            # {
+            #     "name": "couch_left",  
+            #     "furniture": "Couch",
+            #     "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
+            #                       self.robot.get_location_coords_from_furniture("Couch")[1] + (self.robot.get_size_from_furniture("Couch")[1]/4.0),
+            #                       self.robot.get_location_coords_from_furniture("Couch")[2]],
+            #     "speak": "hri/couch_left",
+            # },
+            # {
+            #     "name": "couch_right", 
+            #     "furniture": "Couch",
+            #     "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
+            #                       self.robot.get_location_coords_from_furniture("Couch")[1] - (self.robot.get_size_from_furniture("Couch")[1]/4.0),
+            #                       self.robot.get_location_coords_from_furniture("Couch")[2]],
+            #     "speak": "hri/couch_right"
+            # },
+
+            # couch that extends in the X axis in the 2D map (vertical in the map)
             {
                 "name": "couch_left",  
                 "furniture": "Couch",
-                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
-                                  self.robot.get_location_coords_from_furniture("Couch")[1] + (self.robot.get_size_from_furniture("Couch")[1]/4.0),
+                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] + (self.robot.get_size_from_furniture("Couch")[0]/4.0), 
+                                  self.robot.get_location_coords_from_furniture("Couch")[1],
                                   self.robot.get_location_coords_from_furniture("Couch")[2]],
-                "speak": "hri/couch_left",
+                "speak": "hri/couch_left"
             },
+
             {
                 "name": "couch_right", 
                 "furniture": "Couch",
-                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
-                                  self.robot.get_location_coords_from_furniture("Couch")[1] - (self.robot.get_size_from_furniture("Couch")[1]/4.0),
+                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] - (self.robot.get_size_from_furniture("Couch")[0]/4.0), 
+                                  self.robot.get_location_coords_from_furniture("Couch")[1],
                                   self.robot.get_location_coords_from_furniture("Couch")[2]],
                 "speak": "hri/couch_right"
             },
 
-            # couch that extends in the X axis in the 2D map (vertical in the map)
-            # {
-            #     "name": "coloured_couch_left",  
-            #     "furniture": "Coloured Couch",
-            #     "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] + (self.robot.get_size_from_furniture("Couch")[0]/4.0), 
-            #                       self.robot.get_location_coords_from_furniture("Couch")[1],
-            #                       self.robot.get_location_coords_from_furniture("Couch")[2]],
-            #     "speak": "hri/coloured_couch_left"
-            # },
-            # {
-            #     "name": "coloured_couch_right", 
-            #     "furniture": "Coloured Couch",
-            #     "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0] - (self.robot.get_size_from_furniture("Couch")[0]/4.0), 
-            #                       self.robot.get_location_coords_from_furniture("Couch")[1],
-            #                       self.robot.get_location_coords_from_furniture("Couch")[2]],
-            #     "speak": "hri/coloured_couch_right"
-            # },
-            
             {
-                "name": "left_lounge_chair",
-                "furniture": "left_lounge_chair",
-                "center_coords": self.robot.get_location_coords_from_furniture("left_lounge_chair"),
-                "speak": "furniture/left_lounge_chair"
+                "name": "couch_center", 
+                "furniture": "Couch",
+                "center_coords": [self.robot.get_location_coords_from_furniture("Couch")[0], 
+                                  self.robot.get_location_coords_from_furniture("Couch")[1],
+                                  self.robot.get_location_coords_from_furniture("Couch")[2]],
+                "speak": "hri/couch_center"
             },
-            {
-                "name": "right_lounge_chair", 
-                "furniture": "right_lounge_chair",
-                "center_coords": self.robot.get_location_coords_from_furniture("right_lounge_chair"),
-                "speak": "furniture/right_lounge_chair"
-            }
+            
+            # {
+            #     "name": "left_lounge_chair",
+            #     "furniture": "left_lounge_chair",
+            #     "center_coords": self.robot.get_location_coords_from_furniture("left_lounge_chair"),
+            #     "speak": "furniture/left_lounge_chair"
+            # },
+            # {
+            #     "name": "right_lounge_chair", 
+            #     "furniture": "right_lounge_chair",
+            #     "center_coords": self.robot.get_location_coords_from_furniture("right_lounge_chair"),
+            #     "speak": "furniture/right_lounge_chair"
+            # }
         ]
 
         # # debug the sitting places coordinates
