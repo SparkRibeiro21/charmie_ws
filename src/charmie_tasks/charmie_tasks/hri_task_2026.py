@@ -193,7 +193,7 @@ class TaskMain():
         # Position to communicate with guests at sitting area
         # self.guest_communication_position = [2.2, 2.5, 0.0] 
         #### ROBOCUP 2026
-        self.guest_communication_position = [ 2.82, -0.58, -90.0] 
+        self.guest_communication_position = [ 3.05, -0.58, -90.0] 
         
         # RoboCup Portugal Open 2026
         # Initial position to start task
@@ -610,6 +610,10 @@ class TaskMain():
                 else:
                     print(self.GUEST2_NAME, self.GUEST2_DRINK)
 
+                # POST ROBOCUP 2026
+                self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
+                                                                ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
+                
                 self.robot.set_neck_continuous_tracking(activate=False) # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
                 self.robot.deactivate_tracking_mask() # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
 
@@ -675,14 +679,17 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=False)
-                self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
-                                                                ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
-                
-                while not self.robot.move_to_position_is_done():
-                    print("Waiting... untill saying characteristics and navigation are done!")
-                    time.sleep(0.1)
-                
+                # PRE ROBOCUP 2026
+                # self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=False)
+                # self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
+                #                                                 ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
+                # 
+                # while not self.robot.move_to_position_is_done():
+                #     print("Waiting... untill saying characteristics and navigation are done!")
+                #     time.sleep(0.1)
+
+                # POST ROBOCUP 2026
+                self.robot.move_to_position(move_coords=self.guest_communication_position, wait_for_end_of=True)
                 # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                 # self.robot.set_speech(filename="hri/sitting_area", wait_for_end_of=False)
                 
