@@ -9999,7 +9999,7 @@ class RobotStdFunctions():
 
         #_ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
 
-        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Red Wine"], detect_furniture=True)
+        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture=True)
 
         best_conf = 0.0
 
@@ -10012,9 +10012,21 @@ class RobotStdFunctions():
         approach_x = obj.position_relative.x - 0.615
         approach_y = obj.position_relative.y + 0.30
 
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = open_tab_position, wait_for_end_of=True)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = open_tab_position, wait_for_end_of=False)
         self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
         self.set_arm(command="open_gripper_washing", wait_for_end_of=True)
+        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture_hand=True)
+
+        best_conf = 0.0
+
+        for o in objects:
+
+            if o.confidence > best_conf:
+                best_conf = o.confidence
+                obj = o
+
+        approach_x = obj.position_relative.x - 0.615
+        self.adjust_omnidirectional_position(dx = approach_x, dy = 0.0, wait_for_end_of=True, safety=False)
         self.wait_for_start_button()
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = open_washing_ROBOCUP, wait_for_end_of=True)
         self.set_arm(command="close_gripper", wait_for_end_of=True)
