@@ -9992,6 +9992,7 @@ class RobotStdFunctions():
         #self.wait_for_start_button()
         # h-15 v-45
         open_tab_position = [-203.6, 6.4, -75.7, -40.3, 30.5, 270.6]
+        search_tab_position = [-220,27.6,-66.4,-40.4,-54.5,285.9]
         release_tab_position = [-225.6, 79.3, -141.1, -0.6, -73.5, 302.1]
         continue_opening_door = [-176, 31.3, -66.8, 70.2, -88.9, 343.6]
         open_washing_ROBOCUP = [0.0, 0.0, 0.115*1000, 0.0, 0.0, 0.0]
@@ -10009,13 +10010,14 @@ class RobotStdFunctions():
                 best_conf = o.confidence
                 obj = o
 
-        approach_x = obj.position_relative.x - 0.615
+        # OLD JUST HEAD approach_x = obj.position_relative.x - 0.615
+        approach_x = obj.position_relative.x - 0.66
         approach_y = obj.position_relative.y + 0.30
 
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = open_tab_position, wait_for_end_of=False)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = search_tab_position, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
-        self.set_arm(command="open_gripper_washing", wait_for_end_of=True)
         objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture_hand=True)
+        self.set_arm(command="open_gripper_washing", wait_for_end_of=True)
 
         best_conf = 0.0
 
@@ -10025,8 +10027,10 @@ class RobotStdFunctions():
                 best_conf = o.confidence
                 obj = o
 
-        approach_x = obj.position_relative.x - 0.615
-        self.adjust_omnidirectional_position(dx = approach_x, dy = 0.0, wait_for_end_of=True, safety=False)
+        approach_x = obj.position_relative.x - 0.554
+        approach_y = obj.position_relative.y + 0.30
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = open_tab_position, wait_for_end_of=False)
+        self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
         self.wait_for_start_button()
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = open_washing_ROBOCUP, wait_for_end_of=True)
         self.set_arm(command="close_gripper", wait_for_end_of=True)
