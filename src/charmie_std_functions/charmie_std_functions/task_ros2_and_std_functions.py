@@ -10046,6 +10046,7 @@ class RobotStdFunctions():
         self.set_arm(command="adjust_joint_motion", joint_motion_values = search_tab_position, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
         objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture_hand=True)
+        self.set_speech(filename="doing_laundry/i_will_apply_force_to_the_door", wait_for_end_of=True)
         self.set_arm(command="open_gripper_washing", wait_for_end_of=True)
 
         best_conf = 0.0
@@ -10081,6 +10082,7 @@ class RobotStdFunctions():
         pre_inside_pick = [-239.8, 86.4, -181.6, -69.1, -54.6, 328.7]
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
         _,_ = self.adjust_angle(25)
+        self.set_speech(filename="doing_laundry/slighlty_push_door", wait_for_end_of=False)
         self.adjust_omnidirectional_position(dx=0.0,dy=-0.10, wait_for_end_of=True, safety=False)
         self.adjust_omnidirectional_position(dx=0.33,dy=0.0, wait_for_end_of=True, safety=False)
         inside_pick = [-237.5, 81.4, -171.1, -52, -16.7, 328.7]
