@@ -299,6 +299,8 @@ class TaskMain():
                     self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
                 time.sleep(0.5)
+                self.robot.set_speech(filename="receptionist/please_do_not_move", wait_for_end_of=True)
+                time.sleep(1.0)
 
                 people_found = []
                 correct_person = DetectedPerson()
@@ -539,6 +541,8 @@ class TaskMain():
                     self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 self.robot.set_speech(filename="receptionist/ready_receive_guest", wait_for_end_of=True)
                 time.sleep(0.5)
+                self.robot.set_speech(filename="receptionist/please_do_not_move", wait_for_end_of=True)
+                time.sleep(1.0)
                 
                 people_found = []
                 correct_person = DetectedPerson()
