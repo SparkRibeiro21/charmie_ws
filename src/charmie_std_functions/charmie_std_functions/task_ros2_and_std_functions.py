@@ -8505,13 +8505,13 @@ class RobotStdFunctions():
             self.set_arm(command="close_gripper", wait_for_end_of=False)
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
-            _,_ = self.adjust_angle(70)
-
-            self.adjust_omnidirectional_position(dx = 0.15 , dy = 0.0, wait_for_end_of=True, safety=False)
-            self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=True, safety=False)
-
             self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
             self.set_speech(filename="hri/please_stand_outside_door", wait_for_end_of=False)
+
+            _,_ = self.adjust_angle(70)
+
+            # CHANGE FOR ARENA 3 self.adjust_omnidirectional_position(dx = 0.15 , dy = 0.0, wait_for_end_of=True, safety=False)
+            #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=True, safety=False)
 
             _,_ = self.adjust_angle(ADJUST_TO_DOOR)
             

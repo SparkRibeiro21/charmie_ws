@@ -361,7 +361,7 @@ class TaskMain():
 
                     self.robot.set_speech(filename="furniture/opening_milk", wait_for_end_of=False)
 
-                    self.robot.open_milk_lid(max_opening_attempts=8, wait_for_end_of=True)
+                    self.robot.open_milk_lid(max_opening_attempts=8)
 
                     self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
@@ -451,10 +451,10 @@ class TaskMain():
 
                 self.robot.move_to_position(move_coords=self.SEARCH_CUTLERY_COORDS, wait_for_end_of=True)
 
-                cutlery = self.robot.search_for_objects(tetas=self.search_for_cutlery_tetas, list_of_objects=[], use_arm=True, detect_objects=True)
+                objects_found = self.robot.search_for_objects(tetas=self.search_for_cutlery_tetas, list_of_objects=[], use_arm=True, detect_objects=True)
 
                 # FOR ROBOCUP DAY 1
-                if cutlery:
+                if objects_found:
                     self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
                     self.robot.set_speech(filename="generic/found_the", wait_for_end_of=True)
                     for o in objects_found:
