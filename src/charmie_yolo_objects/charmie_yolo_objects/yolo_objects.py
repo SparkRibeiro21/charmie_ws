@@ -102,7 +102,7 @@ class Yolo_obj(Node):
             print("ERROR: Could NOT import name of models json files. (select_models)")
             print("I will continue with the default filenames for the yolo models.")
         
-            self.objects_model_filename   = "small_objects.pt"
+            self.objects_model_filename   = "ROBOCUP_test_2_s_320.pt"
             self.furniture_model_filename = "furniture_medium.pt"
             self.shoes_model_filename     = "shoes_socks_v1.pt"
                     

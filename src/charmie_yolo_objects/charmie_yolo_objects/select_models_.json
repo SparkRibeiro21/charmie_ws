@@ -1,5 +1,5 @@
 {
-"objects_model_filename": 	"small_objects.pt",
+"objects_model_filename": 	"ROBOCUP_test_2_s_320.pt",
 "furniture_model_filename": 	"furniture_medium.pt",
 "shoes_model_filename": 	"shoes_socks_v1.pt"
 }

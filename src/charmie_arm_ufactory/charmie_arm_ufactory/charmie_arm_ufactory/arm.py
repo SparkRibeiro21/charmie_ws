@@ -902,6 +902,15 @@ class ArmUfactory(Node):
 			case 2:
 				self.finish_arm_movement_()
 
+	def open_gripper_slow(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=1000)
+			case 1:
+				self.set_gripper_position_(pos=900, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
 	def close_dishwasher_rack_part1(self):
 		match self.estado_tr:
 			case 0:
@@ -1705,6 +1714,8 @@ class ArmUfactory(Node):
 				self.slow_open_gripper()
 			case "open_gripper_lid":
 				self.open_gripper_lid()
+			case "open_gripper_slow":
+				self.open_gripper_slow()
 
 			# ADJUSTS MOVEMENTS FROM ARMCONTROLLER
 			case "adjust_linear_motion":

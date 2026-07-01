@@ -9306,9 +9306,9 @@ class RobotStdFunctions():
                     if arm_initial_position == "":
                         self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
                     #Uncomment if ask for help position is changed
-                    # else:
-                    #    if obj.object_name != "plate":    
-                    #        self.set_arm(command=arm_initial_position, wait_for_end_of=True)
+                    else:
+                       if obj.object_name != "plate":    
+                           self.set_arm(command=arm_initial_position, wait_for_end_of=True)    
                     return picked_height, ask_help
                 else:
                     self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=True)
@@ -9547,7 +9547,9 @@ class RobotStdFunctions():
 
         TRAY_HEIGHT = 0.59
         TOLERANCE_ERROR = 0.005
-        PUSH_MILK_DISTANCE = 0.085 - self.get_object_width_from_object("milk")
+        # PUSH_MILK_DISTANCE = 0.085 - self.get_object_width_from_object("milk")
+        PUSH_MILK_DISTANCE = 0.07 - self.get_object_width_from_object("milk")
+
 
         milk_push = [0.0 , 0.0 , PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
         after_push = [0.0 , 0.0 , -PUSH_MILK_DISTANCE*1000 , 0.0 , 0.0 , 0.0]
@@ -9567,7 +9569,7 @@ class RobotStdFunctions():
 
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = safe_place, wait_for_end_of=True)
 
-        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        self.set_arm(command="open_gripper_slow", wait_for_end_of=True)
 
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = after_push, wait_for_end_of=True)
 
@@ -9577,7 +9579,7 @@ class RobotStdFunctions():
         
 
         self.set_arm(command="close_gripper", wait_for_end_of=True)
-        self.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+        self.set_arm(command="point_front_to_initial_position",wait_for_end_of=True)
 
     def place_cornflakes_in_tray(self, place_height = -1):
 
@@ -10018,7 +10020,7 @@ class RobotStdFunctions():
                 best_conf = o.confidence
                 obj = o
 
-        approach_x = obj.position_relative.x - 0.59
+        approach_x = obj.position_relative.x - 0.62
         #approach_x = furniture_distance - 0.245
         approach_y = obj.position_relative.y + 0.30
 
@@ -10035,51 +10037,45 @@ class RobotStdFunctions():
                 best_conf = o.confidence
                 obj = o
 
-        approach_x = obj.position_relative.x - 0.554
+        approach_x = obj.position_relative.x - 0.55
         approach_y = obj.position_relative.y + 0.30
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = open_tab_position, wait_for_end_of=False)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = open_tab_position, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
-        self.wait_for_start_button()
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = open_washing_ROBOCUP, wait_for_end_of=True)
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx = - 0.05, dy = 0.0, wait_for_end_of=True, safety=False)
         self.set_arm(command="open_gripper", wait_for_end_of=True)
-        self.adjust_omnidirectional_position(dx = - 0.14, dy = 0.04, wait_for_end_of=True, safety=False)
+        self.adjust_omnidirectional_position(dx = - 0.16, dy = 0.04, wait_for_end_of=True, safety=False)
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = open_washing_ROBOCUP_return, wait_for_end_of=True)
         self.set_arm(command="close_gripper", wait_for_end_of=True)
-        self.wait_for_start_button()
+        self.adjust_omnidirectional_position(dx = 0.12, dy = 0.0, wait_for_end_of=True, safety=False)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_1, wait_for_end_of=True)
-        self.wait_for_start_button()
+        self.adjust_omnidirectional_position(dx = - 0.03, dy = 0.0, wait_for_end_of=True, safety=False)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_2, wait_for_end_of=True)
-        self.wait_for_start_button()
         self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_3, wait_for_end_of=True)
-        self.wait_for_start_button()
         self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_4, wait_for_end_of=True)
-        self.wait_for_start_button()
-
-        above_door = [-176.1,30.5,-84.3,-95.7,81,317.2]
-
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = above_door, wait_for_end_of=True)
-        self.wait_for_start_button()
-        pre_pull_door = [-205.2, 30.9, -94.2, -56.1, 32.6, 293.6]
-        #self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_pull_door, wait_for_end_of=True)
-        self.wait_for_start_button()
-        pull_door = [-187.0, 64.8, -134.4, 141.9, -52.6, 322.2]
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = pull_door, wait_for_end_of=True)
-        self.wait_for_start_button()
+        move_down = [-0.03*1000,0.0,0.0,0.0,0.0,0.0]
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = move_down, wait_for_end_of=True)
+        self.adjust_angle(30)
+        self.adjust_angle(-30)
 
         pre_inside_pick = [-239.8, 86.4, -181.6, -69.1, -54.6, 328.7]
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
-        _,_ = self.adjust_angle(18)
-        self.adjust_omnidirectional_position(dx=0.0,dy=-0.16, wait_for_end_of=True, safety=False)
-        self.adjust_omnidirectional_position(dx=0.37,dy=0.0, wait_for_end_of=True, safety=False)
-        inside_pick = [-237.5, 82.4, -170.1, -49.1, -23.2, 328.7]
+        _,_ = self.adjust_angle(25)
+        self.adjust_omnidirectional_position(dx=0.0,dy=-0.10, wait_for_end_of=True, safety=False)
+        self.adjust_omnidirectional_position(dx=0.33,dy=0.0, wait_for_end_of=True, safety=False)
+        inside_pick = [-237.5, 81.4, -171.1, -52, -16.7, 328.7]
+        self.set_arm(command="open_gripper", wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = inside_pick, wait_for_end_of=True)
+        # self.wait_for_start_button()
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx=-0.30,dy=0.0, wait_for_end_of=True, safety=False)
         pull_door = [-230.1, 74.5, -122.9, -69.1, -83.4, 328.7]
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pull_door, wait_for_end_of=True)
+        # self.wait_for_start_button()
+        pull_up = [-190.7, 76.1, -88.7, -69.1, -82.7, 308.8]
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = pull_up, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx=-0.27,dy=0.0, wait_for_end_of=True, safety=False)
-        self.set_arm(command="point_front_to_initial_position", wait_for_end_of=True)
+        # self.set_arm(command="point_front_to_initial_position", wait_for_end_of=True)
         
