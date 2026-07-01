@@ -485,7 +485,7 @@ class TaskMain():
                     self.robot.set_speech(filename="hri/please_take_a_seat", wait_for_end_of=True)
                     self.robot.set_speech(filename=speak_file, wait_for_end_of=True)
                 
-                self.state = self.task_states["Wait_for_guest2_to_arrive"]
+                self.state = self.task_states["Move_to_initial_position"]
 
 
             elif self.state == self.task_states["Move_to_initial_position"]:
