@@ -8462,14 +8462,17 @@ class RobotStdFunctions():
                     gripper_position = self.get_gripper_localization()
 
                     move_z_gripper = (g.position_cam.z - tf_z - 0.08)*1000
-                    move_y_gripper = (g.position_cam.y + tf_y - 0.01)*1000
+                    move_y_gripper = (g.position_cam.y + tf_y - 0.05)*1000
                     move_x_gripper = (g.position_cam.x - tf_x)*1000
                     move_x_base = abs(tf_x - g.position_cam.x)
                     print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
                     print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
+
                 if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
                     validated = True
 
+                
+            move_y_gripper = (gripper_position.z - 1.12)*1000
             lower_gripper = [move_z_gripper, move_y_gripper , 0.0, 0.0, 0.0, 0.0] 
 
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = lower_gripper, wait_for_end_of=True)
@@ -8481,13 +8484,13 @@ class RobotStdFunctions():
             GRAB_DOOR_ROTATE= -20
             GRAB_DOOR_Y= 10
             grab_door = [0.0, GRAB_DOOR_Y, 0.0, GRAB_DOOR_ROTATE, GRAB_DOOR_Y, 0.0]
-            grab_door_2=[0.0, 0.075*1000, 0.0, 0.0, 0.0, 0.0]
+            grab_door_2=[0.0, 0.085*1000, 0.0, 0.0, 0.0, 0.0]
             grab_door_return=[0.0, -0.075*1000, 0.0, 0.0, 0.0, 0.0]
             release_door = [0.0, -GRAB_DOOR_Y, 0.0, -GRAB_DOOR_ROTATE, -GRAB_DOOR_Y, 0.0]
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door_2, wait_for_end_of=True)  
-            self.adjust_omnidirectional_position(dx = -0.23 , dy = 0.0, wait_for_end_of=True, safety=False) 
-            self.adjust_omnidirectional_position(dx = -0.24 , dy = 0.11, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = -0.24 , dy = 0.0, wait_for_end_of=True, safety=False) 
+            self.adjust_omnidirectional_position(dx = -0.24 , dy = 0.09, wait_for_end_of=True, safety=False)
             self.adjust_omnidirectional_position(dx = -0.12 , dy = 0.08, wait_for_end_of=True, safety=False)
 
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door_return, wait_for_end_of=True) 
@@ -9993,10 +9996,16 @@ class RobotStdFunctions():
         open_tab_position = [-203.6, 6.4, -75.7, -40.3, 30.5, 270.6]
         release_tab_position = [-225.6, 79.3, -141.1, -0.6, -73.5, 302.1]
         continue_opening_door = [-176, 31.3, -66.8, 70.2, -88.9, 343.6]
-        open_washing_ROBOCUP = [0.0, 0.0, 0.115*1000, 0.0, 0.0, 0.0]
+        open_washing_ROBOCUP = [0.0, 0.0, 0.117*1000, 0.0, 0.0, 0.0]
         open_washing_ROBOCUP_return = [0.0, 0.0, -0.115*1000, 0.0, 0.0, 0.0]
 
-        #_ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+        ROBOCUP_swing_open_1 = [-208,25.3,-88.4,-43.5,23.1,272.2]
+        ROBOCUP_swing_open_2 = [-208,25.3,-88.4,-43.5,61.8,272.2]
+        ROBOCUP_swing_open_3 = [-208,25.3,-88.4,-43.5,49.5,272.2]
+        ROBOCUP_swing_open_4 = [-208,51.1,-88.4,-43.5,49.5,272.2]
+
+
+        #_ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
 
         objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Red Wine"], detect_furniture=True)
 
@@ -10008,7 +10017,8 @@ class RobotStdFunctions():
                 best_conf = o.confidence
                 obj = o
 
-        approach_x = obj.position_relative.x - 0.615
+        approach_x = obj.position_relative.x - 0.59
+        #approach_x = furniture_distance - 0.245
         approach_y = obj.position_relative.y + 0.30
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = open_tab_position, wait_for_end_of=True)
@@ -10019,7 +10029,17 @@ class RobotStdFunctions():
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx = - 0.05, dy = 0.0, wait_for_end_of=True, safety=False)
         self.set_arm(command="open_gripper", wait_for_end_of=True)
+        self.adjust_omnidirectional_position(dx = - 0.14, dy = 0.04, wait_for_end_of=True, safety=False)
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = open_washing_ROBOCUP_return, wait_for_end_of=True)
+        self.set_arm(command="close_gripper", wait_for_end_of=True)
+        self.wait_for_start_button()
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_1, wait_for_end_of=True)
+        self.wait_for_start_button()
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_2, wait_for_end_of=True)
+        self.wait_for_start_button()
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_3, wait_for_end_of=True)
+        self.wait_for_start_button()
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_4, wait_for_end_of=True)
         self.wait_for_start_button()
 
         above_door = [-176.1,30.5,-84.3,-95.7,81,317.2]
