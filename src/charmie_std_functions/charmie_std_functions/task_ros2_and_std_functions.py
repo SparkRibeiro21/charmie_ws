@@ -8511,6 +8511,7 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=True, safety=False)
 
             self.set_speech(filename="hri/door_open_finish", wait_for_end_of=False)
+            self.set_speech(filename="hri/please_stand_outside_door", wait_for_end_of=False)
 
             _,_ = self.adjust_angle(ADJUST_TO_DOOR)
             
@@ -9994,20 +9995,20 @@ class RobotStdFunctions():
         #self.wait_for_start_button()
         # h-15 v-45
         open_tab_position = [-203.6, 6.4, -75.7, -40.3, 30.5, 270.6]
+        search_tab_position = [-220,27.6,-66.4,-40.4,-54.5,285.9]
         release_tab_position = [-225.6, 79.3, -141.1, -0.6, -73.5, 302.1]
         continue_opening_door = [-176, 31.3, -66.8, 70.2, -88.9, 343.6]
         open_washing_ROBOCUP = [0.0, 0.0, 0.117*1000, 0.0, 0.0, 0.0]
         open_washing_ROBOCUP_return = [0.0, 0.0, -0.115*1000, 0.0, 0.0, 0.0]
-
         ROBOCUP_swing_open_1 = [-208,25.3,-88.4,-43.5,23.1,272.2]
         ROBOCUP_swing_open_2 = [-208,25.3,-88.4,-43.5,61.8,272.2]
         ROBOCUP_swing_open_3 = [-208,25.3,-88.4,-43.5,49.5,272.2]
         ROBOCUP_swing_open_4 = [-208,51.1,-88.4,-43.5,49.5,272.2]
 
 
-        #_ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
+        #_ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45
 
-        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Red Wine"], detect_furniture=True)
+        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture=True)
 
         best_conf = 0.0
 
@@ -10021,9 +10022,23 @@ class RobotStdFunctions():
         #approach_x = furniture_distance - 0.245
         approach_y = obj.position_relative.y + 0.30
 
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = open_tab_position, wait_for_end_of=True)
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = search_tab_position, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
+        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture_hand=True)
         self.set_arm(command="open_gripper_washing", wait_for_end_of=True)
+
+        best_conf = 0.0
+
+        for o in objects:
+
+            if o.confidence > best_conf:
+                best_conf = o.confidence
+                obj = o
+
+        approach_x = obj.position_relative.x - 0.554
+        approach_y = obj.position_relative.y + 0.30
+        self.set_arm(command="adjust_joint_motion", joint_motion_values = open_tab_position, wait_for_end_of=False)
+        self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
         self.wait_for_start_button()
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = open_washing_ROBOCUP, wait_for_end_of=True)
         self.set_arm(command="close_gripper", wait_for_end_of=True)
