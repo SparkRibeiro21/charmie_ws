@@ -1,6 +1,6 @@
 {
-"objects_model_filename": 	"ROBOCUP_test_2_s_320.pt",
-"furniture_model_filename": 	"furniture_medium.pt",
+"objects_model_filename": 	"objects_2.pt",
+"furniture_model_filename": 	"ROBOCUP_FURNITURE_TEST.pt",
 "shoes_model_filename": 	"shoes_socks_v1.pt"
 }
 

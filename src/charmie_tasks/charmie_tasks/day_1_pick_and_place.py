@@ -198,7 +198,7 @@ class TaskMain():
             elif self.state == self.task_states["Move_to_tab"]:
 
                 self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.TAB_LOCATION), wait_for_end_of=True)
-                self.robot.pick_object(selected_object="Dishwasher Tab", max_search_attempts=1)
+                self.robot.pick_object(selected_object="Dishwasher Tab")
 
                 self.state = self.task_states["Move_to_dishwasher"]
 
@@ -206,8 +206,8 @@ class TaskMain():
 
                 self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("dishwasher"), wait_for_end_of=True)
                 _,_,dist = self.robot.get_minimum_radar_distance(ang_obstacle_check=30)
-                dist = dist - 0.70
-                trashcan_place=[-220.2,48.5,-79.6,135.9,72.5,111.1]
+                dist = dist - 0.65
+                trashcan_place=[-224.5,81.3,-155.6,136.3,24.1,136.5]
                 self.robot.adjust_omnidirectional_position(dx = dist, dy = 0.0)
                 self.robot.set_speech(filename="pick_and_place_task/open_dishwasher_door", wait_for_end_of=False)
                 time.sleep(5.0)
@@ -343,6 +343,10 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Detect_and_pick_dishes"]:
+
+                self.robot.open_milk_lid()
+
+                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 if self.GET_BREAKFAST_SPOON:
 
