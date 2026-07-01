@@ -1,33 +1,11 @@
 [
-{"name": "Sponge",   		 "class": "Cleaning Supplies",	"width": 0.075, "length": 0.115, "height": 0.03, "shape": "cuboid",    "can_pick": "top",      "std_pick": "top",      "weight": 0.012},
-{"name": "Toothpaste", 		 "class": "Cleaning Supplies",	"width": 0.21, "length": 0.045, "height": 0.037, "shape": "cuboid",    "can_pick": "top",     "std_pick": "top",    "weight": 0.175},
 {"name": "Dishwasher Tab",	 "class": "Cleaning Supplies",	"width": 0.025, "length": 0.025, "height": 0.010, "shape": "cuboid",    "can_pick": "top",      "std_pick": "top",      "weight": 0.011},
  
-{"name": "Coke Can", 		 "class": "Drinks", 		    "width": 0.053, "length": 0.053, "height": 0.115, "shape": "cylinder",  "can_pick": "both",    "std_pick": "front",    "weight": 0.215},
-{"name": "Pepsi", 	         "class": "Drinks",		        "width": 0.009, "length": 0.009, "height": 0.310, "shape": "cylinder",  "can_pick": "front",    "std_pick": "front",    "weight": 1.250},
-{"name": "Milk",           	 "class": "Drinks",		        "width": 0.050, "length": 0.050, "height": 0.14, "shape": "cuboid",    "can_pick": "both",     "std_pick": "front",    "weight": 0.250},
-{"name": "Red Bull",       	 "class": "Drinks", 		    "width": 0.053, "length": 0.053, "height": 0.135, "shape": "cylinder",  "can_pick": "front",    "std_pick": "front",    "weight": 0.250},
-{"name": "Soju",   	         "class": "Drinks",		        "width": 0.068, "length": 0.068, "height": 0.225, "shape": "cylinder",    "can_pick": "front",     "std_pick": "front",    "weight": 0.640},
- 
-{"name": "Chocoflakes",      "class": "Foods", 		        "width": 0.098, "length": 0.098, "height": 0.077, "shape": "cylinder",  "can_pick": "top",     "std_pick": "top",    "weight": 0.030},
-{"name": "Cornflakes", 	     "class": "Foods", 		        "width": 0.098, "length": 0.098, "height": 0.077, "shape": "cylinder",  "can_pick": "top",     "std_pick": "top",    "weight": 0.030},
-{"name": "Instant Noodles",	 "class": "Foods", 		        "width": 0.130, "length": 0.140, "height": 0.020, "shape": "cuboid",  "can_pick": "top",     "std_pick": "top",    "weight": 0.120},
- 
-{"name": "Mangostane", 		 "class": "Fruits",		        "width": 0.070, "length": 0.070, "height": 0.065, "shape": "sphere",    "can_pick": "top",    "std_pick": "top",      "weight": 0.016},
-{"name": "Peach", 		     "class": "Fruits",		        "width": 0.066, "length": 0.066, "height": 0.054, "shape": "sphere",    "can_pick": "top",     "std_pick": "top",      "weight": 0.020},
-{"name": "Lemon", 		     "class": "Fruits",		        "width": 0.060, "length": 0.085, "height": 0.055, "shape": "cylinder",  "can_pick": "top",     "std_pick": "top",      "weight": 0.018},
-{"name": "Apple", 		     "class": "Fruits",		        "width": 0.080, "length": 0.080, "height": 0.060, "shape": "sphere",    "can_pick": "top",     "std_pick": "top",      "weight": 0.025},
-{"name": "Red Bellpepper", 	 "class": "Fruits",		        "width": 0.065, "length": 0.140, "height": 0.070, "shape": "cylinder",    "can_pick": "top",    "std_pick": "top",      "weight": 0.030},
-{"name": "Yellow Bellpepper","class": "Fruits",		        "width": 0.065, "length": 0.140, "height": 0.070, "shape": "cylinder",    "can_pick": "top",    "std_pick": "top",      "weight": 0.030},
-
-{"name": "Rubiks Cube", 	 "class": "Toys",		        "width": 0.055, "length": 0.055, "height": 0.055, "shape": "cuboid",    "can_pick": "top",     "std_pick": "top",      "weight": 0.064},
- 
-{"name": "Pringles", 		 "class": "Snacks",		        "width": 0.070, "length": 0.070, "height": 0.190, "shape": "cylinder",  "can_pick": "both",     "std_pick": "front",    "weight": 0.110},
-{"name": "Seaweed", 		 "class": "Snacks",		        "width": 0.080, "length": 0.190, "height": 0.090, "shape": "cuboid",    "can_pick": "top",     "std_pick": "top",    "weight": 0.071},
+{"name": "Milk",           	 "class": "Drinks",		        "width": 0.050, "length": 0.050, "height": 0.14, "shape": "cuboid",    "can_pick": "both",      "std_pick": "front",    "weight": 0.250},
  
 {"name": "Spoon", 		     "class": "Dishes",		        "width": 0.018, "length": 0.192, "height": 0.018, "shape": "cylinder",  "can_pick": "top",      "std_pick": "top",      "weight": 0.037},
 {"name": "Plate", 		     "class": "Dishes",		        "width": 0.257, "length": 0.257, "height": 0.028, "shape": "cylinder",  "can_pick": "top",      "std_pick": "top",      "weight": 0.279},
-{"name": "Cup", 		     "class": "Dishes",		        "width": 0.081, "length": 0.081, "height": 0.058, "shape": "special",   "can_pick": "top",     "std_pick": "top",      "weight": 0.096},
+{"name": "Cup", 		     "class": "Dishes",		        "width": 0.081, "length": 0.081, "height": 0.058, "shape": "special",   "can_pick": "top",      "std_pick": "top",      "weight": 0.096},
 {"name": "Fork", 		     "class": "Dishes",		        "width": 0.018, "length": 0.195, "height": 0.013, "shape": "cylinder",  "can_pick": "top",      "std_pick": "top",      "weight": 0.030},
 {"name": "Bowl", 		     "class": "Dishes",		        "width": 0.160, "length": 0.160, "height": 0.048, "shape": "special",   "can_pick": "top",      "std_pick": "top",      "weight": 0.136},
 {"name": "Knife", 		     "class": "Dishes",		        "width": 0.018, "length": 0.213, "height": 0.018, "shape": "cylinder",  "can_pick": "top",      "std_pick": "top",      "weight": 0.036}
