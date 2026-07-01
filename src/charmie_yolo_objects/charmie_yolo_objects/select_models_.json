@@ -1,5 +1,5 @@
 {
-"objects_model_filename": 	"small_objects.engine",
+"objects_model_filename": 	"small_objects.pt",
 "furniture_model_filename": 	"furniture_medium.pt",
 "shoes_model_filename": 	"shoes_socks_v1.pt"
 }
