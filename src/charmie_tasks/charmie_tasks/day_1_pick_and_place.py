@@ -11,26 +11,26 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
+    "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 True,
-    "charmie_head_camera":          True,
-    "charmie_hand_camera":          True,
+    "charmie_face":                 False,
+    "charmie_head_camera":          False,
+    "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         True,
-    "charmie_low_level":            True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
     "charmie_navigation":           False,
-    "charmie_nav2":                 True,
+    "charmie_nav2":                 False,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 True,
+    "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
@@ -142,6 +142,17 @@ class TaskMain():
         self.DEMO_MODE = self.robot.get_demo_mode()
         self.DEMO_STATE = -1 # state to be set by task_demo, so that the task can wait for new state to be set by task_demo
 
+
+
+
+
+
+
+
+
+
+
+
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED.lower().replace(" ", "_")
         self.CUTLERY_LOCATION = self.CUTLERY_LOCATION.lower().replace(" ", "_")
 
@@ -174,6 +185,7 @@ class TaskMain():
             print("DEMO MODE:", self.DEMO_MODE)
 
         while True:
+
             self.robot.set_current_task_state_id(current_state=self.state) # Necessary to visualize current task state in GUI
             
             if self.state == self.task_states["Waiting_for_task_start"]:
@@ -184,18 +196,25 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
+                self.robot.close_tray_gripper(wait_for_end_of=True)
+
                 self.robot.set_speech(filename="pick_and_place_task/pp_ready_start", wait_for_end_of=True)
 
                 self.robot.wait_for_start_button()
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                # self.robot.wait_for_door_opening()
+                self.robot.wait_for_door_opening()
 
-                # self.robot.enter_house_after_door_opening()
+                self.robot.enter_house_after_door_opening()
+
                 self.state = self.task_states["Move_to_tab"]
 
             elif self.state == self.task_states["Move_to_tab"]:
+
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.TAB_LOCATION, wait_for_end_of=False)
 
                 self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.TAB_LOCATION), wait_for_end_of=True)
                 self.robot.pick_object(selected_object="Dishwasher Tab")
@@ -204,19 +223,23 @@ class TaskMain():
 
             elif self.state == self.task_states["Move_to_dishwasher"]:
 
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
+
                 self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("dishwasher"), wait_for_end_of=True)
                 _,_,dist = self.robot.get_minimum_radar_distance(ang_obstacle_check=30)
                 dist = dist - 0.65
                 trashcan_place=[-224.5,81.3,-155.6,136.3,24.1,136.5]
                 self.robot.adjust_omnidirectional_position(dx = dist, dy = 0.0)
-                self.robot.set_speech(filename="pick_and_place_task/open_dishwasher_door", wait_for_end_of=False)
-                time.sleep(5.0)
+                self.robot.set_speech(filename="pick_and_place_task/open_dishwasher_door", wait_for_end_of=True)
+                time.sleep(8.0)
                 self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = trashcan_place, wait_for_end_of=True)
-                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                self.robot.set_arm(command="open_gripper_slow", wait_for_end_of=True)
                 time.sleep(0.3)
                 self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
-                self.robot.set_speech(filename="pick_and_place_task/close_dishwasher_door", wait_for_end_of=False)
-                time.sleep(3.0)
+                self.robot.set_speech(filename="pick_and_place_task/close_dishwasher_door", wait_for_end_of=True)
+                time.sleep(6.0)
             
                 if self.MILK_BEFORE_CORNFLAKES:
                     self.state = self.task_states["Move_milk_location"]
@@ -336,6 +359,12 @@ class TaskMain():
                     
                     self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.DISHES_LOCATION), wait_for_end_of=True)
 
+                    self.robot.set_speech(filename="furniture/opening_milk", wait_for_end_of=False)
+
+                    self.robot.open_milk_lid(max_opening_attempts=8, wait_for_end_of=True)
+
+                    self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
                     # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                     # self.robot.set_speech(filename="furniture/"+self.DISHES_LOCATION, wait_for_end_of=False)
                 
@@ -344,9 +373,6 @@ class TaskMain():
 
             elif self.state == self.task_states["Detect_and_pick_dishes"]:
 
-                self.robot.open_milk_lid()
-
-                self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
                 if self.GET_BREAKFAST_SPOON:
 

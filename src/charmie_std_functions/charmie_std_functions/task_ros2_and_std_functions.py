@@ -9057,6 +9057,7 @@ class RobotStdFunctions():
         # ***********************************************************************************************************************
 
             if state == MOVE_ARM_APROACH_OBJECT:
+                print("object orientation:", obj.orientation)
                 print(" NOW ENTERING STATE ", state)
 
 
@@ -9069,8 +9070,8 @@ class RobotStdFunctions():
                         correct_rotation = obj.orientation +90.0
                     else:
                         correct_rotation = obj.orientation -90.0
-                    if (selected_object == "spoon" or selected_object == "fork" or selected_object == "knife"):
-                        self.confirm_cutlery_rotation()
+                    #if (selected_object == "spoon" or selected_object == "fork" or selected_object == "knife"):
+                    #    self.confirm_cutlery_rotation()
 
                 # Calculate how much the arm will move foward to pick object
                 if pick_mode == "front":
@@ -9113,7 +9114,7 @@ class RobotStdFunctions():
 
                 # COnfirm cutlery rotation with cutlery 
                 if pick_mode == "top" and (selected_object == "fork" or selected_object == "spoon" or selected_object == "knife"):
-                    correct_rotation = self.confirm_cutlery_rotation(obj = obj)
+                    correct_rotation = self.confirm_cutlery_rotation(obj = obj, correct_rotation = correct_rotation)
 
 
                 print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab}, {correct_rotation})")
@@ -9396,9 +9397,11 @@ class RobotStdFunctions():
             return placed_height
 
 
-    def confirm_cutlery_rotation(self, obj = DetectedObject()):
-        
+    def confirm_cutlery_rotation(self, obj=DetectedObject(), correct_rotation= 0.0):
+        print(correct_rotation)
+        print("0")
         _, frame = self.get_hand_rgb_image()
+        print("a")
         curr_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
         h, w = curr_frame.shape[:2]
         yolo_mask = np.zeros((h, w),dtype=np.uint8)
@@ -9420,6 +9423,7 @@ class RobotStdFunctions():
 
         lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
         lab = cv2.bitwise_and(lab, lab, mask=yolo_mask)
+        print("b")
 
         #Otsu threshold -> A-channel 
 
@@ -9435,9 +9439,11 @@ class RobotStdFunctions():
         #cv2.imshow('hsv', crop_img) #cv2.imshow('yolo', yolo_mask) #cv2.imshow('red', red) #cv2.imshow('otsu', th) #cv2.imshow('lab', crop_lab) #cv2.imshow('lab_red', crop_lab[:,:,1]) #cv2.waitKey(0) #self.wait_for_start_button()
 
         Y, X = np.mgrid[0:red.shape[0]:1, 0:red.shape[1]:1]
+        print("c")
 
         if np.count_nonzero(red):
             centroid_x = int(float(np.sum(cv2.bitwise_and(X, X, mask=red)))/np.count_nonzero(red))
+            print("t")
             centroid_y = int(float(np.sum(cv2.bitwise_and(Y, Y, mask=red)))/np.count_nonzero(red))
             print("Centroid x: ", centroid_x, " Centroid y: ", centroid_y, " Center y: ", obj.box_height/2)
 
@@ -9450,7 +9456,9 @@ class RobotStdFunctions():
 
             print("Rotation", correct_rotation)
 
-            return correct_rotation
+        print(correct_rotation)
+
+        return correct_rotation
 
     def detect_milk_cap(self, cap="small"):
 
@@ -9621,6 +9629,9 @@ class RobotStdFunctions():
         DETECTION_ERROR = 0.018
         OPENING_ATTEMPT = 0
 
+        safe_rise_distance = - 0.03 * 1000
+        release_distance = 0.02 *1000
+
         TRAY_HEIGHT = 0.59
 
         gripper_place_position = self.get_gripper_localization()
@@ -9628,37 +9639,45 @@ class RobotStdFunctions():
         correct_y_grab = (lid.y - tf_y)*1000
         correct_z_grab = (lid.z - tf_z + DETECTION_ERROR)*1000
 
-        open_milk_lid_adjust = [correct_z_grab, - correct_y_grab, correct_x_grab, 0.0, 0.0, 0.0]
+        open_milk_lid_centralize_adjust = [correct_z_grab, - correct_y_grab, safe_rise_distance, 0.0, 0.0, 0.0]
+        open_milk_lid_down_adjust = [ 0.0, 0.0, - safe_rise_distance + correct_x_grab, 0.0, 0.0, 0.0]
 
-        print(open_milk_lid_adjust)
 
-        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_adjust, wait_for_end_of=True)
+        print(open_milk_lid_centralize_adjust)
 
-        self.set_arm(command="close_gripper", wait_for_end_of=True)
+        print(open_milk_lid_down_adjust)
+
+
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_centralize_adjust, wait_for_end_of=True)
+        self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_down_adjust, wait_for_end_of=True)
+
+        self.set_arm(command="close_gripper_lid", wait_for_end_of=True)
 
         for OPENING_ATTEMPT in range(max_opening_attempts):
             print("OPENING_ATTEMPT:", OPENING_ATTEMPT)
             if OPENING_ATTEMPT == 0:
                 small_rotation = [0.0,0.0,0.0,0.0,0.0,-30.0]
                 self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=small_rotation, wait_for_end_of=True)
-                self.set_arm(command="open_gripper", wait_for_end_of=True)
+                self.set_arm(command="open_gripper_lid", wait_for_end_of=True)
 
             rotate_right = [0.0,0.0,0.0,0.0,0.0,70.0]
             rotate_left = [0.0,0.0,0.0,0.0,0.0,-70.0]
+
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_right, wait_for_end_of=True)
-            self.set_arm(command="close_gripper", wait_for_end_of=True)
+            self.set_arm(command="close_gripper_lid", wait_for_end_of=True)
+            
             if OPENING_ATTEMPT != max_opening_attempts-1:
                 self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_left, wait_for_end_of=True)
-                self.set_arm(command="open_gripper", wait_for_end_of=True)
+                self.set_arm(command="open_gripper_lid", wait_for_end_of=True)
             else:
                 last_rotation = [0.0,0.0,0.0,0.0,0.0,-40.0]
                 self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=last_rotation, wait_for_end_of=True)
                 safe_rise = [0.0,0.0,-lid_height*4*1000,0.0,0.0,0.0]
                 self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=safe_rise, wait_for_end_of=True)
 
-        let_lid_go = [-correct_z_grab, correct_y_grab, -correct_x_grab + lid_height*4*1000, 0.0, 0.0, 0.0]
+        let_lid_go = [-correct_z_grab + release_distance, correct_y_grab, -correct_x_grab + lid_height*4*1000, 0.0, 0.0, 0.0]
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose=let_lid_go, wait_for_end_of=True)
-        self.set_arm(command="open_gripper", wait_for_end_of=True)
+        self.set_arm(command="open_gripper_lid", wait_for_end_of=True)
         self.set_arm(command="check_milk_cap_to_ask_for_objects", wait_for_end_of=True)
 
 
@@ -10334,7 +10353,7 @@ class RobotStdFunctions():
 
 
                 if restaurant_scenario == False or pick_mode == "front":
-                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = self.adjust_y_, wait_for_end_of=False, safety=False)
+                    s,m = self.adjust_omnidirectional_position(dx = self.adjust_x_, dy = -0.05, wait_for_end_of=False, safety=False)
                 state = MOVE_ARM_PRE_HAND_SEARCH_OBJECT
     
 
@@ -10349,15 +10368,15 @@ class RobotStdFunctions():
                         
                 if pick_mode == "top":
                 
-                    ow = self.get_object_width_from_object(valid_detected_object.object_name)
-                    oh = self.get_object_height_from_object(valid_detected_object.object_name)
+                    ow = 0.01
+                    oh = 0.01
 
                     self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
 
                     # Calculate initial arm height for object search
                     gripper_position = self.get_gripper_localization()
                     furniture_height = self.get_height_from_furniture("Cooking Table")
-                    correct_x = (gripper_position.z - tf_x - oh - furniture_height[0])*1000 - 210
+                    correct_x = (gripper_position.z - tf_x - oh - 0.68)*1000 - 210
                     object_position = [0.0, 0.0, correct_x, 0.0, 0.0, 0.0]
                     print("GRIPPER HEIGHT",gripper_position)
                     print("FURNITURE HEIGHT",furniture_height)
@@ -10387,8 +10406,7 @@ class RobotStdFunctions():
                 print(" NOW ENTERING STATE ", state)
 
                 #OPEN GRIPPER
-                if obj.object_name != "plate":
-                    self.set_arm(command="open_gripper", wait_for_end_of=True)
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
 
                 if finals_flag:
                     speak_problem_in_max_search_attempts = False
@@ -10416,6 +10434,10 @@ class RobotStdFunctions():
 
                 # IF NO OBJECTS FOUND WITHIN X SEARCHES GO FOR ASK FOR HELP
                 if not final_objects:
+                    obj = DetectedObject()
+                    obj.object_name = selected_object
+                    show_detection = False
+                    state = ERROR_HANDLING_ASK_FOR_HELP
                     ask_help = True
                     state = ADJUST_TO_INITIAL_POSITION
                 else:
@@ -10530,7 +10552,7 @@ class RobotStdFunctions():
                 # If furniture is known furniture_height will be over 0, otherwise it will be -1 and will calculate object height based on heights gotten from .json file
                 if (furniture_height > 0):                              
 
-                    picked_height = current_gripper_height.z - furniture_height
+                    picked_height = current_gripper_height.z - 0.68
 
                 else:
                     
