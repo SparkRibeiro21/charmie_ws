@@ -144,24 +144,26 @@ class Ollama_planner_description:
 
                             "Follow these rules strictly:\n"
                             "1. Never invent objects, people, or places not in the command.\n"
-                            "2. Always move before interacting with anything.\n"
-                            "3. After moving to a location, always look for the object or person before touching or addressing them.\n"
-                            "4. Always move to the person giving the command before announcing the result of counting/comparing objects."
-                            "4. The locutor is in the instruction point If you need to talk to them or hand them an object, move to them first.\n"
-                            "5. You can't pick and place people, only guide them.\n"
-                            "6. Always move to the person after looking for them.\n"
-                            "7. Anytime you look for a person, move to them\n"
-                            "8. The verbs guide, escort, take mean the same. \n"
-                            "9. The verbs follow and stick with mean the same. \n"
-                            "10. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak, tell.\n\n"
+                            "2. The locutor is in the instruction point If you need to talk to them or hand them an object, move to them first.\n"
+                            "3. You can't pick and place people, only guide them.\n"
+                            "4. The verbs guide, escort, take mean the same. \n"
+                            "5. The verbs follow and stick with mean the same. \n"
+                            "6. Use only these verbs: move to, look for, pick, place, hand, follow, guide, greet, count, speak.\n\n"
 
-                            "WHEN INTERACTING WITH PEOPLE:\n"
-                            "   LOOK FOR PERSON->MOVE TO PERSON->INTERACTION(SPEAK OR HANDOVER)\n"
-                            "WHEN INTERACTING WITH FURNITURE:\n"
-                            "   MOVE TO FURITURE\n"
-                            "WHEN INTERACTING WITH OBJECTS:\n"
-                            "   LOOK FOR OBJECT->PICK OBJECT->FURNITURE/PEOPLE INTERACTION->PLACE/HANDOVER\n\n"
-
+                            "WHEN DOING PICK AND PLACE TASKS:\n"
+                            "   MOVE TO PLACE->SEARCH FOR OBJECTS->PICK OBJECTS->MOVE TO PLACE->PLACE OBJECTS\n"
+                            "WHEN DOING PICK AND HAND TO PERSON TASKS:\n"
+                            "   MOVE TO PLACE->SEARCH FOR OBJECTS->PICK OBJECTS->MOVE TO PLACE->SEARCH FOR PERSON->MOVE TO PERSON->GREET PERSON->HANDOVER->\n"
+                            "WHEN DOING COUNT COMMANDS TASKS:\n"
+                            "   MOVE TO PLACE->SEARCH FOR OBJECTS->COUNT OBJECTS->MOVE TO PLACE->SPEAK THE RESULT\n"
+                            "WHEN DOING COMPARE COMMANDS TASKS:\n"
+                            "   MOVE->SEARCH FOR OBJECTS->COMPARE OBJECTS->MOVE TO PLACE->SPEAK THE RESULT\n"
+                            "WHEN DOING GUIDING TASKS:\n"
+                            "   MOVE TO PLACE->SEARCH FOR PEOPLE->MOVE TO PERSON->GREET PERSON->GUIDE TO PLACE\n"
+                            "WHEN DOING FOLLOW TASKS:\n"
+                            "   MOVE TO PLACE->SEARCH FOR PEOPLE->MOVE TO PERSON->GREET PERSON->FOLLOW PERSON\n"
+                            "WHEN DOING SAYING INFORMATION TASKS:\n"
+                            "   MOVE TO PLACE->SEARCH FOR PEOPLE->MOVE TO PERSON->GREET PERSON->SPEAK INFORMATION\n"
 
                             "EXAMPLES:\n"
 
@@ -171,7 +173,7 @@ class Ollama_planner_description:
                             "Command: Could you tell me what is the heaviest object on the shelf\n"
                             "Answer: I will move to the shelf; I will look for the heaviest object; Then, I will move towards you; I will tell you the result of the comparison.\n\n"
 
-                            "Command: kindly ascertain the number of snacks on the cabinet.\n"
+                            "Command: Please count the number of snacks on the cabinet.\n"
                             "Answer: I will move to the cabinet; I will count the snacks on the cabinet; I will move towards you; Lastly, I will tell you the result of the counting.\n\n"
 
                             "Command: Retrieve a dish from the refrigerator and subsequently position it on the storage rack.\n"
@@ -195,6 +197,8 @@ class Ollama_planner_description:
                             "Command: Tell your team's name to the person pointing left in the kitchen\n"
                             "Answer: I will move to the kitchen; After that, I will move towards the person pointing left; I will tell the person pointing to the left my team's name.\n\n"
 
+                            "Command: Tell Anna in the kitchen what day tomorrow is\n"
+                            "Answer: I will move to the kitchen; After that, I will search for Anna ; I will move towards Anna; Lastly, I will tell Anna what day tomorrow is.\n\n"
                         )},
                       {"role":"user",
                        "content":f"""
@@ -229,19 +233,19 @@ class Ollama_planner_description:
 
                             "STRICT RULES:\n" 
                             "1. Allowed actions:\n" 
-                            " move_to_place-<LOCATION>\n" 
-                            " move_to_person-<ATTRIBUTE>\n" 
-                            " look_for_person-<ATTRIBUTE>\n"
-                            " look_for_object-<OBJECT>\n" 
-                            " compare_objects-<ATTRIBUTE>\n" 
-                            " count_objects-<OBJECT>\n" 
-                            " pick_up_object-<OBJECT>\n" 
-                            " place_object-<LOCATION>\n" 
-                            " hand_object-<OBJECT>\n" 
-                            " guide_person-<LOCATION>\n" 
-                            " follow_person-\n" 
+                            " move_to_place:<LOCATION>\n" 
+                            " move_to_person:<ATTRIBUTE>\n" 
+                            " look_for_person:<ATTRIBUTE>\n"
+                            " look_for_object:<OBJECT>\n" 
+                            " compare_objects:<ATTRIBUTE>\n" 
+                            " count_objects:<OBJECT>\n" 
+                            " pick_up_object:<OBJECT>\n" 
+                            " place_object:<LOCATION>\n" 
+                            " hand_object:<OBJECT>\n" 
+                            " guide_person:<LOCATION>\n" 
+                            " follow_person:\n" 
                             " say_result\n\n" 
-                            " say_info-<INFO_TO_SAY>\n" 
+                            " say_info:<INFO_TO_SAY>\n" 
                             
                             "2. PERSON ATTRIBUTE FORMAT:\n" 
                             # " move_to_person or look for person must use ONLY ONE attribute type:\n" 
@@ -259,58 +263,58 @@ class Ollama_planner_description:
                             
                             "EXAMPLES:\n" 
                             "Command: I will move to the kitchen.\n" 
-                            "Answer: move_to_place-kitchen\n\n" 
+                            "Answer: move_to_place:kitchen\n\n" 
 
                             "Command: I will move towards Robin.\n" 
-                            "Answer: move_to_person-name:Robin\n\n"
+                            "Answer: move_to_person:name:Robin\n\n"
 
                             "Command: I will move towards the waving person.\n" 
-                            "Answer: move_to_person-pose:raising_hand\n\n" 
+                            "Answer: move_to_person:pose:raising_hand\n\n" 
 
                             "Command: I will move towards the person pointing left.\n" 
-                            "Answer: move_to_person-pose:pointing_left\n\n" 
+                            "Answer: move_to_person:pose:pointing_left\n\n" 
 
                             "Command: I will move towards the person wearing a black jacket.\n" 
-                            "Answer: move_to_person-clothing:black\n\n"
+                            "Answer: move_to_person:clothing:black\n\n"
 
                             "Command: I will move towards you.\n" 
-                            "Answer: move_to_person-you\n\n" 
+                            "Answer: move_to_person:you\n\n" 
 
                             "Command: I will look for the lightest drink.\n" 
-                            "Answer: compare_objects-lightest:drinks\n\n" 
+                            "Answer: compare_objects:lightest:drinks\n\n" 
 
                             "Command: I will look for the smallest cleaning supply.\n" 
-                            "Answer: compare_objects-smallest:cleaning_supplies\n\n" 
+                            "Answer: compare_objects:smallest:cleaning_supplies\n\n" 
 
                             "Command: I will count the snacks.\n" 
-                            "Answer: count_objects-snacks\n\n" 
+                            "Answer: count_objects:snacks\n\n" 
 
                             "Command: I will pick up the iced tea.\n"
-                            "Answer: pick_up_object-iced_tea\n\n" 
+                            "Answer: pick_up_object:iced_tea\n\n" 
 
                             "Command: I will hand the tropical juice to Gary.\n" 
-                            "Answer: hand_object-tropical_juice-Gary\n\n" 
+                            "Answer: hand_object:tropical_juice-Gary\n\n" 
 
                             "Command: I will guide the person pointing to the left to the shelf.\n"
-                            "Answer: guide_person-shelf\n\n" 
+                            "Answer: guide_person:shelf\n\n" 
 
                             "Command: I will tell the person pointing to the left my team's name.\n"
-                            "Answer: say_info-team's name\n\n" 
+                            "Answer: say_info:team's name\n\n" 
 
                             "Command: I will look for the cleanser.\n" 
-                            "Answer: look_for_objects-cleanser\n"
+                            "Answer: look_for_objects:cleanser\n"
 
                             "Command: I will look for Scarlett.\n" 
-                            "Answer: look_for_person-name:Scarlett\n\n"
+                            "Answer: look_for_person:name:Scarlett\n\n"
 
                             "Command: I will look for the person pointing left.\n" 
-                            "Answer: look_for_person-pose:pointing_left\n\n" 
+                            "Answer: look_for_person:pose:pointing_left\n\n" 
 
                             "Command: I will look for the person wearing a black jacket.\n" 
-                            "Answer: look_for__person-clothing:black\n\n"
+                            "Answer: look_for__person:clothing:black\n\n"
 
                             "Command: I will greet Andrew.\n" 
-                            "Answer: greet_person-Andrew\n\n"
+                            "Answer: greet_person:Andrew\n\n"
 
                             "Command: I will tell you the result of the comparison.\n" 
                             "Answer: say_result\n" )

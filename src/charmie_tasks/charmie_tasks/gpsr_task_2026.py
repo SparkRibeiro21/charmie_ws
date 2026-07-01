@@ -83,7 +83,7 @@ class TaskMain():
         # Initial Position
         self.initial_position = [0.0, 0.0, 0.0]
 
-        self.instruction_point =  [ 6.09, -1.33, 0]
+        self.instruction_point =  [ 7.11, 4.3, 180]
 
         print(self.initial_position)
         print(self.instruction_point)
@@ -197,45 +197,9 @@ class TaskMain():
 
 
             elif self.state == self.task_states["Set_command_order"]:
-          
-                plan_feasibility = []
+                
+                self.order_to_execute = self.robot.set_order_to_execute_gpsr_plan(self.llps)
 
-                for plan in self.llps:
-                    cannot_perform_task = False
-                    points = 0
-
-                    for step in plan:
-                        action = step.split("-")
-
-                        match action[0]:                          
-                            case "say_info" | "follow_person":
-                                cannot_perform_task = True
-
-                            case "compare_objects" | "count_objects":
-                                points += 6
-
-                            case "pick_object" | "place_object":
-                                points += 3
-
-                            case "move_to" | "say_result":
-                                points += 2
-
-                            case "go_to_person" | "look_for_person" | "guide_person":
-                                points += 1
-
-                            case "ERROR":
-                                points -= 4
-
-                    if cannot_perform_task:
-                        points = float('-inf')
-
-                    i = 0
-                    while i < len(plan_feasibility) and plan_feasibility[i] >= points:
-                        i += 1                                    
-
-                    plan_feasibility.insert(i, points)            
-                    self.order_to_execute.insert(i, plan)
-               
                 self.state = self.task_states["Execute_gpsr_commands"]
 
 
