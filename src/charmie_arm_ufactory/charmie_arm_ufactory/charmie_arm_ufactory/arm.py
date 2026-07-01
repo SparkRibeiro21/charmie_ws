@@ -398,8 +398,15 @@ class ArmUfactory(Node):
 		# point to coords, front of robot
 		self.point_front_of_robot_joints = [-201.2, 52.9, -91.6, 154.1, 57.9, 105.2]
 
-		# OPEN MILK CAP (PICK AND PLACE TASK / SERVE THE BREAKFAST)
-		self.check_milk_cap_position_joints = [-182.1, 46.1, -44.9, -91.4, 90.8, 296.3]
+		# # OPEN MILK CAP (PICK AND PLACE TASK / SERVE THE BREAKFAST)
+		# self.check_milk_cap_position_joints = [-182.1, 46.1, -44.9, -91.4, 90.8, 296.3]
+
+		### ROBOCUP2026 POST-TEST
+		# self.check_milk_cap_position_joints = [-198.8, 46, -46.9, -108.2, 90.4, 294.4]
+
+		### ROBOCUP2026 TEST
+		self.check_milk_cap_position_joints = [-191, 45.7, -45.9, -99.7, 91.3, 295.8]
+
 
 		
 	def setup_arm_movement_services(self):
@@ -839,6 +846,15 @@ class ArmUfactory(Node):
 			case 2:
 				self.finish_arm_movement_()
 
+	def close_gripper_lid(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=2000)
+			case 1:
+				self.set_gripper_position_(pos=0.0, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
 	def close_gripper_with_check_object(self, min_value):
 		match self.estado_tr:
 			case 0:
@@ -872,6 +888,15 @@ class ArmUfactory(Node):
 		match self.estado_tr:
 			case 0:
 				self.set_gripper_speed_(speed=5000)
+			case 1:
+				self.set_gripper_position_(pos=499, wait=True)
+			case 2:
+				self.finish_arm_movement_()
+
+	def open_gripper_lid(self):
+		match self.estado_tr:
+			case 0:
+				self.set_gripper_speed_(speed=2000)
 			case 1:
 				self.set_gripper_position_(pos=499, wait=True)
 			case 2:
@@ -1668,6 +1693,8 @@ class ArmUfactory(Node):
 				self.close_gripper()
 			case "close_gripper_with_check_object":
 				self.close_gripper_with_check_object(0)
+			case "close_gripper_lid":
+				self.close_gripper_lid()
 			case "open_gripper":
 				self.open_gripper()
 			case "open_gripper_fast":
@@ -1676,6 +1703,8 @@ class ArmUfactory(Node):
 				self.open_gripper_washing()
 			case "slow_open_gripper":
 				self.slow_open_gripper()
+			case "open_gripper_lid":
+				self.open_gripper_lid()
 
 			# ADJUSTS MOVEMENTS FROM ARMCONTROLLER
 			case "adjust_linear_motion":

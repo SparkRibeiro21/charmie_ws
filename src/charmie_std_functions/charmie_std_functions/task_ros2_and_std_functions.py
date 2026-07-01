@@ -9455,7 +9455,7 @@ class RobotStdFunctions():
 
         def crop_depth(depth):
             h, w = depth.shape[:2]
-            x1 = w // 3
+            x1 = int(0.45 * w)
             x2 = 2 * w // 3
             y1 = h // 5
             y2 = 4 * h // 5
@@ -9510,7 +9510,7 @@ class RobotStdFunctions():
 
         # cv2.imshow("normalized", depth)
         
-        segmented, labels, centers = segment_3_classes(depth, type_of_cap=type_of_cap)
+        segmented, labels, centers = segment_3_classes(depth, type_of_cap=4)
         # print(labels, centers)
         brightest_cluster = np.argmax(centers)
 
