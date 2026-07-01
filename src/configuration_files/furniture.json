@@ -16,10 +16,10 @@
 {"name": "Refrigerator",      	"height": [ 1.88 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 8.0, 1.09, 0.0],      "center_coords": [ 9.3, 1.03],       "size": [0.72, 0.70],    "angle":   0.0, "diameter":0.0,  "look": "vertical",    "shape":"square"},
 {"name": "Counter",      		"height": [ 0.68 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 5.70, -1.70,   -90.0],"center_coords": [ 5.75, -3.0],      "size": [0.65, 0.725],   "angle":   0.0, "diameter":0.0,  "look": "single",      "shape":"square"},
 {"name": "Sink",      		    "height": [ 0.68 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 6.29, -1.70,   -90.0],"center_coords": [ 6.33, -3.0],      "size": [0.51, 0.725],   "angle":   0.0, "diameter":0.0,  "look": "single",      "shape":"square"},
-{"name": "Cooking Table",      	"height": [ 0.68 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 6.8, -1.70,   -90.0], "center_coords": [ 6.80, -3.0],      "size": [0.43, 0.725],   "angle":   0.0, "diameter":0.0,  "look": "single",      "shape":"square"},
+{"name": "Cooking Table",      	"height": [ 0.68 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 6.8, -2.00,   -90.0], "center_coords": [ 6.80, -3.0],      "size": [0.43, 0.725],   "angle":   0.0, "diameter":0.0,  "look": "single",      "shape":"square"},
 {"name": "Dishwasher",      	"height": [ 0.845 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 8.5, -2.00, -90.0],   "center_coords": [ 8.49, -2.95],     "size": [0.65, 0.83],    "angle":   0.0, "diameter":0.0,  "look": "single",      "shape":"square"},
 {"name": "Kitchen Trash Bin",   "height": [ 0.39], 			                              "room": "Kitchen", 	  "nav_coords": [ 9.18, -1.80,   -90.0],"center_coords": [ 9.2, -2.75],       "size": [0.26, 0.26],    "angle":   0.0, "diameter":0.26,  "look": "single",     "shape":"circle"},
-{"name": "Dinner Table",      	"height": [ 0.73 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 7.58, -1.54, 90.0],   "center_coords": [ 7.56, -0.132],    "size": [0.8, 0.80],     "angle":   0.0, "diameter":3.0, "look": "horizontal",  "shape":"circle"}
+{"name": "Dinner Table",      	"height": [ 0.73 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 7.58, -1.84, 90.0],   "center_coords": [ 7.56, -0.132],    "size": [0.8, 0.80],     "angle":   0.0, "diameter":2.2, "look": "horizontal",  "shape":"circle"}
 
 
 ]

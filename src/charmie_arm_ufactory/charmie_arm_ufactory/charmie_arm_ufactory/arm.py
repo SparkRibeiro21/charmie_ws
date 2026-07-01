@@ -1195,7 +1195,7 @@ class ArmUfactory(Node):
 			case 2:
 				self.set_gripper_speed_(speed=1000)
 			case 3:
-				self.set_gripper_position_(pos=400, wait=True)
+				self.set_gripper_position_(pos=300, wait=True)
 			case 4:
 				self.set_position_values_(pose=self.linear_above_funilocopov4_for_place, speed=150, wait=True)
 			case 5:
