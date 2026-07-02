@@ -267,13 +267,13 @@ class ROS2TaskNode(Node):
         #     while not self.llm_gpsr_client.wait_for_service(1.0):
         #         self.get_logger().warn("Waiting for GPSR Server LLM ...")
         if self.ros2_modules["charmie_llm"]:
-            # while not self.llm_ollama_demonstration_client.wait_for_service(1.0):
+            while not self.llm_ollama_demonstration_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for LLM Ollama Demonstration Server ...")
-            # while not self.llm_ollama_information_client.wait_for_service(1.0):
+            while not self.llm_ollama_information_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for LLM Ollama Information Server ...")
-            # while not self.llm_ollama_gpsr_high_level_client.wait_for_service(1.0):
+            while not self.llm_ollama_gpsr_high_level_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for LLM Ollama GPSR High Level Server ...")
-            # while not self.llm_ollama_gpsr_low_level_client.wait_for_service(1.0):
+            while not self.llm_ollama_gpsr_low_level_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for LLM Ollama GPSR Low Level Server ...")
 
         if self.ros2_modules["charmie_low_level"]:
@@ -5364,43 +5364,87 @@ class RobotStdFunctions():
 
         print(task)
 
-        task_type = ""
+        task_type = "NONE"
+
+        found_comparison_attribute=False
 
         for i, step in enumerate(task):
+
             
-            task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
+            task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").replace("(", ":").split(":")
 
             action = task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
             attribute = task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
             parameter = task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-
-            match action:
-                case "place_object":
-                    task_type="pick_and_place_task"
+        
+            print("-------type_to_check---------")
+            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
                 
-                case "hand_object":
-                    task_type="pick_and_handover_task"
-                
-                case "count_objects":
-                    task_type="count_objects_task"
-                
-                case "guide_person":
-                    for obj in self.node.rooms:
-                        if str(obj["name"]).replace(" ","_").lower() == attribute:
-                            task_type="guide_to_task"
-
-                    task_type="follow_person_task"
-                
-                case "follow_person":
-                    task_type="follow_person_task"
-
-                case "say_info":
-                    task_type="say_info_task"
 
             if attribute == "lightest" or attribute == "heaviest" or attribute == "smallest" or attribute == "biggest":
-
                 task_type="compare_objects_task"
 
+            else:
+                match action:
+
+                    # case "place_object":
+                    #     task_type="pick_and_place_task"
+                    #     print("added")
+                    #     print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+                    
+
+                    # case "hand_object":
+                    #     task_type="pick_and_handover_task"
+                    #     print("added")
+                    #     print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+                
+                    
+                    case "count_objects":
+                        task_type="count_objects_task"
+                        print("added")
+                        print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+                
+                    
+                    case "guide_person":
+                        valid_guide=False
+                        for obj in self.node.rooms:
+                            if str(obj["name"]).replace(" ","_").lower() == attribute:
+                                task_type="guide_to_task"
+                                valid_guide=True
+                                print("added")
+                                print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+
+                        if (not valid_guide):
+                            task_type="follow_person_task"
+                            print("added")
+                            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+                    
+                    case "follow_person":
+                        task_type="follow_person_task"
+                        print("added")
+                        print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+                    
+
+                    case "say_info":
+                        task_type="say_info_task"
+                        print("added")
+                        print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+                    
+                    case "say_result":
+                        if (task_type =="NONE"):
+                            task_type="say_info_task"
+                            print("added")
+                            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+                    
+                    # case "pick_up_object":
+                    #     if (task_type =="NONE"):
+                    #         task_type="pick_and_handover_task"
+                    #         print("added")
+                    #         print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+
+                
+            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+        
 
         return task_type
 
@@ -5415,12 +5459,54 @@ class RobotStdFunctions():
         task_attribute=[]
         task_parameter=[]
 
+        ambigual_action_found=False
         move_found=False
 
 
         ###============STEP 1===============
-            ###ALWAYS START WITH MOVE
-        if(task_type==[]):
+        ###ALWAYS START WITH MOVE
+        for step_index, step in enumerate(raw_task_plan):
+
+            task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
+        
+            # Parsing the command
+            task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+            task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+            task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
+            # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+
+
+            if (task_action == "move_to_place"):
+
+                for room in self.node.rooms:
+                    if str(room["name"]).replace(" ","_").lower() == task_attribute:
+
+                        corrected_task_plan.append("move_to_place:" + task_attribute + ";")
+                        current_step=step_index
+                        first_move_index=step_index
+                        move_found=True
+
+                        break
+
+                for furniture in self.node.furniture:
+                    if str(furniture["name"]).replace(" ","_").lower() == task_attribute:
+
+                        corrected_task_plan.append("move_to_place:" + task_attribute+ ";")
+                        current_step=step_index
+                        first_move_index=step_index
+                        move_found=True
+
+                        break
+
+
+            if (move_found):
+                break
+
+        move_found=False
+        ###============STEP 2===============
+        ###PICK OBJECT
+        if task_type == "pick_and_place_task" or task_type == "pick_and_handover_task":
+       
             for step_index, step in enumerate(raw_task_plan):
 
                 task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
@@ -5429,11 +5515,139 @@ class RobotStdFunctions():
                 task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
                 task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
+                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+               
+
+                if(task_action== "pick_up_object"):
+
+                    for obj in self.node.objects_file:
+                        if str(obj["name"]).replace(" ","_").lower() == task_attribute:
+                            print("picking")
+                            corrected_task_plan.append("pick_object:" + task_attribute + ";")
+                            current_step=step_index
+                            pass
+        
+        ###COUNT OBJECTS
+        elif task_type == "count_objects_task":
+            for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
+                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
+            
+                # Parsing the command
+                task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+                task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+                task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
+                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+
+                if(task_action == "count_objects" and not ambigual_action_found):
+    
+                    corrected_task_plan.append("count_objects:" + task_attribute + ";")
+                    current_step=step_index
+                    ambigual_action_found=True
+
+                elif (task_action == "look_for_objects" and not ambigual_action_found):
+
+                    corrected_task_plan.append("count_objects:" + task_attribute + ":"+task_parameter+";")
+                    current_step=step_index
+                    ambigual_action_found=True
+                
+                elif (task_action == "look_for_objects"):
+
+                    corrected_task_plan.append("compare_objects:" + task_attribute + ":"+task_parameter+";")
+                    current_step=step_index
+                    ambigual_action_found=True
+
+        ###COMPARE OBJECTS
+        elif task_type == "compare_objects_task":
+
+            print("Beggining of curr step:",current_step)
+
+            for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
+                print("curr step:",current_step)
+                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
+               
+                # Parsing the command
+                task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+                task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+                task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
+                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+
+                if (task_action == "compare_objects" or task_action == "look"):
+                    
+                    if task_attribute == "lightest" or task_attribute == "heaviest" or task_attribute == "smallest" or task_attribute == "biggest":
+                
+                        corrected_task_plan.append("compare_objects:" + task_attribute + ":"+task_parameter+";")
+                        current_step=step_index
+                        ambigual_action_found=True
+
+                elif (task_action == "look_for_objects"):
+
+                    if task_attribute == "lightest" or task_attribute == "heaviest" or task_attribute == "smallest" or task_attribute == "biggest":
+                
+                        corrected_task_plan.append("compare_objects:" + task_attribute + ":"+task_parameter+";")
+                        current_step=step_index
+                        ambigual_action_found=True
+
+                elif (task_action == "look_for_object"):
+
+                    if task_attribute == "lightest" or task_attribute == "heaviest" or task_attribute == "smallest" or task_attribute == "biggest":
+                
+                        corrected_task_plan.append("compare_objects:" + task_attribute + ":"+task_parameter+";")
+                        current_step=step_index
+                        ambigual_action_found=True
+
+        ###SEARCH FOR PERSON
+        elif task_type == "guide_to_task" or task_type == "follow_person_task" or task_type == "say_info_task":
+            
+            print("Beggining of curr step:",current_step)
+
+            for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
+               
+                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
+             
+                # Parsing the command
+                task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+                task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+                task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
+                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+
+                print(task_action)
+                if(task_action == "look_for_person" and not ambigual_action_found):
+
+                    print("AAAAAAAAAAAAAAAAAAAAAAAAA")
+                    corrected_task_plan.append("look_for_person:" + task_attribute + ":"+task_parameter+";")
+                    current_step=step_index
+                    ambigual_action_found=True
+
+                elif(task_action == "move_to_person" and not ambigual_action_found):
+                    corrected_task_plan.append("look_for_person:" + task_attribute + ":"+task_parameter+";")
+                    current_step=step_index
+                    ambigual_action_found=True
+                    
+        ambigual_action_found=False
+        move_found=False
+        ###============STEP 3===============
+        ###MOVE TO PLACE OBJECT
+        if task_type == "pick_and_place_task" or task_type == "pick_and_handover_task":
+
+            for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
+                print(step_index)
+                print(step)
+
+                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
+
+                # Parsing the command
+                task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+                task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+                task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
                 # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+                
+                if (task_action == "move_to_person"):
+                    print("aaaaaaaaaaaaaaaa")
+                    move_found=True
+                    break
 
-
-                if (task_action == "move_to_place"):
-
+                elif (task_action == "move_to_place" ):
+                    print("bbbbbbbbbbbbbbbbb")
                     for room in self.node.rooms:
                         if str(room["name"]).replace(" ","_").lower() == task_attribute:
 
@@ -5455,117 +5669,11 @@ class RobotStdFunctions():
                             break
 
 
-                if (move_found):
-                    break
-
-        ###============STEP 2===============
-        ###PICK OBJECT
-        if task_type == "pick_and_place_task" or task_type == "pick_and_handover_task":
-       
-            for step_index, step in enumerate(raw_task_plan, start=current_step):
-                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
-            
-                # Parsing the command
-                task_action.append(task_split[0].replace(" ","_").lower() if len(task_split) > 0 else "")
-                task_attribute.append(task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else "")
-                task_parameter.append(task_split[2].replace(" ","_").lower() if len(task_split) > 2 else "")
-                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
-
-                if(task_action== "pick_object"):
-                    for obj in self.node.objects_file:
-                        if str(obj["name"]).replace(" ","_").lower() == task_attribute[step_index]:
-                            corrected_task_plan.append("pick_object:" + task_attribute[step_index] + ";")
-                            current_step=step_index
-                            pass
+            if (not move_found):
+                corrected_task_plan.append("move_to_place:" + task_attribute[first_move_index] + ";")
+                current_step=step_index
+                move_found=True
         
-        ###COUNT OBJECTS
-        elif task_type == "count_objects_task":
-            
-            for step_index, step in enumerate(raw_task_plan[:current_step], start=current_step):
-                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
-            
-                # Parsing the command
-                task_action.append(task_split[0].replace(" ","_").lower() if len(task_split) > 0 else "")
-                task_attribute.append(task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else "")
-                task_parameter.append(task_split[2].replace(" ","_").lower() if len(task_split) > 2 else "")
-                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
-
-                if(task_action[step_index] == "count_objects"):
-                    for obj in self.node.objects_file:
-                        if str(obj["name"]).replace(" ","_").lower() == task_attribute[step_index]:
-                            corrected_task_plan.append("count_objects:" + task_attribute[step_index] + ";")
-                            current_step=step_index
-                            pass
-                    
-                    for obj_class in self.node.objects_classes_file:
-                        if str(obj_class["name"]).replace(" ","_").lower() == task_attribute[step_index]:
-                            corrected_task_plan.append("count_objects:" + task_attribute[step_index] + ";")
-                            current_step=step_index
-                            pass
-        
-        ###COMPARE OBJECTS
-        elif task_type == "compare_objects_task":
-
-            for step_index, step in enumerate(raw_task_plan[:current_step], start=current_step):
-                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
-            
-                # Parsing the command
-                task_action.append(task_split[0].replace(" ","_").lower() if len(task_split) > 0 else "")
-                task_attribute.append(task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else "")
-                task_parameter.append(task_split[2].replace(" ","_").lower() if len(task_split) > 2 else "")
-                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
-
-                if(task_action[step_index] == "compare_objects"):
-                    corrected_task_plan.append("compare_objects:" + task_attribute[step_index] + ":"+task_parameter[step_index]+";")
-                    current_step=step_index
-
-        ###SEARCH FOR PERSON
-        elif task_type == "guide_to_task" or task_type == "follow_person_task" or task_type == "say_info_task":
-            for step_index, step in enumerate(raw_task_plan[:current_step], start=current_step):
-                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
-
-                # Parsing the command
-                task_action.append(task_split[0].replace(" ","_").lower() if len(task_split) > 0 else "")
-                task_attribute.append(task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else "")
-                task_parameter.append(task_split[2].replace(" ","_").lower() if len(task_split) > 2 else "")
-                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
-
-                if(task_action[step_index] == "look_for_person"):
-                    corrected_task_plan.append("look_for_person:" + task_attribute[step_index] + ":"+task_parameter[step_index]+";")
-        
-
-        ###============STEP 3===============
-        ###MOVE TO PLACE OBJECT
-        if task_type == "pick_and_place_task" or task_type == "pick_and_handover_task":
-            for step_index, step in enumerate(raw_task_plan):
-
-                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
-
-                # Parsing the command
-                task_action.append(task_split[0].replace(" ","_").lower() if len(task_split) > 0 else "")
-                task_attribute.append(task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else "")
-                task_parameter.append(task_split[2].replace(" ","_").lower() if len(task_split) > 2 else "")
-                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
-
-                if (task_action[step_index] == "move_to_place"):
-                    for room in self.node.rooms:
-                        if str(room["name"]).replace(" ","_").lower() == task_attribute[step_index]:
-                            corrected_task_plan.append("move_to_place:" + task_attribute[step_index] + ";")
-                            current_step=step_index
-                    
-                    for furniture in self.node.furniture:
-                        if str(room["name"]).replace(" ","_").lower() == task_attribute[step_index]:
-
-                            corrected_task_plan.append("move_to_place:" + task_attribute[step_index] + ";")
-                            current_step=step_index
-                            first_move_index=step_index
-
-                            pass
-                       
-                else:
-                    corrected_task_plan.append("move_to_place:" + task_attribute[first_move_index] + ";")
-                    current_step=step_index
-    
         ###MOVE TO YOU
         elif task_type == "count_objects_task" or task_type == "compare_objects_task":
 
@@ -5573,19 +5681,19 @@ class RobotStdFunctions():
         
         ###GUIDE TO
         elif task_type == "guide_to_task":
-            for step_index, step in enumerate(raw_task_plan[:current_step], start=current_step):
+            for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
                 task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
 
                 # Parsing the command
-                task_action.append(task_split[0].replace(" ","_").lower() if len(task_split) > 0 else "")
-                task_attribute.append(task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else "")
-                task_parameter.append(task_split[2].replace(" ","_").lower() if len(task_split) > 2 else "")
+                task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+                task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+                task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
                 # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
-                if(task_action[step_index] == "guide_to"):
+                if(task_action == "guide_to"):
                     for room in self.node.rooms:
-                        if str(room["name"]).replace(" ","_").lower() == task_attribute[step_index]:
-                            corrected_task_plan.append("guide_to:"+task_attribute[step_index]+";")
+                        if str(room["name"]).replace(" ","_").lower() == task_attribute:
+                            corrected_task_plan.append("guide_to:"+task_attribute+";")
                             current_step=step_index
 
         ###FOLLOW
@@ -5598,7 +5706,9 @@ class RobotStdFunctions():
 
             corrected_task_plan.append("say_info:;")
 
-
+        print("finnished step three")
+        ambigual_action_found=False
+        move_found=False
         ###============STEP 4===============
         ###PLACE OBJECT
         if task_type == "pick_and_place_task":
@@ -5606,43 +5716,53 @@ class RobotStdFunctions():
                 task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
 
                 # Parsing the command
-                task_action.append(task_split[0].replace(" ","_").lower() if len(task_split) > 0 else "")
-                task_attribute.append(task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else "")
-                task_parameter.append(task_split[2].replace(" ","_").lower() if len(task_split) > 2 else "")
+                task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+                task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+                task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
                 # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
-                if(task_action[step_index] == "place_object"):
+                if(task_action == "place_object"):
                     for room in self.node.rooms:
-                        if str(room["name"]).replace(" ","_").lower() == task_attribute[step_index]:
-                            corrected_task_plan.append("place_object:" + task_attribute[step_index] + ";")
+                        if str(room["name"]).replace(" ","_").lower() == task_attribute:
+                            corrected_task_plan.append("place_object:" + task_attribute + ";")
                             current_step=step_index
 
         ###SEARCH FOR PERSON
         if task_type == "pick_and_handover_task":
-            for step_index, step in enumerate(raw_task_plan[:current_step], start=current_step):
+            for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
                 task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
 
                 # Parsing the command
-                task_action.append(task_split[0].replace(" ","_").lower() if len(task_split) > 0 else "")
-                task_attribute.append(task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else "")
-                task_parameter.append(task_split[2].replace(" ","_").lower() if len(task_split) > 2 else "")
-                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+                task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+                task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+                task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
+                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
-                if(task_action[step_index] == "look_for_person"):
-                    corrected_task_plan.append("look_for_person:" + task_attribute[step_index] + ":"+task_parameter[step_index]+";")
+                if(task_action == "look_for_person"):
+                    corrected_task_plan.append("look_for_person:" + task_attribute + ":"+task_parameter+";")
+                    current_step=step_index
+                    ambigual_action_found=True
+
+                elif(task_action == "move_to_person" and not ambigual_action_found):
+                    corrected_task_plan.append("look_for_person:" + task_attribute + ":"+task_parameter+";")
+                    current_step=step_index
+                    ambigual_action_found=True
 
         ###SAY RESULT
         if task_type == "count_objects_task" or task_type == "compare_objects_task":
             corrected_task_plan.append("say_result:;")
 
+        ambigual_action_found=False
+        move_found=False
         ###============STEP 5===============
         ###HANDOVER OBJECT
         if task_type == "pick_and_handover_task":
             corrected_task_plan.append("hand_object:;")
 
+        if(task_type=="NONE"):
+            corrected_task_plan=raw_task_plan
 
         print("Raw task plan:",raw_task_plan)
-        print("Corrected task plan:", corrected_task_plan)
 
         return corrected_task_plan
 

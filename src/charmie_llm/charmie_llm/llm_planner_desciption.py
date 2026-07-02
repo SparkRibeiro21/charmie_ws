@@ -174,7 +174,7 @@ class Ollama_planner_description:
                             "Answer: I will move to the shelf; I will look for the heaviest object; Then, I will move towards you; I will tell you the result of the comparison.\n\n"
 
                             "Command: Please count the number of snacks on the cabinet.\n"
-                            "Answer: I will move to the cabinet; I will count the snacks on the cabinet; I will move towards you; Lastly, I will tell you the result of the counting.\n\n"
+                            "Answer: I will move to the cabinet; I will count the snacks; I will move towards you; Lastly, I will tell you the result of the counting.\n\n"
 
                             "Command: Retrieve a dish from the refrigerator and subsequently position it on the storage rack.\n"
                             "Answer: I will move to the refrigerator; Then, I will look for the dish; I will pick up the dish; I will move to the storage rack; I will place the dish on the storage rack.\n\n"
@@ -238,7 +238,7 @@ class Ollama_planner_description:
                             " look_for_person:<ATTRIBUTE>\n"
                             " look_for_object:<OBJECT>\n" 
                             " compare_objects:<ATTRIBUTE>\n" 
-                            " count_objects:<OBJECT>\n" 
+                            " count_objects:<OBJECT/CATEGORY>\n" 
                             " pick_up_object:<OBJECT>\n" 
                             " place_object:<LOCATION>\n" 
                             " hand_object:<OBJECT>\n" 
