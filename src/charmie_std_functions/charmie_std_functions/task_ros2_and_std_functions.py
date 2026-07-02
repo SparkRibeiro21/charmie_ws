@@ -5189,7 +5189,7 @@ class RobotStdFunctions():
                     if task_attribute == "smallest":
                         print("Finding the smallest ", task_parameter)
                         smallest_volume = float('inf')
-                        smallest_object = None
+                        smallest_object = ""
 
                         for obj in obj_list:
                             print("getting size of: ", obj)
@@ -5208,7 +5208,7 @@ class RobotStdFunctions():
                     elif task_attribute == "biggest":
                         print("Finding the biggest ", task_parameter)
                         biggest_volume = float('-inf')
-                        biggest_object = None
+                        biggest_object = ""
 
                         for obj in obj_list:
                             print("getting size of: ", obj)
@@ -5227,7 +5227,7 @@ class RobotStdFunctions():
                     elif task_attribute == "heaviest":
                         print("Finding the heaviest ", task_parameter)
                         heaviest_weight_so_far = float('-inf')
-                        heaviest_object = None
+                        heaviest_object = ""
 
                         for obj in obj_list:
                             print("getting weight of: ", obj)
@@ -5247,7 +5247,7 @@ class RobotStdFunctions():
                         print("Finding the lightest ", task_parameter)
                         
                         lightest_weight_so_far = float('inf')
-                        lightest_object = None
+                        lightest_object = ""
 
                         for obj in obj_list:
                             print("getting weight of: ", obj)
@@ -5810,14 +5810,22 @@ class RobotStdFunctions():
 
         filtered_objects_found = []
 
+        obj_found=False
+        obj_class_found=False
+
         for obj_found in list_of_objects_found:
             if obj_found.object_name.replace(" ","_").lower() == parameter:
                 filtered_objects_found.append(obj_found)
+                obj_found=True
 
             else:
                 obj_found_class = self.get_object_class_from_object(obj_found.object_name)
                 if obj_found_class.replace(" ","_").lower() == parameter:
                     filtered_objects_found.append(obj_found)
+                    obj_class_found=True
+        
+        if (not obj_found and not obj_class_found):
+            filtered_objects_found=list_of_objects_found
         
         print("Filtered objects found:", [obj.object_name for obj in filtered_objects_found])
 
