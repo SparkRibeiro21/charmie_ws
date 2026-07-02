@@ -1,51 +1,7 @@
 [
-{"name": "Sponge"   		},
-{"name": "Cleanser" 		},
-{"name": "Dishwasher Tab"	},
-{"name": "Bag" 		        },
-
-{"name": "Red Wine" 		},
-{"name": "Juice Pack" 		},
-{"name": "Cola" 		    },
-{"name": "Tropical Juice"	},
-{"name": "Milk"           	},
-{"name": "Iced Tea"       	},
-{"name": "Orange Juice"   	},
-{"name": "7Up"   		    },
-{"name": "Water"	   	    },
-
-{"name": "Tuna" 		    },
-{"name": "Tomato Soup" 	    },
-{"name": "Spam"		        },
-{"name": "Mustard" 		    },
-{"name": "Strawberry Jello" },
-{"name": "Chocolate Jello"	},
-{"name": "Coffee Grounds" 	},
-{"name": "Sugar" 		    },
-
-{"name": "Pear" 		    },
-{"name": "Plum" 		    },
-{"name": "Peach" 		    },
-{"name": "Lemon" 		    },
-{"name": "Orange" 		    },
-{"name": "Strawberry" 		},
-{"name": "Banana" 		    },
-{"name": "Apple" 		    },
-
-{"name": "Tennis Ball"      },
-{"name": "Soccer Ball"      },
-{"name": "Rubiks Cube"      },
-{"name": "Dice" 		    },
-{"name": "Baseball"         },
-
-{"name": "Pringles" 		},
-{"name": "Cornflakes" 		},
-{"name": "Cheezit" 		    },
-
-{"name": "Spoon" 		    },
-{"name": "Plate" 		    },
-{"name": "Cup" 		        },
-{"name": "Fork" 		    },
-{"name": "Bowl" 		    },
-{"name": "Knife" 		    }
+{"name": "Washing Machine Sticker"},
+{"name": "Laundry Basket"},
+{"name": "Trash Bin"},
+{"name": "Door Handle"},
+{"name": "Dinner Table"}
 ]

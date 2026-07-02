@@ -62,7 +62,7 @@ def generate_launch_description():
         # Cameras                                                           # 
         #####################################################################
         # CAMS have to be after nav2 otherwise map does not show up in rviz
-        std_lf.charmie_multi_camera_launch_description,
+        # std_lf.charmie_multi_camera_launch_description,
         # std_lf.charmie_orbbec_base_camera_launch_description,
 
         #####################################################################
@@ -75,8 +75,8 @@ def generate_launch_description():
         #####################################################################
         # Detections                                                        # 
         #####################################################################
-        # std_lf.yolo_objects,
-        std_lf.yolo_world_without_prompt_free,
+        std_lf.yolo_objects,
+        # std_lf.yolo_world_without_prompt_free,
         # std_lf.yolo_world_with_prompt_free,
         std_lf.yolo_pose,
         std_lf.tracking,

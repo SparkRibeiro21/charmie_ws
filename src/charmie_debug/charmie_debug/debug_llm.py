@@ -73,7 +73,7 @@ class TaskMain():
         Final_State = 9
 
         # VARS ...
-        self.state = LLM_demo
+        self.state = LLM_hri
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -681,12 +681,13 @@ class TaskMain():
                 ##  TESTING INFO EXTRACTION STANDARDFUNCTION ##
                 #self.robot.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
                 # command = self.robot.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
-                command = "Milk, iced tea, tennis ball, dice"
+                command = "right,right,right,right,right,right,right,right,right,right,right,right,right,right,right,right,right,right,right"
 
-                heaviest_object = self.robot.get_llm_ollama_information(command, mode="smallest object", wait_for_end_of=True)
-                # favorite_drink = self.robot.get_llm_ollama_information(command, mode="favorite drink", wait_for_end_of=True)
-                print ("Heaviest object:"+ heaviest_object)
-                # print ("GUEST INFO- name:"+name+", favorite drink:"+favorite_drink)
+                # heaviest_object = self.robot.get_llm_ollama_information(command, mode="smallest object", wait_for_end_of=True)
+                name = self.robot.get_llm_ollama_information(command, mode="name", wait_for_end_of=True)
+                favorite_drink = self.robot.get_llm_ollama_information(command, mode="favorite drink", wait_for_end_of=True)
+                # print ("Heaviest object:"+ heaviest_object)
+                print ("GUEST INFO- name:"+name+", favorite drink:"+favorite_drink)
                 # self.robot.save_speech(command=name, filename=name, quick_voice=False, wait_for_end_of=True)
                 # self.robot.save_speech(command=favorite_drink, filename=favorite_drink, quick_voice=False, wait_for_end_of=True)
 

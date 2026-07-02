@@ -1,0 +1,12 @@
+[
+{"name": "Dishwasher Tab",	 "class": "Cleaning Supplies",	"width": 0.025, "length": 0.025, "height": 0.010, "shape": "cuboid",    "can_pick": "top",      "std_pick": "top",      "weight": 0.011},
+ 
+{"name": "Milk",           	 "class": "Drinks",		        "width": 0.050, "length": 0.050, "height": 0.14, "shape": "cuboid",    "can_pick": "both",      "std_pick": "front",    "weight": 0.250},
+ 
+{"name": "Spoon", 		     "class": "Dishes",		        "width": 0.018, "length": 0.192, "height": 0.018, "shape": "cylinder",  "can_pick": "top",      "std_pick": "top",      "weight": 0.037},
+{"name": "Plate", 		     "class": "Dishes",		        "width": 0.257, "length": 0.257, "height": 0.028, "shape": "cylinder",  "can_pick": "top",      "std_pick": "top",      "weight": 0.279},
+{"name": "Cup", 		     "class": "Dishes",		        "width": 0.081, "length": 0.081, "height": 0.058, "shape": "special",   "can_pick": "top",      "std_pick": "top",      "weight": 0.096},
+{"name": "Fork", 		     "class": "Dishes",		        "width": 0.018, "length": 0.195, "height": 0.013, "shape": "cylinder",  "can_pick": "top",      "std_pick": "top",      "weight": 0.030},
+{"name": "Bowl", 		     "class": "Dishes",		        "width": 0.160, "length": 0.160, "height": 0.048, "shape": "special",   "can_pick": "top",      "std_pick": "top",      "weight": 0.136},
+{"name": "Knife", 		     "class": "Dishes",		        "width": 0.018, "length": 0.213, "height": 0.018, "shape": "cylinder",  "can_pick": "top",      "std_pick": "top",      "weight": 0.036}
+]
