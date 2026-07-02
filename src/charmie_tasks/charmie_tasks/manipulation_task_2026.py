@@ -107,7 +107,7 @@ class TaskMain():
             
             if self.state == self.task_states["Waiting_for_task_start"]:
 
-                #self.robot.set_torso_position(legs=0.040, torso=8, wait_for_end_of=True)
+                # self.robot.set_torso_position(legs=0.040, torso=8, wait_for_end_of=True)
 
                 self.robot.set_initial_position(self.initial_position)
                         
@@ -149,7 +149,7 @@ class TaskMain():
             elif self.state == self.task_states["Final_State"]:
                 
                 # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
-                self.robot.set_speech(filename="doing_laundry/finished_DL", wait_for_end_of=True)
+                self.robot.set_speech(filename="doing_laundry/finished_dl", wait_for_end_of=True)
 
                 while True:
                     pass
