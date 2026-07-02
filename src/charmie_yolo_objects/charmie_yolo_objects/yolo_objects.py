@@ -105,7 +105,14 @@ class Yolo_obj(Node):
             self.objects_model_filename   = "objects_2.pt"
             self.furniture_model_filename = "ROBOCUP_FURNITURE_TEST.pt"
             self.shoes_model_filename     = "shoes_socks_v1.pt"
-                    
+
+        print("\n")
+        print("MODEL USED:")
+        print(f"Objects Model: {self.objects_model_filename}")
+        print(f"Furniture Model: {self.furniture_model_filename}")
+        print(f"Shoes Model: {self.shoes_model_filename}")
+        print("\n")
+        
         # gets list of detected objects from objects.json and alphabetically orders it to match YOLO detections 
         self.objects_class_names = [item["name"] for item in self.objects_file]
         self.objects_class_names.sort()
