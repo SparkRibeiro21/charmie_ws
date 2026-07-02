@@ -8224,7 +8224,7 @@ class RobotStdFunctions():
         initial_position_pull = [1.77, -0.01, 179.0]
 
         neck_position_push = [[12,-18]]
-        neck_position_pull = [[-15,-20]]
+        neck_position_pull = [[-15,-20],[-20,-20]]
 
         ADJUST_TO_DOOR = -60
 
@@ -8430,14 +8430,15 @@ class RobotStdFunctions():
 
             # door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
             # YOLO FURNITURE CHANGE
-            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture=True)
+            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture=True, max_search_attempts=1)
         
             for h in door_handle:
 
                 move_y = h.position_relative.y
 
-            while not self.adjust_omnidirectional_position_is_done():
-                pass
+            if not door_handle:
+                self.adjust_omnidirectional_position(dx = -dx , dy = -dy, wait_for_end_of=True, safety=False)
+                return -1
 
             self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.23, wait_for_end_of=False)
 
@@ -8454,7 +8455,7 @@ class RobotStdFunctions():
 
                 #door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, detect_tv_prompt_head=False, visual_prompts=["door_handle_pull_right_hand"], minimum_tv_prompt_confidence=0.25)
                 # YOLO FURNITURE CHANGE
-                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture_hand=True)
+                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture_hand=True, max_search_attempts=1)
                 
 
                 for g in door_handle:
@@ -8470,6 +8471,16 @@ class RobotStdFunctions():
 
                 if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
                     validated = True
+
+                if not door_handle:
+
+                    self.adjust_omnidirectional_position(dx = -dx , dy = -dy, wait_for_end_of=False, safety=False)
+                    #GENERATE SPEECH
+                    
+                    while not self.adjust_omnidirectional_position_is_done():
+                        pass
+
+                    return -1
 
                 
             move_y_gripper = (gripper_position.z - 1.12)*1000
@@ -8517,6 +8528,8 @@ class RobotStdFunctions():
             
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=False)
             self.adjust_omnidirectional_position(dx = 0.50 , dy = 0.0, wait_for_end_of=True, safety=False)
+        
+        return 0
             
         
     def sort_for_pick(self, objects=[]):
