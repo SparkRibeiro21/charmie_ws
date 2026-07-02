@@ -128,7 +128,7 @@ class TaskMain():
 
         # self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
         self.SEARCH_CUTLERY_COORDS = self.robot.get_navigation_coords_from_furniture(furniture=self.CUTLERY_LOCATION)
-        self.DISHWASHER_LOCATION = [ 4.08, -3.0, -2]
+        self.DISHWASHER_LOCATION = [ 7.80, -2.15, 0.0]
 
         self.SELECTED_PICKED_DISH = DetectedObject()
 
@@ -191,13 +191,13 @@ class TaskMain():
             
             if self.state == self.task_states["Waiting_for_task_start"]:
 
-                self.robot.set_initial_position(self.initial_position)
+                #self.robot.set_initial_position(self.initial_position)
                         
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.robot.close_tray_gripper(wait_for_end_of=True)
+                #self.robot.close_tray_gripper(wait_for_end_of=True)
 
                 self.robot.set_speech(filename="pick_and_place_task/pp_ready_start", wait_for_end_of=True)
 
@@ -205,11 +205,11 @@ class TaskMain():
                 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                self.robot.wait_for_door_opening()
+                #self.robot.wait_for_door_opening()
 
-                self.robot.enter_house_after_door_opening()
+                #self.robot.enter_house_after_door_opening()
 
-                self.state = self.task_states["Move_to_tab"]
+                self.state = self.task_states["Move_to_dishwasher"]
 
             elif self.state == self.task_states["Move_to_tab"]:
 
@@ -218,7 +218,7 @@ class TaskMain():
                 self.robot.set_speech(filename="furniture/"+self.TAB_LOCATION, wait_for_end_of=False)
 
                 self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.TAB_LOCATION), wait_for_end_of=True)
-                self.robot.pick_object(selected_object="Dishwasher Tab")
+                self.robot.pick_object(selected_object="Dishwasher Tab", speak_dishwasher = True)
 
                 self.state = self.task_states["Move_to_dishwasher"]
 
@@ -228,20 +228,24 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture("dishwasher"), wait_for_end_of=True)
-                _,_,dist = self.robot.get_minimum_radar_distance(ang_obstacle_check=30)
-                dist = dist - 0.65
-                trashcan_place=[-224.5,81.3,-155.6,136.3,24.1,136.5]
-                self.robot.adjust_omnidirectional_position(dx = dist, dy = 0.0)
-                self.robot.set_speech(filename="pick_and_place_task/open_dishwasher_door", wait_for_end_of=True)
-                self.robot.set_speech(filename="pick_and_place_task/no_rack", wait_for_end_of=True)
-                time.sleep(8.0)
-                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = trashcan_place, wait_for_end_of=True)
-                self.robot.set_arm(command="open_gripper_slow", wait_for_end_of=True)
-                time.sleep(0.3)
-                self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
-                self.robot.set_speech(filename="pick_and_place_task/close_dishwasher_door", wait_for_end_of=True)
-                time.sleep(3.0)
+                self.robot.move_to_position(move_coords=self.DISHWASHER_LOCATION, wait_for_end_of=True)
+                objects = self.robot.search_for_objects(tetas = [[-15.0,-40.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=2.0, list_of_objects=["Tab Slot"], detect_furniture=True)
+
+                best_conf = 0.0
+
+                for o in objects:
+                
+                    if o.confidence > best_conf:
+                        best_conf = o.confidence
+                        obj = o
+
+                approach_x = obj.position_relative.x - 0.64
+                approach_y = obj.position_relative.y + 0.25
+                self.robot.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
+                
+                slot_insert=[-230.2,82.1,-169.9,-80.2,6.5,263.5]
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = slot_insert, wait_for_end_of=True)
+                self.robot.set_arm(command="open_gripper",wait_for_end_of=True)
             
                 if self.MILK_BEFORE_CORNFLAKES:
                     self.state = self.task_states["Move_milk_location"]

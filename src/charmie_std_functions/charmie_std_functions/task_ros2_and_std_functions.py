@@ -8611,7 +8611,7 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms        
 
-    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False): 
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False, speak_dishwasher = False): 
 
 
         # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
@@ -9061,6 +9061,9 @@ class RobotStdFunctions():
         # ***********************************************************************************************************************
 
             if state == MOVE_ARM_APROACH_OBJECT:
+                if speak_dishwasher:
+                    self.set_speech(filename="pick_and_place_task/open_dishwasher_door", wait_for_end_of=False)
+                    self.set_speech(filename="pick_and_place_task/no_rack", wait_for_end_of=False)
                 print("object orientation:", obj.orientation)
                 print(" NOW ENTERING STATE ", state)
 

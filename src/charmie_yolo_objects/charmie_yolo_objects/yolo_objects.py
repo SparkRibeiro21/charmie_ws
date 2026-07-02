@@ -102,8 +102,8 @@ class Yolo_obj(Node):
             print("ERROR: Could NOT import name of models json files. (select_models)")
             print("I will continue with the default filenames for the yolo models.")
         
-            self.objects_model_filename   = "objects_2.pt"
-            self.furniture_model_filename = "ROBOCUP_FURNITURE_TEST.pt"
+            self.objects_model_filename   = "objects_v02_300_m_640_5070ti.pt"
+            self.furniture_model_filename = "furnitures_v02_table_6_classes_n_640.pt"
             self.shoes_model_filename     = "shoes_socks_v1.pt"
 
         print("\n")
@@ -112,7 +112,7 @@ class Yolo_obj(Node):
         print(f"Furniture Model: {self.furniture_model_filename}")
         print(f"Shoes Model: {self.shoes_model_filename}")
         print("\n")
-        
+
         # gets list of detected objects from objects.json and alphabetically orders it to match YOLO detections 
         self.objects_class_names = [item["name"] for item in self.objects_file]
         self.objects_class_names.sort()
