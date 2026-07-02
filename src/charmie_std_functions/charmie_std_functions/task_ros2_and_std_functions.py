@@ -5278,7 +5278,6 @@ class RobotStdFunctions():
                     pass
 
                 case "say_info":
-
                     ###SPEAK:   Unfortunately, I don't have the information I needed to share with you. I am sorry for this.
                     self.set_speech(filename="gpsr/cannot_perform_say_info",wait_for_end_of=True)
                     
@@ -5383,6 +5382,7 @@ class RobotStdFunctions():
 
             if attribute == "lightest" or attribute == "heaviest" or attribute == "smallest" or attribute == "biggest":
                 task_type="compare_objects_task"
+                found_comparison_attribute=True
 
             else:
                 match action:
@@ -5400,10 +5400,11 @@ class RobotStdFunctions():
                 
                     
                     case "count_objects":
-                        task_type="count_objects_task"
-                        print("added")
-                        print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
-                
+                        if(not found_comparison_attribute):
+                            task_type="count_objects_task"
+                            print("added")
+                            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
+                    
                     
                     case "guide_person":
                         valid_guide=False
@@ -5571,29 +5572,12 @@ class RobotStdFunctions():
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
                 print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
-                if (task_action == "compare_objects" or task_action == "look"):
-                    
-                    if task_attribute == "lightest" or task_attribute == "heaviest" or task_attribute == "smallest" or task_attribute == "biggest":
-                
+                if (task_action == "compare_objects" or task_action == "look_for_objects" or task_action == "look_for_object"):
+    
                         corrected_task_plan.append("compare_objects:" + task_attribute + ":"+task_parameter+";")
                         current_step=step_index
                         ambigual_action_found=True
 
-                elif (task_action == "look_for_objects"):
-
-                    if task_attribute == "lightest" or task_attribute == "heaviest" or task_attribute == "smallest" or task_attribute == "biggest":
-                
-                        corrected_task_plan.append("compare_objects:" + task_attribute + ":"+task_parameter+";")
-                        current_step=step_index
-                        ambigual_action_found=True
-
-                elif (task_action == "look_for_object"):
-
-                    if task_attribute == "lightest" or task_attribute == "heaviest" or task_attribute == "smallest" or task_attribute == "biggest":
-                
-                        corrected_task_plan.append("compare_objects:" + task_attribute + ":"+task_parameter+";")
-                        current_step=step_index
-                        ambigual_action_found=True
 
         ###SEARCH FOR PERSON
         elif task_type == "guide_to_task" or task_type == "follow_person_task" or task_type == "say_info_task":
@@ -5681,6 +5665,7 @@ class RobotStdFunctions():
         
         ###GUIDE TO
         elif task_type == "guide_to_task":
+
             for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
                 task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
 
@@ -5688,13 +5673,15 @@ class RobotStdFunctions():
                 task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
                 task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
                 if(task_action == "guide_to"):
                     for room in self.node.rooms:
                         if str(room["name"]).replace(" ","_").lower() == task_attribute:
                             corrected_task_plan.append("guide_to:"+task_attribute+";")
                             current_step=step_index
+                
+
 
         ###FOLLOW
         elif task_type == "follow_person_task":
@@ -5703,8 +5690,18 @@ class RobotStdFunctions():
 
         ###SAY INFO
         elif task_type == "say_info_task":
+            for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
+                print("curr step:",current_step)
+                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
+               
+                # Parsing the command
+                task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+                task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+                task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
 
-            corrected_task_plan.append("say_info:;")
+                print("PARAMETER: ",task_attribute)
+                if (task_action == "say_info") or (task_action == "say_result"):
+                    corrected_task_plan.append("say_info:"+task_attribute+";")
 
         print("finnished step three")
         ambigual_action_found=False
