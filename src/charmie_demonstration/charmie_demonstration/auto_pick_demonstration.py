@@ -126,6 +126,80 @@ class TaskMain():
             #     self.robot.get_audio(restaurant=True, face_hearing="charmie_face_green_no_mouth", wait_for_end_of=True)
 
             if self.state == self.task_states["Waiting_for_task_start"]:
+                self.robot.open_washing_machine()
+                self.robot.wait_for_start_button()
+                self.robot.open_tray_gripper(wait_for_end_of=True)
+
+                self.robot.wait_for_start_button()
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.close_tray_gripper(wait_for_end_of=False)
+                self.robot.set_arm(command="ask_for_objects_to_check_milk_cap", wait_for_end_of=True)
+                self.robot.set_arm(command="close_tray_gripper", wait_for_end_of=True)
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                lid = self.robot.detect_milk_cap()
+
+                tf_x =  0.145
+                tf_y = -0.006
+                tf_z = -0.075
+                DETECTION_ERROR = 0.018
+                OPENING_ATTEMPT = 0
+                lid_height = 0.01
+                safe_rise_distance = - 0.03 * 1000
+                release_distance = 0.02 *1000
+                max_opening_attempts = 8
+
+                TRAY_HEIGHT = 0.59
+
+                gripper_place_position = self.robot.get_gripper_localization()
+                correct_x_grab = (gripper_place_position.z - TRAY_HEIGHT - lid_height/0.5 - tf_x - self.robot.get_object_height_from_object("milk"))*1000
+                correct_y_grab = (lid.y - tf_y)*1000
+                correct_z_grab = (lid.z - tf_z + DETECTION_ERROR)*1000
+
+                open_milk_lid_centralize_adjust = [correct_z_grab, - correct_y_grab, safe_rise_distance, 0.0, 0.0, 0.0]
+                open_milk_lid_down_adjust = [ 0.0, 0.0, - safe_rise_distance + correct_x_grab, 0.0, 0.0, 0.0]
+
+
+                print(open_milk_lid_centralize_adjust)
+
+                print(open_milk_lid_down_adjust)
+
+                self.robot.wait_for_start_button()
+
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_centralize_adjust, wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_down_adjust, wait_for_end_of=True)
+
+                self.robot.set_arm(command="close_gripper_lid", wait_for_end_of=True)
+
+                for OPENING_ATTEMPT in range(max_opening_attempts):
+                    print("OPENING_ATTEMPT:", OPENING_ATTEMPT)
+                    if OPENING_ATTEMPT == 0:
+                        small_rotation = [0.0,0.0,0.0,0.0,0.0,-30.0]
+                        self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=small_rotation, wait_for_end_of=True)
+                        self.robot.set_arm(command="open_gripper_lid", wait_for_end_of=True)
+
+                    rotate_right = [0.0,0.0,0.0,0.0,0.0,70.0]
+                    rotate_left = [0.0,0.0,0.0,0.0,0.0,-70.0]
+                    self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_right, wait_for_end_of=True)
+                    self.robot.set_arm(command="close_gripper_lid", wait_for_end_of=True)
+                    if OPENING_ATTEMPT != max_opening_attempts-1:
+                        self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_left, wait_for_end_of=True)
+                        self.robot.set_arm(command="open_gripper_lid", wait_for_end_of=True)
+                    else:
+                        last_rotation = [0.0,0.0,0.0,0.0,0.0,-40.0]
+                        self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=last_rotation, wait_for_end_of=True)
+                        safe_rise = [0.0,0.0,-lid_height*4*1000,0.0,0.0,0.0]
+                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=safe_rise, wait_for_end_of=True)
+
+                let_lid_go = [-correct_z_grab + release_distance, correct_y_grab, -correct_x_grab + lid_height*4*1000, 0.0, 0.0, 0.0]
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=let_lid_go, wait_for_end_of=True)
+                self.robot.set_arm(command="open_gripper_lid", wait_for_end_of=True)
+                self.robot.set_arm(command="check_milk_cap_to_ask_for_objects", wait_for_end_of=True)
+
+
+                self.robot.wait_for_start_button()
+
+
         
                 # self.robot.set_face("charmie_face", wait_for_end_of=False)
 
@@ -135,7 +209,7 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
                 #self.robot.open_door(push_pull="pull", handle_side="right")
-                self.robot.open_washing_machine()
+                
 
                 # self.robot.pick_object(selected_object="Apple", max_search_attempts=1)
 
