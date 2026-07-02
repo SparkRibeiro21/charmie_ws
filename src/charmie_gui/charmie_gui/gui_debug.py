@@ -48,7 +48,7 @@ class DebugVisualNode(Node):
         self.audio_interpreted_subscriber = self.create_subscription(String, "audio_interpreted", self.audio_interpreted_callback, 10)
         self.audio_final_subscriber = self.create_subscription(String, "audio_final", self.audio_final_callback, 10)
         # Intel Cameras (Head and Hand/Gripper)
-        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/camera/camera/rgbd", self.get_rgbd_head_callback, 10)
         self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
         # Orbbec Camera (Base)
         self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)

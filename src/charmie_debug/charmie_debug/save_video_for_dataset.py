@@ -16,7 +16,7 @@ class SaveImagesDatasetNode(Node):
         self.get_logger().info("Initialised CHARMIE SaveImagesDataset Node")
 
         # Declare ROS 2 parameters
-        self.declare_parameter("head_cam", False)
+        self.declare_parameter("head_cam", True)
         self.declare_parameter("hand_cam", False)
         self.declare_parameter("base_cam", False)
 
@@ -33,7 +33,7 @@ class SaveImagesDatasetNode(Node):
 
         # Intel Realsense Subscribers (RGBD) Head and Hand Cameras and Orbec Base Camera
         if self.head_cam_record:
-            self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+            self.rgbd_head_subscriber = self.create_subscription(RGBD, "/camera/camera/rgbd", self.get_rgbd_head_callback, 10)
         if self.hand_cam_record:
             self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
         if self.base_cam_record:

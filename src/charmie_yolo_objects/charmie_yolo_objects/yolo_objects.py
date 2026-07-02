@@ -105,7 +105,13 @@ class Yolo_obj(Node):
             self.objects_model_filename   = "objects_2.pt"
             self.furniture_model_filename = "ROBOCUP_FURNITURE_TEST.pt"
             self.shoes_model_filename     = "shoes_socks_v1.pt"
-                    
+        
+        print("\n")
+        print("DETECTION MODELS USED:")
+        print("OBJECTS:  ", self.objects_model_filename)
+        print("FURNITURE:", self.furniture_model_filename)
+        print("\n")
+
         # gets list of detected objects from objects.json and alphabetically orders it to match YOLO detections 
         self.objects_class_names = [item["name"] for item in self.objects_file]
         self.objects_class_names.sort()
@@ -205,7 +211,7 @@ class Yolo_obj(Node):
 
         ### Topics ###
         # Intel Realsense Subscribers (RGBD) Head and Hand Cameras
-        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/CHARMIE/D455_head/rgbd", self.get_rgbd_head_callback, 10)
+        self.rgbd_head_subscriber = self.create_subscription(RGBD, "/camera/camera/rgbd", self.get_rgbd_head_callback, 10)
         self.rgbd_hand_subscriber = self.create_subscription(RGBD, "/CHARMIE/D405_hand/rgbd", self.get_rgbd_hand_callback, 10)
         # Orbbec Camera (Base)
         self.color_image_base_subscriber = self.create_subscription(Image, "/camera/color/image_raw", self.get_color_image_base_callback, 10)
