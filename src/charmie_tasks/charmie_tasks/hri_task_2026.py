@@ -161,6 +161,16 @@ class TaskMain():
             # }
         ]
 
+        # Special case for ROBOCUP 2026
+        self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE = {
+                "name": "chair_left_side_sofa",
+                "center_coords": [self.robot.get_location_coords_from_furniture("Sofa")[0] - (self.robot.get_size_from_furniture("Sofa")[0]), 
+                                  self.robot.get_location_coords_from_furniture("Sofa")[1] + (self.robot.get_size_from_furniture("Sofa")[1]),
+                                  self.robot.get_location_coords_from_furniture("Sofa")[2]],
+                "speak": "hri/chair_on_the_right_side_of_the_sofa"
+            }
+        
+
         # # debug the sitting places coordinates
         # print("SITTING PLACES:")
         # for sf in self.SITTING_PLACES_IN_FURNITURE:
@@ -172,6 +182,7 @@ class TaskMain():
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
+        # THESE SHUOLB BE 2 DIFFERENT THINGS: ROBOCUP 2026
         self.default_speak_file = "hri/sofa_center"
         self.default_couch_to_look_center = "sofa"
         # Which objects should be acquired
@@ -229,7 +240,16 @@ class TaskMain():
 
         self.GUEST2 = DetectedPerson()
         self.GUEST2_NAME = ""
-        self.GUEST2_DRINK = ""  
+        self.GUEST2_DRINK = ""
+
+        
+
+        seat_position = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["center_coords"]
+        speak_file = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["speak"]
+        print(seat_position)
+        print(speak_file)              
+
+
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -435,9 +455,13 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
-                    speak_file = self.default_speak_file
-
+                    # seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
+                    # speak_file = self.default_speak_file
+                    
+                    # ROBOCUP 2026
+                    seat_position = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["center_coords"]
+                    speak_file = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["speak"]
+                    
                 else:
                     max_name = max(
                     temp_min_dist_sitting_places_dict,
@@ -739,8 +763,12 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
-                    speak_file = self.default_speak_file
+                    # seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
+                    # speak_file = self.default_speak_file
+                    
+                    # ROBOCUP 2026
+                    seat_position = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["center_coords"]
+                    speak_file = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["speak"]
 
                 else:
                     max_name = max(
