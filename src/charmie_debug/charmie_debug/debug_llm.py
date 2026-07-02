@@ -21,7 +21,7 @@ ros2_modules = {
     "charmie_lidar":                False,
     "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
-    "charmie_llm":                  True,
+    "charmie_llm":                  False,
     "charmie_localisation":         False,
     "charmie_low_level":            False,
     "charmie_navigation":           False,
@@ -70,10 +70,11 @@ class TaskMain():
         LLM_Ollama_first_tests = 6
         Test_individual_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 7
         Test_together_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 8
-        Final_State = 9
+        Test_Compare= 9
+        Final_State = 10
 
         # VARS ...
-        self.state = LLM_hri
+        self.state = LLM_demo
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -127,68 +128,68 @@ class TaskMain():
                 "Go to the kitchen, find a toothpaste, take it, and deliver it to me.",
                 "Tell the waving person in the kitchen the day of the month.",
 
-                # "While in the printing room, salute Nathan and then announce the time.",
-                # "Salute Nathan in the bedroom, then say the time.",
+                "While in the printing room, salute Nathan and then announce the time.",
+                "Salute Nathan in the bedroom, then say the time.",
                 "What's the lightest object on the table?",
             
-                # "Guide the person who is waving from the desk over to the Trashcan.",
-                # "Tell the day of the month to the waving person in the kitchen.",
-                # "Talk about yourself to the person raising their left arm in the hallway.",
+                "Guide the person who is waving from the desk over to the Trashcan.",
+                "Tell the day of the month to the waving person in the kitchen.",
+                "Talk about yourself to the person raising their left arm in the hallway.",
 
-                # "Please proceed to the desk, at which point you should locate a cleaning supply, retrieve it, and subsequently bring it to me.",
-                # "Go to the bed, find a cleaning supply, pick it up, and bring it to me.",
+                "Please proceed to the desk, at which point you should locate a cleaning supply, retrieve it, and subsequently bring it to me.",
+                "Go to the bed, find a cleaning supply, pick it up, and bring it to me.",
 
-                # "At your earliest opportunity, proceed to the kitchen to introduce yourself to Andrew, after which you should lead them to the bedroom.",
-                # "Head to the kitchen, introduce yourself to Andrew, then lead them to the bedroom.",
-                # "Introduce yourself to Andrew in the kitchen, then take them to the bedroom.",
+                "At your earliest opportunity, proceed to the kitchen to introduce yourself to Andrew, after which you should lead them to the bedroom.",
+                "Head to the kitchen, introduce yourself to Andrew, then lead them to the bedroom.",
+                "Introduce yourself to Andrew in the kitchen, then take them to the bedroom.",
 
-                # "Proceed to the living room first; upon meeting Violet, thereafter follow them to the kitchen.",
-                # "Make your way to the living room, meet Violet, and then follow them to the kitchen.",
-                # "Go to the living room, meet Violet, then follow them to the kitchen.",
+                "Proceed to the living room first; upon meeting Violet, thereafter follow them to the kitchen.",
+                "Make your way to the living room, meet Violet, and then follow them to the kitchen.",
+                "Go to the living room, meet Violet, then follow them to the kitchen.",
 
-                # "Please proceed to rendezvous with Wyatt in the living room and subsequently escort them to the bedroom.",
-                # "Meet Wyatt in the living room, then guide them to the bedroom.",
-                # "Go meet Wyatt in the living room and take them to the bedroom.",
+                "Please proceed to rendezvous with Wyatt in the living room and subsequently escort them to the bedroom.",
+                "Meet Wyatt in the living room, then guide them to the bedroom.",
+                "Go meet Wyatt in the living room and take them to the bedroom.",
 
-                # "Proceed to the chairs, then locate a pear, pick it up, and deliver it to me.",
-                # "Go to the chairs, find a pear, take it, and give it to me.",
-                # "Head to the chairs, grab a pear, and hand it to me.",
+                "Proceed to the sink, then locate a pear, pick it up, and deliver it to me.",
+                "Go to the kitchen cabinet, find a pear, take it, and give it to me.",
+                "Head to the sofa, grab a pear, and hand it to me.",
 
-                # "Kindly ascertain the number of snacks on the cabinet and let me know.",
-                # "Please tell me how many snacks are on the cabinet.",
-                # "How many snacks are on the cabinet?",
+                "Kindly ascertain the number of snacks on the kitchen cabinet and let me know.",
+                "Please tell me how many snacks are on the shelf.",
+                "How many snacks are on the coffee table?",
 
-                # "First, proceed to the storage rack; upon arrival, identify the sitting person and subsequently follow them.",
-                # "Go to the storage rack, find the sitting person, and then follow them.",
-                # "Head to the storage rack, spot the sitting person, and follow them.",
+                "First, proceed to the Laundry Room; upon arrival, identify the sitting person and subsequently follow them.",
+                "Go to the Kitchen, find the sitting person, and then follow them.",
+                "Head to the Bedroom, spot the sitting person, and follow them.",
 
-                # "Could you determine and inform me which is the smallest cleaning supply on the shelf?",
-                # "Can you tell me what the smallest cleaning supply on the shelf is?",
-                # "What's the smallest cleaning supply on the shelf?",
+                "Could you determine and inform me which is the smallest cleaning supply on the shelf?",
+                "Can you tell me what the smallest cleaning supply on the shelf is?",
+                "What's the smallest cleaning supply on the shelf?",
 
-                # "Please provide guidance to the person wearing an orange blouse so that they proceed from the side tables to the coatrack.",
-                # "Help the person wearing an orange blouse go from the side tables to the coatrack.",
-                # "Show the person wearing an orange blouse the way from the side tables to the coatrack.",
+                "Please provide guidance to the person wearing an orange blouse so that they proceed from the side tables to the Bed.",
+                "Help the person wearing an orange blouse go from the Living Room to the Counter.",
+                "Show the person wearing an orange blouse the way from the Kitchen to the Bedroom.",
 
-                # "Would you kindly retrieve a toy from the sofa and deliver it to me.",
-                # "Please grab a toy from the sofa and give it to me.",
-                # "Bring me a toy from the sofa.",
+                "Would you kindly retrieve a toy from the sofa and deliver it to me.",
+                "Please grab a toy from the sofa and give it to me.",
+                "Bring me a toy from the sofa.",
 
-                # "Would you be so kind as to retrieve a dice from the cabinet and bring it to me?",
-                # "Please grab a dice from the cabinet and bring it to me.",
-                # "Grab a dice from the cabinet for me.",
+                "Would you be so kind as to retrieve a dice from the Sofa and bring it to me?",
+                "Please grab a dice from the kitchen cabinet and bring it to me.",
+                "Grab a dice from the Counter for me.",
 
-                # "Kindly retrieve a cleaning supply from the cabinet and then place it on the bed.",
-                # "Grab a cleaning supply from the cabinet and put it on the bed.",
-                # "Take a cleaning supply from the cabinet and set it on the bed.",
+                "Kindly retrieve a cleaning supply from the kitchen cabinet and then place it on the bed.",
+                "Grab a cleaning supply from the Coffee Table and put it on the Laundry Trash Bin.",
+                "Take a cleaning supply from the Laundry Table and set it on the bed.",
 
-                # "Kindly proceed to follow Joshua as he moves from the chairs to the kitchen.",
-                # "Trail Joshua from the chairs to the kitchen.",
-                # "Stick with Joshua from the chairs to the kitchen.",
+                "Kindly proceed to follow Joshua as he moves from the chairs to the kitchen.",
+                "Trail Joshua from the chairs to the kitchen.",
+                "Stick with Joshua from the chairs to the kitchen.",
 
-                # "Please proceed to the storage rack initially, after which you should rendezvous with Isaac and escort them to the side tables.",
-                # "Go to the storage rack, then meet Isaac and walk them over to the side tables.",
-                # "Head to the storage rack, meet Isaac, and take them to the side tables.",
+                "Please proceed to the TV Stand initially, after which you should rendezvous with Isaac and escort them to the shelf.",
+                "Go to the sink, then meet Isaac and walk them over to the Sofa.",
+                "Head to the cooking table, meet Isaac, and take them to the Bed.",
 
                 # "Would you be so kind as to retrieve a lemon from the cabinet and bring it to me?",
                 # "Please grab a lemon from the cabinet and bring it to me.",
@@ -299,6 +300,7 @@ class TaskMain():
 
                     print(f"CORRECTED LLP: {corrected_llp}")
                     print(f"TASK TYPE: {task_type}")
+
 
 
                     # print(f"Total Time taken for GPSR task {i}: {end_time - start_time:.3f} s")
@@ -923,7 +925,19 @@ class TaskMain():
                 while True:
                     pass """
 
+            elif self.state == Test_Compare:
+                print("TEST COMPARE")
 
+                self.instruction_point=[0.0, 0.0, 0.0]
+                # self.robot.execute_gpsr_plan(command=["compare_objects:lightest:"], instruction_point=self.instruction_point)
+
+                self.robot.get_filtered_list_of_objects_found(list_of_objects_found=[],parameter="objects")
+
+                
+
+                while True:
+                    pass
+            
             elif self.state == Final_State:
                 
                 self.state += 1
