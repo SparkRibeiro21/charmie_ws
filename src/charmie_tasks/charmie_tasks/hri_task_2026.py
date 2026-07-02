@@ -165,7 +165,7 @@ class TaskMain():
         self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE = {
                 "name": "chair_left_side_sofa",
                 "center_coords": [self.robot.get_location_coords_from_furniture("Sofa")[0] - (self.robot.get_size_from_furniture("Sofa")[0]), 
-                                  self.robot.get_location_coords_from_furniture("Sofa")[1] + (self.robot.get_size_from_furniture("Sofa")[1]),
+                                  self.robot.get_location_coords_from_furniture("Sofa")[1],
                                   self.robot.get_location_coords_from_furniture("Sofa")[2]],
                 "speak": "hri/chair_on_the_right_side_of_the_sofa"
             }
@@ -377,7 +377,7 @@ class TaskMain():
                     self.GUEST1_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
                     # print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
                 else:
-                    self.GUEST1_NAME = "John"
+                    self.GUEST1_NAME = "Hanna"
                     self.GUEST1_DRINK = "Coffee"
 
                 self.robot.save_speech(command=self.GUEST1_NAME,  filename=self.GUEST1_NAME,  quick_voice=False, wait_for_end_of=False)
@@ -521,10 +521,10 @@ class TaskMain():
 
             elif self.state == self.task_states["Wait_for_guest2_to_arrive"]:
 
-                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
-                self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                # self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
+                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
                                         
                 s, m, label, score = self.robot.wait_for_doorbell(timeout=15, score_threshold=0.1)
                 print(s, m, label, score)
@@ -628,8 +628,8 @@ class TaskMain():
                     self.GUEST2_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
                     # print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
                 else:
-                    self.GUEST2_NAME = "Mary"
-                    self.GUEST2_DRINK = "Tea"
+                    self.GUEST2_NAME = "John"
+                    self.GUEST2_DRINK = "Water"
 
                 self.robot.save_speech(command=self.GUEST2_NAME,  filename=self.GUEST2_NAME,  quick_voice=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, wait_for_end_of=False)

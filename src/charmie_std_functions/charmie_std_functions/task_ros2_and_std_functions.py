@@ -8432,9 +8432,10 @@ class RobotStdFunctions():
             # YOLO FURNITURE CHANGE
             door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture=True, max_search_attempts=1)
         
-            for h in door_handle:
+            if door_handle:
+                for h in door_handle:
 
-                move_y = h.position_relative.y
+                    move_y = h.position_relative.y
 
             if not door_handle:
                 return -1
@@ -8456,23 +8457,23 @@ class RobotStdFunctions():
                 # YOLO FURNITURE CHANGE
                 door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture_hand=True, max_search_attempts=1)
                 
+                if door_handle:
+                    for g in door_handle:
 
-                for g in door_handle:
+                        gripper_position = self.get_gripper_localization()
 
-                    gripper_position = self.get_gripper_localization()
+                        move_z_gripper = (g.position_cam.z - tf_z - 0.08)*1000
+                        move_y_gripper = (g.position_cam.y + tf_y - 0.05)*1000
+                        move_x_gripper = (g.position_cam.x - tf_x)*1000
+                        move_x_base = abs(tf_x - g.position_cam.x)
+                        print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
+                        print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
 
-                    move_z_gripper = (g.position_cam.z - tf_z - 0.08)*1000
-                    move_y_gripper = (g.position_cam.y + tf_y - 0.05)*1000
-                    move_x_gripper = (g.position_cam.x - tf_x)*1000
-                    move_x_base = abs(tf_x - g.position_cam.x)
-                    print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
-                    print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
-
-                if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
-                    validated = True
+                    if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
+                        validated = True
 
                 if not door_handle:
-                    self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
+                    self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                     self.adjust_omnidirectional_position(dx=0.0,dy=-(move_y + 0.23),wait_for_end_of=True)
                     return -1
 
@@ -8498,7 +8499,7 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx = -0.24 , dy = 0.09, wait_for_end_of=True, safety=False)
             self.adjust_omnidirectional_position(dx = -0.12 , dy = 0.08, wait_for_end_of=True, safety=False)
 
-            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door_return, wait_for_end_of=True) 
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_door_return, wait_for_end_of=True) 
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True) 
             after_release_first = [-0.1*1000, 0.0, -0.15*1000, 0.0, 0.0, 0.0, 0.0]
             #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
@@ -8506,7 +8507,8 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_first, wait_for_end_of=True)  
             self.adjust_omnidirectional_position(dx = 0.02 , dy = - 0.28, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_last, wait_for_end_of=True)
-            self.adjust_omnidirectional_position(dx = 0.02 , dy = 0.0, wait_for_end_of=True, safety=False)
+            #CHANGE ARENA 3
+            self.adjust_omnidirectional_position(dx = 0.05 , dy = 0.0, wait_for_end_of=True, safety=False)
             self.set_arm(command="close_gripper", wait_for_end_of=False)
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
@@ -10043,7 +10045,7 @@ class RobotStdFunctions():
 
         is_washing_machine_detected = False
 
-        search_tetas = [[-15.0,-20.0], [-15.0,-25.0], [-20.0,-25.0], [-20.0,-20.0]]
+        search_tetas = [[-15.0,-20.0], [-15.0,-30.0], [-5.0,-30.0], [-5.0,-20.0]]
         temp_search_tetas = [[0.0, 0.0]]
 
         while not is_washing_machine_detected:
