@@ -234,13 +234,14 @@ class TaskMain():
                 trashcan_place=[-224.5,81.3,-155.6,136.3,24.1,136.5]
                 self.robot.adjust_omnidirectional_position(dx = dist, dy = 0.0)
                 self.robot.set_speech(filename="pick_and_place_task/open_dishwasher_door", wait_for_end_of=True)
+                self.robot.set_speech(filename="pick_and_place_task/no_rack", wait_for_end_of=True)
                 time.sleep(8.0)
                 self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = trashcan_place, wait_for_end_of=True)
                 self.robot.set_arm(command="open_gripper_slow", wait_for_end_of=True)
                 time.sleep(0.3)
                 self.robot.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
                 self.robot.set_speech(filename="pick_and_place_task/close_dishwasher_door", wait_for_end_of=True)
-                time.sleep(6.0)
+                time.sleep(3.0)
             
                 if self.MILK_BEFORE_CORNFLAKES:
                     self.state = self.task_states["Move_milk_location"]
@@ -459,11 +460,11 @@ class TaskMain():
                     self.robot.set_neck(position=self.look_forward, wait_for_end_of=True)
                     self.robot.set_speech(filename="generic/found_the", wait_for_end_of=True)
                     for o in objects_found:
-                        if o.furniture_location == self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED:
+                        if o.furniture_location.replace(" ","_").lower() == self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED:
                             self.robot.detected_object_to_face_path(object=o, send_to_face=True, bb_color=(0,255,255))
                             self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                             self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=True)
-                            time.sleep(4)
+                            time.sleep(2)
                                 
 
                 self.state = self.task_states["Final_State"] # changed to final state for testing, should be Placing_bowl
