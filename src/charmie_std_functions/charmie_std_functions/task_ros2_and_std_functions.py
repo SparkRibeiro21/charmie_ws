@@ -8437,7 +8437,6 @@ class RobotStdFunctions():
                 move_y = h.position_relative.y
 
             if not door_handle:
-                self.adjust_omnidirectional_position(dx = -dx , dy = -dy, wait_for_end_of=True, safety=False)
                 return -1
 
             self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.23, wait_for_end_of=False)
@@ -8473,13 +8472,8 @@ class RobotStdFunctions():
                     validated = True
 
                 if not door_handle:
-
-                    self.adjust_omnidirectional_position(dx = -dx , dy = -dy, wait_for_end_of=False, safety=False)
-                    #GENERATE SPEECH
-                    
-                    while not self.adjust_omnidirectional_position_is_done():
-                        pass
-
+                    self.set_arm(command="return_arm_to_initial_position", wait_for_end_of=True)
+                    self.adjust_omnidirectional_position(dx=0.0,dy=-(move_y + 0.23),wait_for_end_of=True)
                     return -1
 
                 

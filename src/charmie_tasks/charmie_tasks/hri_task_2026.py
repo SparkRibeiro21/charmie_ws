@@ -197,6 +197,7 @@ class TaskMain():
 
         #### ROBOCUP 2026
         self.initial_position = [4.0, 1.0, -135]
+        self.DOOR_RETURN = 0.70
 
 
         # Position to start following host after introducing guests
@@ -297,7 +298,16 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest1"]:
                                         
                 if self.OPEN_DOOR_GUEST1:
-                    self.robot.open_door(push_pull="pull", handle_side="right", wait_for_end_of=True)
+                    error = self.robot.open_door(push_pull="pull", handle_side="right", wait_for_end_of=True)
+                    if error == -1:
+                        self.robot.set_speech(filename="hri/could_not_open_door", wait_for_end_of=False)
+                        _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+                        dx = furniture_distance - self.DOOR_RETURN
+                        self.robot.adjust_omnidirectional_position(dx = dx , dy = 0.0, wait_for_end_of=True, safety=False)
+                        self.robot.set_speech(filename="hri/please_open_door", wait_for_end_of=True)
+                        time.sleep(6.0)
+                        self.robot.adjust_omnidirectional_position(dx = 0.5 , dy = 0.0, wait_for_end_of=True, safety=False)
+
                     self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
                 self.state = self.task_states["Receive_guest1"]
