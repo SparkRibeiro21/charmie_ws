@@ -490,23 +490,15 @@ class TaskMain():
                 
 
                 ####################################################################################3
-                self.state = self.task_states["Move_to_initial_position"]
-
-
-            elif self.state == self.task_states["Wait_for_guest2_to_arrive"]:
-                                    
-                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
-                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
-                self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
-                # commented out for time optimmization
-                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                # self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
-                
                 self.state = self.task_states["Wait_for_guest2_to_arrive"]
 
 
             elif self.state == self.task_states["Wait_for_guest2_to_arrive"]:
+
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
                                         
                 s, m, label, score = self.robot.wait_for_doorbell(timeout=15, score_threshold=0.1)
                 print(s, m, label, score)
@@ -615,7 +607,7 @@ class TaskMain():
 
                 # POST ROBOCUP 2026
                 self.robot.get_detected_person_characteristics(detected_person=self.GUEST1, first_sentence="hri/describe_characteristics_of_guest", \
-                                                                ethnicity=True, age=True, gender =True, height=True, shirt_color=True, pants_color=False)
+                                                                ethnicity=True, age=True, gender =True, height=True, shirt_color=False, pants_color=False)
                 
                 self.robot.set_neck_continuous_tracking(activate=False) # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN
                 self.robot.deactivate_tracking_mask() # EDITED BECAUSE OF STRATEGY DEFINED FOR PORTUGAL OPEN

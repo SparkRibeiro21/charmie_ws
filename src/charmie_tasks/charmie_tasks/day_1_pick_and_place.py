@@ -11,26 +11,26 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  False,
+    "charmie_arm":                  True,
     "charmie_audio":                False,
-    "charmie_face":                 False,
-    "charmie_head_camera":          False,
-    "charmie_hand_camera":          False,
+    "charmie_face":                 True,
+    "charmie_head_camera":          True,
+    "charmie_hand_camera":          True,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                False,
-    "charmie_lidar_bottom":         False,
+    "charmie_lidar":                True,
+    "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         False,
-    "charmie_low_level":            False,
+    "charmie_localisation":         True,
+    "charmie_low_level":            True,
     "charmie_navigation":           False,
-    "charmie_nav2":                 False,
+    "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 False,
+    "charmie_neck":                 True,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             False,
+    "charmie_speakers":             True,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
@@ -155,6 +155,7 @@ class TaskMain():
 
         self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED = self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED.lower().replace(" ", "_")
         self.CUTLERY_LOCATION = self.CUTLERY_LOCATION.lower().replace(" ", "_")
+        self.TAB_LOCATION = self.TAB_LOCATION.lower().replace(" ", "_")
 
         self.MILK_LOCATION = self.MILK_LOCATION.lower().replace(" ", "_")
         self.CORNFLAKES_LOCATION = self.CORNFLAKES_LOCATION.lower().replace(" ", "_")
