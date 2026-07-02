@@ -242,15 +242,6 @@ class TaskMain():
         self.GUEST2_NAME = ""
         self.GUEST2_DRINK = ""
 
-        
-
-        seat_position = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["center_coords"]
-        speak_file = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["speak"]
-        print(seat_position)
-        print(speak_file)              
-
-
-
         # Neck Positions
         self.look_forward = [0, 0]
         self.look_navigation = [0, -30]
