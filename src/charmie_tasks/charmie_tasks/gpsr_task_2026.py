@@ -138,9 +138,9 @@ class TaskMain():
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
 
-                # self.robot.wait_for_door_opening()
+                self.robot.wait_for_door_opening()
 
-                # self.robot.enter_house_after_door_opening()
+                self.robot.enter_house_after_door_opening()
                 
                 self.state = self.task_states["Move_to_instruction_point"]
                 
@@ -163,9 +163,9 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                 
                 # Announce arrival
-                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
-                self.robot.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
-
+                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                # self.robot.set_speech(filename="gpsr/instruction_point", wait_for_end_of=True)
+                time.sleep(2.0)
                 self.robot.calibrate_audio()
 
                 ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."

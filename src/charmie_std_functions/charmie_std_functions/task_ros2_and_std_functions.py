@@ -267,10 +267,10 @@ class ROS2TaskNode(Node):
         #     while not self.llm_gpsr_client.wait_for_service(1.0):
         #         self.get_logger().warn("Waiting for GPSR Server LLM ...")
         if self.ros2_modules["charmie_llm"]:
-            while not self.llm_ollama_demonstration_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for LLM Ollama Demonstration Server ...")
-            while not self.llm_ollama_information_client.wait_for_service(1.0):
-                self.get_logger().warn("Waiting for LLM Ollama Information Server ...")
+            # # while not self.llm_ollama_demonstration_client.wait_for_service(1.0):
+            #     self.get_logger().warn("Waiting for LLM Ollama Demonstration Server ...")
+            # # while not self.llm_ollama_information_client.wait_for_service(1.0):
+            #     self.get_logger().warn("Waiting for LLM Ollama Information Server ...")
             while not self.llm_ollama_gpsr_high_level_client.wait_for_service(1.0):
                 self.get_logger().warn("Waiting for LLM Ollama GPSR High Level Server ...")
             while not self.llm_ollama_gpsr_low_level_client.wait_for_service(1.0):
@@ -5768,41 +5768,41 @@ class RobotStdFunctions():
         plan_feasibility = []
         order_to_execute = []
 
-        for plan in self.llps:
-                    cannot_perform_task = False
-                    points = 0
+        for plan in plans:
+            cannot_perform_task = False
+            points = 0
 
-                    for step in plan:
-                        action = step.split("-")
+            for step in plan:
+                action = step.split("-")
 
-                        match action[0]:                          
-                            case "say_info" | "follow_person":
-                                cannot_perform_task = True
+                match action[0]:                          
+                    case "say_info" | "follow_person":
+                        cannot_perform_task = True
 
-                            case "compare_objects" | "count_objects":
-                                points += 6
+                    case "compare_objects" | "count_objects":
+                        points += 6
 
-                            case "pick_object" | "place_object":
-                                points += 3
+                    case "pick_object" | "place_object":
+                        points += 3
 
-                            case "move_to" | "say_result":
-                                points += 2
+                    case "move_to" | "say_result":
+                        points += 2
 
-                            case "look_for_objects" | "look_for_person" | "guide_person":
-                                points += 1
+                    case "look_for_objects" | "look_for_person" | "guide_person":
+                        points += 1
 
-                            case "ERROR":
-                                points -= 4
+                    case "ERROR":
+                        points -= 4
 
-                    if cannot_perform_task:
-                        points = float('-inf')
+            if cannot_perform_task:
+                points = float('-inf')
 
-                    i = 0
-                    while i < len(plan_feasibility) and plan_feasibility[i] >= points:
-                        i += 1                                    
+            i = 0
+            while i < len(plan_feasibility) and plan_feasibility[i] >= points:
+                i += 1                                    
 
-                    plan_feasibility.insert(i, points)            
-                    order_to_execute.insert(i, plan)
+            plan_feasibility.insert(i, points)            
+            order_to_execute.insert(i, plan)
 
         return order_to_execute
 
