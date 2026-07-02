@@ -8679,7 +8679,7 @@ class RobotStdFunctions():
         DISTANCE_IN_TOP_Y       = -0.05
  
         # MAX AND MIN HEIGHTS ALLOWED FOR OBJECTS TO BE CONSIDERED PICKABLE (WORKSPACE LIMITATION)
-        MINIMUM_FRONT_HEIGHT    = 0.55
+        MINIMUM_FRONT_HEIGHT    = 0.38
         MAXIMUM_FRONT_HEIGHT    = 1.70
         
         HALFWAY_TOP_HEIGHT      = 0.40
@@ -9282,7 +9282,8 @@ class RobotStdFunctions():
                     elif ask_help:
                         self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
 
-                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                if arm_initial_position != "collect_spoon_to_tray_funilocopo_v4":
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
 
                 if not object_in_gripper:
                     ask_help = True      
@@ -10033,7 +10034,7 @@ class RobotStdFunctions():
 
         #_ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45
 
-        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture=True)
+        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=2.0, list_of_objects=["Washing Machine Sticker"], detect_furniture=True)
 
         best_conf = 0.0
 
@@ -10043,13 +10044,13 @@ class RobotStdFunctions():
                 best_conf = o.confidence
                 obj = o
 
-        approach_x = obj.position_relative.x - 0.62
+        approach_x = obj.position_relative.x - 0.64
         #approach_x = furniture_distance - 0.245
         approach_y = obj.position_relative.y + 0.30
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = search_tab_position, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
-        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture_hand=True)
+        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=2.0, list_of_objects=["Washing Machine Sticker"], detect_furniture_hand=True)
         self.set_speech(filename="doing_laundry/i_will_apply_force_to_the_door", wait_for_end_of=True)
         self.set_arm(command="open_gripper_washing", wait_for_end_of=True)
 
