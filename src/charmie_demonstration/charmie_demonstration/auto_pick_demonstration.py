@@ -12,26 +12,26 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
+    "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 True,
+    "charmie_face":                 False,
     "charmie_gamepad":              False,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          True,
     "charmie_base_camera":          True,
-    "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
-    "charmie_lidar_livox":          True,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         True,
-    "charmie_low_level":            True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
     "charmie_navigation":           False,
-    "charmie_nav2":                 True,
+    "charmie_nav2":                 False,
     "charmie_nav_sdnl":             False,
     "charmie_neck":                 True,
-    "charmie_radar":                True,
+    "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
@@ -126,7 +126,13 @@ class TaskMain():
             #     self.robot.get_audio(restaurant=True, face_hearing="charmie_face_green_no_mouth", wait_for_end_of=True)
 
             if self.state == self.task_states["Waiting_for_task_start"]:
-                self.robot.open_washing_machine()
+
+                while True:
+
+                    self.robot.pick_object(selected_object="Dishwasher Tab")
+                    # self.robot.search_for_objects(tetas=[[0, -45], [-40, -45], [40, -45]],  time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["water"], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts=1)
+
+                self.robot.pick_object(selected_object="milk")
                 self.robot.wait_for_start_button()
                 self.robot.open_tray_gripper(wait_for_end_of=True)
 

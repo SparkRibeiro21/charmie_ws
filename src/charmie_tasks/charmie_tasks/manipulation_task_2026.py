@@ -65,7 +65,7 @@ class TaskMain():
         # Task States
         self.task_states ={
             "Waiting_for_task_start":       0,
-            "Moving_to_dishwasher":         1,
+            "Moving_to_washing_machine":    1,
             "Opening_washing_machine":      2,
             "Final_State":                  3,
         }
@@ -77,7 +77,7 @@ class TaskMain():
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
         self.initial_position = [0.0, 0.0, 0.0]
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        self.WASHING_MACHINE_LOCATION = [ 3.80, 4.03, 90.0]
+        self.WASHING_MACHINE_LOCATION = [ 3.80, 4.28, 90.0]
         print(self.initial_position)
         
     def main(self):
@@ -107,7 +107,7 @@ class TaskMain():
             
             if self.state == self.task_states["Waiting_for_task_start"]:
 
-                self.robot.set_torso_position(legs=0.040, torso=8, wait_for_end_of=True)
+                # self.robot.set_torso_position(legs=0.040, torso=8, wait_for_end_of=True)
 
                 self.robot.set_initial_position(self.initial_position)
                         
@@ -149,8 +149,7 @@ class TaskMain():
             elif self.state == self.task_states["Final_State"]:
                 
                 # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
-                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                self.robot.set_speech(filename="doing_laundry/finished_DL", wait_for_end_of=False)
+                self.robot.set_speech(filename="doing_laundry/finished_dl", wait_for_end_of=True)
 
                 while True:
                     pass
