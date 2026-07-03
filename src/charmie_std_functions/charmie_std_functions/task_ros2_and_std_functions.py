@@ -8943,7 +8943,7 @@ class RobotStdFunctions():
         initial_position_pull = [1.77, -0.01, 179.0]
 
         neck_position_push = [[12,-18]]
-        neck_position_pull = [[-15,-20]]
+        neck_position_pull = [[-15,-20],[-20,-20]]
 
         ADJUST_TO_DOOR = -60
 
@@ -9149,14 +9149,15 @@ class RobotStdFunctions():
 
             # door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
             # YOLO FURNITURE CHANGE
-            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture=True)
+            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture=True, max_search_attempts=1)
         
-            for h in door_handle:
+            if door_handle:
+                for h in door_handle:
 
-                move_y = h.position_relative.y
+                    move_y = h.position_relative.y
 
-            while not self.adjust_omnidirectional_position_is_done():
-                pass
+            if not door_handle:
+                return -1
 
             self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.23, wait_for_end_of=False)
 
@@ -9173,22 +9174,27 @@ class RobotStdFunctions():
 
                 #door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, detect_tv_prompt_head=False, visual_prompts=["door_handle_pull_right_hand"], minimum_tv_prompt_confidence=0.25)
                 # YOLO FURNITURE CHANGE
-                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture_hand=True)
+                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture_hand=True, max_search_attempts=1)
                 
+                if door_handle:
+                    for g in door_handle:
 
-                for g in door_handle:
+                        gripper_position = self.get_gripper_localization()
 
-                    gripper_position = self.get_gripper_localization()
+                        move_z_gripper = (g.position_cam.z - tf_z - 0.08)*1000
+                        move_y_gripper = (g.position_cam.y + tf_y - 0.05)*1000
+                        move_x_gripper = (g.position_cam.x - tf_x)*1000
+                        move_x_base = abs(tf_x - g.position_cam.x)
+                        print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
+                        print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
 
-                    move_z_gripper = (g.position_cam.z - tf_z - 0.08)*1000
-                    move_y_gripper = (g.position_cam.y + tf_y - 0.05)*1000
-                    move_x_gripper = (g.position_cam.x - tf_x)*1000
-                    move_x_base = abs(tf_x - g.position_cam.x)
-                    print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
-                    print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
+                    if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
+                        validated = True
 
-                if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
-                    validated = True
+                if not door_handle:
+                    self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+                    self.adjust_omnidirectional_position(dx=0.0,dy=-(move_y + 0.23),wait_for_end_of=True)
+                    return -1
 
                 
             move_y_gripper = (gripper_position.z - 1.12)*1000
@@ -9212,7 +9218,7 @@ class RobotStdFunctions():
             self.adjust_omnidirectional_position(dx = -0.24 , dy = 0.09, wait_for_end_of=True, safety=False)
             self.adjust_omnidirectional_position(dx = -0.12 , dy = 0.08, wait_for_end_of=True, safety=False)
 
-            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door_return, wait_for_end_of=True) 
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_door_return, wait_for_end_of=True) 
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True) 
             after_release_first = [-0.1*1000, 0.0, -0.15*1000, 0.0, 0.0, 0.0, 0.0]
             #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
@@ -9220,7 +9226,8 @@ class RobotStdFunctions():
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_first, wait_for_end_of=True)  
             self.adjust_omnidirectional_position(dx = 0.02 , dy = - 0.28, wait_for_end_of=True, safety=False)
             self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = after_release_last, wait_for_end_of=True)
-            self.adjust_omnidirectional_position(dx = 0.02 , dy = 0.0, wait_for_end_of=True, safety=False)
+            #CHANGE ARENA 3
+            self.adjust_omnidirectional_position(dx = 0.05 , dy = 0.0, wait_for_end_of=True, safety=False)
             self.set_arm(command="close_gripper", wait_for_end_of=False)
             #self.adjust_omnidirectional_position(dx = -0.05 , dy = 0.0, wait_for_end_of=False, safety=False)
 
@@ -9236,6 +9243,8 @@ class RobotStdFunctions():
             
             self.set_arm(command="search_front_risky_to_initial_pose", wait_for_end_of=False)
             self.adjust_omnidirectional_position(dx = 0.50 , dy = 0.0, wait_for_end_of=True, safety=False)
+        
+        return 0
             
         
     def sort_for_pick(self, objects=[]):
@@ -9258,6 +9267,7 @@ class RobotStdFunctions():
                 objects[0] = objects[1]
                 objects[1] = obj
                 print(" Changed ", objects[0], " with ", objects[1])
+        print(" Changed list ", objects)
         return objects
 
     def close_dishwasher(self, task = "finals"):
@@ -9330,7 +9340,7 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms        
 
-    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False): 
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False, speak_dishwasher = False): 
 
 
         # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
@@ -9398,7 +9408,7 @@ class RobotStdFunctions():
         DISTANCE_IN_TOP_Y       = -0.05
  
         # MAX AND MIN HEIGHTS ALLOWED FOR OBJECTS TO BE CONSIDERED PICKABLE (WORKSPACE LIMITATION)
-        MINIMUM_FRONT_HEIGHT    = 0.55
+        MINIMUM_FRONT_HEIGHT    = 0.38
         MAXIMUM_FRONT_HEIGHT    = 1.70
         
         HALFWAY_TOP_HEIGHT      = 0.40
@@ -9684,7 +9694,10 @@ class RobotStdFunctions():
                     gripper_search_height = self.get_gripper_localization().z
                     object_height = self.get_object_height_from_object(valid_detected_object.object_name)
                     if furniture_height < 0:
-                        adjust_z = (valid_detected_object.position_relative.z - (object_height/2) - gripper_search_height)*1000
+                        if not restaurant_scenario:
+                            adjust_z = (valid_detected_object.position_relative.z - (object_height/2) - gripper_search_height)*1000
+                        else:
+                            adjust_z = (valid_detected_object.position_relative.z - (object_height/1.5) - gripper_search_height)*1000
                     else:
                         adjust_z = (furniture_height + (object_height/2) - gripper_search_height)*1000
 
@@ -9780,6 +9793,9 @@ class RobotStdFunctions():
         # ***********************************************************************************************************************
 
             if state == MOVE_ARM_APROACH_OBJECT:
+                if speak_dishwasher:
+                    self.set_speech(filename="pick_and_place_task/open_dishwasher_door", wait_for_end_of=False)
+                    self.set_speech(filename="pick_and_place_task/no_rack", wait_for_end_of=False)
                 print("object orientation:", obj.orientation)
                 print(" NOW ENTERING STATE ", state)
 
@@ -10001,7 +10017,8 @@ class RobotStdFunctions():
                     elif ask_help:
                         self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
 
-                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                if arm_initial_position != "collect_spoon_to_tray_funilocopo_v4":
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
 
                 if not object_in_gripper:
                     ask_help = True      
@@ -10749,26 +10766,46 @@ class RobotStdFunctions():
         ROBOCUP_swing_open_3 = [-208,25.3,-88.4,-43.5,49.5,272.2]
         ROBOCUP_swing_open_4 = [-208,51.1,-88.4,-43.5,49.5,272.2]
 
+        is_washing_machine_detected = False
 
-        #_ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45
+        search_tetas = [[-15.0,-20.0], [-15.0,-30.0], [-5.0,-30.0], [-5.0,-20.0]]
+        temp_search_tetas = [[0.0, 0.0]]
 
-        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture=True)
+        while not is_washing_machine_detected:
+            #_ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45
 
-        best_conf = 0.0
+            objects = self.search_for_objects(tetas = search_tetas, list_of_objects=["Washing Machine Sticker"], detect_furniture=True, max_search_attempts=1)
 
-        for o in objects:
+            if objects:
 
-            if o.confidence > best_conf:
-                best_conf = o.confidence
-                obj = o
+                best_conf = 0.0
+                for o in objects:
+                    if o.confidence > best_conf:
+                        best_conf = o.confidence    
+                        obj = o
 
-        approach_x = obj.position_relative.x - 0.62
-        #approach_x = furniture_distance - 0.245
-        approach_y = obj.position_relative.y + 0.30
+                approach_x = obj.position_relative.x - 0.66
+                #approach_x = furniture_distance - 0.245
+                approach_y = obj.position_relative.y + 0.30
 
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = search_tab_position, wait_for_end_of=True)
-        self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
-        objects = self.search_for_objects(tetas = [[-15.0,-20.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["Washing Machine Sticker"], detect_furniture_hand=True)
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = search_tab_position, wait_for_end_of=True)
+                self.adjust_omnidirectional_position(dx = approach_x, dy = approach_y, wait_for_end_of=True, safety=False)
+                objects = self.search_for_objects(tetas = temp_search_tetas, list_of_objects=["Washing Machine Sticker"], detect_furniture_hand=True, max_search_attempts=1)
+                if objects:
+                    is_washing_machine_detected = True
+                else:
+                    # SPEAK: There was a problem with the washing machine handle detection. I will try to approach the washing machine again and search for the handle.
+                    self.adjust_omnidirectional_position(dx = -approach_x, dy = -approach_y, wait_for_end_of=True, safety=False)
+                    self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+            else:
+                self.adjust_omnidirectional_position(dx=0.05,dy=0.0, wait_for_end_of=True, safety=False)
+                    
+
+            search_tetas.reverse()
+        
+        
+        # I KNOW WHERE THE WASHING MACHINE OPEN HANDLE IS !!!
+        
         self.set_speech(filename="doing_laundry/i_will_apply_force_to_the_door", wait_for_end_of=True)
         self.set_arm(command="open_gripper_washing", wait_for_end_of=True)
 
@@ -10807,11 +10844,11 @@ class RobotStdFunctions():
         _,_ = self.adjust_angle(25)
         self.set_speech(filename="doing_laundry/slighlty_push_door", wait_for_end_of=False)
         self.adjust_omnidirectional_position(dx=0.0,dy=-0.10, wait_for_end_of=True, safety=False)
-        self.adjust_omnidirectional_position(dx=0.33,dy=0.0, wait_for_end_of=True, safety=False)
-        inside_pick = [-237.5, 81.4, -171.1, -52, -16.7, 328.7]
+        self.adjust_omnidirectional_position(dx=0.345,dy=0.0, wait_for_end_of=True, safety=False)
+        inside_pick = [-238.8, 82.1, -184.9, -61.4, -0.3, 352.9]
         self.set_arm(command="open_gripper", wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = inside_pick, wait_for_end_of=True)
-        # self.wait_for_start_button()
+        #self.wait_for_start_button()
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx=-0.30,dy=0.0, wait_for_end_of=True, safety=False)
@@ -10820,7 +10857,7 @@ class RobotStdFunctions():
         # self.wait_for_start_button()
         pull_up = [-190.7, 76.1, -88.7, -69.1, -82.7, 308.8]
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pull_up, wait_for_end_of=True)
-        self.adjust_omnidirectional_position(dx=-0.27,dy=0.0, wait_for_end_of=True, safety=False)
+        #self.adjust_omnidirectional_position(dx=-0.27,dy=0.0, wait_for_end_of=True, safety=False)
         # self.set_arm(command="point_front_to_initial_position", wait_for_end_of=True)
         
     def ROBOCUP_pick_tab(self, selected_object="Dishwasher Tab", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False): 
