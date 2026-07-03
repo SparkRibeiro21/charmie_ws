@@ -8621,7 +8621,7 @@ class RobotStdFunctions():
         # arm movements and search for objects for furniture door_handle 
         # add safety and timeout mechanisms        
 
-    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False, speak_dishwasher = False): 
+    def pick_object(self, selected_object="", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False, speak_dishwasher = False, skip_ask_help = False): 
 
 
         # TODO: 1) Add specific variables to decide how to handle errors in each state: ask for help, move on, or ...
@@ -9319,6 +9319,10 @@ class RobotStdFunctions():
         # ***********************************************************************************************************************
         
             if state == ERROR_HANDLING_ASK_FOR_HELP:
+
+                if skip_ask_help == True:
+                    return -1, ask_help
+
                 print(" NOW ENTERING STATE ", state)
 
                 print(" Asked for Help ")
@@ -10113,7 +10117,11 @@ class RobotStdFunctions():
         self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_1, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx = - 0.03, dy = 0.0, wait_for_end_of=True, safety=False)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_2, wait_for_end_of=True)
+        #CHANGES FOR THIRD DAY TEST-----------------------------------------------------------------------------------------------
+        self.adjust_omnidirectional_position(dx = 0.0, dy = -0.05, wait_for_end_of=True, safety=False)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_3, wait_for_end_of=True)
+        self.adjust_omnidirectional_position(dx = 0.0, dy = 0.05, wait_for_end_of=True, safety=False)
+        #END OF CHANGES FOR THIRD DAY TEST-----------------------------------------------------------------------------------------------
         self.set_arm(command="adjust_joint_motion", joint_motion_values = ROBOCUP_swing_open_4, wait_for_end_of=True)
         move_down = [-0.03*1000,0.0,0.0,0.0,0.0,0.0]
         self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = move_down, wait_for_end_of=True)
