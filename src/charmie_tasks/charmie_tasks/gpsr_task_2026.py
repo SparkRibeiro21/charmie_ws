@@ -113,7 +113,7 @@ class TaskMain():
         self.look_navigation = [0, -30]
         
 
-        self.state = self.task_states["Waiting_for_task_start"]
+        self.state = self.task_states["Receive_requests"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -205,6 +205,8 @@ class TaskMain():
                     for plan in self.llps:
                         task_type=self.robot.get_task_type(task=plan)
                         corrected_plan=self.robot.correct_task_plan(raw_task_plan=plan, task_type=task_type)
+                        print("Corrected plan", corrected_plan)
+                        print("task_type", task_type)
                         corrected_plans_list.append(corrected_plan)
                     
                     self.order_to_execute = self.robot.set_order_to_execute_gpsr_plan(corrected_plans_list)

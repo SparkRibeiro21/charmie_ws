@@ -4482,13 +4482,13 @@ class RobotStdFunctions():
         for i, step in enumerate(command):
             print(f"Executing step {i+1}: {step.strip()}")
 
-            task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
+            task_split = step.replace("\n", ":").replace(" ", ":").replace(";", ":").replace(",", ":").split(":")
 
             # Parsing the command
             task_action = task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
             task_attribute = task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
             task_parameter = task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-            print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+            print("Task action:", task_action, " Task attribute:", task_attribute, " Task parameter:", task_parameter)
 
 
             match task_action:
@@ -4929,6 +4929,8 @@ class RobotStdFunctions():
                     objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
                     filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=task_parameter)
                     print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
+
+                    
 
                     if filtered_objects_found:
 
