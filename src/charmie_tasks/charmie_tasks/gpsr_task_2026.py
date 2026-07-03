@@ -113,7 +113,7 @@ class TaskMain():
         self.look_navigation = [0, -30]
         
 
-        self.state = self.task_states["Receive_requests"]
+        self.state = self.task_states["Waiting_for_task_start"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:

@@ -4501,8 +4501,8 @@ class RobotStdFunctions():
                             ### TASK TYPE====> move_to_room
                             self.set_neck(position=look_navigation, wait_for_end_of=False)
 
-                            self.set_speech(filename="generic/moving", wait_for_end_of=True)
-                            self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=True)
+                            self.set_speech(filename="generic/moving", wait_for_end_of=False)
+                            self.set_speech(filename="rooms/"+task_attribute, wait_for_end_of=False)
 
                             self.move_to_position(move_coords=self.get_navigation_coords_from_room(task_attribute), wait_for_end_of=True)
 
@@ -4523,8 +4523,8 @@ class RobotStdFunctions():
                             ### TASK TYPE====> move_to_furniture
                             self.set_neck(position=look_navigation, wait_for_end_of=False)
 
-                            self.set_speech(filename="generic/moving", wait_for_end_of=True)
-                            self.set_speech(filename="furniture/"+task_attribute, wait_for_end_of=True)
+                            self.set_speech(filename="generic/moving", wait_for_end_of=False)
+                            self.set_speech(filename="furniture/"+task_attribute, wait_for_end_of=False)
 
                             self.move_to_position(move_coords=self.get_navigation_coords_from_furniture(task_attribute), wait_for_end_of=True)
                             
@@ -4811,9 +4811,13 @@ class RobotStdFunctions():
                     print("Picking up:", task_attribute)
 
                     search_tetas = [[0, -45], [-40, -45], [40, -45]]
-
+                    print(curr_furniture)
+                        
                     for furniture in self.node.furniture:
-                        if furniture["name"].replace(" ","_").lower == curr_room.replace(" ","_").lower:
+                        print(furniture["name"])
+                        print(str(furniture["name"]).replace(" ","_").lower())
+                        
+                        if str(furniture["name"]).replace(" ","_").lower() == curr_furniture.replace(" ","_").lower():
                     
                             orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
                             print("Orientation to search:", orientation_to_search)
@@ -4833,10 +4837,16 @@ class RobotStdFunctions():
                             object_in_gripper = False
                             object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
 
+                            if object_in_gripper:
+                                    curr_obj_list.append(task_attribute)
+                                    curr_picked_height = picked_height
+                                    curr_asked_help = asked_help
+
+
                     
                     if (not curr_furniture):
                         for furniture in self.node.furniture:
-                            if furniture["room"].replace(" ","_").lower== curr_room.replace(" ","_").lower:
+                            if str(furniture["room"]).replace(" ","_").lower()== curr_room.replace(" ","_").lower():
                                 orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
                                 print("Orientation to search:", orientation_to_search)
 
@@ -4856,10 +4866,10 @@ class RobotStdFunctions():
                                 object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
                                     
 
-                    if object_in_gripper:
-                        curr_obj_list.append(task_attribute)
-                        curr_picked_height = picked_height
-                        curr_asked_help = asked_help
+                                if object_in_gripper:
+                                    curr_obj_list.append(task_attribute)
+                                    curr_picked_height = picked_height
+                                    curr_asked_help = asked_help
 
                     pass
 
@@ -4884,7 +4894,7 @@ class RobotStdFunctions():
                     self.place_object_in_furniture(selected_object=curr_obj_list[0], furniture=curr_furniture, shelf_number=0, place_height=curr_picked_height, asked_help=curr_asked_help)
 
                     object_in_gripper = False
-                    object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
                     if not object_in_gripper:
                         curr_obj_list.clear()
                         curr_picked_height = 0.0
@@ -4985,19 +4995,19 @@ class RobotStdFunctions():
                             print("Found:", obj_found.object_name)
 
 
-                    counting_obj_name = False
-                    counting_obj_class = False
+                    comparing_obj_name = False
+                    comparing_obj_class = False
 
                     for obj_class in self.node.objects_classes_file:
                         if obj_class["name"].replace(" ","_").lower() == task_parameter:
-                            counting_obj_class= True
+                            comparing_obj_class= True
 
                     for obj in self.node.objects_file:
                         if obj["name"].replace(" ","_").lower() == task_parameter:
-                            counting_obj_name= True
+                            comparing_obj_name= True
 
-                    print(counting_obj_class)
-                    print(counting_obj_name)
+                    print(comparing_obj_class)
+                    print(comparing_obj_name)
 
 
                     if task_attribute == "smallest":
@@ -5021,7 +5031,7 @@ class RobotStdFunctions():
 
                         else:
                               
-                            if (not counting_obj_name and not counting_obj_class):
+                            if (not comparing_obj_name and not comparing_obj_class):
                                 result = "Of all the objects I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
 
                             else:
@@ -5050,7 +5060,7 @@ class RobotStdFunctions():
                             result = "I was not able to find any of the desired objects."
                             print(result)
                         else:
-                            if (not counting_obj_name and not counting_obj_class):
+                            if (not comparing_obj_name and not comparing_obj_class):
                                 result = "Of all the objects I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
 
                             else:
@@ -5503,7 +5513,7 @@ class RobotStdFunctions():
                 if(task_action == "guide_person"):
                     for room in self.node.rooms:
                         if str(room["name"]).replace(" ","_").lower() == task_attribute:
-                            corrected_task_plan.append("guide_to:"+task_attribute+";")
+                            corrected_task_plan.append("guide_person:"+task_attribute+";")
                             current_step=step_index
        
         ###FOLLOW
