@@ -28,7 +28,9 @@ drinks_dict = {
     "Coke": 		["coke", "cook"],
     "Pepsi": 		["pepsi", "petsy"],
     "Milk":         ["milk", "muke", "mew", "milburn", "mieuki", "mute", "mille", "mieok", "milton", "meal"],
-    "Red_Bull": 	["red bull", "head blue", "head boat", "head bull", "headblew", "red ball", "helpful", "faithful", "heavy", "purple", "redwood","red bowl","red bone","headble"],
+    "Red_Bull": 	["red bull", "redbull","head blue", "headblue","head boat", "headboat", "head bull", "headbull", "head blew","red ball", \
+                     "redball", "helpful", "faithful", "heavy", "purple", "redwood","red wood","red bowl","headbowl", "head bowl", "red bone", \
+                     "headble","headball","head ball", "red boom","redboom","redboat","red boat"],
     "Soju": 	    ["soju", "soja", "social", "saju", "soldier", "sorghum", "so true", "sausu", "sojour","sojour"],
 
 }
@@ -42,8 +44,8 @@ foods_dict = {
     "Peach": 		        ["peach", "beach", "pitch", "beech", "bitch"],
     "Lemon": 		        ["lemon", "lammon", "lamb", "laman", "lehman"],
     "Apple": 		        ["apple", "april", "saple"],
-    "Red_Bellpepper": 	    ["red bellpepper", "red bell pepper", "red bill pepper", "red belt pepper", "rebel pepper", "rebel paper", "head bell pepper", "red velvet pepper", "head of pepper"],
-    "Yellow_Bellpepper":    ["yellow bellpepper", "yellow bell pepper", "yellow bill pepper", "yellow belt pepper", "yellow velvet pepper"],
+    "Red_Bellpepper": 	    ["red bellpepper", "red bell pepper", "red belt paper", "red bill pepper", "red belt pepper", "rebel pepper", "rebel paper", "head bell pepper", "red velvet pepper", "head of pepper"],
+    "Yellow_Bellpepper":    ["yellow bellpepper", "yellow bell pepper", "red belt paper","yellow bill pepper", "yellow belt pepper", "yellow velvet pepper"],
 
     "Pringles":             ["pringles", "pringle", "prango", "gringles", "bringles", "sprinkles", "green goes", "fringles"],
     "Seaweed":              ["seaweed", "sea weed", "see with", "see wead", "see you with", "see we"],
