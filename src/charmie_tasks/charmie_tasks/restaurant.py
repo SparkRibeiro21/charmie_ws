@@ -13,7 +13,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 
 ros2_modules = {
     "charmie_arm":                  True,
-    "charmie_audio":                True,
+    "charmie_audio":                False,
     "charmie_face":                 True,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          True,
@@ -27,7 +27,7 @@ ros2_modules = {
     "charmie_low_level":            True,
     "charmie_navigation":           True,
     "charmie_nav2":                 False,
-    "charmie_nav_sdnl":             True,
+    "charmie_nav_sdnl":             False,
     "charmie_neck":                 True,
     "charmie_radar":                True,
     "charmie_sound_classification": False,
@@ -36,7 +36,7 @@ ros2_modules = {
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            True,
+    "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
 
@@ -117,8 +117,8 @@ class TaskMain():
         self.detected_customers = []
         self.DETECTED_CUSTOMER_INDEX = 0
         self.all_orders = []
-        self.NCP = ["Red_Bull", "Tuna"]
-        self.NCT = ["Red Wine","Orange Juice","Pringles","Cheezit"]
+        self.NCP = ["Instant Noodles", "Cornflakes"]
+        self.NCT = ["Pringles","Soju","Pepsi"]
         self.number_of_customers_served = 0
 
         # Neck Positions
@@ -130,7 +130,7 @@ class TaskMain():
         self.look_table_objects = [-45, -45]
         self.search_tetas = [[-45, -35], [-45+20, -35+10], [-45-20, -35+10]] # , [-45-10, -45-5], [-45+10, -45-5]]
 
-        self.state = self.task_states["Waiting_for_task_start"]
+        self.state = self.task_states["Collect_order_from_barman"]
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -693,7 +693,7 @@ class TaskMain():
                 ##### SPEAK: Barman, please give me the following items:
                 self.robot.set_speech(filename="restaurant/say_order_to_barman", show_in_face=True, wait_for_end_of=True)
                 #  TEST PREDEFINED ORDERS:  
-                # self.all_orders = [["Apple", "Cheezit"]]
+                self.all_orders = [["Soju","Lemon"]]
 
                 print("ALL ORDERS: ", self.all_orders)
                 current_order = []
@@ -736,6 +736,7 @@ class TaskMain():
                     if len(NCP_check)==0:
                         if len(NCT_check)==0:
                             self.all_orders = self.robot.sort_for_pick(objects= order_names)
+                            self.all_orders.reverse()
                             print("Order to pick ", order_names)
                             #try for o in current_order: 
                     
@@ -751,18 +752,15 @@ class TaskMain():
                                     time.sleep(5.0)
                                     self.robot.set_face("charmie_face", wait_for_end_of=False)
 
-                                    _,_ = self.robot.pick_object(selected_object=o, arm_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas, restaurant_scenario = True)
-                                    self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
+                                    _,_ = self.robot.pick_object(selected_object=o, first_search_tetas=tetas, restaurant_scenario = True)
+                                    #self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
                                 else:
-                                    self.robot.set_face("barman_place_object_restaurant_res", wait_for_end_of=False)
-                                    #### SPEAK: please place these object on the bar counter
                                     self.robot.set_speech(filename="restaurant/please_place", wait_for_end_of=True)
                                     filename = "objects_names/" + o.lower().replace(" ", "_")
                                     self.robot.set_speech(filename=filename, wait_for_end_of=True)
-                                    self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
+                                    self.robot.set_speech(filename="restaurant/on_my_tray", wait_for_end_of=True)
                                     time.sleep(5.0)
-                                    self.robot.set_face("charmie_face", wait_for_end_of=False)
-                                    picked_height_1 ,asked_help_1 = self.robot.pick_object(selected_object=o, first_search_tetas=tetas, restaurant_scenario = True)
+
 
                                 counter = counter + 1         
                         elif len(NCT_check)==1:
@@ -771,6 +769,9 @@ class TaskMain():
                                 obj = order_names[0]
                                 order_names[0] = order_names[1]
                                 order_names[1] = obj
+                            order_names.reverse()
+
+                            print("Order to pick ", order_names)
 
                             for o in order_names:
                                     
@@ -783,10 +784,23 @@ class TaskMain():
                                     self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
                                     time.sleep(5.0)
                                     self.robot.set_face("charmie_face", wait_for_end_of=False)
-                                    _,_ = self.robot.pick_object(selected_object=o, arm_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas, restaurant_scenario = True)
 
-                                    self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
+                                    _,_ = self.robot.pick_object(selected_object=o, first_search_tetas=tetas, restaurant_scenario = True)
+                                    #self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
                                 else:
+                                    self.robot.set_speech(filename="restaurant/please_place", wait_for_end_of=True)
+                                    filename = "objects_names/" + o.lower().replace(" ", "_")
+                                    self.robot.set_speech(filename=filename, wait_for_end_of=True)
+                                    self.robot.set_speech(filename="restaurant/on_my_tray", wait_for_end_of=True)
+                                    time.sleep(5.0)
+
+                                counter = counter + 1
+
+                        elif len(NCT_check)==2:
+
+                            for o in NCT_check:
+                                    
+                                if counter == 0:
                                     self.robot.set_face("barman_place_object_restaurant_res", wait_for_end_of=False)
                                     #### SPEAK: please place these object on the bar counter
                                     self.robot.set_speech(filename="restaurant/please_place", wait_for_end_of=True)
@@ -795,41 +809,19 @@ class TaskMain():
                                     self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
                                     time.sleep(5.0)
                                     self.robot.set_face("charmie_face", wait_for_end_of=False)
-                                    picked_height_1 ,asked_help_1 = self.robot.pick_object(selected_object=o, first_search_tetas=tetas, restaurant_scenario = True)
+
+                                    _,_ = self.robot.pick_object(selected_object=o, first_search_tetas=tetas, restaurant_scenario = True)
+                                    #self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = self.robot.get_standard_pick_from_object(o))
+                                else:
+                                    self.robot.set_speech(filename="restaurant/please_place", wait_for_end_of=True)
+                                    filename = "objects_names/" + o.lower().replace(" ", "_")
+                                    self.robot.set_speech(filename=filename, wait_for_end_of=True)
+                                    self.robot.set_speech(filename="restaurant/on_my_tray", wait_for_end_of=True)
+                                    time.sleep(5.0)
+
+
 
                                 counter = counter + 1
-
-                        elif len(NCT_check)==2:
-
-                            for o in NCT_check:
-                                    
-                                    if counter == 0:
-                                        self.robot.set_face("barman_place_object_restaurant_res", wait_for_end_of=False)
-                                        #### SPEAK: please place these object on the bar counter
-                                        self.robot.set_speech(filename="restaurant/please_place", wait_for_end_of=True)
-                                        filename = "objects_names/" + o.lower().replace(" ", "_")
-                                        self.robot.set_speech(filename=filename, wait_for_end_of=True)
-                                        self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
-                                        time.sleep(5.0)
-                                        self.robot.set_face("charmie_face", wait_for_end_of=False)
-                                        _,_ = self.robot.pick_object(selected_object=o, arm_initial_position = "initial_position_to_ask_for_objects", first_search_tetas=tetas, restaurant_scenario = True) 
-
-
-                                        self.robot.place_object_in_furniture(selected_object=o, asked_help= True, furniture="Tray", place_mode = "top", NCT=True)
-                                    else:
-                                        self.robot.set_face("barman_place_object_restaurant_res", wait_for_end_of=False)
-                                        #### SPEAK: please place these object on the bar counter
-                                        self.robot.set_speech(filename="restaurant/please_place", wait_for_end_of=True)
-                                        filename = "objects_names/" + o.lower().replace(" ", "_")
-                                        self.robot.set_speech(filename=filename, wait_for_end_of=True)
-                                        self.robot.set_speech(filename="restaurant/in_bar_table", wait_for_end_of=True)
-                                        time.sleep(5.0)
-                                        self.robot.set_face("charmie_face", wait_for_end_of=False)
-                                        picked_height_1 ,asked_help_1 = self.robot.pick_object(selected_object=o, first_search_tetas=tetas, restaurant_scenario = True)
-
-
-
-                                    counter = counter + 1
 
 
                     elif len(NCP_check)==1:
@@ -838,6 +830,8 @@ class TaskMain():
                             obj = order_names[0]
                             order_names[0] = order_names[1]
                             order_names[1] = obj
+
+                        print("Order to pick ", order_names)
                         
                         self.robot.set_face("barman_place_object_restaurant_res", wait_for_end_of=False)
                         #### SPEAK: please place these object on the bar counter

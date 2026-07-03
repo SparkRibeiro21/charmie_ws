@@ -29,7 +29,7 @@ def generate_launch_description():
         std_lf.tray_gripper,
         std_lf.speakers,
         # std_lf.save_speakers,
-        std_lf.neck,
+        # std_lf.neck,
         std_lf.face,
         std_lf.low_level,
         
