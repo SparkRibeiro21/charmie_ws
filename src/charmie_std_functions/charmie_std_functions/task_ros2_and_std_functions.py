@@ -4812,23 +4812,49 @@ class RobotStdFunctions():
 
                     search_tetas = [[0, -45], [-40, -45], [40, -45]]
 
-                    orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
-                    print("Orientation to search:", orientation_to_search)
+                    for furniture in self.node.furniture:
+                        if furniture["name"].replace(" ","_").lower == curr_room.replace(" ","_").lower:
+                    
+                            orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                            print("Orientation to search:", orientation_to_search)
 
-                    if orientation_to_search == "horizontal":
-                        search_tetas = [[0, -45], [-40, -45], [40, -45]]
-                        print("Looking for:", task_attribute, "with horizontal search")
-                    elif orientation_to_search == "vertical":
-                        search_tetas = [[0, -15], [0, -35], [0, 15]]
-                        print("Looking for:", task_attribute, "with vertical search")
-                    elif orientation_to_search == "single":
-                        search_tetas = [[0, -25]]
-                        print("Looking for:", task_attribute, "with single search")
+                            if orientation_to_search == "horizontal":
+                                search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                                print("Looking for:", task_attribute, "with horizontal search")
+                            elif orientation_to_search == "vertical":
+                                search_tetas = [[0, -15], [0, -35], [0, 15]]
+                                print("Looking for:", task_attribute, "with vertical search")
+                            elif orientation_to_search == "single":
+                                search_tetas = [[0, -25]]
+                                print("Looking for:", task_attribute, "with single search")
 
-                    picked_height, asked_help = self.pick_object(selected_object= task_attribute, first_search_tetas=search_tetas)
+                            picked_height, asked_help = self.pick_object(selected_object= task_attribute, first_search_tetas=search_tetas)
 
-                    object_in_gripper = False
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                            object_in_gripper = False
+                            object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+
+                    
+                    if (not curr_furniture):
+                        for furniture in self.node.furniture:
+                            if furniture["room"].replace(" ","_").lower== curr_room.replace(" ","_").lower:
+                                orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
+                                print("Orientation to search:", orientation_to_search)
+
+                                if orientation_to_search == "horizontal":
+                                    search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                                    print("Looking for:", task_attribute, "with horizontal search")
+                                elif orientation_to_search == "vertical":
+                                    search_tetas = [[0, -15], [0, -35], [0, 15]]
+                                    print("Looking for:", task_attribute, "with vertical search")
+                                elif orientation_to_search == "single":
+                                    search_tetas = [[0, -25]]
+                                    print("Looking for:", task_attribute, "with single search")
+
+                                picked_height, asked_help = self.pick_object(selected_object= task_attribute, first_search_tetas=search_tetas)
+
+                                object_in_gripper = False
+                                object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                                    
 
                     if object_in_gripper:
                         curr_obj_list.append(task_attribute)
@@ -4890,6 +4916,18 @@ class RobotStdFunctions():
                     filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, parameter=task_attribute)
                     print("Objects to count:", [obj.object_name for obj in filtered_objects_found])
 
+                    counting_obj_name = False
+                    counting_obj_class = False
+
+                    for obj_class in self.node.objects_classes_file:
+                        if obj_class["name"].replace(" ","_").lower() == task_attribute:
+                            counting_obj_class= True
+
+                    for obj in self.node.objects_file:
+                        if obj["name"].replace(" ","_").lower() == task_attribute:
+                            counting_obj_name= True
+
+
                     if filtered_objects_found:
                         self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
 
@@ -4899,7 +4937,13 @@ class RobotStdFunctions():
                             print("Found:", obj_found.object_name)
                             self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
                         
-                    result = "I have found " + str(obj_counter) + " " + task_attribute.replace("_"," ") + "."
+
+                    if (not counting_obj_name and not counting_obj_class):
+                        result = "I have found " + str(obj_counter) + " objects."
+
+                    else:
+                        result = "I have found " + str(obj_counter) + " " + task_attribute.replace("_"," ") + "."
+
                     print(result)
                     self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
                     print ("Total count of ", task_attribute, ":", obj_counter)
@@ -4939,6 +4983,21 @@ class RobotStdFunctions():
                             print("Found:", obj_found.object_name)
 
 
+                    counting_obj_name = False
+                    counting_obj_class = False
+
+                    for obj_class in self.node.objects_classes_file:
+                        if obj_class["name"].replace(" ","_").lower() == task_parameter:
+                            counting_obj_class= True
+
+                    for obj in self.node.objects_file:
+                        if obj["name"].replace(" ","_").lower() == task_parameter:
+                            counting_obj_name= True
+
+                    print(counting_obj_class)
+                    print(counting_obj_name)
+
+
                     if task_attribute == "smallest":
 
                         smallest_volume = float('inf')
@@ -4959,14 +5018,15 @@ class RobotStdFunctions():
                             print(result)
 
                         else:
-                            if task_parameter:
-                                result = "Of all the " + task_parameter.replace("_"," ") + " I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
+                              
+                            if (not counting_obj_name and not counting_obj_class):
+                                result = "Of all the objects I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
+
                             else:
-                              result = "Of all the objects I found, the smallest one is the " + smallest_object.replace("_"," ") + "."  
-                            
-                            
+                                result = "Of all the " + task_parameter.replace("_"," ") + " I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
+                                                        
                             print(result)
-                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                        # self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
                     
                     elif task_attribute == "biggest":
 
@@ -4987,13 +5047,14 @@ class RobotStdFunctions():
                         ###I couldn't find any objects
                             result = "I was not able to find any of the desired objects."
                             print(result)
-
                         else:
-                            if (comparing_obj_class or comparing_obj_name):
-                                result = "Of all the " + task_parameter.replace("_"," ") + " I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
+                            if (not counting_obj_name and not counting_obj_class):
+                                result = "Of all the objects I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
+
                             else:
-                                result = "Of all the objects I found, the biggest one is the " + biggest_object.replace("_"," ") + "." 
-                            print(result)
+                                result = "Of all the " + task_parameter.replace("_"," ") + " I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
+
+                        print(result)
 
                         self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
 
