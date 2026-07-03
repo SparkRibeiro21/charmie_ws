@@ -4966,7 +4966,7 @@ class RobotStdFunctions():
                             
                             
                             print(result)
-                        # self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
                     
                     elif task_attribute == "biggest":
 
@@ -4989,15 +4989,13 @@ class RobotStdFunctions():
                             print(result)
 
                         else:
-                            if task_parameter:
+                            if (comparing_obj_class or comparing_obj_name):
                                 result = "Of all the " + task_parameter.replace("_"," ") + " I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
                             else:
-                              result = "Of all the objects I found, the biggest one is the " + biggest_object.replace("_"," ") + "."  
-                            
-                            
+                                result = "Of all the objects I found, the biggest one is the " + biggest_object.replace("_"," ") + "." 
                             print(result)
 
-                        # self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
 
                     elif task_attribute == "heaviest":
                         
@@ -5018,14 +5016,13 @@ class RobotStdFunctions():
                             print(result)
 
                         else:
-                            if task_parameter:
+                            if (comparing_obj_class or comparing_obj_name):
                                 result = "Of all the " + task_parameter.replace("_"," ") + " I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "."
                             else:
-                              result = "Of all the objects I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "."  
-                            
+                                result = "Of all the objects I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "." 
                             print(result)
 
-                        # self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
 
                     elif task_attribute == "lightest":
                         
@@ -5046,16 +5043,18 @@ class RobotStdFunctions():
                             print(result)
 
                         else:
-                            if task_parameter:
+                            if (comparing_obj_class or comparing_obj_name):
                                 result = "Of all the " + task_parameter.replace("_"," ") + " I found, the lightest one is the " + lightest_object.replace("_"," ") + "."
                             else:
-                              result = "Of all the objects I found, the lightest one is the " + lightest_object.replace("_"," ") + "."  
-                            
+                                result = "Of all the objects I found, the lightest one is the " + lightest_object.replace("_"," ") + "." 
                             print(result)
 
-                        # self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
+                        self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
                     
                     curr_obj_list.clear()
+
+                    comparing_obj_class=False
+                    comparing_obj_name=False
                         
                     pass
 
