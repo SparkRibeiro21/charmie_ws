@@ -27,7 +27,7 @@ drinks_dict = {
 
     "Coke": 		["coke"],
     "Pepsi": 		["pepsi"],
-    "Milk":         ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
+    "Milk":         ["milk", "muke", "mew", "milburn", "mieuki", "mute", "mille", "mieok", "milton"],
     "Red_Bull": 	["red bull"],
     "Soju": 	    ["soju", "soja"],
 
@@ -35,8 +35,8 @@ drinks_dict = {
 
 foods_dict = {
 
-    "Cornflakes": 	        ["cornflakes"],
-    "Instant_Noodles":	    ["instant noodles"],
+    "Cornflakes": 	        ["cornflakes", "corn flakes"],
+    "Instant_Noodles":	    ["instant noodles", "instant", "noodles"],
  
     "Mangostane": 		    ["mangostane", "mango stain", "mango steam", "mango"],
     "Peach": 		        ["peach"],
@@ -46,7 +46,7 @@ foods_dict = {
     "Yellow_Bellpepper":    ["yellow bellpepper", "yellow bell pepper"],
 
     "Pringles":             ["pringles"],
-    "Seaweed":              ["Seaweed"],
+    "Seaweed":              ["seaweed", "sea weed", "see with", "see wead"],
 }
 
 # LAR OBJECTS
