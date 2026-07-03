@@ -8548,6 +8548,7 @@ class RobotStdFunctions():
                 objects[0] = objects[1]
                 objects[1] = obj
                 print(" Changed ", objects[0], " with ", objects[1])
+        print(" Changed list ", objects)
         return objects
 
     def close_dishwasher(self, task = "finals"):
@@ -8974,7 +8975,10 @@ class RobotStdFunctions():
                     gripper_search_height = self.get_gripper_localization().z
                     object_height = self.get_object_height_from_object(valid_detected_object.object_name)
                     if furniture_height < 0:
-                        adjust_z = (valid_detected_object.position_relative.z - (object_height/2) - gripper_search_height)*1000
+                        if not restaurant_scenario:
+                            adjust_z = (valid_detected_object.position_relative.z - (object_height/2) - gripper_search_height)*1000
+                        else:
+                            adjust_z = (valid_detected_object.position_relative.z - (object_height/1.5) - gripper_search_height)*1000
                     else:
                         adjust_z = (furniture_height + (object_height/2) - gripper_search_height)*1000
 
@@ -10074,6 +10078,8 @@ class RobotStdFunctions():
                     # SPEAK: There was a problem with the washing machine handle detection. I will try to approach the washing machine again and search for the handle.
                     self.adjust_omnidirectional_position(dx = -approach_x, dy = -approach_y, wait_for_end_of=True, safety=False)
                     self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+            else:
+                self.adjust_omnidirectional_position(dx=0.05,dy=0.0, wait_for_end_of=True, safety=False)
                     
 
             search_tetas.reverse()
@@ -10119,11 +10125,11 @@ class RobotStdFunctions():
         _,_ = self.adjust_angle(25)
         self.set_speech(filename="doing_laundry/slighlty_push_door", wait_for_end_of=False)
         self.adjust_omnidirectional_position(dx=0.0,dy=-0.10, wait_for_end_of=True, safety=False)
-        self.adjust_omnidirectional_position(dx=0.33,dy=0.0, wait_for_end_of=True, safety=False)
-        inside_pick = [-237.5, 81.4, -171.1, -52, -16.7, 328.7]
+        self.adjust_omnidirectional_position(dx=0.345,dy=0.0, wait_for_end_of=True, safety=False)
+        inside_pick = [-238.8, 82.1, -184.9, -61.4, -0.3, 352.9]
         self.set_arm(command="open_gripper", wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = inside_pick, wait_for_end_of=True)
-        # self.wait_for_start_button()
+        #self.wait_for_start_button()
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
         self.adjust_omnidirectional_position(dx=-0.30,dy=0.0, wait_for_end_of=True, safety=False)
@@ -10132,7 +10138,7 @@ class RobotStdFunctions():
         # self.wait_for_start_button()
         pull_up = [-190.7, 76.1, -88.7, -69.1, -82.7, 308.8]
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pull_up, wait_for_end_of=True)
-        self.adjust_omnidirectional_position(dx=-0.27,dy=0.0, wait_for_end_of=True, safety=False)
+        #self.adjust_omnidirectional_position(dx=-0.27,dy=0.0, wait_for_end_of=True, safety=False)
         # self.set_arm(command="point_front_to_initial_position", wait_for_end_of=True)
         
     def ROBOCUP_pick_tab(self, selected_object="Dishwasher Tab", pick_mode="", first_search_tetas=[], furniture="", furniture_height=-1, arm_initial_position = "", list_of_objects_detected_as = [], max_search_attempts = 3, say_cutlery = False, restaurant_scenario = False, finals_flag=False): 

@@ -77,7 +77,7 @@ class TaskMain():
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
         self.initial_position = [0.0, 0.0, 0.0]
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        self.WASHING_MACHINE_LOCATION = [ 3.80, 4.28, 90.0]
+        self.WASHING_MACHINE_LOCATION = [ 3.60, 4.36, 90.0]
         print(self.initial_position)
         
     def main(self):
@@ -109,7 +109,7 @@ class TaskMain():
 
                 # self.robot.set_torso_position(legs=0.040, torso=8, wait_for_end_of=True)
 
-                self.robot.set_initial_position(self.initial_position)
+                #self.robot.set_initial_position(self.initial_position)
                         
                 self.robot.set_face("charmie_face", wait_for_end_of=False)
 
@@ -150,6 +150,7 @@ class TaskMain():
                 
                 # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                 self.robot.set_speech(filename="doing_laundry/finished_dl", wait_for_end_of=True)
+                self.robot.set_speech(filename="sound_effects/cr7_siuu",wait_for_end_of=True)
 
                 while True:
                     pass
