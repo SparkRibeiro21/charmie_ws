@@ -5,7 +5,9 @@
 {"name": "Laundry Trash Bin",   "height": [ 0.39 ], 			                          "room": "Laundry Room", "nav_coords": [ 2.47, 3.2,   -135.0],  "center_coords": [ 1.77, 2.5],      "size": [0.26, 0.26],    "angle":   0.0, "diameter":0.26, "look": "single",      "shape":"circle"},
 {"name": "Exit",              	"height": [ 2.18 ], 			                          "room": "Laundry Room", "nav_coords": [ 1.40, 4.34,   180.0],  "center_coords": [ 0.7, 4.5],       "size": [0.05, 0.985],   "angle":   0.0, "diameter":0.0,  "look": "horizontal",  "shape":"square"},
 
-{"name": "Bed",      		    "height": [ 0.49 ], 			                          "room": "Bedroom", 	  "nav_coords": [ 6.47, 4.32,   -90.0],  "center_coords": [ 6.33, 2.6],      "size": [2.1, 1.2],      "angle":   0.0, "diameter":0.0,  "look": "horizontal",  "shape":"square"},
+{"name": "Bed",      		    "height": [ 0.49 ], 			                          "room": "Bedroom", 	  "nav_coords": [ 6.57, 4.32,   -90.0],  "center_coords": [ 6.33, 2.6],      "size": [2.1, 1.2],      "angle":   0.0, "diameter":0.0,  "look": "horizontal",  "shape":"square"},
+{"name": "Coat Rack",      		"height": [ 1.70 ], 			                          "room": "Bedroom", 	  "nav_coords": [ 8.75, 4.55,    45.0],  "center_coords": [ 9.55, 5.35],     "size": [0.5, 0.5],      "angle":   0.0, "diameter":0.0,  "look": "horizontal",  "shape":"square"},
+{"name": "Bedside Table",      	"height": [ 0.65 ], 			                          "room": "Bedroom", 	  "nav_coords": [ 6.65, 3.85,  -180.0],  "center_coords": [ 5.60, 3.85],     "size": [0.4, 0.4],      "angle":   0.0, "diameter":0.0,  "look": "horizontal",  "shape":"square"},
 
 {"name": "Coffee Table",        "height": [ 0.60 ], 			                          "room": "Living Room",  "nav_coords": [ 4.42,  -1.66,  -75.0], "center_coords": [ 4.72,  -2.9],    "size": [0.395, 0.395],  "angle":   0.0, "diameter":0.0,  "look": "single",      "shape":"square"},
 {"name": "Sofa",      		    "height": [ 0.27 ], 			                          "room": "Living Room",  "nav_coords": [ 2.82, -0.78,  -90.0],  "center_coords": [ 2.81, -2.67],    "size": [2.4,  1.3],     "angle":   0.0, "diameter":0.0,  "look": "horizontal",  "shape":"square"},
@@ -18,8 +20,8 @@
 {"name": "Sink",      		    "height": [ 0.68 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 6.29, -1.70,   -90.0],"center_coords": [ 6.33, -3.0],      "size": [0.51, 0.725],   "angle":   0.0, "diameter":0.0,  "look": "single",      "shape":"square"},
 {"name": "Cooking Table",      	"height": [ 0.68 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 6.8, -2.00,   -90.0], "center_coords": [ 6.80, -3.0],      "size": [0.43, 0.725],   "angle":   0.0, "diameter":0.0,  "look": "single",      "shape":"square"},
 {"name": "Dishwasher",      	"height": [ 0.845 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 8.5, -2.00, -90.0],   "center_coords": [ 8.49, -2.95],     "size": [0.65, 0.83],    "angle":   0.0, "diameter":0.0,  "look": "single",      "shape":"square"},
-{"name": "Kitchen Trash Bin",   "height": [ 0.39], 			                              "room": "Kitchen", 	  "nav_coords": [ 9.18, -1.80,   -90.0],"center_coords": [ 9.2, -2.75],       "size": [0.26, 0.26],    "angle":   0.0, "diameter":0.26,  "look": "single",     "shape":"circle"},
-{"name": "Dinner Table",      	"height": [ 0.73 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 7.58, -1.84, 90.0],   "center_coords": [ 7.56, -0.132],    "size": [0.8, 0.80],     "angle":   0.0, "diameter":2.2, "look": "horizontal",  "shape":"circle"}
+{"name": "Kitchen Trash Bin",   "height": [ 0.39], 			                              "room": "Kitchen", 	  "nav_coords": [ 9.18, -1.80,   -90.0],"center_coords": [ 9.2, -2.75],      "size": [0.26, 0.26],    "angle":   0.0, "diameter":0.26, "look": "single",      "shape":"circle"},
+{"name": "Dinner Table",      	"height": [ 0.73 ], 			                          "room": "Kitchen", 	  "nav_coords": [ 7.58, -1.84, 90.0],   "center_coords": [ 7.56, -0.132],    "size": [0.8, 0.80],     "angle":   0.0, "diameter":2.20, "look": "horizontal",  "shape":"circle"}
 
 
 ]
