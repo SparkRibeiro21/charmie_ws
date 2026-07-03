@@ -11,31 +11,31 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
-    "charmie_audio":                True,
-    "charmie_face":                 True,
-    "charmie_head_camera":          True,
-    "charmie_hand_camera":          True,
+    "charmie_arm":                  False,
+    "charmie_audio":                False,
+    "charmie_face":                 False,
+    "charmie_head_camera":          False,
+    "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                True,
+    "charmie_lidar":                False,
     "charmie_lidar_bottom":         False,
-    "charmie_lidar_livox":          True,
+    "charmie_lidar_livox":          False,
     "charmie_llm":                  True,
-    "charmie_localisation":         True,
-    "charmie_low_level":            True,
-    "charmie_navigation":           True,
-    "charmie_nav2":                 True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
+    "charmie_navigation":           False,
+    "charmie_nav2":                 False,
     "charmie_nav_sdnl":             False,
-    "charmie_neck":                 True,
-    "charmie_radar":                True,
+    "charmie_neck":                 False,
+    "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
-    "charmie_speakers_save":        True,
+    "charmie_speakers":             False,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
-    "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            True,
+    "charmie_yolo_objects":         False,
+    "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
 }
 
@@ -73,7 +73,7 @@ class TaskMain():
         Final_State = 9
 
         # VARS ...
-        self.state = LLM_gpsr
+        self.state = LLM_hri
 
         self.number_of_requests = 3
         self.curr_request = 1
@@ -382,12 +382,13 @@ class TaskMain():
                 ##  TESTING INFO EXTRACTION STANDARDFUNCTION ##
                 #self.robot.set_speech(filename="receptionist/get_name_and_drink", wait_for_end_of=True)
                 # command = self.robot.get_audio(gpsr=True, question="receptionist/get_name_and_drink", wait_for_end_of=True)
-                command = "Milk, iced tea, tennis ball, dice"
+                command = "right,right,right,right,right,right,right,right,right,right,right,right,right,right,right,right,right,right,right"
 
-                heaviest_object = self.robot.get_llm_ollama_information(command, mode="smallest object", wait_for_end_of=True)
-                # favorite_drink = self.robot.get_llm_ollama_information(command, mode="favorite drink", wait_for_end_of=True)
-                print ("Heaviest object:"+ heaviest_object)
-                # print ("GUEST INFO- name:"+name+", favorite drink:"+favorite_drink)
+                # heaviest_object = self.robot.get_llm_ollama_information(command, mode="smallest object", wait_for_end_of=True)
+                name = self.robot.get_llm_ollama_information(command, mode="name", wait_for_end_of=True)
+                favorite_drink = self.robot.get_llm_ollama_information(command, mode="favorite drink", wait_for_end_of=True)
+                # print ("Heaviest object:"+ heaviest_object)
+                print ("GUEST INFO- name:"+name+", favorite drink:"+favorite_drink)
                 # self.robot.save_speech(command=name, filename=name, quick_voice=False, wait_for_end_of=True)
                 # self.robot.save_speech(command=favorite_drink, filename=favorite_drink, quick_voice=False, wait_for_end_of=True)
 
