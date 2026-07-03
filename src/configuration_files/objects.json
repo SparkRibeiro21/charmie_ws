@@ -4,7 +4,7 @@
 {"name": "Dishwasher Tab",	 "class": "Cleaning Supplies",	"width": 0.025, "length": 0.025, "height": 0.010, "shape": "sphere",    "can_pick": "top",      "std_pick": "top",      "weight": 0.011},
  
 {"name": "Coke", 		     "class": "Drinks", 		    "width": 0.053, "length": 0.053, "height": 0.115, "shape": "cylinder",  "can_pick": "both",    "std_pick": "front",    "weight": 0.215},
-{"name": "Pepsi", 	         "class": "Drinks",		        "width": 0.009, "length": 0.009, "height": 0.310, "shape": "cylinder",  "can_pick": "front",    "std_pick": "front",    "weight": 1.250},
+{"name": "Pepsi", 	         "class": "Drinks",		        "width": 0.090, "length": 0.090, "height": 0.310, "shape": "cylinder",  "can_pick": "front",    "std_pick": "front",    "weight": 1.250},
 {"name": "Milk",           	 "class": "Drinks",		        "width": 0.050, "length": 0.050, "height": 0.14, "shape": "cuboid",    "can_pick": "both",     "std_pick": "front",    "weight": 0.250},
 {"name": "Red Bull",       	 "class": "Drinks", 		    "width": 0.053, "length": 0.053, "height": 0.135, "shape": "cylinder",  "can_pick": "front",    "std_pick": "front",    "weight": 0.250},
 {"name": "Soju",   	         "class": "Drinks",		        "width": 0.068, "length": 0.068, "height": 0.225, "shape": "cylinder",    "can_pick": "front",     "std_pick": "front",    "weight": 0.640},

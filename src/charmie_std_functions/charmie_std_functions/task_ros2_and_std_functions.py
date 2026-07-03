@@ -4543,218 +4543,6 @@ class RobotStdFunctions():
                     
                 case "move_to_person":
                     
-                    # print("Moving to person")
-                    # print(task_attribute)
-                    # print(task_parameter)
-
-                    # correct_person = DetectedPerson()
-
-                    # tetas = [[-60, 0], [0, 0], [60, 0]]
-
-                    # if task_attribute == "pose":
-
-                    #     if task_parameter == "sitting":
-
-                    #         people_found=self.search_for_person(tetas=tetas)
-
-                    #         for p in people_found:
-
-                    #             print("p room: ", p.room_location) 
-                    #             print("person height:", p.height) 
-                    #             print("current room: ", curr_room)
-                    #             print("p x coords relative: ", p.position_absolute.x) 
-                    #             print("p y coords relative: ", p.position_absolute.y) 
-
-                    #             if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-                                    
-                    #                 if (0.8 <= p.height <1.6):
-                    #                     correct_person = p
-
-                    #         pass
-
-                    #     if task_parameter == "standing":
-
-                    #         people_found=self.search_for_person(tetas=tetas)
-
-                    #         for p in people_found:
-
-                    #             print("p room: ", p.room_location) 
-                    #             print("person height:", p.height) 
-                    #             print("current room: ", curr_room)
-                    #             print("p x coords relative: ", p.position_absolute.x) 
-                    #             print("p y coords relative: ", p.position_absolute.y) 
-
-                    #             if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-                                    
-                    #                 if (1.5 <= p.height):
-                    #                     correct_person = p
-                            
-                    #         pass
-
-                    #     if task_parameter == "lying" or task_parameter == "lying_down":
-
-                    #         tetas = [[-60, -30], [0, -30], [60, -30]]
-
-                    #         people_found=self.search_for_person(tetas=tetas)
-
-
-                    #         for p in people_found:
-
-                    #             print("p room: ", p.room_location) 
-                    #             print("person height:", p.height) 
-                    #             print("current room: ", curr_room)
-                    #             print("p x coords relative: ", p.position_absolute.x) 
-                    #             print("p y coords relative: ", p.position_absolute.y) 
-
-                    #             if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-                    #                 print("p x coords: ", p.position_absolute.x) 
-                    #                 print("p y coords: ", p.position_absolute.y) 
-                                    
-                    #                 if (p.height > 0.8):
-                    #                     correct_person = p
-                    #         pass
-
-                    #     if task_parameter == "raising_hand":
-
-                    #         ### Search for person with hand raised in the current room
-                    #         people_found = self.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
-                    #         print("FOUND:", len(people_found)) 
-
-                    #         for p in people_found:
-
-                    #             print("p room: ", p.room_location)
-                    #             print("current room: ", curr_room)
-
-                    #             if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-                    #                 correct_person = p
-                        
-                    #     if task_parameter == "pointing_right":
-                            
-                    #         ### Search for person in the current room
-                    #         people_found=self.search_for_person(tetas=tetas)
-                    #         print("FOUND:", len(people_found)) 
-                            
-                    #         for p in people_found:
-                                
-                    #             self.detected_person_to_face_path(person=p, send_to_face=True)
-                    #             print("p room: ", p.room_location) 
-                    #             print("pointing at:", p.pointing_at) 
-                    #             print("current room: ", curr_room)
-                    #             print("p x coords relative: ", p.position_absolute.x) 
-                    #             print("p y coords relative: ", p.position_absolute.y) 
-
-
-                    #             if p.pointing_at == "Right":
-                    #                 if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-                    #                     correct_person = p
-
-                    #         pass
-
-                    #     if task_parameter == "pointing_left":
-
-                    #         ### Search for person in the current room
-                    #         people_found=self.search_for_person(tetas=tetas)
-                    #         print("FOUND:", len(people_found)) 
-                            
-                    #         for p in people_found:
-
-                    #             self.detected_person_to_face_path(person=p, send_to_face=True)
-                    #             print("p room: ", p.room_location) 
-                    #             print("pointing at:", p.pointing_at) 
-                    #             print("current room: ", curr_room)
-                    #             print("p x coords absolute: ", p.position_absolute.x) 
-                    #             print("p y coords absolute: ", p.position_absolute.y) 
-
-                    #             if p.pointing_at == "Left":
-                    #                 if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-                    #                     correct_person = p
-
-                    #         pass
-
-                    #     print("correct x coords absolut: ", correct_person.position_absolute.x) 
-                    #     print("correct y coords absolut: ", correct_person.position_absolute.y) 
-                    #     print("Correct person's height", correct_person.height)
-
-                    #     self.detected_person_to_face_path(person=correct_person, send_to_face=True)
-
-                    #     self.set_neck(look_navigation)
-                    #     self.move_to_person(person = correct_person)
-                    #     self.set_neck(look_forward)
-
-                    #     self.set_speech(filename= "gpsr/gpsr_intro")
-
-                    # # if task_attribute == "name":
-                        
-                    # #     ### Speak: "I am lookig for someone named [name]"
-                    # #     ### Speak: "[name] could you please raise your hand so I can find you?"
-                    # #     self.save_speech(command=task_parameter.replace("_"," ").lower(), filename="person_name", quick_voice=False, wait_for_end_of=False)
-
-                    # #     while not self.save_speech_is_done():
-                    # #         pass
-                    # #     self.set_speech(filename="gpsr/looking_for", wait_for_end_of=True)
-                    # #     self.set_speech(filename="temp/person_name", wait_for_end_of=True)
-                    # #     time.sleep(0.5)
-                    # #     self.set_speech(filename="gpsr/raise_your_hand", wait_for_end_of=True)
-
-                    # #     ### Search for person with hand raised in the current room
-                    # #     people_found = self.search_for_person(tetas=tetas, only_detect_person_arm_raised=True)
-                    # #     print("FOUND:", len(people_found)) 
-
-                    # #     for p in people_found:
-
-                    # #         print("p room: ", p.room_location)
-                    # #         print("current room: ", curr_room)
-
-                    # #         if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-                    # #             correct_person = p
-
-
-                    # #     print("correct x coords absolut: ", correct_person.position_absolute.x) 
-                    # #     print("correct y coords absolut: ", correct_person.position_absolute.y) 
-                    # #     print("Correct person's height", correct_person.height)
-
-                    # #     # self.detected_person_to_face_path(person=correct_person, send_to_face=True)
-
-                    # #     self.set_neck(look_navigation)
-                    # #     self.move_to_person(person = correct_person)
-                    # #     self.set_neck(look_forward)
-
-                    # #     ### Speak: "Hello [name], my name is Charmie!"
-                    # #     self.set_speech(filename= "gpsr/gpsr_intro")
-
-                    # #     pass
-
-                    # if task_attribute == "clothing":
-
-                    #     ### Search for person with characteristics
-                    #     people_found=self.search_for_person(tetas=tetas)
-                    #     print("FOUND:", len(people_found)) 
-
-                    #     ### If found, search for the desired characteristic
-                    #     for p in people_found:
-
-                    #         if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
-
-                    #             if p.shirt_color.lower() == task_parameter.lower():
-
-                    #                 correct_person=p
-
-
-                    #     print("correct x coords absolut: ", correct_person.position_absolute.x) 
-                    #     print("correct y coords absolut: ", correct_person.position_absolute.y) 
-                    #     print("Correct person's height", correct_person.height)
-
-                    #     self.detected_person_to_face_path(person=correct_person, send_to_face=True)
-
-                    #     self.set_neck(look_navigation)
-                    #     self.move_to_person(person = correct_person)
-                    #     self.set_neck(look_forward)
-
-                    #     ### Speak: "Hello [name], my name is Charmie!"
-                    #     self.set_speech(filename= "gpsr/gpsr_intro")
-
-                    #     pass
-                    
                     if task_attribute == "you":
 
                         ### Set neck: navigation
@@ -4776,38 +4564,6 @@ class RobotStdFunctions():
 
                         pass
                     pass
-
-                case "look_for_object":
-
-                    # search_tetas = [[0, -45], [-40, -45], [40, -45]]
-
-                    # orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
-                    # print("Orientation to search:", orientation_to_search)
-
-                    # if orientation_to_search == "horizontal":
-                    #     search_tetas = [[0, -45], [-40, -45], [40, -45]]
-                    #     print("Looking for:", task_attribute, "with horizontal search")
-                    # elif orientation_to_search == "vertical":
-                    #     search_tetas = [[0, -15], [0, -35], [0, 15]]
-                    #     print("Looking for:", task_attribute, "with vertical search")
-
-                    # objects_found = self.search_for_objects(search_tetas,list_of_objects=[], detect_objects=True)
-                    # filtered_objects_found = self.get_filtered_list_of_objects_found(list_of_objects_found=objects_found, task_attribute=task_attribute)
-                    # print("Objects to compare:", [obj.object_name for obj in filtered_objects_found])
-
-                    # if filtered_objects_found:
-                    #     self.set_speech(filename="generic/found_following_items", wait_for_end_of=True)
-
-                    #     for obj_found in filtered_objects_found:
-
-                    #         curr_obj_list.append(obj_found)
-                    #         print("Found:", obj_found.object_name)
-                    #         self.set_speech(filename="objects_names/"+obj_found.object_name.replace(" ","_").lower(), wait_for_end_of=True)
-
-                    # else:    
-                    #     self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
-
-                    pass
                 
                 case "look_for_person":
 
@@ -4819,7 +4575,6 @@ class RobotStdFunctions():
 
                     tetas = [[-60, 0], [0, 0], [60, 0]]
 
-                    people_found=[]
 
                     if task_attribute == "pose":
 
@@ -4880,7 +4635,7 @@ class RobotStdFunctions():
                                     print("p x coords: ", p.position_absolute.x) 
                                     print("p y coords: ", p.position_absolute.y) 
                                     
-                                    if (p.height > 0.8):
+                                    if (p.height < 0.8):
                                         correct_person = p
                             pass
 
@@ -4905,7 +4660,6 @@ class RobotStdFunctions():
                             print("FOUND:", len(people_found)) 
                             
                             for p in people_found:
-                                
                                 self.detected_person_to_face_path(person=p, send_to_face=True)
                                 print("p room: ", p.room_location) 
                                 print("pointing at:", p.pointing_at) 
@@ -4927,7 +4681,7 @@ class RobotStdFunctions():
                             print("FOUND:", len(people_found)) 
                             
                             for p in people_found:
-
+                                print("FOUND PEOPLE")
                                 self.detected_person_to_face_path(person=p, send_to_face=True)
                                 print("p room: ", p.room_location) 
                                 print("pointing at:", p.pointing_at) 
@@ -4936,6 +4690,7 @@ class RobotStdFunctions():
                                 print("p y coords absolute: ", p.position_absolute.y) 
 
                                 if p.pointing_at == "Left":
+                                    print("FOUND POINTING LEFT PERSON")
                                     if (p.room_location.replace(" ","_").lower() == curr_room.replace(" ","_").lower()):
                                         correct_person = p
 
@@ -5116,6 +4871,7 @@ class RobotStdFunctions():
                     obj_counter = 0
                     
                     search_tetas = [[0, -45], [-40, -45], [40, -45]]
+                    objects_found=[]
 
                     orientation_to_search= self.get_look_orientation_from_furniture(curr_furniture)
                     print("Orientation to search:", orientation_to_search)
@@ -5182,14 +4938,11 @@ class RobotStdFunctions():
                             obj_list.append(obj_found.object_name)
                             print("Found:", obj_found.object_name)
 
-                    else:    
-                        self.set_speech(filename="generic/could_not_find_any_objects", wait_for_end_of=True)
-
 
                     if task_attribute == "smallest":
-                        print("Finding the smallest ", task_parameter)
+
                         smallest_volume = float('inf')
-                        smallest_object = None
+                        smallest_object = ""
 
                         for obj in obj_list:
                             print("getting size of: ", obj)
@@ -5198,20 +4951,30 @@ class RobotStdFunctions():
                             if obj_volume < smallest_volume:
                                 smallest_volume = obj_volume
                                 smallest_object = obj
-                        
-                        print("smallest object is: ", smallest_object)
+        
 
-                        result = "Of all the " + task_parameter.replace("_"," ") + " I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
-                        print(result)
+                        if (not smallest_object):
+                        ###I couldn't find any objects
+                            result = "I was not able to find any of the desired objects."
+                            print(result)
+
+                        else:
+                            if task_parameter:
+                                result = "Of all the " + task_parameter.replace("_"," ") + " I found, the smallest one is the " + smallest_object.replace("_"," ") + "."
+                            else:
+                              result = "Of all the objects I found, the smallest one is the " + smallest_object.replace("_"," ") + "."  
+                            
+                            
+                            print(result)
                         self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
                     
                     elif task_attribute == "biggest":
-                        print("Finding the biggest ", task_parameter)
+
                         biggest_volume = float('-inf')
-                        biggest_object = None
+                        biggest_object = ""
 
                         for obj in obj_list:
-                            print("getting size of: ", obj)
+        
                             obj_volume = self.get_object_volume_from_object(obj)
                             print("size of ", obj,": ",obj_volume)
                             if obj_volume > biggest_volume:
@@ -5220,51 +4983,78 @@ class RobotStdFunctions():
 
                         print("biggest object is: ", biggest_object)
 
-                        result = "Of all the " + task_parameter.replace("_"," ") + " I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
-                        print(result)
+                        if (not biggest_object):
+                        ###I couldn't find any objects
+                            result = "I was not able to find any of the desired objects."
+                            print(result)
+
+                        else:
+                            if (comparing_obj_class or comparing_obj_name):
+                                result = "Of all the " + task_parameter.replace("_"," ") + " I found, the biggest one is the " + biggest_object.replace("_"," ") + "."
+                            else:
+                                result = "Of all the objects I found, the biggest one is the " + biggest_object.replace("_"," ") + "." 
+                            print(result)
+
                         self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
 
                     elif task_attribute == "heaviest":
-                        print("Finding the heaviest ", task_parameter)
+                        
                         heaviest_weight_so_far = float('-inf')
-                        heaviest_object = None
+                        heaviest_object = ""
 
                         for obj in obj_list:
-                            print("getting weight of: ", obj)
+                            
                             obj_weight = self.get_object_weight_from_object(obj)
                             print("size of ", obj,": ",obj_weight)
                             if obj_weight > heaviest_weight_so_far:
                                 heaviest_weight_so_far = obj_weight
                                 heaviest_object = obj
 
-                        print("heaviest object is: ", heaviest_object)
+                        if (not heaviest_object):
+                        ###I couldn't find any objects
+                            result = "I was not able to find any of the desired objects."
+                            print(result)
 
-                        result = "Of all the " + task_parameter.replace("_"," ") + " I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "."
-                        print(result)
+                        else:
+                            if (comparing_obj_class or comparing_obj_name):
+                                result = "Of all the " + task_parameter.replace("_"," ") + " I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "."
+                            else:
+                                result = "Of all the objects I found, the heaviest one is the " + heaviest_object.replace("_"," ") + "." 
+                            print(result)
+
                         self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
 
                     elif task_attribute == "lightest":
-                        print("Finding the lightest ", task_parameter)
                         
                         lightest_weight_so_far = float('inf')
-                        lightest_object = None
+                        lightest_object = ""
 
                         for obj in obj_list:
-                            print("getting weight of: ", obj)
+                            
                             obj_weight = self.get_object_weight_from_object(obj)
                             print("size of ", obj,": ",obj_weight)
                             if obj_weight < lightest_weight_so_far:
                                 lightest_weight_so_far = obj_weight
                                 lightest_object = obj
 
-                        print("lightest object is: ", lightest_object)
+                        if (not lightest_object):
+                        ###I couldn't find any objects
+                            result = "I was not able to find any of the desired objects."
+                            print(result)
 
-                        result = "Of all the " + task_parameter.replace("_"," ") + " I found, the lightest one is the " + lightest_object.replace("_"," ") + "."
-                        print(result)
+                        else:
+                            if (comparing_obj_class or comparing_obj_name):
+                                result = "Of all the " + task_parameter.replace("_"," ") + " I found, the lightest one is the " + lightest_object.replace("_"," ") + "."
+                            else:
+                                result = "Of all the objects I found, the lightest one is the " + lightest_object.replace("_"," ") + "." 
+                            print(result)
 
                         self.save_speech(command=result, filename="result", quick_voice=False, wait_for_end_of=True)
                     
                     curr_obj_list.clear()
+
+                    comparing_obj_class=False
+                    comparing_obj_name=False
                         
                     pass
 
@@ -5361,8 +5151,6 @@ class RobotStdFunctions():
 
     def get_task_type(self, task=""):
 
-        print(task)
-
         task_type = "NONE"
 
         found_comparison_attribute=False
@@ -5374,11 +5162,7 @@ class RobotStdFunctions():
 
             action = task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
             attribute = task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
-            parameter = task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-        
-            print("-------type_to_check---------")
-            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
-                
+            parameter = task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""   
 
             if attribute == "lightest" or attribute == "heaviest" or attribute == "smallest" or attribute == "biggest":
                 task_type="compare_objects_task"
@@ -5402,8 +5186,6 @@ class RobotStdFunctions():
                     case "count_objects":
                         if(not found_comparison_attribute):
                             task_type="count_objects_task"
-                            print("added")
-                            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
                     
                     
                     case "guide_person":
@@ -5412,39 +5194,26 @@ class RobotStdFunctions():
                             if str(obj["name"]).replace(" ","_").lower() == attribute:
                                 task_type="guide_to_task"
                                 valid_guide=True
-                                print("added")
-                                print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
-
+                                
                         if (not valid_guide):
                             task_type="follow_person_task"
-                            print("added")
-                            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
                     
                     case "follow_person":
                         task_type="follow_person_task"
-                        print("added")
-                        print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
                     
 
                     case "say_info":
                         task_type="say_info_task"
-                        print("added")
-                        print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
                     
                     case "say_result":
                         if (task_type =="NONE"):
                             task_type="say_info_task"
-                            print("added")
-                            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
                     
                     # case "pick_up_object":
                     #     if (task_type =="NONE"):
                     #         task_type="pick_and_handover_task"
                     #         print("added")
                     #         print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
-
-                
-            print("Task action:", action, " Task attribute:", attribute, " Task task_attribute:", parameter)
         
 
         return task_type
@@ -5516,14 +5285,13 @@ class RobotStdFunctions():
                 task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
                 task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
                
 
                 if(task_action== "pick_up_object"):
 
                     for obj in self.node.objects_file:
                         if str(obj["name"]).replace(" ","_").lower() == task_attribute:
-                            print("picking")
                             corrected_task_plan.append("pick_object:" + task_attribute + ";")
                             current_step=step_index
                             pass
@@ -5537,21 +5305,24 @@ class RobotStdFunctions():
                 task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
                 task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
-                if(task_action == "count_objects" and not ambigual_action_found):
+                if(task_action == "count_objects"):
     
                     corrected_task_plan.append("count_objects:" + task_attribute + ";")
                     current_step=step_index
-                    ambigual_action_found=True
+                    count_objs_found=True
 
-                elif (task_action == "look_for_objects" and not ambigual_action_found):
+            for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
+                task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
+            
+                # Parsing the command
+                task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
+                task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
+                task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
+                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
-                    corrected_task_plan.append("count_objects:" + task_attribute + ":"+task_parameter+";")
-                    current_step=step_index
-                    ambigual_action_found=True
-                
-                elif (task_action == "look_for_objects"):
+                if (task_action == "look_for_objects" and not count_objs_found):
 
                     corrected_task_plan.append("compare_objects:" + task_attribute + ":"+task_parameter+";")
                     current_step=step_index
@@ -5560,17 +5331,15 @@ class RobotStdFunctions():
         ###COMPARE OBJECTS
         elif task_type == "compare_objects_task":
 
-            print("Beggining of curr step:",current_step)
-
             for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
-                print("curr step:",current_step)
+                
                 task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
                
                 # Parsing the command
                 task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
                 task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
                 if (task_action == "compare_objects" or task_action == "look_for_objects" or task_action == "look_for_object"):
     
@@ -5578,12 +5347,9 @@ class RobotStdFunctions():
                         current_step=step_index
                         ambigual_action_found=True
 
-
         ###SEARCH FOR PERSON
         elif task_type == "guide_to_task" or task_type == "follow_person_task" or task_type == "say_info_task":
             
-            print("Beggining of curr step:",current_step)
-
             for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
                
                 task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
@@ -5592,12 +5358,10 @@ class RobotStdFunctions():
                 task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
                 task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
-                print(task_action)
                 if(task_action == "look_for_person" and not ambigual_action_found):
 
-                    print("AAAAAAAAAAAAAAAAAAAAAAAAA")
                     corrected_task_plan.append("look_for_person:" + task_attribute + ":"+task_parameter+";")
                     current_step=step_index
                     ambigual_action_found=True
@@ -5614,9 +5378,7 @@ class RobotStdFunctions():
         if task_type == "pick_and_place_task" or task_type == "pick_and_handover_task":
 
             for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
-                print(step_index)
-                print(step)
-
+                
                 task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
 
                 # Parsing the command
@@ -5626,12 +5388,12 @@ class RobotStdFunctions():
                 # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
                 
                 if (task_action == "move_to_person"):
-                    print("aaaaaaaaaaaaaaaa")
+                    
                     move_found=True
                     break
 
                 elif (task_action == "move_to_place" ):
-                    print("bbbbbbbbbbbbbbbbb")
+                  
                     for room in self.node.rooms:
                         if str(room["name"]).replace(" ","_").lower() == task_attribute:
 
@@ -5673,16 +5435,14 @@ class RobotStdFunctions():
                 task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
                 task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
-                if(task_action == "guide_to"):
+                if(task_action == "guide_person"):
                     for room in self.node.rooms:
                         if str(room["name"]).replace(" ","_").lower() == task_attribute:
                             corrected_task_plan.append("guide_to:"+task_attribute+";")
                             current_step=step_index
-                
-
-
+       
         ###FOLLOW
         elif task_type == "follow_person_task":
 
@@ -5691,7 +5451,7 @@ class RobotStdFunctions():
         ###SAY INFO
         elif task_type == "say_info_task":
             for step_index, step in enumerate(raw_task_plan[current_step:], start=current_step):
-                print("curr step:",current_step)
+                
                 task_split = step.replace("\n", ":").replace(" ", ":").replace(",", ":").split(":")
                
                 # Parsing the command
@@ -5699,11 +5459,9 @@ class RobotStdFunctions():
                 task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
 
-                print("PARAMETER: ",task_attribute)
                 if (task_action == "say_info") or (task_action == "say_result"):
                     corrected_task_plan.append("say_info:"+task_attribute+";")
 
-        print("finnished step three")
         ambigual_action_found=False
         move_found=False
         ###============STEP 4===============
@@ -5733,7 +5491,7 @@ class RobotStdFunctions():
                 task_action=task_split[0].replace(" ","_").lower() if len(task_split) > 0 else ""
                 task_attribute=task_split[1].replace(" ","_").replace("-","_").lower() if len(task_split) > 1 else ""
                 task_parameter=task_split[2].replace(" ","_").lower() if len(task_split) > 2 else ""
-                print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
+                # print("Task action:", task_action, " Task attribute:", task_attribute, " Task task_attribute:", task_parameter)
 
                 if(task_action == "look_for_person"):
                     corrected_task_plan.append("look_for_person:" + task_attribute + ":"+task_parameter+";")
@@ -5810,27 +5568,34 @@ class RobotStdFunctions():
 
         filtered_objects_found = []
 
+
         for obj_found in list_of_objects_found:
             if obj_found.object_name.replace(" ","_").lower() == parameter:
                 filtered_objects_found.append(obj_found)
+          
 
             else:
                 obj_found_class = self.get_object_class_from_object(obj_found.object_name)
                 if obj_found_class.replace(" ","_").lower() == parameter:
                     filtered_objects_found.append(obj_found)
+
         
-        print("Filtered objects found:", [obj.object_name for obj in filtered_objects_found])
+        if (not filtered_objects_found):
+            filtered_objects_found=list_of_objects_found
+
+        print("Filtered objects found:")
+            
 
         return filtered_objects_found
         
     def get_object_volume_from_object(self, object_name):
 
         obj_volume = 0.0
-
-
+        
         for obj in self.node.objects_file:
-            if obj["name"].replace(" ", "_").lower() == object_name:
 
+            if obj["name"].replace(" ", "_").lower() == object_name.replace(" ", "_").lower():
+           
                 if obj["shape"]== "cylinder":
                     radius = float(obj["width"]) / 2
                     height = float(obj["height"])

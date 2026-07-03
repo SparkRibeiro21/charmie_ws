@@ -104,6 +104,7 @@ class TaskMain():
         self.curr_request = 0
 
         USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS=True
+        USE_CORRECT_COMMANDS_FEATURE=True
 
         # End of added variables
 
@@ -198,7 +199,17 @@ class TaskMain():
 
             elif self.state == self.task_states["Set_command_order"]:
                 
-                self.order_to_execute = self.robot.set_order_to_execute_gpsr_plan(self.llps)
+                if (USE_CORRECT_COMMANDS_FEATURE):
+                    corrected_plans_list=[]
+
+                    for plan in self.llps:
+                        task_type=self.robot.get_task_type(task=plan)
+                        corrected_plan=self.robot.correct_task_plan(raw_task_plan=plan, task_type=task_type)
+                        corrected_plans_list.append(corrected_plan)
+                    
+                    self.order_to_execute = self.robot.set_order_to_execute_gpsr_plan(corrected_plans_list)
+                else:
+                    self.order_to_execute = self.robot.set_order_to_execute_gpsr_plan(self.llps)
 
                 self.state = self.task_states["Execute_gpsr_commands"]
 
@@ -216,7 +227,6 @@ class TaskMain():
 
                         if plan == self.llps[i]:
 
-                            
                             print("I will start executing request number"+str(curr_plan))
                             self.robot.set_speech(filename="gpsr/execute_request"+str(i+1), wait_for_end_of=True)
 
