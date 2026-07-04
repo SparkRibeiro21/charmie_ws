@@ -66,8 +66,9 @@ class TaskMain():
         # Task States
         self.task_states ={
             "Waiting_for_task_start":           0,
-            "State_selector":                   1,
-            "Final_state":                      2,
+            "Temp_Open_Door":                   1,
+            "State_selector":                   2,
+            "Final_state":                      3,
 
             # "Solve_misplaced_objects_legacy_full_house":      30, # Legacy, but left here, if necessary in the future
             # "Solve_people_with_requests_legacy_full_house":   31, # Legacy, but left here, if necessary in the future
@@ -128,6 +129,7 @@ class TaskMain():
         self.MAX_OBJECT_DISTANCE_X = 6
         self.MIN_OBJECT_DISTANCE_Y = -6
         self.MAX_OBJECT_DISTANCE_Y = 6
+        self.avoidable_furnitures_for_trash = ["shelf", "cabinet"]
         
         self.search_objects_floor_navs = {
             "Kitchen":          [[7.2, -2.1,  0.0], [5.6, -0.8,   0.0], [8.3,  1.5,  -90.0]],
@@ -157,7 +159,10 @@ class TaskMain():
         self.search_tetas_single = [[0, -25]]
 
         self.state = self.task_states["Waiting_for_task_start"]
-
+        
+        ### IF RESTART HAPPENS!!!!
+        # self.state = self.task_states["State_selector"]
+        
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
             print("DEMO MODE:", self.DEMO_MODE)
@@ -174,17 +179,20 @@ class TaskMain():
                 self.robot.wait_for_start_button()
                 self.robot.wait_for_door_opening()
                 self.robot.enter_house_after_door_opening()
-                self.state = self.task_states["State_selector"]
+                self.state = self.task_states["Temp_Open_Door"]
 
+            elif self.state == self.task_states["Temp_Open_Door"]:
+
+                # Starts with door opening and getting the request fsolve_open_door_and_get_requestrom the person behind the door
+                self.solve_open_door_and_get_request()
+
+                self.state = self.task_states["State_selector"]
 
             elif self.state == self.task_states["State_selector"]:
 
                 misplaced_objects_problems_solved_ctr = 0
                 peoples_with_requests_problems_solved_ctr = 0
                 trash_objects_problems_solved_ctr = 0
-
-                # Starts with door opening and getting the request fsolve_open_door_and_get_requestrom the person behind the door
-                self.solve_open_door_and_get_request()
                 
                 while True:
                     for room in self.rooms_to_go:
@@ -612,7 +620,8 @@ class TaskMain():
                             (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or \
                             obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or \
                             obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2):
-                            objects_found_validated.append(obj)
+                            if obj.furniture_location.replace(" ","_").lower() not in self.avoidable_furnitures_for_trash:
+                                objects_found_validated.append(obj)
 
                         # if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and not validated:
                         #     valid_detected_object = obj
