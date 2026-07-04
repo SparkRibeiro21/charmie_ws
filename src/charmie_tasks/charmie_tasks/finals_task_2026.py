@@ -158,10 +158,10 @@ class TaskMain():
         self.search_tetas_vertical = [[0, -15], [0, 15]]
         self.search_tetas_single = [[0, -25]]
 
-        self.state = self.task_states["Waiting_for_task_start"]
+        # self.state = self.task_states["Waiting_for_task_start"]
         
         ### IF RESTART HAPPENS!!!!
-        # self.state = self.task_states["State_selector"]
+        self.state = self.task_states["State_selector"]
         
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -199,11 +199,11 @@ class TaskMain():
 
                         print("Room:", room)
                         print("SOLVE_MISPLACED_OBJECTS:", self.SOLVE_MISPLACED_OBJECTS)
-                        print("MISPLACED_OBJECTS_CTR: "+misplaced_objects_problems_solved_ctr+"/"+self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS)
+                        print("MISPLACED_OBJECTS_CTR: "+str(misplaced_objects_problems_solved_ctr)+"/"+str(self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS))
                         print("SOLVE_TRASH_OBJECTS:", self.SOLVE_TRASH_OBJECTS)
-                        print("TRASH_OBJECTS_CTR: "+trash_objects_problems_solved_ctr+"/"+self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS)
+                        print("TRASH_OBJECTS_CTR: "+str(trash_objects_problems_solved_ctr)+"/"+str(self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS))
                         print("SOLVE_PEOPLE_WITH_REQUESTS:", self.SOLVE_PEOPLE_WITH_REQUESTS)
-                        print("PEOPLE_WITH_REQUESTS_CTR: "+peoples_with_requests_problems_solved_ctr+"/"+self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS)
+                        print("PEOPLE_WITH_REQUESTS_CTR: "+str(peoples_with_requests_problems_solved_ctr)+"/"+str(self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS))
 
                         # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
                         if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
@@ -423,15 +423,17 @@ class TaskMain():
                                     self.robot.set_speech(filename="furniture/" + place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
                                     if len(self.robot.get_height_from_furniture(place_furniture)) > 1:
-                                        if place_furniture == "pantry" or place_furniture == "shelf": # HARDCODED
-                                            shelf_number_place = 1
-                                        else:
-                                            shelf_number_place = 2
+                                        self.place_mode = "front"
+                                        shelf_number_place = 3
+                                        if wrong_obj.object_name.replace(" ","_") == "seaweed":
+                                            picked_height = 0.19*0.75 
+
                                     else:
+                                        self.place_mode = self.robot.get_standard_pick_from_object(wrong_obj.object_name.replace(" ","_").lower())
                                         shelf_number_place = 0
 
                                     self.robot.place_object_in_furniture(selected_object=wrong_obj.object_name.replace(" ","_").lower(),
-                                                                        place_mode=self.robot.get_standard_pick_from_object(wrong_obj.object_name.replace(" ","_").lower()),
+                                                                        place_mode=self.place_mode,
                                                                         furniture=place_furniture.replace(" ","_").lower(),
                                                                         shelf_number=shelf_number_place, place_height=picked_height,
                                                                         return_to_initial_position=True)

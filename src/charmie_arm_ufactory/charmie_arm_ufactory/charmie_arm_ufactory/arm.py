@@ -416,7 +416,7 @@ class ArmUfactory(Node):
 	def setup_arm_movement_services(self):
 
 		set_collisiton_sensitivity_req= SetInt16.Request()
-		set_collisiton_sensitivity_req.data = 4
+		set_collisiton_sensitivity_req.data = 1
 		self.future = self.set_collisiton_sensitivity_client.call_async(set_collisiton_sensitivity_req)
 		rclpy.spin_until_future_complete(self, self.future)
 		print("collision_sensitivity", self.future.result())
