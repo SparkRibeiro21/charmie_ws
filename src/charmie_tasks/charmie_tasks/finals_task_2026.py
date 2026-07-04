@@ -286,7 +286,10 @@ class TaskMain():
         self.robot.set_speech(filename="furniture/exit", wait_for_end_of=False)
 
         # Open the door
-        self.robot.open_door(push_pull="push", handle_side=self.handle_side, wait_for_end_of=True)
+        open_door_status = self.robot.open_door(push_pull="push", handle_side=self.handle_side, wait_for_end_of=True)
+
+        if open_door_status == 0:
+            self.robot.set_speech(filename="sound_effects/cr7_siuu",wait_for_end_of=False)
 
         # Request GPSR command
         self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
@@ -439,6 +442,7 @@ class TaskMain():
                                                                         return_to_initial_position=True)
                                     
                                     number_of_replaced_objects += 1
+                                    self.robot.set_speech(filename="sound_effects/cr7_siuu",wait_for_end_of=False)
                                     # if number_of_replaced_objects == requests_left: # breaks if we have solved the number of requests we wanted to solve
                                     #     break
                         
@@ -658,7 +662,7 @@ class TaskMain():
                         self.robot.place_in_trashcan(furniture=goal)
                         self.robot.set_speech(filename="finals/place_trash_finished", wait_for_end_of=False)
                         requests_solved +=1
-
+                        self.robot.set_speech(filename="sound_effects/cr7_siuu",wait_for_end_of=False)
                         # if requests_solved == requests_left: # breaks if we have solved the number of requests we wanted to solve
                         #     break
 
