@@ -87,7 +87,7 @@ class TaskMain():
         self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS = 1
 
         # Overall Configurables:
-        self.rooms_to_go = ["Living room", "Kitchen", "Bedroom", "Laundry Room"]
+        self.rooms_to_go = ["Laundry Room", "Bedroom", "Kitchen", "Living room"]
         self.rooms_to_go = [s.replace(" ", "_").lower() for s in self.rooms_to_go]
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
@@ -98,38 +98,43 @@ class TaskMain():
 
         # Configurables for Door Opening and Request Getting:
         self.handle_side = "left"
-        pass
 
         # Configurables for Misplaced Objects:
         # LAR: self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry", "Office Table"]
-        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry", "Office Table"]
+        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Washing Machine", "Laundry Table", "Bed", "Bedside Table", "Cooking Table", "Counter"]
         # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
         self.FURNITURE_WE_WANT_TO_ANALYSE = [s.replace(" ", "_").lower() for s in self.FURNITURE_WE_WANT_TO_ANALYSE]
         
-        self.IGNORED_OBJECT               = ["Water", "Peach", "Apple"]
+        self.IGNORED_OBJECT               = ["Water"] # water is a placeholder
         self.IGNORED_OBJECT               = [s.replace(" ", "_").lower() for s in self.IGNORED_OBJECT]
-        self.NON_PICKABLE_OBJECT          = ["Tuna", "Plate", "Bowl", "Dishwasher Tab"] 
+        self.NON_PICKABLE_OBJECT          = ["Cornflakes", "Plate", "Spoon"] 
         self.NON_PICKABLE_OBJECT          = [s.replace(" ", "_").lower() for s in self.NON_PICKABLE_OBJECT]
         # Configurables for People with Requests:
         self.tetas_for_rooms = {
-            "Kitchen":          [[-20, -10], [40, -10]],
+            "Kitchen":          [[-30, -10], [30, -10]],
             "Living Room":      [[-30, -10], [30, -10]],
-            "Hallway":          [[-30, -10], [30, -10]],
-            "Office":           [[-40, -10], [20, -10]]
+            "Bedroom":          [[-30, -10], [30, -10]],
+            "Laundry Room":     [[-30, -10], [30, -10]]
         }
         self.tetas_for_rooms = {key.replace(" ", "_").lower(): value for key, value in self.tetas_for_rooms.items()}
 
         # Configurables for Trash Objects:
         self.TRASH_SEARCH_CAMERA = "head"
-        self.divisions          = ["living room","kitchen", "bedroom", "laundry room"]
+        self.divisions          = ["laundry room", "bedroom", "kitchen", "living room"]
         self.divisions          = [s.replace(" ", "_").lower() for s in self.divisions]
-        self.trashcans          = ["laundry room trashcan", "kitchen trashcan", "laundry room trashcan", "laundry room trashcan"]
+        self.trashcans          = ["laundry trash bin", "laundry trash bin", "laundry trash bin", "laundry trash bin"]
         self.trashcans          = [s.replace(" ", "_").lower() for s in self.trashcans]
         self.MIN_OBJECT_DISTANCE_X = 0.05
         self.MAX_OBJECT_DISTANCE_X = 6
         self.MIN_OBJECT_DISTANCE_Y = -6
         self.MAX_OBJECT_DISTANCE_Y = 6
         
+        self.search_objects_floor_navs = {
+            "Kitchen":          [[7.2, -2.1,  0.0], [5.6, -0.8,   0.0], [8.3,  1.5,  -90.0]],
+            "Living Room":      [[2.8, -0.5,  0.0], [2.8, -0.5, 180.0]],
+            "Bedroom":          [[7.7,  4.0,  0.0], [7.7,  4.0, 180.0]],
+            "Laundry Room":     [[2.8,  4.0,  0.0], [2.8,  4.0, 180.0]]
+        }
 
     def main(self):
 
@@ -558,84 +563,100 @@ class TaskMain():
         print("\n>>> Current Task State: Solve_Trash_Objects <<<\n")
         requests_solved = 0
 
+
+
+
+
+        ########## FALTA LOGICA DE REQUESTS LEFT
+        # if not self.SOLVE_PEOPLE_WITH_REQUESTS: # added this just because of the WFEO of the speaks, otherwise I would leave this task and maybe move to other place
+
+
+
+
+
+
         if requests_left > 0:
-            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-            self.robot.set_speech(filename="rooms/"+ room.replace(" ","_").lower(), wait_for_end_of=False)
-            self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room=room), wait_for_end_of=True)
-            valid_detected_object = DetectedObject()
-            validated = False
 
-            MIN_OBJECT_DISTANCE_X = self.MIN_OBJECT_DISTANCE_X 
-            MAX_OBJECT_DISTANCE_X = self.MAX_OBJECT_DISTANCE_X
-            MIN_OBJECT_DISTANCE_Y = self.MIN_OBJECT_DISTANCE_Y 
-            MAX_OBJECT_DISTANCE_Y = self.MAX_OBJECT_DISTANCE_Y 
-            goal = ""
+            navs_in_room = self.search_objects_floor_navs[room]
+            for room_nav_waypoints in navs_in_room:
 
-            if camera=="head":
-                objects_found = self.robot.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
-            else:
-                objects_found = self.robot.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=False, detect_objects_hand=False, detect_objects_base=True)
+                # self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                # self.robot.set_speech(filename="rooms/"+ room.replace(" ","_").lower(), wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=room_nav_waypoints, wait_for_end_of=True)
+                valid_detected_object = DetectedObject()
+                validated = False
 
-            objects_found_validated = []
-            if objects_found:
-                for obj in objects_found:
-                    conf   = f"{obj.confidence * 100:.0f}%"
-                    cam_x_ = f"{obj.position_relative.x:5.2f}"
-                    cam_y_ = f"{obj.position_relative.y:5.2f}"
-                    cam_z_ = f"{obj.position_relative.z:5.2f}"
+                MIN_OBJECT_DISTANCE_X = self.MIN_OBJECT_DISTANCE_X
+                MAX_OBJECT_DISTANCE_X = self.MAX_OBJECT_DISTANCE_X
+                MIN_OBJECT_DISTANCE_Y = self.MIN_OBJECT_DISTANCE_Y
+                MAX_OBJECT_DISTANCE_Y = self.MAX_OBJECT_DISTANCE_Y
+                goal = ""
 
-                    print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.position_absolute.z}{obj.furniture_location})")
+                if camera=="head":
+                    objects_found = self.robot.search_for_objects(tetas = [[30.0, -40.0], [-30.0, -40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                else:
+                    objects_found = self.robot.search_for_objects(tetas = [[30.0, -40.0], [-30.0, -40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=False, detect_objects_hand=False, detect_objects_base=True)
 
-                    if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and \
-                        MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and \
-                        (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or \
-                         obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or \
-                         obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2):
-                        objects_found_validated.append(obj)
+                objects_found_validated = []
+                if objects_found:
+                    for obj in objects_found:
+                        conf   = f"{obj.confidence * 100:.0f}%"
+                        cam_x_ = f"{obj.position_relative.x:5.2f}"
+                        cam_y_ = f"{obj.position_relative.y:5.2f}"
+                        cam_z_ = f"{obj.position_relative.z:5.2f}"
 
-                    # if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and not validated:
-                    #     valid_detected_object = obj
-                    #     validated = True
-                    # if validated:
-                    #     if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and valid_detected_object.position_relative.x > obj.position_relative.x:
-                    #         valid_detected_object = obj
-                    
-            # if validated == True:
-            if len(objects_found_validated) > 0:
+                        print(f"{'ID:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({cam_x_},{cam_y_},{cam_z_} {obj.position_absolute.z}{obj.furniture_location})")
 
-                # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
-                objects_found_validated.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
-                valid_detected_object = objects_found_validated[0]
+                        if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and \
+                            MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and \
+                            (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or \
+                            obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or \
+                            obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2):
+                            objects_found_validated.append(obj)
 
-                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                for o in objects_found_validated:
-                    self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
-                    self.robot.detected_object_to_face_path(object=o, send_to_face=True)
-                    self.robot.set_speech(filename="generic/found_the", wait_for_end_of=True)
-                    self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
-                    self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
-                    self.robot.set_speech(filename="finals/should_be_in_trashcan", wait_for_end_of=True)
-                self.robot.set_face("charmie_face")
-                    
-                if pick_to_trashcan:
+                        # if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and not validated:
+                        #     valid_detected_object = obj
+                        #     validated = True
+                        # if validated:
+                        #     if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and valid_detected_object.position_relative.x > obj.position_relative.x:
+                        #         valid_detected_object = obj
+                        
+                # if validated == True:
+                if len(objects_found_validated) > 0:
 
-                    counter = 0
-                    for d in self.divisions:
-                        if d == room:
-                            goal = self.trashcans[counter]
-                        counter = counter + 1
-                    
-                    if goal != "":
-                        self.robot.ask_help_pick_object_gripper(object_d = valid_detected_object, look_judge= [0,0], show_detection = False)
-                        self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-                        self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                        self.robot.set_speech(filename="furniture/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
+                    # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
+                    objects_found_validated.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
+                    valid_detected_object = objects_found_validated[0]
 
-                        self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
-                        # OLD WAY WITHOUT THE NEW FUNCTION self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
-                        self.robot.place_in_trashcan(furniture=goal)
-                        self.robot.set_speech(filename="finals/place_trash_finished", wait_for_end_of=False)
-                        requests_solved = 1
+                    self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+                    for o in objects_found_validated:
+                        self.robot.set_speech(filename="finals/encountered_a_problem", wait_for_end_of=True)
+                        self.robot.detected_object_to_face_path(object=o, send_to_face=True)
+                        self.robot.set_speech(filename="generic/found_the", wait_for_end_of=True)
+                        self.robot.set_speech(filename="objects_names/"+o.object_name.replace(" ","_").lower(), wait_for_end_of=True)
+                        self.robot.set_speech(filename="generic/check_face_object_detected", wait_for_end_of=False)
+                        self.robot.set_speech(filename="finals/should_be_in_trashcan", wait_for_end_of=True)
+                    self.robot.set_face("charmie_face")
+                        
+                    if pick_to_trashcan:
+
+                        counter = 0
+                        for d in self.divisions:
+                            if d == room:
+                                goal = self.trashcans[counter]
+                            counter = counter + 1
+                        
+                        if goal != "":
+                            self.robot.ask_help_pick_object_gripper(object_d = valid_detected_object, look_judge= [0,0], show_detection = False)
+                            self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+                            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                            self.robot.set_speech(filename="furniture/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
+
+                            self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
+                            # OLD WAY WITHOUT THE NEW FUNCTION self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
+                            self.robot.place_in_trashcan(furniture=goal)
+                            self.robot.set_speech(filename="finals/place_trash_finished", wait_for_end_of=False)
+                            requests_solved = 1
 
             return requests_solved
         
