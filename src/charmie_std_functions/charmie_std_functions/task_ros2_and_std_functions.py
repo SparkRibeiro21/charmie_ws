@@ -10132,7 +10132,7 @@ class RobotStdFunctions():
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
         _,_ = self.adjust_angle(25)
         self.set_speech(filename="doing_laundry/slighlty_push_door", wait_for_end_of=False)
-        self.adjust_omnidirectional_position(dx=0.0,dy=-0.10, wait_for_end_of=True, safety=False)
+        self.adjust_omnidirectional_position(dx=0.0,dy=-0.09, wait_for_end_of=True, safety=False)
         self.adjust_omnidirectional_position(dx=0.345,dy=0.0, wait_for_end_of=True, safety=False)
         inside_pick = [-238.8, 82.1, -184.9, -61.4, -0.3, 352.9]
         self.set_arm(command="open_gripper", wait_for_end_of=True)
@@ -10140,7 +10140,7 @@ class RobotStdFunctions():
         #self.wait_for_start_button()
         self.set_arm(command="close_gripper", wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pre_inside_pick, wait_for_end_of=True)
-        self.adjust_omnidirectional_position(dx=-0.30,dy=0.0, wait_for_end_of=True, safety=False)
+        self.adjust_omnidirectional_position(dx=-0.40,dy=0.0, wait_for_end_of=True, safety=False)
         pull_door = [-230.1, 74.5, -122.9, -69.1, -83.4, 328.7]
         self.set_arm(command="adjust_joint_motion", joint_motion_values = pull_door, wait_for_end_of=True)
         # self.wait_for_start_button()
