@@ -415,7 +415,7 @@ class TaskMain():
 
                 self.robot.adjust_omnidirectional_position(dx=-0.2, dy=0.0, wait_for_end_of=True)
                 self.robot.sdnl_move_to_position(move_coords=self.SAFE_NAV_COORDS_TO_CUSTOMER, first_rotate=True, orient_after_move=True, reached_radius=0.7, wait_for_end_of=True)
-                self.robot.sdnl_move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, first_rotate=False, orient_after_move=False, reached_radius=2.0, wait_for_end_of=True)
+                self.robot.sdnl_move_to_position(move_coords=self.CUSTOMER_NAV_COORDS, first_rotate=False, orient_after_move=False, reached_radius=2.5, wait_for_end_of=True)
 
                 s, m, d = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=45)
                 if d > self.MIN_DISTANCE_TO_CUSTOMER:
@@ -720,7 +720,7 @@ class TaskMain():
 
                 # OLD TETAS
                 # tetas = [[0, -45], [-40, -45], [40, -45]]
-                tetas = [[0, -20], [-40, -20], [40, -20]]
+                tetas = [[0, -30], [-20, -30], [20, -30]]
 
 
                 ########## HERE YOU HAVE TO USE: current_order and not all.orders !!!!!!!!!!!!!!!!!!!!!!!!!
