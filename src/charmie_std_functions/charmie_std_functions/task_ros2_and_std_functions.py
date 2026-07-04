@@ -8224,7 +8224,7 @@ class RobotStdFunctions():
         initial_position_pull = [1.77, -0.01, 179.0]
 
         neck_position_push = [[12,-18]]
-        neck_position_pull = [[-15,-20],[-20,-20]]
+        neck_position_pull = [[15,-20],[20,-20]]
 
         ADJUST_TO_DOOR = -60
 
@@ -8240,8 +8240,106 @@ class RobotStdFunctions():
         tf_z = -0.075
 
         if push_pull == "push" and handle_side == "left":
+            #CHANGE AFTER self.move_to_position(move_coords=initial_position_pull, wait_for_end_of=True)
+            self.set_speech(filename="hri/opening_door", wait_for_end_of=False)
+            _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+            print("Door Distance", furniture_distance)
+            dx = furniture_distance - 0.60
+            dy = 0.0
+
+            self.adjust_omnidirectional_position(dx = dx , dy = dy, wait_for_end_of=True, safety=False)
+
+
+            # door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["door_handle"], detect_tv_prompt_head=True, visual_prompts=["door_handle_pull_right_head"], minimum_tv_prompt_confidence=0.35)
+            # YOLO FURNITURE CHANGE
+            door_handle = self.search_for_objects(tetas = neck_position_pull, time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture=True, max_search_attempts=1)
         
-            pass
+            if door_handle:
+                for h in door_handle:
+
+                    move_y = h.position_relative.y
+
+            if not door_handle:
+                return -1
+
+            self.adjust_omnidirectional_position(dx = 0.0 , dy = move_y + 0.21, wait_for_end_of=False)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = arm_position_pull_left, wait_for_end_of=True)
+
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+            
+
+            validated = False
+            self.set_arm(command="open_gripper", wait_for_end_of=True)
+
+            while not validated:
+
+                #door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=10.0, time_wait_neck_move_pre_each_frame=0.0, list_of_objects=["door_grip"], detect_tv_prompt_hand=True, detect_tv_prompt_head=False, visual_prompts=["door_handle_pull_right_hand"], minimum_tv_prompt_confidence=0.25)
+                # YOLO FURNITURE CHANGE
+                door_handle = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=3.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["Door Handle"], detect_furniture_hand=True, max_search_attempts=1)
+                
+                if door_handle:
+                    for g in door_handle:
+
+                        gripper_position = self.get_gripper_localization()
+
+                        move_z_gripper = (g.position_cam.z - tf_z - 0.08)*1000
+                        move_y_gripper = (g.position_cam.y + tf_y + 0.19)*1000
+                        move_x_gripper = (g.position_cam.x - tf_x)*1000
+                        move_x_base = abs(tf_x - g.position_cam.x)
+                        print("Position x:", g.position_cam.x, "Position y:", g.position_cam.y, "Position z:", g.position_cam.z)
+                        print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, "Move x base:", move_x_base)
+
+                    if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
+                        validated = True
+
+                if not door_handle:
+                    self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
+                    self.adjust_omnidirectional_position(dx=0.0,dy=-(move_y + 0.23),wait_for_end_of=True)
+                    return -1
+
+                
+            move_y_gripper = (gripper_position.z - 1.12)*1000
+            lower_gripper = [move_z_gripper + (0.12*1000), move_y_gripper , 0.0, 0.0, 0.0, 0.0] 
+
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = lower_gripper, wait_for_end_of=True)
+
+            print("Move x:", move_x_gripper, "Move z gripper:", move_z_gripper, " Move y:", move_y_gripper, "Gripper position:", gripper_position, " Position cam Z ",g.position_cam.z , " Position cam Y ",g.position_cam.y , " Position cam X ",g.position_cam.x)
+            self.adjust_omnidirectional_position(dx = move_x_gripper/1000 + 0.024 , dy = 0.0, wait_for_end_of=True, safety=False)
+            GRAB_DOOR_Y = 0.55*1000
+            GRAB_DOOR_X = 0.018*1000
+            GRAB_DOOR_ROTATE= -20
+            GRAB_DOOR_Y= 10
+            grab_door = [0.0, GRAB_DOOR_Y, 0.0, GRAB_DOOR_ROTATE, GRAB_DOOR_Y, 0.0]
+            grab_door_2=[0.0, 0.085*1000, 0.0, 0.0, 0.0, 0.0]
+            grab_door_return=[0.0, -0.080*1000, 0.0, 0.0, 0.0, 0.0]
+            release_door = [0.0, -GRAB_DOOR_Y, 0.0, -GRAB_DOOR_ROTATE, -GRAB_DOOR_Y, 0.0]
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door, wait_for_end_of=True)
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = grab_door_2, wait_for_end_of=True)
+            self.adjust_omnidirectional_position(dx = 0.05 , dy = 0.0, wait_for_end_of=True, safety=False)
+            self.set_arm(command="adjust_move_tool_line", move_tool_line_pose = grab_door_return, wait_for_end_of=True) 
+            self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = release_door, wait_for_end_of=True) 
+            after_release_first = [-0.1*1000, 0.0, -0.15*1000, 0.0, 0.0, 0.0, 0.0]
+            #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
+            after_release_last = [0.25*1000, - 0.12*1000, 0.195*1000, 0.0, -20.0, 0.0]
+            self.adjust_omnidirectional_position(dx = -0.10 , dy = -0.48, wait_for_end_of=True, safety=False)
+
+            middle_position=[-179.3,56.7,-111.6,178.2,34.6,86.9]
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = middle_position, wait_for_end_of=True)
+
+            self.adjust_omnidirectional_position(dx = 0.40 , dy = 0.0, wait_for_end_of=True, safety=False)
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+
+            self.adjust_angle(angle=-20)
+            self.adjust_angle(angle=20)
+
+
+            self.set_arm(command="close_gripper", wait_for_end_of=True)
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
+
         
         if push_pull == "push" and handle_side == "right":
             #self.move_to_position(move_coords=initial_position_pull, wait_for_end_of=True)
@@ -9756,14 +9854,15 @@ class RobotStdFunctions():
     def place_in_trashcan(self,furniture=""):
         
         # Place in trash configs // COMMENTED LINES ARE THERE IN CASE THEY MAY BE NECESSARY IN THE FUTURE
-        DIST_X_TRASHCAN_BASE = 0.55
-        DIST_X_TRASHCAN_HEAD = 0.65
-        DIST_Y_TRASHCAN = 0.0
+        DIST_X_TRASHCAN_BASE = 0.21
+        DIST_X_TRASHCAN_HEAD = 0.95
+        DIST_Y_TRASHCAN = -0.09
 
         #self.use_radar_distance_trashcan = False
         #self.use_default_distance_trashcan = False
         max_trashcan_detect_tries_head = 1
         max_trashcan_detect_tries_base = 1
+        head_found = False
 
         #self.DEFAULT_DX_TRASHCAN = 0.0
         #self.DEFAULT_DY_TRASHCAN = 0.0
@@ -9771,77 +9870,85 @@ class RobotStdFunctions():
         best_dist = -1
         trashcan_place=[-220.2,48.5,-79.6,135.9,72.5,111.1]
 
-        objects_found = self.search_for_objects(tetas = [[0.0,-40.0],[20.0,-40.0],[-20.0,-40.0]], time_in_each_frame=1.0, list_of_objects=[furniture],max_search_attempts=max_trashcan_detect_tries_head, detect_objects=False, detect_furniture=True, detect_objects_hand=False, detect_objects_base=False)
+        objects_found_head = self.search_for_objects(tetas = [[0.0,-40.0],[20.0,-40.0],[-20.0,-40.0]], time_in_each_frame=1.0, list_of_objects=[furniture],max_search_attempts=max_trashcan_detect_tries_head, detect_objects=False, detect_furniture=True, detect_objects_hand=False, detect_objects_base=False)
 
-        if objects_found:
-            for obj in objects_found:
-
+        if objects_found_head:
+            for obj in objects_found_head:
+                print("best obj", obj.position_relative.y ,obj.position_relative.x)
                 if math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2) < best_dist or best_dist == -1:
-                        best_dist = math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2)
-                        valid_obj_h = obj
+                    best_dist = math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2)
+                    valid_obj_h = obj
+            print("best dust", valid_obj_h.position_relative.y ,valid_obj_h.position_relative.x)
 
-                object_angle = math.atan2(valid_obj_h.position_relative.y,valid_obj_h.position_relative.x) * 180 / math.pi
-                self.adjust_angle(angle = object_angle, tolerance= 3.0)
+            object_angle = math.atan2(valid_obj_h.position_relative.y,valid_obj_h.position_relative.x) * 180 / math.pi
+            self.adjust_angle(angle = object_angle, tolerance= 3.0)
+            dx     = (valid_obj_h.position_relative.x**2 + valid_obj_h.position_relative.y**2)**0.5 - DIST_X_TRASHCAN_HEAD
+            dy     = 0.0 
+            self.set_speech(filename="finals/placing_trash", wait_for_end_of=False)
+            self.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=True, safety=False)
+            print("HEAD DX", dx, dy)
+            print("ANGLKE TRASHCNA", object_angle)
             
             head_found = True
             best_dist = -1
+        if head_found:
 
-        objects_found = self.search_for_objects(tetas = [[0.0,0.0]], time_in_each_frame=1.5, list_of_objects=[furniture],max_search_attempts=max_trashcan_detect_tries_base, detect_objects=False, detect_furniture_base=True, detect_objects_hand=False, detect_objects_base=False)
-            
-        if objects_found:
-            for obj in objects_found:
+            objects_found_base = self.search_for_objects(tetas = [[0.0,-40.0],[20.0,-40.0],[-20.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[furniture],max_search_attempts=max_trashcan_detect_tries_base, detect_objects=False, detect_furniture=True, detect_objects_hand=False, detect_objects_base=False)
+                
+            if objects_found_base:
+                for obj in objects_found_base:
+                    
+                    if math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2) < best_dist or best_dist == -1:
+                        best_dist = math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2)
+                        valid_obj_b = obj
 
-                if math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2) < best_dist or best_dist == -1:
-                    best_dist = math.sqrt((obj.position_relative.x)**2 + (obj.position_relative.y)**2)
-                    valid_obj_b = obj
+                _ , _ , furniture_distance = self.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
+                dx = furniture_distance - DIST_X_TRASHCAN_BASE
+                dy = valid_obj_b.position_relative.y - DIST_Y_TRASHCAN
+                self.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=True, safety=False)
+                print("Base DX", dx, dy)
+            elif head_found:
+                dx     = (valid_obj_h.position_relative.x**2 + valid_obj_h.position_relative.y**2)**0.5 - DIST_X_TRASHCAN_HEAD
+                dy     = DIST_Y_TRASHCAN 
+                self.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
+                print("HEAD DX", dx, dy)
+            else:
+                # RETURN SAY SOMETHING EMERGENCY CASE
+                self.set_arm(command="adjust_joint_motion", joint_motion_values = trashcan_place, wait_for_end_of=True)
+                self.set_arm(command="open_gripper", wait_for_end_of=True)
+                time.sleep(0.5)
+                self.set_arm(command="close_gripper", wait_for_end_of=True)
+                self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+                return
+        
 
-            dx = valid_obj_b.position_relative.x - DIST_X_TRASHCAN_BASE
-            dy = valid_obj_b.position_relative.y - DIST_Y_TRASHCAN
-            self.set_speech(filename="finals/placing_trash", wait_for_end_of=False)
-            self.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
-        elif head_found:
-            dx     = (valid_obj_h.position_relative.x**2 + valid_obj_h.position_relative.y**2)**0.5 - DIST_X_TRASHCAN_HEAD
-            dy     = DIST_Y_TRASHCAN 
-            self.set_speech(filename="finals/placing_trash", wait_for_end_of=False)
-            self.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
-        else:
+            # elif self.use_default_distance_trashcan == True:
+            #     dx = self.DEFAULT_DX_TRASHCAN
+            #     dy = self.DEFAULT_DY_TRASHCAN
+            #     self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
+
+            self.set_arm(command="adjust_joint_motion", joint_motion_values = trashcan_place, wait_for_end_of=True)
+
+            while not self.adjust_omnidirectional_position_is_done():
+                pass 
+
+            self.set_arm(command="open_gripper", wait_for_end_of=True)
+            time.sleep(0.5)
+
+            self.adjust_omnidirectional_position(dx = -dx, dy = -dy, wait_for_end_of=False, safety=False)
+            self.set_arm(command="close_gripper", wait_for_end_of=True)
+            self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
+
+            while not self.adjust_omnidirectional_position_is_done():
+                pass
+        else:   
             # RETURN SAY SOMETHING EMERGENCY CASE
             self.set_arm(command="adjust_joint_motion", joint_motion_values = trashcan_place, wait_for_end_of=True)
             self.set_arm(command="open_gripper", wait_for_end_of=True)
             time.sleep(0.5)
             self.set_arm(command="close_gripper", wait_for_end_of=True)
             self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
-
             return
-
-
-
-        # elif self.use_radar_distance_trashcan == True:
-
-        #     _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
-        #     dx = furniture_distance - self.DIST_X_TRASHCAN
-        #     dy = 0.0
-        #     self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
-
-        # elif self.use_default_distance_trashcan == True:
-        #     dx = self.DEFAULT_DX_TRASHCAN
-        #     dy = self.DEFAULT_DY_TRASHCAN
-        #     self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
-
-        self.set_arm(command="adjust_joint_motion", joint_motion_values = trashcan_place, wait_for_end_of=True)
-
-        while not self.adjust_omnidirectional_position_is_done():
-            pass 
-
-        self.set_arm(command="open_gripper", wait_for_end_of=True)
-        time.sleep(0.5)
-
-        self.adjust_omnidirectional_position(dx = -dx, dy = -dy, wait_for_end_of=False, safety=False)
-        self.set_arm(command="close_gripper", wait_for_end_of=True)
-        self.set_arm(command="place_front_to_initial_pose", wait_for_end_of=True)
-
-        while not self.adjust_omnidirectional_position_is_done():
-            pass
 
 
         
