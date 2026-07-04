@@ -9884,8 +9884,10 @@ class RobotStdFunctions():
             self.adjust_angle(angle = object_angle, tolerance= 3.0)
             dx     = (valid_obj_h.position_relative.x**2 + valid_obj_h.position_relative.y**2)**0.5 - DIST_X_TRASHCAN_HEAD
             dy     = 0.0 
-            self.set_speech(filename="finals/placing_trash", wait_for_end_of=False)
+            
             self.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=True, safety=False)
+            self.set_speech(filename="finals/move_away_trashbin", wait_for_end_of=True)
+            time.sleep(2.0)
             print("HEAD DX", dx, dy)
             print("ANGLKE TRASHCNA", object_angle)
             
@@ -9926,6 +9928,7 @@ class RobotStdFunctions():
             #     dx = self.DEFAULT_DX_TRASHCAN
             #     dy = self.DEFAULT_DY_TRASHCAN
             #     self.robot.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=False, safety=False)
+            self.set_speech(filename="finals/placing_trash", wait_for_end_of=False)
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = trashcan_place, wait_for_end_of=True)
 
