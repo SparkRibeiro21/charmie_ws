@@ -127,12 +127,13 @@ class TaskMain():
 
             if self.state == self.task_states["Waiting_for_task_start"]:
 
-                while True:
-
-                    self.robot.pick_object(selected_object="Dishwasher Tab")
+                
+                # self.robot.open_door(push_pull="push", handle_side="left")
+                # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture="Laundry Trash Bin"))
+                self.robot.place_in_trashcan(furniture="Trash Bin")
                     # self.robot.search_for_objects(tetas=[[0, -45], [-40, -45], [40, -45]],  time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["water"], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts=1)
 
-                self.robot.pick_object(selected_object="milk")
+                #self.robot.pick_object(selected_object="milk")
                 self.robot.wait_for_start_button()
                 self.robot.open_tray_gripper(wait_for_end_of=True)
 
