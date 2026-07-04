@@ -9882,12 +9882,14 @@ class RobotStdFunctions():
 
             object_angle = math.atan2(valid_obj_h.position_relative.y,valid_obj_h.position_relative.x) * 180 / math.pi
             self.adjust_angle(angle = object_angle, tolerance= 3.0)
-            dx     = (valid_obj_h.position_relative.x**2 + valid_obj_h.position_relative.y**2)**0.5 - DIST_X_TRASHCAN_HEAD
-            dy     = 0.0 
             
-            self.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=True, safety=False)
             self.set_speech(filename="finals/move_away_trashbin", wait_for_end_of=True)
             time.sleep(2.0)
+
+            dx     = (valid_obj_h.position_relative.x**2 + valid_obj_h.position_relative.y**2)**0.5 - DIST_X_TRASHCAN_HEAD
+            dy     = 0.0             
+            self.adjust_omnidirectional_position(dx = dx, dy = dy, wait_for_end_of=True, safety=False)
+
             print("HEAD DX", dx, dy)
             print("ANGLKE TRASHCNA", object_angle)
             
