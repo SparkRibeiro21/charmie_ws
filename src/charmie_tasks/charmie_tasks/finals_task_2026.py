@@ -81,8 +81,8 @@ class TaskMain():
         self.SOLVE_DOOR_OPENING = True
         self.SOLVE_REQUEST_FROM_PERSON_BEHIND_DOOR = True
         self.SOLVE_MISPLACED_OBJECTS = True
-        self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS = 1
-        self.SOLVE_PEOPLE_WITH_REQUESTS = True
+        self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS = 1
+        self.SOLVE_PEOPLE_WITH_REQUESTS = False
         self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 0
         self.SOLVE_TRASH_OBJECTS = True
         self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS = 1
@@ -197,17 +197,25 @@ class TaskMain():
                 while True:
                     for room in self.rooms_to_go:
 
+                        print("Room:", room)
+                        print("SOLVE_MISPLACED_OBJECTS:", self.SOLVE_MISPLACED_OBJECTS)
+                        print("MISPLACED_OBJECTS_CTR: "+misplaced_objects_problems_solved_ctr+"/"+self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS)
+                        print("SOLVE_TRASH_OBJECTS:", self.SOLVE_TRASH_OBJECTS)
+                        print("TRASH_OBJECTS_CTR: "+trash_objects_problems_solved_ctr+"/"+self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS)
+                        print("SOLVE_PEOPLE_WITH_REQUESTS:", self.SOLVE_PEOPLE_WITH_REQUESTS)
+                        print("PEOPLE_WITH_REQUESTS_CTR: "+peoples_with_requests_problems_solved_ctr+"/"+self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS)
+
                         # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
                         if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
                             print("CLEARED ALL FLAGS")
                             self.SOLVE_MISPLACED_OBJECTS = True
                             self.SOLVE_TRASH_OBJECTS = True
-                            self.SOLVE_PEOPLE_WITH_REQUESTS = True
+                            self.SOLVE_PEOPLE_WITH_REQUESTS = False
 
-                        misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
+                        misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS - misplaced_objects_problems_solved_ctr)
                         print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
                         misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
-                        if misplaced_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
+                        if misplaced_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS:
                             self.SOLVE_MISPLACED_OBJECTS = False
                             misplaced_objects_problems_solved_ctr = 0
 
@@ -308,7 +316,7 @@ class TaskMain():
 
         for current_furniture in self.FURNITURE_WE_WANT_TO_ANALYSE:
 
-            if self.robot.get_room_from_furniture(current_furniture) == room and number_of_replaced_objects < requests_left:
+            if self.robot.get_room_from_furniture(current_furniture) == room:
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
@@ -380,7 +388,7 @@ class TaskMain():
                         self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(obj.object_name.replace(" ","_").lower())), wait_for_end_of=False)
                     self.robot.set_face("charmie_face")
                         
-                if self.SOLVE_MISPLACED_OBJECTS:
+                if self.SOLVE_MISPLACED_OBJECTS and number_of_replaced_objects < requests_left:
 
                     if len(objects_in_wrong_furniture) == 0:
                         print("All objects are in the correct furniture")
@@ -388,7 +396,7 @@ class TaskMain():
 
                     else:
 
-                        objects_in_wrong_furniture.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
+                        objects_in_wrong_furniture.sort(key=lambda p: math.hypot(p.position_relative.x, p.position_relative.y))
 
                         for wrong_obj in objects_in_wrong_furniture:
 
@@ -556,7 +564,7 @@ class TaskMain():
                             self.robot.set_speech(filename="finals/cannot_perform_task", wait_for_end_of=True)
                             self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
 
-            if number_of_solved_requests == requests_left: # breaks if we have solved the number of requests we wanted to solve
+            if number_of_solved_requests >= requests_left: # breaks if we have solved the number of requests we wanted to solve
                 no_people_left_with_requests_in_this_room = True
 
         return number_of_solved_requests
