@@ -72,7 +72,7 @@ class TaskMain():
         Final_State = 7
 
         # VARS ...
-        self.state = Continuous_audio_wfeo_true
+        self.state = Audio_restaurant
     
         self.robot.set_face("charmie_face")
         print("IN NEW MAIN")

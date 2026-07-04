@@ -25,28 +25,30 @@ names_dict = {
 # LAR OBJECTS
 drinks_dict = {
 
-    "Coke": 		["coke"],
-    "Pepsi": 		["pepsi"],
-    "Milk":         ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
-    "Red_Bull": 	["red bull"],
-    "Soju": 	    ["soju", "soja"],
+    "Coke": 		["coke", "cook"],
+    "Pepsi": 		["pepsi", "petsy"],
+    "Milk":         ["milk", "muke", "mew", "milburn", "mieuki", "mute", "mille", "mieok", "milton", "meal"],
+    "Red_Bull": 	["red bull", "redbull","head blue", "headblue","head boat", "headboat", "head bull", "headbull", "head blew","red ball", \
+                     "redball", "helpful", "faithful", "heavy", "purple", "redwood","red wood","red bowl","headbowl", "head bowl", "red bone", \
+                     "headble","headball","head ball", "red boom","redboom","redboat","red boat"],
+    "Soju": 	    ["soju", "soja", "social", "saju", "soldier", "sorghum", "so true", "sausu", "sojour","sojour"],
 
 }
 
 foods_dict = {
 
-    "Cornflakes": 	        ["cornflakes"],
-    "Instant_Noodles":	    ["instant noodles"],
+    "Cornflakes": 	        ["cornflakes", "flakes", "corn flakes", "corn place", "conflicts", "cold flakes","complex"],
+    "Instant_Noodles":	    ["instant noodles", "instant", "noodles", "eastern adults", "eastern noodles", "instant doodles"],
  
-    "Mangostane": 		    ["mangostane", "mango stain", "mango steam", "mango"],
-    "Peach": 		        ["peach"],
-    "Lemon": 		        ["lemon", "lammon"],
-    "Apple": 		        ["apple"],
-    "Red_Bellpepper": 	    ["red bellpepper", "red bell pepper"],
-    "Yellow_Bellpepper":    ["yellow bellpepper", "yellow bell pepper"],
+    "Mangostane": 		    ["mangostane", "mongestain", "mangosten", "mango stain", "mango steam", "mango", "mangu", "mangostan", "mango stand", "mangustain", "mangostant"],
+    "Peach": 		        ["peach", "beach", "pitch", "beech", "bitch"],
+    "Lemon": 		        ["lemon", "lammon", "lamb", "laman", "lehman"],
+    "Apple": 		        ["apple", "april", "saple"],
+    "Red_Bellpepper": 	    ["red bellpepper", "red bell pepper", "red belt paper", "red bill pepper", "red belt pepper", "rebel pepper", "rebel paper", "head bell pepper", "red velvet pepper", "head of pepper"],
+    "Yellow_Bellpepper":    ["yellow bellpepper", "yellow bell pepper", "red belt paper","yellow bill pepper", "yellow belt pepper", "yellow velvet pepper"],
 
-    "Pringles":             ["pringles"],
-    "Seaweed":              ["Seaweed"],
+    "Pringles":             ["pringles", "pringle", "prango", "gringles", "bringles", "sprinkles", "green goes", "fringles"],
+    "Seaweed":              ["seaweed", "sea weed", "see with", "see wead", "see you with", "see we"],
 }
 
 # LAR OBJECTS

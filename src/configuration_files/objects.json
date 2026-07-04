@@ -9,7 +9,6 @@
 {"name": "Red Bull",       	 "class": "Drinks", 		    "width": 0.053, "length": 0.053, "height": 0.135, "shape": "cylinder",  "can_pick": "front",    "std_pick": "front",    "weight": 0.250},
 {"name": "Soju",   	         "class": "Drinks",		        "width": 0.068, "length": 0.068, "height": 0.225, "shape": "cylinder",    "can_pick": "front",     "std_pick": "front",    "weight": 0.640},
  
-{"name": "Chocoflakes",      "class": "Foods", 		        "width": 0.098, "length": 0.098, "height": 0.077, "shape": "cylinder",  "can_pick": "top",     "std_pick": "top",    "weight": 0.030},
 {"name": "Cornflakes", 	     "class": "Foods", 		        "width": 0.098, "length": 0.098, "height": 0.077, "shape": "cylinder",  "can_pick": "top",     "std_pick": "top",    "weight": 0.030},
 {"name": "Instant Noodles",	 "class": "Foods", 		        "width": 0.130, "length": 0.140, "height": 0.020, "shape": "cuboid",  "can_pick": "top",     "std_pick": "top",    "weight": 0.120},
  
