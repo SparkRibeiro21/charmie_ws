@@ -36,8 +36,8 @@ ros2_modules = {
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            True,
-    "charmie_yolo_world":           True,
+    "charmie_yolo_pose":            False,
+    "charmie_yolo_world":           False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -632,12 +632,13 @@ class TaskMain():
                         self.robot.set_speech(filename="furniture/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
 
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
-                        self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
+                        # OLD WAY WITHOUT THE NEW FUNCTION self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
+                        self.robot.place_in_trashcan(furniture=goal)
+                        self.robot.set_speech(filename="finals/place_trash_finished", wait_for_end_of=False)
                         requests_solved = 1
 
             return requests_solved
-
-
+        
     def solve_basket_misplacement(self):
         print("\n>>> Current Task State: Solve_Basket_Misplacement <<<\n")
         # NOT PART OF ROBOCUP 2026 FINALS STRATEGY

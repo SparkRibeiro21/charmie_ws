@@ -36,6 +36,7 @@ class ArmUfactory(Node):
 		self.set_gripper = self.create_client(GripperMove, '/xarm/set_gripper_position')
 		self.set_pause_time_client = self.create_client(SetFloat32, '/xarm/set_pause_time')
 		self.get_gripper_position = self.create_client(GetFloat32,'/xarm/get_gripper_position')
+		self.set_collisiton_sensitivity_client = self.create_client(SetInt16, '/xarm/set_collision_sensitivity')
 		#self.plan_pose_client = self.create_client(PlanPose, '/xarm_pose_plan')
 		#self.exec_plan_client = self.create_client(PlanExec, '/xarm_exec_plan')
 		#self.joint_plan_client = self.create_client(PlanJoint, '/xarm_joint_plan')
@@ -82,6 +83,9 @@ class ArmUfactory(Node):
 
 		while not self.get_gripper_position.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Get Gripper Position...")
+
+		while not self.set_collisiton_sensitivity_client.wait_for_service(1.0):
+			self.get_logger().warn("Waiting for Server Collision sensitivity...")
 
 		while not self.set_state_client.wait_for_service(1.0):
 			self.get_logger().warn("Waiting for Server Set State Client...")
@@ -410,6 +414,12 @@ class ArmUfactory(Node):
 
 		
 	def setup_arm_movement_services(self):
+
+		set_collisiton_sensitivity_req= SetInt16.Request()
+		set_collisiton_sensitivity_req.data = 4
+		self.future = self.set_collisiton_sensitivity_client.call_async(set_collisiton_sensitivity_req)
+		rclpy.spin_until_future_complete(self, self.future)
+		print("collision_sensitivity", self.future.result())
 
 		time.sleep(0.2)
 
