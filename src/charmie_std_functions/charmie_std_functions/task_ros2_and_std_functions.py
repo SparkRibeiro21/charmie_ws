@@ -8224,7 +8224,7 @@ class RobotStdFunctions():
         initial_position_pull = [1.77, -0.01, 179.0]
 
         neck_position_push = [[12,-18]]
-        neck_position_pull = [[15,-20],[20,-20]]
+        neck_position_pull = [[15,-20], [20,-20], [20, -25], [15, -25]]
 
         ADJUST_TO_DOOR = -60
 
@@ -8294,7 +8294,7 @@ class RobotStdFunctions():
                     if abs(move_y_gripper) < 0.5*1000 and abs(move_z_gripper) < 0.5*1000:
                         validated = True
 
-                if not door_handle:
+                else:
                     self.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=False)
                     self.adjust_omnidirectional_position(dx=0.0,dy=-(move_y + 0.23),wait_for_end_of=True)
                     return -1
@@ -8323,13 +8323,14 @@ class RobotStdFunctions():
             after_release_first = [-0.1*1000, 0.0, -0.15*1000, 0.0, 0.0, 0.0, 0.0]
             #after_release_second = [0.05*1000, 0.1*1000, 0.16*1000, 0.0, 0.0, 0.0]
             after_release_last = [0.25*1000, - 0.12*1000, 0.195*1000, 0.0, -20.0, 0.0]
-            self.adjust_omnidirectional_position(dx = -0.10 , dy = -0.48, wait_for_end_of=True, safety=False)
+
+            self.adjust_omnidirectional_position(dx = -0.10 , dy = -0.48, wait_for_end_of=True, safety=False, max_speed=0.1, tolerance=0.05)
 
             middle_position=[-179.3,56.7,-111.6,178.2,34.6,86.9]
 
             self.set_arm(command="adjust_joint_motion", joint_motion_values = middle_position, wait_for_end_of=True)
 
-            self.adjust_omnidirectional_position(dx = 0.40 , dy = 0.0, wait_for_end_of=True, safety=False)
+            self.adjust_omnidirectional_position(dx = 0.40 , dy = 0.0, wait_for_end_of=True, safety=False, max_speed=0.1, tolerance=0.05)
             while not self.adjust_omnidirectional_position_is_done():
                 pass
 
