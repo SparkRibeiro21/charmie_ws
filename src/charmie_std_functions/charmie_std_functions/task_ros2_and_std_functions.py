@@ -7303,7 +7303,7 @@ class RobotStdFunctions():
                 while not self.adjust_omnidirectional_position_is_done():
                     pass
 
-            #self.set_arm(command="close_gripper", wait_for_end_of=True)
+            self.set_arm(command="close_gripper", wait_for_end_of=False)
 
         # while not self.adjust_omnidirectional_position_is_done():
         #     pass       
@@ -8337,8 +8337,9 @@ class RobotStdFunctions():
             self.adjust_angle(angle=-20)
             self.adjust_angle(angle=20)
 
+            self.set_arm(command="close_gripper", wait_for_end_of=False)
+            self.adjust_omnidirectional_position(dx = -0.40 , dy = 0.0, wait_for_end_of=True, safety=False, max_speed=0.1, tolerance=0.05)
 
-            self.set_arm(command="close_gripper", wait_for_end_of=True)
             self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
 
         
@@ -9853,6 +9854,8 @@ class RobotStdFunctions():
         self.set_arm(command="close_gripper", wait_for_end_of=True)
 
     def place_in_trashcan(self,furniture=""):
+
+        furniture = furniture.replace(" ","_").lower()
         
         # Place in trash configs // COMMENTED LINES ARE THERE IN CASE THEY MAY BE NECESSARY IN THE FUTURE
         DIST_X_TRASHCAN_BASE = 0.21
