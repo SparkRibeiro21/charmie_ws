@@ -82,12 +82,12 @@ class TaskMain():
         self.SOLVE_MISPLACED_OBJECTS = True
         self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS = 1
         self.SOLVE_PEOPLE_WITH_REQUESTS = True
-        self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 1
+        self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 0
         self.SOLVE_TRASH_OBJECTS = True
         self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS = 1
 
         # Overall Configurables:
-        self.rooms_to_go = ["Kitchen", "Living room", "Hallway", "Office"]
+        self.rooms_to_go = ["Living room", "Kitchen", "Bedroom", "Laundry Room"]
         self.rooms_to_go = [s.replace(" ", "_").lower() for s in self.rooms_to_go]
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
@@ -97,10 +97,11 @@ class TaskMain():
         print(self.initial_position)
 
         # Configurables for Door Opening and Request Getting:
-        self.handle_side = "right"
+        self.handle_side = "left"
         pass
 
         # Configurables for Misplaced Objects:
+        # LAR: self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry", "Office Table"]
         self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry", "Office Table"]
         # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
         self.FURNITURE_WE_WANT_TO_ANALYSE = [s.replace(" ", "_").lower() for s in self.FURNITURE_WE_WANT_TO_ANALYSE]
@@ -120,9 +121,9 @@ class TaskMain():
 
         # Configurables for Trash Objects:
         self.TRASH_SEARCH_CAMERA = "head"
-        self.divisions          = ["kitchen"         ,"living room"         ,"hallway","office","bedroom","workshop"]
+        self.divisions          = ["living room","kitchen", "bedroom", "laundry room"]
         self.divisions          = [s.replace(" ", "_").lower() for s in self.divisions]
-        self.trashcans          = ["kitchen trashcan","living room trashcan",""       ,""      ,""       ,""        ]
+        self.trashcans          = ["laundry room trashcan", "kitchen trashcan", "laundry room trashcan", "laundry room trashcan"]
         self.trashcans          = [s.replace(" ", "_").lower() for s in self.trashcans]
         self.MIN_OBJECT_DISTANCE_X = 0.05
         self.MAX_OBJECT_DISTANCE_X = 6
