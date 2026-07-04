@@ -4890,15 +4890,17 @@ class RobotStdFunctions():
                 case "place_object":
                 
                     print("Placing:", task_attribute)
+                    
+                    if not curr_obj_list:
 
-                    self.place_object_in_furniture(selected_object=curr_obj_list[0], furniture=curr_furniture, shelf_number=0, place_height=curr_picked_height, asked_help=curr_asked_help)
+                        self.place_object_in_furniture(selected_object=curr_obj_list[0], furniture=curr_furniture, shelf_number=0, place_height=curr_picked_height, asked_help=curr_asked_help)
 
-                    object_in_gripper = False
-                    object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
-                    if not object_in_gripper:
-                        curr_obj_list.clear()
-                        curr_picked_height = 0.0
-                        curr_asked_help = False
+                        object_in_gripper = False
+                        object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                        if not object_in_gripper:
+                            curr_obj_list.clear()
+                            curr_picked_height = 0.0
+                            curr_asked_help = False
 
                     pass
                 
