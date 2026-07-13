@@ -236,7 +236,7 @@ To setup the Livox MID360 package in your workspace, please follow the installat
 
 ### 2026
 
-|Event|Poster|Human Robot Interaction (HRI)|Pick and Place (PP)|General Purpose Service Robot(GPSR)|Doing Laundry (DL)|Restaurant|Total Score|Finals|Total Event|
+|Event|Poster|Human Robot Interaction (HRI)|Pick and Place (PP)|General Purpose Service Robot (GPSR)|Doing Laundry (DL)|Restaurant|Total Score|Finals|Total Event|
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 |RoboCup 2026|36.1|655|945|800|315|1230|3981.1|1524|5505.1|
 |RoboCup Portugal Open 2026|-|1070|1235|540|-|700|3545|-|3545|
