@@ -1,10 +1,9 @@
 [
-{"name": "Cleaning Supplies",   "location": "Cooking Table"},
-{"name": "Drinks", 		        "location": "Cabinet"},
-{"name": "Foods",   		    "location": "Coffee Table"},
-{"name": "Fruits", 		        "location": "Dinner Table"},
-{"name": "Toys",   		        "location": "Bed"},
-{"name": "Snacks", 		        "location": "Shelf"},
-{"name": "Dishes",   		    "location": "Dishwasher"},
-{"name": "Fabrics",   		    "location": "Laundry Table"}
+{"name": "Cleaning Supplies",   "location": "Workshop Desk"},
+{"name": "Drinks", 		"location": "Shelf"},
+{"name": "Foods",   		"location": "Kitchen Cabinet"},
+{"name": "Fruits", 		"location": "Office Table"},
+{"name": "Toys",   		"location": "Night Stand"},
+{"name": "Snacks", 		"location": "Pantry"},
+{"name": "Dishes",   		"location": "Dishwasher"}
 ]
