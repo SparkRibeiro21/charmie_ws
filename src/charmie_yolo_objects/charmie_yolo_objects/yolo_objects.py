@@ -81,9 +81,9 @@ class Yolo_obj(Node):
             with open(self.complete_path_configuration_files + 'furniture.json', encoding='utf-8') as json_file:
                 self.house_furniture = json.load(json_file)
             # print(self.house_furniture)
-            # with open(self.complete_path_configuration_files + 'detected_furniture.json', encoding='utf-8') as json_file:
-            #     self.detected_furniture_file = json.load(json_file)
-            # # print(self.detected_furniture_file)
+            with open(self.complete_path_configuration_files + 'detected_furniture.json', encoding='utf-8') as json_file:
+                self.detected_furniture_file = json.load(json_file)
+            print(self.detected_furniture_file)
             self.get_logger().info("Successfully Imported data from json configuration files. (objects, rooms, furniture and detected_furniture)")
         except:
             self.get_logger().error("Could NOT import data from json configuration files. (objects, rooms, furniture and detected_furniture)")
@@ -139,9 +139,9 @@ class Yolo_obj(Node):
         self.objects_std_pick_dict = {item["name"]: item["std_pick"] for item in self.objects_file}
 
         # gets list of detected furniture from detected_furniture.json and alphabetically orders it to match YOLO detections 
-        # self.furniture_class_names = [item["name"] for item in self.detected_furniture_file]
-        # self.furniture_class_names.sort()
-        self.furniture_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'Level Handler', 'Wardrobe Door'] # temp fix so that detected_furniture.json is not necessary to be included in configuration_files
+        self.furniture_class_names = [item["name"] for item in self.detected_furniture_file]
+        self.furniture_class_names.sort()
+        # self.furniture_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'Level Handler', 'Wardrobe Door'] # temp fix so that detected_furniture.json is not necessary to be included in configuration_files
         
         # list of detections from Stickler for the Rules: check if person is wearing shoes...
         self.shoes_class_names = ['Shoe', 'Sock']
@@ -183,17 +183,17 @@ class Yolo_obj(Node):
                 # Import the models, one for each category
                 self.object_model = YOLO(self.complete_path_yolo_models + self.objects_model_filename, task="segment")
                 # self.shoes_model = YOLO(self.complete_path_yolo_models + self.shoes_model_filename)
-                self.furniture_model = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="detect")
+                self.furniture_model = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="segment")
 
                 # it needs to have a different model because of the track parameter, otherwise it is always creating new track ids
                 self.object_model_hand = YOLO(self.complete_path_yolo_models + self.objects_model_filename, task="segment")
                 # self.shoes_model_hand = YOLO(self.complete_path_yolo_models + self.shoes_model_filename)
-                self.furniture_model_hand = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="detect")
+                self.furniture_model_hand = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="segment")
 
                 # it needs to have a different model because of the track parameter, otherwise it is always creating new track ids
                 self.object_model_base = YOLO(self.complete_path_yolo_models + self.objects_model_filename, task="segment")
                 # self.shoes_model_base = YOLO(self.complete_path_yolo_models + self.shoes_model_filename)
-                self.furniture_model_base = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="detect")
+                self.furniture_model_base = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="segment")
 
                 self.get_logger().info("Successfully imported YOLO models (objects, furniture, shoes)")
 
