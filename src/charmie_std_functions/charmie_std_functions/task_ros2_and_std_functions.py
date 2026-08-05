@@ -8888,7 +8888,7 @@ class RobotStdFunctions():
                 correct_rotation_adjust = -60 #degrees
 
             if selected_object == "spoon" or selected_object == "knife" or selected_object == "fork":
-                correct_x_adjust = 15.0 #mm
+                correct_x_adjust = 0.0 #mm
 
             if selected_object == "dishwasher_tab":
                 correct_x_adjust = 10.0 #mm
@@ -9398,7 +9398,7 @@ class RobotStdFunctions():
                     elif ask_help:
                         self.set_arm(command="initial_pose_to_search_table_top_risky", wait_for_end_of=True)
 
-                if arm_initial_position != "collect_spoon_to_tray_funilocopo_v4":
+                if arm_initial_position == "":
                     object_in_gripper, m = self.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
 
                 if not object_in_gripper:
@@ -9808,7 +9808,7 @@ class RobotStdFunctions():
 
     def pour_milk(self, milk_height=0.0):
 
-        POUR_ROTATION = -90.0
+        POUR_ROTATION = -120.0
         CENTRE_LID_DISTANCE = 0.0
         PUSH_MILK_DISTANCE = 0.085 - self.get_object_width_from_object("milk")
 

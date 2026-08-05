@@ -16,7 +16,7 @@ class ArmUfactory(Node):
 		self.get_logger().info("Initialised my test Node")	
 		
 		# THIS VALUE HAS TO BE IN METERS
-		self.HEIGHT_TABLE_PLACE_OBJECTS = 0.74
+		self.HEIGHT_TABLE_PLACE_OBJECTS = 0.75
 		self.get_logger().info(f"New table height received: {str(self.HEIGHT_TABLE_PLACE_OBJECTS)}")
 
 		# ARM TOPICS
@@ -908,7 +908,7 @@ class ArmUfactory(Node):
 			case 0:
 				self.set_gripper_speed_(speed=2000)
 			case 1:
-				self.set_gripper_position_(pos=499, wait=True)
+				self.set_gripper_position_(pos=600, wait=True)
 			case 2:
 				self.finish_arm_movement_()
 

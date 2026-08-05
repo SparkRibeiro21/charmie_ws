@@ -120,7 +120,7 @@ class TaskMain():
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
         self.initial_position = [0.0, 0.0, 0.0]
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
-        self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
+        # self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
         self.DISHWASHER_LOCATION = [ 4.08, -3.15, 0]
         print(self.initial_position)
         
@@ -312,7 +312,7 @@ class TaskMain():
                 if self.GET_BREAKFAST_SPOON:
 
                     if not self.HELP_PICK_SPOON:
-                        self.robot.pick_object(selected_object="Spoon", list_of_objects_detected_as= [["Fork", "Knife"]], arm_initial_position="collect_spoon_to_tray_funilocopo_v4")
+                        self.robot.pick_object(selected_object="Spoon", list_of_objects_detected_as= [["Fork", "Knife"]], arm_initial_position="collect_spoon_to_tray_funilocopo_v4", first_search_tetas=[[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
 
                     else:
                         object_in_gripper = False
@@ -329,7 +329,7 @@ class TaskMain():
                 if self.GET_BOWL:
                     
                     if not self.HELP_PICK_BOWL:
-                        self.robot.pick_object(selected_object="Bowl")
+                        self.robot.pick_object(selected_object="Bowl", first_search_tetas=[[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
                         
                     else:
                         object_in_gripper = False
@@ -383,7 +383,8 @@ class TaskMain():
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
 
-                self.robot.move_to_position(move_coords=self.SEARCH_CUTLERY_COORDS, wait_for_end_of=True)
+                # self.robot.move_to_position(move_coords=self.SEARCH_CUTLERY_COORDS, wait_for_end_of=True)
+                self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED), wait_for_end_of=True)
 
                 cutlery = self.robot.search_for_objects(tetas=self.search_for_cutlery_tetas, list_of_objects=[], use_arm=True, detect_objects=True)
 
@@ -431,7 +432,7 @@ class TaskMain():
 
                     self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
 
-                    self.robot.open_milk_lid()
+                    self.robot.open_milk_lid(lid_height=0.02, max_opening_attempts=3)
 
                     self.robot.pour_milk()
 
