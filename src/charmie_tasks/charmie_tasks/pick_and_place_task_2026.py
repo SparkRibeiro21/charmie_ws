@@ -112,9 +112,9 @@ class TaskMain():
 
         # Objects picked furniture names
         # self.MILK_LOCATION = "Pantry"
-        self.MILK_LOCATION = "Cabinet"
-        self.CORNFLAKES_LOCATION = "Cabinet"
-        self.DISHES_LOCATION = "Kitchen Counter"
+        self.MILK_LOCATION = "Shelf"
+        self.CORNFLAKES_LOCATION = "Pantry"
+        self.DISHES_LOCATION = "Dishwasher"
 
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
@@ -211,9 +211,7 @@ class TaskMain():
                 if self.GET_MILK:
                     
                     if not self.HELP_PICK_MILK:
-                        self.robot.set_speech(filename="pick_and_place_task/open_milk_lid", wait_for_end_of=True)
-                        time.sleep(8.0)
-                        self.robot.pick_object_risky(selected_object="Milk", return_arm_to_initial_position="collect_milk_to_tray")
+                        pick_height, _ = self.robot.pick_object(selected_object="Milk", arm_initial_position="initial_position_to_ask_for_objects",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                         # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
@@ -228,6 +226,8 @@ class TaskMain():
                                 self.robot.set_speech(filename="generic/check_detection_again", wait_for_end_of=True)
 
                         self.robot.set_arm(command="collect_milk_to_tray", wait_for_end_of=True)
+                    
+                    self.robot.place_milk_in_tray(place_height=pick_height)
 
                 
                 if self.MILK_BEFORE_CORNFLAKES:
@@ -250,7 +250,7 @@ class TaskMain():
                         self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                         self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                         self.robot.set_speech(filename="furniture/"+self.CORNFLAKES_LOCATION , wait_for_end_of=False)
-                        self.robot.set_speech(filename="pick_and_place_task/open_milk_lid", wait_for_end_of=True)
+                        # self.robot.set_speech(filename="pick_and_place_task/open_milk_lid", wait_for_end_of=True)
 
                         self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(self.CORNFLAKES_LOCATION), wait_for_end_of=True)
 
@@ -265,7 +265,7 @@ class TaskMain():
                 if self.GET_CORNFLAKES:
 
                     if not self.HELP_PICK_CORNFLAKES:
-                        self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position="collect_cornflakes_to_tray")
+                        self.robot.pick_object(selected_object="Cornflakes", arm_initial_position="collect_cornflakes_to_tray", first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                         # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
 
@@ -312,7 +312,7 @@ class TaskMain():
                 if self.GET_BREAKFAST_SPOON:
 
                     if not self.HELP_PICK_SPOON:
-                        self.robot.pick_object_risky(selected_object="Spoon", list_of_objects_detected_as= [["Fork", "Knife"]], return_arm_to_initial_position="collect_spoon_to_tray_funilocopo_v4")
+                        self.robot.pick_object(selected_object="Spoon", list_of_objects_detected_as= [["Fork", "Knife"]], arm_initial_position="collect_spoon_to_tray_funilocopo_v4")
 
                     else:
                         object_in_gripper = False
@@ -329,7 +329,7 @@ class TaskMain():
                 if self.GET_BOWL:
                     
                     if not self.HELP_PICK_BOWL:
-                        self.robot.pick_object_risky(selected_object="Bowl")
+                        self.robot.pick_object(selected_object="Bowl")
                         
                     else:
                         object_in_gripper = False
@@ -382,13 +382,15 @@ class TaskMain():
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
                 self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
-                # self.robot.set_speech(filename="pick_and_place_task/remove_chairs", wait_for_end_of=False)
 
                 self.robot.move_to_position(move_coords=self.SEARCH_CUTLERY_COORDS, wait_for_end_of=True)
 
                 cutlery = self.robot.search_for_objects(tetas=self.search_for_cutlery_tetas, list_of_objects=[], use_arm=True, detect_objects=True)
 
-                move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))
+                s, _ , coords, _ =self.robot.move_to_free_place_position(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, list_of_objects=cutlery, heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=False, wait_for_end_of=True)
+
+                move_coords = self.robot.add_rotation_to_pick_position(coords)
+
                                 
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
 
@@ -426,11 +428,20 @@ class TaskMain():
             elif self.state == self.task_states["Placing_milk"]:
 
                 if self.GET_MILK:
-                    ##### ARM POUR IN BOWL
-                    self.robot.place_object(arm_command="pour_milk_bowl", speak_before=False, speak_after=True, verb="pour", object_name="milk", preposition="into", furniture_name="bowl")
+
+                    self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+
+                    self.robot.open_milk_lid()
+
+                    self.robot.pour_milk()
+
+                    self.robot.set_arm(command="place_milk_table", wait_for_end_of=True)
+                    
+                    # ##### ARM POUR IN BOWL
+                    # self.robot.place_object(arm_command="pour_milk_bowl", speak_before=False, speak_after=True, verb="pour", object_name="milk", preposition="into", furniture_name="bowl")
                 
-                    ##### ARM PLACE OBJECT
-                    self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name="milk", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                    # ##### ARM PLACE OBJECT
+                    # self.robot.place_object(arm_command="place_milk_table", speak_before=False, speak_after=True, verb="place", object_name="milk", preposition="on", furniture_name=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
                     
                 self.state = self.task_states["Placing_spoon"]
 

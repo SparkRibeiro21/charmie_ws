@@ -8888,7 +8888,7 @@ class RobotStdFunctions():
                 correct_rotation_adjust = -60 #degrees
 
             if selected_object == "spoon" or selected_object == "knife" or selected_object == "fork":
-                correct_x_adjust = 0.0 #mm
+                correct_x_adjust = 15.0 #mm
 
             if selected_object == "dishwasher_tab":
                 correct_x_adjust = 10.0 #mm
