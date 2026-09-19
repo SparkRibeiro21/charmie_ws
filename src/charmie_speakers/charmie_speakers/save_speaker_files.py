@@ -109,6 +109,18 @@ class RobotSpeak():
             tts_config_path= config_path,
         )
 
+        # UNCOMMENT TO USE QUICK VOICE RENDERING
+        # worse quality but quick render voice
+        # self.model_name = "tacotron2-DDC_ph"
+        # mode_path, config_path, model_item = self.model_manager.download_model("tts_models/en/ljspeech/tacotron2-DDC_ph")
+        # voc_path, voc_config_path, _ = self.model_manager.download_model(model_item["default_vocoder"])
+        # self.syn = Synthesizer(
+        #     tts_checkpoint= mode_path,
+        #     tts_config_path= config_path,
+        #     vocoder_checkpoint= voc_path,
+        #     vocoder_config= voc_config_path
+        # )
+
     def convert_command(self, commands, play_sound):
 
         for filename, command in commands.items():
