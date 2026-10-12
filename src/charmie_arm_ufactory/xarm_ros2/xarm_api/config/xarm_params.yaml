@@ -69,7 +69,7 @@ ufactory_driver:
       set_linear_track_speed: false
       set_cartesian_velo_continuous: false
       set_allow_approx_motion: false
-      set_only_check_type: false
+      set_only_check_type: true
       config_tgpio_reset_when_stop: false
       config_cgpio_reset_when_stop: false
       motion_enable: true

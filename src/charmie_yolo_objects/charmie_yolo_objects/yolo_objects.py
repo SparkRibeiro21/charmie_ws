@@ -83,7 +83,7 @@ class Yolo_obj(Node):
             # print(self.house_furniture)
             with open(self.complete_path_configuration_files + 'detected_furniture.json', encoding='utf-8') as json_file:
                 self.detected_furniture_file = json.load(json_file)
-            # print(self.detected_furniture_file)
+            print(self.detected_furniture_file)
             self.get_logger().info("Successfully Imported data from json configuration files. (objects, rooms, furniture and detected_furniture)")
         except:
             self.get_logger().error("Could NOT import data from json configuration files. (objects, rooms, furniture and detected_furniture)")
@@ -141,9 +141,10 @@ class Yolo_obj(Node):
         # gets list of detected furniture from detected_furniture.json and alphabetically orders it to match YOLO detections 
         self.furniture_class_names = [item["name"] for item in self.detected_furniture_file]
         self.furniture_class_names.sort()
-
+        # self.furniture_class_names = ['Cabinet', 'Dishwasher', 'Door', 'Drawer', 'Level Handler', 'Wardrobe Door'] # temp fix so that detected_furniture.json is not necessary to be included in configuration_files
+        
         # list of detections from Stickler for the Rules: check if person is wearing shoes...
-        self.shoes_class_names = ['Shoe', 'Sock']        
+        self.shoes_class_names = ['Shoe', 'Sock']
         
 
         # This is the variable to change to True if you want to see the bounding boxes on the screen and to False if you don't
@@ -182,17 +183,17 @@ class Yolo_obj(Node):
                 # Import the models, one for each category
                 self.object_model = YOLO(self.complete_path_yolo_models + self.objects_model_filename, task="segment")
                 # self.shoes_model = YOLO(self.complete_path_yolo_models + self.shoes_model_filename)
-                self.furniture_model = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="detect")
+                self.furniture_model = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="segment")
 
                 # it needs to have a different model because of the track parameter, otherwise it is always creating new track ids
                 self.object_model_hand = YOLO(self.complete_path_yolo_models + self.objects_model_filename, task="segment")
                 # self.shoes_model_hand = YOLO(self.complete_path_yolo_models + self.shoes_model_filename)
-                self.furniture_model_hand = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="detect")
+                self.furniture_model_hand = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="segment")
 
                 # it needs to have a different model because of the track parameter, otherwise it is always creating new track ids
                 self.object_model_base = YOLO(self.complete_path_yolo_models + self.objects_model_filename, task="segment")
                 # self.shoes_model_base = YOLO(self.complete_path_yolo_models + self.shoes_model_filename)
-                self.furniture_model_base = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="detect")
+                self.furniture_model_base = YOLO(self.complete_path_yolo_models + self.furniture_model_filename, task="segment")
 
                 self.get_logger().info("Successfully imported YOLO models (objects, furniture, shoes)")
 
@@ -359,13 +360,12 @@ class Yolo_obj(Node):
             depth_h, depth_w = depth.shape[:2]
 
             if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
-                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                self.get_logger().warn(f"Hand RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
                 rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
 
             if (depth_w, depth_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
-                self.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                self.get_logger().warn(f"Hand depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
                 depth = cv2.resize(depth, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
-
 
             self.hand_rgb_cv2_frame = rgb
             self.hand_depth_cv2_frame = depth
@@ -452,7 +452,24 @@ class Yolo_obj(Node):
 
         return new_object
 
-    def position_to_house_rooms_and_furniture(self, person_pos):
+    def point_inside_rotated_rectangle(self, px, py, cx, cy, size_x, size_y, angle_deg):
+        angle_rad = math.radians(angle_deg)
+
+        dx = px - cx
+        dy = py - cy
+
+        # Rotate point into furniture local frame
+        local_x =  math.cos(angle_rad) * dx + math.sin(angle_rad) * dy
+        local_y = -math.sin(angle_rad) * dx + math.cos(angle_rad) * dy
+
+        return abs(local_x) <= size_x / 2.0 and abs(local_y) <= size_y / 2.0
+
+    def point_inside_circle(self, px, py, cx, cy, diameter):
+        radius = diameter / 2.0
+        dist = math.sqrt((px - cx) ** 2 + (py - cy) ** 2)
+        return dist <= radius
+            
+    def position_to_house_rooms_and_furniture(self, position):
         
         room_location = "Outside"
         for room in self.house_rooms:
@@ -461,27 +478,21 @@ class Yolo_obj(Node):
             min_y = room['bot_right_coords'][1]
             max_y = room['top_left_coords'][1]
             # print(min_x, max_x, min_y, max_y)
-            if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
+            if min_x < position.x < max_x and min_y < position.y < max_y:
                 room_location = room['name'] 
 
         furniture_location = "None"
         for furniture in self.house_furniture:
 
-            if furniture['shape'] == "square":
-                min_x = furniture['bot_right_coords'][0]
-                max_x = furniture['top_left_coords'][0]
-                min_y = furniture['bot_right_coords'][1]
-                max_y = furniture['top_left_coords'][1]
-                # print(min_x, max_x, min_y, max_y)
-                if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
-                    furniture_location = furniture['name'] 
-            else: # if furniture['shape'] == "circle":
-                furniture_x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2
-                furniture_y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2
-                person_dist_to_furniture = math.sqrt((person_pos.x-furniture_x)**2 + (person_pos.y-furniture_y)**2)
+            cx = furniture["center_coords"][0]
+            cy = furniture["center_coords"][1]
 
-                if person_dist_to_furniture < furniture['diameter']/2:
-                    furniture_location = furniture['name'] 
+            if furniture['shape'] == "square":
+                if self.point_inside_rotated_rectangle(position.x,  position.y, cx, cy, furniture["size"][0], furniture["size"][1], furniture.get("angle", 0.0)):
+                    furniture_location = furniture["name"]
+            else: # if furniture['shape'] == "circle":
+                if self.point_inside_circle(position.x, position.y, cx, cy, furniture["diameter"]):
+                    furniture_location = furniture["name"]
 
         return room_location, furniture_location
         

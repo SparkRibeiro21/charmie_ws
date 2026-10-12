@@ -2,7 +2,7 @@ radar_node:
   ros__parameters:
     debug: false # debug mode 
     robot_base_frame: base_footprint # frame of the robot base
-    robot_radius: 0.28 # radius of the robot in meters
+    robot_radius: 0.30 # radius of the robot in meters
     update_frequency: 10.0 # frequency to update the radar data in Hz
     radar_configuration:
       number_of_sectors: 24 # currently working every 10 degrees

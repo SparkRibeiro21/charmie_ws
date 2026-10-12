@@ -50,12 +50,22 @@ class Cam_node(Node):
 
     def get_rgbd_head_callback(self, rgbd: RGBD):
         with data_lock:
-            self.head_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            rgb = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            self.head_rgb_cv2_frame = rgb
             self.got_head = True
 
     def get_rgbd_hand_callback(self, rgbd: RGBD):
         with data_lock:
-            self.hand_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            rgb = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            rgb_h, rgb_w = rgb.shape[:2]
+            if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Hand RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+            self.hand_rgb_cv2_frame = rgb
             self.got_hand = True
 
     def get_color_image_base_callback(self, img: Image):

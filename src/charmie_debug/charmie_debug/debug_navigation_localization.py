@@ -2,6 +2,7 @@
 import rclpy
 import threading
 import time
+from charmie_interfaces.msg import DetectedPerson
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
@@ -17,21 +18,22 @@ ros2_modules = {
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
-    "charmie_lidar":                False,
+    "charmie_lidar":                True,
     "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         False,
+    "charmie_localisation":         True,
     "charmie_low_level":            True,
-    "charmie_navigation":           False,
-    "charmie_nav2":                 False,
+    "charmie_navigation":           True,
+    "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
     "charmie_neck":                 False,
-    "charmie_radar":                False,
+    "charmie_radar":                True,
     "charmie_sound_classification": False,
-    "charmie_speakers":             False,
+    "charmie_speakers":             True,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
+    "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         False,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
@@ -77,19 +79,35 @@ class TaskMain():
         # VARS ...
         self.state = Waiting_for_start_button
 
-        self.robot.set_rgb(RED+BACK_AND_FORTH_8)
-
-        while True:
-            pass
 
         while True:
 
             if self.state == Waiting_for_start_button:
                 # your code here ...
 
-                self.robot.set_initial_position(self.initial_position)
+                # self.robot.set_initial_position(self.initial_position)
+
+                # move_coords = [2.5, 3.0, 0.0] # 3.5
+                move_coords = self.robot.get_location_coords_from_furniture("couch") 
+                move_coords[0] = 2.94
+                print(move_coords)
+                
+                p=DetectedPerson()
+                p.position_absolute.x = move_coords[0]
+                p.position_absolute.y = move_coords[1]
+                p.furniture_location = "None"
+
+                print("Person detected at: " + str(p.position_absolute.x) + ", " + str(p.position_absolute.y) + " in furniture: " + p.furniture_location)
 
                 self.robot.wait_for_start_button()
+
+            
+                self.robot.move_to_person(person=p)
+
+                print("DONE")
+
+                while True:
+                    pass
 
                 # self.robot.adjust_omnidirectional_position(dx=1.0, dy=0.0)
 

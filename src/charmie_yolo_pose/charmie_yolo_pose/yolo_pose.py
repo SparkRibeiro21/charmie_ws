@@ -241,9 +241,25 @@ class YoloPoseNode(Node):
     def get_rgbd_head_callback(self, rgbd: RGBD):
         with data_lock: 
             self.head_rgb = rgbd.rgb
-            self.head_rgb_cv2_frame = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
             self.head_depth = rgbd.depth
-            self.head_depth_cv2_frame = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
+
+            rgb = self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8")
+            depth = self.br.imgmsg_to_cv2(rgbd.depth, "passthrough")
+
+            rgb_h, rgb_w = rgb.shape[:2]
+            depth_h, depth_w = depth.shape[:2]
+
+            if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+
+            if (depth_w, depth_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+                self.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+                depth = cv2.resize(depth, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+
+            self.head_rgb_cv2_frame = rgb
+            self.head_depth_cv2_frame = depth
+            
         self.new_head_rgb = True
         self.new_head_depth = True
         # print("Head (h,w):", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
@@ -406,7 +422,24 @@ class YoloPoseNode(Node):
                 p2 = (int(xy[0][KP_TWO][0]), int(xy[0][KP_TWO][1]))
                 cv2.line(current_frame_draw, p1, p2, (0,0,255), 2) 
 
-    def position_to_house_rooms_and_furniture(self, person_pos):
+    def point_inside_rotated_rectangle(self, px, py, cx, cy, size_x, size_y, angle_deg):
+        angle_rad = math.radians(angle_deg)
+
+        dx = px - cx
+        dy = py - cy
+
+        # Rotate point into furniture local frame
+        local_x =  math.cos(angle_rad) * dx + math.sin(angle_rad) * dy
+        local_y = -math.sin(angle_rad) * dx + math.cos(angle_rad) * dy
+
+        return abs(local_x) <= size_x / 2.0 and abs(local_y) <= size_y / 2.0
+
+    def point_inside_circle(self, px, py, cx, cy, diameter):
+        radius = diameter / 2.0
+        dist = math.sqrt((px - cx) ** 2 + (py - cy) ** 2)
+        return dist <= radius
+            
+    def position_to_house_rooms_and_furniture(self, position):
         
         room_location = "Outside"
         for room in self.house_rooms:
@@ -415,27 +448,21 @@ class YoloPoseNode(Node):
             min_y = room['bot_right_coords'][1]
             max_y = room['top_left_coords'][1]
             # print(min_x, max_x, min_y, max_y)
-            if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
+            if min_x < position.x < max_x and min_y < position.y < max_y:
                 room_location = room['name'] 
 
         furniture_location = "None"
         for furniture in self.house_furniture:
 
-            if furniture['shape'] == "square":
-                min_x = furniture['bot_right_coords'][0]
-                max_x = furniture['top_left_coords'][0]
-                min_y = furniture['bot_right_coords'][1]
-                max_y = furniture['top_left_coords'][1]
-                # print(min_x, max_x, min_y, max_y)
-                if min_x < person_pos.x < max_x and min_y < person_pos.y < max_y:
-                    furniture_location = furniture['name'] 
-            else: # if furniture['shape'] == "circle":
-                furniture_x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0])/2
-                furniture_y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1])/2
-                person_dist_to_furniture = math.sqrt((person_pos.x-furniture_x)**2 + (person_pos.y-furniture_y)**2)
+            cx = furniture["center_coords"][0]
+            cy = furniture["center_coords"][1]
 
-                if person_dist_to_furniture < furniture['diameter']/2:
-                    furniture_location = furniture['name'] 
+            if furniture['shape'] == "square":
+                if self.point_inside_rotated_rectangle(position.x,  position.y, cx, cy, furniture["size"][0], furniture["size"][1], furniture.get("angle", 0.0)):
+                    furniture_location = furniture["name"]
+            else: # if furniture['shape'] == "circle":
+                if self.point_inside_circle(position.x, position.y, cx, cy, furniture["diameter"]):
+                    furniture_location = furniture["name"]
 
         return room_location, furniture_location
 

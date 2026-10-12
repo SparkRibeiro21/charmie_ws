@@ -210,10 +210,10 @@ def main():
     font = pygame.font.SysFont("monospace", 18)
 
     # Curve limits (same as before)
-    y_lim_top = 15.0
-    y_lim_mid = 15.0
-    y_lim_bot = 25.0
-    step = 2.0
+    y_lim_top = 4.0
+    y_lim_mid = 4.0
+    y_lim_bot = 4.0
+    step = 1.0
 
     w, h, margin, rect1, rect2, rect3, rect4 = recompute_layout(screen)
     node.width, node.height = w, h

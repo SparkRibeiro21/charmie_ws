@@ -4,6 +4,7 @@ string command          # type of face that is commonly used and is always the s
 string custom           # type of face that is custom, not previously in face (i.e. show detected person or object in the moment)
 string camera           # select which camera must be shown in face (can be rgb or depth)
 bool show_detections    # select if in addition to show the camera on the face, shows the detections being used with that camera
+float32 loadbar         # set loadbar in seconds ( > 0.0)
 ---
 bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages.

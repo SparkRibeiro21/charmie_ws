@@ -83,6 +83,12 @@ class FaceNode(Node):
         self.new_face_received_name = ""
         self.last_face_command = ""
 
+        # Loadbar mode
+        self.loadbar_flag = False
+        self.loadbar_total_time = 0.0
+        self.loadbar_start_time = None
+        self.loadbar_text = "Please wait..."
+
         self.new_text_received = False
         self.new_text_received_name = ""
         self.new_text_received_delay = self.AFTER_SPEECH_TIMER_SHORT
@@ -98,15 +104,15 @@ class FaceNode(Node):
         self.touchscreen_menu_mode = "single"
         self.touchscreen_menu_start_time = None
 
-        self.HEAD_CAM_WIDTH = 848
-        self.BASE_CAM_WIDTH = 640
-        self.HEAD_CAM_HEIGHT = 480
-        self.head_rgb =   np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
-        self.hand_rgb =   np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
-        self.base_rgb =   np.zeros((self.HEAD_CAM_HEIGHT, self.BASE_CAM_WIDTH, 3), np.uint8)
-        self.head_depth = np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
-        self.hand_depth = np.zeros((self.HEAD_CAM_HEIGHT, self.HEAD_CAM_WIDTH, 3), np.uint8)
-        self.base_depth = np.zeros((self.HEAD_CAM_HEIGHT, self.BASE_CAM_WIDTH, 3), np.uint8)
+        self.CAM_IMAGE_WIDTH = 848
+        self.CAM_BASE_IMAGE_WIDTH = 640
+        self.CAM_IMAGE_HEIGHT = 480
+        self.head_rgb =   np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH, 3), np.uint8)
+        self.hand_rgb =   np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH, 3), np.uint8)
+        self.base_rgb =   np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_BASE_IMAGE_WIDTH, 3), np.uint8)
+        self.head_depth = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH, 3), np.uint8)
+        self.hand_depth = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_IMAGE_WIDTH, 3), np.uint8)
+        self.base_depth = np.zeros((self.CAM_IMAGE_HEIGHT, self.CAM_BASE_IMAGE_WIDTH, 3), np.uint8)
         self.new_head_rgb = False
         self.new_hand_rgb = False
         self.new_base_rgb = False
@@ -146,10 +152,18 @@ class FaceNode(Node):
         # string custom           # type of face that is custom, not previously in face (i.e. show detected person or object in the moment)
         # string camera           # select which camera must be shown in face (can be rgb or depth)
         # bool show_detections    # select if in addition to show the camera on the face, shows the detections being used with that camera
+        # float32 loadbar         # set loadbar in seconds ( > 0.0)
+        # ---
+        # bool success   # indicate successful run of triggered service
+        # string message # informational, e.g. for error messages. 
 
         self.cams_flag = False
         self.show_camera_detections = False
-        if request.command != "":
+        self.loadbar_flag = False
+
+        if request.loadbar > 0.0:
+            response.success, response.message = self.loadbar_to_face(command=request.loadbar, text=request.command)
+        elif request.command != "":
             response.success, response.message = self.image_to_face(command=request.command)
         elif request.custom != "":
             response.success, response.message = self.custom_image_to_face(command=request.custom)
@@ -162,7 +176,7 @@ class FaceNode(Node):
             response.success = False
             response.message = "No standard or custom face received."
 
-        print("Face Request:", request.command, request.custom, request.camera, request.show_detections)
+        print("Face Request:", request.command, request.custom, request.camera, request.show_detections, request.loadbar)
 
         return response
 
@@ -227,13 +241,43 @@ class FaceNode(Node):
                     
     # CAMERAS 
     def get_rgbd_head_callback(self, rgbd: RGBD):
-        self.head_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
-        self.head_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "head")
+
+        rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
+        depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "head")
+        
+        rgb_h, rgb_w = rgb.shape[:2]
+        depth_h, depth_w = depth.shape[:2]
+
+        if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+            self.get_logger().warn(f"Head RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+            rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+
+        if (depth_w, depth_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+            self.get_logger().warn(f"Head depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+            depth = cv2.resize(depth, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+
+        self.head_rgb = rgb
+        self.head_depth = depth
         # print("HEAD:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_rgbd_hand_callback(self, rgbd: RGBD):
-        self.hand_rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
-        self.hand_depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "hand")
+
+        rgb = cv2.cvtColor(self.br.imgmsg_to_cv2(rgbd.rgb, "bgr8"), cv2.COLOR_BGR2RGB)
+        depth = self.get_cv2_cvtColor_from_depth_image(rgbd.depth, "hand")
+        
+        rgb_h, rgb_w = rgb.shape[:2]
+        depth_h, depth_w = depth.shape[:2]
+
+        if (rgb_w, rgb_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+            self.get_logger().warn(f"Hand RGB came with {rgb_w}x{rgb_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+            rgb = cv2.resize(rgb, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_LINEAR)
+
+        if (depth_w, depth_h) != (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT):
+            self.get_logger().warn(f"Hand depth came with {depth_w}x{depth_h}, expected {self.CAM_IMAGE_WIDTH}x{self.CAM_IMAGE_HEIGHT}. Resizing.")
+            depth = cv2.resize(depth, (self.CAM_IMAGE_WIDTH, self.CAM_IMAGE_HEIGHT), interpolation=cv2.INTER_NEAREST)
+
+        self.hand_rgb = rgb
+        self.hand_depth = depth
         # print("HAND:", rgbd.rgb_camera_info.height, rgbd.rgb_camera_info.width, rgbd.depth_camera_info.height, rgbd.depth_camera_info.width)
 
     def get_color_image_base_callback(self, img: Image):
@@ -356,6 +400,23 @@ class FaceNode(Node):
         else:
             self.get_logger().error("FACE received (custom) does not exist! - %s" %command)
             return False, "FACE received (custom) does not exist."
+        
+    def loadbar_to_face(self, command, text="Please wait..."):
+
+        print("Loadbar Command Received:", command)
+        print("Loadbar Text Received:", text)
+
+        self.loadbar_total_time = float(command)
+        self.loadbar_start_time = None
+        self.loadbar_text = text if text != "" else "Please wait..."
+        self.loadbar_flag = True
+
+        self.get_logger().info(
+            "FACE received loadbar for %.2f seconds with text: %s"
+            % (self.loadbar_total_time, self.loadbar_text)
+        )
+
+        return True, "Loadbar received and started."
     
     def get_cv2_cvtColor_from_depth_image(self, cam, name):
 
@@ -1261,6 +1322,129 @@ class FaceMain():
                     self.confirming_multi_button = None
             return
 
+    def handle_touchscreen_menu_yes_or_no(self):
+
+        """
+        One-click Yes/No menu.
+        Shows the instruction and two large buttons:
+        YES -> green
+        NO  -> red
+
+        Sends ["Yes"] or ["No"] through GetFaceTouchscreenMenu.
+        """
+
+        if not hasattr(self, "pressed_confirm_button"):
+            self.pressed_confirm_button = None
+
+        self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)
+
+        screen_w, screen_h = self.resolution
+
+        # ---------- Instruction ----------
+        instruction = getattr(self.node, "touchscreen_menu_instruction", "")
+
+        if instruction == "":
+            instruction = "Please select an option"
+
+        instr_font = pygame.font.SysFont(None, 76)
+        margin = 60
+        max_w = screen_w - 2 * margin
+
+        lines = self.wrap_text(instruction, instr_font, max_w)
+
+        total_text_height = len(lines) * instr_font.get_height()
+        start_y = int(screen_h * 0.20) - total_text_height // 2
+
+        y = start_y
+        for line in lines:
+            surf = instr_font.render(line, True, self.GREY_LAR_LOGO)
+            rect = surf.get_rect(center=(screen_w // 2, y + surf.get_height() // 2))
+            self.SCREEN.blit(surf, rect)
+            y += surf.get_height() + 8
+
+        # ---------- Buttons ----------
+        button_font = pygame.font.SysFont(None, 80)
+
+        button_width = 360
+        button_height = 120
+        gap = 80
+
+        center_x = screen_w // 2
+        button_y = int(screen_h * 0.58)
+
+        self.yes_button = pygame.Rect(
+            center_x - button_width - gap // 2,
+            button_y,
+            button_width,
+            button_height
+        )
+
+        self.no_button = pygame.Rect(
+            center_x + gap // 2,
+            button_y,
+            button_width,
+            button_height
+        )
+
+        yes_color = (
+            tuple(max(c - 30, 0) for c in self.GREEN_PASTEL)
+            if self.pressed_confirm_button == "yes"
+            else self.GREEN_PASTEL
+        )
+
+        no_color = (
+            tuple(max(c - 30, 0) for c in self.RED_PASTEL)
+            if self.pressed_confirm_button == "no"
+            else self.RED_PASTEL
+        )
+
+        pygame.draw.rect(self.SCREEN, yes_color, self.yes_button, border_radius=16)
+        pygame.draw.rect(self.SCREEN, no_color, self.no_button, border_radius=16)
+
+        yes_text = button_font.render("Yes", True, self.GREY_LAR_LOGO)
+        no_text = button_font.render("No", True, self.GREY_LAR_LOGO)
+
+        self.SCREEN.blit(yes_text, yes_text.get_rect(center=self.yes_button.center))
+        self.SCREEN.blit(no_text, no_text.get_rect(center=self.no_button.center))
+
+        pygame.display.update()
+
+        # ---------- Events ----------
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+
+                if self.yes_button.collidepoint(pos):
+                    self.pressed_confirm_button = "yes"
+                elif self.no_button.collidepoint(pos):
+                    self.pressed_confirm_button = "no"
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+
+                selected_answer = None
+
+                if self.yes_button.collidepoint(pos) and self.pressed_confirm_button == "yes":
+                    selected_answer = "yes"
+
+                elif self.no_button.collidepoint(pos) and self.pressed_confirm_button == "no":
+                    selected_answer = "no"
+
+                if selected_answer is not None:
+                    request = GetFaceTouchscreenMenu.Request()
+                    request.command = [selected_answer]
+                    self.node.call_face_get_touchscreen_menu_server(request=request)
+
+                    self.node.is_touchscreen_menu = False
+                    self.node.touchscreen_menu_start_time = None
+                    self.pressed_confirm_button = None
+
+                    print(f"Yes/No selected: {selected_answer}")
+
+                self.pressed_confirm_button = None
+
+        return
+                
     def handle_touchscreen_menu_keyboard(self):
         """
         QWERTY keyboard for name entry.
@@ -1661,6 +1845,122 @@ class FaceMain():
         return
 
 
+    def handle_loadbar(self):
+        """
+        Displays a timed loading/progress bar using the same visual style
+        as the touchscreen menus.
+        """
+
+        # Initialize start time on first frame
+        if self.node.loadbar_start_time is None:
+            self.node.loadbar_start_time = time.time()
+
+        elapsed_time = time.time() - self.node.loadbar_start_time
+        total_time = max(self.node.loadbar_total_time, 0.001)
+        progress = min(elapsed_time / total_time, 1.0)
+
+        screen_w, screen_h = self.resolution
+
+        # Background
+        self.SCREEN.fill(self.LIGHT_BLUE_CHARMIE_FACE)
+
+        # Text
+        title_font = pygame.font.SysFont(None, 90)
+        subtitle_font = pygame.font.SysFont(None, 48)
+
+        title_surface = title_font.render("Processing...", True, self.GREY_LAR_LOGO)
+        title_rect = title_surface.get_rect(center=(screen_w // 2, int(screen_h * 0.32)))
+        self.SCREEN.blit(title_surface, title_rect)
+
+        # Loadbar message received through SetFace.command
+        loadbar_message = f'"{self.node.loadbar_text}"'
+
+        max_text_width = int(screen_w * 0.85)
+        message_lines = self.wrap_text(loadbar_message, subtitle_font, max_text_width)
+
+        line_height = subtitle_font.get_height() + 6
+
+        # Keep the FIRST line always at the same height
+        first_line_center_y = int(screen_h * 0.42)
+
+        for i, line in enumerate(message_lines):
+            subtitle_surface = subtitle_font.render(line, True, self.GREY_LAR_LOGO)
+            subtitle_rect = subtitle_surface.get_rect(
+                center=(screen_w // 2, first_line_center_y + i * line_height)
+            )
+            self.SCREEN.blit(subtitle_surface, subtitle_rect)
+
+        # Loadbar geometry
+        bar_width = int(screen_w * 0.70)
+        bar_height = 70
+        bar_x = (screen_w - bar_width) // 2
+        bar_y = int(screen_h * 0.55)
+
+        outer_rect = pygame.Rect(bar_x, bar_y, bar_width, bar_height)
+
+        # Outer rounded bar
+        pygame.draw.rect(
+            self.SCREEN,
+            self.GREY_LAR_LOGO,
+            outer_rect,
+            border_radius=18
+        )
+
+        # Inner background
+        inner_margin = 8
+        inner_rect = pygame.Rect(
+            bar_x + inner_margin,
+            bar_y + inner_margin,
+            bar_width - 2 * inner_margin,
+            bar_height - 2 * inner_margin
+        )
+
+        pygame.draw.rect(
+            self.SCREEN,
+            self.LIGHT_BLUE_CHARMIE_FACE,
+            inner_rect,
+            border_radius=14
+        )
+
+        # Filled progress
+        fill_width = int(inner_rect.width * progress)
+
+        if fill_width > 0:
+            fill_rect = pygame.Rect(
+                inner_rect.x,
+                inner_rect.y,
+                fill_width,
+                inner_rect.height
+            )
+
+            pygame.draw.rect(
+                self.SCREEN,
+                self.GREEN_PASTEL,
+                fill_rect,
+                border_radius=14
+            )
+
+        # Percentage text
+        percentage = int(progress * 100)
+        percent_font = pygame.font.SysFont(None, 44)
+        percent_surface = percent_font.render(f"{percentage}%", True, self.GREY_LAR_LOGO)
+        percent_rect = percent_surface.get_rect(center=(screen_w // 2, bar_y + bar_height + 45))
+        self.SCREEN.blit(percent_surface, percent_rect)
+
+        pygame.display.update()
+
+        # Finish loadbar
+        if progress >= 1.0:
+            self.node.loadbar_flag = False
+            self.node.loadbar_start_time = None
+            self.node.loadbar_total_time = 0.0
+
+            if self.node.last_face_command != "":
+                self.node.image_to_face(self.node.last_face_command)
+            else:
+                self.node.image_to_face(self.node.INITIAL_FACE)
+
+
     def main(self):
         
         while self.running:
@@ -1713,6 +2013,8 @@ class FaceMain():
                         self.handle_touchscreen_menu()
                     elif self.node.touchscreen_menu_mode == "multi":
                         self.handle_touchscreen_menu_multiple_options()
+                    elif self.node.touchscreen_menu_mode == "yes or no":
+                        self.handle_touchscreen_menu_yes_or_no()
                     elif self.node.touchscreen_menu_mode == "keyboard":
                         self.handle_touchscreen_menu_keyboard()
                     elif self.node.touchscreen_menu_mode == "numpad":
@@ -1723,6 +2025,9 @@ class FaceMain():
                         self.node.call_face_get_touchscreen_menu_server(request=request)
                         self.node.is_touchscreen_menu = False
                         self.node.touchscreen_menu_start_time = None
+
+            elif self.node.loadbar_flag:
+                self.handle_loadbar()
 
             elif self.node.cams_flag:
 

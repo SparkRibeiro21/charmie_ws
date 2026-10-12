@@ -18,7 +18,7 @@ ros2_modules = {
     "charmie_gamepad":              False,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          True,
-    "charmie_base_camera":          False,
+    "charmie_base_camera":          True,
     "charmie_lidar":                True,
     "charmie_lidar_bottom":         True,
     "charmie_lidar_livox":          True,
@@ -34,6 +34,7 @@ ros2_modules = {
     "charmie_speakers":             True,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
+    "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
@@ -78,10 +79,9 @@ class TaskMain():
     def configurables(self): # Variables that may change depending on the arena the robot does the task 
 
 
-        self.home_furniture = "Dinner Table"
+        self.home_furniture = "Entrance"
         # self.home_furniture = "Dinner Table"        
-        self.initial_position = self.robot.get_navigation_coords_from_furniture(self.home_furniture.replace(" ","_").lower())
-        print(self.initial_position)
+        self.initial_position = [8.80, 0.13, -180.0]
 
         self.GET_HEAR = False
 
@@ -127,22 +127,70 @@ class TaskMain():
 
             if self.state == self.task_states["Waiting_for_task_start"]:
         
-                self.robot.set_face("charmie_face", wait_for_end_of=False)
+                # self.robot.set_face("charmie_face", wait_for_end_of=False)
 
                 #self.robot.set_torso_position(legs=0.10, torso=10, wait_for_end_of=True) 
                 #self.robot.wait_until_camera_stable(timeout=120, check_interval=0.3, stable_duration=0.3, get_gripper=False)
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
 
-                self.robot.set_initial_position(self.initial_position)
+                # self.robot.pick_object(selected_object="Apple", max_search_attempts=1)
 
+                # self.robot.set_initial_position(self.initial_position)
+                
+                #self.robot.search_for_objects(tetas=[[0, -45], [-40, -45], [40, -45]],  time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["water"], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts=1)
+
+                self.robot.wait_for_start_button()
+
+                pick_height, s= self.robot.pick_object(selected_object="water")
+                placed_height=self.robot.place_object_in_furniture(selected_object="water", furniture= "Table 2", place_height=pick_height)
+
+                self.robot.wait_for_start_button()
+                # placed_height=self.robot.place_object_in_furniture(selected_object="mustard",place_mode = "front", furniture= "Tray", place_height=pick_height)
+                # pick_height = self.robot.pick_from_tray(selected_object="cola", placed_height=placed_height)
+                # placed_height=self.robot.place_object_in_furniture(selected_object="cola",place_mode = "front", place_height=pick_height)
+
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+
+                corn_flakes_place=[-246.2,-23.6,-36.4,15.6,51.8,198.7]
+
+                pick_flakes_first=[-216.6,-70.3,-10,5.9,65.5,236.1]
+
+
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = corn_flakes_place, wait_for_end_of=True)
+                
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                object_position_grab = [0.16*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_joint_motion", joint_motion_values = pick_flakes_first, wait_for_end_of=True)
+                object_position_grab = [-0.24*1000, 0.0, 0.0, 0.0, 0.0, 0.0]
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose = object_position_grab, wait_for_end_of=True)
+                self.robot.set_arm(command="close_gripper", wait_for_end_of=True)
+                #self.robot.set_arm(command="pour_cereals_bowl_alternative_robocup_cornflakes", wait_for_end_of=True)
+
+                #self.robot.open_door(push_pull="pull", handle_side="right")
+
+                #self.robot.set_initial_position(self.initial_position)
+
+                #pick_height, s= self.robot.pick_object(selected_object="cup")
                 # self.robot.wait_for_start_button()
+                #placed_height=self.robot.place_object_in_furniture(selected_object="mustard",place_mode = "front", furniture= "Tray", place_height=pick_height)
+                #pick_height = self.robot.pick_from_tray(selected_object="cola", placed_height=placed_height)
+                #placed_height=self.robot.place_object_in_furniture(selected_object="cola",place_mode = "front", place_height=pick_height)
+
+                self.robot.wait_for_start_button()
                 
                 #self.robot.set_initial_position(self.initial_position)
+                self.robot.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+                picked_height,_ =self.robot.pick_object(selected_object="milk", arm_initial_position="initial_position_to_ask_for_objects")
+                self.robot.place_milk_in_tray(place_height=picked_height)
                 
                 print("SET INITIAL POSITION")
 
                 self.robot.wait_for_start_button()
+
+                # self.robot.pick_object(selected_object="Mustard")
 
 
                 self.state = self.task_states["Select_object_to_pick"]
@@ -322,6 +370,9 @@ class TaskMain():
                 elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "vertical":
                     self.tetas = [[0, 0], [0, 15], [0, -35]]
 
+                elif self.robot.get_look_orientation_from_furniture(self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(self.object_name))) == "single":
+                    self.tetas = [[0, -25]]
+                     
                 self.HORIZONTAL_TETAS = [[0, -45], [-40, -45], [40, -45]]
                 self.VERTICAL_TETAS = [[0, 0], [0, 15], [0, -35]]
 

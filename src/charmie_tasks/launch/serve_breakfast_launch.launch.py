@@ -31,12 +31,13 @@ def generate_launch_description():
         std_lf.neck,
         std_lf.face,
         std_lf.low_level,
+        std_lf.tray_gripper,
         
         #####################################################################
         # Sensors                                                           # 
         #####################################################################
         std_lf.lidar,
-        std_lf.lidar_bottom,
+        # std_lf.lidar_bottom,
         std_lf.livox_driver,
         std_lf.radar,
         # std_lf.audio,

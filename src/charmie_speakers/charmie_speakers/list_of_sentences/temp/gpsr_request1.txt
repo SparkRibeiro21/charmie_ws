@@ -1,1 +1,1 @@
-I will move to the kitchen. I will then move to the dining table.
+I will move to the waste basket; Then, I will look for an iced tea; If found, I will pick up the iced tea; I will move to the person in the bedroom; I will look for the lying person; I will move towards the lying person; I will hand the iced tea to the lying person.

@@ -2,7 +2,7 @@
 import rclpy
 import threading
 import time
-from charmie_interfaces.msg import DetectedObject
+from charmie_interfaces.msg import DetectedObject, ListOfDetectedObject
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
@@ -14,12 +14,12 @@ ros2_modules = {
     "charmie_arm":                  False,
     "charmie_audio":                False,
     "charmie_face":                 True,
-    "charmie_head_camera":          False,
+    "charmie_head_camera":          True,
     "charmie_hand_camera":          False,
     "charmie_base_camera":          False,
     "charmie_gamepad":              False,
     "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
+    "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
     "charmie_localisation":         True,
@@ -28,10 +28,12 @@ ros2_modules = {
     "charmie_nav2":                 True,
     "charmie_nav_sdnl":             False,
     "charmie_neck":                 True,
-    "charmie_radar":                False,
+    "charmie_radar":                True,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
+    "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         True,
     "charmie_yolo_pose":            False,
     "charmie_yolo_world":           False,
@@ -60,8 +62,11 @@ class TaskMain():
     def main(self):
         Waiting_for_start_button = 0
         Move_to_pre_pick_position_after_search_for_objects = 1
-        Final_State = 2
-        
+        Move_to_pre_pick_position_after_search_for_objects_quick_test = 2
+        Move_to_pre_place_position = 3
+        Move_to_pre_place_position_quick_test = 4
+        Final_State = 5
+
         # self.initial_position = [0.0, 0.0, 0.0]
         self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
         # self.initial_position = [2.5, -4.50, 0.0] # temp (near Tiago desk for testing)
@@ -71,9 +76,9 @@ class TaskMain():
         self.NAVIGATION_TARGET = self.NAVIGATION_TARGET.replace(" ","_").lower()
         self.NAVIGATION_TARGET2 = "desk"
         self.NAVIGATION_TARGET3 = "Left Lounge Chair"
-        self.NAVIGATION_TARGET4 = [ 2.0,  2.0,   0.0]
-        self.NAVIGATION_TARGET5 = [ 2.0, -2.0,   0.0]
-        self.NAVIGATION_TARGET6 = [ 0.0, -0.0,  90.0]
+        self.NAVIGATION_TARGET4 = [ 4.0,  0.0,   0.0]
+        self.NAVIGATION_TARGET5 = [ 4.0,  0.0,   0.0]
+        self.NAVIGATION_TARGET6 = [ 0.0,  0.2,   0.0]
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -81,7 +86,7 @@ class TaskMain():
         self.look_judge = [-90, 0]
         
         # VARS ...
-        self.state = Move_to_pre_pick_position_after_search_for_objects
+        self.state = Move_to_pre_place_position
 
         self.robot.set_rgb(RED+BACK_AND_FORTH_8)
 
@@ -116,15 +121,15 @@ class TaskMain():
 
                 while True:
 
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
-                    print("Moved to target 4")
+                    # self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET4, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                    # print("Moved to target 4")
                     # time.sleep(10.0)
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET5, ignore_obstacles=False, first_rotate=False, orient_after_move=True, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
                     print("Moved to target 5")
-                    # time.sleep(10.0)
-                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET6, ignore_obstacles=True, first_rotate=False, orient_after_move=False, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
+                    time.sleep(10.0)
+                    self.robot.sdnl_move_to_position(move_coords=self.NAVIGATION_TARGET6, ignore_obstacles=False, first_rotate=False, orient_after_move=True, reached_radius=0.5, print_feedback=True, wait_for_end_of=True)
                     print("Moved to target 6")
-                    # time.sleep(10.0)
+                    time.sleep(10.0)
                
 
                 # to test move_to_pre_pick_position_after_search_for_objects std_function
@@ -214,6 +219,123 @@ class TaskMain():
                 #     print(self.robot.get_robot_localization())
                 #     time.sleep(0.5)
                 #     pass    
+
+                # next state
+                self.state = Final_State
+
+
+            elif self.state == Move_to_pre_pick_position_after_search_for_objects_quick_test:
+                print('State 1 = Move to pre pick position after search for objects quick test')
+
+                
+                o = DetectedObject()
+                o.position_absolute.x = 5.18 # 5.55 - 0.1
+                o.position_absolute.y = 2.60 # 1.78 + 0.1
+
+                self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.NAVIGATION_TARGET, object=o, approach_offset=0.5, move_to=False, wait_for_end_of=True)
+
+                while True:
+                    pass
+
+                # next state
+                self.state = Final_State
+            
+            elif self.state == Move_to_pre_place_position:
+                print('State 1 = Move to pre pick position after search for objects')
+
+                ### MOVE TO DINNER TABLE POSITION TO SEARCH FOR OBJECTS
+
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=False)
+
+                # must be removed after the update to minimize as much as possivle the final orientation error 
+                move_coords = self.robot.get_navigation_coords_from_furniture(self.NAVIGATION_TARGET)                
+                # move_coords = self.robot.add_rotation_to_pick_position(move_coords=move_coords)                
+                self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
+
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=True)
+                self.robot.set_speech(filename="furniture/"+self.NAVIGATION_TARGET, wait_for_end_of=True)
+
+                ### SEARCH FOR OBJECTS EXAMPLE     
+                
+                # tetas = [[-120, -10], [-60, -10], [0, -10], [60, -10], [120, -10]]
+                # tetas = [[-30, -45], [0, -45], [30, -45]]
+                tetas = [[0, -30]]
+                # objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=3.0, list_of_objects=["Milk", "Cornflakes"], list_of_objects_detected_as=[["cleanser"], ["strawberry_jello", "chocolate_jello"]], use_arm=False, detect_objects=True, detect_furniture=False)
+                objects_found = self.robot.search_for_objects(tetas=tetas, time_in_each_frame=2.0, use_arm=False, detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                
+                print("LIST OF DETECTED OBJECTS:")
+                for o in objects_found:
+                    conf = f"{o.confidence * 100:.0f}%"
+                    x_ = f"{o.position_absolute.x:4.2f}"
+                    y_ = f"{o.position_absolute.y:5.2f}"
+                    z_ = f"{o.position_absolute.z:5.2f}"
+                    print(f"{'ID:'+str(o.index):<7} {o.object_name:<17} {conf:<3} {o.furniture_location} ({x_}, {y_}, {z_})")
+
+                time.sleep(0.5)
+                self.robot.set_face("charmie_face", wait_for_end_of=False)
+
+                self.robot.wait_for_start_button()
+                    
+                self.robot.move_to_free_place_position(furniture=self.NAVIGATION_TARGET, list_of_objects=objects_found, heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=True, wait_for_end_of=True)                
+                            
+                # self.robot.set_neck(position=self.look_table_objects, wait_for_end_of=False)
+
+                # while True:
+                #     print(self.robot.get_robot_localization())
+                #     time.sleep(0.5)
+                #     pass    
+
+                # next state
+                self.state = Final_State
+
+
+            elif self.state == Move_to_pre_place_position_quick_test:
+
+                lob = ListOfDetectedObject()
+
+                o1 = DetectedObject()
+                o1.position_absolute.x = 5.55
+                o1.position_absolute.y = 2.1
+                o1.index = 1
+
+                o2 = DetectedObject()
+                o2.position_absolute.x = 5.22
+                o2.position_absolute.y = 1.47
+                o2.index = 2
+
+                o3 = DetectedObject()
+                o3.position_absolute.x = 5.6
+                o3.position_absolute.y = 0.98
+                o3.index = 3
+
+                o4 = DetectedObject()
+                o4.position_absolute.x = 4.88
+                o4.position_absolute.y = 2.22
+                o4.index = 4
+
+                o5 = DetectedObject()
+                o5.position_absolute.x = 6.1
+                o5.position_absolute.y = 1.8
+                o5.index = 5
+
+                o6 = DetectedObject()
+                o6.position_absolute.x = 5.25
+                o6.position_absolute.y = 1.58
+                o6.index = 6
+
+                lob.objects.append(o1)
+                lob.objects.append(o2)
+                # lob.objects.append(o3)
+                # lob.objects.append(o4)
+                # lob.objects.append(o5)
+                # lob.objects.append(o6)
+
+                self.robot.move_to_free_place_position(furniture=self.NAVIGATION_TARGET, list_of_objects=lob.objects, heads_of_the_table=False, speak_remove_chairs=False, speak_remove_decorations=False, move_to=False, wait_for_end_of=True)                
+                        
+                while True:
+                    pass
 
                 # next state
                 self.state = Final_State

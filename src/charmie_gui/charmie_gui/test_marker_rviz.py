@@ -194,13 +194,14 @@ class MarkerPublisher(Node):
         self.publisher_marker_array_rooms.publish(marker_array)
         self.publisher_marker_array_rooms_names.publish(marker_array_names)
 
+
+
+
+
     def publish_marker_array_furniture(self):
 
         marker_array = MarkerArray()
         marker_array_names = MarkerArray()
-
-        ### FALTA:
-        # ORIENTATION
 
         for index, furniture in enumerate(self.house_furniture):
             marker = Marker()
@@ -217,31 +218,41 @@ class MarkerPublisher(Node):
                 marker.type = Marker.CUBE  # Other options: SPHERE, CYLINDER, ARROW, etc.
             elif furniture['shape'] == "circle":
                 marker.type = Marker.CYLINDER  # Other options: SPHERE, CYLINDER, ARROW, etc.
-            else: # defualt value, might make sense to change in the future
+            else: # default value, might make sense to change in the future
                 marker.type = Marker.CUBE  # Other options: SPHERE, CYLINDER, ARROW, etc.
 
             # Marker Action
             marker.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
 
-            marker.pose.position.x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0]) / 2  # Set the X coordinate
-            marker.pose.position.y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1]) / 2  # Set the X coordinate
+            marker.pose.position.x = furniture["center_coords"][0]  # Set the X coordinate
+            marker.pose.position.y = furniture["center_coords"][1]  # Set the Y coordinate
             marker.pose.position.z = furniture['height'][0]/2  # Set the Z coordinate
 
-            marker.pose.orientation.x = 0.0
-            marker.pose.orientation.y = 0.0
-            marker.pose.orientation.z = 0.0
-            marker.pose.orientation.w = 1.0  # No rotation
+            # Get orientation
+            if furniture['shape'] == "square":
+                yaw_rad = math.radians(furniture["angle"])
+                q = self.euler_to_quaternion(0.0, 0.0, yaw_rad)
+            elif furniture['shape'] == "circle":
+                q = [0.0, 0.0, 0.0, 1.0]  # no rotation needed
+            else: # default value, might make sense to change in the future
+                yaw_rad = math.radians(furniture["angle"])
+                q = self.euler_to_quaternion(0.0, 0.0, yaw_rad)
+            
+            marker.pose.orientation.x = q[0]
+            marker.pose.orientation.y = q[1]
+            marker.pose.orientation.z = q[2]
+            marker.pose.orientation.w = q[3]
             
             # Has to be similar to previous choose shape condition
             if furniture['shape'] == "square":
-                marker.scale.x = abs(furniture['top_left_coords'][0] - furniture['bot_right_coords'][0]) # + 2*margin_x  # Width
-                marker.scale.y = abs(furniture['top_left_coords'][1] - furniture['bot_right_coords'][1]) # + 2*margin_y # Width
+                marker.scale.x = furniture["size"][0]
+                marker.scale.y = furniture["size"][1]
             elif furniture['shape'] == "circle":
                 marker.scale.x = furniture['diameter'] # Width
                 marker.scale.y = furniture['diameter'] # Width
-            else: # defualt value, might make sense to change in the future
-                marker.scale.x = abs(furniture['top_left_coords'][0] - furniture['bot_right_coords'][0]) # + 2*margin_x  # Width
-                marker.scale.y = abs(furniture['top_left_coords'][1] - furniture['bot_right_coords'][1]) # + 2*margin_y # Width
+            else: # default value, might make sense to change in the future
+                marker.scale.x = furniture["size"][0]
+                marker.scale.y = furniture["size"][1]
             
             marker.scale.z = furniture['height'][0]  # Height
             
@@ -276,8 +287,8 @@ class MarkerPublisher(Node):
             marker_name.id = index+len(self.house_rooms)
             marker_name.type = Marker.TEXT_VIEW_FACING
             marker_name.action = Marker.ADD  # Can be ADD, MODIFY, or DELETE
-            marker_name.pose.position.x = (furniture['top_left_coords'][0] + furniture['bot_right_coords'][0]) / 2  # Set the X coordinate
-            marker_name.pose.position.y = (furniture['top_left_coords'][1] + furniture['bot_right_coords'][1]) / 2  # Set the X coordinate
+            marker_name.pose.position.x = furniture["center_coords"][0]
+            marker_name.pose.position.y = furniture["center_coords"][1]  # Set the X coordinate
             marker_name.pose.position.z = furniture['height'][0]/2  # Set the Z coordinate
             marker_name.pose.orientation.w = 1.0  # No rotation
             marker_name.scale.z = self.NAMES_TEXT_SIZE # Height
@@ -1170,6 +1181,20 @@ class MarkerPublisher(Node):
 
         self.publisher_marker_array_sdnl_goal.publish(marker_array)
 
+    def euler_to_quaternion(self, roll, pitch, yaw):
+        cz = math.cos(yaw * 0.5)
+        sz = math.sin(yaw * 0.5)
+        cy = math.cos(pitch * 0.5)
+        sy = math.sin(pitch * 0.5)
+        cx = math.cos(roll * 0.5)
+        sx = math.sin(roll * 0.5)
+
+        w = cz * cy * cx + sz * sy * sx
+        x = cz * cy * sx - sz * sy * cx
+        y = cz * sy * cx + sz * cy * sx
+        z = sz * cy * cx - cz * sy * sx
+
+        return [x, y, z, w]
 
 def main(args=None):
     rclpy.init(args=args)
