@@ -84,7 +84,7 @@ class RobotSpeak():
             pygame.mixer.music.play()
             if not breakable_play:
                 while pygame.mixer.music.get_busy():
-                    pass
+                    pygame.time.Clock().tick(100)
 
             if show_in_face:
                 # sends empty string to tell face that the audio has finished to be played

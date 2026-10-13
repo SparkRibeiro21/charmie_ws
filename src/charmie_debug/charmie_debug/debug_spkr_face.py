@@ -31,7 +31,7 @@ ros2_modules = {
     "charmie_radar":                False,
     "charmie_sound_classification": False,
     "charmie_speakers":             True,
-    "charmie_speakers_save":        True,
+    "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         False,
@@ -90,15 +90,32 @@ class TaskMain():
                 print("Command list:", l_command)
 
                 if True:
-                    
-                    llp1 = self.robot.get_llm_ollama_gpsr_low_level(command=command, mode="", wait_for_end_of=True)
-                    print("LLM low level response:", llp1)
+                        
+                    answer = self.robot.set_face_touchscreen_menu(choice_category=["object_classes"], timeout=10, instruction="Are you the barman?", speak_results=True, wait_for_end_of=True)
+                    answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Are you the barman?", speak_results=True, wait_for_end_of=True)
+                    answer = self.robot.set_face_touchscreen_menu(choice_category=["object_classes"], timeout=10, instruction="Are you the barman?", speak_results=True, wait_for_end_of=True)
 
-                    self.robot.get_llm_ollama_gpsr_low_level(command=command, mode="", wait_for_end_of=False)
-                    while not self.robot.get_llm_ollama_gpsr_low_level_is_done():
-                        time.sleep(0.05)
-                    llp2 = self.robot.node.llm_ollama_gpsr_low_level_response
-                    print("LLM low level response:", llp2)
+                    """    
+                    aaa = time.time()
+                    self.robot.set_speech(command="Hello, my name is charmie, your robot assistant. How can I help?", wait_for_end_of=True)
+                    self.robot.set_speech(command="Let me open the entrance door for you.", wait_for_end_of=True)
+                    self.robot.set_speech(command="Okay, I have stopped. Would you like me to help you with anything else?", wait_for_end_of=True)
+                    self.robot.set_speech(command=command, wait_for_end_of=True)
+                    t1 = time.time()-aaa
+                    print(t1)
+                    while True:
+                        pass
+                        
+                        """
+
+                    # llp1 = self.robot.get_llm_ollama_gpsr_low_level(command=command, mode="", wait_for_end_of=True)
+                    # print("LLM low level response:", llp1)
+                    # 
+                    # self.robot.get_llm_ollama_gpsr_low_level(command=command, mode="", wait_for_end_of=False)
+                    # while not self.robot.get_llm_ollama_gpsr_low_level_is_done():
+                    #     time.sleep(0.05)
+                    # llp2 = self.robot.node.llm_ollama_gpsr_low_level_response
+                    # print("LLM low level response:", llp2)
 
 
                 else:
