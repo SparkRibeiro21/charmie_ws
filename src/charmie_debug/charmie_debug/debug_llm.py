@@ -3,6 +3,7 @@ import rclpy
 import threading
 import time
 from datetime import datetime
+from pathlib import Path
 from charmie_std_functions.task_ros2_and_std_functions import ROS2TaskNode, RobotStdFunctions
 
 # Constant Variables to ease RGB_MODE coding
@@ -64,14 +65,13 @@ class TaskMain():
         # Waiting_for_start_button = 0
         LLM_demo = 1
         LLM_gpsr = 2
-        LLM_person_pose = 3
+        LLM_gpsr_hlp= 3
         LLM_gpsr_llp= 4
         LLM_hri= 5
         LLM_Ollama_first_tests = 6
         Test_individual_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 7
         Test_together_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 8
-        Test_Compare= 9
-        Final_State = 10
+        Final_State = 8
 
         # VARS ...
         self.state = LLM_demo
@@ -94,179 +94,11 @@ class TaskMain():
 
             if self.state == LLM_demo:
 
-                print("New LLM Demo")
+                print("New LLM GPSR Demo")
 
 
                 commands = [
-                "Please identify which object on the table is the lightest.",
-
-                "In the printig room, introduce yourself to the person wearing a black jacket and follow them.",
-                "Please identify which object on the table is the lightest.",
-                
-            
-                "Head to the conference room, grab a toothpaste, and deliver it to me.",
-                
-                "Please verbally communicate the day of the month to the waving person in the conference room.",
-
-                "Please proceed to the kitchen, introduce yourself to the person wearing a black jacket, and thereafter follow them.",
-                "Go to the kitchen, introduce yourself to the person wearing a black jacket, then follow them.",
-                
-                "In the Hallway, salute Nathan and say the time.",
-                "Tell me which object on the table is the lightest.",
-                "Help the person pointing to the left go from the desk to the table.",
-
-                "Kindly address the person who is raising their left arm in the hallway with a statement about yourself.",
-                "Tell the person raising their left arm in the bedroom something about yourself.",
-                
-                "Head to the desk, find a cleaning supply, grab it, and bring it to me.",
-
-                "Please direct the person pointing to the left, ensuring they move from the trashcan to the table.",
-    
-                "Tell me which object on the table is the lightest.",
-
-                "Please proceed to the kitchen, at which point you should locate a Cola, take it, and deliver it to me.",
-                "Go to the kitchen, find a toothpaste, take it, and deliver it to me.",
-                "Tell the waving person in the kitchen the day of the month.",
-
-                "While in the printing room, salute Nathan and then announce the time.",
-                "Salute Nathan in the bedroom, then say the time.",
-                "What's the lightest object on the table?",
-            
-                "Guide the person who is waving from the desk over to the Trashcan.",
-                "Tell the day of the month to the waving person in the kitchen.",
-                "Talk about yourself to the person raising their left arm in the hallway.",
-
-                "Please proceed to the desk, at which point you should locate a cleaning supply, retrieve it, and subsequently bring it to me.",
-                "Go to the bed, find a cleaning supply, pick it up, and bring it to me.",
-
-                "At your earliest opportunity, proceed to the kitchen to introduce yourself to Andrew, after which you should lead them to the bedroom.",
-                "Head to the kitchen, introduce yourself to Andrew, then lead them to the bedroom.",
-                "Introduce yourself to Andrew in the kitchen, then take them to the bedroom.",
-
-                "Proceed to the living room first; upon meeting Violet, thereafter follow them to the kitchen.",
-                "Make your way to the living room, meet Violet, and then follow them to the kitchen.",
-                "Go to the living room, meet Violet, then follow them to the kitchen.",
-
-                "Please proceed to rendezvous with Wyatt in the living room and subsequently escort them to the bedroom.",
-                "Meet Wyatt in the living room, then guide them to the bedroom.",
-                "Go meet Wyatt in the living room and take them to the bedroom.",
-
-                "Proceed to the sink, then locate a pear, pick it up, and deliver it to me.",
-                "Go to the kitchen cabinet, find a pear, take it, and give it to me.",
-                "Head to the sofa, grab a pear, and hand it to me.",
-
-                "Kindly ascertain the number of snacks on the kitchen cabinet and let me know.",
-                "Please tell me how many snacks are on the shelf.",
-                "How many snacks are on the coffee table?",
-
-                "First, proceed to the Laundry Room; upon arrival, identify the sitting person and subsequently follow them.",
-                "Go to the Kitchen, find the sitting person, and then follow them.",
-                "Head to the Bedroom, spot the sitting person, and follow them.",
-
-                "Could you determine and inform me which is the smallest cleaning supply on the shelf?",
-                "Can you tell me what the smallest cleaning supply on the shelf is?",
-                "What's the smallest cleaning supply on the shelf?",
-
-                "Please provide guidance to the person wearing an orange blouse so that they proceed from the side tables to the Bed.",
-                "Help the person wearing an orange blouse go from the Living Room to the Counter.",
-                "Show the person wearing an orange blouse the way from the Kitchen to the Bedroom.",
-
-                "Would you kindly retrieve a toy from the sofa and deliver it to me.",
-                "Please grab a toy from the sofa and give it to me.",
-                "Bring me a toy from the sofa.",
-
-                "Would you be so kind as to retrieve a dice from the Sofa and bring it to me?",
-                "Please grab a dice from the kitchen cabinet and bring it to me.",
-                "Grab a dice from the Counter for me.",
-
-                "Kindly retrieve a cleaning supply from the kitchen cabinet and then place it on the bed.",
-                "Grab a cleaning supply from the Coffee Table and put it on the Laundry Trash Bin.",
-                "Take a cleaning supply from the Laundry Table and set it on the bed.",
-
-                "Kindly proceed to follow Joshua as he moves from the chairs to the kitchen.",
-                "Trail Joshua from the chairs to the kitchen.",
-                "Stick with Joshua from the chairs to the kitchen.",
-
-                "Please proceed to the TV Stand initially, after which you should rendezvous with Isaac and escort them to the shelf.",
-                "Go to the sink, then meet Isaac and walk them over to the Sofa.",
-                "Head to the cooking table, meet Isaac, and take them to the Bed.",
-
-                # "Would you be so kind as to retrieve a lemon from the cabinet and bring it to me?",
-                # "Please grab a lemon from the cabinet and bring it to me.",
-                # "Get me a lemon from the cabinet.",
-
-                # "Please communicate to the waving person in the kitchen which day tomorrow will be.",
-                # "Tell the waving person in the kitchen what day is tomorrow.",
-                # "In the kitchen, tell the waving person what day is tomorrow.",
-
-                # "Please proceed to the office; afterwards, meet Sophia and then tell the time.",
-                # "First go to the office, then meet Sophia, and tell the time.",
-                # "Go to the office, meet Sophia, then tell the time.",
-
-                # "Retrieve a dish from the refrigerator and subsequently position it on the storage rack.",
-                # "Take a dish out of the refrigerator and put it on the storage rack.",
-                # "Grab a dish from the refrigerator and set it on the storage rack.",
-
-                # "Proceed to the office, introduce yourself to the person wearing a gray shirt, and thereafter escort them to the bedroom.",
-                # "Go to the office, introduce yourself to the person wearing a gray shirt, then take them to the bedroom.",
-                # "In the office, say who you are to the person wearing a gray shirt and take them to the bedroom.",
-                
-                # "Proceed to the chairs, after which you should identify the waving person and announce the time.",
-                # "Go to the chairs, find the waving person, and tell the time.",
-                # "Head to the chairs, spot the waving person, then tell the time.",
-
-                # "Please ascertain the number of people in the kitchen who are wearing yellow jackets.",
-                # "How many people in the kitchen have yellow jackets on?",
-                # "Count the people in the kitchen wearing yellow jackets.",
-
-                # "First, locate a cola in the kitchen; once located, take it and deliver it to the standing person in the kitchen.",
-                # "Find a cola in the kitchen, pick it up, and deliver it to the standing person in the kitchen.",
-                # "Find a cola in the kitchen and give it to the standing person in the kitchen.",
-
-                # "Proceed to the chairs; subsequently, locate the sitting person and then tell something about yourself.",
-                # "Go to the chairs, find the sitting person, and tell something about yourself.",
-                # "Head to the chairs, spot the sitting person, and say something about yourself.",
-
-                # "Please proceed to follow the lying person who is at the chairs.",
-                # "Follow the lying person by the chairs.",
-                # "Go follow the lying person at the chairs.",
-
-                # "Proceed to the chairs first, after which you should meet Scarlett and subsequently follow them.",
-                # "Go to the chairs, then meet Scarlett, and then follow them.",
-                # "Head to the chairs, meet Scarlett, and follow them.",
-
-                # "Proceed to the bed to retrieve a lemon, and subsequently deliver it to the standing person in the kitchen.",
-                # "Grab a lemon from the bed and take it to the standing person in the kitchen.",
-                # "Take a lemon from the bed to the standing person in the kitchen.",
-
-                # "Proceed to the armchair, locate the lying person, and subsequently lead them to the bedroom.",
-                # "Go to the armchair, find the lying person, and then lead them to the bedroom.",
-                # "Head to the armchair, spot the lying person, and take them to the bedroom.",
-
-                # "Please retrieve a chocolate jello from the bed and subsequently dispose of it by throwing it in the trash.",
-                # "Pick up a chocolate jello from the bed, then toss it in the trash.",
-                # "Grab a chocolate jello from the bed and throw it in the trash.",
-
-                # "Proceed to navigate to the bedroom; upon arrival, locate a food, retrieve it, and subsequently deliver it to the waving person in the kitchen.",
-                # "Go to the bedroom, find a food, pick it up, and bring it to the waving person in the kitchen.",
-                # "Head to the bedroom, find a food, get it, and take it to the waving person in the kitchen.",
-
-                # "Identify, within the bedroom, a person who is pointing to the left, and proceed to follow them to the office.",
-                # "In the bedroom, find a person pointing to the left and follow them to the office.",
-                # "Find a person pointing to the left in the bedroom, then follow them to the office.",
-
-                # "Kindly inform the waving person in the bedroom as to what day today is.",
-                # "Tell the waving person in the bedroom what day it is today.",
-                # "Tell the waving person in the bedroom what day today is.",
-
-                # "Would you be so kind as to bring me a cleanser from the side tables?",
-                # "Please bring me a cleanser from the side tables.",
-                # "Grab me a cleanser from the side tables.",
-
-                # "Locate a fruit within the living room, retrieve it, and present it to the person pointing to the right in the living room.",
-                # "Find a fruit in the living room, pick it up, and give it to the person pointing to the right in the living room.",
-                # "Search the living room for a fruit, take it, and hand it to the person pointing to the right in the living room.",
-
+                "Please identify which object on the table is the lightest."
                 ]
 
                 for i, command in enumerate(commands):
@@ -302,13 +134,12 @@ class TaskMain():
                     print(f"TASK TYPE: {task_type}")
 
 
-
                     # print(f"Total Time taken for GPSR task {i}: {end_time - start_time:.3f} s")
                     # print(f"Total Time taken for HLP task {i}: {start_llp_time - start_time:.3f} s")
                     # print(f"Total Time taken for LLP task {i}: {end_time - start_llp_time:.3f} s")
 
 
-                print("Finished LLM GPSR LLP")
+                print("Finished LLM GPSR Demo")
                 while True:
                     pass
                 
@@ -332,267 +163,153 @@ class TaskMain():
                 print(f"Initial Robot Position: {initial_position}")
 
 
-            ##Receive guest1
-                
-                ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."
-                print("SPEAK: 'Hello! My name is Charmie and I am here to help you with whatever you need.'")
-
-                self.curr_request = 1
-                
-                self.robot.calibrate_audio()
-
                 ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."
                 self.robot.set_speech(filename="gpsr/gpsr_intro", wait_for_end_of=True)
 
-                self.curr_request = 1
-
-                request = self.robot.get_llm_confirm_command()
-
-                if request == "ERROR":
-                    print("Error in request " + str(self.curr_request))
-                    ##### SPEAK: "I was not able to understand your request. Let's move on."
-                    self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
-
-                else:
-                    # Save current request
-                    print("Request " + str(self.curr_request) + ": " + request)
-
-                    ##### SPEAK: "Okay, I understood your request. Let's move on."
-                    self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
-
-                    ##### SPEAK: "Please give me a moment while I proccess your requests"
-                    # self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
-
-                    #### SPEAK: "This may take more than a minute"
-                    # self.robot.set_speech(filename="gpsr/may_take_a_while", wait_for_end_of=False)
-
-                    hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
-
-                    ##### SPEAK: "I am almost done with your request, please wait a little bit more."
-                    self.robot.set_speech(filename="gpsr/please_wait", wait_for_end_of=False)
-                    
-                    self.robot.save_speech(command=hlp_request[0], filename="gpsr_request1", quick_voice=True ,wait_for_end_of=True)
-                    self.robot.set_speech(filename="gpsr/say_plan1", wait_for_end_of= False)
-                    self.robot.set_speech(filename="temp/gpsr_request1", wait_for_end_of= False)
-                    llp_plan_1 = self.robot.get_llm_ollama_gpsr_low_level(command=hlp_request[0], mode="", wait_for_end_of=True)
-
-            ##Receive guest2
+                ## Receive command and generate both high-level plan and low-level plan
+                self.curr_request+=1
                 
-                ##### SPEAK: "Let's move on to the second request"
-                #
+                llp = self.robot.receive_command_and_generate_low_level_planner(command_no=self.curr_request, use_touchscreen_for_yes_no_questions=USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS)
+                print("Low-level planner " + str(self.curr_request) + ": ", llp)
+                self.llps.append(llp)
 
-                self.curr_request = 2
-
-                # Look at the judge
-                # self.robot.set_neck
+                corrected_plans_list=[]
                 
-                request = self.robot.get_llm_confirm_command()
-
-
-                if request == "ERROR":
-                    print("Error in request " + str(self.curr_request))
-                    ##### SPEAK: "I was not able to understand your request. Let's move on."
-                    self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
-
-                else:
-                    # Save current request
-                    # self.request2 = request
-                    print("Request " + str(self.curr_request) + ": " + request)
-
-                    ##### SPEAK: "Okay, I understood your request. Let's move on."
-                    self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
-
-                    ##### SPEAK: "Please give me a moment while I proccess your requests"
-                    # self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
-
-                    #### SPEAK: "This may take more than a minute"
-                    # self.robot.set_speech(filename="gpsr/may_take_a_while", wait_for_end_of=False)
-
-                    hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
-
-                    ##### SPEAK: "I am almost done with your request, please wait a little bit more."
-                    # self.robot.set_speech(filename="gpsr/please_wait", wait_for_end_of=False)
-
-                    self.robot.save_speech(command=hlp_request[0], filename="gpsr_request2", quick_voice=True ,wait_for_end_of=True)
-
-                    self.robot.set_speech(filename="gpsr/say_plan2", wait_for_end_of= False)
-                    self.robot.set_speech(filename="temp/gpsr_request2", wait_for_end_of= False)
-                    llp_plan_2 = self.robot.get_llm_ollama_gpsr_low_level(command=hlp_request[0], mode="", wait_for_end_of=True)
-                    # self.request2 = hlp_request[0]
-
-            ##Receive guest3
-            
-                self.curr_request = 3
-                # your code here ...
-
-                # Look at the judge
-                # self.robot.set_neck
+                for plan in self.llps:
+                    task_type=self.robot.get_task_type(task=plan)
+                    corrected_plan=self.robot.correct_task_plan(raw_task_plan=plan, task_type=task_type)
+                    print("Corrected plan", corrected_plan)
+                    print("task_type", task_type)
+                    corrected_plans_list.append(corrected_plan)
                 
-                request = self.robot.get_llm_confirm_command()
+                self.order_to_execute = self.robot.set_order_to_execute_gpsr_plan(corrected_plans_list)
 
+                for plan in self.order_to_execute:
 
-                if request == "ERROR":
-                    print("Error in request " + str(self.curr_request))
-                    ##### SPEAK: "I was not able to understand your request. Let's move on."
-                    self.robot.set_speech(filename="gpsr/unsucessful_hearing_command", wait_for_end_of=True)
+                    for i, plan_check in enumerate(self.llps):
 
-                else:
-                    # Save current request
-                    # self.request3 = request
-                    print("Request " + str(self.curr_request) + ": " + request)
+                        curr_plan = i +1
 
-                    ##### SPEAK: "Okay, I understood your curr_request request. Let's move on."
-                    self.robot.set_speech(filename="gpsr/sucessful_hearing_command", wait_for_end_of=False)
+                        print(plan)
+                        print(plan_check)
 
-                    ##### SPEAK: "Please give me a moment while I proccess your requests"
-                    self.robot.set_speech(filename="gpsr/analyse_command", wait_for_end_of=False)
+                        if plan == self.llps[i]:
 
-                    #### SPEAK: "This may take more than a minute"
-                    self.robot.set_speech(filename="gpsr/may_take_a_while", wait_for_end_of=False)
+                            print("I will start executing request number"+str(curr_plan))
+                            self.robot.set_speech(filename="gpsr/execute_request"+str(i+1), wait_for_end_of=True)
 
-                    hlp_request = self.robot.get_llm_ollama_gpsr_high_level(command=request, mode="", wait_for_end_of=True)
+                    self.robot.execute_gpsr_plan(command=plan, instruction_point=self.instruction_point)
 
-                    ##### SPEAK: "I am almost done with your request, please wait a little bit more."
-                    self.robot.set_speech(filename="gpsr/please_wait", wait_for_end_of=False)
-
-                    self.robot.save_speech(command=hlp_request[0], filename="gpsr_request3", quick_voice=True ,wait_for_end_of=True)
-
-                    self.robot.set_speech(filename="gpsr/say_plan3", wait_for_end_of= False)
-                    self.robot.set_speech(filename="temp/gpsr_request3", wait_for_end_of= False)
-                    llp_plan_3 = self.robot.get_llm_ollama_gpsr_low_level(command=hlp_request[0], mode="", wait_for_end_of=True)
-
-            # # ##execute request1
-
-            # #     ##### SPEAK: "I will start by executing the first request."
-            #     self.robot.set_speech(filename="gpsr/execute_request1", wait_for_end_of=True)
-            #     for i, step in enumerate(llp_plan_1):
-            #         print(f"Step {i+1}: {step}")
-            #         self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=step, instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
-            #         print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
-
-            # #     ##### SPEAK: "I have finished executing the first task."
-            #     self.robot.set_speech(filename="gpsr/finished_request1", wait_for_end_of=True)
-
-                
-
-            # # ##execute request2
-                                        
-            # #     ##### SPEAK: "I will start by executing the second request."
-            #     self.robot.set_speech(filename="gpsr/execute_request2", wait_for_end_of=True)
-            #     for i, step in enumerate(llp_plan_2):
-            #         print(f"Step {i+1}: {step}")
-            #         self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=step, instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
-            #         print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
-
-
-            # #     ##### SPEAK: "I have finished executing the second task."
-            #     self.robot.set_speech(filename="gpsr/finished_request2", wait_for_end_of=True)
-
-            # #     # your code here ...
-
-            # # ##execute request3
-                                        
-            # #     ##### SPEAK: "I will start by executing the third request."
-            #     self.robot.set_speech(filename="gpsr/execute_request3", wait_for_end_of=True)
-            #     for i, step in enumerate(llp_plan_3):
-            #         print(f"Step {i+1}: {step}")
-            #         self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=step, instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
-            #         print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
-
-            # #     ##### SPEAK: "I have finished executing the third task."
-            #     self.robot.set_speech(filename="gpsr/finished_request3", wait_for_end_of=True)
-
-                self.robot.set_speech(filename="gpsr/end_of_gpsr", wait_for_end_of=True)
 
                 print("Finished LLM GPSR")
                 time.sleep(5)
 
-            if self.state == LLM_person_pose:
+            if self.state == LLM_gpsr_hlp:
 
-                self.robot.wait_for_start_button()
+                print("New LLM GPSR HLP")
 
-                time.sleep(5)
+                use_touchscreen_for_yes_no_questions=True
+                command_no=1
 
-                llp = "go_to_person-pose-pointing left"
+                current_datetime = ""
+                hlp_comm = ""
+                l_command = [] # can only be used after the .split(";")
+                got_hlp = False
 
-                self.curr_room = "living_room"
-                self.curr_furniture = "shelf"
-                self.curr_result = "NONE"
-                self.curr_obj_list =[]
-                self.curr_picked_height= 0.0
-                self.curr_asked_help = False
-                initial_position = [0, 0, 0]
+                def check_received_hlp_and_save_speaker_sentences(): # checks if hlp has been received and sends all sentence speak files
+                    nonlocal current_datetime, hlp_comm, l_command, got_hlp
+                    if not got_hlp and self.robot.get_llm_ollama_gpsr_high_level_is_done():
+                        print("CHECKED RECEIVE HLP - STARTING TO GENERATE SPEECH FILES")
+                        hlp_comm = self.node.llm_ollama_gpsr_high_level_response[0]
+                        if hlp_comm.endswith(";"): # edge case where hlp ended with ; . This made a sentence be empty and thus not generated, which maskes the checks if can do speaks block because it is waiting for file to be created
+                            hlp_comm = hlp_comm[:-1]
+                        l_command = hlp_comm.split(";")
+        
+                        # SAVE ALL SPEAKS
+                        for index, value in enumerate(l_command):
+                            # print("hlp_" + current_datetime + "_" + str(index))
+                            self.robot.save_speech(command=value, filename="hlp_" + current_datetime + "_" + str(index), quick_voice=True, play_command=False, show_in_face=False, wait_for_end_of=False)
+        
+                        got_hlp = True
 
-                print(f"Step: {llp}")
-                self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=llp, instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
-                print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
+                def speech_file_is_ready(filename): # helper to check if file exists, wav + txt because txt is created after wav, which means wav is not under construction
+                            temp_path = (
+                                Path.home()
+                                / "charmie_ws"
+                                / "src"
+                                / "charmie_speakers"
+                                / "charmie_speakers"
+                                / "list_of_sentences"
+                                / "temp"
+                            )
+                            wav_path = Path(temp_path) / f"{filename}.wav"
+                            txt_path = Path(temp_path) / f"{filename}.txt"
+                            return wav_path.is_file() and txt_path.is_file()
+                
+                command_confirmed = False
+                max_characters = 250
+
+                ##### SPEAK: "What is your request?"
+                gpsr_command = self.robot.get_audio(gpsr=True, question="gpsr/gpsr_question_2", face_hearing="charmie_face_green", wait_for_end_of= True)
+                print("Finished:", gpsr_command)
+    
+                ##### SPEAK: "Please give me a moment to process your command"
+                self.robot.set_speech(filename="gpsr/gpsr_process_command", wait_for_end_of=False)
+                
+                if len(gpsr_command) > max_characters:
+                    self.robot.set_speech(filename="gpsr/could_not_process", wait_for_end_of=True)
+                else:
+    
+                    self.robot.get_llm_ollama_gpsr_high_level(command=gpsr_command, mode="", wait_for_end_of=False)
+                
+                    self.robot.set_face(loadbar=10.0, command=gpsr_command)
+                    self.robot.save_speech(command= gpsr_command, filename="gpsr_command", quick_voice=True, wait_for_end_of=True)
+                    self.robot.set_face("charmie_face")
+                    check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+    
+                    ##### SPEAK: "I have understood the following command."
+                    self.robot.set_speech(filename="gpsr/check_command", wait_for_end_of=True)
+                    check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+                    self.robot.set_speech(filename="temp/gpsr_command", show_in_face=True, wait_for_end_of=True)
+                    check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+                    
+                    if not use_touchscreen_for_yes_no_questions:
+                        ##### SPEAK: "Is the command correct? Please say yes robot, or no robot to confirm."
+                        self.robot.set_speech(filename="gpsr/confirm_command", wait_for_end_of= True)
+                        confirmation = self.robot.get_audio(yes_or_no=True, question="generic/say_robot_yes_no", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
+                    else: # if touchscreen is used
+                        if command_no == 1: # for time efficiency, only inform user that needs to press the face for the first command
+                            self.robot.set_speech(filename="generic/press_correct_option_touchscreen", wait_for_end_of=True) # SAY: Please press the correct option on my face.
+                        answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Is this command correct?", speak_results=False, speak_timeout=False, start_speak_file="gpsr/confirm_command", wait_for_end_of=True)
+                        confirmation = answer[0]
+                    
+                    # worst case scenario, it waits until is received here, 
+                    while not got_hlp:
+                        check_received_hlp_and_save_speaker_sentences() # if hlp has been received, starts creating the sentences speak files
+                        time.sleep(0.05)
+                    
+                    # print("confirmation:", confirmation)
+                    if confirmation.lower() == "yes":
+                        self.robot.set_rgb(command=GREEN+BLINK_LONG)
+                        command_confirmed = True
+                    else: # "no" or "TIMEOUT"
+                        self.robot.set_speech(filename="generic/sorry_for_my_mistake_lets_try_again", wait_for_end_of=True) # SAY: Sorry for my mistake let's try again
+
+                    
+                    # time_efficient_high_level_sentence_saver()
+                    self.robot.set_speech(filename="gpsr/say_plan", wait_for_end_of= True)
+                    for index, value in enumerate(l_command):
+                        while not speech_file_is_ready("hlp_" + current_datetime + "_" + str(index)):
+                            time.sleep(0.05)
+                        self.robot.set_speech(filename="temp/hlp_" + current_datetime + "_" + str(index), wait_for_end_of=True)
+            
+
+                print("Finished LLM GPSR HLP")
 
                 while True:
                     pass
 
             if self.state == LLM_gpsr_llp:
-
-                # self.robot.wait_for_start_button()
-                
-                # print("New LLM GPSR LLP")
-
-                # start_time = time.time()
-
-                # # robot_pose= self.robot.get_robot_localization()
-                # # initial_position = [robot_pose.x, robot_pose.y, robot_pose.theta]
-                # initial_position = [0, 0, 0]
-                # # print(f"Initial Robot Position: {initial_position}")
-
-                # hlp= self.robot.get_llm_ollama_gpsr_high_level(command= "Go to Anna in the living room", mode="", wait_for_end_of=True)
-
-                # start_llp_time = time.time()
-
-                # llp_output=self.robot.get_llm_ollama_gpsr_low_level(command=hlp[0], mode="", wait_for_end_of=True)
-
-                # self.curr_room = "living_room"
-                # self.curr_furniture = "shelf"
-                # self.curr_result = "NONE"
-                # self.curr_obj_list =[]
-                # self.curr_picked_height= 0.0
-                # self.curr_asked_help = False
-
-                # for i, step in enumerate(llp_output):
-                #     print(f"Step {i+1}: {step.strip()}")
-                #     self.curr_room, self.curr_furniture, self.curr_result, self.curr_obj_list, self.curr_picked_height, self.curr_asked_help = self.robot.execute_gpsr_plan(command=step.strip(), instruction_point=initial_position, curr_room=self.curr_room, curr_furniture=self.curr_furniture, curr_result=self.curr_result, curr_obj_list=self.curr_obj_list, curr_picked_height=self.curr_picked_height, curr_asked_help=self.curr_asked_help, wait_for_end_of=True)
-                #     print(f"Updated State - Room: {self.curr_room}, Furniture: {self.curr_furniture}, Result: {self.curr_result}, Object List: {self.curr_obj_list}")
-
-                # end_time = time.time()
-                # print(f"Total Time taken for GPSR task: {end_time - start_time}")
-                # print(f"Total Time taken for HLP task: {start_llp_time - start_time}")
-                # print(f"Total Time taken for LLP task: {end_time - start_llp_time}")
-
-                # self.robot.set_rgb(command=GREEN+SET_COLOUR, wait_for_end_of=True)
-
-                # #================= Init =================
-                # self.llps = []
-                # USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS = True
-
-                # self.robot.calibrate_audio()
-
-                # ##### SPEAK: "Hello! My name is Charmie and I am here to help you with whatever you need."
-                # self.robot.set_speech(filename="gpsr/gpsr_intro", wait_for_end_of=True)
-
-                # #================= Get_commands & generate plans =================
-                # self.curr_request=1
-
-                # while self.curr_request < 3:
-                #     self.curr_request+=1
-                
-                #     llp = self.robot.receive_command_and_generate_low_level_planner(use_touchscreen_for_yes_no_questions=USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS)
-                #     print("Low-level planner " + str(self.curr_request) + ": " + llp)
-                #     self.llps.append(llp)
-
-                #     # checks if there is another command to be received, if not proceeds to deciding and executing the commands in the list
-                #     if not USE_TOUCHSCREEN_FOR_YES_NO_QUESTIONS:
-                #         confirmation = self.robot.get_audio(yes_or_no=True, question="gpsr/do_you_have_another_command", face_hearing="charmie_face_green_yes_no", wait_for_end_of=True)
-                #     else: # if touchscreen is used
-                #         answer = self.robot.set_face_touchscreen_menu(choice_category=["yes_or_no"], timeout=10, instruction="Do you have another command?", speak_results=False, start_speak_file="gpsr/do_you_have_another_command", wait_for_end_of=True)
-                #         confirmation = answer[0]
 
                 #================= Set_command_order =================
                 order_to_execute = []
@@ -698,63 +415,10 @@ class TaskMain():
 
                 ##  END OF TESTING INFO EXTRACTION STANDARDFUNCTION ##
                 print("Finished LLM HRI")
+
                 while True:
                     pass
             
-            if self.state == LLM_Ollama_first_tests:
-
-                # resp = self.robot.get_llm_ollama_demonstration(command="Test D", mode="HRI X", wait_for_end_of=True)
-                # print(resp)
-                start_time = time.time()
-                resp = self.robot.get_llm_ollama_information(command="Hi my name is Sarah I like orange juice", mode="name", wait_for_end_of=True)
-                end_time = time.time()
-                print(f"Response: {resp}, Time taken: {end_time - start_time}")
-
-                start_time = time.time()
-                resp = self.robot.get_llm_ollama_information(command="Hi my name is Sarah I like orange juice", mode="favorite drink", wait_for_end_of=True)
-                end_time = time.time()
-                print(f"Response: {resp}, Time taken: {end_time - start_time}")
-
-                start_time = time.time()
-                resp = self.robot.get_llm_ollama_information(command="I'm David and I drink coffee", mode="name", wait_for_end_of=True)
-                end_time = time.time()
-                print(f"Response: {resp}, Time taken: {end_time - start_time}")
-
-                start_time = time.time()
-                resp = self.robot.get_llm_ollama_information(command="I'm David and I drink coffee", mode="favorite drink", wait_for_end_of=True)
-                end_time = time.time()
-                print(f"Response: {resp}, Time taken: {end_time - start_time}")
-
-
-                start_time = time.time()
-                resp = self.robot.get_llm_ollama_information(command="Hello im Jhon and i like capachino", mode="name", wait_for_end_of=True)
-                end_time = time.time()
-                print(f"Response: {resp}, Time taken: {end_time - start_time}")
-
-                start_time = time.time()
-                resp = self.robot.get_llm_ollama_information(command="Hello im Jhon and i like capachino", mode="favorite drink", wait_for_end_of=True)
-                end_time = time.time()
-                print(f"Response: {resp}, Time taken: {end_time - start_time}")
-
-                start_time = time.time()
-                resp = self.robot.get_llm_ollama_information(command="Name is Maik and favorite drink ice tree", mode="name", wait_for_end_of=True)
-                end_time = time.time()
-                print(f"Response: {resp}, Time taken: {end_time - start_time}")
-
-                start_time = time.time()
-                resp = self.robot.get_llm_ollama_information(command="Name is Maik and favorite drink ice tree", mode="favorite drink", wait_for_end_of=True)
-                end_time = time.time()
-                print(f"Response: {resp}, Time taken: {end_time - start_time}")
-
-                # resp = self.robot.get_llm_ollama_gpsr_high_level(command="Test H", mode="HRI X", wait_for_end_of=True)
-                # print(resp)
-
-                # resp = self.robot.get_llm_ollama_gpsr_low_level(command="Test L", mode="HRI X", wait_for_end_of=True)
-                # print(resp)
-
-                while True:
-                    pass
-
             elif self.state == Test_individual_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr:
 
                 ### 2 OPTIONS: MUSIC, OR PERIODIC SPEAKS
@@ -924,19 +588,6 @@ class TaskMain():
 
                 while True:
                     pass """
-
-            elif self.state == Test_Compare:
-                print("TEST COMPARE")
-
-                self.instruction_point=[0.0, 0.0, 0.0]
-                # self.robot.execute_gpsr_plan(command=["compare_objects:lightest:"], instruction_point=self.instruction_point)
-
-                self.robot.get_filtered_list_of_objects_found(list_of_objects_found=[],parameter="objects")
-
-                
-
-                while True:
-                    pass
             
             elif self.state == Final_State:
                 
