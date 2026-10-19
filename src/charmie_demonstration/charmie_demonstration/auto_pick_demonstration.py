@@ -12,26 +12,26 @@ SET_COLOUR, BLINK_LONG, BLINK_QUICK, ROTATE, BREATH, ALTERNATE_QUARTERS, HALF_RO
 CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FLAG, NETHERLANDS_FLAG = 255, 100, 101, 102, 103, 104, 105, 106
 
 ros2_modules = {
-    "charmie_arm":                  True,
+    "charmie_arm":                  False,
     "charmie_audio":                False,
-    "charmie_face":                 True,
+    "charmie_face":                 False,
     "charmie_gamepad":              False,
     "charmie_head_camera":          True,
     "charmie_hand_camera":          True,
     "charmie_base_camera":          True,
-    "charmie_lidar":                True,
-    "charmie_lidar_bottom":         True,
-    "charmie_lidar_livox":          True,
+    "charmie_lidar":                False,
+    "charmie_lidar_bottom":         False,
+    "charmie_lidar_livox":          False,
     "charmie_llm":                  False,
-    "charmie_localisation":         True,
-    "charmie_low_level":            True,
+    "charmie_localisation":         False,
+    "charmie_low_level":            False,
     "charmie_navigation":           False,
-    "charmie_nav2":                 True,
+    "charmie_nav2":                 False,
     "charmie_nav_sdnl":             False,
     "charmie_neck":                 True,
-    "charmie_radar":                True,
+    "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             True,
+    "charmie_speakers":             False,
     "charmie_speakers_save":        False,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
@@ -126,6 +126,86 @@ class TaskMain():
             #     self.robot.get_audio(restaurant=True, face_hearing="charmie_face_green_no_mouth", wait_for_end_of=True)
 
             if self.state == self.task_states["Waiting_for_task_start"]:
+
+                while True:
+
+                    self.robot.pick_object(selected_object="Dishwasher Tab")
+                    # self.robot.search_for_objects(tetas=[[0, -45], [-40, -45], [40, -45]],  time_in_each_frame=2.0, time_wait_neck_move_pre_each_frame=1.0, list_of_objects=["water"], use_arm=True, detect_objects=True, detect_objects_hand=False, detect_objects_base=False, max_search_attempts=1)
+
+                self.robot.pick_object(selected_object="milk")
+                self.robot.wait_for_start_button()
+                self.robot.open_tray_gripper(wait_for_end_of=True)
+
+                self.robot.wait_for_start_button()
+                self.robot.set_arm(command="initial_position_to_ask_for_objects", wait_for_end_of=True)
+                self.robot.close_tray_gripper(wait_for_end_of=False)
+                self.robot.set_arm(command="ask_for_objects_to_check_milk_cap", wait_for_end_of=True)
+                self.robot.set_arm(command="close_tray_gripper", wait_for_end_of=True)
+                self.robot.set_arm(command="open_gripper", wait_for_end_of=True)
+                lid = self.robot.detect_milk_cap()
+
+                tf_x =  0.145
+                tf_y = -0.006
+                tf_z = -0.075
+                DETECTION_ERROR = 0.018
+                OPENING_ATTEMPT = 0
+                lid_height = 0.01
+                safe_rise_distance = - 0.03 * 1000
+                release_distance = 0.02 *1000
+                max_opening_attempts = 8
+
+                TRAY_HEIGHT = 0.59
+
+                gripper_place_position = self.robot.get_gripper_localization()
+                correct_x_grab = (gripper_place_position.z - TRAY_HEIGHT - lid_height/0.5 - tf_x - self.robot.get_object_height_from_object("milk"))*1000
+                correct_y_grab = (lid.y - tf_y)*1000
+                correct_z_grab = (lid.z - tf_z + DETECTION_ERROR)*1000
+
+                open_milk_lid_centralize_adjust = [correct_z_grab, - correct_y_grab, safe_rise_distance, 0.0, 0.0, 0.0]
+                open_milk_lid_down_adjust = [ 0.0, 0.0, - safe_rise_distance + correct_x_grab, 0.0, 0.0, 0.0]
+
+
+                print(open_milk_lid_centralize_adjust)
+
+                print(open_milk_lid_down_adjust)
+
+                self.robot.wait_for_start_button()
+
+
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_centralize_adjust, wait_for_end_of=True)
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=open_milk_lid_down_adjust, wait_for_end_of=True)
+
+                self.robot.set_arm(command="close_gripper_lid", wait_for_end_of=True)
+
+                for OPENING_ATTEMPT in range(max_opening_attempts):
+                    print("OPENING_ATTEMPT:", OPENING_ATTEMPT)
+                    if OPENING_ATTEMPT == 0:
+                        small_rotation = [0.0,0.0,0.0,0.0,0.0,-30.0]
+                        self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=small_rotation, wait_for_end_of=True)
+                        self.robot.set_arm(command="open_gripper_lid", wait_for_end_of=True)
+
+                    rotate_right = [0.0,0.0,0.0,0.0,0.0,70.0]
+                    rotate_left = [0.0,0.0,0.0,0.0,0.0,-70.0]
+                    self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_right, wait_for_end_of=True)
+                    self.robot.set_arm(command="close_gripper_lid", wait_for_end_of=True)
+                    if OPENING_ATTEMPT != max_opening_attempts-1:
+                        self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=rotate_left, wait_for_end_of=True)
+                        self.robot.set_arm(command="open_gripper_lid", wait_for_end_of=True)
+                    else:
+                        last_rotation = [0.0,0.0,0.0,0.0,0.0,-40.0]
+                        self.robot.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose=last_rotation, wait_for_end_of=True)
+                        safe_rise = [0.0,0.0,-lid_height*4*1000,0.0,0.0,0.0]
+                        self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=safe_rise, wait_for_end_of=True)
+
+                let_lid_go = [-correct_z_grab + release_distance, correct_y_grab, -correct_x_grab + lid_height*4*1000, 0.0, 0.0, 0.0]
+                self.robot.set_arm(command="adjust_move_tool_line", move_tool_line_pose=let_lid_go, wait_for_end_of=True)
+                self.robot.set_arm(command="open_gripper_lid", wait_for_end_of=True)
+                self.robot.set_arm(command="check_milk_cap_to_ask_for_objects", wait_for_end_of=True)
+
+
+                self.robot.wait_for_start_button()
+
+
         
                 # self.robot.set_face("charmie_face", wait_for_end_of=False)
 
@@ -133,6 +213,9 @@ class TaskMain():
                 #self.robot.wait_until_camera_stable(timeout=120, check_interval=0.3, stable_duration=0.3, get_gripper=False)
 
                 self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
+
+                #self.robot.open_door(push_pull="pull", handle_side="right")
+                
 
                 # self.robot.pick_object(selected_object="Apple", max_search_attempts=1)
 

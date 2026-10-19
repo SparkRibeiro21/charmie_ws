@@ -1,5 +1,5 @@
 # this variable is just to help to better visualise for debug purposes
-max_number_of_chars_of_keys = 16
+max_number_of_chars_of_keys = 20
 
 names_dict = {
     "Sophie":    ["sophie", "sufi", " sofi ", "zofi ", "zafi "],
@@ -22,50 +22,80 @@ names_dict = {
     "Peter":     ["peter", "better", "pinker", "repeat"],
 }
 
+# LAR OBJECTS
 drinks_dict = {
-    "Red_Wine":       ["red wine", "wine", "edvin", "royce", "white", "ready", "headwind"],
-    "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
-                       "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
-                       "peck", "druspek", "drip spec", "juicy pek", "juice but", "respect", " juspe ", "jeez park", "two spec"],
-    "Cola":           ["cola", "coke", "coca", "kola", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold",\
-                        "kohler", "kala", "gola", "kohla"],
-    "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
-    "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
-	"Iced_Tea":       [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
-                       "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
-                       "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", " icy ", "nice t", "oysti", " aste "],
-    # "Orange_Juice":   ["orange", "orang", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "our enjour", "northern juice", "orton julius",\
-    "Orange_Juice":   ["orange juice", "orangous", "orangels", "foreign", "autumn", "orandris", "our enjour", "northern juice", "orton julius",\
-                       "orang joyce", "orang juiis", "orange joyce", "arun jus", "jordan jus", "oronschuss", "ortons ju"], # removed 'order' and all "just orange" so there is no conflict with orange 
-    "7up":            ["seven", "up ", "7", "nope", "devanab", "savannah", "sabona", "sabanab"], # removed o "simon" cause it conflicts with th name Simon
-    "Water":          ["water", "laude"],
-    "Red_Bull":       ["red bull", "redbull", "red b", "red boulder", "red bowl", "red ball", "red pull", "red poll", "red pole", "red bullseye", \
-                       "bread roll", "red wool", "redwell", "have wool", "head bowl"]
+
+    "Coke": 		["coke", "cook"],
+    "Pepsi": 		["pepsi", "petsy"],
+    "Milk":         ["milk", "muke", "mew", "milburn", "mieuki", "mute", "mille", "mieok", "milton", "meal"],
+    "Red_Bull": 	["red bull", "redbull","head blue", "headblue","head boat", "headboat", "head bull", "headbull", "head blew","red ball", \
+                     "redball", "helpful", "faithful", "heavy", "purple", "redwood","red wood","red bowl","headbowl", "head bowl", "red bone", \
+                     "headble","headball","head ball", "red boom","redboom","redboat","red boat"],
+    "Soju": 	    ["soju", "soja", "social", "saju", "soldier", "sorghum", "so true", "sausu", "sojour","sojour"],
+
 }
 
 foods_dict = {
-    "Tuna":             ["tuna"],
-    "Tomato_Soup":      ["tomato"],
-    "Spam":             ["spam", "spum", "spun"],
-    "Mustard":          ["mustard", "musta", "mustn't", "moustache"],    
-    "Strawberry_Jello": ["strawberry jello"],
-    "Chocolate_Jello":  ["chocolat"],
-    "Coffee_Grounds":   ["coffee", "grounds"],
-    "Sugar":            ["sugar"],
 
-    "Pear":             [" pear ", " pair ", " pier ", " beer ", " bare ", " bear ", " fair "],
-    "Plum":             ["plum", "clump", "blam", "blum", "plumb"],
-    "Peach":            ["peach"],
-    "Lemon":            ["lemon", "lammon"],
-    "Orange":           ["orange", "orton"],
-    "Strawberry":       ["strawberr"],
-    "Banana":           ["banana"],
-    "Apple":            ["apple"],
+    "Cornflakes": 	        ["cornflakes", "flakes", "corn flakes", "corn place", "conflicts", "cold flakes","complex"],
+    "Instant_Noodles":	    ["instant noodles", "instant", "noodles", "eastern adults", "eastern noodles", "instant doodles"],
+ 
+    "Mangostane": 		    ["mangostane", "mongestain", "mangosten", "mango stain", "mango steam", "mango", "mangu", "mangostan", "mango stand", "mangustain", "mangostant"],
+    "Peach": 		        ["peach", "beach", "pitch", "beech", "bitch"],
+    "Lemon": 		        ["lemon", "lammon", "lamb", "laman", "lehman"],
+    "Apple": 		        ["apple", "april", "saple"],
+    "Red_Bellpepper": 	    ["red bellpepper", "red bell pepper", "red belt paper", "red bill pepper", "red belt pepper", "rebel pepper", "rebel paper", "head bell pepper", "red velvet pepper", "head of pepper"],
+    "Yellow_Bellpepper":    ["yellow bellpepper", "yellow bell pepper", "red belt paper","yellow bill pepper", "yellow belt pepper", "yellow velvet pepper"],
 
-    "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "fringles", "ringle", "brangles"],
-    "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex"],
-    "Cheezit":          ["cheese", "cheezit", "she's it", "shisit"]
+    "Pringles":             ["pringles", "pringle", "prango", "gringles", "bringles", "sprinkles", "green goes", "fringles"],
+    "Seaweed":              ["seaweed", "sea weed", "see with", "see wead", "see you with", "see we"],
 }
+
+# LAR OBJECTS
+# # # drinks_dict = {
+# # #     "Red_Wine":       ["red wine", "wine", "edvin", "royce", "white", "ready", "headwind"],
+# # #     "Juice_Pack":     ["pack", "gispeck", "druspak", "juspek", "swissbag", "speck", "just play", "packing", "becky",\
+# # #                        "bagging", "pachy", "peky", "paki", "peggy", "bek", "bake", "beck", "back", "speak", "bank", "juice bag", "drew spec",\
+# # #                        "peck", "druspek", "drip spec", "juicy pek", "juice but", "respect", " juspe ", "jeez park", "two spec"],
+# # #     "Cola":           ["cola", "coke", "coca", "kola", "coconut", "cook", "cok", "color", "call", "gog", "koch", "kullum", "goog", "cold",\
+# # #                         "kohler", "kala", "gola", "kohla"],
+# # #     "Tropical_Juice": ["tropical", "e-copic", "trophy dungeons", "tropi"],
+# # #     "Milk":           ["milk", "muke", "mew", "milburn", "mio", "mieuki", "mute", "mille", "mieok", "milton"],
+# # # 	"Iced_Tea":       [" ice", "tea", "i-st", "stick", "i see", "i still", "i stick", "ice cream", "icedy",\
+# # #                        "icedi", "istie", "isti", "isalutti", "hasty", "i sati", "i see", "istia", "i steve", "i stay",\
+# # #                        "an i.c.", "anasti", "aussie", "aesti", "esti", "nice d", " icy ", "nice t", "oysti", " aste "],
+# # #     # "Orange_Juice":   ["orange", "orang", "orangous", "orangels", "foreign", "autumn", "orton", "orandris", "our enjour", "northern juice", "orton julius",\
+# # #     "Orange_Juice":   ["orange juice", "orangous", "orangels", "foreign", "autumn", "orandris", "our enjour", "northern juice", "orton julius",\
+# # #                        "orang joyce", "orang juiis", "orange joyce", "arun jus", "jordan jus", "oronschuss", "ortons ju"], # removed 'order' and all "just orange" so there is no conflict with orange 
+# # #     "7up":            ["seven", "up ", "7", "nope", "devanab", "savannah", "sabona", "sabanab"], # removed o "simon" cause it conflicts with th name Simon
+# # #     "Water":          ["water", "laude"],
+# # #     "Red_Bull":       ["red bull", "redbull", "red b", "red boulder", "red bowl", "red ball", "red pull", "red poll", "red pole", "red bullseye", \
+# # #                        "bread roll", "red wool", "redwell", "have wool", "head bowl"]
+# # # }
+# # # 
+# # # foods_dict = {
+# # #     "Tuna":             ["tuna"],
+# # #     "Tomato_Soup":      ["tomato"],
+# # #     "Spam":             ["spam", "spum", "spun"],
+# # #     "Mustard":          ["mustard", "musta", "mustn't", "moustache"],    
+# # #     "Strawberry_Jello": ["strawberry jello"],
+# # #     "Chocolate_Jello":  ["chocolat"],
+# # #     "Coffee_Grounds":   ["coffee", "grounds"],
+# # #     "Sugar":            ["sugar"],
+# # # 
+# # #     "Pear":             [" pear ", " pair ", " pier ", " beer ", " bare ", " bear ", " fair "],
+# # #     "Plum":             ["plum", "clump", "blam", "blum", "plumb"],
+# # #     "Peach":            ["peach"],
+# # #     "Lemon":            ["lemon", "lammon"],
+# # #     "Orange":           ["orange", "orton"],
+# # #     "Strawberry":       ["strawberr"],
+# # #     "Banana":           ["banana"],
+# # #     "Apple":            ["apple"],
+# # # 
+# # #     "Pringles":         ["pringle", "sprinkles", "wrinkles", "bringles", "friendos", "pre-ingles", "pringos", "bring those", "prueingles", "fringles", "ringle", "brangles"],
+# # #     "Cornflakes":       ["cornflakes", "corn flakes", "conflicts", "gonna flex"],
+# # #     "Cheezit":          ["cheese", "cheezit", "she's it", "shisit"]
+# # # }
 
 numbers_dict = {
     "Zero":  ["0", "zero"],

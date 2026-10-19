@@ -45,7 +45,7 @@ CLEAR, RAINBOW_ROT, RAINBOW_ALL, POLICE, MOON_2_COLOUR, PORTUGAL_FLAG, FRANCE_FL
 # able to recognise. Check 'words_dict' to see the words the robot must recognise on each category.
 DICT_CALIBRATION = False
 CALIBRATION_PRINTS = True
-FULL_CALIBRATION_PRINTS = False # leave false unless you need to chack a more in-depth audio keywords detected
+FULL_CALIBRATION_PRINTS = True # leave false unless you need to chack a more in-depth audio keywords detected
 
 # post robocup 23 tasks for audio
     # - dois sistemas de audição em paralelo, para que normalmente use o que ouve e pára no fim da frase
@@ -815,15 +815,15 @@ class AudioNode(Node):
                 if speech != "error":
                     name_predicted = ''
                     name_ctr = 0
-                    if FULL_CALIBRATION_PRINTS:
-                        print("NAMES:")
+                    # if FULL_CALIBRATION_PRINTS:
+                    #     print("NAMES:")
                     for key in names_dict:
                         res, idx = self.charmie_audio.compare_commands(names_dict, speech, [key])
-                        if FULL_CALIBRATION_PRINTS:
-                            print('    ', key, end='')
-                            for spaces in range(max_number_of_chars_of_keys-len(key)):
-                                print('.', end='') 
-                            print('->', res)
+                        # if FULL_CALIBRATION_PRINTS:
+                        #     print('    ', key, end='')
+                        #     for spaces in range(max_number_of_chars_of_keys-len(key)):
+                        #         print('.', end='') 
+                        #     print('->', res)
                         if res:
                             name_predicted += key+" "
                             name_ctr += 1
@@ -866,15 +866,15 @@ class AudioNode(Node):
 
                     numbers_predicted = ''
                     numbers_ctr = 0
-                    if FULL_CALIBRATION_PRINTS:
-                        print("NUMBERS:")
+                    # if FULL_CALIBRATION_PRINTS:
+                    #     print("NUMBERS:")
                     for key in numbers_dict:
                         res, idx = self.charmie_audio.compare_commands(numbers_dict, speech, [key])
-                        if FULL_CALIBRATION_PRINTS:
-                            print('    ', key, end='')
-                            for spaces in range(max_number_of_chars_of_keys-len(key)):
-                                print('.', end='') 
-                            print('->', res)
+                        # if FULL_CALIBRATION_PRINTS:
+                        #     print('    ', key, end='')
+                        #     for spaces in range(max_number_of_chars_of_keys-len(key)):
+                        #         print('.', end='') 
+                        #     print('->', res)
                         if res:
                             numbers_predicted += key+" "
                             numbers_ctr += 1
@@ -883,15 +883,15 @@ class AudioNode(Node):
 
                     yn_predicted = ''
                     yn_ctr = 0         
-                    if FULL_CALIBRATION_PRINTS:           
-                        print("YES OR NO:")
+                    # if FULL_CALIBRATION_PRINTS:           
+                    #     print("YES OR NO:")
                     for key in yes_no_dict:
                         res, idx = self.charmie_audio.compare_commands(yes_no_dict, speech, [key])
-                        if FULL_CALIBRATION_PRINTS:
-                            print('    ', key, end='')
-                            for spaces in range(max_number_of_chars_of_keys-len(key)):
-                                print('.', end='') 
-                            print('->', res)
+                        # if FULL_CALIBRATION_PRINTS:
+                        #     print('    ', key, end='')
+                        #     for spaces in range(max_number_of_chars_of_keys-len(key)):
+                        #         print('.', end='') 
+                        #     print('->', res)
                         if res:
                             yn_predicted += key+" "
                             yn_ctr += 1
