@@ -36,8 +36,8 @@ ros2_modules = {
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         True,
-    "charmie_yolo_pose":            True,
-    "charmie_yolo_world":           True,
+    "charmie_yolo_pose":            False,
+    "charmie_yolo_world":           False,
 }
 
 # main function that already creates the thread for the task state machine
@@ -66,8 +66,9 @@ class TaskMain():
         # Task States
         self.task_states ={
             "Waiting_for_task_start":           0,
-            "State_selector":                   1,
-            "Final_state":                      2,
+            "Temp_Open_Door":                   1,
+            "State_selector":                   2,
+            "Final_state":                      3,
 
             # "Solve_misplaced_objects_legacy_full_house":      30, # Legacy, but left here, if necessary in the future
             # "Solve_people_with_requests_legacy_full_house":   31, # Legacy, but left here, if necessary in the future
@@ -80,14 +81,14 @@ class TaskMain():
         self.SOLVE_DOOR_OPENING = True
         self.SOLVE_REQUEST_FROM_PERSON_BEHIND_DOOR = True
         self.SOLVE_MISPLACED_OBJECTS = True
-        self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS = 1
-        self.SOLVE_PEOPLE_WITH_REQUESTS = True
-        self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 1
+        self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS = 1
+        self.SOLVE_PEOPLE_WITH_REQUESTS = False
+        self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS = 0
         self.SOLVE_TRASH_OBJECTS = True
         self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS = 1
 
         # Overall Configurables:
-        self.rooms_to_go = ["Kitchen", "Living room", "Hallway", "Office"]
+        self.rooms_to_go = ["Laundry Room", "Bedroom", "Kitchen", "Living room"]
         self.rooms_to_go = [s.replace(" ", "_").lower() for s in self.rooms_to_go]
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
@@ -97,38 +98,45 @@ class TaskMain():
         print(self.initial_position)
 
         # Configurables for Door Opening and Request Getting:
-        self.handle_side = "right"
-        pass
+        self.handle_side = "left"
 
         # Configurables for Misplaced Objects:
-        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Pantry", "Office Table"]
+        self.FURNITURE_WE_WANT_TO_ANALYSE = ["Washing Machine", "Laundry Table", "Bed", "Bedside Table", "Counter", "Cooking Table", "Dishwasher"]
+
         # self.FURNITURE_WE_WANT_TO_ANALYSE = ["Office Table", "Office Counter", "Bench", "Shelf", "Coffee Table", "Dishwasher", "Dinner Table", "Kitchen Counter", "Kitchen Cabinet", "Pantry"]
         self.FURNITURE_WE_WANT_TO_ANALYSE = [s.replace(" ", "_").lower() for s in self.FURNITURE_WE_WANT_TO_ANALYSE]
         
-        self.IGNORED_OBJECT               = ["Water", "Peach", "Apple"]
+        self.IGNORED_OBJECT               = ["Water"] # water is a placeholder
         self.IGNORED_OBJECT               = [s.replace(" ", "_").lower() for s in self.IGNORED_OBJECT]
-        self.NON_PICKABLE_OBJECT          = ["Tuna", "Plate", "Bowl", "Dishwasher Tab"] 
+        self.NON_PICKABLE_OBJECT          = ["Cornflakes", "Plate", "Spoon", "Pepsi"] 
         self.NON_PICKABLE_OBJECT          = [s.replace(" ", "_").lower() for s in self.NON_PICKABLE_OBJECT]
         # Configurables for People with Requests:
         self.tetas_for_rooms = {
-            "Kitchen":          [[-20, -10], [40, -10]],
+            "Kitchen":          [[-30, -10], [30, -10]],
             "Living Room":      [[-30, -10], [30, -10]],
-            "Hallway":          [[-30, -10], [30, -10]],
-            "Office":           [[-40, -10], [20, -10]]
+            "Bedroom":          [[-30, -10], [30, -10]],
+            "Laundry Room":     [[-30, -10], [30, -10]]
         }
         self.tetas_for_rooms = {key.replace(" ", "_").lower(): value for key, value in self.tetas_for_rooms.items()}
 
         # Configurables for Trash Objects:
         self.TRASH_SEARCH_CAMERA = "head"
-        self.divisions          = ["kitchen"         ,"living room"         ,"hallway","office","bedroom","workshop"]
+        self.divisions          = ["laundry room", "bedroom", "kitchen", "living room"]
         self.divisions          = [s.replace(" ", "_").lower() for s in self.divisions]
-        self.trashcans          = ["kitchen trashcan","living room trashcan",""       ,""      ,""       ,""        ]
+        self.trashcans          = ["laundry trash bin", "laundry trash bin", "laundry trash bin", "laundry trash bin"]
         self.trashcans          = [s.replace(" ", "_").lower() for s in self.trashcans]
         self.MIN_OBJECT_DISTANCE_X = 0.05
         self.MAX_OBJECT_DISTANCE_X = 6
         self.MIN_OBJECT_DISTANCE_Y = -6
         self.MAX_OBJECT_DISTANCE_Y = 6
+        self.avoidable_furnitures_for_trash = ["shelf", "cabinet"] # avoids detecting trash objects in furnitures with shelves with height very close to ground
         
+        self.search_objects_floor_navs = {
+            "kitchen":          [[7.2, -2.1,  0.0], [5.6, -0.8,   0.0], [8.3,  1.5,  -90.0]],
+            "living_room":      [[2.8, -0.5,  0.0], [2.8, -0.5, 180.0]],
+            "bedroom":          [[7.7,  4.0,  0.0], [7.7,  4.0, 180.0]],
+            "laundry_room":     [[2.8,  4.0,  0.0], [2.8,  4.0, 180.0]]
+        }
 
     def main(self):
 
@@ -150,7 +158,23 @@ class TaskMain():
         self.search_tetas_vertical = [[0, -15], [0, 15]]
         self.search_tetas_single = [[0, -25]]
 
+
+
+
+
+
         self.state = self.task_states["Waiting_for_task_start"]
+
+
+
+
+        ### IF RESTART HAPPENS!!!!
+        # self.state = self.task_states["State_selector"]
+        
+
+
+
+
 
         print("IN " + self.TASK_NAME.upper() + " MAIN")
         if self.DEMO_MODE:
@@ -168,32 +192,43 @@ class TaskMain():
                 self.robot.wait_for_start_button()
                 self.robot.wait_for_door_opening()
                 self.robot.enter_house_after_door_opening()
-                self.state = self.task_states["State_selector"]
+                self.state = self.task_states["Temp_Open_Door"]
 
+            elif self.state == self.task_states["Temp_Open_Door"]:
+
+                # Starts with door opening and getting the request fsolve_open_door_and_get_requestrom the person behind the door
+                self.solve_open_door_and_get_request()
+
+                self.state = self.task_states["State_selector"]
 
             elif self.state == self.task_states["State_selector"]:
 
                 misplaced_objects_problems_solved_ctr = 0
                 peoples_with_requests_problems_solved_ctr = 0
                 trash_objects_problems_solved_ctr = 0
-
-                # Starts with door opening and getting the request fsolve_open_door_and_get_requestrom the person behind the door
-                self.solve_open_door_and_get_request()
                 
                 while True:
                     for room in self.rooms_to_go:
+
+                        print("Room:", room)
+                        print("SOLVE_MISPLACED_OBJECTS:", self.SOLVE_MISPLACED_OBJECTS)
+                        print("MISPLACED_OBJECTS_CTR: "+str(misplaced_objects_problems_solved_ctr)+"/"+str(self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS))
+                        print("SOLVE_TRASH_OBJECTS:", self.SOLVE_TRASH_OBJECTS)
+                        print("TRASH_OBJECTS_CTR: "+str(trash_objects_problems_solved_ctr)+"/"+str(self.MAX_PROBLEM_SOLVING_TRASH_OBJECTS))
+                        print("SOLVE_PEOPLE_WITH_REQUESTS:", self.SOLVE_PEOPLE_WITH_REQUESTS)
+                        print("PEOPLE_WITH_REQUESTS_CTR: "+str(peoples_with_requests_problems_solved_ctr)+"/"+str(self.MAX_PROBLEM_SOLVING_PEOPLE_WITH_REQUESTS))
 
                         # if they are all False, it means we will only do detections from now on, but we have decided to reset all flags
                         if not self.SOLVE_MISPLACED_OBJECTS and not self.SOLVE_TRASH_OBJECTS and not self.SOLVE_PEOPLE_WITH_REQUESTS:
                             print("CLEARED ALL FLAGS")
                             self.SOLVE_MISPLACED_OBJECTS = True
                             self.SOLVE_TRASH_OBJECTS = True
-                            self.SOLVE_PEOPLE_WITH_REQUESTS = True
+                            self.SOLVE_PEOPLE_WITH_REQUESTS = False
 
-                        misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS - misplaced_objects_problems_solved_ctr)
+                        misplaced_objects_number_of_problems_solved = self.solve_misplaced_objects(room=room, requests_left=self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS - misplaced_objects_problems_solved_ctr)
                         print("misplaced_objects_number_of_problems_solved:", misplaced_objects_number_of_problems_solved)
                         misplaced_objects_problems_solved_ctr += misplaced_objects_number_of_problems_solved
-                        if misplaced_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_MISPLACEDED_OBJECTS:
+                        if misplaced_objects_problems_solved_ctr >= self.MAX_PROBLEM_SOLVING_MISPLACED_OBJECTS:
                             self.SOLVE_MISPLACED_OBJECTS = False
                             misplaced_objects_problems_solved_ctr = 0
 
@@ -258,38 +293,36 @@ class TaskMain():
         # Move to door coordinates
         self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
         self.robot.set_speech(filename="furniture/exit", wait_for_end_of=False)
-        self.robot.move_to_position(move_coords=[-0.1, -1.35, 0.0], wait_for_end_of=True)
-        # self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture="Exit"), wait_for_end_of=True)
+        # self.robot.move_to_position(move_coords=[-0.1, -1.35, 0.0], wait_for_end_of=True)
+        self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture="Exit"), wait_for_end_of=True)
         self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
         self.robot.set_speech(filename="furniture/exit", wait_for_end_of=False)
 
         # Open the door
-        self.robot.open_door(push_pull="push", handle_side="right", wait_for_end_of=True)
+        open_door_status = self.robot.open_door(push_pull="push", handle_side=self.handle_side, wait_for_end_of=True)
+
+        if open_door_status == 0:
+            self.robot.set_speech(filename="sound_effects/cr7_siuu",wait_for_end_of=False)
 
         # Request GPSR command
         self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-
-        self.robot.set_speech(filename="generic/please_wait", wait_for_end_of=True)
-        time.sleep(0.5) # a little of robot not doing anythingbefore starting background noise calibration 
-        # self.robot.calibrate_audio()
-
-        ### llp = self.robot.receive_command_and_generate_low_level_planner()
-        ### print("Low-level planner:", llp)
-        self.robot.wait_for_start_button()
-
-        # TODO: PLACEHOLDER: CHECK IF ORDER CAN BE EXECUTED...
-        order_can_be_executed = True
-
-        if order_can_be_executed:
-            
-            # TODO: PLACEHOLDER: ADD LOW LEVEL PLANNER EXECUTION HERE ...
-            time.sleep(0.5)
-            self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=True)
-            # self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
-            
-        else: # WILL SEARCH FOR MORE PEOPLE IN THE SAME ROOM
-            self.robot.set_speech(filename="finals/cannot_perform_task", wait_for_end_of=True)
-            self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
+        
+        # self.robot.set_speech(filename="generic/please_wait", wait_for_end_of=True)
+        # time.sleep(0.5) # a little of robot not doing anythingbefore starting background noise calibration 
+        # # self.robot.calibrate_audio()
+        # ### llp = self.robot.receive_command_and_generate_low_level_planner()
+        # ### print("Low-level planner:", llp)
+        # self.robot.wait_for_start_button()
+        # # TODO: PLACEHOLDER: CHECK IF ORDER CAN BE EXECUTED...
+        # order_can_be_executed = True
+        # if order_can_be_executed:
+        #     # TODO: PLACEHOLDER: ADD LOW LEVEL PLANNER EXECUTION HERE ...
+        #     time.sleep(0.5)
+        #     self.robot.set_speech(filename="sound_effects/cr7_siuu", wait_for_end_of=True)
+        #     # self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
+        # else: # WILL SEARCH FOR MORE PEOPLE IN THE SAME ROOM
+        #     self.robot.set_speech(filename="finals/cannot_perform_task", wait_for_end_of=True)
+        #     self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
 
 
     def solve_misplaced_objects(self, room, requests_left):
@@ -299,7 +332,7 @@ class TaskMain():
 
         for current_furniture in self.FURNITURE_WE_WANT_TO_ANALYSE:
 
-            if self.robot.get_room_from_furniture(current_furniture) == room and number_of_replaced_objects < requests_left:
+            if self.robot.get_room_from_furniture(current_furniture) == room:
 
                 self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
                 self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
@@ -371,7 +404,7 @@ class TaskMain():
                         self.robot.set_speech(filename="furniture/"+self.robot.get_furniture_from_object_class(self.robot.get_object_class_from_object(obj.object_name.replace(" ","_").lower())), wait_for_end_of=False)
                     self.robot.set_face("charmie_face")
                         
-                if self.SOLVE_MISPLACED_OBJECTS:
+                if self.SOLVE_MISPLACED_OBJECTS and number_of_replaced_objects < requests_left:
 
                     if len(objects_in_wrong_furniture) == 0:
                         print("All objects are in the correct furniture")
@@ -379,7 +412,7 @@ class TaskMain():
 
                     else:
 
-                        objects_in_wrong_furniture.sort(key=lambda p: math.hypot(p.position_absolute.x, p.position_absolute.y))
+                        objects_in_wrong_furniture.sort(key=lambda p: math.hypot(p.position_relative.x, p.position_relative.y))
 
                         for wrong_obj in objects_in_wrong_furniture:
 
@@ -406,22 +439,30 @@ class TaskMain():
                                     self.robot.set_speech(filename="furniture/" + place_furniture.replace(" ","_").lower(), wait_for_end_of=False)
 
                                     if len(self.robot.get_height_from_furniture(place_furniture)) > 1:
-                                        if place_furniture == "pantry" or place_furniture == "shelf": # HARDCODED
-                                            shelf_number_place = 1
-                                        else:
-                                            shelf_number_place = 2
+                                        self.place_mode = "front"
+                                        shelf_number_place = 3
+                                        if wrong_obj.object_name.replace(" ","_") == "seaweed":
+                                            picked_height = 0.19*0.75 
+
                                     else:
+                                        self.place_mode = self.robot.get_standard_pick_from_object(wrong_obj.object_name.replace(" ","_").lower())
                                         shelf_number_place = 0
 
+                                    if place_furniture.replace(" ","_").lower() == "dinner_table":
+                                        self.robot.set_speech(filename="pick_and_place_task/remove_chair_front_of_me", wait_for_end_of=True)
+                                        time.sleep(8.0)
+                                     
+
                                     self.robot.place_object_in_furniture(selected_object=wrong_obj.object_name.replace(" ","_").lower(),
-                                                                        place_mode=self.robot.get_standard_pick_from_object(wrong_obj.object_name.replace(" ","_").lower()),
+                                                                        place_mode=self.place_mode,
                                                                         furniture=place_furniture.replace(" ","_").lower(),
                                                                         shelf_number=shelf_number_place, place_height=picked_height,
-                                                                        return_to_initial_position=True)
+                                                                        return_to_initial_position=True, asked_help= asked_help)
                                     
                                     number_of_replaced_objects += 1
-                                    if number_of_replaced_objects == requests_left: # breaks if we have solved the number of requests we wanted to solve
-                                        break
+                                    self.robot.set_speech(filename="sound_effects/cr7_siuu",wait_for_end_of=False)
+                                    # if number_of_replaced_objects == requests_left: # breaks if we have solved the number of requests we wanted to solve
+                                    #     break
                         
                         if number_of_replaced_objects < requests_left: # breaks if we have solved the number of requests we wanted to solve
                             self.robot.set_speech(filename="finals/check_the_next_furniture", wait_for_end_of=True)
@@ -489,6 +530,7 @@ class TaskMain():
                         self.robot.set_speech(filename="finals/check_face_detected_person", wait_for_end_of=True) # may be problematic becuase referee may place himself in front of the robot...
                         time.sleep(2.0) # wait a bit to let the speaks be said before going to next room
 
+                    self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
                     self.robot.set_face("charmie_face")
                     no_people_left_with_requests_in_this_room = True
                 
@@ -547,7 +589,7 @@ class TaskMain():
                             self.robot.set_speech(filename="finals/cannot_perform_task", wait_for_end_of=True)
                             self.robot.set_speech(filename="finals/please_dont_raise_arm_anymore", wait_for_end_of=True)
 
-            if number_of_solved_requests == requests_left: # breaks if we have solved the number of requests we wanted to solve
+            if number_of_solved_requests >= requests_left: # breaks if we have solved the number of requests we wanted to solve
                 no_people_left_with_requests_in_this_room = True
 
         return number_of_solved_requests
@@ -555,25 +597,29 @@ class TaskMain():
 
     def solve_trash_objects(self, room="", requests_left=0, pick_to_trashcan=False, camera="head"):
         print("\n>>> Current Task State: Solve_Trash_Objects <<<\n")
+       
         requests_solved = 0
+        
+        navs_in_room = self.search_objects_floor_navs[room]
+        for room_nav_waypoints in navs_in_room:
 
-        if requests_left > 0:
-            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-            self.robot.set_speech(filename="rooms/"+ room.replace(" ","_").lower(), wait_for_end_of=False)
-            self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_room(room=room), wait_for_end_of=True)
+            # self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+            # self.robot.set_speech(filename="rooms/"+ room.replace(" ","_").lower(), wait_for_end_of=False)
+            self.robot.move_to_position(move_coords=room_nav_waypoints, wait_for_end_of=True)
             valid_detected_object = DetectedObject()
             validated = False
 
-            MIN_OBJECT_DISTANCE_X = self.MIN_OBJECT_DISTANCE_X 
+            MIN_OBJECT_DISTANCE_X = self.MIN_OBJECT_DISTANCE_X
             MAX_OBJECT_DISTANCE_X = self.MAX_OBJECT_DISTANCE_X
-            MIN_OBJECT_DISTANCE_Y = self.MIN_OBJECT_DISTANCE_Y 
-            MAX_OBJECT_DISTANCE_Y = self.MAX_OBJECT_DISTANCE_Y 
+            MIN_OBJECT_DISTANCE_Y = self.MIN_OBJECT_DISTANCE_Y
+            MAX_OBJECT_DISTANCE_Y = self.MAX_OBJECT_DISTANCE_Y
             goal = ""
 
+            trash_tetas = [[30.0, -40.0], [-30.0, -40.0]]
             if camera=="head":
-                objects_found = self.robot.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
+                objects_found = self.robot.search_for_objects(tetas = trash_tetas, time_in_each_frame=1.5, list_of_objects=[], detect_objects=True, detect_objects_hand=False, detect_objects_base=False)
             else:
-                objects_found = self.robot.search_for_objects(tetas = [[0.0,-40.0]], time_in_each_frame=1.5, list_of_objects=[], detect_objects=False, detect_objects_hand=False, detect_objects_base=True)
+                objects_found = self.robot.search_for_objects(tetas = trash_tetas, time_in_each_frame=1.5, list_of_objects=[], detect_objects=False, detect_objects_hand=False, detect_objects_base=True)
 
             objects_found_validated = []
             if objects_found:
@@ -587,10 +633,12 @@ class TaskMain():
 
                     if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and \
                         MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and \
-                        (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or \
-                         obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or \
-                         obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2):
-                        objects_found_validated.append(obj)
+                        obj.position_absolute.z < 0.4:
+                        # (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or \
+                        # obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or \
+                        # obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2):
+                        if obj.furniture_location.replace(" ","_").lower() not in self.avoidable_furnitures_for_trash:
+                            objects_found_validated.append(obj)
 
                     # if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and not validated:
                     #     valid_detected_object = obj
@@ -599,7 +647,6 @@ class TaskMain():
                     #     if MIN_OBJECT_DISTANCE_X < obj.position_relative.x < MAX_OBJECT_DISTANCE_X and MIN_OBJECT_DISTANCE_Y < obj.position_relative.y < MAX_OBJECT_DISTANCE_Y and (obj.position_absolute.z < self.robot.get_object_height_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_length_from_object(obj.object_name) * 2 or obj.position_absolute.z < self.robot.get_object_width_from_object(obj.object_name) * 2) and valid_detected_object.position_relative.x > obj.position_relative.x:
                     #         valid_detected_object = obj
                     
-            # if validated == True:
             if len(objects_found_validated) > 0:
 
                 # REORDER BY DISTANCE TO THE ROBOT (NOT BY NAVIGATION DISTANCE)
@@ -616,7 +663,7 @@ class TaskMain():
                     self.robot.set_speech(filename="finals/should_be_in_trashcan", wait_for_end_of=True)
                 self.robot.set_face("charmie_face")
                     
-                if pick_to_trashcan:
+                if pick_to_trashcan and requests_solved < requests_left:
 
                     counter = 0
                     for d in self.divisions:
@@ -625,18 +672,26 @@ class TaskMain():
                         counter = counter + 1
                     
                     if goal != "":
-                        self.robot.ask_help_pick_object_gripper(object_d = valid_detected_object, look_judge= [0,0], show_detection = False)
+                        self.robot.ask_help_pick_object_gripper(object_d = valid_detected_object, look_judge= [0,0], attempts_at_receiving=1, show_detection = False)
                         self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
-                        self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                        self.robot.set_speech(filename="furniture/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
+                        
 
-                        self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
-                        self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
-                        requests_solved = 1
+                        object_in_gripper, m = self.robot.set_arm(command="close_gripper_with_check_object", wait_for_end_of=True)
+                        
+                        if object_in_gripper:
+                            self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                            self.robot.set_speech(filename="furniture/"+goal.replace(" ","_").lower(), wait_for_end_of=False)
+                            self.robot.move_to_position(move_coords=self.robot.get_navigation_coords_from_furniture(furniture=goal), wait_for_end_of=True)
+                            # OLD WAY WITHOUT THE NEW FUNCTION self.robot.place_object_in_furniture(selected_object=valid_detected_object.object_name,place_mode = "front",furniture=goal)
+                            self.robot.place_in_trashcan(furniture="Trash Bin")
+                            self.robot.set_speech(filename="finals/place_trash_finished", wait_for_end_of=False)
+                            requests_solved +=1
+                            self.robot.set_speech(filename="sound_effects/cr7_siuu",wait_for_end_of=False)
+                            # if requests_solved == requests_left: # breaks if we have solved the number of requests we wanted to solve
+                            #     break
 
-            return requests_solved
-
-
+        return requests_solved
+        
     def solve_basket_misplacement(self):
         print("\n>>> Current Task State: Solve_Basket_Misplacement <<<\n")
         # NOT PART OF ROBOCUP 2026 FINALS STRATEGY
