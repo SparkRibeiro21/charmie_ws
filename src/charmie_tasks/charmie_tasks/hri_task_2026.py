@@ -161,16 +161,6 @@ class TaskMain():
             # }
         ]
 
-        # Special case for ROBOCUP 2026
-        self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE = {
-                "name": "chair_left_side_sofa",
-                "center_coords": [self.robot.get_location_coords_from_furniture("Sofa")[0] - (self.robot.get_size_from_furniture("Sofa")[0]), 
-                                  self.robot.get_location_coords_from_furniture("Sofa")[1],
-                                  self.robot.get_location_coords_from_furniture("Sofa")[2]],
-                "speak": "hri/chair_on_the_right_side_of_the_sofa"
-            }
-        
-
         # # debug the sitting places coordinates
         # print("SITTING PLACES:")
         # for sf in self.SITTING_PLACES_IN_FURNITURE:
@@ -182,7 +172,6 @@ class TaskMain():
         self.SITTING_AREA_ROOM = "living_room"
         self.SIDE_TO_LOOK = "right" # side where guest2 must stand next to the robot when introducing the guests ("right" or "left")
 
-        # THESE SHUOLB BE 2 DIFFERENT THINGS: ROBOCUP 2026
         self.default_speak_file = "hri/sofa_center"
         self.default_couch_to_look_center = "sofa"
         # Which objects should be acquired
@@ -197,8 +186,6 @@ class TaskMain():
 
         #### ROBOCUP 2026
         self.initial_position = [4.0, 1.0, -135]
-        self.DOOR_RETURN = 1.0
-        self.DISTANCE_TO_OUTSIDE_GUEST = 0.5
 
 
         # Position to start following host after introducing guests
@@ -242,7 +229,7 @@ class TaskMain():
 
         self.GUEST2 = DetectedPerson()
         self.GUEST2_NAME = ""
-        self.GUEST2_DRINK = ""
+        self.GUEST2_DRINK = ""  
 
         # Neck Positions
         self.look_forward = [0, 0]
@@ -299,16 +286,7 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest1"]:
                                         
                 if self.OPEN_DOOR_GUEST1:
-                    error = self.robot.open_door(push_pull="pull", handle_side="right", wait_for_end_of=True)
-                    if error == -1:
-                        self.robot.set_speech(filename="hri/could_not_open_door", wait_for_end_of=False)
-                        _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
-                        dx = furniture_distance - self.DOOR_RETURN
-                        self.robot.adjust_omnidirectional_position(dx = dx , dy = 0.0, wait_for_end_of=True, safety=False)
-                        self.robot.set_speech(filename="hri/please_open_door", wait_for_end_of=True)
-                        time.sleep(6.0)
-                        self.robot.adjust_omnidirectional_position(dx = self.DISTANCE_TO_OUTSIDE_GUEST , dy = 0.0, wait_for_end_of=True, safety=False)
-
+                    self.robot.open_door(push_pull="pull", handle_side="right", wait_for_end_of=True)
                     self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
                 self.state = self.task_states["Receive_guest1"]
@@ -377,7 +355,7 @@ class TaskMain():
                     self.GUEST1_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
                     # print("Favorite drink:", self.GUEST1_DRINK, time.time()-b)
                 else:
-                    self.GUEST1_NAME = "Hanna"
+                    self.GUEST1_NAME = "John"
                     self.GUEST1_DRINK = "Coffee"
 
                 self.robot.save_speech(command=self.GUEST1_NAME,  filename=self.GUEST1_NAME,  quick_voice=False, wait_for_end_of=False)
@@ -457,13 +435,9 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    # seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
-                    # speak_file = self.default_speak_file
-                    
-                    # ROBOCUP 2026
-                    seat_position = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["center_coords"]
-                    speak_file = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["speak"]
-                    
+                    seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
+                    speak_file = self.default_speak_file
+
                 else:
                     max_name = max(
                     temp_min_dist_sitting_places_dict,
@@ -521,10 +495,10 @@ class TaskMain():
 
             elif self.state == self.task_states["Wait_for_guest2_to_arrive"]:
 
-                self.robot.set_neck(position=self.look_forward, wait_for_end_of=False)
-                # self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
-                # self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
-                # self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
+                self.robot.set_neck(position=self.look_navigation, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/moving", wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/initial_position", wait_for_end_of=False)
+                self.robot.move_to_position(move_coords=self.initial_position, wait_for_end_of=True)
                                         
                 s, m, label, score = self.robot.wait_for_doorbell(timeout=15, score_threshold=0.1)
                 print(s, m, label, score)
@@ -548,16 +522,7 @@ class TaskMain():
             elif self.state == self.task_states["Open_door_guest2"]:
                                         
                 if self.OPEN_DOOR_GUEST2:
-                    error = self.robot.open_door(push_pull="pull", handle_side="right", wait_for_end_of=True)
-                    if error == -1:
-                        self.robot.set_speech(filename="hri/could_not_open_door", wait_for_end_of=False)
-                        _ , _ , furniture_distance = self.robot.get_minimum_radar_distance(direction=0.0, ang_obstacle_check=30)
-                        dx = furniture_distance - self.DOOR_RETURN
-                        self.robot.adjust_omnidirectional_position(dx = dx , dy = 0.0, wait_for_end_of=True, safety=False)
-                        self.robot.set_speech(filename="hri/please_open_door", wait_for_end_of=True)
-                        time.sleep(6.0)
-                        self.robot.adjust_omnidirectional_position(dx = self.DISTANCE_TO_OUTSIDE_GUEST , dy = 0.0, wait_for_end_of=True, safety=False)
-
+                    self.robot.open_door(push_pull="pull", handle_side="right", wait_for_end_of=True)
                     self.robot.set_neck_coords(position=[0.0, 0.0, 1.7], wait_for_end_of=True)
 
                 self.state = self.task_states["Receive_guest2"]
@@ -628,8 +593,8 @@ class TaskMain():
                     self.GUEST2_DRINK = self.robot.get_llm_ollama_information(command, mode = "favorite drink", wait_for_end_of=True)
                     # print("Favorite drink:", self.GUEST2_DRINK, time.time()-b)
                 else:
-                    self.GUEST2_NAME = "John"
-                    self.GUEST2_DRINK = "Water"
+                    self.GUEST2_NAME = "Mary"
+                    self.GUEST2_DRINK = "Tea"
 
                 self.robot.save_speech(command=self.GUEST2_NAME,  filename=self.GUEST2_NAME,  quick_voice=False, wait_for_end_of=False)
                 self.robot.save_speech(command=self.GUEST2_DRINK, filename=self.GUEST2_DRINK, quick_voice=False, wait_for_end_of=False)
@@ -774,12 +739,8 @@ class TaskMain():
                 if all(dist < self.min_dist_for_sitting_place_to_be_occupied for dist in temp_min_dist_sitting_places_dict.values()):
                     # SPECIAL CASE, if all seats are occupided, by default we say the person should sit in the center of the sofa 
                     # Might make sense to chang in the future
-                    # seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
-                    # speak_file = self.default_speak_file
-                    
-                    # ROBOCUP 2026
-                    seat_position = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["center_coords"]
-                    speak_file = self.DEFAULT_SITTING_PLACE_IF_NO_SEATS_AVAILABLE["speak"]
+                    seat_position = [self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[0], self.robot.get_location_coords_from_furniture(self.default_couch_to_look_center)[1], 0.9]
+                    speak_file = self.default_speak_file
 
                 else:
                     max_name = max(
