@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from flask import request
 
 from rclpy.node import Node
 import rclpy
@@ -18,8 +17,9 @@ import json
 
 
 ### Classes that handle the ollama LLMs 
-from charmie_llm.llm_planner_desciption import Ollama_planner_description, Ollama_unified_planner_description
+# from charmie_llm.llm_planner_desciption import Ollama_planner_description
 from charmie_llm.llm_info_extraction_description import Ollama_info_extraction_description
+from charmie_llm.llm_demo_description import Ollama_demonstration_description
 
 
 
@@ -48,8 +48,8 @@ class LLMNode(Node):
         # self.llm_info_extraction_description = LLM_info_extraction_description()
 
         self.ollama_info_extraction = Ollama_info_extraction_description()
-        self.ollama_planner = Ollama_planner_description()
-        self.ollama_unified_planner = Ollama_unified_planner_description()
+        # self.ollama_planner = Ollama_planner_description()
+        self.ollama_demo = Ollama_demonstration_description()
         
         match self.TASK:
             case "hri":
@@ -69,16 +69,22 @@ class LLMNode(Node):
                 # self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
 
 
-                self.ollama_unified_planner = Ollama_unified_planner_description()
-                req = GetLLMResponse.Request()
-                req.command="Go to the kitchen and bring me the milk to the bed"
-                req.mode = ""
-                self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
+                # self.ollama_unified_planner = Ollama_unified_planner_description()
+                # self.ollama_planner = Ollama_planner_description()
+                # req = GetLLMResponse.Request()
+                # req.command="Go to the kitchen and bring me the milk to the bed"
+                # req.mode = ""
+                # self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
+
+                # req = GetLLMResponse.Request()
+                # req.command="Say your team's afilliation"
+                # req.mode = ""
+                # self.llm_ollama_gpsr_low_level_callback(request=req, response=GetLLMResponse.Response())
 
                 req = GetLLMResponse.Request()
-                req.command="Move to the kitchen"
-                req.mode = ""
-                self.llm_ollama_gpsr_low_level_callback(request=req, response=GetLLMResponse.Response())
+                req.command="team's afilliation"
+                req.mode = "demonstration"
+                self.llm_ollama_demonstration_callback(request=req, response=GetLLMResponse.Response())
 
 
 
@@ -88,8 +94,8 @@ class LLMNode(Node):
 
         self.llm_ollama_demonstration_server    = self.create_service(GetLLMResponse, "llm_ollama_demonstration",   self.llm_ollama_demonstration_callback)
         self.llm_ollama_information_server      = self.create_service(GetLLMResponse, "llm_ollama_information",     self.llm_ollama_information_callback)
-        self.llm_ollama_gpsr_high_level_server  = self.create_service(GetLLMResponse, "llm_ollama_gpsr_high_level", self.llm_ollama_gpsr_high_level_callback)
-        self.llm_ollama_gpsr_low_level_server   = self.create_service(GetLLMResponse, "llm_ollama_gpsr_low_level",  self.llm_ollama_gpsr_low_level_callback)
+        # self.llm_ollama_gpsr_high_level_server  = self.create_service(GetLLMResponse, "llm_ollama_gpsr_high_level", self.llm_ollama_gpsr_high_level_callback)
+        # self.llm_ollama_gpsr_low_level_server   = self.create_service(GetLLMResponse, "llm_ollama_gpsr_low_level",  self.llm_ollama_gpsr_low_level_callback)
         
         self.get_logger().info("Initialised CHARMIE LLM Offline Ollama Response Servers")
 
@@ -116,14 +122,19 @@ class LLMNode(Node):
         print("Extracted favorite drink:", extracted_info)
  
         response.answer = extracted_info"""
-        
+
+        request_command = request.command
+        mode = request.mode
+
+        print("LLM working in mode:", mode)
+        llm_answer = self.ollama_demo.get_answer(question=request_command, mode=mode)
+        print("Answer:", llm_answer)
+
         los = ListOfStrings()
-        los.strings.append("This is 1 demonstration response from the LLM.")
-        los.strings.append("This is 2 demonstration response from the LLM.")
-        los.strings.append("This is 3 demonstration response from the LLM.")
+        los.strings.append(llm_answer)
         
         response.answer = los
-
+        
         return response
     
 
@@ -181,11 +192,12 @@ class LLMNode(Node):
         #llm_response = self.llm_planner_description.handle_request(request.command)
 
         start_time = time.time()
-        # generated_plan = self.ollama_planner.high_level_planner(request.command)
-        generated_unified_plan = self.ollama_unified_planner.high_level_planner(request.command)
+        generated_plan = self.ollama_planner.high_level_planner(request.command)
+        # generated_unified_plan = self.ollama_unified_planner.high_level_planner(request.command)
         end_time = time.time()
 
-        print("Plan Generated:", generated_unified_plan)
+        # print("Plan Generated:", generated_unified_plan)
+        print("Plan Generated:", generated_plan)
         print("Time taken to generate the plan: ", end_time - start_time, "seconds")
 
 
@@ -244,7 +256,8 @@ class LLMNode(Node):
         
         # response.answer = los
         los = ListOfStrings()
-        los.strings.append(generated_unified_plan)
+        # los.strings.append(generated_unified_plan)
+        los.strings.append(generated_plan)
 
         response.answer = los
 
@@ -329,8 +342,10 @@ class LLMNode(Node):
                     if step_to_llm == "" or step_to_llm == " ":
                         print("Skipping empty step")
                     else:
-                        generated_unified_plan = self.ollama_unified_planner.low_level_planner(step.strip())
-                        los.strings.append(generated_unified_plan)
+                        # generated_unified_plan = self.ollama_unified_planner.low_level_planner(step.strip())
+                        generated_plan = self.ollama_planner.low_level_planner(step.strip())
+                        # los.strings.append(generated_unified_plan)
+                        los.strings.append(generated_plan)
 
         end_time = time.time()
 
