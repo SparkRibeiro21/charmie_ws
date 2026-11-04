@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from flask import request
 
 from rclpy.node import Node
 import rclpy
@@ -18,7 +17,7 @@ import json
 
 
 ### Classes that handle the ollama LLMs 
-from charmie_llm.llm_planner_desciption import Ollama_planner_description
+# from charmie_llm.llm_planner_desciption import Ollama_planner_description
 from charmie_llm.llm_info_extraction_description import Ollama_info_extraction_description
 from charmie_llm.llm_demo_description import Ollama_demonstration_description
 
@@ -49,7 +48,7 @@ class LLMNode(Node):
         # self.llm_info_extraction_description = LLM_info_extraction_description()
 
         self.ollama_info_extraction = Ollama_info_extraction_description()
-        self.ollama_planner = Ollama_planner_description()
+        # self.ollama_planner = Ollama_planner_description()
         self.ollama_demo = Ollama_demonstration_description()
         
         match self.TASK:
@@ -71,16 +70,16 @@ class LLMNode(Node):
 
 
                 # self.ollama_unified_planner = Ollama_unified_planner_description()
-                self.ollama_planner = Ollama_planner_description()
-                req = GetLLMResponse.Request()
-                req.command="Go to the kitchen and bring me the milk to the bed"
-                req.mode = ""
-                self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
+                # self.ollama_planner = Ollama_planner_description()
+                # req = GetLLMResponse.Request()
+                # req.command="Go to the kitchen and bring me the milk to the bed"
+                # req.mode = ""
+                # self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
 
-                req = GetLLMResponse.Request()
-                req.command="Say your team's afilliation"
-                req.mode = ""
-                self.llm_ollama_gpsr_low_level_callback(request=req, response=GetLLMResponse.Response())
+                # req = GetLLMResponse.Request()
+                # req.command="Say your team's afilliation"
+                # req.mode = ""
+                # self.llm_ollama_gpsr_low_level_callback(request=req, response=GetLLMResponse.Response())
 
                 req = GetLLMResponse.Request()
                 req.command="team's afilliation"
@@ -95,8 +94,8 @@ class LLMNode(Node):
 
         self.llm_ollama_demonstration_server    = self.create_service(GetLLMResponse, "llm_ollama_demonstration",   self.llm_ollama_demonstration_callback)
         self.llm_ollama_information_server      = self.create_service(GetLLMResponse, "llm_ollama_information",     self.llm_ollama_information_callback)
-        self.llm_ollama_gpsr_high_level_server  = self.create_service(GetLLMResponse, "llm_ollama_gpsr_high_level", self.llm_ollama_gpsr_high_level_callback)
-        self.llm_ollama_gpsr_low_level_server   = self.create_service(GetLLMResponse, "llm_ollama_gpsr_low_level",  self.llm_ollama_gpsr_low_level_callback)
+        # self.llm_ollama_gpsr_high_level_server  = self.create_service(GetLLMResponse, "llm_ollama_gpsr_high_level", self.llm_ollama_gpsr_high_level_callback)
+        # self.llm_ollama_gpsr_low_level_server   = self.create_service(GetLLMResponse, "llm_ollama_gpsr_low_level",  self.llm_ollama_gpsr_low_level_callback)
         
         self.get_logger().info("Initialised CHARMIE LLM Offline Ollama Response Servers")
 
