@@ -18,8 +18,9 @@ import json
 
 
 ### Classes that handle the ollama LLMs 
-from charmie_llm.llm_planner_desciption import Ollama_planner_description, Ollama_unified_planner_description
+from charmie_llm.llm_planner_desciption import Ollama_planner_description
 from charmie_llm.llm_info_extraction_description import Ollama_info_extraction_description
+from charmie_llm.llm_demo_description import Ollama_demonstration_description
 
 
 
@@ -49,7 +50,7 @@ class LLMNode(Node):
 
         self.ollama_info_extraction = Ollama_info_extraction_description()
         self.ollama_planner = Ollama_planner_description()
-        self.ollama_unified_planner = Ollama_unified_planner_description()
+        self.ollama_demo = Ollama_demonstration_description()
         
         match self.TASK:
             case "hri":
@@ -77,9 +78,14 @@ class LLMNode(Node):
                 self.llm_ollama_gpsr_high_level_callback(request=req, response=GetLLMResponse.Response())
 
                 req = GetLLMResponse.Request()
-                req.command="Move to the kitchen"
+                req.command="Say your team's afilliation"
                 req.mode = ""
                 self.llm_ollama_gpsr_low_level_callback(request=req, response=GetLLMResponse.Response())
+
+                req = GetLLMResponse.Request()
+                req.command="team's afilliation"
+                req.mode = "demonstration"
+                self.llm_ollama_demonstration_callback(request=req, response=GetLLMResponse.Response())
 
 
 
@@ -117,14 +123,19 @@ class LLMNode(Node):
         print("Extracted favorite drink:", extracted_info)
  
         response.answer = extracted_info"""
-        
+
+        request_command = request.command
+        mode = request.mode
+
+        print("LLM working in mode:", mode)
+        llm_answer = self.ollama_demo.get_answer(question=request_command, mode=mode)
+        print("Answer:", llm_answer)
+
         los = ListOfStrings()
-        los.strings.append("This is 1 demonstration response from the LLM.")
-        los.strings.append("This is 2 demonstration response from the LLM.")
-        los.strings.append("This is 3 demonstration response from the LLM.")
+        los.strings.append(llm_answer)
         
         response.answer = los
-
+        
         return response
     
 

@@ -5143,8 +5143,17 @@ class RobotStdFunctions():
                     pass
 
                 case "say_info":
-                    ###SPEAK:   Unfortunately, I don't have the information I needed to share with you. I am sorry for this.
-                    self.set_speech(filename="gpsr/cannot_perform_say_info",wait_for_end_of=True)
+
+                    requested_info = task_attribute
+
+                    answer = self.get_llm_ollama_demonstration(command=requested_info, mode="competition", wait_for_end_of=True)
+
+                    self.save_speech(command=answer, filename="say_info", quick_voice=False, wait_for_end_of=True)
+
+                    self.set_speech(filename="temp/say_info", wait_for_end_of=True)
+
+                    # ###SPEAK:   Unfortunately, I don't have the information I needed to share with you. I am sorry for this.
+                    # self.set_speech(filename="gpsr/cannot_perform_say_info",wait_for_end_of=True)
                     
                 case "guide_person":
 

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from flask import request
+
 import rclpy
 import threading
 import time
@@ -22,7 +24,7 @@ ros2_modules = {
     "charmie_lidar":                False,
     "charmie_lidar_bottom":         False,
     "charmie_lidar_livox":          False,
-    "charmie_llm":                  False,
+    "charmie_llm":                  True,
     "charmie_localisation":         False,
     "charmie_low_level":            False,
     "charmie_navigation":           False,
@@ -31,8 +33,8 @@ ros2_modules = {
     "charmie_neck":                 False,
     "charmie_radar":                False,
     "charmie_sound_classification": False,
-    "charmie_speakers":             False,
-    "charmie_speakers_save":        False,
+    "charmie_speakers":             True,
+    "charmie_speakers_save":        True,
     "charmie_tracking":             False,
     "charmie_tray_gripper":         False,
     "charmie_yolo_objects":         False,
@@ -63,15 +65,16 @@ class TaskMain():
     # main state-machine function
     def main(self):
         # Waiting_for_start_button = 0
-        LLM_demo = 1
+        LLM_planner = 1
         LLM_gpsr = 2
         LLM_gpsr_hlp= 3
         LLM_gpsr_llp= 4
-        LLM_hri= 5
-        LLM_Ollama_first_tests = 6
-        Test_individual_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 7
-        Test_together_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 8
-        Final_State = 8
+        LLM_demo=5
+        LLM_hri= 6
+        LLM_Ollama_first_tests = 7
+        Test_individual_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 8
+        Test_together_save_speaker_and_llm_with_periodic_updates_from_robot_for_gpsr = 9
+        Final_State = 10
 
         # VARS ...
         self.state = LLM_demo
@@ -92,7 +95,7 @@ class TaskMain():
             # State 4 = Calibrate Audio
             # State 5 = Final Speech
 
-            if self.state == LLM_demo:
+            if self.state == LLM_planner:
 
                 print("New LLM GPSR Demo")
 
@@ -308,6 +311,28 @@ class TaskMain():
 
                 while True:
                     pass
+
+            if self.state == LLM_demo:
+
+                print("New LLM GPSR Demo")
+
+                request =  "team's affiliation"
+                mode = "competition"
+
+                # answer = self.robot.get_llm_ollama_demonstration(command=request, mode=mode, wait_for_end_of=True)
+                # print(f"Requested Info: {request}")
+                # print(f"LLM Answer: {answer}")
+
+
+
+                self.robot.execute_gpsr_plan(command=["say_info:available_dishes;"], instruction_point=[0, 0, 0])
+
+                
+
+                print("Finished LLM GPSR Demo")
+                while True:
+                    pass
+
 
             if self.state == LLM_gpsr_llp:
 

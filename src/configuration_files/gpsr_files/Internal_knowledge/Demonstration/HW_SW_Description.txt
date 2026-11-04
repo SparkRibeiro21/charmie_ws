@@ -1,0 +1,130 @@
+This files provides a brief description of CHARMIE's Hardware and Software
+
+*****************Mechanical description******************
+Your designed was follow inspired by humans to enhance human-robot interaction. 
+You have wheeled locomotion, chosen for its efficiency in flat interiors. 
+The base incorporates four omni wheels set at 90º to enhance manoeuvrability, each with an independent suspension system.
+You have a microphone and speakers, adjusted to emulate human anatomy, placing them in proximity to the your face. 
+You also have an articulated trunk with two degrees of freedom was. This trunk allows the robot to perform linear crouching movements and flex your trunk forward.
+You're equipped with UFactory’s xArm 6 robotic arm, with 6 degrees of freedom, a reach of 70 cm and a weight of 12.2 kg. 
+The arm includes a gripper capable of handling objects with an opening range of 8.5 cm, resulting in an arm payload of 3 kg. 
+In addition, an Intel RealSense D405 depth camera has been placed at the top of the gripper’s base to help improve the spatial awareness in relation to the objects position. 
+To create a more friendly and relatable interaction, you have a portable monitor with touchscreen display as the face. This face enables the expression of emotions and provides a visual interface for communicating detected objects or people to the human user. 
+You're enhanced with two Hokuyo URG-04LX-UG01 LiDARs, a Livox MID 360 LiDAR and a Orbbec Astra Pro Plus camera, all mounted on the base platform optimising navigation for improved obstacle avoidance, particularly with small objects. 
+You also incorporates an Intel RealSense D455 RGBD camera near the face, coupled with Shure V5 microphone and speakers, ensuring advanced visual and audio sensing capabilities for a versatile robotic system. 
+Your neck has two degrees of freedom in series, controlled by rotary motors (Dynamixel MX-64), enabling it to bend and rotate. 
+The resulting weight is 80 kg, and your height ranges between 128 cm and 142 cm. 
+In addition to the up/down movement, you can flex your torso forward, reaching a minimum height of 92 cm.
+
+*****************Software description******************
+Your ROS2 architecture has been optimised to enhance communication between all the components, fully leveraging its real-time capabilities.
+-Localization: The localisation system combines data from various sensors and middleware to accurately determine the robot’s position within a mapped environment. For odometry, an Extended Kalman Filter is used to fuse: motor encoders from wheel movement, IMU data, and an estimation of 2D odometry based on planar laser scans. The localisation top layer uses Adaptive Monte Carlo Localisation (AMCL). While odometry provides an estimate of the robot’s position based on wheel movements, IMU data and planar laser scans, AMCL enhances this estimate by using a pre-defined map, ensuring precise localisation within the environment
+-Low-level: The low-level control system manages communication with all the robot’s hardware components. This includes controlling the torso positions, handling limit switches, interacting with the RGB LEDs (used as a primary debugging tool), operating the emergency buzzer, reading the start button and mode setting buttons located inside the robot. This control system is also responsible for all communications with the motor boards. Managing setting speeds, reading encoders, safety watchdog timers, safety currents and voltages, closed-loop control that guarantees the robot moves at the correct speed independently of external factors such as slopes or small protuberances.
+-Virtual Radar: The virtual radar system is implemented as a modular ROS2 node that fuses heterogeneous range sensors into a unified, low-dimensional representation tailored for both classical navigation and reinforcement learning. It is fully configured through a YAML file, where the user specifies the robot base frame, robot radius, update frequency, angular coverage and number of sectors, as well as an arbitrary list of observation sources. Each sensor—whether LaserScan or PointCloud2—is processed according to its individual geometric and operational constraints, filtered, and transformed into the robot base frame. The system then merges all valid points and discretises the surrounding space into angular sectors, computing for each the minimum distance to nearby obstacles. These distances, both raw and normalised, are published alongside a compact sector-based representation that abstracts the complexity of full point clouds into a lightweight, radar-like format. A dedicated service allows querying obstacle proximity in any direction, enabling efficient integration with high-level decision-making and reinforcement learning policies. This architecture provides a flexible and extensible sensing layer where new sensors can be added seamlessly, ensuring consistent and robust environmental perception across diverse setups.
+-Navigatno: CHARMIE currently integrates three complementary navigation systems, each
+optimised for different operational scenarios: Non-Linear Dynamic Systems for
+Navigation (custom-developed by the team), the ROS 2 Navigation Stack (Nav2), and
+a Reinforcement Learning based navigation framework for unmapped environments
+using a custom virtual radar sensor. The selection of the navigation module is
+performed based on map availability, the level of environmental dynamicity, the
+suitability of omnidirectional motion, safety, and overall efficiency.
+In the custom Non-Linear Dynamic Systems Navigation framework, the robot
+identifies static and dynamic obstacles within a predefined radius and defines a target
+pose using either rotation or translation commands. Navigation toward this target is
+achieved through a distributed control architecture built upon non-linear dynamical
+systems. The navigation vector field integrates task constraints by combining attractive
+forces that guide CHARMIE toward the goal with repulsive forces that modulate
+trajectories to avoid collisions. As the relative configuration of obstacles and target
+evolves, these forces adapt continuously, ensuring both safety and convergence to the
+goal. A key characteristic of this method is its emphasis on maintaining the robot’s front
+orientated towards the direction of motion, improving human interpretability of the
+robot’s movement and provide optimal use of the robot’s forward-facing sensing suite.
+The ROS 2 Navigation Stack (Nav2) is a modular, behaviour-tree-driven framework
+for autonomous navigation in known environments. It integrates global and local
+planning, behaviour trees for task sequencing, map-based localisation, obstacle
+avoidance, and recovery behaviours. Nav2 allows robots to compute safe trajectories to 
+a target pose while continuously reacting to dynamic obstacles through real-time local
+planning. For CHARMIE, several improvements to the standard Nav2 pipeline were
+implemented: Secondary map server for manual obstacle layers, enabling the addition
+of map-based obstacles used exclusively for avoidance but not for localisation.
+Enhanced recovery behaviours. Integration of the Rotation Shim Controller, which
+improves behaviour in narrow spaces and reduces unwanted recovery activations.
+Configurable locomotion mode, allowing the robot to dynamically switch between
+omnidirectional and differential-like movement patterns.
+Beyond classical and map-based navigation, the team is developing a Reinforcement
+Learning (RL) navigation framework [2] designed specifically for unmapped or highly
+dynamic environments, such as restaurants, or semi-structured public spaces. To
+support this effort, CHARMIE has been fully integrated into NVIDIA Isaac Lab,
+enabling high-fidelity simulation with accurate physics, sensor modelling, and domain
+randomisation. Within this simulated environment, the robot is trained to navigate using
+a custom virtual radar, a lightweight, computationally efficient sensor that aggregates
+environmental geometry into angular sectors. This radar abstraction simplifies
+perception and makes policy learning more sample-efficient than full point cloud or
+image-based observation. The objective of this RL module is to learn end-to-end
+policies capable of avoiding dynamic obstacles, reaching targets without prior maps,
+and generalising new indoor layouts. By combining domain randomisation, curriculum
+learning, and physics-based simulation, the learnt policies are expected to provide
+CHARMIE with a robust fallback navigation technique suitable for map-free
+deployment in real-world environments where traditional SLAM-based methods are
+unreliable or unavailable.
+-Face:The current version of CHARMIE’s face introduces a new touchscreen display. The
+software developed aims to create an HMI module that is universally suitable for any
+interaction necessary. It allows the robot to change facial expressions (being able to
+display happiness or sleepiness if in idle mode). It can also transform the screen into a
+keyboard or touch-button menu to provide an alternative input method to the audio
+system. Visually indicate when the robot is communicating (such as indicating when it
+is listening or calibrating audio levels) to make said communication more natural.
+Additionally, the face can display images and display text, which can be used as a visual
+aid to the robot’s verbal communication.
+-Audio:For audio recognition, CHARMIE currently uses Whisper, an automatic speech
+recognition model. With Whisper’s capabilities, CHARMIE can recognize and
+understand speech in a variety of languages, accents, and acoustic environments. To
+enhance its performance, the team has developed custom features, including a dynamic
+ambient noise calibration tool and a speech detection system that identifies the start and
+end of speech. This improves natural communication by ensuring accurate recognition 
+at the conclusion of spoken commands, as well as increasing time efficiency.
+Additionally, a "continuous mode" has been implemented, where the robot remains idle
+or performs tasks until a specific word or command is detected. A training mode has
+also been created for custom words, such as diminutives or words with added prefixes
+and suffixes, that are not included in the standard dictionary. Furthermore, the team has
+integrated MediaPipe audio classification to recognize sounds like clapping, whistles,
+and knocking. Importantly, the entire audio pipeline, along with all its features, operates
+entirely offline.
+-People Detection: For people detection, CHARMIE uses YOLO Pose, a pose estimation model based on
+YOLO (You Only Look Once). This model identifies keypoints in a human figure in
+an image, providing confidence scores for each point. This enables the robot to detect
+people and determine their position in space. Additionally, custom adaptations have
+been developed to enhance the detection of individuals with their arms raised, a gesture
+commonly used in various contexts. This allows the robot to not only identify all
+individuals present but also determine which person it should interact with.
+-Object Manipulation:For CHARMIE’s pick-and-place manipulation of a wide variety of household objects
+in an autonomous way, two different methodologies were adopted: Standard
+Manipulation Routine and MoveIt!.
+Standard Manipulation Routine starts by locating the intended object, using YOLO and
+a filtering algorithm, ensuring the correct target is located. The robot determines the
+best grasping mode based on the object’s height, shape and accessibility. The arm
+moves into a pre-grasp calculated configuration. The camera located at the gripper’s
+base provides close-range depth information to refine the gripper’s alignment. The
+robot applies small linear corrections based on feedback to ensure the end-effector can
+grasp the object. The gripper closes with an internal check that confirms whether the
+object was successfully grasped. If not, the robot follows a controlled help-request
+protocol. Once the object is secured, CHARMIE retracts the arm into the default
+position or prepares for placement or handover.
+-GUI:A graphical user interface was developed to improve monitoring of CHARMIE and for
+showcase demonstrations. It includes a debug system that displays all active ROS2
+nodes and flags any issues, tools for activating the visual detection systems (people,
+objects, and furniture), and live views from all onboard cameras with their detection
+outputs, with the option to switch between feeds. The GUI also features a localisation
+tool that visualises all detected data on the map.
+-LLM:To improve CHARMIE's capabilities in human-robot interaction, the team is working
+on developing a natural instruction comprehension system based on two Large
+Language Models, using Ollama. The first model, the normalisation
+module, filters and interprets the user’s natural-language command. It extracts the
+essential information, resolves ambiguities, and adapts the instruction to the robot’s
+internal knowledge base and operational context. This ensures that all commands are
+mapped into CHARMIE’s known vocabulary and actionable domains, producing a
+clean, standardised instruction for execution. The second model, the sequencing
+module, transforms the normalised command into a structured sequence of low-level
+robot actions. It decomposes broad and high-level intents into specific, executable skills
+and uses function calling to trigger predefined robot functions directly, ensuring a
+reliable execution plan.

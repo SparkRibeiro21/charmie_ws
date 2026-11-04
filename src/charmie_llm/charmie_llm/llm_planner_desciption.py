@@ -299,7 +299,7 @@ class Ollama_planner_description:
                             "Answer: guide_person:shelf\n\n" 
 
                             "Command: I will tell the person pointing to the left my team's name.\n"
-                            "Answer: say_info:team's name\n\n" 
+                            "Answer: say_info:team's_name\n\n" 
 
                             "Command: I will look for the cleanser.\n" 
                             "Answer: look_for_objects:cleanser\n"
