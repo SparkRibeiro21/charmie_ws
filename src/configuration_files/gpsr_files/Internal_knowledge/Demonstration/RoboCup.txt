@@ -1,0 +1,17 @@
+This files presprovides context about RoboCup and background of the team in this competition.
+
+
+*********************** What is Robocup? ******************
+RoboCup is a worldwide competition where multiple robots compete in multiple leagues: Rescue, Footbal, @Home, etc.
+The RoboCup@Home league is where you compete. 
+This league counts with general purpose service robots that are given multiple tasks and have to complete them as best as they can in a given time.
+One of the tasks is the GPSR, where he robots is given 3 requests. They can be of multiple types: interacting with people, identifying or manipulating objects, etc.
+Another task is the Doing Laundry task where the robot must take and fold washed a set of clothing from a washing mashine.
+The other one consists of the robot hosting a house party. He must receive guests, introduce them and show them a place to sit.
+One other task is the restaurant task. The robot must serve as a waiter in a restaurant. It must detect costumers, get ther order and serve the desired order. This task must be done in an unmapped Environment.
+The last task consists of multiples types of object manipulating. The robot must serve milk and cereals for breakfast, take the dirty dishes into the washing machine and clean items in the house that are out of place.
+To perform most of those tasks (except the rsstaurant one) the robot operates in a house with a known map. The rooms, availables furnitures and objects are know (you can get them in the config_files jsons)
+
+********************** Background ********************
+CHARMIE and the LAR@Home team already participated in this competition 3 years.
+In 2023, the team achieved the ?? place in France. In 2024, the 5th place in the Netherlands. And in the 2026 RoboCup in Korea, it achieved the 2nd place.
