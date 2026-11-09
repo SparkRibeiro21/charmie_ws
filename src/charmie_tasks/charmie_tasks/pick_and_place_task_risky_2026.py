@@ -89,7 +89,7 @@ class TaskMain():
         self.GET_MILK            = True
         self.GET_CORNFLAKES      = True
         self.GET_BOWL            = True
-        self.GET_BREAKFAST_SPOON = False
+        self.GET_BREAKFAST_SPOON = True
         self.GET_CUTLERY         = True
         self.IS_CORNFLAKES_BIG   = False # choose whether the cornflakes package is a big one (False) or a small one (True)
 
@@ -114,7 +114,7 @@ class TaskMain():
         # self.MILK_LOCATION = "Pantry"
         self.MILK_LOCATION = "Kitchen Cabinet"
         self.CORNFLAKES_LOCATION = "Kitchen Cabinet"
-        self.DISHES_LOCATION = "Kitchen Counter"
+        self.DISHES_LOCATION = "Dishwasher"
 
         # Initial Position
         #self.initial_position = self.robot.get_navigation_coords_from_furniture("dishwasher")
@@ -123,8 +123,9 @@ class TaskMain():
         # self.initial_position = self.robot.get_navigation_coords_from_furniture(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED) TESTING POURING 
         # self.initial_position = [2.0, -3.80, 90.0] # temp (near Tiago desk for testing)
 
-        self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
-        self.DISHWASHER_LOCATION = [ 4.08, -3.0, -2]
+        # self.SEARCH_CUTLERY_COORDS = [2.58, -2.85, 90.0] # FNR position for where dining table's side is
+        self.SEARCH_CUTLERY_COORDS = [4.40, 1.80, 0.0]
+        self.DISHWASHER_LOCATION = [ 4.75, 3.25, 90]
 
         self.SELECTED_PICKED_DISH = DetectedObject()
 
@@ -219,7 +220,7 @@ class TaskMain():
                     
                     if not self.HELP_PICK_MILK:
 
-                        pick_height, _ = self.robot.pick_object(selected_object="Milk", arm_initial_position="initial_position_to_ask_for_objects",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
+                        pick_height, _ = self.robot.pick_object(selected_object="Milk", arm_initial_position="initial_position_to_ask_for_objects",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, 15.0]])
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                         # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
                     
@@ -273,9 +274,12 @@ class TaskMain():
                 if self.GET_CORNFLAKES:
 
                     if not self.HELP_PICK_CORNFLAKES:
-                        self.robot.pick_object_risky(selected_object="Cornflakes", return_arm_to_initial_position="collect_cornflakes_to_tray",first_search_tetas = [[0.0, -20.0],[0.0, 0.0], [0.0, -30.0]])
+                        self.robot.pick_object(selected_object="Cornflakes", arm_initial_position="initial_position_to_ask_for_objects",first_search_tetas = [[0.0, 0.0], [0.0, 15.0],[0.0, -20.0]])
                         ### here logic should be changed because, it does not make sense to go to ask_for_objects_position before initial_position seince ip is already so close
                         # self.robot.set_arm(command="ask_for_objects_to_initial_position", wait_for_end_of=True)
+
+                        self.robot.set_arm(command="collect_cornflakes_to_tray", wait_for_end_of=True)
+
 
                     else:
                         object_in_gripper = False
@@ -320,7 +324,7 @@ class TaskMain():
                 if self.GET_BREAKFAST_SPOON:
 
                     if not self.HELP_PICK_SPOON:
-                        self.robot.pick_object_risky(selected_object="Spoon", list_of_objects_detected_as= [["Fork", "Knife"]], return_arm_to_initial_position="collect_spoon_to_tray_funilocopo_v4")
+                        self.robot.pick_object(selected_object="Spoon", list_of_objects_detected_as= [["Fork", "Knife"]], arm_initial_position="collect_spoon_to_tray_funilocopo_v4", first_search_tetas=[[-20.0, -15.0],[20.0, -15.0]])
 
                     else:
                         object_in_gripper = False
@@ -337,7 +341,7 @@ class TaskMain():
                 if self.GET_BOWL:
                     
                     if not self.HELP_PICK_BOWL:
-                        self.robot.pick_object_risky(selected_object="Bowl")
+                        self.robot.pick_object(selected_object="Bowl", first_search_tetas=[[-20.0, -15.0],[20.0, -15.0]])
                         
                     else:
                         object_in_gripper = False
@@ -396,44 +400,16 @@ class TaskMain():
 
                 cutlery = self.robot.search_for_objects(tetas=self.search_for_cutlery_tetas, list_of_objects=[], use_arm=True, detect_objects=True)
 
-                move_coords = self.robot.add_rotation_to_pick_position(self.robot.get_navigation_coords_from_furniture(self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED))
+                s, _ , coords, _ =self.robot.move_to_free_place_position(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, list_of_objects=cutlery, heads_of_the_table=True, speak_remove_chairs=False, speak_remove_decorations=False, move_to=False, wait_for_end_of=True)
+
+                move_coords = self.robot.add_rotation_to_pick_position(coords)
                                 
                 self.robot.move_to_position(move_coords=move_coords, wait_for_end_of=True)
 
                 self.robot.adjust_obstacles(distance=0.3, direction=-45.0, wait_for_end_of=False)
 
-                #VARIABLE TO ENSURE ONLY CUTLERY IS PICKED
-                no_other_cutlery = True
-
-                for c in cutlery:
-                    if (c.object_name == "Fork" or c.object_name == "Spoon" or c.object_name == "Knife") and no_other_cutlery:
-
-                        fc = self.robot.get_location_coords_from_furniture(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
-                        if c.position_absolute.y > fc[1]:
-                            self.robot.set_speech(filename="pick_and_place_task/remove_chair_laundry_room", wait_for_end_of=False)
-                        else:
-                            self.robot.set_speech(filename="pick_and_place_task/remove_chair_kitchen_counter", wait_for_end_of=False)
-                        # time.sleep(8.0)    
-                        self.SELECTED_PICKED_DISH = c     
-                        no_other_cutlery = False                          
-        
-                
-                if no_other_cutlery == True:
-                    for c in cutlery:
-                        if c.object_name == "Cup" and no_other_cutlery:
-
-                            fc = self.robot.get_location_coords_from_furniture(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
-                            if c.position_absolute.y > fc[1]:
-                                self.robot.set_speech(filename="pick_and_place_task/remove_chair_laundry_room", wait_for_end_of=False)
-                            else:
-                                self.robot.set_speech(filename="pick_and_place_task/remove_chair_kitchen_counter", wait_for_end_of=False)
-                            # time.sleep(8.0)  
-
-                            self.SELECTED_PICKED_DISH = c  
-                            no_other_cutlery = False                       
-        
-                # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
-                # self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
+                self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
+                self.robot.set_speech(filename="furniture/"+self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED, wait_for_end_of=False)
                 
                 self.robot.set_neck(position=self.look_table_objects, wait_for_end_of=False)
                 
@@ -503,13 +479,37 @@ class TaskMain():
                 if self.GET_CUTLERY:
                     if not self.HELP_PICK_CUTLERY:
 
-                        if self.SELECTED_PICKED_DISH.object_name in ["Fork", "Spoon", "Knife"]:
-                            self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.CUTLERY_LOCATION, object=self.SELECTED_PICKED_DISH)
-                            pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=self.SELECTED_PICKED_DISH.object_name, list_of_objects_detected_as=[["Spoon", "Fork", "Knife"]], say_cutlery=True)
-                        else:
-                            self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.CUTLERY_LOCATION, object=self.SELECTED_PICKED_DISH)
-                            pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=self.SELECTED_PICKED_DISH.object_name)
+                        #VARIABLE TO ENSURE ONLY CUTLERY IS PICKED
+                        no_other_cutlery = True
 
+                        for c in cutlery:
+                            if (c.object_name == "Fork" or c.object_name == "Spoon" or c.object_name == "Knife") and no_other_cutlery:
+
+                                fc = self.robot.get_location_coords_from_furniture(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                                if c.position_absolute.y > fc[1]:
+                                    self.robot.set_speech(filename="pick_and_place_task/remove_chair_laundry_room", wait_for_end_of=True)
+                                else:
+                                    self.robot.set_speech(filename="pick_and_place_task/remove_chair_kitchen_counter", wait_for_end_of=True)
+                                time.sleep(8.0)                                    
+                
+                                self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.CUTLERY_LOCATION, object=c)
+                                pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=c.object_name, list_of_objects_detected_as=[["Spoon", "Fork", "Knife"]], say_cutlery=True)
+                                no_other_cutlery = False
+                        
+                        if no_other_cutlery == True:
+                            for c in cutlery:
+                                if c.object_name == "Cup" and no_other_cutlery:
+
+                                    fc = self.robot.get_location_coords_from_furniture(furniture=self.NAME_TABLE_WHERE_BREAKFAST_IS_SERVED)
+                                    if c.position_absolute.y > fc[1]:
+                                        self.robot.set_speech(filename="pick_and_place_task/remove_chair_laundry_room", wait_for_end_of=True)
+                                    else:
+                                        self.robot.set_speech(filename="pick_and_place_task/remove_chair_kitchen_counter", wait_for_end_of=True)
+                                    time.sleep(8.0)  
+
+                                    self.robot.move_to_pre_pick_position_after_search_for_objects(furniture=self.CUTLERY_LOCATION, object=c)
+                                    pick_height_cutlery, _ = self.robot.pick_object_risky(selected_object=c.object_name)
+                                    no_other_cutlery = False
 
                         if no_other_cutlery == True:
                             print("NO OBJECT DETECTED")
@@ -544,7 +544,7 @@ class TaskMain():
                     # self.robot.set_speech(filename="generic/arrived", wait_for_end_of=False)
                     # self.robot.set_speech(filename="furniture/dishwasher", wait_for_end_of=False)
 
-                self.state = self.task_states["Placing_cutlery"]
+                self.state = self.task_states["Final_State"]
 
 
             elif self.state == self.task_states["Placing_cutlery"]:

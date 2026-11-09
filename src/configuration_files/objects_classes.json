@@ -1,8 +1,8 @@
 [
 {"name": "Cleaning Supplies",   "location": "Workshop Desk"},
-{"name": "Drinks", 		"location": "Shelf"},
+{"name": "Drinks", 		"location": "Kitchen Cabinet"},
 {"name": "Foods",   		"location": "Kitchen Cabinet"},
-{"name": "Fruits", 		"location": "Office Table"},
+{"name": "Fruits", 		"location": "Kitchen Cabinet"},
 {"name": "Toys",   		"location": "Night Stand"},
 {"name": "Snacks", 		"location": "Pantry"},
 {"name": "Dishes",   		"location": "Dishwasher"}

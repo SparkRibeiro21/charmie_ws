@@ -7877,7 +7877,7 @@ class RobotStdFunctions():
         #     pass       
 
 
-    def place_object_in_dishwasher_top_rack_and_close_rack(self, selected_object="", place_mode="", asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True, navigation_distance = -1):
+    def place_object_in_dishwasher_top_rack_and_close_rack(self, selected_object="", place_mode="", asked_help = False, furniture_distance = -1.0, base_adjust_y = 0.0, place_height = -1.0, return_to_initial_position = True, navigation_distance = -1, attempt = 0):
 
         selected_object = selected_object.replace(" ","_").lower()
 
@@ -7888,10 +7888,10 @@ class RobotStdFunctions():
 
         #### VARIABLES ####            
         print("Place 1:", place_mode)
-        furniture_height = 0.58
+        furniture_height = 0.59
 
         #### CONSTANTS ####
-        top_base_adjust_x = 0.08
+        top_base_adjust_x = 0.03
         top_base_adjust_y = base_adjust_y
 
         #### FUNCTION ####
@@ -7901,7 +7901,7 @@ class RobotStdFunctions():
         dy = top_base_adjust_y                                                                                                            
 
         self.adjust_omnidirectional_position(dx=0.0, dy=dy, safety=False, wait_for_end_of=True)
-        self.adjust_omnidirectional_position(dx=0.25, dy=0.0, safety=False, wait_for_end_of=False)   
+        self.adjust_omnidirectional_position(dx=top_base_adjust_x, dy=0.0, safety=False, wait_for_end_of=False)   
 
         self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_initial_position, wait_for_end_of=True)
         self.set_arm(command="adjust_joint_motion", joint_motion_values = self.arm_safe_first, wait_for_end_of=True)
@@ -7912,7 +7912,7 @@ class RobotStdFunctions():
         while not self.adjust_omnidirectional_position_is_done():
             pass                                                     
 
-        final_x = (gripper_place_position.z - furniture_height - place_height - 0.02)*1000
+        final_x = (gripper_place_position.z - furniture_height - place_height - 0.07)*1000
         print( "Final X: ", final_x, "gripper position: ", gripper_place_position.z, "furniture height: ", furniture_height, " place_height :", place_height)                                     
 
         self.safe_place_final = [0.0 , 0.0 , final_x , 0.0 , 0.0 , 0.0]                                                         
@@ -7921,11 +7921,18 @@ class RobotStdFunctions():
         self.set_arm(command="adjust_move_tool_line_quick", move_tool_line_pose = self.safe_place_final, wait_for_end_of=True)        
         self.set_arm(command="adjust_move_tool_line_quick_with_open_gripper_first", move_tool_line_pose = self.safe_rise_gripper, wait_for_end_of=True)
 
-        self.set_arm(command="close_dishwasher_rack_part1", wait_for_end_of=True)
-        self.set_arm(command="close_dishwasher_rack_part2", wait_for_end_of=False)
+        if attempt == 0:
+            self.set_arm(command="search_table_top_risky_to_initial_pose", wait_for_end_of=True)
+            self.set_arm(command="close_gripper", wait_for_end_of=True)
+            self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)  
         
-        self.set_torso_position(legs=0.015, torso=8, wait_for_end_of=False)
-        self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)   
+        else:
+
+            self.set_arm(command="close_dishwasher_rack_part1", wait_for_end_of=True)
+            self.set_arm(command="close_dishwasher_rack_part2", wait_for_end_of=False)
+            
+            #self.set_torso_position(legs=0.015, torso=8, wait_for_end_of=False)
+            self.adjust_omnidirectional_position(dx=-dx,dy=-dy, wait_for_end_of=True)   
     
     def wait_until_camera_stable(self, timeout = 2.5, stable_duration = 0.4, check_interval= 0.1, get_gripper = True):
 
@@ -9612,8 +9619,8 @@ class RobotStdFunctions():
                         correct_rotation = obj.orientation +90.0
                     else:
                         correct_rotation = obj.orientation -90.0
-                    if (selected_object == "spoon" or selected_object == "fork" or selected_object == "knife"):
-                        self.confirm_cutlery_rotation()
+                    #if (selected_object == "spoon" or selected_object == "fork" or selected_object == "knife"):
+                        #self.confirm_cutlery_rotation()
 
                 # Calculate how much the arm will move foward to pick object
                 if pick_mode == "front":
@@ -9655,8 +9662,8 @@ class RobotStdFunctions():
                     correct_rotation = correct_rotation + correct_rotation_adjust
 
                 # COnfirm cutlery rotation with cutlery 
-                if pick_mode == "top" and (selected_object == "fork" or selected_object == "spoon" or selected_object == "knife"):
-                    correct_rotation = self.confirm_cutlery_rotation(obj = obj)
+                #if pick_mode == "top" and (selected_object == "fork" or selected_object == "spoon" or selected_object == "knife"):
+                    #correct_rotation = self.confirm_cutlery_rotation(obj = obj)
 
 
                 print(f"{'BEFORE GRIP ID AND ADJUST:'+str(obj.index):<7} {obj.object_name:<17} {conf:<3} {obj.camera} ({hand_y_grab}, {hand_z_grab}, {hand_x_grab}, {correct_rotation})")
@@ -10119,8 +10126,10 @@ class RobotStdFunctions():
         self.close_tray_gripper(wait_for_end_of=True)
         
 
-        self.set_arm(command="close_gripper", wait_for_end_of=True)
-        self.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+        # self.set_arm(command="close_gripper", wait_for_end_of=True)
+        # self.set_arm(command="return_to_elevated_initial_position",wait_for_end_of=True)
+
+        self.set_arm(command="place_front_to_initial_pose",wait_for_end_of=True)
 
     def place_cornflakes_in_tray(self, place_height = -1):
 
